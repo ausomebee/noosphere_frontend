@@ -1,0 +1,201 @@
+/* ============================
+   1. CSS Reset + Normalize
+============================ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-width: 320px;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  display: flex;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar */
+body::-webkit-scrollbar {
+  display: none;
+}
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-primary);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* ============================
+   2. Root Variables
+============================ */
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  --color-primary: #4f46e5;
+  --color-secondary: #6366f1;
+  --color-accent: #10b981;
+  --color-muted: #6b7280;
+
+  --color-bg: #ffffff;
+  --color-bg-dark: #0f172a;
+  --color-text: #111827;
+  --color-text-light: #f1f5f9;
+
+  --border-radius: 0.75rem;
+  --transition-speed: 0.3s;
+}
+
+/* ============================
+   3. Layout Containers
+============================ */
+.container {
+  max-width: 1200px;
+  min-width: 100vw;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding-block: 2rem;
+  background-color: var(--color-bg);
+}
+
+/* ============================
+   4. Utility Classes
+============================ */
+.text-center {
+  text-align: center;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--border-radius);
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  transition: background-color var(--transition-speed);
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: var(--color-secondary);
+}
+
+/* ============================
+   5. Reusable Sections
+============================ */
+.section {
+  padding-block: 4rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ============================
+   6. Responsive Media Queries
+============================ */
+@media (max-width: 1024px) {
+  .container {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-inline: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* ============================
+   7. Dark Mode Support
+============================ */
+.dark {
+  --color-bg: var(--color-bg-dark);
+  --color-text: var(--color-text-light);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg: #ffffff;
+    --color-text: #213547;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  button {
+    background-color: #f9f9f9;
+  }
+}
