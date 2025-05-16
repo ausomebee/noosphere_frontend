@@ -1,0 +1,18 @@
+.loading-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    background-color: rgba(255, 255, 255, 0.8); /* Optional: slight overlay */
+  }
+  
+  .loading-spinner {
+    font-size: 40px;
+    color: #000000; /* Match your primary button color */
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }

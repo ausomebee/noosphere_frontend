@@ -1,0 +1,852 @@
+.tenant-list-container {
+  padding: 1rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.tenant-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 3px solid #eee;
+  padding-bottom: 2rem;
+}
+.tenant-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.back-link {
+  display: flex;
+  gap: 5px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tenant-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  justify-content: center;
+  display: flex;
+  flex: 1;
+}
+.tenant-title-breadcrumbs {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a1a8b3;
+  margin: 0;
+  justify-content: center;
+  display: flex;
+  flex: 1;
+}
+.tenant-title-breadcrumbs-org {
+  font-size: 14px;
+  font-weight: 600;
+  color: #002d7d;
+  margin: 0;
+  justify-content: center;
+  display: flex;
+  flex: 1;
+}
+
+.account-officer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.officer-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #004aba;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.officer-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.officer-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.officer-role {
+  font-size: 12px;
+  color: #666;
+}
+
+.change-button {
+  background: none;
+  border: none;
+  color: #004aba;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tenant-header-gen {
+  color: #a1a8b3;
+  font-size: 16px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tenant-info {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tenant-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.tenant-org-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tenant-org-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    1fr
+  ); /* Fixed 3 columns to match the image */
+  gap: 20px 0;
+}
+
+.info-item label {
+  font-size: 12px;
+  color: #666;
+  display: block;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.info-item p {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  font-weight: 500;
+  border-bottom: 1px solid #eee;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  color: #004aba;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+.plan-info {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 2rem;
+}
+
+.plan-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a1a8b3;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.plan-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.plan-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-item label {
+  font-size: 11px;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.plan-item p {
+  font-size: 14px;
+  color: #111827;
+  margin: 0 0 10px;
+  font-weight: 500;
+}
+
+.plan-item .plan-badge {
+  background-color: #e8ebf9;
+  color: #1e3a8a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.usage-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.usage-filled {
+  height: 100%;
+  background-color: #004aba;
+  transition: width 0.3s ease-in-out;
+}
+
+.next-payment-box {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+  .tenant-list-container {
+    padding: 2rem;
+  }
+
+  .tenant-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tenant-title {
+    font-size: 20px;
+    text-align: left;
+  }
+
+  .tenant-title-container {
+    align-items: flex-start;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 0;
+  }
+
+  .plan-details {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .account-officer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .next-payment-box {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+  .tenant-list-container {
+    padding: 1rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-title {
+    font-size: 18px;
+  }
+
+  .plan-item p,
+  .plan-item label {
+    font-size: 13px;
+  }
+
+  .plan-info {
+    padding: 16px;
+  }
+
+  .tenant-header-gen {
+    font-size: 14px;
+  }
+
+  .plan-item .plan-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .change-button,
+  .edit-button {
+    font-size: 13px;
+  }
+
+  .officer-name {
+    font-size: 15px;
+  }
+
+  .officer-role {
+    font-size: 11px;
+  }
+
+  .officer-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+/* Features Table */
+.features-table {
+  width: 100%;
+  border-collapse: separate; /* Required for border-radius to work */
+  border-spacing: 0;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Table Headers */
+.features-table thead th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  background-color: #f7f7f7;
+}
+
+/* Apply border-radius to top-left of the first column in the header */
+.features-table thead tr:first-child th:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+
+/* Apply border-radius to top-right of the last column in the header */
+.features-table thead tr:first-child th:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+/* Table Rows */
+.features-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Table Cells */
+.features-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+/* Checkbox Column */
+.features-table td:first-child,
+.features-table th:first-child {
+  width: 40px;
+  text-align: center;
+}
+
+/* Feature Column */
+.features-table td:nth-child(2) {
+  font-weight: 500;
+}
+
+/* Active Column */
+.features-table .active-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.features-table .active-label {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Action Column */
+.features-table td:last-child {
+  text-align: left;
+}
+
+/* Optional: Hover effect on rows */
+.features-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Payment Methods Container (Carousel) */
+.payment-methods-container {
+  display: flex;
+  overflow-x: auto; /* Enable horizontal scrolling */
+  gap: 20px;
+  margin-top: 20px;
+  padding-bottom: 10px; /* Space for scrollbar */
+  scroll-snap-type: x mandatory; /* Snap to each card */
+  position: relative; /* For fade effect */
+  margin-bottom: 20px;
+}
+
+/* Optional: Add a fade effect on the right to indicate scrollability */
+.payment-methods-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none; /* Allow clicking through the fade */
+}
+
+/* Custom scrollbar for Webkit browsers (Chrome, Safari) */
+.payment-methods-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.payment-methods-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.payment-methods-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.payment-methods-container::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* Payment Method Card */
+.payment-method-card {
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  padding: 16px;
+  width: 260px;
+  height: 140px;
+  flex: 0 0 auto; /* Prevent cards from shrinking */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #f7f7f7;
+  scroll-snap-align: start; /* Snap each card into view */
+}
+
+/* Payment Method Header (Icon and Card Number) */
+.payment-method-header {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  width: 32px; /* Adjust based on logo size */
+  height: 24px;
+  object-fit: contain; /* Ensure logos aren't distorted */
+}
+
+.card-number {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Payment Method Footer (Expiry and Status) */
+.payment-method-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expiry {
+  font-size: 12px;
+  color: #666;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.status-active {
+  color: #28a745; /* Green for Active */
+  background-color: #e6f4ea; /* Light green background */
+}
+
+.status-inactive {
+  color: #666; /* Gray for Inactive */
+  background-color: #f0f0f0; /* Light gray background */
+}
+
+.status-expired {
+  color: #dc3545; /* Red for Expired */
+  background-color: #f8d7da; /* Light red background */
+}
+
+/* Invoices Tabs Container */
+.invoices-tabs-container {
+  margin-top: 20px;
+}
+
+/* Tabs */
+.tenants-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.tenants-tab {
+  background: none;
+  flex: 1;
+  border: none;
+  padding: 10px 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s ease;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.tenants-tab:hover {
+  color: #333;
+}
+
+.tenants-tab.active {
+  color: #004aba; /* Blue color for active tab */
+  font-weight: 600;
+}
+
+.tenants-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #004aba; /* Underline for active tab */
+}
+
+.tab-count {
+  background: #f7f7f7;
+  color: #4b4e54;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  margin-left: 5px;
+}
+
+/* Overview Section */
+.issue-overview-section {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.issue-overview-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  grid-template-rows: repeat(2, auto); /* 2 rows */
+  gap: 1rem;
+}
+
+.issue-overview-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.issue-overview-card h4 {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.issue-overview-value {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.issue-view-link {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 0.875rem;
+  color: #242528;
+  text-decoration: none;
+}
+
+.issue-view-link:hover {
+  text-decoration: underline;
+}
+
+/* Top Issue Card */
+.issue-top-issue-card {
+  grid-row: 1 / 3; /* Span both rows */
+  grid-column: 3 / 4; /* Occupy the third column */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem; /* Increased gap for better spacing */
+}
+
+.issue-top-issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.issue-top-issue-filter {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Added shadow to match image */
+  border-color: #9ca3af; /* Slightly darker border */
+}
+
+.issue-top-issue-chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* Container for the settings sections */
+.tenant-tenant-settings-container {
+  max-width: 800px; /* Adjust based on your design */
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* Individual settings section (General Settings, Admin Security Settings) */
+.tenant-settings-section {
+  margin-bottom: 40px;
+}
+
+/* Section title (e.g., "General Settings", "Admin Security Settings") */
+.tenant-settings-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+/* Row for each setting (label + input/button) */
+.tenant-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* Label for each setting */
+.tenant-settings-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Group for input + change button or radio buttons */
+.tenant-settings-input-group {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Style for the Input component */
+.tenant-settings-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* Style for the Change button */
+.tenant-settings-change-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #007bff;
+  background-color: transparent;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tenant-settings-change-button:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* Group for radio buttons */
+.tenant-settings-radio-group {
+  flex: 2;
+  display: flex;
+  gap: 20px;
+  margin-top: 1rem;
+}
+
+/* Style for radio button labels */
+.tenant-settings-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+/* Style for radio buttons */
+.tenant-settings-radio-label input[type="radio"] {
+  margin-right: 8px;
+  accent-color: #007bff; /* For modern browsers to color the radio button */
+}
+
+/* Group for action links (Reset Password, Manage Sessions, Deactivate Account) */
+.tenant-settings-action-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Specific styling for Tenant Portal URL group */
+.tenant-portal-url-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+/* Style for the Tenant Portal URL text */
+.tenant-portal-url-text {
+  flex: 1;
+  font-size: 14px;
+  color: #007bff;
+  -webkit-user-select: none;
+  user-select: none; /* Prevent text selection */
+}
+
+/* Style for the copy button */
+.tenant-copy-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenant-copy-button svg {
+  font-size: 16px;
+  color: #666;
+}
+
+.tenant-copy-button:hover svg {
+  color: #007bff;
+}
+
+/* Ensure the layout is responsive */
+@media (max-width: 768px) {
+  .tenant-settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tenant-settings-label {
+    flex: none;
+    margin-bottom: 5px;
+  }
+
+  .tenant-settings-input-group,
+  .tenant-settings-radio-group {
+    flex: none;
+    width: 100%;
+  }
+
+  .tenant-settings-input {
+    width: 100%;
+  }
+}
