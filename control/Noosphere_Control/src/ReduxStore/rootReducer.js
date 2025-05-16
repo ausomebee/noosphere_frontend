@@ -1,9 +1,13 @@
 import { combineReducers } from '@reduxjs/toolkit';
 import authReducer from './features/authentication';
+import pipelineReducer from './features/PipelineSlice';
+import featureManagementReducer from './features/featureManagementSlice';
 
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  authentication: authReducer,
+  pipeline: pipelineReducer,
+  featureManagement: featureManagementReducer,
 
 });
 

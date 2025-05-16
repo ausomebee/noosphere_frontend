@@ -1,0 +1,394 @@
+.auth2fas-form-container {
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+
+/* QR Code section */
+.qr-code-container {
+    margin-bottom: 20px;
+  }
+  
+  .qr-code-placeholder {
+    width: 150px;
+    height: 150px;
+    background: #e5e7eb;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .manual-code-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+  
+  .manual-code {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    letter-spacing: 2px;
+  }
+
+/* Step instructions */
+.step-instruction {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.step-instruction p {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  /* Prevent wrapping of the entire line */
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: #3b82f6;
+  /* Blue background for step number */
+  color: white;
+  border-radius: 50%;
+  margin-right: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  /* Prevent shrinking */
+}
+
+.step-text {
+  font-size: 14px;
+  color: #555;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+  flex: 1;
+}
+
+/* QR Code section */
+.qr-code-container {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 40px;
+}
+
+.qr-code-container > div:first-child {
+  flex-shrink: 0;
+}
+
+.qr-code-container > div:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Code input for step 2 */
+.code-input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.code-input {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  margin: 0 5px;
+}
+
+.code-separator {
+  font-size: 16px;
+  color: #333;
+  margin: 0 5px;
+}
+
+/* Success message */
+.success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon {
+  width: 40px;
+  height: 40px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* Password form */
+.form-groups {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 30px;
+}
+
+/* Password info styling */
+.password-info {
+  align-items: left;
+  flex: 1;
+  justify-content: flex-start;
+  flex-direction: column;
+  padding: 10px;
+  text-align: left;
+  gap: 20px;
+}
+
+.subtitles {
+  font-size: 12px;
+  color: #333;
+  margin: 6px 0;
+}
+
+.shield-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 15px;
+  /* Space between icon and text */
+}
+
+.shield-logo {
+  width: 70%;
+  height: auto;
+}
+
+.support-note {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #666;
+}
+
+/* Link styling */
+.support-note a {
+  color: #007bff;
+  /* Optional: link color */
+  text-decoration: underline;
+  /* Optional: underline for links */
+}
+
+.support-note a {
+  color: #3b82f6;
+  /* Blue link */
+  text-decoration: none;
+}
+
+.support-note a:hover {
+  text-decoration: underline;
+}
+
+/* Password policy note */
+.password-policy {
+  font-size: 12px;
+  color: #3b82f6;
+  /* Blue note */
+  margin-top: 15px;
+  /* Tighter spacing */
+  text-align: center;
+}
+
+/* Buttons group (for other steps) */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.password-inputs {
+  flex: 1;
+}
+
+/* Security question form (Step 1) */
+.security-question-container {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.security-question-container .input-group {
+  margin-bottom: 10px;
+}
+
+.security-question-container .input-select,
+.security-question-container .input-text {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.security-question-container .input-select {
+  appearance: none;
+  background: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>')
+    no-repeat right 10px center;
+  background-size: 16px;
+}
+
+.security-question-container .input-text::placeholder {
+  color: #999;
+}
+
+.security-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .qr-code-container {
+    gap: 30px;
+    /* Reduce gap slightly for tablets */
+  }
+
+  .form-groups {
+    flex-direction: column;
+    /* Stack form groups vertically */
+  }
+
+  .input-group {
+    margin-bottom: 12px;
+    /* Slightly tighter spacing */
+  }
+
+  .support-note {
+    font-size: 13px;
+  }
+
+  .password-policy {
+    font-size: 11px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    /* Stack buttons vertically */
+    gap: 8px;
+  }
+
+  .security-question-container .input-select,
+  .security-question-container .input-text {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .security-question-container .input-label {
+    font-size: 13px;
+  }
+
+  .security-note {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-instruction p {
+    white-space: normal;
+    /* Allow wrapping on smaller screens */
+  }
+
+  .step-number {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    margin-right: 8px;
+    /* Slightly reduce margin */
+  }
+
+  .step-text {
+    font-size: 13px;
+  }
+
+  .qr-code-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    /* Further reduce gap for mobile */
+  }
+
+  .qr-code-container > div:last-child {
+    align-items: center;
+  }
+
+  .password-info {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 20px;
+  }
+
+  .shield-icon {
+    margin-right: 0;
+    margin-bottom: 10px;
+    /* Add space below the icon when stacked */
+  }
+
+  .password-info p {
+    font-size: 12px;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+    /* Tighter spacing for mobile */
+  }
+
+  .support-note {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+
+  .password-policy {
+    font-size: 11px;
+    margin-top: 10px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 6px;
+    /* Even tighter gap for mobile */
+  }
+
+  .security-question-container .input-select,
+  .security-question-container .input-text {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .security-question-container .input-label {
+    font-size: 12px;
+  }
+
+  .security-note {
+    font-size: 10px;
+    margin-bottom: 15px;
+  }
+}

@@ -1,0 +1,122 @@
+/* ============================
+   1. CSS Reset + Normalize
+============================ */
+/* *,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+} */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-width: 320px;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  display: flex;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+
+/* ============================
+   2. Root Variables
+============================ */
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  --color-primary: #4f46e5;
+  --color-secondary: #6366f1;
+  --color-accent: #10b981;
+  --color-muted: #6b7280;
+
+  --color-bg: #ffffff;
+  --color-bg-dark: #0f172a;
+  --color-text: #111827;
+  --color-text-light: #f1f5f9;
+
+  --border-radius: 0.75rem;
+  --transition-speed: 0.3s;
+  
+}
+
+/* ============================
+   3. Layout Containers
+============================ */
+/* .container {
+  max-width: 1200px;
+  min-width: 100vw;
+  margin: auto;
+  padding-inline: 1rem;
+  gap: 2rem;
+  padding-block: 2rem;
+  background-color: var(--color-bg);
+} */
+
+
+
+/* ============================
+   5. Reusable Sections
+============================ */
+.section {
+  padding-block: 4rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ============================
+   6. Responsive Media Queries
+============================ */
+/* @media (max-width: 1024px) {
+  .container {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-inline: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+} */
+
+

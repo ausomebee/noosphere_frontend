@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+
+
 /* ============================
    1. CSS Reset + Normalize
 ============================ */
@@ -21,22 +25,20 @@ html {
 }
 
 body {
-  min-height: 100vh;
-  min-width: 320px;
-  font-family: var(--font-sans, 'Inter', sans-serif);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.6;
-  display: flex;
-  transition: background-color var(--transition-speed), color var(--transition-speed);
+
+  font-family: var(--font-primary);
+  font-weight: 400; /* Default weight */
+  line-height: 1.6; /* Improved readability */
+  transition: background-color var(--transition-speed),
+    color var(--transition-speed);
   overflow-x: hidden;
 }
 
 /* Hide scrollbar */
-body::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-body {
+.no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -67,23 +69,13 @@ a:hover {
   color: var(--color-primary);
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  outline: none;
-}
 
 /* ============================
    2. Root Variables
 ============================ */
 :root {
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  --font-primary: 'Inter', sans-serif;
+  --font-mono: "Fira Code", monospace;
 
   --color-primary: #4f46e5;
   --color-secondary: #6366f1;
@@ -103,17 +95,10 @@ select {
    3. Layout Containers
 ============================ */
 .container {
-  max-width: 1200px;
   min-width: 100vw;
-  margin-inline: auto;
-  padding-inline: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 2rem;
-  padding-block: 2rem;
-  background-color: var(--color-bg);
+  margin: 0 auto;
+  padding: auto 0;
 }
 
 /* ============================
@@ -123,25 +108,11 @@ select {
   text-align: center;
 }
 
-.btn {
-  display: inline-block;
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--border-radius);
-  background-color: var(--color-primary);
-  color: white;
-  font-weight: 600;
-  transition: background-color var(--transition-speed);
-  cursor: pointer;
-}
-
-.btn:hover {
-  background-color: var(--color-secondary);
-}
 
 /* ============================
    5. Reusable Sections
 ============================ */
-.section {
+/* .section {
   padding-block: 4rem;
 }
 
@@ -149,7 +120,7 @@ select {
   font-size: 2rem;
   text-align: center;
   margin-bottom: 2rem;
-}
+} */
 
 /* ============================
    6. Responsive Media Queries
@@ -171,10 +142,7 @@ select {
     padding-inline: 0.5rem;
   }
 
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-  }
+ 
 }
 
 /* ============================
@@ -199,3 +167,6 @@ select {
     background-color: #f9f9f9;
   }
 }
+
+
+

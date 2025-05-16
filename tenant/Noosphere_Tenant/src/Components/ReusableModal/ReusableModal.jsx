@@ -1,0 +1,122 @@
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import './ReusableModal.css';
+
+// Reusable Modal Component
+const ReusableModal = ({
+  isOpen,
+  onClose,
+  title,
+  primaryButtonText,
+  secondaryButtonText,
+  primaryButtonColor,
+  secondaryButtonColor,
+  tabs,
+  onPrimaryButtonClick,
+  onSecondaryButtonClick,
+  children,
+}) => {
+  const [activeTab, setActiveTab] = useState(tabs && tabs.length > 0 ? tabs[0].name : null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  // Handle body scroll and position when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setScrollPosition(window.scrollY);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${window.scrollY}px`;
+      document.body.style.width = '100%'; // Prevent horizontal shift
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollPosition); // Restore scroll position
+    }
+
+    // Cleanup on unmount or when modal closes
+    return () => {
+      if (!isOpen) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollPosition);
+      }
+    };
+  }, [isOpen, scrollPosition]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        {/* Modal Title */}
+        <h2 className="modal-title">{title}</h2>
+
+        {/* Tabs (if provided) */}
+        {tabs && tabs.length > 0 && (
+          <div className="modal-tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                className={`tab-button ${activeTab === tab.name ? 'active-tab' : ''}`}
+                onClick={() => setActiveTab(tab.name)}
+              >
+                {tab.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Content or Children */}
+        <div className="ReuseableModal-body no-scrollbar::-webkit-scrollbar no-scrollbar">
+          {tabs && tabs.length > 0
+            ? tabs.find((tab) => tab.name === activeTab)?.content
+            : children}
+        </div>
+
+        {/* Buttons */}
+        <div className="modal-buttons">
+          <button
+            onClick={onSecondaryButtonClick || onClose}
+            className="modal-button secondary-button"
+            style={{ backgroundColor: secondaryButtonColor || '#ffffff', color: '#333333' }}
+          >
+            {secondaryButtonText || 'Cancel'}
+          </button>
+          <button
+            onClick={onPrimaryButtonClick || onClose}
+            className="modal-button primary-button"
+            style={{ backgroundColor: primaryButtonColor || '#000000', color: '#ffffff' }}
+          >
+            {primaryButtonText || 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// PropTypes for type checking
+ReusableModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  primaryButtonText: PropTypes.string,
+  secondaryButtonText: PropTypes.string,
+  primaryButtonColor: PropTypes.string,
+  secondaryButtonColor: PropTypes.string,
+  tabs: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      content: PropTypes.node.isRequired,
+    })
+  ),
+  onPrimaryButtonClick: PropTypes.func,
+  onSecondaryButtonClick: PropTypes.func,
+  children: PropTypes.node,
+};
+
+export default ReusableModal;

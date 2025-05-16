@@ -1,0 +1,619 @@
+.tenant-page-container {
+    padding: 1rem 0;
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .tenant-page-header{
+    align-items: center;
+    border-bottom: 3px solid #eee;
+   
+  }
+  .tenant-page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #111827;
+  }
+  
+  .tenant-page-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+  }
+  
+  .tenant-section-label {
+    margin-top: 1rem;
+    font-size: 16px;
+    font-weight: 600;
+    color: #a1a8b3;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  
+  .overview-card-wrapper {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    border-bottom: 3px solid #eee;
+    padding-bottom: 2rem;
+  }
+  
+  .overview-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background-color: #fff;
+  }
+  
+  .overview-card label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .overview-card p {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .overview-card-wrapper {
+      flex-direction: column;
+    }
+  }
+
+  /* src/styles/TenantListViewPayment.css */
+
+.tenant-payment-page {
+  padding: 24px;
+  font-family: 'Inter', sans-serif;
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+.tenant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.back-button {
+display: flex;
+  gap: 5px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.header-info {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.header-info h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #888;
+}
+
+.breadcrumb-active {
+  color: #000; /* Darker color for the last part */
+  font-weight: bold; /* Bold for emphasis */
+}
+.breadcrumb span {
+  color: #000;
+  font-weight: 600;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.action-dropdown {
+  position: absolute;
+  margin-top: 8px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  width: 160px;
+  padding: 10px;
+  font-size: 14px;
+  text-align: left;
+  background: white;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f1f1;
+}
+
+.payment-info {
+  margin-top: 24px;
+}
+
+.payment-info h2 {
+  font-size: 18px;
+  color: #A1A8B3;
+}
+
+.payment-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-row:last-child {
+  border-bottom: none;
+}
+
+.card-icon {
+  width: 24px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.invoice-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invoice-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: space-between;
+
+}
+
+
+/* Usage Statistics Cards */
+.usage-statistics-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.usage-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  flex: 1;
+  position: relative;
+}
+
+.usage-card h3 {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.usage-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.view-graph-button {
+  background: none;
+  border: none;
+  color: #242528;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+.view-graph-button:hover {
+  text-decoration: none;
+}
+
+/* Graph Section */
+.usage-graph-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.graph-title-headers{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.graph-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 0.5rem;
+  
+}
+
+.graph-filter {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background: #fff;
+}
+
+.view-data-button {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: #3b82f6;
+  cursor: pointer;
+}
+
+.view-data-button:hover {
+  background: #f3f4f6;
+}
+
+.sessions-over-time {
+  position: relative;
+}
+
+.sessions-change {
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.875rem;
+  color: #1f2937;
+  margin-bottom: 20px;
+
+}
+
+.change-value {
+  font-weight: 600;
+}
+
+.change-percentage {
+  color: #ef4444; /* Red for +25% */
+  margin-left: 10px;
+}
+
+/* Graph Container */
+.graph-container {
+  margin-top: 1rem;
+  
+}
+
+/* Base tenant page styles */
+.tli-tenant-issue-page,
+.tli-tenant-payment-page {
+  padding: 20px;
+ 
+}
+
+/* Header styles */
+.tenant-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 20px;
+  color: #333;
+}
+
+.back-button svg {
+  margin-right: 5px;
+}
+
+.header-info h1 {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.breadcrumb-active {
+  color: #0066cc;
+  font-weight: 500;
+}
+
+/* Section header styles */
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header-actions h2 {
+  font-size: 16px;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+
+
+
+
+/* Section containers */
+.issue-information,
+.description {
+  margin-bottom: 30px;
+}
+
+/* Table styles */
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.details-table th,
+.details-table td {
+  padding: 12px 16px;
+  text-align: left;
+ 
+  
+}
+
+.details-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  border: 1px solid #e0e0e0;
+  
+  
+}
+
+.details-table thead tr:first-child th:first-child {
+  border-top-left-radius: 20px;
+  
+ 
+}
+.details-table thead tr:first-child th:last-child {
+  border-top-right-radius: 20px;
+ 
+}
+
+.details-table td {
+  font-size: 14px;
+  color: #444;
+  background-color: #FFF;
+  border: 1px solid #e0e0e0;
+}
+
+/* First column width control */
+.details-table th:first-child,
+.details-table td:first-child {
+  width: 25%;
+  max-width: 180px;
+
+}
+
+/* Priority label styling */
+.priority-label {
+  font-weight: 500;
+}
+
+.priority-label.critical {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+/* Attachment styling */
+.attachment-link {
+  display: inline-flex;
+  align-items: center;
+  color: #0066cc;
+  text-decoration: none;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.attachment-link svg {
+  margin-right: 5px;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tenant-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .back-button {
+    margin-bottom: 10px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .table-actions {
+    margin-top: 10px;
+  }
+}
+
+
+
+
+/* Documents Section Specific Styles */
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background-color: #f9fafc;
+  transition: all 0.2s;
+}
+
+.document-item:hover {
+  background-color: #f5f7fa;
+}
+
+.document-icon {
+  margin-right: 10px;
+  color: #0066cc;
+}
+
+.document-link {
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.document-link:hover {
+  text-decoration: underline;
+}
+
+
+/* Comments Section Styling */
+.issues-comments-section {
+  margin-top: 20px;
+}
+
+.issues-comments-section .header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.issues-comments-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.issues-comments-list {
+  padding: 10px 0;
+}
+
+.issues-comment-item {
+  margin-bottom: 20px;
+}
+
+.issues-comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.issues-comment-date {
+  font-weight: 600;
+}
+
+.issues-comment-user {
+  font-weight: 500;
+}
+
+.issues-comment-action {
+  font-weight: 400;
+}
+
+.issues-comment-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}

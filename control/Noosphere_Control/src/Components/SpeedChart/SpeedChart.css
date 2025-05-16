@@ -1,0 +1,27 @@
+.system-speed-chart-container {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background-color: #fff;
+  margin: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.system-speed-chart-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.system-speed-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  grid-column: 1;
+  justify-self: end;
+  padding-right: 1rem;
+  margin-bottom: 1rem;
+}

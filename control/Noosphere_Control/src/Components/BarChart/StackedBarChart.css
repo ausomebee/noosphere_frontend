@@ -1,0 +1,39 @@
+/* Existing CSS */
+.stacked-bar-container {
+  padding: 1rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background-color: #fff;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stacked-bar-chart-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.stacked-bar-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  grid-column: 1;
+  justify-self: end;
+  padding-right: 1rem;
+  margin-bottom: 1rem;
+}
+
+
+
+
+.apexcharts-canvas {
+  margin: 0 auto;
+}
+
+/* Add this CSS to force rounding on the top of the Success bars */
+.apexcharts-bar-area[seriesName="Success"] {
+  clip-path: inset(0 0 0 0 round 8px 8px 0 0) !important;
+}
