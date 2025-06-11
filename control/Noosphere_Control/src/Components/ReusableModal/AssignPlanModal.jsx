@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReusableModal from "./ReusableModal";
 import { CheckboxInput } from "../Input/Inputs";
 
-const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTitle, currentPlans }) => {
+const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTitle, currentPlans, isLoading }) => {
   const [selectedPlans, setSelectedPlans] = useState([]);
 
   // Pre-populate with the feature's current plans
@@ -50,12 +50,13 @@ const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTit
         isOpen={isOpen}
         onClose={handleClose}
         title="Assign to plan"
-        primaryButtonText="Save"
+        primaryButtonText={isLoading ? "Saving..." : "Save"}
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
+        isPrimaryButtonDisabled={isLoading}
       >
         <div>
           <p className="text-sm text-gray-600 mb-4">
@@ -70,6 +71,7 @@ const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTit
                 value={plan.value}
                 checked={selectedPlans.includes(plan.value)}
                 onChange={handlePlanChange}
+                disabled={isLoading}
               />
             ))}
           </div>

@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import ReusableModal from "./ReusableModal";
-import { TextInput, SelectInput, CheckboxInput } from "../Input/Inputs";
+import { TextInput, SelectInput, CheckboxInput, TextareaInput } from "../Input/Inputs";
 
-const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
+const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
   const featureGroups = useSelector(
     (state) => state.featureManagement.featureGroups
   );
   const [selectedGroup, setSelectedGroup] = useState("");
   const [formData, setFormData] = useState({
     name: "",
-    plans: [],
-    active: true, 
+    description: "",
+    managedBy: "", // Added managedBy field
+    active: true,
   });
 
   const featureGroupOptions = [
@@ -22,12 +23,6 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
     })),
   ];
 
-  const planOptions = [
-    { value: "Basic", label: "Basic" },
-    { value: "Standard", label: "Standard" },
-    { value: "Pro", label: "Pro" },
-    { value: "Enterprise", label: "Enterprise" },
-  ];
 
   const statusOptions = [
     { value: "true", label: "Active" },
@@ -64,25 +59,25 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleSave = () => {
-    if (selectedGroup && formData.name.trim() && formData.plans.length > 0) {
+    if (selectedGroup && formData.name.trim() ) {
       const newFeature = {
         id: Date.now().toString(),
         name: formData.name.trim(),
+        description: formData.description.trim(),
+        managedBy: formData.managedBy.trim() || "Current User", // Fallback to "Current User"
         dateAdded: new Date().toLocaleDateString("en-US"),
-        addedBy: "Current User",
         active: formData.active,
-        plan: formData.plans,
         selected: false,
       };
       onSave({ groupTitle: selectedGroup, feature: newFeature });
       setSelectedGroup("");
-      setFormData({ name: "", plans: [], active: true });
+      setFormData({ name: "", description: "", managedBy: "", plans: [], active: true }); // Reset managedBy
     }
   };
 
   const handleClose = () => {
     setSelectedGroup("");
-    setFormData({ name: "", plans: [], active: true });
+    setFormData({ name: "", description: "", managedBy: "", plans: [], active: true }); // Reset managedBy
     onClose();
   };
 
@@ -92,12 +87,13 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Add New Feature"
-        primaryButtonText="Save"
+        primaryButtonText={isLoading ? "Saving..." : "Save"}
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
+        isPrimaryButtonDisabled={isLoading}
       >
         <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
           <SelectInput
@@ -107,6 +103,7 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
             onChange={(e) => setSelectedGroup(e.target.value)}
             options={featureGroupOptions}
             placeholder="Select a feature group"
+            disabled={isLoading}
           />
           <TextInput
             label="Feature Name"
@@ -114,24 +111,25 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
             value={formData.name}
             onChange={handleInputChange}
             placeholder="Enter feature name"
+            disabled={isLoading}
           />
-          <div>
-            <label>
-              Applicable Plans
-            </label>
-            <div className="">
-              {planOptions.map((plan) => (
-                <CheckboxInput
-                  key={plan.value}
-                  label={plan.label}
-                  name="plans"
-                  value={plan.value}
-                  checked={formData.plans.includes(plan.value)}
-                  onChange={handlePlanCheckboxChange}
-                />
-              ))}
-            </div>
-          </div>
+          <TextareaInput
+            label="Feature Description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            placeholder="Enter feature description"
+            disabled={isLoading}
+          />
+          <TextInput
+            label="Managed By"
+            name="managedBy"
+            value={formData.managedBy}
+            onChange={handleInputChange}
+            placeholder="Enter manager name"
+            disabled={isLoading}
+          />
+        
           <div style={{ marginTop: "20px" }}>
             <SelectInput
               label="Set Active or Disabled"
@@ -139,6 +137,7 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave }) => {
               value={formData.active.toString()} // Convert boolean to string for SelectInput
               onChange={handleStatusChange}
               options={statusOptions}
+              disabled={isLoading}
             />
           </div>
         </form>

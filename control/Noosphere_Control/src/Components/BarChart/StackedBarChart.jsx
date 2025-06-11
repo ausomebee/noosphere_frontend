@@ -117,6 +117,7 @@ const StackedBarChart = ({
             label: option,
           }))}
           defaultValue={dropdownOptions[0]}
+          className="system-speed-chart-select"
         />
       </div>
       <Chart options={options} series={series} type="bar" height={height} />

@@ -20,7 +20,6 @@ import {
   SwitchInput,
   TextInput,
 } from "../Input/Inputs";
-import { parse, format, isWithinInterval, isSameDay } from "date-fns";
 import { FaExchangeAlt } from "react-icons/fa";
 import { FiRefreshCw } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
@@ -33,11 +32,14 @@ const CustomTable = ({
   onFilterChange,
   actions,
   showActions = true,
+  showCheckbox = true,
   itemsPerPage = 5,
   tableName = "Table",
   onAssignToStaff,
   onMoveCandidates,
   onDelete,
+  onSelectionChange,
+  hasStatusDot = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,6 +55,10 @@ const CustomTable = ({
     plan: "",
     account_status: "",
     account_officer: "",
+    status: "",
+    nextBillingDate: null,
+    billingCycle: "",
+    lastPaymentStatus: "",
   });
   const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
     useState(false);
@@ -66,6 +72,23 @@ const CustomTable = ({
   const dateFilterDropdownRef = useRef(null);
 
   // Extract unique values for filters
+  const uniqueStatuses = useMemo(() => {
+    const statuses = new Set(data.map((row) => row.status).filter(Boolean));
+    return Array.from(statuses);
+  }, [data]);
+
+  const uniqueBillingCycles = useMemo(() => {
+    const cycles = new Set(data.map((row) => row.billingCycle).filter(Boolean));
+    return Array.from(cycles);
+  }, [data]);
+
+  const uniquePaymentStatuses = useMemo(() => {
+    const statuses = new Set(
+      data.map((row) => row.lastPaymentStatus).filter(Boolean)
+    );
+    return Array.from(statuses);
+  }, [data]);
+
   const uniqueAssignTo = useMemo(() => {
     const assignToSet = new Set(
       data.map((row) => row.assigned_to).filter(Boolean)
@@ -126,8 +149,16 @@ const CustomTable = ({
           filtered = filtered.filter((row) => row.account_status === value);
         } else if (key === "account_officer") {
           filtered = filtered.filter((row) => row.account_officer === value);
+        } else if (key === "status") {
+          filtered = filtered.filter((row) => row.status === value);
+        } else if (key === "billingCycle") {
+          filtered = filtered.filter((row) => row.billingCycle === value);
+        } else if (key === "lastPaymentStatus") {
+          filtered = filtered.filter((row) => row.lastPaymentStatus === value);
         } else if (
-          (key === "date_created" || key === "due_date") &&
+          (key === "date_created" ||
+            key === "nextBillingDate" ||
+            key === "due_date") &&
           value.start
         ) {
           filtered = filtered.filter((row) => {
@@ -174,34 +205,50 @@ const CustomTable = ({
     setCurrentPage(page);
   }, []);
 
-  const handleCheckboxChange = useCallback((rowIndex, row) => {
-    setSelectedRows((prev) =>
-      prev.includes(rowIndex)
-        ? prev.filter((index) => index !== rowIndex)
-        : [...prev, rowIndex]
-    );
-    setSelectedItems((prev) =>
-      prev.some((item) => item.id === row.id)
-        ? prev.filter((item) => item.id !== row.id)
-        : [...prev, row]
-    );
-  }, []);
+  const handleCheckboxChange = useCallback(
+    (rowIndex, row) => {
+      const newSelectedRows = selectedRows.includes(rowIndex)
+        ? selectedRows.filter((index) => index !== rowIndex)
+        : [...selectedRows, rowIndex];
+      const newSelectedItems = selectedItems.some((item) => item.id === row.id)
+        ? selectedItems.filter((item) => item.id !== row.id)
+        : [...selectedItems, row];
+
+      setSelectedRows(newSelectedRows);
+      setSelectedItems(newSelectedItems);
+
+      if (onSelectionChange) {
+        onSelectionChange(newSelectedRows, newSelectedItems);
+      }
+    },
+    [selectedRows, selectedItems, onSelectionChange]
+  );
 
   const handleSelectAllChange = useCallback(() => {
+    let newSelectedRows = [];
+    let newSelectedItems = [];
+
     if (
+      selectedRows.length > 0 &&
       selectedRows.length ===
-      currentData.filter((row) => row.hasCheckbox).length
+        currentData.filter((row) => row.hasCheckbox).length
     ) {
-      setSelectedRows([]);
-      setSelectedItems([]);
+      newSelectedRows = [];
+      newSelectedItems = [];
     } else {
-      const allSelectableIndices = currentData
+      newSelectedRows = currentData
         .map((row, index) => (row.hasCheckbox ? index : null))
         .filter((index) => index !== null);
-      setSelectedRows(allSelectableIndices);
-      setSelectedItems(currentData.filter((row) => row.hasCheckbox));
+      newSelectedItems = currentData.filter((row) => row.hasCheckbox);
     }
-  }, [selectedRows, currentData]);
+
+    setSelectedRows(newSelectedRows);
+    setSelectedItems(newSelectedItems);
+
+    if (onSelectionChange) {
+      onSelectionChange(newSelectedRows, newSelectedItems);
+    }
+  }, [selectedRows, currentData, onSelectionChange]);
 
   const handleToggleActive = useCallback(
     (rowIndex) => {
@@ -277,7 +324,6 @@ const CustomTable = ({
 
     let top;
 
-    // Vertical positioning
     if (spaceBelow >= dropdownHeight) {
       top = button.offsetHeight + 2;
       dropdown.style.top = `${top}px`;
@@ -295,7 +341,6 @@ const CustomTable = ({
       dropdown.style.maxHeight = `${Math.min(spaceBelow, dropdownHeight)}px`;
     }
 
-    // Horizontal positioning with extra offset to push it more left
     const additionalOffset = 4;
     const left = -dropdownWidth - additionalOffset;
 
@@ -392,6 +437,10 @@ const CustomTable = ({
       plan: "",
       account_status: "",
       account_officer: "",
+      status: "",
+      nextBillingDate: null,
+      billingCycle: "",
+      lastPaymentStatus: "",
     });
     setCurrentDateFilterKey(null);
     onFilterChange("assign_to", "");
@@ -401,6 +450,10 @@ const CustomTable = ({
     onFilterChange("plan", "");
     onFilterChange("account_status", "");
     onFilterChange("account_officer", "");
+    onFilterChange("status", "");
+    onFilterChange("nextBillingDate", null);
+    onFilterChange("billingCycle", "");
+    onFilterChange("lastPaymentStatus", "");
   };
 
   useEffect(() => {
@@ -442,7 +495,11 @@ const CustomTable = ({
   }, [isDateFilterDropdownOpen]);
 
   return (
-    <div className={`custom-table-container ${exportDropdownOpen ? 'export-dropdown-open' : ''}`}>
+    <div
+      className={`custom-table-container ${
+        exportDropdownOpen ? "export-dropdown-open" : ""
+      }`}
+    >
       {selectedItems.length > 0 && tableName === "ManageColumn" && (
         <div className="selected-items-actions">
           <Button
@@ -500,24 +557,25 @@ const CustomTable = ({
                       }
                     }}
                     options={filter.options}
+                    className="table-filter-select"
                   />
-
-                  {/* Date Created/Due Date Filter */}
-                  {filterValues[filter.key] === "date_created" && (
+                  {(filterValues[filter.key] === "date_created" ||
+                    filterValues[filter.key] === "nextBillingDate" ||
+                    filterValues[filter.key] === "due_date") && (
                     <div className="date-filter-input-container">
                       <TextInput
                         type="text"
                         value={
-                          filterValues.date_created?.start
+                          filterValues[filter.key]?.start
                             ? format(
-                                filterValues.date_created.start,
+                                filterValues[filter.key].start,
                                 "MMM d, yyyy"
                               )
                             : "Select start date"
                         }
                         readOnly
                         onClick={() => {
-                          setCurrentDateFilterKey("date_created");
+                          setCurrentDateFilterKey(filter.key);
                           setIsDateFilterDropdownOpen(true);
                         }}
                         className="date-filter-input date-filter-input-start"
@@ -527,23 +585,23 @@ const CustomTable = ({
                       <TextInput
                         type="text"
                         value={
-                          filterValues.date_created?.end
+                          filterValues[filter.key]?.end
                             ? format(
-                                filterValues.date_created.end,
+                                filterValues[filter.key].end,
                                 "MMM d, yyyy"
                               )
                             : "Select end date"
                         }
                         readOnly
                         onClick={() => {
-                          setCurrentDateFilterKey("date_created");
+                          setCurrentDateFilterKey(filter.key);
                           setIsDateFilterDropdownOpen(true);
                         }}
                         className="date-filter-input date-filter-input-end"
                         ref={dateFilterEndInputRef}
                       />
                       {isDateFilterDropdownOpen &&
-                        currentDateFilterKey === "date_created" && (
+                        currentDateFilterKey === filter.key && (
                           <div
                             className="date-filter-dropdown-wrapper no-scrollbar::-webkit-scrollbar no-scrollbar"
                             ref={dateFilterDropdownRef}
@@ -557,8 +615,6 @@ const CustomTable = ({
                         )}
                     </div>
                   )}
-
-                  {/* Assign To Filter */}
                   {filterValues[filter.key] === "assign_to" && (
                     <SelectInput
                       value={filterValues.assign_to || ""}
@@ -575,8 +631,6 @@ const CustomTable = ({
                       className="filter-value-select"
                     />
                   )}
-
-                  {/* Stage Completion Filter */}
                   {filterValues[filter.key] === "stage_completion" && (
                     <SelectInput
                       value={filterValues.stage_completion || ""}
@@ -596,8 +650,6 @@ const CustomTable = ({
                       className="filter-value-select"
                     />
                   )}
-
-                  {/* Plan Filter */}
                   {filterValues[filter.key] === "plan" && (
                     <SelectInput
                       value={filterValues.plan || ""}
@@ -614,8 +666,6 @@ const CustomTable = ({
                       className="filter-value-select"
                     />
                   )}
-
-                  {/* Account Status Filter */}
                   {filterValues[filter.key] === "account_status" && (
                     <SelectInput
                       value={filterValues.account_status || ""}
@@ -635,8 +685,6 @@ const CustomTable = ({
                       className="filter-value-select"
                     />
                   )}
-
-                  {/* Account Officer Filter */}
                   {filterValues[filter.key] === "account_officer" && (
                     <SelectInput
                       value={filterValues.account_officer || ""}
@@ -656,8 +704,56 @@ const CustomTable = ({
                       className="filter-value-select"
                     />
                   )}
-
-                  {/* Clear Filters Option */}
+                  {filterValues[filter.key] === "status" && (
+                    <SelectInput
+                      value={filterValues.status || ""}
+                      onChange={(e) =>
+                        handleFilterValueChange("status", e.target.value)
+                      }
+                      options={[
+                        { value: "", label: "Select Status" },
+                        ...uniqueStatuses.map((status) => ({
+                          value: status,
+                          label: status,
+                        })),
+                      ]}
+                      className="filter-value-select"
+                    />
+                  )}
+                  {filterValues[filter.key] === "billingCycle" && (
+                    <SelectInput
+                      value={filterValues.billingCycle || ""}
+                      onChange={(e) =>
+                        handleFilterValueChange("billingCycle", e.target.value)
+                      }
+                      options={[
+                        { value: "", label: "Select Billing Cycle" },
+                        { value: "Monthly", label: "Monthly" },
+                        { value: "Yearly", label: "Yearly" },
+                        { value: "Custom", label: "Custom" },
+                      ]}
+                      className="filter-value-select"
+                    />
+                  )}
+                  {filterValues[filter.key] === "lastPaymentStatus" && (
+                    <SelectInput
+                      value={filterValues.lastPaymentStatus || ""}
+                      onChange={(e) =>
+                        handleFilterValueChange(
+                          "lastPaymentStatus",
+                          e.target.value
+                        )
+                      }
+                      options={[
+                        { value: "", label: "Select Payment Status" },
+                        ...uniquePaymentStatuses.map((status) => ({
+                          value: status,
+                          label: status,
+                        })),
+                      ]}
+                      className="filter-value-select"
+                    />
+                  )}
                   {filterValues[filter.key] === "clear_filters" && (
                     <Button
                       label="Clear All Filters"
@@ -735,16 +831,18 @@ const CustomTable = ({
         <table className="custom-table">
           <thead>
             <tr>
-              <th className="checkbox-column">
-                <CheckboxInput
-                  checked={
-                    selectedRows.length > 0 &&
-                    selectedRows.length ===
-                      currentData.filter((row) => row.hasCheckbox).length
-                  }
-                  onChange={handleSelectAllChange}
-                />
-              </th>
+              {showCheckbox && (
+                <th className="checkbox-column">
+                  <CheckboxInput
+                    checked={
+                      selectedRows.length > 0 &&
+                      selectedRows.length ===
+                        currentData.filter((row) => row.hasCheckbox).length
+                    }
+                    onChange={handleSelectAllChange}
+                  />
+                </th>
+              )}
               {columns.map((col, index) => (
                 <th key={index}>{col.header}</th>
               ))}
@@ -755,7 +853,9 @@ const CustomTable = ({
             {currentData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length + (showActions ? 2 : 1)}
+                  colSpan={
+                    columns.length + (showActions ? 2 : showCheckbox ? 1 : 0)
+                  }
                   className="table-empty-state"
                 >
                   <div className="table-empty-state-content">
@@ -784,14 +884,14 @@ const CustomTable = ({
             ) : (
               currentData.map((row, rowIndex) => (
                 <tr key={row.item_id || rowIndex}>
-                  <td className="checkbox-column">
-                    {row.hasCheckbox && (
+                  {showCheckbox && row.hasCheckbox && (
+                    <td className="checkbox-column">
                       <CheckboxInput
                         checked={selectedRows.includes(rowIndex)}
                         onChange={() => handleCheckboxChange(rowIndex, row)}
                       />
-                    )}
-                  </td>
+                    </td>
+                  )}
                   {columns.map((col, colIndex) => (
                     <td key={colIndex} className="table-cell">
                       {col.hasColumnActions ? (
@@ -819,7 +919,7 @@ const CustomTable = ({
                                 }
                                 menuRefs.current[key].dropdown = el;
                               }}
-                              style={{ zIndex: 1000 }} // Ensure dropdown is above
+                              style={{ zIndex: 1000 }}
                             >
                               {col.columnActions.map((action, index) => (
                                 <button
@@ -856,12 +956,30 @@ const CustomTable = ({
                         >
                           {row[col.key]}
                         </span>
+                      ) : col.type === "subscription_status" ? (
+                        <span
+                          className={`subscription_status-label subscription_status-${row[
+                            col.key
+                          ].toLowerCase()}`}
+                        >
+                          <span className="status-dot" />
+                          {row[col.key]}
+                        </span>
+                      ) : col.type === "payment_status" ? (
+                        <span
+                          className={`payment_status-label payment_status-${row[
+                            col.key
+                          ].toLowerCase()}`}
+                        >
+                          {row[col.key]}
+                        </span>
                       ) : col.type === "status" ? (
                         <span
                           className={`status-label status-${row[
                             col.key
                           ].toLowerCase()}`}
                         >
+                          {hasStatusDot && <span className="status-dot" />}
                           {row[col.key]}
                         </span>
                       ) : col.type === "document" ? (
@@ -901,8 +1019,14 @@ const CustomTable = ({
                         />
                       ) : col.type === "day_time" ? (
                         <div className="day-time-cell">
-                          <div>{row[col.key].date}</div>
-                          <div>{row[col.key].time}</div>
+                          {row[col.key] ? (
+                            <>
+                              <span>{row[col.key].date || "N/A"}</span>
+                              <span>{row[col.key].time || "N/A"}</span>
+                            </>
+                          ) : (
+                            <span>N/A</span>
+                          )}
                         </div>
                       ) : col.type === "priority" ? (
                         <span

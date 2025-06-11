@@ -506,15 +506,7 @@ const ManageColumn = () => {
                   justifyContent: "space-between",
                 }}
               >
-                <div className="save-button-container">
-                  <Button
-                    label={isSaving ? "Saving..." : "Save Changes"}
-                    icon={!isSaving && <FaSave />}
-                    onClick={handleSaveBasicInfo}
-                    disabled={isSaving}
-                    width="auto"
-                  />
-                </div>
+                
 
                 <Button
                   variant="secondary-danger"
@@ -527,6 +519,15 @@ const ManageColumn = () => {
                     }
                   }}
                 />
+                <div className="save-button-container">
+                  <Button
+                    label={isSaving ? "Saving..." : "Save Changes"}
+                    icon={!isSaving && <FaSave />}
+                    onClick={handleSaveBasicInfo}
+                    disabled={isSaving}
+                    width="auto"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -606,6 +607,16 @@ const ManageColumn = () => {
                     justifyContent: "space-between",
                   }}
                 >
+                  
+                  <div className="add-button-container">
+                    <Button
+                      label="Add a new task"
+                      variant="outline"
+                      iconPosition="left"
+                      onClick={() => setShowTaskModal(true)}
+                      width="auto"
+                    />
+                  </div>
                   <div className="save-button-container">
                     <Button
                       label={isSaving ? "Saving..." : "Save Tasks"}
@@ -618,15 +629,6 @@ const ManageColumn = () => {
                         )
                       }
                       disabled={isSaving}
-                    />
-                  </div>
-                  <div className="add-button-container">
-                    <Button
-                      label="Add a new task"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowTaskModal(true)}
-                      width="auto"
                     />
                   </div>
                 </div>
@@ -706,6 +708,16 @@ const ManageColumn = () => {
                     justifyContent: "space-between",
                   }}
                 >
+                  
+                  <div className="add-button-container">
+                    <Button
+                      label="Request a new document"
+                      variant="outline"
+                      iconPosition="left"
+                      onClick={() => setShowDocumentModal(true)}
+                      width="auto"
+                    />
+                  </div>
                   <div className="save-button-container">
                     <Button
                       label={isSaving ? "Saving..." : "Save Documents"}
@@ -718,15 +730,6 @@ const ManageColumn = () => {
                         )
                       }
                       disabled={isSaving}
-                    />
-                  </div>
-                  <div className="add-button-container">
-                    <Button
-                      label="Request a new document"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowDocumentModal(true)}
-                      width="auto"
                     />
                   </div>
                 </div>

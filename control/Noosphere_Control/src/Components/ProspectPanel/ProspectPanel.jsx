@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  FiPhoneCall,
   FiMail,
   FiRefreshCw,
   FiEdit3,
@@ -1032,7 +1031,7 @@ const ProspectPanel = () => {
                     width="auto"
                     disabled={isLoading}
                   />
-                  <Button
+                  {/* <Button
                     icon={<LuCloudUpload size={20} />}
                     iconPosition="left"
                     label="Upload a document"
@@ -1040,7 +1039,7 @@ const ProspectPanel = () => {
                     onClick={() => setIsUploadModalOpen(true)}
                     width="auto"
                     disabled={isLoading}
-                  />
+                  /> */}
                 </div>
               </div>
             </div>

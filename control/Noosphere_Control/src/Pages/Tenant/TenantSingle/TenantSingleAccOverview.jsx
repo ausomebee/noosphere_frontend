@@ -1,19 +1,22 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiArrowUpRight, FiEdit3 } from "react-icons/fi";
-import { FaArrowLeft } from "react-icons/fa";
+
 import Layout from "../../Layout/ControlLayout";
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
+import { FaArrowLeft } from "react-icons/fa";
 
 const TenantSingleAccOverview = () => {
+  const { tenantId } = useParams();
+  const navigate = useNavigate(); 
   return (
     <Layout>
       <div className="tenant-list-container">
         <div className="tenant-header">
-          <Link to="/tenants/tenant-list" className="back-link">
+          <div onClick={() => navigate(-1)} className="back-link">
             <FaArrowLeft /> Back
-          </Link>
+          </div>
           <div className="tenant-title-container">
             <h1 className="tenant-title">Tenant</h1>
             <h2 className="tenant-title-breadcrumbs">

@@ -130,6 +130,7 @@
     width: 100%;
     box-sizing: border-box;
     margin: 0;
+    
   }
   
   /* Logo */
@@ -188,7 +189,7 @@
   }
   
   .sidebar-nav > ul > li {
-    padding: 5px 20px;
+    padding: 5px 15px;
     margin-top: 10px;
     cursor: pointer;
     transition: background-color 0.2s;

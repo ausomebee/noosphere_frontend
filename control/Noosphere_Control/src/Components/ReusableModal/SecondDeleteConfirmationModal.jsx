@@ -21,24 +21,25 @@ const DeleteConfirmationModal = ({
   isLoading = false,
   groupTitle,
   featureId,
+  requirePassword = false,
 }) => {
   const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
-  const [step, setStep] = useState(isFeatureDeletion ? 1 : 0);
+  const [step, setStep] = useState(isFeatureDeletion ? (requirePassword ? 1 : 1) : 0);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [password, setPassword] = useState("");
 
-  // Reset step when modal opens or isFeatureDeletion changes
+  // Reset step and form state when modal opens or isFeatureDeletion changes
   useEffect(() => {
     if (isOpen) {
-      setStep(isFeatureDeletion ? 1 : 0);
+      setStep(isFeatureDeletion ? (requirePassword ? 1 : 1) : 0);
       setSelectedGroup("");
       setPassword("");
     }
-  }, [isOpen, isFeatureDeletion]);
+  }, [isOpen, isFeatureDeletion, requirePassword]);
 
   // Add placeholder option to featureGroupOptions
   const featureGroupOptions = [
-    { value: "", label: "Select ...", disabled: true, hidden: true }, // Placeholder option
+    { value: "", label: "Select ...", disabled: true, hidden: true },
     ...(providedFeatureGroupOptions || featureGroups.map((group) => ({
       value: group.title,
       label: group.title,
@@ -47,7 +48,7 @@ const DeleteConfirmationModal = ({
 
   const handleSelectGroup = () => {
     if (selectedGroup) {
-      setStep(1);
+      setStep(requirePassword ? 1 : 2);
     }
   };
 
@@ -56,22 +57,23 @@ const DeleteConfirmationModal = ({
   };
 
   const handleConfirm = () => {
-    if (password.trim()) {
+    if (!requirePassword || password.trim()) {
       if (isFeatureDeletion) {
-        onConfirm({ groupTitle, featureId }); // Pass groupTitle and featureId for feature deletion
+        onConfirm({ groupTitle, featureId, administratorPassword: password });
       } else {
-        onConfirm(selectedGroup); // Pass selectedGroup for feature group deletion
+        onConfirm({ selectedGroup, administratorPassword: password });
       }
       // Reset form state
       setSelectedGroup("");
       setPassword("");
+      setStep(isFeatureDeletion ? (requirePassword ? 1 : 1) : 0);
       // Close the modal
       onCancel();
     }
   };
 
   const handleCancel = () => {
-    setStep(isFeatureDeletion ? 1 : 0);
+    setStep(isFeatureDeletion ? (requirePassword ? 1 : 1) : 0);
     setSelectedGroup("");
     setPassword("");
     onCancel();
@@ -86,11 +88,11 @@ const DeleteConfirmationModal = ({
       secondaryButtonText="Cancel"
       primaryButtonColor={confirmButtonColor}
       secondaryButtonColor="#ffffff"
-      onPrimaryButtonClick={step === 0 ? handleSelectGroup : step === 1 ? handleProceedToPassword : handleConfirm}
+      onPrimaryButtonClick={step === 0 ? handleSelectGroup : step === 1 ? (requirePassword ? handleProceedToPassword : handleConfirm) : handleConfirm}
       onSecondaryButtonClick={handleCancel}
       showPrimaryButton={showConfirmButton}
       showSecondaryButton={showSecondaryButton}
-      primaryButtonDisabled={isLoading}
+      primaryButtonDisabled={isLoading || (step === 0 && !selectedGroup) || (step === 2 && requirePassword && !password.trim())}
       secondaryButtonDisabled={isLoading}
       footerClassName={
         showConfirmButton && !showSecondaryButton
@@ -110,7 +112,7 @@ const DeleteConfirmationModal = ({
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               options={featureGroupOptions}
-              placeholder="Select ..." // Keep this in case SelectInput uses it
+              placeholder="Select ..."
             />
           </>
         ) : (
@@ -125,16 +127,16 @@ const DeleteConfirmationModal = ({
               <p>{message}</p>
             ) : (
               <>
-              <form>
-                <p>Enter administrative password to complete this action</p>
-                <PasswordInput
-                  label="Administrative Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your Administrative password"
-                  disabled={isLoading}
-                />
+                <form>
+                  <p>Enter administrative password to complete this action</p>
+                  <PasswordInput
+                    label="Administrative Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your Administrative password"
+                    disabled={isLoading}
+                  />
                 </form>
               </>
             )}

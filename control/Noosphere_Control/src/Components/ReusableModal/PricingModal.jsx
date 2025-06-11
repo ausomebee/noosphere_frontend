@@ -1,107 +1,96 @@
-import React, { useState } from 'react';
-import ReusableModal from './ReusableModal';
-import { TextInput, SelectInput } from '../Input/Inputs';
-import './ReusableModal.css';
-import Button from '../Button/Button';
+import React from "react";
+import ReusableModal from "./ReusableModal";
+import usePricingForm from "../../Pages/BillingsAndPayment/usePricingForm";
+import { showToast } from "../../Helper/ShowToast";
 
-const PricingModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [pricePerMonth, setPricePerMonth] = useState('$1,000.00');
-  const [pricePerYear, setPricePerYear] = useState('$1,000.00');
-  const [clients, setClients] = useState('10');
-  const [storage, setStorage] = useState('1GB');
-  const [currency, setCurrency] = useState('USD');
+const PricingPlanModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialPlanType = "Standard",
+  features = [], // Default to empty array
+  admins = [],
+  tenants = [],
+}) => {
+  const initialData = {
+    name: "",
+    type: initialPlanType,
+    assignedTo: "",
+    accountManager: "",
+    pricing: {
+      pricePerMonth: { amount: "", currency: "USD" },
+      pricePerYear: { amount: "", currency: "USD" },
+      clients: "10",
+      storage: "5GB",
+      userOption: "clients",
+    },
+    features: [],
+    extraPricing: [],
+  };
 
-  const clientOptions = [
-    { value: '10', label: '10' },
-    { value: '20', label: '20' },
-    { value: '30', label: '30' },
-  ];
+  const {
+    activeTab,
+    setActiveTab,
+    tabs,
+    validateForm,
+    handleSave,
+    resetForm,
+  } = usePricingForm({
+    initialData,
+    initialPlanType,
+    features,
+    admins,
+    tenants,
+    isEditMode: false, // Explicitly set for creating new plans
+    onSave,
+  });
 
-  const storageOptions = [
-    { value: '1GB', label: '1GB' },
-    { value: '2GB', label: '2GB' },
-    { value: '5GB', label: '5GB' },
-  ];
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
-  const currencyOptions = [
-    { value: 'USD', label: 'USD' },
-    { value: 'EUR', label: 'EUR' },
-    { value: 'GBP', label: 'GBP' },
-  ];
+  const handleNextClick = () => {
+    if (!validateForm(activeTab)) {
+      showToast("Please fill in all required fields.", "error");
+      return;
+    }
+    const currentIndex = tabs.findIndex((tab) => tab.name === activeTab);
+    if (currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1].name);
+    } else {
+      handleSave();
+      handleClose();
+    }
+  };
+
+  const handlePreviousClick = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.name === activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabs[currentIndex - 1].name);
+    } else {
+      handleClose();
+    }
+  };
 
   return (
-    <>
-     
-      <Button
-    
-        label="Open Pricing Modal"
-        variant="primary"
-        onClick={() => setIsOpen(true)}
-      />
+    isOpen && (
       <ReusableModal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        title="Pricing"
-        primaryButtonText="Save"
-        secondaryButtonText="Cancel"
+        onClose={handleClose}
+        title="Add New Plan"
+        primaryButtonText={activeTab === tabs[tabs.length - 1].name ? "Save" : "Next"}
+        secondaryButtonText={activeTab === tabs[0].name ? "Cancel" : "Previous"}
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
-      >
-        <div>
-          <div className="form-group">
-            <label className="form-label">Price per Month</label>
-            <div className="form-row">
-              <TextInput
-                value={pricePerMonth}
-                onChange={(e) => setPricePerMonth(e.target.value)}
-              />
-              <SelectInput
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                options={currencyOptions}
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Price per Year</label>
-            <div className="form-row">
-              <TextInput
-                value={pricePerYear}
-                onChange={(e) => setPricePerYear(e.target.value)}
-              />
-              <SelectInput
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                options={currencyOptions}
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">For</label>
-            <div className="form-row">
-              <SelectInput
-                value={clients}
-                onChange={(e) => setClients(e.target.value)}
-                options={clientOptions}
-              />
-              <SelectInput
-                value={clients}
-                onChange={(e) => setClients(e.target.value)}
-                options={[{ value: 'Clients', label: 'Clients' }]}
-              />
-              <SelectInput
-                value={storage}
-                onChange={(e) => setStorage(e.target.value)}
-                options={storageOptions}
-              />
-              <span>of Storage</span>
-            </div>
-          </div>
-        </div>
-      </ReusableModal>
-    </>
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onPrimaryButtonClick={handleNextClick}
+        onSecondaryButtonClick={handlePreviousClick}
+      />
+    )
   );
 };
 
-export default PricingModal;
+export default PricingPlanModal;

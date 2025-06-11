@@ -104,12 +104,12 @@ const ResourceUtilizationChart = ({ data, defaultPeriod = "Year" }) => {
       tooltip: { enabled: true },
       legend: {
         show: true,
-        position: "top",
-        horizontalAlign: "right",
+        position: "right", // Move legend to the right for vertical layout
+        verticalAlign: "middle", // Center vertically
         fontSize: "14px",
         fontFamily: "Arial",
         markers: { width: 12, height: 12, radius: 12 },
-        itemMargin: { horizontal: 10 },
+        itemMargin: { vertical: 5 }, // Add vertical spacing between legend items
       },
     });
   }, [data, period]);
@@ -125,6 +125,7 @@ const ResourceUtilizationChart = ({ data, defaultPeriod = "Year" }) => {
             value: p,
             label: p,
           }))}
+          className="system-speed-chart-select"
         />
       </div>
 

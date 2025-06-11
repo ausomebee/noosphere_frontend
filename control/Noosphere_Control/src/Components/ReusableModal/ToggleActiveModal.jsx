@@ -8,23 +8,28 @@ const ToggleActiveModal = ({
   onConfirm,
   featureName,
   currentState,
+  isLoading,
 }) => {
   const newState = !currentState; // Toggle the current state
   const actionText = newState ? "enable" : "disable";
+  const buttonText = isLoading
+    ? "Confirming..."
+    : actionText.charAt(0).toUpperCase() + actionText.slice(1); // "Enable" or "Disable"
 
   return (
     <ReusableModal
       isOpen={isOpen}
       onClose={onClose}
       title=""
-      primaryButtonText={actionText.charAt(0).toUpperCase() + actionText.slice(1)} // "Enable" or "Disable"
+      primaryButtonText={buttonText}
       secondaryButtonText="Cancel"
-      primaryButtonColor="#000000" // Black for both enable and disable to match the image
+      primaryButtonColor="#000000" // Black for both enable and disable
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={() => onConfirm(newState)}
       onSecondaryButtonClick={onClose}
       showPrimaryButton={true}
       showSecondaryButton={true}
+      isPrimaryButtonDisabled={isLoading}
     >
       <div className="delete-confirmation-content">
         <IoMdAlert className="warning-icon" style={{ color: "#000000" }} /> {/* Black icon */}

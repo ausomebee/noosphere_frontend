@@ -33,6 +33,17 @@ const getAllAdmins = async ({ accessToken, refreshToken }) => {
   }
 };
 
+const getAllTenants = async ({ accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/tenant`);
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Get All Tenants failed");
+  }
+};
+
+
 const CreatePipelineStage = async ({
   pipelineId,
   name,
@@ -436,8 +447,24 @@ const UpdateStageTasksToDone = async ({
   }
 };
 
+const GetTenantCount = async ({ accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/tenant/count`);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Tenant Count failed"
+    );
+  }
+};
+
+
+
+
 export default {
   getAllAdmins,
+  getAllTenants,
   GetPipelineByModule,
   UpdatePipelineStage,
   CreatePipelineStage,
@@ -456,4 +483,5 @@ export default {
   UpdatePipelineItemActivity,
   UpdateStageDocumentsToDone,
   UpdateStageTasksToDone,
+  GetTenantCount
 };
