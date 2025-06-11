@@ -3,7 +3,7 @@ import ReactApexChart from "react-apexcharts";
 import { SelectInput } from "../Input/Inputs";
 import "./SpeedChart.css";
 
-const SystemSpeedChart = ({ periodDataMap }) => {
+const SystemSpeedChart = ({ periodDataMap, title }) => {
   const [period, setPeriod] = useState("Year");
 
   // Function to filter the data based on period settings
@@ -112,7 +112,7 @@ const SystemSpeedChart = ({ periodDataMap }) => {
   return (
     <div className="system-speed-chart-container">
       <div className="system-speed-chart-header">
-        <h3 className="system-speed-chart-title">System Speed</h3>
+        <h3 className="system-speed-chart-title">{title}</h3>
         <SelectInput
           value={period}
           onChange={handlePeriodChange}
@@ -120,6 +120,7 @@ const SystemSpeedChart = ({ periodDataMap }) => {
             value: opt,
             label: opt,
           }))}
+          className="system-speed-chart-select"
         />
       </div>
       <ReactApexChart

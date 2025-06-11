@@ -15,7 +15,7 @@ const Gauge = ({ value, maxValue, label, color, isPercentage = false }) => {
             radialBar: {
               startAngle: -90,
               endAngle: 90,
-              hollow: { size: "50%" },
+              hollow: { size: "60%" },
               track: {
                 background: "#F1F1F1",
                 strokeWidth: "100%",
@@ -24,8 +24,8 @@ const Gauge = ({ value, maxValue, label, color, isPercentage = false }) => {
               dataLabels: {
                 name: { show: false },
                 value: {
-                  fontSize: "20px",
-                  fontWeight: 700,
+                  fontSize: "30px",
+                  fontWeight: 600,
                   color: "#333",
                   offsetY: -10, // Keeps value position stable
                   formatter: (val) =>
@@ -39,8 +39,8 @@ const Gauge = ({ value, maxValue, label, color, isPercentage = false }) => {
         }}
         series={[((value / maxValue) * 100).toFixed(2)]}
         type="radialBar"
-        height={220}
-        width={220}
+        height={800}
+        width={250}
       />
       <div className="gauge-label">{label}</div>
     </div>

@@ -1,0 +1,947 @@
+.billing-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+  border-bottom: 1px solid #efe7ef;
+  padding: 1.25rem;
+}
+
+.billing-board-buttons {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.billing-board-title h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+}
+
+.billing-board-title p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 5px 0 0;
+}
+
+.tabs {
+  display: flex;
+  margin: 20px 0;
+  border-bottom: 1px solid #777c85;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #777c85;
+}
+
+.tab.active {
+  color: #242528;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.plans-container {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 1.25rem;
+  min-height: calc(100vh - 150px);
+  white-space: nowrap;
+}
+
+/* Ensure plans-container behaves correctly for the table */
+.plans-container.table-active {
+  flex-direction: column; /* Override row direction for table */
+  overflow-x: visible; /* Allow table to take full width without horizontal scroll */
+  white-space: normal; /* Reset nowrap for table */
+}
+
+/* Ensure billing-table takes full width */
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; /* Allow table to adjust column widths naturally */
+}
+
+/* Preserve FallbackUI centering */
+.plans-container.fallback-active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden; /* Disable horizontal scrolling for FallbackUI */
+  flex-direction: column; /* Center FallbackUI vertically */
+  white-space: normal; /* Reset nowrap for FallbackUI */
+}
+
+.plan-card {
+  position: relative;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+  color: #000;
+  border: 1px solid #dddddd;
+}
+
+.plan-header {
+  display: flex;
+  padding: 15px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #dddddd;
+  border-radius: 15px 15px 0 0;
+}
+
+.plan-card.inactive .plan-header {
+  opacity: 2;
+  pointer-events: none;
+}
+
+.plan-card.inactive .plan-header .cog-button {
+  pointer-events: auto;
+  filter: none;
+  opacity: 1;
+}
+
+.plan-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #000;
+  font-weight: 800;
+}
+
+.pricing-container {
+  text-align: left;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.pricing {
+  margin: 20px;
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+
+.pricing h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #a1a8b3;
+  font-weight: 500;
+  text-transform: uppercase;
+  display: flex;
+}
+
+.pricing p {
+  font-size: 14px;
+  color: #242528;
+}
+
+.plan-features {
+  padding: 20px 0;
+}
+
+.plan-features h4 {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #a1a8b3;
+  text-align: center;
+}
+
+.plan-features ul {
+  list-style: none;
+  padding: 0;
+}
+
+.plan-features ul li {
+  background-color: #f7f7f7;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 20px;
+  padding: 16px 16px;
+  color: #5c6167;
+  display: flex;
+  align-items: center;
+}
+
+.feature-icon {
+  font-size: 16px;
+  color: #5c6167;
+  margin-right: 10px;
+}
+
+.plan-features ul li span {
+  flex: 1;
+}
+
+.billing-table-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.billing-table td {
+  padding: 10px;
+  text-align: left;
+  color: #242528;
+  border-bottom: 1px solid #ececec;
+}
+
+.billing-table th {
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  background-color: #f7f7f7;
+}
+
+.billing-table thead tr:first-child th:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+/* Apply border-radius to top-right of the last column in the header */
+.billing-table thead tr:first-child th:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .plans-container {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .billing-board-header {
+    padding: 1rem;
+  }
+
+  .billing-board-buttons {
+    padding: 0 1rem 1rem;
+  }
+
+  .billing-board-title h1 {
+    font-size: 20px;
+  }
+
+  .billing-board-title p {
+    font-size: 12px;
+  }
+
+  .tab {
+    padding: 8px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plan-card {
+    padding: 15px;
+  }
+
+  .plan-header h3 {
+    font-size: 16px;
+  }
+
+  .gear-icon {
+    font-size: 14px;
+  }
+
+  .pricing p {
+    font-size: 12px;
+  }
+
+  .plan-features h4 {
+    font-size: 12px;
+  }
+
+  .plan-features ul li {
+    font-size: 12px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+/* Action Cell */
+.action-cell {
+  position: relative;
+}
+
+/* Dropdown Container */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Menu Base Styles */
+.dropdown-menu {
+  width: 200px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  position: absolute;
+  top: 50px;
+  right: 15px;
+}
+
+.dropdown-menu-header {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  margin-right: 16px;
+}
+
+.dropdown-menu-row {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  margin-right: 16px;
+}
+
+.dropdown-items {
+  padding: 8px 0;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+.dropdown-item-danger {
+  color: #dc2626;
+}
+
+.dropdown-item-danger:hover {
+  background-color: #f3f4f6;
+}
+
+.plan-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-header-right {
+  position: relative;
+}
+
+.subscriber-count {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333539;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.cog-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  top: 0;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 12px;
+}
+
+.status-badge.active {
+  background-color: #003a9b;
+  color: #fff;
+}
+
+.status-badge.inactive {
+  background-color: #a1a8b3;
+  color: #fff;
+}
+.status-badge.suspended {
+  background-color: #fdb022;
+  color: #fff;
+}
+
+.plan-card.inactive {
+  opacity: 0.6;
+}
+
+.plan-header.inactive {
+  background-color: #f0f0f0;
+}
+
+.plan-title.inactive {
+  color: #5c6167;
+}
+
+.subscriber-list-container {
+  padding: 20px;
+}
+.nav-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.breadCrumb-active {
+  color: #004aba;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.subscriber-list-header h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.subscriber-list-header {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0 20px;
+}
+
+.filters-container {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-group span {
+  font-size: 14px;
+  color: #666;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.export-buttons button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #666;
+  text-align: center;
+}
+
+.empty-state svg {
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+.subscriber-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.subscriber-table th,
+.subscriber-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.subscriber-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.subcriber-action-menu {
+  position: relative;
+}
+
+.subcriber-action-button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.subcriber-dropdown-menu {
+  position: absolute;
+  top: 100%; /* Position below the button */
+  right: 100%; /* Align to the right of the button */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  display: none;
+}
+
+.subcriber-dropdown-menu.show {
+  display: block; /* Show the dropdown when the 'show' class is applied */
+}
+
+.subcriber-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+
+  border: none;
+  cursor: pointer;
+}
+
+.subcriber-dropdown-menu button:hover {
+  background-color: #f0f0f0; /* Highlight on hover */
+}
+
+/* Activity Reports Styles */
+.billing-reports-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.billing-reports-header {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.reports-icon {
+  font-size: 24px;
+  color: #4a90e2;
+  transition: color 0.3s ease;
+}
+
+.reports-icon:hover {
+  color: #2a70c2;
+}
+
+.billing-reports-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.billing-reports-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.billing-reports-item {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.billing-reports-item:last-child {
+  border-bottom: none;
+}
+
+.billing-reports-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.billing-reports-button:hover {
+  background-color: #f5f7fa; /* Light gray background on hover */
+}
+
+.billing-reports-button span {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+}
+
+.billing-reports-icon {
+  font-size: 16px;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.billing-reports-button:hover .billing-reports-icon {
+  color: #4a90e2; /* Blue on hover for interactivity */
+}
+
+.overview-card-wrapper-invoice {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding-bottom: 2rem;
+  position: relative;
+}
+
+.overview-card-invoice {
+  flex: 1;
+  min-width: 200px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  /* Align content to the start */
+}
+
+.overview-card-invoice label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.overview-select-container {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-content: flex-start;
+}
+
+.overview-card-invoice p {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.overview-select-input {
+  width: 150px; /* Adjust width to match date inputs */
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #374151;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.invoice-tabs-container {
+  width: 100%;
+  display: flex;
+  gap: 0;
+  padding: 5px 10px;
+  background-color: #ececec;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.invoice-tab {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: #ececec;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.invoice-tab.active {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.invoice-tab:not(.active):hover {
+  background: #e5e7eb;
+}
+
+.sub-tabs-container {
+  width: 100%;
+  display: flex;
+  padding: 10px 20px;
+}
+
+.sub-tab {
+  flex: 1;
+  padding: 5px 15px;
+  border: none;
+  background: none;
+  border-bottom: 1px solid #ececec;
+  cursor: pointer;
+  margin-top: 3rem;
+}
+
+.sub-tab.active {
+  border-bottom: 2px solid #242528;
+  font-weight: bold;
+}
+
+.invoice-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.date-filter-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+}
+
+.date-filter-input-container.flex-column {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.date-filter-input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.date-filter-demarcator {
+  padding: 0 10px;
+}
+
+.date-range-picker {
+  display: flex;
+  flex-direction: column; /* Stack date inputs vertically */
+  width: 100%; /* Ensure it takes full width */
+  align-items: flex-end; /* Align date inputs to the right */
+}
+
+.date-filter-input-small {
+  width: 150px; /* Match the width of the select input */
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+  font-size: 14px;
+  margin-bottom: -40px;
+}
+
+.subscription-tabs-container {
+  width: 100%;
+  display: flex;
+  padding: 10px 10px;
+}
+
+.subscription-tab {
+  flex: 1;
+  padding: 5px 15px;
+  border: none;
+  background: none;
+  border-bottom: 1px solid #ececec;
+  cursor: pointer;
+}
+
+.subscription-tab.active {
+  border-bottom: 2px solid #242528;
+  font-weight: bold;
+}
+
+.subscription-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: end;
+}
+
+.invoice-management-container {
+  padding: 20px;
+  width: 60%;
+}
+
+.tenant-section-label {
+  font-size: 18px;
+  font-weight: 500;
+  color: #A1A8B3;
+  margin-bottom: 10px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ECECEC;
+}
+
+.invoice-select {
+  border-radius: 20px !important;
+  width: 70px !important;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.form-header-one {
+  display: flex;
+  margin-bottom: 10px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.form-header-two {
+  background-color: #f7f7f7;
+  color: #4b4e54;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.form-header-two label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upcoming-invoice-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: center;
+}
+.csub-select{
+  width: 100% !important;
+}
+
+.form-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  margin-bottom: 15px;
+  width: 100%;
+
+}
+
+.csub-form-row {
+  display: flex;
+  margin-bottom: 15px;
+  width: 100%;
+ 
+}
+.overdue-form-row {
+  display: flex;
+  margin-bottom: 15px;
+  width: 100%;
+  border-bottom: 1px solid #ececec;
+}
+
+.form-row label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+.csub-form-row label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+
+
+.form-row input:disabled,
+.form-row textarea:disabled,
+.form-row select:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+.csub-form-row input:disabled,
+.csub-form-row textarea:disabled,
+.csub-form-row select:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+.auto-tab-content {
+  margin-top: 20px;
+}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ReusableModal from "./ReusableModal";
 import { TextInput } from "../Input/Inputs";
 
-const CreateFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
+const CreateFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading }) => {
   const [formData, setFormData] = useState({
     title: "",
   });
@@ -33,12 +33,13 @@ const CreateFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Create Feature Group"
-        primaryButtonText="Save"
+        primaryButtonText={isLoading ? "Saving..." : "Save"}
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
+        isPrimaryButtonDisabled={isLoading}
       >
         <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
           <TextInput
@@ -47,6 +48,7 @@ const CreateFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
             value={formData.title}
             onChange={handleInputChange}
             placeholder="Enter feature group title"
+            disabled={isLoading}
           />
         </form>
       </ReusableModal>

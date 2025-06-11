@@ -184,7 +184,7 @@ const AddProspectModal = ({
         reset(defaultFormValues);
         onClose();
       }}
-      title="Add a new prospect"
+      title="Add a new candidate"
       primaryButtonText={isLoading ? "Saving..." : "Save candidate"}
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
@@ -194,7 +194,7 @@ const AddProspectModal = ({
         onClose();
       }}
     >
-      <form className="space-y-4 max-h-[60vh] overflow-y-auto p-4">
+      <form className="">
         <TextInput
           label="Company Name"
           {...register("companyName")}
@@ -232,7 +232,7 @@ const AddProspectModal = ({
           options={organizationTypeOptions}
           error={errors.organizationType?.message}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="">
           <TextInput
             label="Address"
             {...register("location.address")}

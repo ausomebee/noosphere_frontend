@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput } from "../Input/Inputs";
 
-const EditFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
+const EditFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading  }) => {
   const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [formData, setFormData] = useState({
@@ -56,12 +56,13 @@ const EditFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Edit Feature Group"
-        primaryButtonText="Save"
+        primaryButtonText={isLoading ? "Saving..." : "Save"}
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
+        isPrimaryButtonDisabled={isLoading || !formData.title.trim() || selectedGroup === formData.title}
       >
         <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
           <SelectInput
@@ -71,6 +72,7 @@ const EditFeatureGroupModal = ({ isOpen, onClose, onSave }) => {
             onChange={(e) => setSelectedGroup(e.target.value)}
             options={featureGroupOptions}
             placeholder="Select a feature group"
+            disabled={isLoading}
           />
           <TextInput
             label="Feature Group Title"

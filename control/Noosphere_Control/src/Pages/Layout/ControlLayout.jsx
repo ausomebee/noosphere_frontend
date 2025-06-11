@@ -61,18 +61,35 @@ const Layout = ({ children }) => {
       children: [
         { name: "Pipeline", path: "/tenants/pipeline" },
         { name: "Tenant List", path: "/tenants/tenant-list" },
-        { name: "", path: "/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit" },
-        { name: "", path: "/tenants/candidate-single/:pipelineStageId/:pipelineItemId" },
+        {
+          name: "",
+          path: "/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit",
+        },
+        {
+          name: "",
+          path: "/tenants/candidate-single/:pipelineStageId/:pipelineItemId",
+        },
         { name: "", path: "/tenants/column-single/:id" },
       ],
     },
     {
       name: "Billing & Payments",
-      path: "/billing-payments",
+      path: "/billing-payments/plans-pricing",
       icon: <FiCreditCard size={20} />,
       children: [
         { name: "Plans & Pricing", path: "/billing-payments/plans-pricing" },
-        { name: "Billing Manager", path: "/billing-payments/billingManager" },
+        {
+          name: "Invoice & Payments",
+          path: "/billing-payments/invoice-payments",
+        },
+        {
+          name: "Subscription Manager",
+          path: "/billing-payments/subscription-manager",
+        },
+        {
+          name: "Auto-billing Settings",
+          path: "/billing-payments/auto-billing-settings",
+        },
         { name: "Reports", path: "/billing-payments/Reports" },
       ],
     },
@@ -90,7 +107,7 @@ const Layout = ({ children }) => {
     },
     {
       name: "Settings",
-      path: "/settings",
+      path: "/settings/roles-permissions",
       icon: <FiSettings size={20} />,
       children: [
         { name: "Roles & Permissions", path: "/settings/roles-permissions" },
@@ -157,7 +174,10 @@ const Layout = ({ children }) => {
 
   const isSecondaryNavActive = (itemPath) => {
     const matchingPaths = secondaryNavItems
-      .filter((item) => isPathActive(item.path) || location.pathname.startsWith(item.path))
+      .filter(
+        (item) =>
+          isPathActive(item.path) || location.pathname.startsWith(item.path)
+      )
       .map((item) => item.path);
 
     if (matchingPaths.length > 0) {
@@ -189,7 +209,11 @@ const Layout = ({ children }) => {
         } ${isSidebarCollapsed ? "collapsed" : ""}`}
       >
         <div className="logo">
-          <img src={NoosphereLogo} alt="Noosphere Logo" className="logo-image" />
+          <img
+            src={NoosphereLogo}
+            alt="Noosphere Logo"
+            className="logo-image"
+          />
         </div>
         <nav className="sidebar-nav">
           <ul>
@@ -198,7 +222,8 @@ const Layout = ({ children }) => {
                 <div
                   className={`nav-item ${isNavActive(item) ? "active" : ""}`}
                   onClick={() => {
-                    if (item.children && !isSidebarCollapsed) toggleNav(item.name);
+                    if (item.children && !isSidebarCollapsed)
+                      toggleNav(item.name);
                     handleNavClickDesktop();
                   }}
                 >
@@ -218,12 +243,16 @@ const Layout = ({ children }) => {
                   {item.children && !isSidebarCollapsed && (
                     <FiChevronDown
                       size={16}
-                      className={`nav-arrow ${openNavs[item.name] ? "open" : ""}`}
+                      className={`nav-arrow ${
+                        openNavs[item.name] ? "open" : ""
+                      }`}
                     />
                   )}
                 </div>
                 {item.children && !isSidebarCollapsed && (
-                  <ul className={`sub-nav ${openNavs[item.name] ? "open" : ""}`}>
+                  <ul
+                    className={`sub-nav ${openNavs[item.name] ? "open" : ""}`}
+                  >
                     {item.children
                       .filter((child) => child.name)
                       .map((child, childIndex) => (
@@ -258,7 +287,11 @@ const Layout = ({ children }) => {
         className={`collapse-button ${isSidebarCollapsed ? "collapsed" : ""}`}
         onClick={toggleSidebarCollapse}
       >
-        {isSidebarCollapsed ? <FiChevronRight size={24} /> : <FiChevronLeft size={24} />}
+        {isSidebarCollapsed ? (
+          <FiChevronRight size={24} />
+        ) : (
+          <FiChevronLeft size={24} />
+        )}
       </button>
 
       {showSecondarySidebar && (

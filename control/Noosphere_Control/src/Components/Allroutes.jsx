@@ -25,6 +25,15 @@ import TenantSingleUserLogs from '../Pages/Tenant/TenantSingle/TenantSingleUserL
 import TenantSingleSecuritySettings from '../Pages/Tenant/TenantSingle/TenantSingleSecuritySettings';
 import FeatureManagement from '../Pages/FeatureManagment/FeatureManagement';
 import ForgotPasswordResetPassword from '../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword';
+import PlansAndPayment from '../Pages/BillingsAndPayment/PlansAndPayment';
+import BillingManager from '../Pages/BillingsAndPayment/BillingManager';
+import BillingReports from '../Pages/BillingsAndPayment/BillingReports';
+import SubscriberList from '../Pages/BillingsAndPayment/SubcriberList';
+import SubscriptionManager from '../Pages/BillingsAndPayment/BillingReport/SubcriptionManager/SubscriptionManager';
+import AutoBilling from '../Pages/BillingsAndPayment/BillingReport/AutoBilling/AutoBilling';
+import MainPerformance from '../Pages/Performance/MainPerformance';
+import IssueManagement from '../Pages/IssueManagement/IssueManagement';
+import ControlSettings from '../Pages/Settings/ControlSettings';
 
 const AllRoutes = () => {
   return (
@@ -47,7 +56,7 @@ const AllRoutes = () => {
 
 {/* Tenant Management */}
         <Route path="/tenants/tenant-list" element={<TenantList />} />
-        <Route path="/tenants/tenant-lists/overview" element={<TenantSingle />} />
+        <Route path="/tenants/tenant-lists/overview/:tenantId" element={<TenantSingle />} />
         <Route path="/tenants/pipeline" element={<TenantPipeline/>} />
         <Route 
   path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId" 
@@ -60,21 +69,25 @@ const AllRoutes = () => {
         <Route path="/tenants/column-single/:pipelineStageId" element={<ManageColumn/>} />
         <Route path="/tenants/tenant-lists/features" element={< TenantSingleFeature/>} />
         <Route path="/tenants/tenant-lists/billing" element={<TenantSingleBilling />} />
+        <Route path="/plans/subscribers/:planId" element={<SubscriberList />} />
         <Route path="/tenants/tenant-lists/issues" element={<TenantSingleIssueManagement/>} />
         <Route path="/tenants/tenant-lists/logs" element={<TenantSingleUserLogs />} />
         <Route path="/tenants/tenant-lists/security" element={<TenantSingleSecuritySettings />} />
 
 
-        <Route path="/performance" element={<div>Performance Page</div>} />
-        <Route path="/billing-payments/plans-pricing" element={<div>Plans & Pricing Page</div>} />
-        <Route path="/billing-payments/billingManager" element={<div>Billing Manager Page</div>} />
-        <Route path="/billing-payments/Reports" element={<div>Reports Page</div>} />
-        <Route path="/issues" element={<div>Issues Page</div>} />
+        <Route path="/performance" element={<MainPerformance />} />
+        <Route path="/billing-payments/plans-pricing" element={<PlansAndPayment />} />
+        <Route path="/billing-payments/invoice-payments" element={<BillingManager />} />
+        <Route path="/billing-payments/subscription-manager" element={<SubscriptionManager />} />
+        <Route path="/billing-payments/auto-billing-settings" element={<AutoBilling />} />
+        <Route path="/billing-payments/Reports" element={<BillingReports />} />
+
+        <Route path="/issues" element={<IssueManagement />} />
         
 {/* Feature Management */}
         <Route path="/features" element={<FeatureManagement />} />
 
-        <Route path="/settings/roles-permissions" element={<div>Roles & Permissions Page</div>} />
+        <Route path="/settings/roles-permissions" element={<ControlSettings />} />
         <Route path="/settings/notification-alerts" element={<div>Notification & Alerts Page</div>} />
         <Route path="/settings/securitySettings" element={<div>Security Settings Page</div>} />
         {/* Secondary sidebar routes */}

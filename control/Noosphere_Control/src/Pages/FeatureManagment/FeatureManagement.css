@@ -108,24 +108,29 @@
   }
   
   /* Different colors for each plan */
-  .plan-tag-basic {
+  .plan-tag-basic-plan {
     background-color: #e0f2fe;
     color: #0284c7;
   }
   
-  .plan-tag-standard {
+  .plan-tag-standard-plan {
     background-color: #fef3c7;
     color: #d97706;
   }
   
-  .plan-tag-pro {
+  .plan-tag-pro-plan {
     background-color: #fce7f3;
     color: #db2777;
   }
   
-  .plan-tag-enterprise {
+  .plan-tag-enterprise-plan {
     background-color: #e6f4ea;
     color: #16a34a;
+  }
+  .plan-tag-unassigned {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    
   }
   
   /* Feature Row */

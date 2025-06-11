@@ -12,6 +12,11 @@
   padding-top: 70px;
 }
 
+.table-filter-select{
+  margin-bottom: -40px;
+  margin-top: 10px;
+  border-radius: 20px;
+}
 
 .table-header {
   display: flex;
@@ -37,7 +42,7 @@
 
 .filter-text {
   font-size: 0.9rem;
-  margin-bottom: 1rem;
+
 }
 
 .table-actions {
@@ -96,11 +101,11 @@
 }
 
 .custom-table th:first-child {
-  border-radius: 15px 0 0 15px;
+  border-radius: 8px 0 0 8px;
 }
 
 .custom-table th:last-child {
-  border-radius: 0 15px 15px 0;
+  border-radius: 0 8px 8px 0;
 }
 
 .custom-table tbody tr:hover {
@@ -121,7 +126,7 @@
 /* Plan Column Styles */
 .plan-label {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 12px;
   font-size: 12px;
   color: #333;
@@ -142,11 +147,29 @@
 /* Status Column Styles */
 .status-label {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 1px 6px;
   border-radius: 12px;
   font-size: 12px;
   color: #333;
 }
+
+.status-active  .status-dot {
+  background-color: #ffffff;
+  
+}
+.status-inactive  .status-dot {
+  background-color: #ffffff;
+  
+}
+.status-suspended  .status-dot {
+  background-color: #ffffff;
+  
+}
+.status-blocked  .status-dot {
+  background-color: #ffffff;
+  
+}
+
 
 .status-paid {
   background-color: #e6f4ea;
@@ -160,10 +183,10 @@
   background-color: #d8d8d8;
   color: #000;
 }
-.status-upcoming {
+/* .status-upcoming {
   background-color: #67748b;
   color: #ffffff;
-}
+} */
 .status-active {
   background-color: #003A9B;
   color: #ffffff;
@@ -181,13 +204,90 @@
   color: #ffffff;
 }
 .status-resolved {
- 
   color: #039855;
 }
 .status-unresolved {
- 
   color: #D92D20;
 }
+.status-failed {
+  background-color: #FEF3F2;
+  color: #B42318;
+}
+.status-completed {
+  background-color: #ECFDF3;
+  color: #027A48;
+}
+.status-in-progress {
+  background-color: #ECFDF3;
+  color: #027A48;
+}
+.status-successful {
+  background-color: #ECFDF3;
+  color: #027A48;
+}
+.status-upcoming {
+  background-color: #EFF8FF;
+  color: #175CD3;
+}
+.status-unpaid {
+  background-color: #FFFAEB;
+  color: #B54708;
+}
+.status-overdue {
+  background-color: #FFFAEB;
+  color: #B54708;
+}
+
+
+.payment_status-failed {
+  color: #B54708;
+}
+.payment_status-success {
+  color: #039855;
+}
+.payment_status-pending {
+  color: #DC6803;
+}
+
+.subscription_status-active {
+  color: #039855;
+}
+.subscription_status-paused {
+  color: #5C6167;
+}
+.subscription_status-canceled {
+  color: #C01048;
+}
+.subscription_status-pending {
+  color: #DC6803;
+}
+
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  display: inline-block;
+}
+
+.subscription_status-active .status-dot {
+  background-color: #039855; 
+}
+
+.subscription_status-paused .status-dot {
+  background-color: #5C6167;
+}
+
+.subscription_status-canceled .status-dot {
+  background-color: #C01048;
+}
+.subscription_status-pending .status-dot {
+  background-color: #DC6803;
+}
+
+
+
 
 /* Document Column Styles */
 .document-cell {
@@ -417,6 +517,7 @@
 /* Style for the filter value select input */
 .filter-value-select {
   min-width: 150px;
+  margin-bottom: -20px; /* Adjusted to match the original design */
 }
 
 
@@ -448,7 +549,9 @@
   align-items: center;
   position: relative;
   gap: 8px;
-  
+   margin-bottom: -20px;
+  justify-content: end;
+  border-radius: 16px;
 }
 
 /* Date filter input */
@@ -457,6 +560,8 @@
   font-size: 14px;
   color: #333;
   cursor: pointer;
+  border-radius: 16px;
+  
 }
 
 /* Specific styles for start and end inputs */
@@ -464,6 +569,8 @@
 .date-filter-input-end {
   width: 140px; 
   padding: 12px 12px;
+  border-radius: 16px;
+  
 }
 
 /* Demarcator between start and end inputs */

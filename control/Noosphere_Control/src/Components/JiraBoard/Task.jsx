@@ -59,7 +59,7 @@ const Task = ({
         </Menu.Button>
         <Menu.Items className="menu-items">
           <div>
-            <Menu.Item>
+            {/* <Menu.Item>
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
@@ -68,7 +68,7 @@ const Task = ({
                   View candidate information
                 </button>
               )}
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item>
               {({ active }) => (
                 <button

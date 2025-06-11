@@ -5,7 +5,7 @@ import { CheckboxInput } from "../../../Components/Input/Inputs";
 import { toggleSelectAllFeatures } from "../../../ReduxStore/features/featureManagementSlice";
 import "../FeatureManagement.css";
 
-const FeatureGroup = ({ title, features }) => {
+const FeatureGroup = ({ title, features, onViewStatistics }) => {
   const dispatch = useDispatch();
   const [selectAll, setSelectAll] = useState(false);
 
@@ -41,6 +41,7 @@ const FeatureGroup = ({ title, features }) => {
                 key={feature.id}
                 feature={feature}
                 groupTitle={title}
+                onViewStatistics={onViewStatistics}
               />
             ))}
           </tbody>

@@ -12,12 +12,16 @@ const TenantList = () => {
   });
 
   const filters = [
-    {
-      key: "dateAdded",
-      value: filterValues.dateAdded,
+   {
+      key: "filter_type",
+      value: "",
       options: [
-        { value: "Date Added", label: "Date Added" },
-        { value: "Plan", label: "Plan" },
+        { value: "", label: "Select Filter" },
+        { value: "date_created", label: "Date Created" },
+        { value: "plan", label: "Plan" },
+        { value: "status", label: "Account Status" },
+        { value: "account_officer", label: "Account Officer" },
+        { value: "clear_filters", label: "Clear Filters" },
       ],
     },
   ];
@@ -33,106 +37,129 @@ const TenantList = () => {
     { key: "date_created", header: "Date Created" },
     { key: "plan", header: "Plan", type: "plan" },
     { key: "status", header: "Account Status", type: "status" },
+    { key: "subscription_status", header: "Subscription Status", type: "subscription_status" },
     { key: "account_officer", header: "Account Officer" },
   ];
 
-  // Scatter Sample Tenant Data
+  // Updated tableData with tenantId
   const tableData = [
     {
+      tenantId: "1",
       name: "ACME Corp",
       date_created: "12/10/2024",
       plan: "Enterprise",
       status: "Active",
+      subscription_status: "Active",
       account_officer: "Olivia Rhye",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "2",
       name: "Beta Holdings",
       date_created: "03/02/2023",
       plan: "Gold",
       status: "InActive",
+        subscription_status: "Active",
       account_officer: "Ethan Clarke",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "3",
       name: "Gamma Inc",
       date_created: "07/07/2024",
       plan: "Basic",
       status: "Active",
+        subscription_status: "Active",
       account_officer: "Sophia Turner",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "4",
       name: "Delta Partners",
       date_created: "01/12/2022",
       plan: "Enterprise",
       status: "Active",
+      subscription_status: "Pending",
       account_officer: "Liam Martinez",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "5",
       name: "Zeta Services",
       date_created: "09/11/2023",
       plan: "Gold",
       status: "Suspended",
+      subscription_status: "Canceled",
       account_officer: "Ava James",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "6",
       name: "Beta Holdings",
       date_created: "03/02/2023",
       plan: "Gold",
       status: "Blocked",
+      subscription_status: "Paused",
       account_officer: "Ethan Clarke",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "7",
       name: "Gamma Inc",
       date_created: "07/07/2024",
       plan: "Basic",
       status: "Active",
+      subscription_status: "Active",
       account_officer: "Sophia Turner",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "8",
       name: "Delta Partners",
       date_created: "01/12/2022",
       plan: "Enterprise",
       status: "Active",
+      subscription_status: "Pending",
       account_officer: "Liam Martinez",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "9",
       name: "ACME Corp",
       date_created: "12/10/2024",
       plan: "Enterprise",
       status: "Active",
+      subscription_status: "Paused",
       account_officer: "Olivia Rhye",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "10",
       name: "Beta Holdings",
       date_created: "03/02/2023",
       plan: "Gold",
       status: "Active",
+      subscription_status: "Pending",
       account_officer: "Ethan Clarke",
       hasCheckbox: true,
       hasActions: true,
     },
     {
+      tenantId: "11",
       name: "Gamma Inc",
       date_created: "07/07/2024",
       plan: "Basic",
       status: "Active",
+      subscription_status: "Canceled",
       account_officer: "Sophia Turner",
       hasCheckbox: true,
       hasActions: true,
@@ -143,11 +170,11 @@ const TenantList = () => {
     {
       label: "View Tenant",
       onClick: (row) => {
-        navigate("/tenants/tenant-lists/overview");
+        navigate(`/tenants/tenant-lists/overview/${row.tenantId}`); // Use tenantId from row
       },
     },
     {
-      label: "Delete Tenant",
+      label: "Deactivate Tenant",
       className: "remove",
       onClick: (row) => {
         navigate("/tenants/tenant-lists");
@@ -187,6 +214,8 @@ const TenantList = () => {
           filters={filters}
           onFilterChange={handleFilterChange}
           itemsPerPage={10}
+          tableName="Tenant List"
+          hasStatusDot={true}
         />
       </div>
     </Layout>

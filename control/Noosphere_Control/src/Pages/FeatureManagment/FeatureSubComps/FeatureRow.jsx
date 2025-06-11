@@ -1,23 +1,28 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { createPortal } from "react-dom";
 import { SwitchInput, CheckboxInput } from "../../../Components/Input/Inputs";
 import { FiMoreVertical } from "react-icons/fi";
 import MoveToFeatureGroupModal from "../../../Components/ReusableModal/MoveFeatureModal";
 import AssignToPlanModal from "../../../Components/ReusableModal/AssignPlanModal";
 import DeleteConfirmationModal from "../../../Components/ReusableModal/SecondDeleteConfirmationModal";
 import ToggleActiveModal from "../../../Components/ReusableModal/ToggleActiveModal";
+import EditFeatureModal from "../../../Components/ReusableModal/EditFeatureModal";
 import {
   toggleSelectFeature,
-  moveFeature,
-  toggleFeatureActive,
-  assignFeaturePlan,
-  deleteFeature,
-  editFeature,
+  asyncMoveFeatureToAnotherGroup,
+  asyncEnableOrDisableFeature,
+  asyncAssignFeatureToPlan,
+  asyncDeleteFeature,
+  asyncUpdateFeature,
+  asyncFetchAllFeatures,
 } from "../../../ReduxStore/features/featureManagementSlice";
+import { showToast } from "../../../Helper/ShowToast";
 import "../FeatureManagement.css";
 
-const FeatureRow = ({ feature, groupTitle }) => {
+const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const dispatch = useDispatch();
+  const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
   const [modalState, setModalState] = useState({
     moveFeature: false,
@@ -26,47 +31,185 @@ const FeatureRow = ({ feature, groupTitle }) => {
     deleteFeature: false,
     editFeature: false,
   });
+  const [isMoving, setIsMoving] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const rowDropdownRef = useRef(null);
+
+  const token = useSelector((state) => state.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
 
   const handleSelectFeature = () => {
     dispatch(toggleSelectFeature({ groupTitle, featureId: feature.id }));
   };
 
   const handleMoveFeature = ({ featureId, fromGroupTitle, toGroupTitle }) => {
-    dispatch(moveFeature({ featureId, fromGroupTitle, toGroupTitle }));
-    setModalState({ ...modalState, moveFeature: false });
-  };
-
-  const handleToggleActive = (newActiveState) => {
-    dispatch(toggleFeatureActive({ groupTitle, featureId: feature.id, active: newActiveState }));
-    setModalState({ ...modalState, toggleActive: false });
-  };
-
-  const handleAssignPlan = ({ featureId, groupTitle, plans }) => {
-    dispatch(assignFeaturePlan({ groupTitle, featureId, plans }));
-    setModalState({ ...modalState, assignPlan: false });
-  };
-
-  const handleDeleteFeature = ({ groupTitle, featureId }) => {
-    setIsDeleting(true);
-    try {
-      dispatch(deleteFeature({ groupTitle, featureId }));
-      setModalState({ ...modalState, deleteFeature: false });
-    } catch (error) {
-      console.error("Failed to delete feature:", error);
-    } finally {
-      setIsDeleting(false);
+    const toGroup = featureGroups.find((g) => g.title === toGroupTitle);
+    if (toGroup) {
+      setIsMoving(true);
+      dispatch(
+        asyncMoveFeatureToAnotherGroup({
+          id: featureId,
+          featureGroupId: toGroup.id,
+          accessToken,
+          refreshToken,
+        })
+      )
+        .unwrap()
+        .then(() => {
+          dispatch(asyncFetchAllFeatures({ accessToken, refreshToken }));
+          setModalState({ ...modalState, moveFeature: false });
+          showToast(
+            `Feature "${feature.name}" moved to "${toGroupTitle}" successfully`,
+            "success"
+          );
+        })
+        .catch((err) => {
+          showToast(
+            `Failed to move feature: ${err.message || "Unknown error"}`,
+            "error"
+          );
+        })
+        .finally(() => {
+          setIsMoving(false);
+        });
+    } else {
+      showToast(`Target group "${toGroupTitle}" not found`, "error");
     }
   };
 
-  const handleEditFeature = (updatedFeature) => {
-    dispatch(editFeature({ groupTitle, featureId: feature.id, updatedFeature }));
-    setModalState({ ...modalState, editFeature: false });
+  const handleToggleActive = (newActiveState) => {
+    setIsToggling(true);
+    dispatch(
+      asyncEnableOrDisableFeature({
+        id: feature.id,
+        active: newActiveState,
+        accessToken,
+        refreshToken,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        dispatch(asyncFetchAllFeatures({ accessToken, refreshToken }));
+        setModalState({ ...modalState, toggleActive: false });
+        showToast(
+          `Feature "${feature.name}" ${
+            newActiveState ? "enabled" : "disabled"
+          } successfully`,
+          "success"
+        );
+      })
+      .catch((err) => {
+        showToast(
+          `Failed to toggle feature: ${err.message || "Unknown error"}`,
+          "error"
+        );
+      })
+      .finally(() => {
+        setIsToggling(false);
+      });
   };
 
-  // Close dropdown when clicking outside
+  const handleAssignPlan = ({ featureId, plans }) => {
+    setIsAssigning(true);
+    dispatch(
+      asyncAssignFeatureToPlan({
+        id: featureId,
+        applicablePlans: plans,
+        accessToken,
+        refreshToken,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        dispatch(asyncFetchAllFeatures({ accessToken, refreshToken }));
+        setModalState({ ...modalState, assignPlan: false });
+        showToast(
+          `Feature "${feature.name}" assigned to plan(s) successfully`,
+          "success"
+        );
+      })
+      .catch((err) => {
+        showToast(
+          `Failed to assign plans: ${err.message || "Unknown error"}`,
+          "error"
+        );
+      })
+      .finally(() => {
+        setIsAssigning(false);
+      });
+  };
+
+  const handleDeleteFeature = ({ groupTitle, featureId, administratorPassword }) => {
+    setIsDeleting(true);
+    dispatch(
+      asyncDeleteFeature({
+        id: featureId,
+        administratorPassword,
+        accessToken,
+        refreshToken,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        dispatch(asyncFetchAllFeatures({ accessToken, refreshToken }));
+        setModalState({ ...modalState, deleteFeature: false });
+        showToast(`Feature "${feature.name}" deleted successfully`, "success");
+      })
+      .catch((err) => {
+        showToast(
+          `Failed to delete feature: ${err.message || "Unknown error"}`,
+          "error"
+        );
+      })
+      .finally(() => {
+        setIsDeleting(false);
+      });
+  };
+
+  const handleEditFeature = (updatedFeature) => {
+    setIsEditing(true);
+    dispatch(
+      asyncUpdateFeature({
+        id: feature.id,
+        name: updatedFeature.name,
+        description: updatedFeature.description || "",
+        active: updatedFeature.active,
+        applicablePlans: updatedFeature.plan || feature.plan,
+        managedBy: updatedFeature.managedBy || feature.managedBy || "Admin",
+        accessToken,
+        refreshToken,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        dispatch(asyncFetchAllFeatures({ accessToken, refreshToken }));
+        setModalState({ ...modalState, editFeature: false });
+        showToast(
+          `Feature "${updatedFeature.name}" updated successfully`,
+          "success"
+        );
+      })
+      .catch((err) => {
+        showToast(
+          `Failed to edit feature: ${err.message || "Unknown error"}`,
+          "error"
+        );
+      })
+      .finally(() => {
+        setIsEditing(false);
+      });
+  };
+
+  const handleViewStatisticsClick = () => {
+    onViewStatistics({ featureId: feature.id, featureName: feature.name, groupTitle });
+    setIsRowDropdownOpen(false);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (rowDropdownRef.current && !rowDropdownRef.current.contains(event.target)) {
@@ -81,30 +224,34 @@ const FeatureRow = ({ feature, groupTitle }) => {
     <>
       <tr className="feature-row">
         <td>
-          <CheckboxInput
-            checked={feature.selected}
-            onChange={handleSelectFeature}
-          />
+          <CheckboxInput checked={feature.selected} onChange={handleSelectFeature} />
         </td>
         <td>{feature.name}</td>
         <td>{feature.dateAdded}</td>
-        <td>{feature.addedBy}</td>
+        <td>{feature.managedBy}</td>
         <td>
           <div className="active-cell">
             <SwitchInput
-              checked={feature.active} // Reflects the Redux state
+              checked={feature.active}
               onChange={() => setModalState({ ...modalState, toggleActive: true })}
             />
             <span className="active-status">{feature.active ? "Yes" : "No"}</span>
           </div>
         </td>
-        <td>
-          <div className="plan-tags">
-            {feature.plan.map((plan, index) => (
-              <span key={index} className={`plan-tag plan-tag-${plan.toLowerCase()}`}>{plan}</span>
-            ))}
-          </div>
-        </td>
+       <td>
+ <div className="plan-tags flex flex-wrap gap-1">
+  {(Array.isArray(feature.plans) && feature.plans.length > 0 ? feature.plans : ["Unassigned"]).map((plan, index) => (
+    <span
+      key={index}
+      className={`plan-tag ${plan !== "Unassigned" ? `plan-tag-${plan.toLowerCase().replace(/\s+/g, '-')}` : "plan-tag-unassigned"}`}
+    >
+      {plan}
+    </span>
+  ))}
+</div>
+
+</td>
+
         <td className="action-cell">
           <div className="dropdown-container" ref={rowDropdownRef}>
             <button
@@ -117,7 +264,7 @@ const FeatureRow = ({ feature, groupTitle }) => {
               <div className="dropdown-menu dropdown-menu-row">
                 <div className="dropdown-items">
                   <button
-                    onClick={() => console.log(`View Feature Statistics for ${feature.name}`)}
+                    onClick={handleViewStatisticsClick}
                     className="dropdown-item"
                   >
                     View Feature Statistics
@@ -145,7 +292,7 @@ const FeatureRow = ({ feature, groupTitle }) => {
                       setModalState({ ...modalState, toggleActive: true });
                       setIsRowDropdownOpen(false);
                     }}
-                    className={`dropdown-item ${feature.active ? "blurred" : ""}`} // Blur if already enabled
+                    className={`dropdown-item ${feature.active ? "blurred" : ""}`}
                   >
                     Enable Feature
                   </button>
@@ -154,7 +301,7 @@ const FeatureRow = ({ feature, groupTitle }) => {
                       setModalState({ ...modalState, toggleActive: true });
                       setIsRowDropdownOpen(false);
                     }}
-                    className={`dropdown-item ${!feature.active ? "blurred" : ""}`} // Blur if already disabled
+                    className={`dropdown-item ${!feature.active ? "blurred" : ""}`}
                   >
                     Disable Feature
                   </button>
@@ -182,56 +329,75 @@ const FeatureRow = ({ feature, groupTitle }) => {
           </div>
         </td>
       </tr>
-
-      {/* Modals */}
-      {modalState.moveFeature && (
-        <MoveToFeatureGroupModal
-          isOpen={modalState.moveFeature}
-          onClose={() => setModalState({ ...modalState, moveFeature: false })}
-          onSave={handleMoveFeature}
-          featureId={feature.id}
-          currentGroupTitle={groupTitle}
-        />
-      )}
-      {modalState.assignPlan && (
-        <AssignToPlanModal
-          isOpen={modalState.assignPlan}
-          onClose={() => setModalState({ ...modalState, assignPlan: false })}
-          onConfirm={handleAssignPlan}
-          featureId={feature.id}
-          currentGroupTitle={groupTitle}
-          currentPlans={feature.plan}
-        />
-      )}
-      {modalState.deleteFeature && (
-        <DeleteConfirmationModal
-          isOpen={modalState.deleteFeature}
-          onCancel={() => setModalState({ ...modalState, deleteFeature: false })}
-          onConfirm={handleDeleteFeature}
-          featureId={feature.id}
-          groupTitle={groupTitle}
-          title="SERVICE DISRUPTION ALERT!"
-          message={`Are you sure you want to remove the feature '${feature.name}'? Removing this feature will disable it for all customers of the NooSphere platform. This can cause serious service disruption.`}
-          isLoading={isDeleting}
-          isFeatureDeletion={true}
-        />
-      )}
-      {modalState.toggleActive && (
-        <ToggleActiveModal
-          isOpen={modalState.toggleActive}
-          featureName={feature.name}
-          currentState={feature.active}
-          onConfirm={handleToggleActive}
-          onClose={() => setModalState({ ...modalState, toggleActive: false })}
-        />
-      )}
-      {/* {modalState.editFeature && (
-        <EditFeatureModal
-          feature={feature}
-          onSave={handleEditFeature}
-          onClose={() => setModalState({ ...modalState, editFeature: false })}
-        />
-      )} */}
+      {modalState.moveFeature &&
+        createPortal(
+          <MoveToFeatureGroupModal
+            isOpen={modalState.moveFeature}
+            onClose={() => setModalState({ ...modalState, moveFeature: false })}
+            onSave={handleMoveFeature}
+            featureId={feature.id}
+            currentGroupTitle={groupTitle}
+            isLoading={isMoving}
+          />,
+          document.body
+        )}
+      {modalState.assignPlan &&
+        createPortal(
+          <AssignToPlanModal
+            isOpen={modalState.assignPlan}
+            onClose={() => setModalState({ ...modalState, assignPlan: false })}
+            onSave={handleAssignPlan}
+            featureId={feature.id}
+            currentGroupTitle={groupTitle}
+            currentPlans={feature.plan}
+            isLoading={isAssigning}
+          />,
+          document.body
+        )}
+      {modalState.deleteFeature &&
+        createPortal(
+          <DeleteConfirmationModal
+            isOpen={modalState.deleteFeature}
+            onCancel={() => setModalState({ ...modalState, deleteFeature: false })}
+            onConfirm={handleDeleteFeature}
+            featureId={feature.id}
+            groupTitle={groupTitle}
+            title="SERVICE DISRUPTION ALERT!"
+            message={`Are you sure you want to remove the feature '${feature.name}'? Removing this feature will disable it for all customers of the NooSphere platform. This can cause serious service disruption.`}
+            isLoading={isDeleting}
+            isFeatureDeletion={true}
+            requirePassword={true}
+          />,
+          document.body
+        )}
+      {modalState.toggleActive &&
+        createPortal(
+          <ToggleActiveModal
+            isOpen={modalState.toggleActive}
+            featureName={feature.name}
+            currentState={feature.active}
+            onConfirm={handleToggleActive}
+            onClose={() => setModalState({ ...modalState, toggleActive: false })}
+            isLoading={isToggling}
+          />,
+          document.body
+        )}
+      {modalState.editFeature &&
+        createPortal(
+          <EditFeatureModal
+            isOpen={modalState.editFeature}
+            onClose={() => setModalState({ ...modalState, editFeature: false })}
+            onSave={handleEditFeature}
+            featureId={feature.id}
+            currentName={feature.name}
+            currentDescription={feature.description}
+            currentManagedBy={feature.managedBy}
+            currentPlans={feature.plan}
+            currentActive={feature.active}
+            isLoading={isEditing}
+          />,
+          document.body
+        )}
     </>
   );
 };
