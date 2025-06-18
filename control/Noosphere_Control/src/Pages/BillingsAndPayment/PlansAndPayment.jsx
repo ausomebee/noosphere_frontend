@@ -50,6 +50,17 @@ const PlansAndPayment = () => {
     }
   }, [activeTab, accessToken, refreshToken]);
 
+  // Reset filters when plans are empty
+  useEffect(() => {
+    if (
+      !loading &&
+      (standardPlans.length === 0 || enterprisePlans.length === 0)
+    ) {
+      setSearchQuery("");
+      setFilterStatus("all");
+    }
+  }, [loading, standardPlans, enterprisePlans]);
+
   const fetchData = async () => {
     setLoading(true);
     setErrors({});
@@ -95,7 +106,10 @@ const PlansAndPayment = () => {
           const { type, response } = result.value;
           switch (type) {
             case "plans":
+              console.log("Plans API response:", response.data);
               if (!Array.isArray(response?.data)) {
+                setStandardPlans([]);
+                setEnterprisePlans([]);
                 newErrors.plans = "Invalid plans data received from API";
                 showToast("Failed to load plans: Invalid data format", "error");
                 break;
@@ -109,7 +123,8 @@ const PlansAndPayment = () => {
                     id: plan.id,
                     name: plan.name || plan.organization || "Unnamed Plan",
                     status: plan.active ? "active" : "inactive",
-                    subscriberCount: plan._count?.subscriptions?.toString() || "0",
+                    subscriberCount:
+                      plan._count?.subscriptions?.toString() || "0",
                     colourCode: /^#[0-9A-Fa-f]{6}$/.test(plan.colourCode)
                       ? plan.colourCode
                       : "#ffffff",
@@ -122,9 +137,13 @@ const PlansAndPayment = () => {
                       storage: plan.forStorage
                         ? `${plan.forStorage} DATA STORAGE`
                         : "unlimited DATA STORAGE",
-                      extra: plan.extraFeaturesWithPrice?.length > 0
-                        ? `$${plan.extraFeaturesWithPrice[0]?.pricePerMonth?.price || 0} FOR EVERY EXTRA CLIENT`
-                        : "$0 FOR EVERY EXTRA CLIENT",
+                      extra:
+                        plan.extraFeaturesWithPrice?.length > 0
+                          ? `$${
+                              plan.extraFeaturesWithPrice[0]?.pricePerMonth
+                                ?.price || 0
+                            } FOR EVERY EXTRA CLIENT`
+                          : "$0 FOR EVERY EXTRA CLIENT",
                       userType: plan.forClient
                         ? "clients"
                         : plan.forStaff
@@ -144,7 +163,8 @@ const PlansAndPayment = () => {
                     tenantName: tenant ? tenant.name : "Unassigned",
                     accountManager: plan.adminId || null,
                     accountManagerName: admin ? admin.name : "Unassigned",
-                    organization: plan.organization || plan.name || "Unnamed Organization",
+                    organization:
+                      plan.organization || plan.name || "Unnamed Organization",
                     dateAdded: plan.createdAt
                       ? new Date(plan.createdAt).toLocaleDateString("en-US", {
                           month: "numeric",
@@ -162,7 +182,8 @@ const PlansAndPayment = () => {
                 setEnterprisePlans(plans);
               }
               if (plans.length === 0 && response?.data?.length > 0) {
-                newErrors.plans = "No valid plans could be mapped from the response";
+                newErrors.plans =
+                  "No valid plans could be mapped from the response";
                 showToast("No valid plans found in the response", "error");
               }
               break;
@@ -170,7 +191,10 @@ const PlansAndPayment = () => {
               if (!response?.data || !Array.isArray(response?.data?.data)) {
                 setFeatures([]);
                 newErrors.features = "Invalid features data received from API";
-                showToast("Failed to load features: Invalid data format", "error");
+                showToast(
+                  "Failed to load features: Invalid data format",
+                  "error"
+                );
                 break;
               }
               const featuresData = response.data.data
@@ -189,7 +213,10 @@ const PlansAndPayment = () => {
               if (!Array.isArray(response.data?.data)) {
                 setAdmins([]);
                 newErrors.admins = "Invalid admins data received from API";
-                showToast("Failed to load admins: Invalid data format", "error");
+                showToast(
+                  "Failed to load admins: Invalid data format",
+                  "error"
+                );
                 break;
               }
               const adminsData = response.data.data.map((a) => ({
@@ -202,7 +229,10 @@ const PlansAndPayment = () => {
               if (!Array.isArray(response.data?.data)) {
                 setTenants([]);
                 newErrors.tenants = "Invalid tenants data received from API";
-                showToast("Failed to load tenants: Invalid data format", "error");
+                showToast(
+                  "Failed to load tenants: Invalid data format",
+                  "error"
+                );
                 break;
               }
               const tenantsData = response.data.data.map((t) => ({
@@ -215,7 +245,8 @@ const PlansAndPayment = () => {
               break;
           }
         } else {
-          const errorMsg = result.reason.message || `Failed to fetch ${promiseType}`;
+          const errorMsg =
+            result.reason.message || `Failed to fetch ${promiseType}`;
           newErrors[promiseType] = errorMsg;
           showToast(`Failed to load ${promiseType}: ${errorMsg}`, "error");
           console.error(`Error in ${promiseType}:`, result.reason);
@@ -226,7 +257,8 @@ const PlansAndPayment = () => {
         setErrors(newErrors);
       }
     } catch (err) {
-      const errorMsg = err.message || "Unexpected error occurred while fetching data";
+      const errorMsg =
+        err.message || "Unexpected error occurred while fetching data";
       setErrors((prev) => ({
         ...prev,
         general: errorMsg,
@@ -248,7 +280,10 @@ const PlansAndPayment = () => {
       features.length === 0 ||
       !features.every((f) => f.id && f.name)
     ) {
-      showToast("Cannot add plan: Features are not loaded or invalid.", "error");
+      showToast(
+        "Cannot add plan: Features are not loaded or invalid.",
+        "error"
+      );
       return;
     }
     setSearchQuery("");
@@ -256,165 +291,173 @@ const PlansAndPayment = () => {
     setIsModalOpen(true);
   };
 
-  const handleSavePlan = async (planData) => {
-    if (!planData?.name || !planData?.pricing) {
-      showToast("Invalid plan data provided.", "error");
-      return;
-    }
-    setLoading(true);
-    try {
-      const payload = {
-        name: planData.name || "Unnamed Plan",
-        description: `Includes all features for ${planData.name || "Unnamed Plan"}`,
-        pricePerMonth: {
-          price: parseFloat(planData.pricing?.pricePerMonth?.amount) || 0,
-          currency: planData.pricing?.pricePerMonth?.currency || "USD",
-        },
-        pricePerYear: {
-          price: parseFloat(planData.pricing?.pricePerYear?.amount) || 0,
-          currency: planData.pricing?.pricePerYear?.currency || "USD",
-        },
-        features: {
-          connect: Array.isArray(planData.features)
-            ? planData.features.map((f) => ({ id: f.id }))
-            : [],
-        },
-        planType: planData.type === "Standard" ? "STANDARD" : "ENTERPRISE",
-        colourCode: planData.colourCode || "#ffffff",
-        forClient:
-          planData.pricing?.userOption === "clients" &&
-          planData.pricing?.clients !== "unlimited"
-            ? parseInt(planData.pricing.clients, 10) || 0
-            : 0,
-        forStaff:
-          planData.pricing?.userOption === "staffs" &&
-          planData.pricing?.clients !== "unlimited"
-            ? parseInt(planData.pricing.clients, 10) || 0
-            : 0,
-        forStorage:
-          planData.pricing?.storage === "unlimited"
-            ? 0
-            : parseFloat(planData.pricing?.storage) || 0,
-        extraFeaturesEnabled:
-          Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
-        tenantId: planData.assignedTo || null,
-        adminId: planData.accountManager || null,
-        extraFeatures: {
-          connect: Array.isArray(planData.extraPricing)
-            ? planData.extraPricing.map((e) => ({ id: e.id }))
-            : [],
-        },
-        extraFeaturesWithPrice: Array.isArray(planData.extraPricing)
-          ? planData.extraPricing.map((e) => ({
-              id: e.id,
-              pricePerMonth: {
-                price: parseFloat(e.pricePerMonth?.price) || 0,
-                currency: e.pricePerMonth?.currency || "USD",
-              },
-              pricePerYear: {
-                price: parseFloat(e.pricePerYear?.price) || 0,
-                currency: e.pricePerYear?.currency || "USD",
-              },
-            }))
+const handleSavePlan = async (planData) => {
+  if (!planData?.name || !planData?.pricing) {
+    showToast("Invalid plan data provided.", "error");
+    return;
+  }
+  setLoading(true);
+  try {
+    const payload = {
+      name: planData.name || "Unnamed Plan",
+      description: `Includes all features for ${planData.name || "Unnamed Plan"}`,
+      pricePerMonth: {
+        price: parseFloat(planData.pricing?.pricePerMonth?.amount) || 0,
+        currency: planData.pricing?.pricePerMonth?.currency || "USD",
+      },
+      pricePerYear: {
+        price: parseFloat(planData.pricing?.pricePerYear?.amount) || 0,
+        currency: planData.pricing?.pricePerYear?.currency || "USD",
+      },
+      features: {
+        connect: Array.isArray(planData.features)
+          ? planData.features.map((f) => ({ id: f.id }))
           : [],
-        accessToken,
-        refreshToken,
-      };
+      },
+      planType: planData.type === "Standard" ? "STANDARD" : "ENTERPRISE",
+      colourCode: planData.colourCode || "#ffffff",
+      forClient:
+        planData.pricing?.userOption === "clients" &&
+        planData.pricing?.clients !== "unlimited"
+          ? parseInt(planData.pricing.clients, 10) || 0
+          : 0,
+      forStaff:
+        planData.pricing?.userOption === "staffs" &&
+        planData.pricing?.clients !== "unlimited"
+          ? parseInt(planData.pricing.clients, 10) || 0
+          : 0,
+      forStorage:
+        planData.pricing?.storage === "unlimited"
+          ? 0
+          : parseFloat(planData.pricing?.storage) || 0,
+      extraFeaturesEnabled:
+        Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
+      tenantId: planData.assignedTo || null,
+      adminId: planData.accountManager || null,
+      accessToken,
+      refreshToken,
+    };
 
-      await api.CreateBillingPlan(payload);
-      showToast("Plan created successfully", "success");
-      setIsModalOpen(false);
-      await fetchData();
-    } catch (err) {
-      const errorMsg = err.message || "Failed to create plan";
-      showToast(errorMsg, "error");
-      console.error("Create plan error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveEditedPlan = async (planData) => {
-    if (!selectedPlan?.id || !planData?.name || !planData?.pricing) {
-      showToast("Invalid plan data or missing plan ID.", "error");
-      return;
-    }
-    setLoading(true);
-    try {
-      const payload = {
-        id: selectedPlan.id,
-        name: planData.name || "Unnamed Plan",
-        description: `Includes all features for ${planData.name || "Unnamed Plan"}`,
-        pricePerMonth: {
-          price: parseFloat(planData.pricing?.pricePerMonth?.amount) || 0,
-          currency: planData.pricing?.pricePerMonth?.currency || "USD",
-        },
-        pricePerYear: {
-          price: parseFloat(planData.pricing?.pricePerYear?.amount) || 0,
-          currency: planData.pricing?.pricePerYear?.currency || "USD",
-        },
-        features: {
-          connect: Array.isArray(planData.features)
-            ? planData.features.map((f) => ({ id: f.id }))
-            : [],
-        },
-        planType: planData.type === "Standard" ? "STANDARD" : "ENTERPRISE",
-        colourCode: planData.colourCode || "#ffffff",
-        forClient:
-          planData.pricing?.userOption === "clients" &&
-          planData.pricing?.clients !== "unlimited"
-            ? parseInt(planData.pricing.clients, 10) || 0
-            : 0,
-        forStaff:
-          planData.pricing?.userOption === "staffs" &&
-          planData.pricing?.clients !== "unlimited"
-            ? parseInt(planData.pricing.clients, 10) || 0
-            : 0,
-        forStorage:
-          planData.pricing?.storage === "unlimited"
-            ? 0
-            : parseFloat(planData.pricing?.storage) || 0,
-        extraFeaturesEnabled:
-          Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
-        tenantId: planData.assignedTo || null,
-        adminId: planData.accountManager,
-        extraFeatures: {
-          connect: Array.isArray(planData.extraPricing)
-            ? planData.extraPricing.map((e) => ({ id: e.id }))
-            : [],
-        },
-        extraFeaturesWithPrice: Array.isArray(planData.extraPricing)
-          ? planData.extraPricing.map((e) => ({
-              id: e.id,
-              pricePerMonth: {
-                price: parseFloat(e.pricePerMonth?.price) || 0,
-                currency: e.pricePerMonth?.currency || "USD",
-              },
-              pricePerYear: {
-                price: parseFloat(e.pricePerYear?.price) || 0,
-                currency: e.pricePerYear?.currency || "USD",
-              },
-            }))
+    // Conditionally add extraFeatures and extraFeaturesWithPrice only if extraFeaturesEnabled is true
+    if (payload.extraFeaturesEnabled) {
+      payload.extraFeatures = {
+        connect: Array.isArray(planData.extraPricing)
+          ? planData.extraPricing.map((e) => ({ id: e.id }))
           : [],
-        accessToken,
-        refreshToken,
       };
-
-      await api.UpdateBillingPlan(payload);
-      showToast("Plan updated successfully", "success");
-      setIsEditModalOpen(false);
-      setSelectedPlan(null);
-      await fetchData();
-    } catch (err) {
-      const errorMsg = err.message || "Failed to update plan";
-      showToast(errorMsg, "error");
-      console.error("Update plan error:", err);
-    } finally {
-      setLoading(false);
-      setIsEditModalOpen(false);
-      setSelectedPlan(null);
+      payload.extraFeaturesWithPrice = Array.isArray(planData.extraPricing)
+        ? planData.extraPricing.map((e) => ({
+            id: e.id,
+            pricePerMonth: {
+              price: parseFloat(e.pricePerMonth?.price) || 0,
+              currency: e.pricePerMonth?.currency || "USD",
+            },
+            pricePerYear: {
+              price: parseFloat(e.pricePerYear?.price) || 0,
+              currency: e.pricePerYear?.currency || "USD",
+            },
+          }))
+        : [];
     }
-  };
+
+    await api.CreateBillingPlan(payload);
+    showToast("Plan created successfully", "success");
+    setIsModalOpen(false);
+    await fetchData();
+  } catch (err) {
+    const errorMsg = err.message || "Failed to create plan";
+    showToast(errorMsg, "error");
+    console.error("Create plan error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+ const handleSaveEditedPlan = async (planData) => {
+  if (!selectedPlan?.id || !planData?.name || !planData?.pricing) {
+    showToast("Invalid plan data or missing plan ID.", "error");
+    return;
+  }
+  setLoading(true);
+  try {
+    const payload = {
+      id: selectedPlan.id,
+      name: planData.name || "Unnamed Plan",
+      description: `Includes all features for ${planData.name || "Unnamed Plan"}`,
+      pricePerMonth: {
+        price: parseFloat(planData.pricing?.pricePerMonth?.amount) || 0,
+        currency: planData.pricing?.pricePerMonth?.currency || "USD",
+      },
+      pricePerYear: {
+        price: parseFloat(planData.pricing?.pricePerYear?.amount) || 0,
+        currency: planData.pricing?.pricePerYear?.currency || "USD",
+      },
+      features: {
+        connect: Array.isArray(planData.features)
+          ? planData.features.map((f) => ({ id: f.id }))
+          : [],
+      },
+      planType: planData.type === "Standard" ? "STANDARD" : "ENTERPRISE",
+      colourCode: planData.colourCode || "#ffffff",
+      forClient:
+        planData.pricing?.userOption === "clients" &&
+        planData.pricing?.clients !== "unlimited"
+          ? parseInt(planData.pricing.clients, 10) || 0
+          : 0,
+      forStaff:
+        planData.pricing?.userOption === "staffs" &&
+        planData.pricing?.clients !== "unlimited"
+          ? parseInt(planData.pricing.clients, 10) || 0
+          : 0,
+      forStorage:
+        planData.pricing?.storage === "unlimited"
+          ? 0
+          : parseFloat(planData.pricing?.storage) || 0,
+      extraFeaturesEnabled:
+        Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
+      tenantId: planData.assignedTo || null,
+      adminId: planData.accountManager || null,
+      accessToken,
+      refreshToken,
+    };
+
+    // Conditionally add extraFeatures and extraFeaturesWithPrice only if extraFeaturesEnabled is true
+    if (payload.extraFeaturesEnabled) {
+      payload.extraFeatures = {
+        connect: Array.isArray(planData.extraPricing)
+          ? planData.extraPricing.map((e) => ({ id: e.id }))
+          : [],
+      };
+      payload.extraFeaturesWithPrice = Array.isArray(planData.extraPricing)
+        ? planData.extraPricing.map((e) => ({
+            id: e.id,
+            pricePerMonth: {
+              price: parseFloat(e.pricePerMonth?.price) || 0,
+              currency: e.pricePerMonth?.currency || "USD",
+            },
+            pricePerYear: {
+              price: parseFloat(e.pricePerYear?.price) || 0,
+              currency: e.pricePerYear?.currency || "USD",
+            },
+          }))
+        : [];
+    }
+
+    await api.UpdateBillingPlan(payload);
+    showToast("Plan updated successfully", "success");
+    setIsEditModalOpen(false);
+    setSelectedPlan(null);
+    await fetchData();
+  } catch (err) {
+    const errorMsg = err.message || "Failed to update plan";
+    showToast(errorMsg, "error");
+    console.error("Update plan error:", err);
+  } finally {
+    setLoading(false);
+    setIsEditModalOpen(false);
+    setSelectedPlan(null);
+  }
+};
 
   const handleDuplicatePlan = async (plan, type) => {
     if (!plan?.id) {
@@ -438,9 +481,13 @@ const PlansAndPayment = () => {
         features: plan.features,
         extraFeatures: plan.extraFeatures,
         tenantId:
-          type === "enterprise" ? `${plan.tenantId || "copy"}_${Date.now()}` : null,
+          type === "enterprise"
+            ? `${plan.tenantId || "copy"}_${Date.now()}`
+            : null,
         organization:
-          type === "enterprise" ? `${plan.organization} (Copy)` : `${plan.name} (Copy)`,
+          type === "enterprise"
+            ? `${plan.organization} (Copy)`
+            : `${plan.name} (Copy)`,
         dateAdded: new Date().toLocaleDateString("en-US"),
         accountManager: plan.accountManager,
       };
@@ -471,7 +518,11 @@ const PlansAndPayment = () => {
     setIsStatusModalOpen(true);
   };
 
-  const handleConfirmStatusChange = async ({ plan, action, administratorPassword }) => {
+  const handleConfirmStatusChange = async ({
+    plan,
+    action,
+    administratorPassword,
+  }) => {
     if (!plan?.id || !administratorPassword) {
       showToast("Missing plan ID or administrator password.", "error");
       return;
@@ -696,7 +747,9 @@ const PlansAndPayment = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
-              activeTab === "standard" ? "Search plans" : "Search enterprise plans"
+              activeTab === "standard"
+                ? "Search plans"
+                : "Search enterprise plans"
             }
             disabled={loading}
           />
@@ -704,12 +757,15 @@ const PlansAndPayment = () => {
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2 className="filter-text">Filters:</h2>
-            <SelectInput
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              options={filterOptions}
-              disabled={loading}
-            />
+            <div className="plan-filter-select">
+              <SelectInput
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                options={filterOptions}
+                disabled={loading}
+                className="plan-filter-select-input"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -728,12 +784,15 @@ const PlansAndPayment = () => {
         </div>
       ) : Object.keys(errors).length > 0 ? (
         <div style={{ color: "red", textAlign: "center" }}>
-          {errors.plans && <div>Error loading plans: {errors.plans}</div>}
-          {errors.features && <div>Error loading features: {errors.features}</div>}
-          {errors.admins && <div>Error loading admins: {errors.admins}</div>}
-          {errors.tenants && <div>Error loading tenants: {errors.tenants}</div>}
-          {errors.general && <div>{errors.general}</div>}
-          {errors.auth && <div>{errors.auth}</div>}
+          {errors.general && <p>{errors.general}</p>}
+          {errors.plans && <p>{errors.plans}</p>}
+          {errors.features && <p>{errors.features}</p>}
+          {errors.admins && <p>{errors.admins}</p>}
+          {errors.tenants && <p>{errors.tenants}</p>}
+          {(activeTab === "standard" && standardPlans.length === 0) ||
+          (activeTab === "enterprise" && enterprisePlans.length === 0) ? (
+            <FallbackUI />
+          ) : null}
         </div>
       ) : (
         <div
@@ -747,11 +806,7 @@ const PlansAndPayment = () => {
         >
           {activeTab === "standard" &&
             (filteredStandardPlans.length === 0 ? (
-              errors.plans ? (
-                <div>No plans loaded due to error: {errors.plans}</div>
-              ) : (
-                <FallbackUI />
-              )
+              <FallbackUI />
             ) : (
               filteredStandardPlans.map((plan) => (
                 <PlanCard
@@ -770,16 +825,14 @@ const PlansAndPayment = () => {
 
           {activeTab === "enterprise" &&
             (filteredEnterprisePlans.length === 0 ? (
-              errors.plans ? (
-                <div>No plans loaded due to error: {errors.plans}</div>
-              ) : (
-                <FallbackUI />
-              )
+              <FallbackUI />
             ) : (
               <div className="billing-table-container">
                 <Table
                   plans={filteredEnterprisePlans}
-                  onDuplicate={(plan) => handleDuplicatePlan(plan, "enterprise")}
+                  onDuplicate={(plan) =>
+                    handleDuplicatePlan(plan, "enterprise")
+                  }
                   onStatusChange={(plan, action) =>
                     handleStatusChange(plan, action, "enterprise")
                   }

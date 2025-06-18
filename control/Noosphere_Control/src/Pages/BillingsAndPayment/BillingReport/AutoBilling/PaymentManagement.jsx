@@ -1,118 +1,262 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { debounce } from "lodash";
 import {
   SwitchInput,
   TextInput,
   TextareaInput,
   SelectInput,
-} from "../../../../Components/Input/Inputs"; // Adjust paths
-import Button from "../../../../Components/Button/Button"; // Adjust path
+} from "../../../../Components/Input/Inputs";
+import Button from "../../../../Components/Button/Button";
+import api from "../../../../api/AutoBillingPandAApis"; // Adjust path to your API file
+import { showToast } from "../../../../Helper/ShowToast";
 
 const PaymentManagement = () => {
-  // State for form values
+  const [isLoading, setIsLoading] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState({
-    // General
+    id: "",
     chargeOnDueDate: false,
-    chargeLastUsedMethod: false,
-    chargeAlternativeMethods: false,
-    // Failed Payments & Auto-Retry
-    autoRetryBeforeOverdue: false,
-    autoRetryTimesBefore: "10",
-    autoRetryAfterOverdue: false,
-    autoRetryTimesAfter: "10",
-    notifyChargeAttempts: false,
-    chargeAttemptEmailHeader: "Charge Attempt Notification",
-    chargeAttemptEmailBody: "Enter message",
-    // Subscription Cancellation
-    cancelSubscription: false,
-    cancelDaysAfter: "10",
-    allowManualCancel: false,
-    suspensionAction: "Select",
+    chargeLastUsedFirst: false,
+    chargeAlternative: false,
+    retryBefore: "0",
+    retryAfter: "0",
+    notifyTenant: false,
+    notificationEmailHeader: "Payment Failed Notification",
+    notificationEmailBody: "Enter message",
+    cancelAfter: "5",
+    manualCancel: false,
+    suspensionAction: "SUSPEND_SERVICE",
     errorMessage: "Enter message",
-    // Cancellation Notification
+    emailAfterAttempts: "3",
     sendWarningEmail: false,
-    warningAfterAttempts: "5",
-    sendCancellationEmail: false,
-    cancellationEmailHeader: "Your account is suspended",
-    cancellationEmailBody: "Enter message",
+    warningMailHeader: "Warning: Payment Issue Detected",
+    warningMailBody: "Enter message",
+    sendOnSubscriptionCancel: false,
+    cancelMailHeader: "Subscription Cancelled",
+    cancelMailBody: "Enter message",
   });
-
-  // State for dynamic email notifications
-  const [emailNotifications, setEmailNotifications] = useState(
-    Array.from({ length: 5 }, (_, i) => ({
-      emailHeader: `Warning Email ${i + 1}`,
-      emailBody: "Enter message",
-    }))
-  );
-
-  // State to manage edit mode for sections
+  const [originalSettings, setOriginalSettings] = useState(null);
   const [editMode, setEditMode] = useState({
-    general: false,
-    failedPayments: false,
-    subscriptionCancellation: false,
-    cancellationNotification: false,
+    notificationEmail: false,
+    suspensionAction: false,
+    warningEmail: false,
+    cancelEmail: false,
   });
 
-  // Effect to update email notifications based on warningAfterAttempts
-  useEffect(() => {
-    const newCount = parseInt(paymentSettings.warningAfterAttempts, 10);
-    setEmailNotifications((prev) => {
-      const currentCount = prev.length;
-      if (newCount > currentCount) {
-        // Add new email notifications
-        const newNotifications = Array.from(
-          { length: newCount - currentCount },
-          (_, i) => ({
-            emailHeader: `Warning Email ${currentCount + i + 1}`,
-            emailBody: "Enter message",
-          })
-        );
-        return [...prev, ...newNotifications];
-      } else if (newCount < currentCount) {
-        // Remove excess email notifications
-        return prev.slice(0, newCount);
-      }
-      return prev;
-    });
-  }, [paymentSettings.warningAfterAttempts]);
+  const accessToken = "your-access-token";
+  const refreshToken = "your-refresh-token";
 
-  // Toggle edit mode for sections
-  const toggleEditMode = (section) => {
+  const fetchPaymentSettings = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.GetPaymentAccessManagementAllField({
+        accessToken,
+        refreshToken,
+      });
+      const data = response.data;
+      const settings = {
+        id: data.id,
+        chargeOnDueDate: data.chargeOnDueDate,
+        chargeLastUsedFirst: data.chargeLastUsedFirst,
+        chargeAlternative: data.chargeAlternative,
+        retryBefore: data.retryBefore.toString(),
+        retryAfter: data.retryAfter.toString(),
+        notifyTenant: data.notifyTenant,
+        notificationEmailHeader: data.notificationEmailHeader,
+        notificationEmailBody: data.notificationEmailBody,
+        cancelAfter: data.cancelAfter.toString(),
+        manualCancel: data.manualCancel,
+        suspensionAction: data.suspensionAction,
+        errorMessage: data.errorMessage,
+        emailAfterAttempts: data.emailAfterAttempts.toString(),
+        sendWarningEmail: data.emailAfterAttempts > 0,
+        warningMailHeader: data.warningMailHeader,
+        warningMailBody: data.warningMailBody,
+        sendOnSubscriptionCancel: data.sendOnSubscriptionCancel,
+        cancelMailHeader: data.cancelMailHeader,
+        cancelMailBody: data.cancelMailBody,
+      };
+      setPaymentSettings(settings);
+      setOriginalSettings(settings);
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPaymentSettings();
+  }, [fetchPaymentSettings]);
+
+  const toggleEditMode = (form) => {
     setEditMode((prev) => ({
       ...prev,
-      [section]: !prev[section],
+      [form]: !prev[form],
     }));
-  };
-
-  // Handle form changes
-  const handleInputChange = (key, value, index = null) => {
-    if (index !== null) {
-      // Handle email notification changes
-      setEmailNotifications((prev) =>
-        prev.map((notification, i) =>
-          i === index ? { ...notification, [key]: value } : notification
-        )
-      );
-    } else {
-      // Handle other settings
-      setPaymentSettings((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
+    if (editMode[form]) {
+      // Revert to original settings on cancel
+      setPaymentSettings(originalSettings);
     }
   };
 
-  // Handle Save for sections
-  const handleSave = (section) => {
-    console.log(`Saving ${section} settings:`, {
-      ...paymentSettings,
-      emailNotifications, // Include email notifications in the save
-    });
-    // TODO: Send data to an endpoint
-    toggleEditMode(section);
+  const debouncedSave = useCallback(
+    debounce(async (settings, fieldOrForm, isForm = false) => {
+      setIsLoading(true);
+      try {
+        const { id } = settings;
+        if (!isForm) {
+          // Auto-save for non-form fields
+          if (fieldOrForm === "chargeOnDueDate") {
+            await api.UpdateChargeOnDueDateToggle({
+              accessToken,
+              refreshToken,
+              id,
+              chargeOnDueDate: settings.chargeOnDueDate,
+            });
+          } else if (fieldOrForm === "chargeLastUsedFirst") {
+            await api.UpdateChargeLastUsedFirstToggle({
+              accessToken,
+              refreshToken,
+              id,
+              chargeLastUsedFirst: settings.chargeLastUsedFirst,
+            });
+          } else if (fieldOrForm === "chargeAlternative") {
+            await api.UpdateChargeAlternativeToggle({
+              accessToken,
+              refreshToken,
+              id,
+              chargeAlternative: settings.chargeAlternative,
+            });
+          } else if (fieldOrForm === "retryBefore") {
+            await api.UpdateRetryBeforeCount({
+              accessToken,
+              refreshToken,
+              id,
+              retryBefore: parseInt(settings.retryBefore, 10),
+            });
+          } else if (fieldOrForm === "retryAfter") {
+            await api.UpdateRetryAfterCount({
+              accessToken,
+              refreshToken,
+              id,
+              retryAfter: parseInt(settings.retryAfter, 10),
+            });
+          } else if (fieldOrForm === "notifyTenant") {
+            await api.UpdateNotifyTenantToggle({
+              accessToken,
+              refreshToken,
+              id,
+              notifyTenant: settings.notifyTenant,
+            });
+          } else if (fieldOrForm === "cancelAfter") {
+            await api.UpdateCancelAfter({
+              accessToken,
+              refreshToken,
+              id,
+              cancelAfter: parseInt(settings.cancelAfter, 10),
+            });
+          } else if (fieldOrForm === "manualCancel") {
+            await api.UpdateManualCancel({
+              accessToken,
+              refreshToken,
+              id,
+              manualCancel: settings.manualCancel,
+            });
+          } else if (fieldOrForm === "emailAfterAttempts") {
+            await api.UpdateEmailAfterAttempts({
+              accessToken,
+              refreshToken,
+              id,
+              emailAfterAttempts: parseInt(settings.emailAfterAttempts, 10),
+            });
+            setPaymentSettings((prev) => ({
+              ...prev,
+              sendWarningEmail: parseInt(settings.emailAfterAttempts, 10) > 0,
+            }));
+          } else if (fieldOrForm === "sendWarningEmail") {
+            await api.UpdateEmailAfterAttempts({
+              accessToken,
+              refreshToken,
+              id,
+              emailAfterAttempts: settings.sendWarningEmail
+                ? parseInt(settings.emailAfterAttempts, 10)
+                : 0,
+            });
+          } else if (fieldOrForm === "sendOnSubscriptionCancel") {
+            await api.SendOnSubCancel({
+              accessToken,
+              refreshToken,
+              id,
+              sendOnSubscriptionCancel: settings.sendOnSubscriptionCancel,
+            });
+          }
+          showToast(`${fieldOrForm} updated successfully`, "success");
+        } else {
+          // Save for form fields
+          if (fieldOrForm === "notificationEmail") {
+            await api.NotificationEmail({
+              accessToken,
+              refreshToken,
+              id,
+              notificationEmailHeader: settings.notificationEmailHeader,
+              notificationEmailBody: settings.notificationEmailBody,
+            });
+          } else if (fieldOrForm === "suspensionAction") {
+            await api.UpdateSuspensionAction({
+              accessToken,
+              refreshToken,
+              id,
+              suspensionAction: settings.suspensionAction,
+              errorMessage: settings.errorMessage,
+            });
+          } else if (fieldOrForm === "warningEmail") {
+            await api.WarningEmail({
+              accessToken,
+              refreshToken,
+              id,
+              warningMailHeader: settings.warningMailHeader,
+              warningMailBody: settings.warningMailBody,
+            });
+          } else if (fieldOrForm === "cancelEmail") {
+            await api.CancelEmail({
+              accessToken,
+              refreshToken,
+              id,
+              cancelMailHeader: settings.cancelMailHeader,
+              cancelMailBody: settings.cancelMailBody,
+            });
+          }
+          showToast(`${fieldOrForm} form updated successfully`, "success");
+        }
+        await fetchPaymentSettings();
+      } catch (error) {
+        showToast(error.message, "error");
+      } finally {
+        setIsLoading(false);
+      }
+    }, 500),
+    [fetchPaymentSettings]
+  );
+
+  const handleInputChange = (key, value, isFormField = false) => {
+    setPaymentSettings((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+    if (!isFormField) {
+      debouncedSave({ ...paymentSettings, [key]: value }, key);
+    }
+  };
+
+  const handleSaveForm = (form) => {
+    debouncedSave(paymentSettings, form, true);
+    toggleEditMode(form);
   };
 
   return (
     <div className="invoice-management-container">
+  
+
       {/* General Section */}
       <h3 className="tenant-section-label">GENERAL</h3>
       <div className="form-section">
@@ -130,13 +274,12 @@ const PaymentManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>
-              If user has multiple payment methods, charge last used payment
-              method first
+              If tenant has multiple payment methods, charge last used method first
             </label>
             <SwitchInput
-              checked={paymentSettings.chargeLastUsedMethod}
+              checked={paymentSettings.chargeLastUsedFirst}
               onChange={(e) =>
-                handleInputChange("chargeLastUsedMethod", e.target.checked)
+                handleInputChange("chargeLastUsedFirst", e.target.checked)
               }
             />
           </div>
@@ -147,9 +290,9 @@ const PaymentManagement = () => {
               Charge alternative payment methods if the last used method fails
             </label>
             <SwitchInput
-              checked={paymentSettings.chargeAlternativeMethods}
+              checked={paymentSettings.chargeAlternative}
               onChange={(e) =>
-                handleInputChange("chargeAlternativeMethods", e.target.checked)
+                handleInputChange("chargeAlternative", e.target.checked)
               }
             />
           </div>
@@ -164,14 +307,16 @@ const PaymentManagement = () => {
             <label>Auto-retry failed payments</label>
             <div style={{ width: "80px", marginBottom: "-10px" }}>
               <SelectInput
-                value={paymentSettings.autoRetryTimesBefore}
+                value={paymentSettings.retryBefore}
                 onChange={(e) =>
-                  handleInputChange("autoRetryTimesBefore", e.target.value)
+                  handleInputChange("retryBefore", e.target.value)
                 }
-                options={Array.from({ length: 30 }, (_, i) => ({
-                  value: (i + 1).toString(),
-                  label: (i + 1).toString(),
-                }))}
+                options={[{ value: "0", label: "0" }].concat(
+                  Array.from({ length: 30 }, (_, i) => ({
+                    value: (i + 1).toString(),
+                    label: (i + 1).toString(),
+                  }))
+                )}
                 className="invoice-select"
               />
             </div>
@@ -183,14 +328,16 @@ const PaymentManagement = () => {
             <label>Auto-retry failed payments</label>
             <div style={{ width: "80px", marginBottom: "-10px" }}>
               <SelectInput
-                value={paymentSettings.autoRetryTimesAfter}
+                value={paymentSettings.retryAfter}
                 onChange={(e) =>
-                  handleInputChange("autoRetryTimesAfter", e.target.value)
+                  handleInputChange("retryAfter", e.target.value)
                 }
-                options={Array.from({ length: 30 }, (_, i) => ({
-                  value: (i + 1).toString(),
-                  label: (i + 1).toString(),
-                }))}
+                options={[{ value: "0", label: "0" }].concat(
+                  Array.from({ length: 30 }, (_, i) => ({
+                    value: (i + 1).toString(),
+                    label: (i + 1).toString(),
+                  }))
+                )}
                 className="invoice-select"
               />
             </div>
@@ -199,80 +346,86 @@ const PaymentManagement = () => {
         </div>
         <div className="form-row">
           <div className="form-header">
-            <label>
-              Notify tenant and system admin of every charge attempt
-            </label>
+            <label>Notify tenant of every charge attempt</label>
             <SwitchInput
-              checked={paymentSettings.notifyChargeAttempts}
+              checked={paymentSettings.notifyTenant}
               onChange={(e) =>
-                handleInputChange("notifyChargeAttempts", e.target.checked)
+                handleInputChange("notifyTenant", e.target.checked)
               }
             />
           </div>
         </div>
-        <div className="form-header-two">
-          <label>Email Notification</label>
-        </div>
-        <div className="form-row">
-          <div className="form-inputs">
-            <TextInput
-              label="Email Header"
-              value={paymentSettings.chargeAttemptEmailHeader}
-              onChange={(e) =>
-                handleInputChange("chargeAttemptEmailHeader", e.target.value)
-              }
-              placeholder="Charge Attempt Notification"
-              disabled={!editMode.failedPayments}
-            />
-            <TextareaInput
-              label="Email Body"
-              value={paymentSettings.chargeAttemptEmailBody}
-              onChange={(e) =>
-                handleInputChange("chargeAttemptEmailBody", e.target.value)
-              }
-              placeholder="Enter message"
-              rows={4}
-              disabled={!editMode.failedPayments}
-            />
-            {!editMode.failedPayments ? (
-              <Button
-                label="Edit"
-                variant="outline"
-                onClick={() => toggleEditMode("failedPayments")}
-                width="100px"
-              />
-            ) : (
-              <div className="edit-actions">
-                <Button
-                  label="Cancel"
-                  variant="outline"
-                  onClick={() => toggleEditMode("failedPayments")}
-                  width="100px"
+        {paymentSettings.notifyTenant && (
+          <>
+            <div className="form-header-two">
+              <label>Payment Failure Notification</label>
+            </div>
+            <div className="form-row">
+              <div className="form-inputs">
+                <TextInput
+                  label="Email Header"
+                  value={paymentSettings.notificationEmailHeader}
+                  onChange={(e) =>
+                    handleInputChange("notificationEmailHeader", e.target.value, true)
+                  }
+                  placeholder="Payment Failed Notification"
+                  disabled={!editMode.notificationEmail}
                 />
+                <TextareaInput
+                  label="Email Body"
+                  value={paymentSettings.notificationEmailBody}
+                  onChange={(e) =>
+                    handleInputChange("notificationEmailBody", e.target.value, true)
+                  }
+                  placeholder="Enter message"
+                  rows={4}
+                  disabled={!editMode.notificationEmail}
+                />
+              </div>
+            </div>
+            {!editMode.notificationEmail ? (
+              <div className="form-row">
                 <Button
-                  label="Save"
-                  variant="primary"
-                  onClick={() => handleSave("failedPayments")}
+                  label="Edit"
+                  variant="outline"
+                  onClick={() => toggleEditMode("notificationEmail")}
                   width="100px"
                 />
               </div>
+            ) : (
+              <div className="form-row">
+                <div className="edit-actions">
+                  <Button
+                    label="Cancel"
+                    variant="outline"
+                    onClick={() => toggleEditMode("notificationEmail")}
+                    width="100px"
+                  />
+                  <Button
+                    label="Save"
+                    variant="primary"
+                    onClick={() => handleSaveForm("notificationEmail")}
+                    width="100px"
+                  />
+                </div>
+              </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Subscription Cancellation Section */}
       <h3 className="tenant-section-label">SUBSCRIPTION CANCELLATION</h3>
       <div className="form-section">
-        <div className="form-header">
-          <div className="form-row">
+        <div className="form-row">
+          <div className="form-header">
             <div className="upcoming-invoice-controls">
               <label>Cancel tenant subscription after</label>
               <div style={{ width: "80px", marginBottom: "-10px" }}>
                 <SelectInput
-                  value={paymentSettings.cancelDaysAfter}
+                  value={paymentSettings.cancelAfter}
                   onChange={(e) =>
-                    handleInputChange("cancelDaysAfter", e.target.value)
+                    handleInputChange("cancelAfter", e.target.value)
                   }
                   options={Array.from({ length: 30 }, (_, i) => ({
                     value: (i + 1).toString(),
@@ -284,20 +437,14 @@ const PaymentManagement = () => {
               <label>days of overdue invoice</label>
             </div>
           </div>
-          <SwitchInput
-            checked={paymentSettings.cancelSubscription}
-            onChange={(e) =>
-              handleInputChange("cancelSubscription", e.target.checked)
-            }
-          />
         </div>
         <div className="form-row">
           <div className="form-header">
             <label>Allow admin to manually cancel subscriptions</label>
             <SwitchInput
-              checked={paymentSettings.allowManualCancel}
+              checked={paymentSettings.manualCancel}
               onChange={(e) =>
-                handleInputChange("allowManualCancel", e.target.checked)
+                handleInputChange("manualCancel", e.target.checked)
               }
             />
           </div>
@@ -322,21 +469,15 @@ const PaymentManagement = () => {
                 <SelectInput
                   value={paymentSettings.suspensionAction}
                   onChange={(e) =>
-                    handleInputChange("suspensionAction", e.target.value)
+                    handleInputChange("suspensionAction", e.target.value, true)
                   }
                   options={[
-                    { value: "Select", label: "Select" },
-                    {
-                      value: "Prevent Account Login",
-                      label: "Prevent Account Login",
-                    },
-                    {
-                      value: "Disable all features",
-                      label: "Disable all features",
-                    },
+                    { value: "SUSPEND_SERVICE", label: "Suspend Service" },
+                    { value: "PREVENT_LOGIN", label: "Prevent Account Login" },
+                    { value: "DISABLE_FEATURES", label: "Disable All Features" },
                   ]}
-                  disabled={!editMode.subscriptionCancellation}
                   className="csub-select"
+                  disabled={!editMode.suspensionAction}
                 />
               </div>
             </div>
@@ -344,50 +485,55 @@ const PaymentManagement = () => {
               label="Error Message"
               value={paymentSettings.errorMessage}
               onChange={(e) =>
-                handleInputChange("errorMessage", e.target.value)
+                handleInputChange("errorMessage", e.target.value, true)
               }
               placeholder="Enter message"
-              disabled={!editMode.subscriptionCancellation}
+              rows={4}
+              disabled={!editMode.suspensionAction}
             />
-            {!editMode.subscriptionCancellation ? (
-              <Button
-                label="Edit"
-                variant="outline"
-                onClick={() => toggleEditMode("subscriptionCancellation")}
-                width="100px"
-              />
-            ) : (
-              <div className="edit-actions">
-                <Button
-                  label="Cancel"
-                  variant="outline"
-                  onClick={() => toggleEditMode("subscriptionCancellation")}
-                  width="100px"
-                />
-                <Button
-                  label="Save"
-                  variant="primary"
-                  onClick={() => handleSave("subscriptionCancellation")}
-                  width="100px"
-                />
-              </div>
-            )}
           </div>
         </div>
+        {!editMode.suspensionAction ? (
+          <div className="form-row">
+            <Button
+              label="Edit"
+              variant="outline"
+              onClick={() => toggleEditMode("suspensionAction")}
+              width="100px"
+            />
+          </div>
+        ) : (
+          <div className="form-row">
+            <div className="edit-actions">
+              <Button
+                label="Cancel"
+                variant="outline"
+                onClick={() => toggleEditMode("suspensionAction")}
+                width="100px"
+              />
+              <Button
+                label="Save"
+                variant="primary"
+                onClick={() => handleSaveForm("suspensionAction")}
+                width="100px"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Cancellation Notification Section */}
       <h3 className="tenant-section-label">CANCELLATION NOTIFICATION</h3>
       <div className="form-section">
-        <div className="form-header">
-          <div className="form-row">
+        <div className="form-row">
+          <div className="form-header">
             <div className="upcoming-invoice-controls">
-              <label>Send cancellation warning email after</label>
+              <label>Send warning email after</label>
               <div style={{ width: "80px", marginBottom: "-10px" }}>
                 <SelectInput
-                  value={paymentSettings.warningAfterAttempts}
+                  value={paymentSettings.emailAfterAttempts}
                   onChange={(e) =>
-                    handleInputChange("warningAfterAttempts", e.target.value)
+                    handleInputChange("emailAfterAttempts", e.target.value)
                   }
                   options={Array.from({ length: 10 }, (_, i) => ({
                     value: (i + 1).toString(),
@@ -398,138 +544,139 @@ const PaymentManagement = () => {
               </div>
               <label>failed payment attempts</label>
             </div>
-          
-          </div>
             <SwitchInput
               checked={paymentSettings.sendWarningEmail}
               onChange={(e) =>
                 handleInputChange("sendWarningEmail", e.target.checked)
               }
             />
+          </div>
         </div>
-
-        {emailNotifications.map((notification, index) => (
-          <React.Fragment key={index}>
+        {paymentSettings.sendWarningEmail && (
+          <>
             <div className="form-header-two">
-              <label>Email Notification {index + 1}</label>
+              <label>Warning Email Notification</label>
             </div>
             <div className="form-row">
               <div className="form-inputs">
                 <TextInput
                   label="Email Header"
-                  value={notification.emailHeader}
+                  value={paymentSettings.warningMailHeader}
                   onChange={(e) =>
-                    handleInputChange("emailHeader", e.target.value, index)
+                    handleInputChange("warningMailHeader", e.target.value, true)
                   }
-                  placeholder={`Warning Email ${index + 1}`}
-                  disabled={!editMode.cancellationNotification}
+                  placeholder="Warning: Payment Issue Detected"
+                  disabled={!editMode.warningEmail}
                 />
                 <TextareaInput
                   label="Email Body"
-                  value={notification.emailBody}
+                  value={paymentSettings.warningMailBody}
                   onChange={(e) =>
-                    handleInputChange("emailBody", e.target.value, index)
+                    handleInputChange("warningMailBody", e.target.value, true)
                   }
                   placeholder="Enter message"
                   rows={4}
-                  disabled={!editMode.cancellationNotification}
+                  disabled={!editMode.warningEmail}
                 />
-                {index === emailNotifications.length - 1 && (
-                  <>
-                    {!editMode.cancellationNotification ? (
-                      <Button
-                        label="Edit"
-                        variant="outline"
-                        onClick={() =>
-                          toggleEditMode("cancellationNotification")
-                        }
-                        width="100px"
-                      />
-                    ) : (
-                      <div className="edit-actions">
-                        <Button
-                          label="Cancel"
-                          variant="outline"
-                          onClick={() =>
-                            toggleEditMode("cancellationNotification")
-                          }
-                          width="100px"
-                        />
-                        <Button
-                          label="Save"
-                          variant="primary"
-                          onClick={() => handleSave("cancellationNotification")}
-                          width="100px"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             </div>
-          </React.Fragment>
-        ))}
-
+            {!editMode.warningEmail ? (
+              <div className="form-row">
+                <Button
+                  label="Edit"
+                  variant="outline"
+                  onClick={() => toggleEditMode("warningEmail")}
+                  width="100px"
+                />
+              </div>
+            ) : (
+              <div className="form-row">
+                <div className="edit-actions">
+                  <Button
+                    label="Cancel"
+                    variant="outline"
+                    onClick={() => toggleEditMode("warningEmail")}
+                    width="100px"
+                  />
+                  <Button
+                    label="Save"
+                    variant="primary"
+                    onClick={() => handleSaveForm("warningEmail")}
+                    width="100px"
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
         <div className="form-row">
           <div className="form-header">
             <label>Send an email when subscription is cancelled</label>
             <SwitchInput
-              checked={paymentSettings.sendCancellationEmail}
+              checked={paymentSettings.sendOnSubscriptionCancel}
               onChange={(e) =>
-                handleInputChange("sendCancellationEmail", e.target.checked)
+                handleInputChange("sendOnSubscriptionCancel", e.target.checked)
               }
             />
           </div>
         </div>
-        <div className="form-header-two">
-          <label>Cancellation Email Notification</label>
-        </div>
-        <div className="form-row">
-          <div className="form-inputs">
-            <TextInput
-              label="Email Header"
-              value={paymentSettings.cancellationEmailHeader}
-              onChange={(e) =>
-                handleInputChange("cancellationEmailHeader", e.target.value)
-              }
-              placeholder="Your account is suspended"
-              disabled={!editMode.cancellationNotification}
-            />
-            <TextareaInput
-              label="Email Body"
-              value={paymentSettings.cancellationEmailBody}
-              onChange={(e) =>
-                handleInputChange("cancellationEmailBody", e.target.value)
-              }
-              placeholder="Enter message"
-              rows={4}
-              disabled={!editMode.cancellationNotification}
-            />
-            {!editMode.cancellationNotification ? (
-              <Button
-                label="Edit"
-                variant="outline"
-                onClick={() => toggleEditMode("cancellationNotification")}
-                width="100px"
-              />
-            ) : (
-              <div className="edit-actions">
-                <Button
-                  label="Cancel"
-                  variant="outline"
-                  onClick={() => toggleEditMode("cancellationNotification")}
-                  width="100px"
+        {paymentSettings.sendOnSubscriptionCancel && (
+          <>
+            <div className="form-header-two">
+              <label>Cancellation Email Notification</label>
+            </div>
+            <div className="form-row">
+              <div className="form-inputs">
+                <TextInput
+                  label="Email Header"
+                  value={paymentSettings.cancelMailHeader}
+                  onChange={(e) =>
+                    handleInputChange("cancelMailHeader", e.target.value, true)
+                  }
+                  placeholder="Subscription Cancelled"
+                  disabled={!editMode.cancelEmail}
                 />
+                <TextareaInput
+                  label="Email Body"
+                  value={paymentSettings.cancelMailBody}
+                  onChange={(e) =>
+                    handleInputChange("cancelMailBody", e.target.value, true)
+                  }
+                  placeholder="Enter message"
+                  rows={4}
+                  disabled={!editMode.cancelEmail}
+                />
+              </div>
+            </div>
+            {!editMode.cancelEmail ? (
+              <div className="form-row">
                 <Button
-                  label="Save"
-                  variant="primary"
-                  onClick={() => handleSave("cancellationNotification")}
+                  label="Edit"
+                  variant="outline"
+                  onClick={() => toggleEditMode("cancelEmail")}
                   width="100px"
                 />
               </div>
+            ) : (
+              <div className="form-row">
+                <div className="edit-actions">
+                  <Button
+                    label="Cancel"
+                    variant="outline"
+                    onClick={() => toggleEditMode("cancelEmail")}
+                    width="100px"
+                  />
+                  <Button
+                    label="Save"
+                    variant="primary"
+                    onClick={() => handleSaveForm("cancelEmail")}
+                    width="100px"
+                  />
+                </div>
+              </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

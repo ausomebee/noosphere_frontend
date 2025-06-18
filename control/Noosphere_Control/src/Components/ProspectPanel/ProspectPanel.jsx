@@ -747,7 +747,6 @@ const ProspectPanel = () => {
   const sentDocumentsCount = Object.values(sentDocuments).filter(Boolean).length;
   const totalDocumentsCount = documents.length;
 
-  console.log(candidate)
 
   return (
     <Layout>

@@ -62,11 +62,12 @@ const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
       primaryButtonDisabled={!password.trim() || isLoading}
       primaryButtonLoading={isLoading}
     >
+      <form onSubmit={handleConfirm} className="modal-form">
       <div className="delete-confirmation-content">
         <IoMdAlert className="warning-icon" />
         <h3>{title}</h3>
         <p>{message}</p>
-        <form onSubmit={handleConfirm}>
+        
           <div className="password-input-wrapper">
             <PasswordInput
               label="Administrative Password"
@@ -79,8 +80,9 @@ const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
               autoFocus={isOpen} // Focus input when modal opens
             />
           </div>
-        </form>
+        
       </div>
+      </form>
     </ReusableModal>
   );
 };

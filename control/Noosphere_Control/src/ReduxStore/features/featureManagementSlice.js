@@ -377,15 +377,18 @@ const featureManagementSlice = createSlice({
       })
       .addCase(asyncCreateFeatureGroup.fulfilled, (state, action) => {
         state.loading = false;
-        state.featureGroups.push({
-          id: action.payload.id,
-          title: action.payload.name,
-          features: [],
-        });
-        showToast({
-          message: `Feature group "${action.payload.name}" created successfully`,
-          type: "success",
-        });
+        if (action.payload.name) {
+          // Only add if title exists
+          state.featureGroups.push({
+            id: action.payload.id,
+            title: action.payload.name,
+            features: [], // Initialize with empty features, to be populated by asyncFetchAllFeatures
+          });
+          showToast({
+            message: `Feature group "${action.payload.name}" created successfully`,
+            type: "success",
+          });
+        }
       })
       .addCase(asyncCreateFeatureGroup.rejected, (state, action) => {
         state.loading = false;
@@ -691,84 +694,59 @@ const featureManagementSlice = createSlice({
         state.error = null;
       })
 
-      .addCase(asyncFetchAllFeatureGroups.fulfilled, (state, action) => {
-        state.loading = false;
+  .addCase(asyncFetchAllFeatureGroups.fulfilled, (state, action) => {
+  state.loading = false;
+  const payload = Array.isArray(action.payload) ? action.payload : [];
 
-        const payload = Array.isArray(action.payload) ? action.payload : [];
-
-        payload.forEach((incomingGroup) => {
-          const existingGroup = state.featureGroups.find(
-            (g) => g.id === incomingGroup.id
-          );
-
-          if (existingGroup) {
-            existingGroup.title = incomingGroup.name;
-            // Only set features if they don't exist or are empty (avoid overwriting later fetched features)
-            if (
-              !existingGroup.features ||
-              existingGroup.features.length === 0
-            ) {
-              existingGroup.features = (
-                incomingGroup.features ||
-                incomingGroup.Feature ||
-                []
-              ).map((feature) => ({
-                id: feature.id,
-                name: feature.name,
-                description: feature.description || "",
-                dateAdded: new Date(feature.createdAt).toLocaleDateString(
-                  "en-US",
-                  {
-                    month: "2-digit",
-                    day: "2-digit",
-                    year: "numeric",
-                  }
-                ),
-                managedBy: feature.managedBy || "Admin",
-                active: feature.active,
-                plans: Array.isArray(feature.plans)
-                  ? feature.plans.map((plan) => plan.name)
-                  : [],
-                selected: false,
-              }));
-            }
-          } else {
-            // New group, initialize with empty features — or mapped features, your choice
-            state.featureGroups.push({
-              id: incomingGroup.id,
-              title: incomingGroup.name,
-              features: (
-                incomingGroup.features ||
-                incomingGroup.Feature ||
-                []
-              ).map((feature) => ({
-                id: feature.id,
-                name: feature.name,
-                description: feature.description || "",
-                dateAdded: new Date(feature.createdAt).toLocaleDateString(
-                  "en-US",
-                  {
-                    month: "2-digit",
-                    day: "2-digit",
-                    year: "numeric",
-                  }
-                ),
-                managedBy: feature.managedBy || "Admin",
-                active: feature.active,
-                plans: Array.isArray(feature.plans)
-                  ? feature.plans.map((plan) => plan.name)
-                  : [],
-                selected: false,
-              })),
-            });
-          }
+  payload.forEach((incomingGroup) => {
+    if (incomingGroup.name) { // Only process groups with a title
+      const existingGroup = state.featureGroups.find((g) => g.id === incomingGroup.id);
+      if (existingGroup) {
+        existingGroup.title = incomingGroup.name;
+        if (!existingGroup.features || existingGroup.features.length === 0) {
+          existingGroup.features = (incomingGroup.features || incomingGroup.Feature || []).map((feature) => ({
+            id: feature.id,
+            name: feature.name,
+            description: feature.description || "",
+            dateAdded: new Date(feature.createdAt).toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            }),
+            managedBy: feature.managedBy || "Admin",
+            active: feature.active,
+            plans: Array.isArray(feature.plans) ? feature.plans.map((plan) => plan.name) : [],
+            selected: false,
+          }));
+        }
+      } else {
+        state.featureGroups.push({
+          id: incomingGroup.id,
+          title: incomingGroup.name,
+          features: (incomingGroup.features || incomingGroup.Feature || []).map((feature) => ({
+            id: feature.id,
+            name: feature.name,
+            description: feature.description || "",
+            dateAdded: new Date(feature.createdAt).toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            }),
+            managedBy: feature.managedBy || "Admin",
+            active: feature.active,
+            plans: Array.isArray(feature.plans) ? feature.plans.map((plan) => plan.name) : [],
+            selected: false,
+          })),
         });
+      }
+    }
+  });
 
-        showToast({
-          message: "Feature groups fetched successfully",
-          type: "success",
-        });
-      })
+  showToast({
+    message: "Feature groups fetched successfully",
+    type: "success",
+  });
+})
 
       .addCase(asyncFetchAllFeatureGroups.rejected, (state, action) => {
         state.loading = false;

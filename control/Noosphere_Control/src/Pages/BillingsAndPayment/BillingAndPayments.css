@@ -669,8 +669,9 @@
   display: flex;
   position: relative;
   flex-direction: column;
-  align-content: flex-start;
+  align-items: flex-end; /* Aligns all content to the right */
 }
+
 
 .overview-card-invoice p {
   font-size: 28px;
@@ -773,13 +774,13 @@
 
 .date-range-picker {
   display: flex;
-  flex-direction: column; /* Stack date inputs vertically */
-  width: 100%; /* Ensure it takes full width */
-  align-items: flex-end; /* Align date inputs to the right */
+  flex-direction: column;
+  width: 100%;
+  align-items: flex-end; 
 }
 
 .date-filter-input-small {
-  width: 150px; /* Match the width of the select input */
+  width: 100px;
   padding: 6px;
   border: 1px solid #e5e7eb;
   border-radius: 15px;
@@ -889,6 +890,14 @@
   width: 100%;
 }
 
+.plan-filter-select{
+margin-bottom: -20px !important;
+width: 200px
+}
+
+.plan-filter-select-input{
+border-radius: 20px !important;
+}
 .edit-actions {
   display: flex;
   gap: 8px;

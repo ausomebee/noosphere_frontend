@@ -15,7 +15,16 @@
 .table-filter-select{
   margin-bottom: -40px;
   margin-top: 10px;
-  border-radius: 20px;
+  border-radius: 20px !important;
+  width: 150px;
+}
+.filter-label{
+  width: 200px;
+   border-radius: 20px;
+}
+
+.filter-value-select-container{
+  margin-bottom: -10px !important;
 }
 
 .table-header {
@@ -218,7 +227,6 @@
   color: #027A48;
 }
 .status-in-progress {
-  background-color: #ECFDF3;
   color: #027A48;
 }
 .status-successful {
@@ -255,7 +263,7 @@
 .subscription_status-paused {
   color: #5C6167;
 }
-.subscription_status-canceled {
+.subscription_status-cancelled {
   color: #C01048;
 }
 .subscription_status-pending {
@@ -279,7 +287,7 @@
   background-color: #5C6167;
 }
 
-.subscription_status-canceled .status-dot {
+.subscription_status-cancelled .status-dot {
   background-color: #C01048;
 }
 .subscription_status-pending .status-dot {
@@ -348,22 +356,42 @@
 /* Priority Column Styles */
 .priority-label {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 1px 6px;
   border-radius: 12px;
   font-size: 12px;
   color: #333;
+  text-transform: capitalize;
+  justify-content: center;
 }
 
-.priority-low {
-  background-color: #e6f4ea; /* Light green */
+.priority-enterprise-critical {
+  background-color: #ff0000; /* Bright red for Enterprise Critical */
+  color: #fff;
 }
 
-.priority-medium {
-  background-color: #fff3e0; /* Light orange */
+.priority-enterprise-high {
+  background-color: #F79009; /* Orange for Enterprise High */
+  color: #fff;
+}
+
+.priority-critical {
+  background-color: #FEF3F2; /* Darker red for Critical */
+  color: #B42318;
 }
 
 .priority-high {
-  background-color: #ffebee; /* Light red */
+  background-color: #FFFAEB;
+  color: #B54708;
+}
+
+.priority-medium {
+  background-color: #F8F9FC;
+  color: #363F72;
+}
+
+.priority-low {
+  background-color: #F7F7F7;
+  color: #4B4E54;
 }
 
 .progress-bars {
@@ -568,8 +596,8 @@
 .date-filter-input-start,
 .date-filter-input-end {
   width: 140px; 
-  padding: 12px 12px;
-  border-radius: 16px;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
   
 }
 
@@ -699,8 +727,8 @@
 }
 
 .date-filter-button {
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 6px 12px !important;
+  border-radius: 16px !important;
   font-size: 14px;
   cursor: pointer;
 }

@@ -98,7 +98,7 @@ const EditProspectModal = ({
     ...stages.map((stage) => ({ value: stage.stageId, label: stage.name })),
   ];
 
-  console.log(initialFormData)
+
   useEffect(() => {
     if (isOpen) {
       reset(initialFormData);

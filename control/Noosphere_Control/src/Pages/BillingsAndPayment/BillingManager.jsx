@@ -50,11 +50,28 @@ const BillingManager = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentView, setShowPaymentView] = useState(false);
   const [invoiceData, setInvoiceData] = useState([]);
+  const [paymentData, setPaymentData] = useState([]);
+  const [invoiceCounts, setInvoiceCounts] = useState({
+    All: 0,
+    Paid: 0,
+    Upcoming: 0,
+    Due: 0,
+    Overdue: 0,
+  });
+  const [paymentCounts, setPaymentCounts] = useState({
+    All: 0,
+    Successful: 0,
+    InProgress: 0,
+    Failed: 0,
+  });
 
-  const extractInvoiceIdNumber = (invoiceId) => {
-    if (!invoiceId || typeof invoiceId !== "string") return invoiceId;
-    return invoiceId.replace("invoice_", "");
+  const extractIdNumber = (id) => {
+    if (!id || typeof id !== "string") return id;
+    return id.replace(/^(PAY00|invoice_|INV)/, ""); // Updated to handle "INV" prefix
   };
+
+  const formatPaymentId = (id) => `PAY00${id}`;
+  const formatInvoiceId = (id) => `invoice_${id}`;
 
   const handleFilterChange = (key, value) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
@@ -67,7 +84,10 @@ const BillingManager = () => {
       const updatedDates = { ...prev, [key]: { ...prev[key], [field]: value } };
       setFilterValues((prevValues) => ({
         ...prevValues,
-        [key]: updatedDates[key].start && updatedDates[key].end ? "custom" : prevValues[key],
+        [key]:
+          updatedDates[key].start && updatedDates[key].end
+            ? "custom"
+            : prevValues[key],
       }));
       return updatedDates;
     });
@@ -99,13 +119,19 @@ const BillingManager = () => {
       formattedValue = formattedValue.slice(0, -3);
     }
 
-    return isCurrency ? `$${formattedValue}${suffix}` : `${formattedValue}${suffix}`;
+    return isCurrency
+      ? `$${formattedValue}${suffix}`
+      : `${formattedValue}${suffix}`;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   useEffect(() => {
@@ -125,29 +151,38 @@ const BillingManager = () => {
         const fetchBillingTotal = api.GetBillingTotalMetric(params);
         const fetchBillingDue = api.GetBillingDueMetric(params);
 
-        const [tenantResponse, billingTotalResponse, billingDueResponse] = await Promise.all([
-          fetchTenants.catch((err) => ({ error: err })),
-          fetchBillingTotal.catch((err) => ({ error: err })),
-          fetchBillingDue.catch((err) => ({ error: err })),
-        ]);
+        const [tenantResponse, billingTotalResponse, billingDueResponse] =
+          await Promise.all([
+            fetchTenants.catch((err) => ({ error: err })),
+            fetchBillingTotal.catch((err) => ({ error: err })),
+            fetchBillingDue.catch((err) => ({ error: err })),
+          ]);
 
         const tenantCount = tenantResponse.error ? 0 : tenantResponse.data || 0;
 
         const totalBilled = {
           all_time: formatNumber(
-            billingTotalResponse.error ? 0 : billingTotalResponse.data?.allTime?._sum?.total ?? 0,
+            billingTotalResponse.error
+              ? 0
+              : billingTotalResponse.data?.allTime?._sum?.total ?? 0,
             true
           ),
           this_week: formatNumber(
-            billingTotalResponse.error ? 0 : billingTotalResponse.data?.thisWeek?._sum?.total ?? 0,
+            billingTotalResponse.error
+              ? 0
+              : billingTotalResponse.data?.thisWeek?._sum?.total ?? 0,
             true
           ),
           this_month: formatNumber(
-            billingTotalResponse.error ? 0 : billingTotalResponse.data?.thisMonth?._sum?.total ?? 0,
+            billingTotalResponse.error
+              ? 0
+              : billingTotalResponse.data?.thisMonth?._sum?.total ?? 0,
             true
           ),
           this_year: formatNumber(
-            billingTotalResponse.error ? 0 : billingTotalResponse.data?.thisYear?._sum?.total ?? 0,
+            billingTotalResponse.error
+              ? 0
+              : billingTotalResponse.data?.thisYear?._sum?.total ?? 0,
             true
           ),
           custom: "$0",
@@ -155,16 +190,24 @@ const BillingManager = () => {
 
         const invoicesDue = {
           all_time: formatNumber(
-            billingDueResponse.error ? 0 : billingDueResponse.data?.allTime?._sum?.total ?? 0
+            billingDueResponse.error
+              ? 0
+              : billingDueResponse.data?.allTime?._sum?.total ?? 0
           ),
           this_week: formatNumber(
-            billingDueResponse.error ? 0 : billingDueResponse.data?.thisWeek?._sum?.total ?? 0
+            billingDueResponse.error
+              ? 0
+              : billingDueResponse.data?.thisWeek?._sum?.total ?? 0
           ),
           this_month: formatNumber(
-            billingDueResponse.error ? 0 : billingDueResponse.data?.thisMonth?._sum?.total ?? 0
+            billingDueResponse.error
+              ? 0
+              : billingDueResponse.data?.thisMonth?._sum?.total ?? 0
           ),
           this_year: formatNumber(
-            billingDueResponse.error ? 0 : billingDueResponse.data?.thisYear?._sum?.total ?? 0
+            billingDueResponse.error
+              ? 0
+              : billingDueResponse.data?.thisYear?._sum?.total ?? 0
           ),
           custom: "0",
         };
@@ -186,7 +229,7 @@ const BillingManager = () => {
   }, []);
 
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -202,40 +245,132 @@ const BillingManager = () => {
                 accessToken,
                 refreshToken,
               };
-        const invoicesResponse = await api.GetInvoiceByAllAndStatus(params);
-        const invoices = (invoicesResponse.data || []).map((inv) => ({
-          invoice_id: `invoice_${inv.invoiceId}`, // Format for display
-          tenant: inv.tenant,
-          date_created: formatDate(inv.createdAt),
-          due_date: formatDate(inv.dueDate),
-          status: inv.status,
-          hasActions: true,
-        }));
 
-        setInvoiceData(invoices);
+        const fetchInvoiceCounts = api.GetCountForInvoice({
+          accessToken,
+          refreshToken,
+        });
+        const fetchPaymentCounts = api.GetCountForPayment({
+          accessToken,
+          refreshToken,
+        });
+
+        const [
+          invoicesResponse,
+          paymentsResponse,
+          invoiceCountsResponse,
+          paymentCountsResponse,
+        ] = await Promise.all([
+          activeTab === "invoices"
+            ? api.GetInvoiceByAllAndStatus(params).catch((err) => ({
+                error: err,
+                data: [],
+              }))
+            : Promise.resolve({ data: [] }),
+          activeTab === "payments"
+            ? api.GetPaymentByAllAndStatus(params).catch((err) => ({
+                error: err,
+                data: [],
+              }))
+            : Promise.resolve({ data: [] }),
+          fetchInvoiceCounts.catch((err) => ({
+            error: err,
+            data: {
+              All: { _count: { _all: 0 } },
+              Paid: { _count: { _all: 0 } },
+              Upcoming: { _count: { _all: 0 } },
+              Due: { _count: { _all: 0 } },
+              Overdue: { _count: { _all: 0 } },
+            },
+          })),
+          fetchPaymentCounts.catch((err) => ({
+            error: err,
+            data: {
+              All: { _count: { _all: 0 } },
+              Successful: { _count: { _all: 0 } },
+              InProgress: { _count: { _all: 0 } },
+              Failed: { _count: { _all: 0 } },
+            },
+          })),
+        ]);
+
+        if (activeTab === "invoices") {
+          const invoices = (invoicesResponse.data || []).map((inv) => ({
+            invoice_id: inv.invoiceId,
+            tenant: inv.tenant,
+            date_created: formatDate(inv.createdAt),
+            due_date: formatDate(inv.dueDate),
+            status: inv.status,
+            hasActions: true,
+          }));
+          setInvoiceData(invoices);
+        }
+
+        if (activeTab === "payments") {
+          const payments = (paymentsResponse.data || []).map((pay) => ({
+            payment_id: formatPaymentId(pay.id),
+            invoice_id: formatInvoiceId(pay.invoiceId),
+            tenant: pay.tenant?.companyName,
+            date_paid: formatDate(pay.createdAt),
+            amount: formatNumber(pay.amount, true),
+            status: pay.status,
+            hasActions: true,
+          }));
+          setPaymentData(payments);
+        }
+
+        setInvoiceCounts({
+          All: invoiceCountsResponse.data?.All?._count?._all ?? 0,
+          Paid: invoiceCountsResponse.data?.Paid?._count?._all ?? 0,
+          Upcoming: invoiceCountsResponse.data?.Upcoming?._count?._all ?? 0,
+          Due: invoiceCountsResponse.data?.Due?._count?._all ?? 0,
+          Overdue: invoiceCountsResponse.data?.Overdue?._count?._all ?? 0,
+        });
+
+        setPaymentCounts({
+          All: paymentCountsResponse.data?.All?._count?._all ?? 0,
+          Successful: paymentCountsResponse.data?.Successful?._count?._all ?? 0,
+          InProgress: paymentCountsResponse.data?.InProgress?._count?._all ?? 0,
+          Failed: paymentCountsResponse.data?.Failed?._count?._all ?? 0,
+        });
+
+        if (
+          invoicesResponse.error ||
+          paymentsResponse.error ||
+          invoiceCountsResponse.error ||
+          paymentCountsResponse.error
+        ) {
+          throw new Error("Failed to fetch some data.");
+        }
       } catch (err) {
-        console.error("Error fetching invoices:", err);
-        setError("Failed to load invoices. Please try again later.");
+        console.error(`Error fetching ${activeTab}:`, err);
+        setError(`Failed to load ${activeTab}. Please try again later.`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInvoices();
-  }, [activeSubTab]);
+    fetchData();
+  }, [activeTab, activeSubTab]);
 
   useEffect(() => {
     const fetchCustomMetrics = async () => {
       if (
-        (filterValues.totalBilled === "custom" && customDates.totalBilled.start && customDates.totalBilled.end) ||
-        (filterValues.invoicesDue === "custom" && customDates.invoicesDue.start && customDates.invoicesDue.end)
+        (filterValues.totalBilled === "custom" &&
+          customDates.totalBilled.start &&
+          customDates.totalBilled.end) ||
+        (filterValues.invoicesDue === "custom" &&
+          customDates.invoicesDue.start &&
+          customDates.invoicesDue.end)
       ) {
         try {
           setLoading(true);
           setError(null);
 
           const totalBilledPromise =
-            filterValues.totalBilled === "custom" && customDates.totalBilled.start && customDates.totalBilled.end
+            filterValues.totalBilled === "custom" &&
+            customDates.totalBilled.start &&
+            customDates.totalBilled.end
               ? api.GetBillingTotalMetric({
                   from: customDates.totalBilled.start,
                   to: customDates.totalBilled.end,
@@ -245,7 +380,9 @@ const BillingManager = () => {
               : Promise.resolve({ data: { _sum: { total: 0 } } });
 
           const invoicesDuePromise =
-            filterValues.invoicesDue === "custom" && customDates.invoicesDue.start && customDates.invoicesDue.end
+            filterValues.invoicesDue === "custom" &&
+            customDates.invoicesDue.start &&
+            customDates.invoicesDue.end
               ? api.GetBillingDueMetric({
                   from: customDates.invoicesDue.start,
                   to: customDates.invoicesDue.end,
@@ -263,14 +400,18 @@ const BillingManager = () => {
 
           if (filterValues.totalBilled === "custom") {
             updatedOverviewData.totalBilled.custom = formatNumber(
-              totalBilledResponse.error ? 0 : totalBilledResponse.data?._sum?.total ?? 0,
+              totalBilledResponse.error
+                ? 0
+                : totalBilledResponse.data?._sum?.total ?? 0,
               true
             );
           }
 
           if (filterValues.invoicesDue === "custom") {
             updatedOverviewData.invoicesDue.custom = formatNumber(
-              invoicesDueResponse.error ? 0 : invoicesDueResponse.data?._sum?.total ?? 0
+              invoicesDueResponse.error
+                ? 0
+                : invoicesDueResponse.data?._sum?.total ?? 0
             );
           }
 
@@ -292,32 +433,25 @@ const BillingManager = () => {
     setSelectedInvoice(null);
   };
 
-  const handleViewInvoice = async (rowOrInvoiceId) => {
+  const handleViewInvoice = async (rowOrInvoiceId, invoiceId) => {
     try {
-      const invoiceId = typeof rowOrInvoiceId === "string"
-        ? extractInvoiceIdNumber(rowOrInvoiceId)
-        : extractInvoiceIdNumber(rowOrInvoiceId.invoice_id);
-      const response = await api.GetInvoiceById({ id: invoiceId, accessToken, refreshToken });
+      const finalInvoiceId = invoiceId || extractIdNumber(rowOrInvoiceId?.invoice_id || rowOrInvoiceId);
+      const response = await api.GetInvoiceById({
+        id: finalInvoiceId,
+        accessToken,
+        refreshToken,
+      });
       const invoiceData = response.data || {};
 
       const invoice = {
         companyName: "noosphere",
-        companyAddress: invoiceData.companyAddress || {
-          street: "931 10th street",
-          suite: "Suite 776, Modesto",
-          state: "CA 95354",
-        },
-        invoiceId: invoiceData.invoiceId || invoiceId,
+        companyAddress: invoiceData.companyAddress,
+        invoiceId: invoiceData.invoiceId || finalInvoiceId,
         dueDate: formatDate(invoiceData.dueDate),
-        billingFrequency: invoiceData.billingFrequency || "Monthly",
-        customerInfo: invoiceData.customerInfo || {
-          name: "Unknown Tenant",
-          street: "24, Allison Street",
-          city: "Dallas, Texas, US",
-          zip: "655849",
-        },
-        items: (invoiceData.items || []).map((item) => ({
-          id: item.id,
+        billingFrequency: invoiceData.billingFrequency,
+        customerInfo: invoiceData.customerInfo,
+        items: (invoiceData.items || []).map((item, index) => ({
+          id: `${index + 1}`,
           description: item.description,
           rate: formatNumber(item.rate?.price || 0, true),
           quantity: item.quantity,
@@ -333,56 +467,60 @@ const BillingManager = () => {
     }
   };
 
-  const handleViewPayment = (row) => {
-    const payment = {
-      Plan: "Basic Plan",
-      Period: "N/A",
-      "Payment ID": row.payment_id,
-      "Payment Date": row.date_paid,
-      "Time of Payment": "N/A",
-      "Payment Amount": row.amount,
-      "Payment Method": {
-        icon: "/amex-icon.png",
-        number: "XXXX-XXXX-XXXX-2345",
-      },
-      Invoice: {
-        id: row.invoice_id,
-        link: "#",
-      },
-    };
-    setSelectedPayment(payment);
-    setShowPaymentView(true);
-  };
+  const handleViewPayment = async (row) => {
+    try {
+      const paymentId = extractIdNumber(row.payment_id);
+      const response = await api.GetPaymentById({
+        id: paymentId,
+        accessToken,
+        refreshToken,
+      });
+      const paymentData = response.data || {};
 
-  const handleBackFromPayment = () => {
-    setShowPaymentView(false);
-    setSelectedPayment(null);
+      const payment = {
+        Plan: paymentData.Plan || "N/A",
+        Period: paymentData.Period || "N/A",
+        "Payment ID": formatPaymentId(paymentId),
+        "Payment Date": formatDate(paymentData.paymentDate),
+        "Time of Payment": formatDate(paymentData.paymentTime),
+        "Payment Amount": formatNumber(paymentData.amount, true),
+        "Payment Method": {
+          icon: "/visa-icon.png",
+          number: paymentData.paymentMethod?.code || "N/A",
+        },
+        Invoice: {
+          id: paymentData.invoice?.invoiceId?.replace(/^INV/, "") || "N/A",
+          ...paymentData.invoice,
+          link: "#",
+        },
+      };
+      setSelectedPayment(payment);
+      setShowPaymentView(true);
+    } catch (err) {
+      console.error("Error fetching payment:", err);
+      setError("Failed to load payment details.");
+    }
   };
 
   const handleDownloadInvoice = async (row) => {
     try {
-      const invoiceId = extractInvoiceIdNumber(row.invoice_id);
-      const response = await api.GetInvoiceById({ id: invoiceId, accessToken, refreshToken });
+      const invoiceId = extractIdNumber(row.invoice_id);
+      const response = await api.GetInvoiceById({
+        id: invoiceId,
+        accessToken,
+        refreshToken,
+      });
       const invoiceData = response.data || {};
 
       const invoice = {
         companyName: "noosphere",
-        companyAddress: invoiceData.companyAddress || {
-          street: "931 10th street",
-          suite: "Suite 776, Modesto",
-          state: "CA 95354",
-        },
+        companyAddress: invoiceData.companyAddress,
         invoiceId: invoiceData.invoiceId || invoiceId,
         dueDate: formatDate(invoiceData.dueDate),
-        billingFrequency: invoiceData.billingFrequency || "Monthly",
-        customerInfo: invoiceData.customerInfo || {
-          name: row.tenant,
-          street: "24, Allison Street",
-          city: "Dallas, Texas, US",
-          zip: "655849",
-        },
-        items: (invoiceData.items || []).map((item) => ({
-          id: item.id,
+        billingFrequency: invoiceData.billingFrequency,
+        customerInfo: invoiceData.customerInfo,
+        items: (invoiceData.items || []).map((item, index) => ({
+          id: `${index + 1}`,
           description: item.description,
           rate: formatNumber(item.rate?.price || 0, true),
           quantity: item.quantity,
@@ -429,91 +567,22 @@ const BillingManager = () => {
   ];
 
   const invoiceSubTabs = [
-    { key: "all", label: "All", count: invoiceData.length },
-    {
-      key: "paid",
-      label: "Paid",
-      count: invoiceData.filter((item) => item.status.toLowerCase() === "paid").length,
-    },
-    {
-      key: "upcoming",
-      label: "Upcoming",
-      count: invoiceData.filter((item) => item.status.toLowerCase() === "upcoming").length,
-    },
-    {
-      key: "due_unpaid",
-      label: "Due/Unpaid",
-      count: invoiceData.filter((item) => item.status.toLowerCase() === "due/unpaid").length,
-    },
-    {
-      key: "overdue",
-      label: "Overdue",
-      count: invoiceData.filter((item) => item.status.toLowerCase() === "overdue").length,
-    },
+    { key: "all", label: "All", count: invoiceCounts.All },
+    { key: "paid", label: "Paid", count: invoiceCounts.Paid },
+    { key: "upcoming", label: "Upcoming", count: invoiceCounts.Upcoming },
+    { key: "due", label: "Due/Unpaid", count: invoiceCounts.Due },
+    { key: "overdue", label: "Overdue", count: invoiceCounts.Overdue },
   ];
 
   const paymentSubTabs = [
-    { key: "all", label: "All", count: 123 },
-    { key: "successful", label: "Successful", count: 94 },
-    { key: "in_progress", label: "Payment in Progress", count: 12 },
-    { key: "failed", label: "Failed", count: 10 },
-  ];
-
-  const paymentDataAll = [
+    { key: "all", label: "All", count: paymentCounts.All },
+    { key: "successful", label: "Successful", count: paymentCounts.Successful },
     {
-      payment_id: "PAY001",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      status: "Successful",
-      hasActions: true,
+      key: "in_progress",
+      label: "Payment in Progress",
+      count: paymentCounts.InProgress,
     },
-    {
-      payment_id: "PAY002",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      status: "Failed",
-      hasActions: true,
-    },
-    {
-      payment_id: "PAY003",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      status: "In-Progress",
-      hasActions: true,
-    },
-  ];
-
-  const paymentDataOther = [
-    {
-      payment_id: "PAY001",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      hasActions: true,
-    },
-    {
-      payment_id: "PAY002",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      hasActions: true,
-    },
-    {
-      payment_id: "PAY003",
-      invoice_id: "invoice_0ca31f2f-3bdb-4742-a7d1-5885e94e839e",
-      tenant: "ACME Corporation Ltd",
-      date_paid: "12/10/2024",
-      amount: "$5,000",
-      hasActions: true,
-    },
+    { key: "failed", label: "Failed", count: paymentCounts.Failed },
   ];
 
   const invoiceColumns = [
@@ -521,7 +590,9 @@ const BillingManager = () => {
     { key: "tenant", header: "Tenant" },
     { key: "date_created", header: "Date Created" },
     { key: "due_date", header: "Due Date" },
-    ...(activeSubTab === "all" ? [{ key: "status", header: "Status", type: "status" }] : []),
+    ...(activeSubTab === "all"
+      ? [{ key: "status", header: "Status", type: "status" }]
+      : []),
   ];
 
   const paymentColumns = [
@@ -530,7 +601,9 @@ const BillingManager = () => {
     { key: "tenant", header: "Tenant" },
     { key: "date_paid", header: "Date" },
     { key: "amount", header: "Amount" },
-    ...(activeSubTab === "all" ? [{ key: "status", header: "Status", type: "status" }] : []),
+    ...(activeSubTab === "all"
+      ? [{ key: "status", header: "Status", type: "status" }]
+      : []),
   ];
 
   const invoiceFilters = [
@@ -574,74 +647,88 @@ const BillingManager = () => {
     if (activeTab === "invoices") {
       return invoiceData;
     } else {
-      if (activeSubTab === "all") return paymentDataAll;
-      return paymentDataOther.filter(() => true);
+      return activeSubTab === "all"
+        ? paymentData
+        : paymentData.filter(
+            (item) =>
+              item.status.toLowerCase() ===
+              activeSubTab.split("_")[0].toLowerCase()
+          );
     }
+  };
+
+  const handleBackFromPayment = () => {
+    setShowPaymentView(false);
+    setSelectedPayment(null);
   };
 
   return (
     <Layout>
+      {/* Invoice Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 100000,
+          }}
+          onClick={closeInvoiceModal}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              position: "relative",
+              padding: "20px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                background: "none",
+                border: "none",
+                fontSize: "16px",
+                cursor: "pointer",
+              }}
+              onClick={closeInvoiceModal}
+            >
+              ✕
+            </button>
+            <SubscriptionInvoice {...selectedInvoice} />
+          </div>
+        </div>
+      )}
+
       {showPaymentView && selectedPayment ? (
         <div className="payment-view-container">
           <TenantListViewPayment
-            title="Payment Details"
-            breadcrumb={`Tenants / ${selectedPayment.Invoice.id} / Billing & Payments / Payment Info`}
+            title="Billing & Payments"
+            breadcrumb={" Invoices & Payment / Payment Information"}
             paymentInfo={selectedPayment}
             onBack={handleBackFromPayment}
             onViewInvoice={handleViewInvoice}
+            // NEW: Pass modal state and functions
+            showInvoiceModal={showInvoiceModal}
+            selectedInvoice={selectedInvoice}
+            closeInvoiceModal={closeInvoiceModal}
           />
         </div>
       ) : (
         <>
-          {/* Invoice Modal */}
-          {showInvoiceModal && selectedInvoice && (
-            <div
-              style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 1000,
-              }}
-              onClick={closeInvoiceModal}
-            >
-              <div
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  maxWidth: "700px",
-                  width: "100%",
-                  maxHeight: "80vh",
-                  overflowY: "auto",
-                  position: "relative",
-                  padding: "20px",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    background: "none",
-                    border: "none",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                  }}
-                  onClick={closeInvoiceModal}
-                >
-                  ✕
-                </button>
-                <SubscriptionInvoice {...selectedInvoice} />
-              </div>
-            </div>
-          )}
-
           <div className="billing-board-header">
             <div className="billing-board-title">
               <h1>Billing & Payment</h1>
@@ -664,7 +751,9 @@ const BillingManager = () => {
                 </div>
                 <div className="overview-select-container">
                   <SelectInput
-                    onChange={(e) => handleFilterChange("totalBilled", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("totalBilled", e.target.value)
+                    }
                     options={[
                       { value: "all_time", label: "All time" },
                       { value: "this_week", label: "This week" },
@@ -677,16 +766,26 @@ const BillingManager = () => {
                   {filterValues.totalBilled === "custom" && (
                     <div className="date-range-picker date-range-picker-below">
                       <TextInput
+                        label="From"
                         type="date"
                         value={customDates.totalBilled.start || ""}
-                        onChange={(e) => handleDateChange("totalBilled", "start", e.target.value)}
+                        onChange={(e) =>
+                          handleDateChange(
+                            "totalBilled",
+                            "start",
+                            e.target.value
+                          )
+                        }
                         className="date-filter-input-small"
                         placeholder="Start date"
                       />
                       <TextInput
+                        label="To"
                         type="date"
                         value={customDates.totalBilled.end || ""}
-                        onChange={(e) => handleDateChange("totalBilled", "end", e.target.value)}
+                        onChange={(e) =>
+                          handleDateChange("totalBilled", "end", e.target.value)
+                        }
                         className="date-filter-input-small"
                         placeholder="End date"
                       />
@@ -701,7 +800,9 @@ const BillingManager = () => {
                 </div>
                 <div className="overview-select-container">
                   <SelectInput
-                    onChange={(e) => handleFilterChange("invoicesDue", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("invoicesDue", e.target.value)
+                    }
                     options={[
                       { value: "all_time", label: "All time" },
                       { value: "this_week", label: "This week" },
@@ -716,14 +817,22 @@ const BillingManager = () => {
                       <TextInput
                         type="date"
                         value={customDates.invoicesDue.start || ""}
-                        onChange={(e) => handleDateChange("invoicesDue", "start", e.target.value)}
+                        onChange={(e) =>
+                          handleDateChange(
+                            "invoicesDue",
+                            "start",
+                            e.target.value
+                          )
+                        }
                         className="date-filter-input-small"
                         placeholder="Start date"
                       />
                       <TextInput
                         type="date"
                         value={customDates.invoicesDue.end || ""}
-                        onChange={(e) => handleDateChange("invoicesDue", "end", e.target.value)}
+                        onChange={(e) =>
+                          handleDateChange("invoicesDue", "end", e.target.value)
+                        }
                         className="date-filter-input-small"
                         placeholder="End date"
                       />
@@ -737,7 +846,9 @@ const BillingManager = () => {
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
-                  className={`invoice-tab ${activeTab === tab.key ? "active" : ""}`}
+                  className={`invoice-tab ${
+                    activeTab === tab.key ? "active" : ""
+                  }`}
                   onClick={() => {
                     setActiveTab(tab.key);
                     setActiveSubTab("all");
@@ -752,30 +863,42 @@ const BillingManager = () => {
                 invoiceSubTabs.map((subTab) => (
                   <button
                     key={subTab.key}
-                    className={`sub-tab ${activeSubTab === subTab.key ? "active" : ""}`}
+                    className={`sub-tab ${
+                      activeSubTab === subTab.key ? "active" : ""
+                    }`}
                     onClick={() => setActiveSubTab(subTab.key)}
                   >
-                    {subTab.label} <span className="candidate-count">{subTab.count}</span>
+                    {subTab.label}{" "}
+                    <span className="candidate-count">{subTab.count}</span>
                   </button>
                 ))}
               {activeTab === "payments" &&
                 paymentSubTabs.map((subTab) => (
                   <button
                     key={subTab.key}
-                    className={`sub-tab ${activeSubTab === subTab.key ? "active" : ""}`}
+                    className={`sub-tab ${
+                      activeSubTab === subTab.key ? "active" : ""
+                    }`}
                     onClick={() => setActiveSubTab(subTab.key)}
                   >
-                    {subTab.label} <span className="candidate-count">{subTab.count}</span>
+                    {subTab.label}{" "}
+                    <span className="candidate-count">{subTab.count}</span>
                   </button>
                 ))}
             </div>
             <div className="invoice-table-container">
               <CustomTable
                 data={getFilteredData()}
-                columns={activeTab === "invoices" ? invoiceColumns : paymentColumns}
-                filters={activeTab === "invoices" ? invoiceFilters : paymentFilters}
+                columns={
+                  activeTab === "invoices" ? invoiceColumns : paymentColumns
+                }
+                filters={
+                  activeTab === "invoices" ? invoiceFilters : paymentFilters
+                }
                 onFilterChange={handleFilterChange}
-                actions={activeTab === "invoices" ? invoiceActions : paymentActions}
+                actions={
+                  activeTab === "invoices" ? invoiceActions : paymentActions
+                }
                 showActions={true}
                 itemsPerPage={10}
                 tableName={activeTab === "invoices" ? "Invoices" : "Payments"}
