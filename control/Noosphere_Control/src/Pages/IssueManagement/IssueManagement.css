@@ -1,0 +1,134 @@
+.issue-mgmt-overview-section {
+  padding: 20px;
+}
+
+.issue-mgmt-issue-log-section {
+  padding: 20px;
+}
+
+.issue-mgmt-overview-cards {
+  display: flex;
+  grid-template-columns: repeat(auto-fit, minmax(2, 1fr));
+  gap: 20px;
+}
+
+.issue-mgmt-overview-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+
+.issue-mgmt-overview-card-container {
+  display: flex;
+  flex-direction: column;
+  flex: 3;
+  gap: 20px;
+}
+
+.issue-mgmt-overview-card-one {
+  display: flex;
+  gap: 20px;
+}
+
+.issue-mgmt-overview-card-two {
+  display: flex;
+  gap: 20px;
+}
+
+.issue-mgmt-overview-value {
+  font-size: 36px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 10px 0 5px;
+}
+
+.issue-mgmt-view-link {
+  color: #242528;
+  text-decoration: none;
+  font-size: 14px;
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.issue-mgmt-top-issue-card {
+  position: relative;
+}
+
+.issue-mgmt-top-issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.issue-mgmt-overview-value-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.issue-mgmt-top-issue-header,
+.issue-mgmt-overview-card h4 {
+  font-size: 16px;
+  color: #1f2937;
+  margin: 0;
+}
+
+.issue-mgmt-top-issue-select {
+  width: 160px;
+  border-radius: 20px;
+}
+
+.issue-mgmt-top-issue-chart {
+  margin-bottom: 15px;
+  margin-top: 30px;
+}
+
+button {
+  cursor: pointer;
+}
+
+.issue-mgt-modal-content {
+  padding: 30px;
+}
+
+.modal-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-item span:first-child {
+  color: #6b7280;
+}
+
+.modal-item span:last-child {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.add-issue-buttons{
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+  margin-top: 20px;
+}
+
+
+
+.issue-management-container{
+ justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.issues-management-view{
+  width: 1000px;
+ 
+}
+

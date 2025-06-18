@@ -102,6 +102,7 @@ const DeleteConfirmationModal = ({
           : ''
       }
     >
+       <form className='modal-form'>
       <div className="delete-confirmation-content">
         {step === 0 ? (
           <>
@@ -143,6 +144,7 @@ const DeleteConfirmationModal = ({
           </>
         )}
       </div>
+      </form>
     </ReusableModal>
   );
 };

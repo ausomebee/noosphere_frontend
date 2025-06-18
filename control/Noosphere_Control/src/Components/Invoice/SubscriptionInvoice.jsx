@@ -29,13 +29,12 @@ const SubscriptionInvoice = ({
 }) => {
   const styles = {
     body: {
-     
       margin: 0,
       padding: "20px",
       color: "#333",
     },
     invoiceContainer: {
-      maxWidth: "600px",
+      maxWidth: "650px",
       margin: "0 auto",
       background: "#fff",
       padding: "40px",
@@ -83,6 +82,12 @@ const SubscriptionInvoice = ({
       color: "#000",
       margin: 0,
     },
+
+    addressContainer: {
+      display: "flex",
+      justifyContent: "space-between"
+    },
+
     companyAddress: {
       margin: "30px 0",
       lineHeight: 1.6,
@@ -174,24 +179,27 @@ const SubscriptionInvoice = ({
           <h1 style={styles.invoiceTitle}>Subscription Invoice</h1>
         </div>
 
-        <div style={styles.companyAddress}>
-          {companyAddress.street}
-          <br />
-          {companyAddress.suite}
-          <br />
-          {companyAddress.state}
-        </div>
+        <div style={styles.addressContainer}>
+          <div style={styles.companyAddress}>
+            {companyAddress.street}
+            <br />
+            {companyAddress.suite}
+            <br />
+            {companyAddress.state}
+          </div>
 
-        <div style={styles.invoiceMeta}>
-          <strong style={styles.invoiceMetaStrong}>Invoice ID:</strong>{" "}
-          {invoiceId}
-          <br />
-          <strong style={styles.invoiceMetaStrong}>Due Date:</strong> {dueDate}
-          <br />
-          <strong style={styles.invoiceMetaStrong}>
-            Billing Frequency:
-          </strong>{" "}
-          {billingFrequency}
+          <div style={styles.invoiceMeta}>
+            <strong style={styles.invoiceMetaStrong}>Invoice ID:</strong>{" "}
+            {invoiceId}
+            <br />
+            <strong style={styles.invoiceMetaStrong}>Due Date:</strong>{" "}
+            {dueDate}
+            <br />
+            <strong style={styles.invoiceMetaStrong}>
+              Billing Frequency:
+            </strong>{" "}
+            {billingFrequency}
+          </div>
         </div>
 
         <div style={styles.customerSection}>

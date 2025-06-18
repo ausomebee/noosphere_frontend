@@ -24,6 +24,7 @@ import { FaExchangeAlt } from "react-icons/fa";
 import { FiRefreshCw } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import Button from "../Button/Button";
+import { parse, isSameDay, isWithinInterval, format, isValid } from "date-fns";
 
 const CustomTable = ({
   data,
@@ -48,7 +49,11 @@ const CustomTable = ({
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [filterValues, setFilterValues] = useState({
-    assign_to: "",
+    category: "",
+    priority: "",
+    date_reported: null,
+    date_updated: null,
+    assigned_to: "",
     stage_completion: "",
     date_created: null,
     due_date: null,
@@ -59,6 +64,7 @@ const CustomTable = ({
     nextBillingDate: null,
     billingCycle: "",
     lastPaymentStatus: "",
+    filter_type: "", // Added to match the filters structure
   });
   const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
     useState(false);
@@ -72,6 +78,23 @@ const CustomTable = ({
   const dateFilterDropdownRef = useRef(null);
 
   // Extract unique values for filters
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set(data.map((row) => row.category).filter(Boolean));
+    return Array.from(categories);
+  }, [data]);
+
+  const uniquePriorities = useMemo(() => {
+    const priorities = new Set(data.map((row) => row.priority).filter(Boolean));
+    return Array.from(priorities);
+  }, [data]);
+
+  const uniqueAssignedTo = useMemo(() => {
+    const assignToSet = new Set(
+      data.map((row) => row.assigned_to).filter(Boolean)
+    );
+    return Array.from(assignToSet);
+  }, [data]);
+
   const uniqueStatuses = useMemo(() => {
     const statuses = new Set(data.map((row) => row.status).filter(Boolean));
     return Array.from(statuses);
@@ -87,13 +110,6 @@ const CustomTable = ({
       data.map((row) => row.lastPaymentStatus).filter(Boolean)
     );
     return Array.from(statuses);
-  }, [data]);
-
-  const uniqueAssignTo = useMemo(() => {
-    const assignToSet = new Set(
-      data.map((row) => row.assigned_to).filter(Boolean)
-    );
-    return Array.from(assignToSet);
   }, [data]);
 
   const uniquePlans = useMemo(() => {
@@ -134,8 +150,39 @@ const CustomTable = ({
 
     // Apply filters
     Object.entries(filterValues).forEach(([key, value]) => {
-      if (value) {
-        if (key === "assign_to") {
+      if (value && (value.start || value.end)) {
+        if (
+          key === "date_reported" ||
+          key === "date_updated" ||
+          key === "date_created" ||
+          key === "due_date" ||
+          key === "nextBillingDate"
+        ) {
+          filtered = filtered.filter((row) => {
+            const rowDate = row[key]
+              ? parse(row[key], "MM/dd/yyyy", new Date())
+              : null;
+            if (!isValid(rowDate)) return false;
+            const startDate = value.start ? new Date(value.start) : null;
+            const endDate = value.end ? new Date(value.end) : null;
+
+            if (startDate && endDate && !isSameDay(startDate, endDate)) {
+              return isWithinInterval(rowDate, {
+                start: startDate,
+                end: endDate,
+              });
+            } else if (startDate) {
+              return isSameDay(rowDate, startDate);
+            }
+            return true;
+          });
+        }
+      } else if (value && key !== "filter_type") {
+        if (key === "category") {
+          filtered = filtered.filter((row) => row.category === value);
+        } else if (key === "priority") {
+          filtered = filtered.filter((row) => row.priority === value);
+        } else if (key === "assigned_to") {
           filtered = filtered.filter((row) => row.assigned_to === value);
         } else if (key === "stage_completion") {
           const percentage = parseInt(value.replace("%", ""), 10);
@@ -155,27 +202,6 @@ const CustomTable = ({
           filtered = filtered.filter((row) => row.billingCycle === value);
         } else if (key === "lastPaymentStatus") {
           filtered = filtered.filter((row) => row.lastPaymentStatus === value);
-        } else if (
-          (key === "date_created" ||
-            key === "nextBillingDate" ||
-            key === "due_date") &&
-          value.start
-        ) {
-          filtered = filtered.filter((row) => {
-            const rowDate = parse(row[key], "MM/dd/yyyy", new Date());
-            if (
-              value.start &&
-              value.end &&
-              !isSameDay(value.start, value.end)
-            ) {
-              return isWithinInterval(rowDate, {
-                start: value.start,
-                end: value.end,
-              });
-            } else {
-              return isSameDay(rowDate, value.start);
-            }
-          });
         }
       }
     });
@@ -255,11 +281,7 @@ const CustomTable = ({
       const updatedData = [...data];
       updatedData[startIndex + rowIndex].active =
         !updatedData[startIndex + rowIndex].active;
-      console.log(
-        `Toggled active state for row ${rowIndex}: ${
-          updatedData[startIndex + rowIndex].active
-        }`
-      );
+      
     },
     [data, startIndex]
   );
@@ -306,50 +328,111 @@ const CustomTable = ({
     }
   }, [exportDropdownOpen]);
 
-  const positionDropdown = (rowIndex, colIndex) => {
-    const key = `${rowIndex}-${colIndex}`;
-    const button = menuRefs.current[key]?.button;
-    const dropdown = menuRefs.current[key]?.dropdown;
+  // const positionDropdown = (rowIndex, colIndex) => {
+  //   const key = `${rowIndex}-${colIndex}`;
+  //   const button = menuRefs.current[key]?.button;
+  //   const dropdown = menuRefs.current[key]?.dropdown;
 
-    if (!button || !dropdown) return;
+  //   if (!button || !dropdown) return;
 
-    const buttonRect = button.getBoundingClientRect();
-    const tableRect = tableContainerRef.current.getBoundingClientRect();
-    const dropdownRect = dropdown.getBoundingClientRect();
+  //   const buttonRect = button.getBoundingClientRect();
+  //   const tableRect = tableContainerRef.current.getBoundingClientRect();
+  //   const dropdownRect = dropdown.getBoundingClientRect();
 
-    const dropdownHeight = dropdownRect.height;
-    const dropdownWidth = dropdownRect.width;
-    const spaceBelow = tableRect.bottom - buttonRect.bottom - 10;
-    const spaceAbove = buttonRect.top - tableRect.top - 10;
+  //   const dropdownHeight = dropdownRect.height;
+  //   const dropdownWidth = dropdownRect.width;
+  //   const spaceBelow = tableRect.bottom - buttonRect.bottom - 10;
+  //   const spaceAbove = buttonRect.top - tableRect.top - 10;
 
-    let top;
+  //   let top;
 
-    if (spaceBelow >= dropdownHeight) {
-      top = button.offsetHeight + 2;
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceBelow}px`;
-    } else if (spaceAbove >= dropdownHeight) {
-      top = -dropdownHeight - 2;
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceAbove}px`;
-    } else {
-      top = button.offsetHeight + 2;
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${Math.min(spaceBelow, dropdownHeight)}px`;
-    }
+  //   if (spaceBelow >= dropdownHeight) {
+  //     top = button.offsetHeight + 2;
+  //     dropdown.style.top = `${top}px`;
+  //     dropdown.style.bottom = "auto";
+  //     dropdown.style.maxHeight = `${spaceBelow}px`;
+  //   } else if (spaceAbove >= dropdownHeight) {
+  //     top = -dropdownHeight - 2;
+  //     dropdown.style.top = `${top}px`;
+  //     dropdown.style.bottom = "auto";
+  //     dropdown.style.maxHeight = `${spaceAbove}px`;
+  //   } else {
+  //     top = button.offsetHeight + 2;
+  //     dropdown.style.top = `${top}px`;
+  //     dropdown.style.bottom = "auto";
+  //     dropdown.style.maxHeight = `${Math.min(spaceBelow, dropdownHeight)}px`;
+  //   }
 
-    const additionalOffset = 4;
-    const left = -dropdownWidth - additionalOffset;
+  //   const additionalOffset = 4;
+  //   const left = -dropdownWidth - additionalOffset;
 
-    dropdown.style.left = `${left}px`;
-    dropdown.style.right = "auto";
-    dropdown.style.position = "absolute";
-    dropdown.style.zIndex = "1000";
-    dropdown.style.overflowY = "auto";
-  };
+  //   dropdown.style.left = `${left}px`;
+  //   dropdown.style.right = "auto";
+  //   dropdown.style.position = "absolute";
+  //   dropdown.style.zIndex = "1000";
+  //   dropdown.style.overflowY = "auto";
+  // };
+
+const positionDropdown = (rowIndex, colIndex) => {
+  const key = `${rowIndex}-${colIndex}`;
+  const button = menuRefs.current[key]?.button;
+  const dropdown = menuRefs.current[key]?.dropdown;
+
+  if (!button || !dropdown) return;
+
+  const buttonRect = button.getBoundingClientRect();
+  const tableRect = tableContainerRef.current.getBoundingClientRect();
+  const headerRect = tableContainerRef.current.querySelector("thead")?.getBoundingClientRect();
+  const dropdownRect = dropdown.getBoundingClientRect();
+
+  // Ensure headerRect is valid
+  if (!headerRect) return;
+
+  const dropdownHeight = dropdownRect.height || 150; // Default height if not yet measured
+  const spaceBelow = window.innerHeight - buttonRect.bottom - 10; // Use window height for consistency
+  const spaceAbove = buttonRect.top - headerRect.bottom - 10; // Space from header bottom to button top
+
+  let top;
+
+  // Prioritize showing below if enough space, otherwise show above below the header
+  if (spaceBelow >= dropdownHeight) {
+    top = button.offsetHeight + 2;
+    dropdown.style.top = `${top}px`;
+    dropdown.style.bottom = "auto";
+    dropdown.style.maxHeight = `${spaceBelow}px`;
+  } else if (spaceAbove >= dropdownHeight) {
+    top = -(dropdownHeight + 2);
+    dropdown.style.top = `${top}px`;
+    dropdown.style.bottom = "auto";
+    dropdown.style.maxHeight = `${spaceAbove}px`;
+  } else {
+    // Fallback: Show above with max available space, ensuring it starts below header
+    top = -(Math.min(dropdownHeight, spaceAbove) + 2);
+    dropdown.style.top = `${top}px`;
+    dropdown.style.bottom = "auto";
+    dropdown.style.maxHeight = `${spaceAbove}px`;
+  }
+
+  // Adjust horizontal positioning
+  const additionalOffset = 4;
+  const left = -dropdownRect.width - additionalOffset;
+
+  dropdown.style.left = `${left}px`;
+  dropdown.style.right = "auto";
+  dropdown.style.position = "absolute";
+  dropdown.style.zIndex = "1000";
+  dropdown.style.overflowY = "auto";
+
+  // Ensure dropdown stays within viewport vertically
+  const viewportBottom = window.innerHeight;
+  const dropdownBottom = buttonRect.top + top;
+  if (dropdownBottom < 0) {
+    dropdown.style.top = "0";
+    dropdown.style.maxHeight = `${buttonRect.top - 10}px`; // Limit to space above button
+  } else if (buttonRect.bottom + (dropdownHeight - top) > viewportBottom) {
+    dropdown.style.maxHeight = `${viewportBottom - buttonRect.bottom - 10}px`;
+  }
+};
 
   const positionExportDropdown = () => {
     const button = exportButtonRef.current;
@@ -418,19 +501,52 @@ const CustomTable = ({
   };
 
   const handleDateRangeSelect = (range) => {
-    if (currentDateFilterKey) {
-      setFilterValues((prev) => ({
-        ...prev,
-        [currentDateFilterKey]: range,
-      }));
-      onFilterChange(currentDateFilterKey, range);
+    const selectedFilterType = filterValues.filter_type;
+    if (
+      selectedFilterType &&
+      [
+        "date_reported",
+        "date_updated",
+        "date_created",
+        "due_date",
+        "nextBillingDate",
+      ].includes(selectedFilterType)
+    ) {
+      const updatedValues = {
+        ...filterValues,
+        [selectedFilterType]: {
+          start: range.start ? new Date(range.start) : null,
+          end: range.end ? new Date(range.end) : null,
+        },
+      };
+    
+      setFilterValues(updatedValues);
+      onFilterChange(selectedFilterType, updatedValues[selectedFilterType]);
+    } else {
+
+      // Fallback to a default key if needed (optional)
+      const defaultKey = "date_reported";
+      const updatedValues = {
+        ...filterValues,
+        [defaultKey]: {
+          start: range.start ? new Date(range.start) : null,
+          end: range.end ? new Date(range.end) : null,
+        },
+      };
+      
+      setFilterValues(updatedValues);
+      onFilterChange(defaultKey, updatedValues[defaultKey]);
     }
     setIsDateFilterDropdownOpen(false);
   };
 
   const resetFilters = () => {
     setFilterValues({
-      assign_to: "",
+      category: "",
+      priority: "",
+      date_reported: null,
+      date_updated: null,
+      assigned_to: "",
       stage_completion: "",
       date_created: null,
       due_date: null,
@@ -441,9 +557,14 @@ const CustomTable = ({
       nextBillingDate: null,
       billingCycle: "",
       lastPaymentStatus: "",
+      filter_type: "",
     });
     setCurrentDateFilterKey(null);
-    onFilterChange("assign_to", "");
+    onFilterChange("category", "");
+    onFilterChange("priority", "");
+    onFilterChange("date_reported", null);
+    onFilterChange("date_updated", null);
+    onFilterChange("assigned_to", "");
     onFilterChange("stage_completion", "");
     onFilterChange("date_created", null);
     onFilterChange("due_date", null);
@@ -454,7 +575,10 @@ const CustomTable = ({
     onFilterChange("nextBillingDate", null);
     onFilterChange("billingCycle", "");
     onFilterChange("lastPaymentStatus", "");
+    onFilterChange("filter_type", "");
   };
+
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -537,7 +661,7 @@ const CustomTable = ({
           <div className="search-container">
             <SearchInput
               type="text"
-              placeholder="Search"
+              placeholder="Select Filter"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -547,35 +671,46 @@ const CustomTable = ({
             {filters.map((filter, index) => (
               <div key={index} className="filter-wrapper">
                 <div className="filter-select-container">
-                  <SelectInput
-                    value={filterValues[filter.key] || ""}
-                    onChange={(e) => {
-                      const newFilterValue = e.target.value;
-                      handleFilterValueChange(filter.key, newFilterValue);
-                      if (newFilterValue === "") {
-                        resetFilters();
-                      }
-                    }}
-                    options={filter.options}
-                    className="table-filter-select"
-                  />
-                  {(filterValues[filter.key] === "date_created" ||
-                    filterValues[filter.key] === "nextBillingDate" ||
-                    filterValues[filter.key] === "due_date") && (
+                  <div className="filter-label">
+                    <SelectInput
+                      value={filterValues[filter.key] || ""}
+                      onChange={(e) => {
+                        const newFilterValue = e.target.value;
+                        handleFilterValueChange(filter.key, newFilterValue);
+                        if (newFilterValue === "") {
+                          resetFilters();
+                        } else if (
+                          ["date_reported", "date_updated"].includes(
+                            newFilterValue
+                          )
+                        ) {
+                          setCurrentDateFilterKey(newFilterValue); // Set the actual date key
+                        }
+                      }}
+                      options={filter.options}
+                      className="table-filter-select"
+                    />
+                  </div>
+                  {(filterValues[filter.key] === "date_reported" ||
+                    filterValues[filter.key] === "date_updated" ||
+                    filterValues[filter.key] === "date_created" ||
+                    filterValues[filter.key] === "due_date" ||
+                    filterValues[filter.key] === "nextBillingDate") && (
                     <div className="date-filter-input-container">
                       <TextInput
                         type="text"
                         value={
-                          filterValues[filter.key]?.start
+                          filterValues[filterValues[filter.key]]?.start
                             ? format(
-                                filterValues[filter.key].start,
+                                filterValues[filterValues[filter.key]].start,
                                 "MMM d, yyyy"
                               )
                             : "Select start date"
                         }
                         readOnly
                         onClick={() => {
-                          setCurrentDateFilterKey(filter.key);
+                         
+                          setCurrentDateFilterKey(filterValues[filter.key]);
                           setIsDateFilterDropdownOpen(true);
                         }}
                         className="date-filter-input date-filter-input-start"
@@ -585,23 +720,24 @@ const CustomTable = ({
                       <TextInput
                         type="text"
                         value={
-                          filterValues[filter.key]?.end
+                          filterValues[filterValues[filter.key]]?.end
                             ? format(
-                                filterValues[filter.key].end,
+                                filterValues[filterValues[filter.key]].end,
                                 "MMM d, yyyy"
                               )
                             : "Select end date"
                         }
                         readOnly
                         onClick={() => {
-                          setCurrentDateFilterKey(filter.key);
+                          
+                          setCurrentDateFilterKey(filterValues[filter.key]);
                           setIsDateFilterDropdownOpen(true);
                         }}
                         className="date-filter-input date-filter-input-end"
                         ref={dateFilterEndInputRef}
                       />
                       {isDateFilterDropdownOpen &&
-                        currentDateFilterKey === filter.key && (
+                        currentDateFilterKey === filterValues[filter.key] && (
                           <div
                             className="date-filter-dropdown-wrapper no-scrollbar::-webkit-scrollbar no-scrollbar"
                             ref={dateFilterDropdownRef}
@@ -615,30 +751,71 @@ const CustomTable = ({
                         )}
                     </div>
                   )}
-                  {filterValues[filter.key] === "assign_to" && (
+                  {filterValues[filter.key] === "category" && (
+                    <div className="filter-value-select-container">
+                      <SelectInput
+                        value={filterValues.category || ""}
+                        onChange={(e) =>
+                          handleFilterValueChange("category", e.target.value)
+                        }
+                        options={[
+                          { value: "", label: "Select Category" },
+                          ...uniqueCategories.map((category) => ({
+                            value: category,
+                            label: category,
+                          })),
+                        ]}
+                        className="filter-value-select"
+                      />
+                    </div>
+                  )}
+                  {filterValues[filter.key] === "priority" && (
+                    <div className="filter-value-select-container">
                     <SelectInput
-                      value={filterValues.assign_to || ""}
+                      value={filterValues.priority || ""}
                       onChange={(e) =>
-                        handleFilterValueChange("assign_to", e.target.value)
+                        handleFilterValueChange("priority", e.target.value)
                       }
                       options={[
-                        { value: "", label: "Select Assign To" },
-                        ...uniqueAssignTo.map((name) => ({
+                        { value: "", label: "Select Priority" },
+                        {
+                          value: "Enterprise Critical",
+                          label: "Enterprise Critical",
+                        },
+                        { value: "Enterprise High", label: "Enterprise High" },
+                        { value: "Critical", label: "Critical" },
+                        { value: "High", label: "High" },
+                        { value: "Medium", label: "Medium" },
+                        { value: "Low", label: "Low" },
+                      ]}
+                      className="filter-value-select"
+                    />
+                    </div>
+                  )}
+                  {filterValues[filter.key] === "assigned_to" && (
+                    <div className="filter-value-select-container">
+                    <SelectInput
+                      value={filterValues.assigned_to || ""}
+                      onChange={(e) =>
+                        handleFilterValueChange("assigned_to", e.target.value)
+                      }
+                      options={[
+                        { value: "", label: "Select Assigned To" },
+                        ...uniqueAssignedTo.map((name) => ({
                           value: name,
                           label: name,
                         })),
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "stage_completion" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.stage_completion || ""}
                       onChange={(e) =>
-                        handleFilterValueChange(
-                          "stage_completion",
-                          e.target.value
-                        )
+                        handleFilterValueChange("stage_completion", e.target.value)
                       }
                       options={[
                         { value: "", label: "Select Stage Completion" },
@@ -649,8 +826,10 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "plan" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.plan || ""}
                       onChange={(e) =>
@@ -665,15 +844,14 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "account_status" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.account_status || ""}
                       onChange={(e) =>
-                        handleFilterValueChange(
-                          "account_status",
-                          e.target.value
-                        )
+                        handleFilterValueChange("account_status", e.target.value)
                       }
                       options={[
                         { value: "", label: "Select Account Status" },
@@ -684,15 +862,14 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "account_officer" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.account_officer || ""}
                       onChange={(e) =>
-                        handleFilterValueChange(
-                          "account_officer",
-                          e.target.value
-                        )
+                        handleFilterValueChange("account_officer", e.target.value)
                       }
                       options={[
                         { value: "", label: "Select Account Officer" },
@@ -703,8 +880,10 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "status" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.status || ""}
                       onChange={(e) =>
@@ -719,8 +898,10 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "billingCycle" && (
+                     <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.billingCycle || ""}
                       onChange={(e) =>
@@ -734,15 +915,14 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "lastPaymentStatus" && (
+                    <div className="filter-value-select-container">
                     <SelectInput
                       value={filterValues.lastPaymentStatus || ""}
                       onChange={(e) =>
-                        handleFilterValueChange(
-                          "lastPaymentStatus",
-                          e.target.value
-                        )
+                        handleFilterValueChange("lastPaymentStatus", e.target.value)
                       }
                       options={[
                         { value: "", label: "Select Payment Status" },
@@ -753,6 +933,7 @@ const CustomTable = ({
                       ]}
                       className="filter-value-select"
                     />
+                    </div>
                   )}
                   {filterValues[filter.key] === "clear_filters" && (
                     <Button
@@ -1030,9 +1211,9 @@ const CustomTable = ({
                         </div>
                       ) : col.type === "priority" ? (
                         <span
-                          className={`priority-label priority-${row[
-                            col.key
-                          ].toLowerCase()}`}
+                          className={`priority-label priority-${row[col.key]
+                            .toLowerCase()
+                            .replace(/[\s-]/g, "-")}`}
                         >
                           {row[col.key]}
                         </span>

@@ -168,7 +168,7 @@ const usePricingForm = ({
       Array.isArray(initialData.extraPricing) && initialData.extraPricing.length > 0
     );
 
-    console.log("usePricingForm - Initial sync with initialData:", initialData);
+
     prevInitialDataRef.current = initialData;
   }, [initialData, initialPlanType, normalizedFeatures]);
 
@@ -193,7 +193,7 @@ const usePricingForm = ({
   const availableFeatures = Array.isArray(normalizedFeatures)
     ? normalizedFeatures.filter((feature) => {
         if (!feature?.id || !feature?.name) {
-          console.warn("Invalid feature:", feature);
+        
           return false;
         }
         const isAssigned =
@@ -227,10 +227,15 @@ const usePricingForm = ({
   }, [enableExtraPricing, normalizedFeatures, isEditMode, initialData.extraPricing]);
 
   const clientOptions = [
+    { value: "5", label: "5" },
     { value: "10", label: "10" },
+    { value: "15", label: "15" },
     { value: "20", label: "20" },
     { value: "30", label: "30" },
-    { value: "200", label: "200" }, // Added for your plan
+    { value: "50", label: "50" },
+    { value: "100", label: "100" },
+    { value: "200", label: "200" }, 
+    { value: "500", label: "500" }, 
     { value: "unlimited", label: "Unlimited" },
   ];
 
@@ -240,7 +245,6 @@ const usePricingForm = ({
     const value = 5 * (i + 1) + "GB";
     return { value, label: value };
   }).concat([
-    { value: "70GB", label: "70GB" }, // Added for your plan
     { value: "unlimited", label: "Unlimited" },
   ]);
 

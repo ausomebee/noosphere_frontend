@@ -79,10 +79,11 @@
   font-family: 'Inter', sans-serif;
   background-color: #fff;
   min-height: 100vh;
+  position: relative;
 }
 
 .tenant-header {
-  display: flex;
+display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 32px;
@@ -471,7 +472,7 @@ display: flex;
 
 }
 
-/* Priority label styling */
+/* Priority label styling
 .priority-label {
   font-weight: 500;
 }
@@ -479,7 +480,7 @@ display: flex;
 .priority-label.critical {
   color: #d32f2f;
   font-weight: bold;
-}
+} */
 
 /* Attachment styling */
 .attachment-link {

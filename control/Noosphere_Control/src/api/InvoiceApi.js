@@ -43,6 +43,7 @@ const GetInvoiceById = async ({ id, accessToken, refreshToken }) => {
   }
 };
 
+
 const GetInvoiceByAllAndStatus = async ({
   status,
   accessToken,
@@ -62,6 +63,73 @@ const GetInvoiceByAllAndStatus = async ({
   }
 };
 
+const GetPaymentById = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/billing/payment/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch payment by ID"
+    );
+  }
+};
+
+const GetPaymentByAllAndStatus = async({
+ status,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/billing/payment/status/${status}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch payments by status"
+    );
+  }
+}
+
+const GetCountForInvoice = async({
+   accessToken,
+  refreshToken, 
+}) => {
+ const authFetch = AxiosInterceptor(accessToken, refreshToken);
+
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/invoice/total/status`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch invoice counts by status"
+    );
+  }
+}
+const GetCountForPayment = async({
+   accessToken,
+  refreshToken, 
+}) => {
+ const authFetch = AxiosInterceptor(accessToken, refreshToken);
+
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/billing/countpayment`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch payment counts by status"
+    );
+  }
+}
+
 
 
 export default {
@@ -69,4 +137,8 @@ export default {
   GetBillingDueMetric,
   GetInvoiceById,
   GetInvoiceByAllAndStatus,
+  GetPaymentById,
+  GetPaymentByAllAndStatus,
+  GetCountForInvoice,
+  GetCountForPayment
 };

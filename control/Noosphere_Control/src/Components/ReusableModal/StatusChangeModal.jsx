@@ -65,11 +65,12 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, plan, action }) => {
       onSecondaryButtonClick={onClose}
       primaryButtonDisabled={!password.trim() || isLoading}
     >
+      <form onSubmit={handleConfirm}>
       <div className="delete-confirmation-content">
         <IoMdAlert className="warning-icon" />
         <h3>{title}</h3>
         <p>{message}</p>
-        <form onSubmit={handleConfirm}>
+       
           <p>Enter administrative password to complete this action</p>
           <PasswordInput
             label="Administrative Password"
@@ -81,8 +82,9 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, plan, action }) => {
             error={error} // Added for error display
             autoFocus={isOpen} // Added for UX
           />
-        </form>
+        
       </div>
+      </form>
     </ReusableModal>
   );
 };

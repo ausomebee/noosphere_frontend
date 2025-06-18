@@ -100,7 +100,7 @@ const MainPerformance = () => {
       <div className="resource-utilization-chart-wrapper">
         <ResourceUtilizationChart data={data} />
       </div>
-      <div>
+      {/* <div>
         <h2 className="performance-section-label">Data Management</h2>
       </div>
       <div>
@@ -137,7 +137,7 @@ const MainPerformance = () => {
           <StackedBarChart />
        
         </div>
-      </div>
+      </div> */}
     </Layout>
   );
 };

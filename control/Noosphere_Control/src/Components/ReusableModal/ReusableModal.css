@@ -39,8 +39,6 @@
   width: 100%; /* Ensure the container takes up the full width */
 }
 
-
-
 /* Styles for each tab button */
 .tab-button {
   flex: 1; /* Each tab takes up an equal portion of the container's width */
@@ -126,8 +124,6 @@
   margin-bottom: 1rem;
 }
 
-
-
 .form-checkbox-label {
   font-size: 0.875rem;
   color: #333333;
@@ -146,182 +142,172 @@
 }
 
 .form-row .input-select {
-    flex: 1;
-    min-width: 80px; /* Ensure select inputs have a minimum width */
-    max-width: 120px; /* Cap the width to match the screenshot */
-  }
+  flex: 1;
+  min-width: 80px; /* Ensure select inputs have a minimum width */
+  max-width: 120px; /* Cap the width to match the screenshot */
+}
 
-  /* Form Input Styles */
-  
-  
-  .form-row .input-select {
-    flex: 1;
-    min-width: 80px; /* Ensure select inputs have a minimum width */
-    max-width: 120px; /* Cap the width to match the screenshot */
-  }
-  
-  .form-row > span {
-    font-size: 0.875rem;
-    color: #333333;
-  }
+/* Form Input Styles */
 
+.form-row .input-select {
+  flex: 1;
+  min-width: 80px; /* Ensure select inputs have a minimum width */
+  max-width: 120px; /* Cap the width to match the screenshot */
+}
 
+.form-row > span {
+  font-size: 0.875rem;
+  color: #333333;
+}
 
+.upload-modal-content {
+  padding: 1rem 0;
+}
 
+.upload-area {
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  background: #f9fafb;
+}
 
-  .upload-modal-content {
-    padding: 1rem 0;
-  }
-  
-  .upload-area {
-    border: 2px dashed #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    text-align: center;
-    position: relative;
-    background: #f9fafb;
-  }
-  
-  .upload-area svg {
-    color: #5C6167;
-  }
-  
-  .upload-icon {
-    background: #F7F7F7;
-    padding: 1rem;
-    border-radius: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto 1rem;
-    width: 56px;
-    height: 56px;
-  }
-  
-  .upload-area p {
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin: 0;
-    line-height: 1.5;
-  }
-  
-  .upload-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
-  
-  .file-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-  
-  .file-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 1.3rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.8rem;
-    background: #fff;
-  }
-  
-  .file-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .file-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .file-icon {
-    color: #3b82f6; /* Blue color to match the image */
-  }
-  
-  .file-name {
-    font-size: 0.875rem;
-    color: #111827;
-  }
-  
-  .file-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  
-  .file-success {
-    color: #242528;
-  }
-  
-  .file-error {
-    font-size: 0.75rem;
-    color: #ef4444;
-  }
-  
-  .progress-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 0.25rem;
-  }
-  
-  .progress {
-    flex: 1;
-    height: 0.6rem;
-    background: #111827;
-    border-radius: 0.25rem;
-    transition: width 0.3s ease;
-  }
-  
-  .progress-text {
-    font-size: 0.9rem;
-    color: #6b7280;
-  }
-  
-  .remove-file,
-  .retry-file {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-  }
-  
-  .remove-file:hover,
-  .retry-file:hover {
-    color: #ef4444;
-  }
+.upload-area svg {
+  color: #5c6167;
+}
 
+.upload-icon {
+  background: #f7f7f7;
+  padding: 1rem;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1rem;
+  width: 56px;
+  height: 56px;
+}
 
-  .delete-confirmation-content {
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .warning-icon {
-    font-size: 2rem;
-    color: #000;
-    margin-bottom: 0.5rem;
-  }
-  
-  .center-footer {
-    display: flex;
-    justify-content: center !important; /* Override default footer alignment */
-    gap: 0 !important; /* Remove gap if only one button */
-  }
+.upload-area p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
 
+.upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
 
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
 
-  
+.file-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.3rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-icon {
+  color: #3b82f6; /* Blue color to match the image */
+}
+
+.file-name {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.file-success {
+  color: #242528;
+}
+
+.file-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.progress {
+  flex: 1;
+  height: 0.6rem;
+  background: #111827;
+  border-radius: 0.25rem;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.remove-file,
+.retry-file {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.remove-file:hover,
+.retry-file:hover {
+  color: #ef4444;
+}
+
+.delete-confirmation-content {
+  text-align: center;
+  padding: 1rem;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  color: #000;
+  margin-bottom: 0.5rem;
+}
+
+.center-footer {
+  display: flex;
+  justify-content: center !important; /* Override default footer alignment */
+  gap: 0 !important; /* Remove gap if only one button */
+}
 
 .pricing-plan-section-titles {
   font-size: 14px;
@@ -330,9 +316,8 @@
   margin-bottom: 20px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-margin-bottom: 20px;
+  margin-bottom: 20px;
 }
-
 
 .pricing-plan-section-title {
   font-size: 14px;
@@ -357,7 +342,6 @@ margin-bottom: 20px;
   display: flex;
   align-items: center;
   padding: 10px 0;
-  
 }
 
 .pricing-plan-feature-item:last-child {
@@ -448,7 +432,7 @@ margin-bottom: 20px;
 }
 
 .pricing-plan-custom-input.error {
-  border-color: #FF4D4F;
+  border-color: #ff4d4f;
 }
 
 .pricing-plan-custom-select {
@@ -481,7 +465,7 @@ margin-bottom: 20px;
 }
 
 .pricing-plan-error-message {
-  color: #FF4D4F;
+  color: #ff4d4f;
   font-size: 12px;
   margin-top: 4px;
 }
@@ -492,7 +476,6 @@ margin-bottom: 20px;
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   padding: 20px;
-
 }
 
 .pricing-plan-extra-pricing-section {
@@ -515,4 +498,80 @@ margin-bottom: 20px;
 
 .pricing-plan-extra-pricing-item .pricing-plan-input-group {
   position: relative;
+}
+
+/* Estimated Time to Resolution (SLA) */
+.resolution-time {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+
+
+.resolution-time h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4B4E54; /* Adjust for light/dark theme */
+  margin: 0;
+}
+
+.upload-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin: 0;
+  margin-top: 2rem;
+}
+
+.upload-content h4 {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+.resolution-time .resolution-inputs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.resolution-selects {
+  margin-bottom: -20px !important;
+  border-radius: 20px;
+  width: 150px !important;
+}
+.resolution-selects-one {
+  margin-bottom: -20px !important;
+  border-radius: 20px;
+  width: 90px !important;
+}
+
+.sla-select {
+  width: 130px;
+  padding: 0.5rem;
+  border-radius: 20px !important;
+}
+.sla-select-one {
+  width: 80px;
+  padding: 0.5rem;
+  border-radius: 20px !important;
+}
+
+
+.resolution-time .resolution-inputs h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4B4E54;
+  margin: 0;
+}
+
+
+
+.resolution-time .resolution-date {
+  font-size: 16px;
+  color: #333539;
+  margin-top: 2rem;
+ 
 }

@@ -71,7 +71,7 @@ const AddProspectModal = ({
     resolver: yupResolver(schema),
     defaultValues: {
       ...defaultFormValues,
-      pipelineStageId, // Preselect the current stage
+      pipelineStageId,
     },
   });
 
