@@ -1,26 +1,23 @@
 import React, { useMemo, useEffect } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { SelectInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { SelectInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
-    console.log(initialCategory)
-  // Define validation schema with yup
+const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
     categoryFrom: yup.string().trim().required("Current category is required"),
     categoryTo: yup.string().trim().required("New category is required").notOneOf([yup.ref("categoryFrom")], "New category must be different from the current category"),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
-    watch,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -29,7 +26,6 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
     },
   });
 
-  // Memoized category options
   const categoryOptions = useMemo(
     () => [
       { value: "", label: "Select" },
@@ -53,7 +49,6 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
     []
   );
 
-  // Set initial category value when the modal opens or initialCategory changes
   useEffect(() => {
     if (isOpen && initialCategory) {
       setValue("categoryFrom", initialCategory, { shouldValidate: true });
@@ -62,11 +57,10 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
     }
   }, [isOpen, initialCategory, setValue, reset]);
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (data.categoryFrom && data.categoryTo) {
-      onSave(data.categoryTo); // Only send the "to" value as per your requirement
-      reset(); // Reset form
+      await onSave(data.categoryTo);
+      reset();
       onClose();
     }
   };
@@ -75,7 +69,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
+        reset();
         onClose();
       }}
       title="Change category"
@@ -83,7 +77,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
+        reset();
         onClose();
       }}
     >
@@ -93,7 +87,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
           {...register("categoryFrom")}
           options={categoryOptions}
           error={errors.categoryFrom?.message}
-          disabled={!!initialCategory} // Disable if initialCategory is provided
+          disabled={!!initialCategory}
         />
         <SelectInput
           label="Change To"
@@ -104,6 +98,17 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
       </form>
     </ReusableModal>
   );
+};
+
+ChangeCategoryModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  initialCategory: PropTypes.string,
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default ChangeCategoryModal;

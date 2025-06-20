@@ -49,8 +49,12 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, plan, action }) => {
   const title = action === "activate" ? "Activate Plan" : "Deactivate Plan";
   const message =
     action === "activate"
-      ? `Are you sure you want to activate the ${plan?.name || "Unnamed Plan"} plan?`
-      : `Are you sure you want to deactivate the ${plan?.name || "Unnamed Plan"} plan?`;
+      ? `Are you sure you want to activate the ${
+          plan?.name || "Unnamed Plan"
+        } plan?`
+      : `Are you sure you want to deactivate the ${
+          plan?.name || "Unnamed Plan"
+        } plan?`;
 
   return (
     <ReusableModal
@@ -66,11 +70,11 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, plan, action }) => {
       primaryButtonDisabled={!password.trim() || isLoading}
     >
       <form onSubmit={handleConfirm}>
-      <div className="delete-confirmation-content">
-        <IoMdAlert className="warning-icon" />
-        <h3>{title}</h3>
-        <p>{message}</p>
-       
+        <div className="delete-confirmation-content">
+          <IoMdAlert className="warning-icon" />
+          <h3>{title}</h3>
+          <p>{message}</p>
+
           <p>Enter administrative password to complete this action</p>
           <PasswordInput
             label="Administrative Password"
@@ -82,8 +86,7 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, plan, action }) => {
             error={error} // Added for error display
             autoFocus={isOpen} // Added for UX
           />
-        
-      </div>
+        </div>
       </form>
     </ReusableModal>
   );

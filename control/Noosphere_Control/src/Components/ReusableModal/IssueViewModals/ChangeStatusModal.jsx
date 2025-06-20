@@ -1,18 +1,17 @@
 import React, { useEffect } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { SelectInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { SelectInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
-  // Define validation schema with yup
+const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
     statusFrom: yup.string().trim().required("Current status is required"),
     statusTo: yup.string().trim().required("New status is required").notOneOf([yup.ref("statusFrom")], "New status must be different from the current status"),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
@@ -27,7 +26,6 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
     },
   });
 
-  // Status options
   const statusOptions = [
     { value: "", label: "Select" },
     { value: "Unassigned", label: "Unassigned" },
@@ -36,7 +34,6 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
     { value: "Resolved", label: "Resolved" },
   ];
 
-  // Set initial status value when the modal opens
   useEffect(() => {
     if (isOpen && initialStatus) {
       setValue("statusFrom", initialStatus, { shouldValidate: true });
@@ -45,11 +42,10 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
     }
   }, [isOpen, initialStatus, setValue, reset]);
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (data.statusFrom && data.statusTo) {
-      onSave(data.statusTo); // Only send the "to" value as per your requirement
-      reset(); // Reset form
+      await onSave(data.statusTo);
+      reset();
       onClose();
     }
   };
@@ -58,7 +54,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
+        reset();
         onClose();
       }}
       title="Change Status"
@@ -66,7 +62,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
+        reset();
         onClose();
       }}
     >
@@ -76,7 +72,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
           {...register("statusFrom")}
           options={statusOptions}
           error={errors.statusFrom?.message}
-          disabled={!!initialStatus} // Disable if initialStatus is provided
+          disabled={!!initialStatus}
         />
         <SelectInput
           label="Change To"
@@ -87,6 +83,17 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
       </form>
     </ReusableModal>
   );
+};
+
+ChangeStatusModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  initialStatus: PropTypes.string,
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default ChangeStatusModal;

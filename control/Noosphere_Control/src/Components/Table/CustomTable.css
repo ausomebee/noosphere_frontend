@@ -229,6 +229,9 @@
 .status-in-progress {
   color: #027A48;
 }
+.status-not-started {
+  color: #9e2709;
+}
 .status-successful {
   background-color: #ECFDF3;
   color: #027A48;

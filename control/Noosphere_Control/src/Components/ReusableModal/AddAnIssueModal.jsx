@@ -9,14 +9,15 @@ import { showToast } from "../../Helper/ShowToast";
 import { useSelector } from "react-redux";
 import { BsCloudUpload } from "react-icons/bs";
 
+
 // Yup schema for AddIssueModal
 const schema = yup.object().shape({
   tenant: yup.string().required("Company Name is required").trim(),
-  issueTitle: yup.string().required("Issue Title is required").trim(),
+  title: yup.string().required("Issue Title is required").trim(),
   description: yup.string().required("Issue Description is required").trim(),
   category: yup.string().required("Category is required").trim(),
   priority: yup.string().required("Priority is required").trim(),
-  assignToStaff: yup.string().required("Assign to Staff is required"),
+  assignToStaff: yup.string().optional(),
   resolutionTime: yup.object().shape({
     value: yup.string().required("Resolution Time is required"),
     duration: yup.string().required("Duration is required"),
@@ -26,7 +27,7 @@ const schema = yup.object().shape({
 
 const defaultFormValues = {
   tenant: "",
-  issueTitle: "",
+  title: "",
   description: "",
   category: "",
   priority: "",
@@ -45,9 +46,8 @@ const AddIssueModal = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
-  const adminId = useSelector((state) => state.auth?.adminId); // Adjusted to match previous versions
+  const adminId = useSelector((state) => state.authentication?.user?.id);
 
   const {
     register,
@@ -76,10 +76,7 @@ const AddIssueModal = ({
       { value: "Subscription & Plans", label: "Subscription & Plans" },
       { value: "Data Issues", label: "Data Issues" },
       { value: "User Management & Roles", label: "User Management & Roles" },
-      {
-        value: "Client/Patient Management Issues",
-        label: "Client/Patient Management Issues",
-      },
+      { value: "Client/Patient Management Issues", label: "Client/Patient Management Issues" },
       { value: "Bug Report", label: "Bug Report" },
       { value: "Performance", label: "Performance" },
       { value: "Compliance & Security", label: "Compliance & Security" },
@@ -97,16 +94,16 @@ const AddIssueModal = ({
   const priorityOptions = useMemo(() => {
     const baseOptions = [
       { value: "", label: "Select" },
-      { value: "Critical", label: "P1 - Critical" },
-      { value: "High", label: "P2 - High" },
-      { value: "Medium", label: "P3 - Medium" },
-      { value: "Low", label: "P4 - Low" },
+      { value: "P1", label: "P1 - Critical" },
+      { value: "P2", label: "P2 - High" },
+      { value: "P3", label: "P3 - Medium" },
+      { value: "P4", label: "P4 - Low" },
     ];
     if (selectedTenant?.isEnterprise) {
       return [
         { value: "", label: "Select" },
-        { value: "Enterprise Critical", label: "EP1 - Enterprise Critical" },
-        { value: "Enterprise High", label: "EP1 - Enterprise High" },
+        { value: "EP1", label: "EP1 - Enterprise Critical" },
+        { value: "EP2", label: "EP2 - Enterprise High" }, // Fixed typo
         ...baseOptions.slice(1),
       ];
     }
@@ -126,10 +123,7 @@ const AddIssueModal = ({
 
   const tenantOptions = useMemo(
     () => [
-      {
-        value: "",
-        label: tenantList.length ? "Select" : "No tenant available",
-      },
+      { value: "", label: tenantList.length ? "Select" : "No tenant available" },
       ...tenantList.map((tenant) => ({
         value: tenant.tenantId,
         label: tenant.name,
@@ -148,6 +142,7 @@ const AddIssueModal = ({
 
       if (sizeInMB > 50) {
         return {
+          file,
           name: file.name,
           size: sizeDisplay,
           progress: 0,
@@ -157,6 +152,7 @@ const AddIssueModal = ({
       }
 
       return {
+        file,
         name: file.name,
         size: sizeDisplay,
         progress: 0,
@@ -166,7 +162,6 @@ const AddIssueModal = ({
 
     setFiles((prev) => [...prev, ...newFiles]);
 
-    setUploading(true);
     newFiles.forEach((file, index) => {
       if (file.error) return;
 
@@ -186,11 +181,7 @@ const AddIssueModal = ({
             setFiles((prev) =>
               prev.map((f, i) =>
                 i === index + files.length - newFiles.length
-                  ? {
-                      ...f,
-                      error: true,
-                      errorMessage: "Unable to upload. Please try again",
-                    }
+                  ? { ...f, error: true, errorMessage: "Unable to upload. Please try again" }
                   : f
               )
             );
@@ -202,9 +193,9 @@ const AddIssueModal = ({
     setValue("attachmentUpload", newFiles.map((file) => file.name).join(", "));
   };
 
-  const calculateResolutionDate = () => {
+  const calculateResolutionDeadline = () => {
     const { value, duration } = watch("resolutionTime");
-    if (!value || !duration) return null; // Return null if either field is empty
+    if (!value || !duration) return { iso: null, display: null };
 
     const now = new Date();
     let resolutionDate = new Date(now);
@@ -224,7 +215,11 @@ const AddIssueModal = ({
       }
     }
 
-    return `Expected resolution: ${resolutionDate.toLocaleString("en-US", {
+    // Set time to 23:59:59 for consistency
+    resolutionDate.setHours(23, 59, 59, 0);
+
+    const isoString = resolutionDate.toISOString();
+    const displayString = `Expected resolution: ${resolutionDate.toLocaleString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -232,41 +227,39 @@ const AddIssueModal = ({
       minute: "2-digit",
       hour12: true,
     })} (within ${value} ${duration})`;
+
+    return { iso: isoString, display: displayString };
   };
 
   const handleSave = async (formData) => {
-    const issueData = {
-      tenantId: formData.tenant,
-      issueTitle: formData.issueTitle,
-      description: formData.description,
-      category: formData.category,
-      priority: formData.priority,
-      assignToStaff: formData.assignToStaff,
-      resolutionTime: formData.resolutionTime,
-      attachmentUpload: formData.attachmentUpload,
-      createdBy: adminId,
-    };
-
     setIsLoading(true);
     try {
-      const response = await api2.CreateIssue(issueData);
-      if (response.data.status === "ok" && response.data.data?.id) {
-        showToast("Issue created successfully", "success");
-        onSave({
-          ...issueData,
-          id: response.data.data.id,
-          createdAt: new Date().toISOString(),
-        });
+      const { iso: resolutionDeadline } = calculateResolutionDeadline();
+      if (!resolutionDeadline) {
+        throw new Error("Invalid resolution deadline");
+      }
+
+      const issueData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        tenantId: formData.tenant,
+        adminId: formData.assignToStaff,
+        resolutionDeadline,
+        adminLoggedById: adminId,
+        assignToStaff: formData.assignToStaff,
+        createdBy: adminId,
+        image: files.find((f) => !f.error)?.file || null,
+      };
+
+      await onSave(issueData, () => {
         reset(defaultFormValues);
         setFiles([]);
         onClose();
-      } else {
-        throw new Error(response.data.message || "Invalid response from server");
-      }
+      });
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "Failed to create issue";
-      showToast(errorMessage, "error");
+      showToast(`Failed to create issue: ${err.message}`, "error");
     } finally {
       setIsLoading(false);
     }
@@ -303,8 +296,8 @@ const AddIssueModal = ({
         />
         <TextInput
           label="Issue Title"
-          {...register("issueTitle")}
-          error={errors.issueTitle?.message}
+          {...register("title")}
+          error={errors.title?.message}
           placeholder="Type something"
         />
         <TextareaInput
@@ -364,8 +357,8 @@ const AddIssueModal = ({
               />
             </div>
           </div>
-          {calculateResolutionDate() && (
-            <p className="resolution-date">{calculateResolutionDate()}</p>
+          {calculateResolutionDeadline().display && (
+            <p className="resolution-date">{calculateResolutionDeadline().display}</p>
           )}
         </div>
         <div className="upload-content">

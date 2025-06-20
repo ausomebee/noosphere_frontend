@@ -1,25 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { TextareaInput, SwitchInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { TextareaInput, SwitchInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { BsCloudUpload } from "react-icons/bs"; // Ensure this is installed: npm install react-icons
+import { BsCloudUpload } from "react-icons/bs";
 
-const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
-  // Define validation schema with yup
+const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
-    resolution: yup.string().trim().required("Resolution is required").max(1000, "Resolution must not exceed 1000 characters"),
-    tenantApproval: yup.boolean().oneOf([true], "You must confirm with the tenant that the issue is resolved before proceeding."),
+    resolution: yup
+      .string()
+      .trim()
+      .required("Resolution description is required")
+      .max(1000, "Resolution must not exceed 1000 characters"),
+    tenantApproval: yup
+      .boolean()
+      .oneOf([true], "You must confirm with the tenant that the issue is resolved before proceeding."),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -28,11 +32,9 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
     },
   });
 
-  // State for file management
-  const [files, setFiles] = React.useState([]);
-  const [uploading, setUploading] = React.useState(false);
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
-  // Handle file change and upload progress
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files).map((file) => {
       const sizeInMB = file.size / 1024 / 1024;
@@ -43,6 +45,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
 
       if (sizeInMB > 50) {
         return {
+          file,
           name: file.name,
           size: sizeDisplay,
           progress: 0,
@@ -52,6 +55,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
       }
 
       return {
+        file,
         name: file.name,
         size: sizeDisplay,
         progress: 0,
@@ -81,11 +85,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
             setFiles((prev) =>
               prev.map((f, i) =>
                 i === index + prev.length - newFiles.length
-                  ? {
-                      ...f,
-                      error: true,
-                      errorMessage: "Unable to upload. Please try again",
-                    }
+                  ? { ...f, error: true, errorMessage: "Unable to upload. Please try again" }
                   : f
               )
             );
@@ -93,19 +93,18 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
         }
       }, 300);
     });
-
-    // Update form value for attachment (optional, for form submission)
-    setValue("attachmentUpload", newFiles.filter(f => !f.error).map(f => f.name).join(", "));
   };
 
-  // Handle form submission
-  const onSubmit = (data) => {
-    if (data.resolution.trim()) {
-      const validFiles = files.filter(f => !f.error && f.progress === 100);
-      onSave({ resolution: data.resolution, attachmentFile: validFiles.length ? validFiles : null, tenantApproval: data.tenantApproval });
-      reset(); // Reset form
-      setFiles([]); // Clear files
-      setUploading(false); // Reset uploading state
+  const onSubmit = async (data) => {
+    const validFile = files.find((f) => !f.error && f.progress === 100);
+    if (data.resolution.trim() && data.tenantApproval) {
+      await onSave({
+        resolution: data.resolution,
+        attachmentFile: validFile ? validFile.file : null,
+      });
+      reset();
+      setFiles([]);
+      setUploading(false);
       onClose();
     }
   };
@@ -114,31 +113,34 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
-        setFiles([]); // Clear files on close
-        setUploading(false); // Reset uploading state
+        reset();
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
       title="Mark as Resolved"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonDisabled={uploading && !files.some((f) => !f.error && f.progress === 100)}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
-        setFiles([]); // Clear files on cancel
-        setUploading(false); // Reset uploading state
+        reset();
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
     >
-      <div>
-        <label>Describe resolution applied</label>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <TextareaInput
+          label="Resolution Description"
           {...register("resolution")}
           error={errors.resolution?.message}
-          placeholder="Enter a description..."
+          placeholder="Enter resolution details"
+          rows={5}
         />
+        <label>Upload and attach files (optional)</label>
         <div className="upload-content">
-          <h3>Upload and attach files (optional)</h3>
+          <h3>Upload and attach files</h3>
           <h4>Upload and attach files to this issue</h4>
           <div className="upload-area">
             <div className="upload-icon">
@@ -147,12 +149,11 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
             <p>
               Click to upload or drag and drop
               <br />
-              SVG, PNG, JPG, GIF (max. 800x400px, 50MB)
+              SVG, PNG, JPG, GIF, PDF, DOC, DOCX (max. 50MB)
             </p>
             <input
               type="file"
-              multiple
-              accept="image/svg+xml,image/png,image/jpeg,image/gif"
+              accept="image/svg+xml,image/png,image/jpeg,image/gif,application/pdf,.doc,.docx"
               onChange={handleFileChange}
               className="upload-input"
             />
@@ -168,10 +169,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
                     <span className="file-error">{file.errorMessage}</span>
                   ) : (
                     <div className="progress-bar">
-                      <div
-                        className="progress"
-                        style={{ width: `${file.progress}%` }}
-                      ></div>
+                      <div className="progress" style={{ width: `${file.progress}%` }}></div>
                     </div>
                   )}
                 </div>
@@ -179,21 +177,31 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
             </div>
           )}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
-          <p>Confirm tenant’s approval</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px" }}>
+          <label>Confirm tenant’s approval</label>
           <SwitchInput
             {...register("tenantApproval")}
             error={errors.tenantApproval?.message}
           />
         </div>
         {errors.tenantApproval && (
-          <p style={{ color: "red", marginTop: "20px" }}>
+          <p style={{ color: "red", marginTop: "10px" }}>
             {errors.tenantApproval.message}
           </p>
         )}
-      </div>
+      </form>
     </ReusableModal>
   );
+};
+
+MarkAsResolvedModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default MarkAsResolvedModal;
