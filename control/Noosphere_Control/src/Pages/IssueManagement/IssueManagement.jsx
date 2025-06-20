@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
+import { useSelector } from "react-redux";
 import Layout from "../Layout/ControlLayout";
 import { SelectInput } from "../../Components/Input/Inputs";
 import Chart from "react-apexcharts";
@@ -8,12 +15,18 @@ import Pagination from "../../Components/Table/Pagination";
 import "./IssueManagement.css";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
-import AddIssueModal from "../../Components/ReusableModal/AddAnIssue";
-import { useSelector } from "react-redux";
-import api2 from "../../api/TenantApis";
+import AddIssueModal from "../../Components/ReusableModal/AddAnIssueModal";
 import ViewIssue from "./ViewIssue";
+import api from "../../api/IssueApi";
+import api2 from "../../api/TenantApis";
+import LoadingSpinner from "../../Components/LoadingSpinner";
+import { showToast } from "../../Helper/ShowToast";
 
 const IssueManagement = () => {
+  const token = useSelector((state) => state.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
   const [selectedFilter, setSelectedFilter] = useState("by category");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddIssueModalOpen, setIsAddIssueModalOpen] = useState(false);
@@ -22,365 +35,651 @@ const IssueManagement = () => {
   const [filterValue, setFilterValue] = useState("");
   const [staffList, setStaffList] = useState([]);
   const [tenantList, setTenantList] = useState([]);
-  const [issueData, setIssueData] = useState([
-    {
-      id: 1,
-      issue_id: "ISS-2393",
-      category: "Login Issues",
-      priority: "Enterprise Critical",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Angelina ka...",
-      status: "In-Progress",
-      hasActions: true,
-    },
-    {
-      id: 2,
-      issue_id: "ISS-2709",
-      category: "Billing & Payments",
-      priority: "Enterprise High",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "James Har...",
-      status: "Not-Started",
-      hasActions: true,
-    },
-    {
-      id: 3,
-      issue_id: "ISS-8790",
-      category: "Scheduling",
-      priority: "Critical",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Jamie Vardy",
-      status: "Resolved",
-      hasActions: true,
-    },
-    {
-      id: 4,
-      issue_id: "ISS-8899",
-      category: "Login Issues",
-      priority: "High",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Richard De...",
-      status: "Unassigned",
-      hasActions: true,
-    },
-    {
-      id: 5,
-      issue_id: "ISS-2709",
-      category: "Login Issues",
-      priority: "Medium",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Celine Dion",
-      status: "In-Progress",
-      hasActions: true,
-    },
-    {
-      id: 6,
-      issue_id: "ISS-2709",
-      category: "Login Issues",
-      priority: "Low",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Alvarra Akr...",
-      status: "Not-Started",
-      hasActions: true,
-    },
-    {
-      id: 7,
-      issue_id: "ISS-2709",
-      category: "Login Issues",
-      priority: "Critical",
-      logged_by: "James Ca...",
-      date_reported: "12/10/2024",
-      date_updated: "15/10/2024",
-      assigned_to: "Luther Van...",
-      status: "Resolved",
-      hasActions: true,
-    },
-  ]);
-  const itemsPerPage = 5;
+  const [issueData, setIssueData] = useState([]);
+  const [metrics, setMetrics] = useState({
+    All: 0,
+    NotStarted: 0,
+    Resolved: 0,
+    InProgress: 0,
+    Unassigned: 0,
+  });
+  const [resolutionTime, setResolutionTime] = useState("0.00");
+  const [statusPercentages, setStatusPercentages] = useState([]);
+  const [categoryPercentages, setCategoryPercentages] = useState([]);
+  const [dateCreatedPercentages, setDateCreatedPercentages] = useState([]);
+  const [assigneePercentages, setAssigneePercentages] = useState([]);
+  const [priorityPercentages, setPriorityPercentages] = useState([]);
   const [selectedIssue, setSelectedIssue] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isIssueLoading, setIsIssueLoading] = useState(false);
+  const [isAddingIssue, setIsAddingIssue] = useState(false);
+  const [error, setError] = useState("");
+  const itemsPerPage = 5;
+  const cache = useRef(new Map());
+  const staffCache = useRef([]);
+  const tenantCache = useRef([]);
 
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const formatDate = useCallback((dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [adminsResponse, tenantsResponse] = await Promise.all([
-          api2.getAllAdmins({ accessToken, refreshToken }).then((response) => ({
-            type: "admins",
-            response,
-          })),
-          api2.getAllTenants({ accessToken, refreshToken }).then((response) => ({
-            type: "tenants",
-            response,
-          })),
-        ]);
+  const formatNumber = useCallback((num) => {
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return num.toString();
+  }, []);
 
-        const errors = {};
-
-        if (adminsResponse.type === "admins") {
-          if (!Array.isArray(adminsResponse.response.data?.data)) {
-            setStaffList([]);
-            errors.admins = "Invalid admins data received from API";
-          } else {
-            const adminsData = adminsResponse.response.data.data.map((a) => ({
-              staffId: a.id || "",
-              name: a.fullName || a.id || "Unnamed Admin",
-            }));
-            setStaffList(adminsData);
-          }
-        }
-
-        if (tenantsResponse.type === "tenants") {
-          if (!Array.isArray(tenantsResponse.response.data?.data)) {
-            setTenantList([]);
-            errors.tenants = "Invalid tenants data received from API";
-          } else {
-            const tenantsData = tenantsResponse.response.data.data.map((t) => ({
-              tenantId: t.id || "",
-              name: t.companyName || t.id || "Unnamed Tenant",
-              isEnterprise: t.isEnterprise || false,
-            }));
-            setTenantList(tenantsData);
-          }
-        }
-
-        if (Object.keys(errors).length > 0) {
-          console.error("API fetch errors:", errors);
-        }
-      } catch (err) {
-        console.error(`Failed to fetch data: ${err.message}`);
-        setStaffList([]);
-        setTenantList([]);
-      }
-    };
-
-    fetchData();
-  }, [accessToken, refreshToken]);
-
-  const handleFilterChange = (key, value) => {
-    setFilterValue(value);
-    setActiveTab("all");
-  };
-
-  const handleAddIssue = (newIssue) => {
-    const tenant = tenantList.find((t) => t.tenantId === newIssue.tenantId);
-    const staff = staffList.find((s) => s.staffId === newIssue.assignToStaff);
-    const newIssueData = {
-      id: issueData.length + 1,
-      issue_id: `ISS-${Math.floor(1000 + Math.random() * 9000)}`,
-      category: newIssue.category,
-      priority: newIssue.priority,
-      logged_by: newIssue.createdBy || "Unknown",
-      date_reported: new Date().toLocaleDateString("en-US"),
-      date_updated: new Date().toLocaleDateString("en-US"),
-      assigned_to: staff?.name || "Unassigned",
-      status: "Not-Started",
-      hasActions: true,
-    };
-    setIssueData([newIssueData, ...issueData]);
-    setIsAddIssueModalOpen(false);
-  };
-
-  const issuesStats = [
-    { key: "all", label: "All", count: "1200" },
-    { key: "unassigned", label: "Unassigned", count: "123" },
-    { key: "in_progress", label: "In-Progress", count: "123" },
-    { key: "not_started", label: "Not Started", count: "24" },
-    { key: "resolved", label: "Resolved", count: "585" },
-  ];
-
-  const getTopIssueData = () => {
-    switch (selectedFilter) {
-      case "by category":
-        return {
-          series: [48, 20, 15, 14.9, 14],
-          options: {
-            chart: { type: "donut", height: 180 },
-            labels: [
-              "Account & Access",
-              "Billing & Payments",
-              "Scheduling",
-              "Login Issues",
-              "User Management & Roles",
-            ],
-            colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: "50%" } } },
-            tooltip: { y: { formatter: (val) => `${val}%` } },
-          },
-        };
-      case "by status":
-        return {
-          series: [48, 20, 15, 14.9],
-          options: {
-            chart: { type: "donut", height: 180 },
-            labels: ["Resolved", "In Progress", "Not Started", "Unassigned"],
-            colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD"],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: "50%" } } },
-            tooltip: { y: { formatter: (val) => `${val}%` } },
-          },
-        };
-      case "by date reported":
-        return {
-          series: [48, 20, 15, 14.9, 14],
-          options: {
-            chart: { type: "donut", height: 180 },
-            labels: [
-              "12/10/2024",
-              "12/9/2024",
-              "12/8/2024",
-              "12/7/2024",
-              "12/6/2024",
-            ],
-            colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: "50%" } } },
-            tooltip: { y: { formatter: (val) => `${val}%` } },
-          },
-        };
-      case "by assigned to":
-        return {
-          series: [48, 20, 15, 14.9, 14],
-          options: {
-            chart: { type: "donut", height: 180 },
-            labels: [
-              "Angelina ka...",
-              "James Har...",
-              "Jamie Vardy",
-              "Richard De...",
-              "Celine Dion",
-            ],
-            colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: "50%" } } },
-            tooltip: { y: { formatter: (val) => `${val}%` } },
-          },
-        };
-      default:
-        return {
-          series: [30, 25, 20, 15, 10],
-          options: {
-            chart: { type: "donut", height: 180 },
-            labels: ["Issue A", "Issue B", "Issue C", "Issue D", "Issue E"],
-            colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: "50%" } } },
-            tooltip: { y: { formatter: (val) => `${val}%` } },
-          },
-        };
-    }
-  };
-
-  const getModalData = () => {
-    const data = {
-      "by category": [
-        { category: "Account & Access", count: 4800 },
-        { category: "Billing & Payments", count: 2000 },
-        { category: "Scheduling", count: 1500 },
-        { category: "Login Issues", count: 1490 },
-        { category: "User Management & Roles", count: 1400 },
-      ],
-      "by status": [
-        { category: "Resolved", count: 4800 },
-        { category: "In Progress", count: 2000 },
-        { category: "Not Started", count: 1500 },
-        { category: "Unassigned", count: 1490 },
-      ],
-      "by date reported": [
-        { category: "12/10/2024", count: 4800 },
-        { category: "12/9/2024", count: 2000 },
-        { category: "12/8/2024", count: 1500 },
-        { category: "12/7/2024", count: 1490 },
-        { category: "12/6/2024", count: 1400 },
-      ],
-      "by assigned to": [
-        { category: "Angelina ka...", count: 4800 },
-        { category: "James Har...", count: 2000 },
-        { category: "Jamie Vardy", count: 1500 },
-        { category: "Richard De...", count: 1490 },
-        { category: "Celine Dion", count: 1400 },
-      ],
-    };
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    const endIdx = startIdx + itemsPerPage;
-    return data[selectedFilter] ? data[selectedFilter].slice(startIdx, endIdx) : [];
-  };
-
-  const totalPages = Math.ceil(
-    {
-      "by category": 5,
-      "by status": 4,
-      "by date reported": 5,
-      "by assigned to": 5,
-    }[selectedFilter] / itemsPerPage || 1
+  const staffMap = useMemo(
+    () => new Map(staffList.map((s) => [s.staffId, s.name])),
+    [staffList]
+  );
+  const tenantMap = useMemo(
+    () => new Map(tenantList.map((t) => [t.tenantId, t.name])),
+    [tenantList]
   );
 
-  const topIssueData = getTopIssueData();
+  const formatStatus = (status) => {
+  if (!status) return "Not-Started";
 
-  const allColumns = [
-    { key: "issue_id", header: "Issue ID" },
-    { key: "category", header: "Category" },
-    { key: "priority", header: "Priority", type: "priority" },
-    { key: "logged_by", header: "Logged by" },
-    { key: "date_reported", header: "Date reported", type: "date" },
-    { key: "date_updated", header: "Last Updated", type: "date" },
-    { key: "assigned_to", header: "Assigned to" },
-    { key: "status", header: "Issue Status", type: "status" },
-  ];
+  // Normalize status to remove spaces and unify case
+  const normalized = status.replace(/\s/g, "").toLowerCase();
 
-  const filteredColumns = allColumns.filter((col) => col.key !== "status");
+  const statusMap = {
+    inprogress: "In-Progress",
+    notstarted: "Not-Started",
+    completed: "Completed",
+    open: "Open",
+  };
 
-  const activeActions = [
-    { label: "View Issue", onClick: (row) => setSelectedIssue(row) },
-  ];
+  return (
+    statusMap[normalized] ||
+    status.replace(/([a-z])([A-Z])/g, "$1-$2") || // fallback: insert hyphen
+    "Not-Started"
+  );
+};
 
-  const filters = [
-    {
-      key: "filter_type",
-      value: "",
-      options: [
-        { value: "", label: "Select Filter" },
-        { value: "category", label: "Category" },
-        { value: "priority", label: "Priority" },
-        { value: "date_reported", label: "Date Reported" },
-        { value: "date_updated", label: "Last Updated" },
-        { value: "assigned_to", label: "Assigned to" },
-        { value: "clear_filters", label: "Clear Filters" },
-      ],
+
+  const formatPriority = (priority) => {
+    const priorityMap = {
+      EP1: "Enterprise Critical",
+      EP2: "Enterprise High",
+      P1: "Critical",
+      P2: "High",
+      P3: "Medium",
+      P4: "Low",
+    };
+
+    return priorityMap[priority] || priority || "N/A";
+  };
+
+  const fetchData = useCallback(async () => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError("");
+    const errors = [];
+    try {
+      const status =
+        activeTab === "all"
+          ? "all"
+          : activeTab
+              .replace("in_progress", "In Progress")
+              .replace("not_started", "Not Started")
+              .replace("unassigned", "Unassigned")
+              .replace("resolved", "Resolved");
+
+      const results = await Promise.allSettled([
+        api2.getAllAdmins({ accessToken, refreshToken }),
+        api2.getAllTenants({ accessToken, refreshToken }),
+        api.GetIssuesByStatus({ status, accessToken, refreshToken }),
+        api.GetMetricAndStatusCount({ accessToken, refreshToken }),
+        api.GetResolutionTime({ accessToken, refreshToken }),
+        api.GetStatusPercentageAndCount({ accessToken, refreshToken }),
+        api.GetCategoryPercentageAndCount({ accessToken, refreshToken }),
+        api.GetDateCreatedPercentageAndCount({ accessToken, refreshToken }),
+        api.GetAssigneePercentageAndCount({ accessToken, refreshToken }),
+        api.GetPriorityPercentageAndCount({ accessToken, refreshToken }),
+      ]);
+
+      const [
+        adminsResult,
+        tenantsResult,
+        issuesResult,
+        metricsResult,
+        resolutionTimeResult,
+        statusPercentagesResult,
+        categoryPercentagesResult,
+        dateCreatedPercentagesResult,
+        assigneePercentagesResult,
+        priorityPercentagesResult,
+      ] = results;
+
+      // Process admins
+      if (adminsResult.status === "fulfilled") {
+        const adminsData = Array.isArray(adminsResult.value.data?.data)
+          ? adminsResult.value.data.data.map((a) => ({
+              staffId: a.id || "",
+              name: a.fullName || a.id || "Unnamed Admin",
+            }))
+          : [];
+        staffCache.current = adminsData;
+        setStaffList(adminsData);
+      } else {
+        errors.push("Failed to load staff list.");
+        setStaffList(staffCache.current);
+        console.error("Admins error:", adminsResult.reason);
+      }
+
+      // Process tenants
+      if (tenantsResult.status === "fulfilled") {
+        const tenantsData = Array.isArray(tenantsResult.value.data?.data)
+          ? tenantsResult.value.data.data.map((t) => ({
+              tenantId: t.id || "",
+              name: t.companyName || t.id || "Unnamed Tenant",
+              isEnterprise: t.BillingPlan?.[0]?.planType === "ENTERPRISE", // Handle array
+            }))
+          : [];
+        tenantCache.current = tenantsData;
+        setTenantList(tenantsData);
+        console.log("Tenant List:", tenantsData); // Debugging
+      } else {
+        errors.push("Failed to load tenant list.");
+        setTenantList(tenantCache.current);
+        console.error("Tenants error:", tenantsResult.reason);
+      }
+
+      // Process issues
+      if (issuesResult.status === "fulfilled") {
+        const issues = Array.isArray(issuesResult.value.data)
+          ? issuesResult.value.data.map((issue, index) => ({
+              id: issue.id,
+              issue_id: `ISS-00${index + 1}`,
+              category: issue.category || "N/A",
+              status: formatStatus(issue.status),
+              priority: formatPriority(issue.priority),
+              logged_by:
+                issue.loggedBy?.fullName ||
+                issue.tenant?.companyName ||
+                "Unknown",
+              date_reported: formatDate(issue.createdAt),
+              date_updated: formatDate(issue.updatedAt),
+              assigned_to: issue.assignedTo?.fullName || "Unassigned",
+              hasActions: true,
+              title: issue.title || "N/A",
+              description: issue.description || "No description provided",
+              attachments: issue.attachments || [],
+              comments: issue.comments || [],
+              Logs: issue.logs || [],
+              resolutionDeadline: formatDate(issue.resolutionDeadline) || "N/A",
+            }))
+          : [];
+        setIssueData(issues);
+      } else {
+        errors.push("Failed to load issues.");
+        setIssueData([]);
+        console.error("Issues error:", issuesResult.reason);
+      }
+
+      // Process metrics
+      if (metricsResult.status === "fulfilled") {
+        setMetrics({
+          All: metricsResult.value.data?.All?._count?._all ?? 0,
+          NotStarted: metricsResult.value.data?.NotStarted?._count?._all ?? 0,
+          Resolved: metricsResult.value.data?.Resolved?._count?._all ?? 0,
+          InProgress: metricsResult.value.data?.InProgress?._count?._all ?? 0,
+          Unassigned: metricsResult.value.data?.Unassigned?._count?._all ?? 0,
+        });
+      } else {
+        errors.push("Failed to load metrics.");
+        setMetrics({
+          All: 0,
+          NotStarted: 0,
+          Resolved: 0,
+          InProgress: 0,
+          Unassigned: 0,
+        });
+        console.error("Metrics error:", metricsResult.reason);
+      }
+
+      // Process resolution time
+      if (resolutionTimeResult.status === "fulfilled") {
+        setResolutionTime(resolutionTimeResult.value.data ?? "0.00");
+      } else {
+        errors.push("Failed to load resolution time.");
+        setResolutionTime("0.00");
+        console.error("Resolution time error:", resolutionTimeResult.reason);
+      }
+
+      // Process percentages
+      if (statusPercentagesResult.status === "fulfilled") {
+        setStatusPercentages(statusPercentagesResult.value.data ?? []);
+      } else {
+        errors.push("Failed to load status percentages.");
+        setStatusPercentages([]);
+        console.error(
+          "Status percentages error:",
+          statusPercentagesResult.reason
+        );
+      }
+
+      if (categoryPercentagesResult.status === "fulfilled") {
+        setCategoryPercentages(categoryPercentagesResult.value.data ?? []);
+      } else {
+        errors.push("Failed to load category percentages.");
+        setCategoryPercentages([]);
+        console.error(
+          "Category percentages error:",
+          categoryPercentagesResult.reason
+        );
+      }
+
+      if (dateCreatedPercentagesResult.status === "fulfilled") {
+        setDateCreatedPercentages(
+          dateCreatedPercentagesResult.value.data ?? []
+        );
+      } else {
+        errors.push("Failed to load date created percentages.");
+        setDateCreatedPercentages([]);
+        console.error(
+          "Date created percentages error:",
+          dateCreatedPercentagesResult.reason
+        );
+      }
+
+      if (assigneePercentagesResult.status === "fulfilled") {
+        setAssigneePercentages(assigneePercentagesResult.value.data ?? []);
+      } else {
+        errors.push("Failed to load assignee percentages.");
+        setAssigneePercentages([]);
+        console.error(
+          "Assignee percentages error:",
+          assigneePercentagesResult.reason
+        );
+      }
+
+      if (priorityPercentagesResult.status === "fulfilled") {
+        setPriorityPercentages(priorityPercentagesResult.value.data ?? []);
+      } else {
+        errors.push("Failed to load priority percentages.");
+        setPriorityPercentages([]);
+        console.error(
+          "Priority percentages error:",
+          priorityPercentagesResult.reason
+        );
+      }
+
+      if (errors.length > 0) {
+        setError(errors.join(" "));
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setError("Unexpected error occurred while loading data.");
+        console.error("Fetch error:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+    return () => controller.abort();
+  }, [accessToken, refreshToken, activeTab, formatDate]);
+
+  useEffect(() => {
+    const cleanup = fetchData();
+    return () => {
+      if (typeof cleanup === "function") cleanup();
+    };
+  }, [fetchData]);
+
+  const handleFilterChange = useCallback((key, value) => {
+    setFilterValue(value);
+    setActiveTab("all");
+  }, []);
+
+  const handleAddIssue = useCallback(
+    async (newIssue, onSuccess) => {
+      setIsAddingIssue(true);
+      setError("");
+      try {
+        const formData = new FormData();
+        formData.append("title", newIssue.title || "");
+        formData.append("description", newIssue.description || "");
+        formData.append("category", newIssue.category || "");
+        formData.append("priority", newIssue.priority || "");
+        formData.append("tenantId", newIssue.tenantId || "");
+        formData.append("adminId", newIssue.assignToStaff || "");
+        formData.append(
+          "resolutionDeadline",
+          newIssue.resolutionDeadline || ""
+        );
+        formData.append("adminLoggedById", newIssue.adminLoggedById || "");
+        formData.append("assignToStaff", newIssue.assignToStaff || "");
+        if (newIssue.image) {
+          formData.append("attachment", newIssue.image);
+        }
+
+        const response = await api.CreateIssue({
+          accessToken,
+          refreshToken,
+          payload: formData,
+        });
+
+        const newIssueData = {
+          id: response.data?.id || issueData.length + 1,
+          issue_id: `ISS-00${issueData.length + 1}`,
+          category: newIssue.category || "N/A",
+          status: formatStatus(issue.status),
+              priority: formatPriority(issue.priority),
+          logged_by:
+            newIssue.createdBy || tenantMap.get(newIssue.tenantId) || "Unknown",
+          date_reported: formatDate(new Date()),
+          date_updated: formatDate(new Date()),
+          assigned_to: staffMap.get(newIssue.assignToStaff) || "Unassigned",
+
+          hasActions: true,
+          title: response.data?.title || "N/A",
+          description: response.data?.description || "No description provided",
+          attachments: response.data?.attachments || [],
+          comments: response.data?.comments || [],
+          Logs: response.data?.logs || [],
+          resolutionDeadline: formatDate(newIssue.resolutionDeadline) || "N/A",
+        };
+        setIssueData([newIssueData, ...issueData]);
+        cache.current.clear();
+        showToast("Issue added successfully", "success");
+        onSuccess();
+      } catch (err) {
+        setError("Failed to add issue.");
+        showToast("Error adding issue: " + err.message, "error");
+        console.error("Error adding issue:", err);
+      } finally {
+        setIsAddingIssue(false);
+      }
     },
-  ];
+    [accessToken, refreshToken, issueData, staffMap, tenantMap, formatDate]
+  );
+
+  const handleViewIssue = useCallback(
+    async (row) => {
+      setIsIssueLoading(true);
+      setError("");
+      const cacheKey = `issue_${row.id}`;
+      if (cache.current.has(cacheKey)) {
+        setSelectedIssue(cache.current.get(cacheKey));
+        setIsIssueLoading(false);
+        return;
+      }
+      try {
+        const response = await api.GetIssueById({
+          id: row.id,
+          accessToken,
+          refreshToken,
+        });
+        const issue = {
+          id: response.data?.id || row.id,
+          issue_id: response.data?.issueId || row.issue_id,
+          category: response.data?.category || row.category,
+          priority: response.data?.priority || row.priority,
+          logged_by:
+            response.data?.loggedBy?.fullName ||
+            response.data?.tenant?.companyName ||
+            row.logged_by,
+          date_reported: formatDate(
+            response.data?.createdAt || row.date_reported
+          ),
+          date_updated: formatDate(
+            response.data?.updatedAt || row.date_updated
+          ),
+          assigned_to: response.data?.assignedTo?.fullName || "Unassigned",
+          status: response.data?.status?.replace(/\s/g, "") || row.status,
+          title: response.data?.title || "N/A",
+          description: response.data?.description || "No description provided",
+          attachments: response.data?.attachments || [],
+          comments: response.data?.comments || [],
+          Logs: response.data?.logs || [],
+          resolutionDeadline:
+            formatDate(response.data?.resolutionDeadline) || "N/A",
+        };
+        cache.current.set(cacheKey, issue);
+        setSelectedIssue(issue);
+      } catch (err) {
+        setError("Failed to load issue details.");
+        showToast("Error loading issue: " + err.message, "error");
+        console.error("Error fetching issue:", err);
+      } finally {
+        setIsIssueLoading(false);
+      }
+    },
+    [accessToken, refreshToken, formatDate]
+  );
+
+  const issuesStats = useMemo(
+    () => [
+      { key: "all", label: "All", count: formatNumber(metrics.All) },
+      {
+        key: "unassigned",
+        label: "Unassigned",
+        count: formatNumber(metrics.Unassigned),
+      },
+      {
+        key: "in_progress",
+        label: "In-Progress",
+        count: formatNumber(metrics.InProgress),
+      },
+      {
+        key: "not_started",
+        label: "Not Started",
+        count: formatNumber(metrics.NotStarted),
+      },
+      {
+        key: "resolved",
+        label: "Resolved",
+        count: formatNumber(metrics.Resolved),
+      },
+    ],
+    [metrics, formatNumber]
+  );
+
+  const chartOptions = useMemo(
+    () => ({
+      chart: { type: "donut", height: 180 },
+      colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      plotOptions: { pie: { donut: { size: "50%" } } },
+      tooltip: { y: { formatter: (val) => `${val}%` } },
+    }),
+    []
+  );
+
+  const getTopIssueData = useMemo(() => {
+    const dataMap = {
+      "by category": categoryPercentages,
+      "by status": statusPercentages,
+      "by date reported": dateCreatedPercentages,
+      "by assigned to": assigneePercentages,
+      "by priority": priorityPercentages,
+    };
+    const data = dataMap[selectedFilter] || [];
+    const top5 = data.slice(0, 5);
+    const series = top5.map((item) => parseFloat(item.percentage) || 0);
+    const labels = top5.map((item) => {
+      if (item.category) return item.category;
+      if (item.status) return item.status;
+      if (item.createdAt) return formatDate(item.createdAt);
+      if (item.assignedTo) {
+        return typeof item.assignedTo === "object"
+          ? item.assignedTo.fullName || "Unassigned"
+          : item.assignedTo || "Unassigned";
+      }
+      if (item.priority) return item.priority;
+      return "Unknown";
+    });
+
+    return {
+      series: series.length ? series : [1],
+      options: {
+        ...chartOptions,
+        labels: labels.length ? labels : ["No Data"],
+      },
+    };
+  }, [
+    selectedFilter,
+    categoryPercentages,
+    statusPercentages,
+    dateCreatedPercentages,
+    assigneePercentages,
+    priorityPercentages,
+    chartOptions,
+    formatDate,
+  ]);
+
+  const getModalData = useMemo(() => {
+    const dataMap = {
+      "by category": categoryPercentages,
+      "by status": statusPercentages,
+      "by date reported": dateCreatedPercentages,
+      "by assigned to": assigneePercentages,
+      "by priority": priorityPercentages,
+    };
+    const data = dataMap[selectedFilter] || [];
+    if (selectedFilter === "by status" || selectedFilter === "by priority") {
+      return data.map((item) => ({
+        category: item.status || item.priority || "Unknown",
+        count: item.count || 0,
+      }));
+    }
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    return data.slice(startIdx, endIdx).map((item) => ({
+      category:
+        item.category ||
+        formatDate(item.createdAt) ||
+        item.assignedTo
+  ? typeof item.assignedTo === "object"
+    ? item.assignedTo.fullName || "Unassigned"
+    : item.assignedTo || "Unassigned"
+  : "Unassigned" ||
+        item.priority ||
+        "Unknown",
+      count: item.count || 0,
+    }));
+
+    
+  }, [
+    selectedFilter,
+    categoryPercentages,
+    statusPercentages,
+    dateCreatedPercentages,
+    assigneePercentages,
+    priorityPercentages,
+    currentPage,
+    formatDate,
+  ]);
+
+  const totalPages = useMemo(() => {
+    const dataMap = {
+      "by category": categoryPercentages.length,
+      "by status": 0,
+      "by date reported": dateCreatedPercentages.length,
+      "by assigned to": assigneePercentages.length,
+      "by priority": 0,
+    };
+    return selectedFilter === "by status" || selectedFilter === "by priority"
+      ? 1
+      : Math.ceil((dataMap[selectedFilter] || 1) / itemsPerPage);
+  }, [
+    selectedFilter,
+    categoryPercentages,
+    dateCreatedPercentages,
+    assigneePercentages,
+  ]);
+
+  const allColumns = useMemo(
+    () => [
+      { key: "issue_id", header: "Issue ID" },
+      { key: "category", header: "Category" },
+      { key: "priority", header: "Priority", type: "priority" },
+      { key: "logged_by", header: "Logged by" },
+      { key: "date_reported", header: "Date reported", type: "date" },
+      { key: "date_updated", header: "Last Updated", type: "date" },
+      { key: "assigned_to", header: "Assigned to" },
+      { key: "status", header: "Issue Status", type: "status" },
+    ],
+    []
+  );
+
+  const filteredColumns = useMemo(
+    () => allColumns.filter((col) => col.key !== "status"),
+    [allColumns]
+  );
+
+  const activeActions = useMemo(
+    () => [{ label: "View Issue", onClick: handleViewIssue }],
+    [handleViewIssue]
+  );
+
+  const filters = useMemo(
+    () => [
+      {
+        key: "filter_type",
+        value: "",
+        options: [
+          { value: "", label: "Select Filter" },
+          { value: "category", label: "Category" },
+          { value: "priority", label: "Priority" },
+          { value: "date_reported", label: "Date Reported" },
+          { value: "date_updated", label: "Last Updated" },
+          { value: "assigned_to", label: "Assigned to" },
+          { value: "clear_filters", label: "Clear Filters" },
+        ],
+      },
+    ],
+    []
+  );
+
+  const selectOptions = useMemo(
+    () => [
+      { value: "by category", label: "by Category" },
+      { value: "by status", label: "By Status" },
+      { value: "by date reported", label: "By Date Reported" },
+      { value: "by assigned to", label: "By Assigned to" },
+      { value: "by priority", label: "By Priority" },
+    ],
+    []
+  );
 
   if (selectedIssue) {
     return (
       <ViewIssue
         issue={selectedIssue}
         onBack={() => setSelectedIssue(null)}
+        tenant={tenantList}
+        staffList={staffList}
       />
     );
   }
 
   return (
     <Layout>
+      {loading && <LoadingSpinner />}
+      {(isIssueLoading || isAddingIssue) && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1000,
+          }}
+        >
+          <LoadingSpinner />
+        </div>
+      )}
+      {error && (
+        <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+      )}
       <div className="billing-board-header">
         <div className="billing-board-title">
           <h1>Issues Management</h1>
@@ -396,19 +695,25 @@ const IssueManagement = () => {
               <div className="issue-mgmt-overview-card">
                 <h4>All Issues</h4>
                 <div className="issue-mgmt-overview-value-container">
-                  <p className="issue-mgmt-overview-value">10.2K</p>
+                  <p className="issue-mgmt-overview-value">
+                    {formatNumber(metrics.All)}
+                  </p>
                 </div>
               </div>
               <div className="issue-mgmt-overview-card">
                 <h4>Assigned Issues</h4>
                 <div className="issue-mgmt-overview-value-container">
-                  <p className="issue-mgmt-overview-value">9.2K</p>
+                  <p className="issue-mgmt-overview-value">
+                    {formatNumber(metrics.All - metrics.Unassigned)}
+                  </p>
                 </div>
               </div>
               <div className="issue-mgmt-overview-card">
                 <h4>Issues In Progress</h4>
                 <div className="issue-mgmt-overview-value-container">
-                  <p className="issue-mgmt-overview-value">8K</p>
+                  <p className="issue-mgmt-overview-value">
+                    {formatNumber(metrics.InProgress)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -416,13 +721,17 @@ const IssueManagement = () => {
               <div className="issue-mgmt-overview-card">
                 <h4>Resolved Issues</h4>
                 <div className="issue-mgmt-overview-value-container">
-                  <p className="issue-mgmt-overview-value">40.2K</p>
+                  <p className="issue-mgmt-overview-value">
+                    {formatNumber(metrics.Resolved)}
+                  </p>
                 </div>
               </div>
               <div className="issue-mgmt-overview-card">
                 <h4>Avg Resolution Time</h4>
                 <div className="issue-mgmt-overview-value-container">
-                  <p className="issue-mgmt-overview-value">98 hrs</p>
+                  <p className="issue-mgmt-overview-value">
+                    {resolutionTime} hrs
+                  </p>
                 </div>
               </div>
             </div>
@@ -432,13 +741,7 @@ const IssueManagement = () => {
               <h4>Top Issue</h4>
               <div>
                 <SelectInput
-                  options={[
-                    { value: "by category", label: "by Category" },
-                    { value: "by priority", label: "By Priority" },
-                    { value: "by status", label: "By Status" },
-                    { value: "by date reported", label: "By Date Reported" },
-                    { value: "by assigned to", label: "By Assigned to" },
-                  ]}
+                  options={selectOptions}
                   className="issue-mgmt-top-issue-select"
                   onChange={(e) => setSelectedFilter(e.target.value)}
                   value={selectedFilter}
@@ -447,8 +750,8 @@ const IssueManagement = () => {
             </div>
             <div className="issue-mgmt-top-issue-chart">
               <Chart
-                options={topIssueData.options}
-                series={topIssueData.series}
+                options={getTopIssueData.options}
+                series={getTopIssueData.series}
                 type="donut"
                 height={180}
               />
@@ -468,7 +771,9 @@ const IssueManagement = () => {
           {issuesStats.map((tab) => (
             <button
               key={tab.key}
-              className={`subscription-tab ${activeTab === tab.key ? "active" : ""}`}
+              className={`subscription-tab ${
+                activeTab === tab.key ? "active" : ""
+              }`}
               onClick={() => setActiveTab(tab.key)}
             >
               {tab.label} <span className="candidate-count">{tab.count}</span>
@@ -489,7 +794,7 @@ const IssueManagement = () => {
         <div className="issue-mgt-table-container">
           <CustomTable
             data={issueData}
-            columns={allColumns}
+            columns={activeTab === "all" ? allColumns : filteredColumns}
             filters={filters}
             onFilterChange={handleFilterChange}
             actions={activeActions}
@@ -512,17 +817,20 @@ const IssueManagement = () => {
         secondaryButtonColor="#ffffff"
       >
         <div className="issue-mgt-modal-content">
-          {getModalData().map((item, index) => (
+          {getModalData.map((item, index) => (
             <div key={index} className="modal-item">
               <span>{item.category}</span>
               <span>{item.count}</span>
             </div>
           ))}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {selectedFilter !== "by status" &&
+            selectedFilter !== "by priority" && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
         </div>
       </ReusableModal>
 

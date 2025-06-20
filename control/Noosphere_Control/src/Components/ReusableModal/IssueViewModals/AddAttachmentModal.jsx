@@ -1,17 +1,12 @@
 import React, { useState } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { BsCloudUpload } from "react-icons/bs";
 
-const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
-  const [attachmentFile, setAttachmentFile] = useState(null);
+const AddAttachmentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
   const [files, setFiles] = useState([]);
-  const handleSave = () => {
-    if (attachmentFile) {
-      onSave(attachmentFile);
-      setAttachmentFile(null);
-      onClose();
-    }
-  };
+  const [uploading, setUploading] = useState(false);
+
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files).map((file) => {
       const sizeInMB = file.size / 1024 / 1024;
@@ -22,6 +17,7 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
 
       if (sizeInMB > 50) {
         return {
+          file,
           name: file.name,
           size: sizeDisplay,
           progress: 0,
@@ -31,6 +27,7 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
       }
 
       return {
+        file,
         name: file.name,
         size: sizeDisplay,
         progress: 0,
@@ -39,8 +36,8 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
     });
 
     setFiles((prev) => [...prev, ...newFiles]);
-
     setUploading(true);
+
     newFiles.forEach((file, index) => {
       if (file.error) return;
 
@@ -49,8 +46,8 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
         progress += 10;
         setFiles((prev) =>
           prev.map((f, i) =>
-            i === index + files.length - newFiles.length
-              ? { ...f, progress }
+            i === index + prev.length - newFiles.length
+              ? { ...f, progress: Math.min(progress, 100) }
               : f
           )
         );
@@ -59,12 +56,8 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
           if (file.name.includes("Unable")) {
             setFiles((prev) =>
               prev.map((f, i) =>
-                i === index + files.length - newFiles.length
-                  ? {
-                      ...f,
-                      error: true,
-                      errorMessage: "Unable to upload. Please try again",
-                    }
+                i === index + prev.length - newFiles.length
+                  ? { ...f, error: true, errorMessage: "Unable to upload. Please try again" }
                   : f
               )
             );
@@ -72,27 +65,39 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
         }
       }, 300);
     });
-
-    setValue("attachmentUpload", newFiles.map((file) => file.name).join(", "));
   };
+
+  const handleSave = async () => {
+    const validFile = files.find((f) => !f.error && f.progress === 100);
+    if (validFile) {
+      await onSave(validFile.file);
+      setFiles([]);
+      setUploading(false);
+      onClose();
+    }
+  };
+
   return (
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        setAttachmentFile(null);
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
       title="Add an attachment"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonDisabled={uploading || !files.some((f) => !f.error && f.progress === 100)}
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={() => {
-        setAttachmentFile(null);
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
     >
       <div className="upload-content">
-        <h3>Upload and attach files (optional)</h3>
+        <h3>Upload and attach files</h3>
         <h4>Upload and attach files to this issue</h4>
         <div className="upload-area">
           <div className="upload-icon">
@@ -105,7 +110,6 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
           </p>
           <input
             type="file"
-            multiple
             accept="image/svg+xml,image/png,image/jpeg,image/gif"
             onChange={handleFileChange}
             className="upload-input"
@@ -122,10 +126,7 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
                   <span className="file-error">{file.errorMessage}</span>
                 ) : (
                   <div className="progress-bar">
-                    <div
-                      className="progress"
-                      style={{ width: `${file.progress}%` }}
-                    ></div>
+                    <div className="progress" style={{ width: `${file.progress}%` }}></div>
                   </div>
                 )}
               </div>
@@ -135,6 +136,16 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
       </div>
     </ReusableModal>
   );
+};
+
+AddAttachmentModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default AddAttachmentModal;

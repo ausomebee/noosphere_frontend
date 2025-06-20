@@ -1,18 +1,17 @@
 import React, { useEffect } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { SelectInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { SelectInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [] }) => {
-  // Define validation schema with yup
+const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [], issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
     currentAssignee: yup.string().trim().required("Current assignee is required"),
     newAssignee: yup.string().trim().required("New assignee is required").notOneOf([yup.ref("currentAssignee")], "New assignee must be different from the current assignee"),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
@@ -27,7 +26,6 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     },
   });
 
-  // Memoized staff options (moved inside component to use staffList)
   const staffOptions = [
     { value: "", label: staffList.length ? "Select" : "No staff available" },
     ...staffList.map((staff) => ({
@@ -36,20 +34,19 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     })),
   ];
 
-  // Set initial assignee value when the modal opens
   useEffect(() => {
     if (isOpen && initialAssignee) {
-      setValue("currentAssignee", initialAssignee, { shouldValidate: true });
+      const staff = staffList.find((s) => s.name === initialAssignee);
+      setValue("currentAssignee", staff?.staffId || initialAssignee, { shouldValidate: true });
     } else {
       reset({ currentAssignee: "", newAssignee: "" });
     }
-  }, [isOpen, initialAssignee, setValue, reset]);
+  }, [isOpen, initialAssignee, staffList, setValue, reset]);
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (data.currentAssignee && data.newAssignee) {
-      onSave(data.newAssignee); // Only send the "to" value as per your requirement
-      reset(); // Reset form
+      await onSave(data.newAssignee);
+      reset();
       onClose();
     }
   };
@@ -58,7 +55,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
+        reset();
         onClose();
       }}
       title="Reassign to Staff"
@@ -66,7 +63,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
+        reset();
         onClose();
       }}
     >
@@ -76,7 +73,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
           {...register("currentAssignee")}
           options={staffOptions}
           error={errors.currentAssignee?.message}
-          disabled={!!initialAssignee} // Disable if initialAssignee is provided
+          disabled={!!initialAssignee}
         />
         <SelectInput
           label="New Assignee"
@@ -87,6 +84,23 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
       </form>
     </ReusableModal>
   );
+};
+
+ReassignModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  initialAssignee: PropTypes.string,
+  staffList: PropTypes.arrayOf(
+    PropTypes.shape({
+      staffId: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ),
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default ReassignModal;

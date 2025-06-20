@@ -1,25 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { TextInput, TextareaInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { TextInput, TextareaInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { BsCloudUpload } from "react-icons/bs"; // Ensure this is installed: npm install react-icons
+import { BsCloudUpload } from "react-icons/bs";
 
-const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
-  // Define validation schema with yup
+const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
     header: yup.string().trim().required("Header is required").max(100, "Header must not exceed 100 characters"),
     body: yup.string().trim().required("Body is required").max(1000, "Body must not exceed 1000 characters"),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -28,11 +26,9 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
     },
   });
 
-  // State for file management
-  const [files, setFiles] = React.useState([]);
-  const [uploading, setUploading] = React.useState(false);
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
-  // Handle file change and upload progress
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files).map((file) => {
       const sizeInMB = file.size / 1024 / 1024;
@@ -43,6 +39,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
 
       if (sizeInMB > 50) {
         return {
+          file,
           name: file.name,
           size: sizeDisplay,
           progress: 0,
@@ -52,6 +49,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
       }
 
       return {
+        file,
         name: file.name,
         size: sizeDisplay,
         progress: 0,
@@ -81,11 +79,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
             setFiles((prev) =>
               prev.map((f, i) =>
                 i === index + prev.length - newFiles.length
-                  ? {
-                      ...f,
-                      error: true,
-                      errorMessage: "Unable to upload. Please try again",
-                    }
+                  ? { ...f, error: true, errorMessage: "Unable to upload. Please try again" }
                   : f
               )
             );
@@ -93,19 +87,15 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
         }
       }, 300);
     });
-
-    // Update form value for attachment (optional, for form submission)
-    setValue("attachmentUpload", newFiles.filter(f => !f.error).map(f => f.name).join(", "));
   };
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
+    const validFile = files.find((f) => !f.error && f.progress === 100);
     if (data.header.trim() && data.body.trim()) {
-      const validFiles = files.filter(f => !f.error && f.progress === 100);
-      onSave({ header: data.header, body: data.body, attachmentFile: validFiles.length ? validFiles : null });
-      reset(); // Reset form
-      setFiles([]); // Clear files
-      setUploading(false); // Reset uploading state
+      await onSave({ header: data.header, body: data.body, attachmentFile: validFile ? validFile.file : null });
+      reset();
+      setFiles([]);
+      setUploading(false);
       onClose();
     }
   };
@@ -114,19 +104,20 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
-        setFiles([]); // Clear files on close
-        setUploading(false); // Reset uploading state
+        reset();
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
       title="Contact tenant by email"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonDisabled={uploading && !files.some((f) => !f.error && f.progress === 100)}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
-        setFiles([]); // Clear files on cancel
-        setUploading(false); // Reset uploading state
+        reset();
+        setFiles([]);
+        setUploading(false);
         onClose();
       }}
     >
@@ -143,10 +134,10 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
           error={errors.body?.message}
           placeholder="Type something"
         />
-        <label>Upload and attach files</label>
+        <label>Upload and attach files (optional)</label>
         <div className="upload-content">
-          <h3>Upload and attach files (optional)</h3>
-          <h4>Upload and attach files to this issue</h4>
+          <h3>Upload and attach files</h3>
+          <h4>Upload and attach files to this email</h4>
           <div className="upload-area">
             <div className="upload-icon">
               <BsCloudUpload size={24} />
@@ -154,12 +145,11 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
             <p>
               Click to upload or drag and drop
               <br />
-              SVG, PNG, JPG, GIF (max. 800x400px, 50MB)
+              SVG, PNG, JPG, GIF, PDF, DOC, DOCX (max. 50MB)
             </p>
             <input
               type="file"
-              multiple
-              accept="image/svg+xml,image/png,image/jpeg,image/gif"
+              accept="image/svg+xml,image/png,image/jpeg,image/gif,application/pdf,.doc,.docx"
               onChange={handleFileChange}
               className="upload-input"
             />
@@ -175,10 +165,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
                     <span className="file-error">{file.errorMessage}</span>
                   ) : (
                     <div className="progress-bar">
-                      <div
-                        className="progress"
-                        style={{ width: `${file.progress}%` }}
-                      ></div>
+                      <div className="progress" style={{ width: `${file.progress}%` }}></div>
                     </div>
                   )}
                 </div>
@@ -189,6 +176,15 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
       </form>
     </ReusableModal>
   );
+};
+
+ContactTenantModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  issueId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default ContactTenantModal;

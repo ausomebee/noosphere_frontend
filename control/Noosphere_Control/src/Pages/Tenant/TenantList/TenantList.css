@@ -603,10 +603,14 @@ display: flex;
 
 .issues-comment-date {
   font-weight: 600;
+   font-size: 12px;
+   color: #5C6167;
 }
 
 .issues-comment-user {
   font-weight: 500;
+  font-size: 14px;
+  color: #A1A8B3;
 }
 
 .issues-comment-action {

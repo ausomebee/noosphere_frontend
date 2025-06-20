@@ -1,18 +1,17 @@
 import React from "react";
+import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { TextInput, TextareaInput } from "../../Input/Inputs"; // Adjust the import path as needed
+import { TextInput, TextareaInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescription }) => {
-  // Define validation schema with yup
+const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescription, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
     issueTitle: yup.string().trim().required("Issue title is required").max(100, "Title must not exceed 100 characters"),
     description: yup.string().trim().required("Description is required").max(1000, "Description must not exceed 1000 characters"),
   });
 
-  // Initialize useForm with yup resolver and initial values
   const {
     register,
     handleSubmit,
@@ -26,11 +25,10 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
     },
   });
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (data.issueTitle.trim() && data.description.trim()) {
-      onSave({ title: data.issueTitle, description: data.description });
-      reset(); // Reset form
+      await onSave({ title: data.issueTitle, description: data.description });
+      reset();
       onClose();
     }
   };
@@ -39,7 +37,7 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
     <ReusableModal
       isOpen={isOpen}
       onClose={() => {
-        reset(); // Reset form on close
+        reset();
         onClose();
       }}
       title="Edit issue"
@@ -47,7 +45,7 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
-        reset(); // Reset form on cancel
+        reset();
         onClose();
       }}
     >
@@ -67,6 +65,18 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
       </form>
     </ReusableModal>
   );
+};
+
+EditIssueModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  initialTitle: PropTypes.string,
+  initialDescription: PropTypes.string,
+  issueId: PropTypes.string.isRequired,
+  adminId: PropTypes.string.isRequired,
+  accessToken: PropTypes.string.isRequired,
+  refreshToken: PropTypes.string.isRequired,
 };
 
 export default EditIssueModal;

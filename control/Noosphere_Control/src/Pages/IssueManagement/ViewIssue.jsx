@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import Layout from "../Layout/ControlLayout";
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import Button from "../../Components/Button/Button";
-import api2 from "../../api/TenantApis";
 import "./IssueManagement.css";
 import AddCommentModal from "../../Components/ReusableModal/IssueViewModals/AddCommentModal";
 import EditIssueModal from "../../Components/ReusableModal/IssueViewModals/EditIssueModal";
@@ -15,8 +15,15 @@ import ReassignModal from "../../Components/ReusableModal/IssueViewModals/Reassi
 import ChangeStatusModal from "../../Components/ReusableModal/IssueViewModals/ChangeStatusModal";
 import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/ContactTenantModal";
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
+import api from "../../api/IssueApi";
+import { showToast } from "../../Helper/ShowToast";
 
-const ViewIssue = ({ issue, onBack }) => {
+const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
+  const token = useSelector((state) => state.authentication?.user?.token);
+  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const accessToken = token;
+  const refreshToken = token;
+
   const [issueData, setIssueData] = useState(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(null);
@@ -45,62 +52,76 @@ const ViewIssue = ({ issue, onBack }) => {
     comments: useRef(null),
   };
 
-  // Fetch issue data from API
-  useEffect(() => {
-    const fetchIssue = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await api2.getIssueById(issue.id, { token });
-        setIssueData(response.data);
-      } catch (error) {
-        console.error("Failed to fetch issue:", error);
-        setIssueData({
-          tenant: "ACME Corps",
-          issueId: `#${issue.id || "12345"}`,
-          title: "Billing Error in Invoice",
-          category: "Billing Issue",
-          priority: "Critical",
-          status: "In Progress",
-          loggedBy: "John Doe",
-          assignedTo: "Jane Smith",
-          dateReported: "Nov 12, 2023 | 01:04:06 AM",
-          lastUpdate: "Nov 25, 2023 | 03:09:56 PM",
-          attachments: [
-            { name: "Attachment A", url: "#" },
-            { name: "Attachment B", url: "#" },
-          ],
-          resolutionDeadline: "Apr 25, 2024",
-          description:
-            "Invoice #4567 generated incorrectly due to missing authorization. Needs immediate correction.",
-          activityHistory: [
-            {
-              date: "Nov 25, 2023",
-              time: "10:45 AM",
-              action: "Issue Created",
-              user: "Support Staff (Michael Scoffield)",
-              details: "Initial Report Submitted",
-            },
-          ],
-          documents: [
-            { id: 1, name: "Document 1", url: "#" },
-            { id: 2, name: "Document 2", url: "#" },
-            { id: 3, name: "Document 3", url: "#" },
-          ],
-          comments: [
-            {
-              date: "Nov 25, 2023",
-              time: "02:45 pm",
-              user: "Support Staff (Michael Scoffield)",
-              action: "commented",
-              text: "Invoice #4567 generated incorrectly due to missing authorization. Needs immediate correction",
-            },
-          ],
-        });
-      }
-    };
+  // Format date to "Nov 25, 2023 (02:45 pm)"
+  const formatDateTime = (dateString) => {
+    if (!dateString || dateString === "N/A") return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).replace(",", " (").replace(/(\d+:\d+ [AP]M)/, "$1)");
+  };
 
-    if (issue?.id) {
-      fetchIssue();
+  // Refetch issue data
+  const refetchIssue = async () => {
+    try {
+      const response = await api.GetIssueById({
+        id: issue.id,
+        accessToken,
+        refreshToken,
+      });
+      const data = response.data;
+      setIssueData({
+        tenant: data.tenant?.companyName || "Unknown",
+        issueId: issue.issue_id || `#${issue.id}`,
+        tenantId: data.tenantId,
+        title: data.title || "N/A",
+        category: data.category || "N/A",
+        priority: data.priority || "N/A",
+        status: data.status || "Not Started",
+        loggedBy: data.loggedBy?.fullName || "Unknown",
+        assignedTo: data.assignedTo?.fullName || "Unassigned",
+        dateReported: formatDateTime(data.createdAt),
+        lastUpdate: formatDateTime(data.updatedAt),
+        attachments: data.attachments?.map((att) => ({
+          name: att.key || "Attachment",
+          url: att.location || "#",
+        })) || [],
+        resolutionDeadline: formatDateTime(data.resolutionDeadline),
+        description: data.description || "No description provided",
+        activityHistory: data.Logs?.map((log, index) => ({
+          date: formatDateTime(log.createdAt),
+          action: log.action || "Unknown",
+          user: log.admin?.fullName || "Unknown",
+          details: log.details || "No details",
+          id: log.logId || index + 1,
+        })) || [],
+        documents: data.attachments?.map((att, index) => ({
+          id: index + 1,
+          name: att.key || "Document",
+          url: att.location || "#",
+        })) || [],
+        comments: data.comments?.map((comment, index) => ({
+          date: formatDateTime(comment.createdAt),
+          user: comment.commentBy.fullName || "Unknown",
+          action: "commented",
+          text: comment.comment || "No text",
+          id: comment.id || index + 1,
+        })) || [],
+      });
+    } catch (err) {
+      showToast(`Failed to refetch issue: ${err.message}`, "error");
+    }
+  };
+
+  // Initialize issueData and refetch on issue change
+  useEffect(() => {
+    if (issue) {
+      refetchIssue();
     }
   }, [issue]);
 
@@ -147,6 +168,7 @@ const ViewIssue = ({ issue, onBack }) => {
     "Mark as resolved",
     "Reassign",
   ];
+
   // Placeholder export functions
   const onExportCSV = (data) => console.log("Exporting CSV:", data);
   const onExportPDF = (data) => console.log("Exporting PDF:", data);
@@ -172,7 +194,7 @@ const ViewIssue = ({ issue, onBack }) => {
   const descriptionTableData = issueData ? [[issueData.description]] : [];
   const activityHistoryTableData =
     issueData?.activityHistory?.map((activity) => [
-      `${activity.date}, ${activity.time}`,
+      activity.date,
       activity.action,
       activity.user,
       activity.details,
@@ -180,7 +202,7 @@ const ViewIssue = ({ issue, onBack }) => {
   const documentsTableData = issueData?.documents?.map((doc) => [doc.name]) || [];
   const commentsTableData =
     issueData?.comments?.map((comment) => [
-      `${comment.date}, ${comment.time}`,
+      comment.date,
       comment.user,
       comment.action,
       comment.text,
@@ -232,92 +254,178 @@ const ViewIssue = ({ issue, onBack }) => {
     toggleExportDropdown("comments");
   };
   const handlePrintComments = () => onPrint(commentsTableData);
- const handleActionClick = (action) => {
+
+  const handleActionClick = (action) => {
     setModalOpen(action);
   };
 
-  const handleSaveComment = (comment) => {
-    console.log("Saving comment:", comment);
-    // Add logic to update issueData.comments (e.g., API call or state update)
+  const handleSaveComment = async (comment) => {
+    try {
+      await api.CreateCommentOnIssue({
+        issueId: issue.id,
+        comment,
+        adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Comment added successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to add comment: ${err.message}`, "error");
+    }
   };
 
-  const handleSaveEdit = ({ title, description }) => {
-    console.log("Saving edit:", { title, description });
-    // Add logic to update issueData (e.g., API call or state update)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
+  const handleSaveEdit = async ({ title, description }) => {
+    try {
+      await api.EditIssue({
+        issueId: issue.id,
         title,
         description,
-      }));
+        updatedBy: adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Issue updated successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to edit issue: ${err.message}`, "error");
     }
   };
 
-  const handleSaveAttachment = (file) => {
-    console.log("Saving attachment:", file.name);
-    // Add logic to upload file and update issueData.attachments (e.g., API call)
-  };
+  const handleSaveAttachment = async (attachmentFile) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", issue.id);
+      formData.append("attachment", attachmentFile);
+      formData.append("updatedBy", adminId);
 
-  const handleSaveCategory = (from, to) => {
-    console.log("Changing category from", from, "to", to);
-    // Add logic to update issueData.category (e.g., API call or state update)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
-        category: to,
-      }));
+      await api.AddAttachment({
+        payload: formData,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Attachment added successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to add attachment: ${err.message}`, "error");
     }
   };
 
-  const handleSavePriority = (from, to) => {
-    console.log("Changing priority from", from, "to", to);
-    // Add logic to update issueData.priority (e.g., API call or state update)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
-        priority: to,
-      }));
+  const handleSaveCategory = async (category) => {
+    try {
+      await api.ChangeCategory({
+        issueId: issue.id,
+        category,
+        updatedBy: adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Category changed successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to change category: ${err.message}`, "error");
     }
   };
 
-  const handleSaveReassign = (current, newAssignee) => {
-    console.log("Reassigning from", current, "to", newAssignee);
-    // Add logic to update issueData.assignedTo (e.g., API call or state update)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
-        assignedTo: newAssignee,
-      }));
+  const handleSavePriority = async (priority) => {
+    try {
+      await api.ChangePriority({
+        issueId: issue.id,
+        priority,
+        updatedBy: adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Priority changed successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to change priority: ${err.message}`, "error");
     }
   };
 
-  const handleSaveStatus = (from, to) => {
-    console.log("Changing status from", from, "to", to);
-    // Add logic to update issueData.status (e.g., API call or state update)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
-        status: to,
-      }));
+  const handleSaveReassign = async (adminIdNew) => {
+    try {
+      await api.ReassignToStaff({
+        issueId: issue.id,
+        adminId: adminIdNew,
+        updatedBy: adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Issue reassigned successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to reassign issue: ${err.message}`, "error");
     }
   };
 
-  const handleSaveContact = ({ header, body, attachmentFile }) => {
-    console.log("Sending email:", { header, body, attachmentFile: attachmentFile?.name });
-    // Add logic to send email and handle attachment (e.g., API call)
-  };
-
-  const handleSaveResolved = ({ resolution, attachmentFile, tenantApproval }) => {
-    console.log("Marking as resolved:", { resolution, attachmentFile: attachmentFile?.name, tenantApproval });
-    // Add logic to update issueData.status and resolution (e.g., API call)
-    if (issueData) {
-      setIssueData((prev) => ({
-        ...prev,
-        status: "Resolved",
-        resolution,
-      }));
+  const handleSaveStatus = async (status) => {
+    try {
+      await api.ChangeIssueStatus({
+        issueId: issue.id,
+        status,
+        updatedBy: adminId,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Status changed successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to change status: ${err.message}`, "error");
     }
   };
+
+  
+  const handleSaveContact = async ({ header, body, attachmentFile }) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", issueData.tenantId);
+      formData.append("header", header);
+      formData.append("body", body);
+      if (attachmentFile) formData.append("attachment", attachmentFile);
+
+      await api.ContactTenantByMail({
+        payload: formData,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Email sent successfully", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to send email: ${err.message}`, "error");
+    }
+  };
+
+  const handleSaveResolved = async ({ resolution, attachmentFile }) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", issue.id);
+      if (attachmentFile) formData.append("attachment", attachmentFile);
+      formData.append("updatedBy", adminId);
+      formData.append("status", "Resolved");
+      formData.append("resolutionDescription", resolution);
+
+      await api.MarkAsResolved({
+        payload: formData,
+        accessToken,
+        refreshToken,
+      });
+      await refetchIssue();
+      showToast("Issue marked as resolved", "success");
+      setModalOpen(null);
+    } catch (err) {
+      showToast(`Failed to mark as resolved: ${err.message}`, "error");
+    }
+  };
+
   if (!issueData) return <div>Loading...</div>;
 
   return (
@@ -336,7 +444,7 @@ const ViewIssue = ({ issue, onBack }) => {
           <div className="add-issue-buttons">
             <div className="dropdown-container">
               <Button
-                label={"Actions"}
+                label="Actions"
                 icon={<IoIosArrowDown />}
                 iconPosition="right"
                 variant="secondary"
@@ -346,10 +454,7 @@ const ViewIssue = ({ issue, onBack }) => {
                 width="120px"
               />
               {actionDropdownOpen && (
-                <div
-                  ref={actionDropdownRef}
-                  className="dropdown-menu dropdown-menu-header"
-                >
+                <div ref={actionDropdownRef} className="dropdown-menu dropdown-menu-header">
                   <div className="dropdown-items">
                     {actions.map((action, index) => (
                       <button
@@ -393,29 +498,17 @@ const ViewIssue = ({ issue, onBack }) => {
                     </svg>
                   </button>
                   {exportDropdownOpen.issueInfo && (
-                    <div
-                      className="action-dropdown export-dropdown"
-                      ref={exportDropdownRefs.issueInfo}
-                    >
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportCSVIssueInfo}
-                      >
+                    <div className="action-dropdown export-dropdown" ref={exportDropdownRefs.issueInfo}>
+                      <button className="dropdown-item" onClick={handleExportCSVIssueInfo}>
                         Export as CSV
                       </button>
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportPDFIssueInfo}
-                      >
+                      <button className="dropdown-item" onClick={handleExportPDFIssueInfo}>
                         Export as PDF
                       </button>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handlePrintIssueInfo}
-                  className="action-button"
-                >
+                <button onClick={handlePrintIssueInfo} className="action-button">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -463,9 +556,7 @@ const ViewIssue = ({ issue, onBack }) => {
                     <td>Priority</td>
                     <td>
                       <span
-                        className={`priority-label ${issueData.priority
-                          .toLowerCase()
-                          .replace(" ", "-")}`}
+                        className={`priority-label ${issueData.priority.toLowerCase().replace(" ", "-")}`}
                       >
                         {issueData.priority}
                       </span>
@@ -553,29 +644,17 @@ const ViewIssue = ({ issue, onBack }) => {
                     </svg>
                   </button>
                   {exportDropdownOpen.description && (
-                    <div
-                      className="action-dropdown export-dropdown"
-                      ref={exportDropdownRefs.description}
-                    >
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportCSVDescription}
-                      >
+                    <div className="action-dropdown export-dropdown" ref={exportDropdownRefs.description}>
+                      <button className="dropdown-item" onClick={handleExportCSVDescription}>
                         Export as CSV
                       </button>
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportPDFDescription}
-                      >
+                      <button className="dropdown-item" onClick={handleExportPDFDescription}>
                         Export as PDF
                       </button>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handlePrintDescription}
-                  className="action-button"
-                >
+                <button onClick={handlePrintDescription} className="action-button">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -637,29 +716,17 @@ const ViewIssue = ({ issue, onBack }) => {
                     </svg>
                   </button>
                   {exportDropdownOpen.activityHistory && (
-                    <div
-                      className="action-dropdown export-dropdown"
-                      ref={exportDropdownRefs.activityHistory}
-                    >
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportCSVActivityHistory}
-                      >
+                    <div className="action-dropdown export-dropdown" ref={exportDropdownRefs.activityHistory}>
+                      <button className="dropdown-item" onClick={handleExportCSVActivityHistory}>
                         Export as CSV
                       </button>
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportPDFActivityHistory}
-                      >
+                      <button className="dropdown-item" onClick={handleExportPDFActivityHistory}>
                         Export as PDF
                       </button>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handlePrintActivityHistory}
-                  className="action-button"
-                >
+                <button onClick={handlePrintActivityHistory} className="action-button">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -681,24 +748,27 @@ const ViewIssue = ({ issue, onBack }) => {
             <table className="details-table">
               <thead>
                 <tr>
-                  <th>Date & Time</th>
+                  <th>Date</th>
                   <th>Action</th>
                   <th>User</th>
                   <th>Details</th>
                 </tr>
               </thead>
               <tbody>
-                {issueData.activityHistory?.map((activity, index) => (
-                  <tr key={index}>
-                    <td>
-                      {activity.date}, <br />
-                      {activity.time}
-                    </td>
-                    <td>{activity.action}</td>
-                    <td>{activity.user}</td>
-                    <td>{activity.details}</td>
+                {issueData.activityHistory?.length ? (
+                  issueData.activityHistory.map((activity) => (
+                    <tr key={activity.id}>
+                      <td>{activity.date}</td>
+                      <td>{activity.action}</td>
+                      <td>{activity.user}</td>
+                      <td>{activity.details}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4">No activity history available</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -717,7 +787,7 @@ const ViewIssue = ({ issue, onBack }) => {
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
-                      viewBox="0 0 24 24"
+                      viewBox="0 0 24  beyond 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -730,29 +800,17 @@ const ViewIssue = ({ issue, onBack }) => {
                     </svg>
                   </button>
                   {exportDropdownOpen.documents && (
-                    <div
-                      className="action-dropdown export-dropdown"
-                      ref={exportDropdownRefs.documents}
-                    >
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportCSVDocuments}
-                      >
+                    <div className="action-dropdown export-dropdown" ref={exportDropdownRefs.documents}>
+                      <button className="dropdown-item" onClick={handleExportCSVDocuments}>
                         Export as CSV
                       </button>
-                      <button
-                        className="dropdown-item"
-                        onClick={handleExportPDFDocuments}
-                      >
+                      <button className="dropdown-item" onClick={handleExportPDFDocuments}>
                         Export as PDF
                       </button>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handlePrintDocuments}
-                  className="action-button"
-                >
+                <button onClick={handlePrintDocuments} className="action-button">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -772,84 +830,47 @@ const ViewIssue = ({ issue, onBack }) => {
               </div>
             </div>
             <div className="documents-list">
-              {issueData.documents?.map((document) => (
-                <div key={document.id} className="document-item">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="document-icon"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  <a href={document.url} className="document-link">
-                    {document.name}
-                  </a>
-                </div>
-              ))}
+              {issueData.documents?.length ? (
+                issueData.documents.map((document) => (
+                  <div key={document.id} className="document-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="document-icon"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <a href={document.url} className="document-link">
+                      {document.name}
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <p>No documents available</p>
+              )}
             </div>
           </div>
 
-          {issueData.comments && issueData.comments.length > 0 && (
-            <div className="issues-comments-section">
-              <div className="header-actions">
-                <h2>Comments</h2>
-                <div className="table-actions">
-                  <div className="action-menu">
-                    <button
-                      onClick={() => toggleExportDropdown("comments")}
-                      className="action-button"
-                      ref={exportButtonRefs.comments}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                    </button>
-                    {exportDropdownOpen.comments && (
-                      <div
-                        className="action-dropdown export-dropdown"
-                        ref={exportDropdownRefs.comments}
-                      >
-                        <button
-                          className="dropdown-item"
-                          onClick={handleExportCSVComments}
-                        >
-                          Export as CSV
-                        </button>
-                        <button
-                          className="dropdown-item"
-                          onClick={handleExportPDFComments}
-                        >
-                          Export as PDF
-                        </button>
-                      </div>
-                    )}
-                  </div>
+          <div className="issues-comments-section">
+            <div className="header-actions">
+              <h2>Comments</h2>
+              <div className="table-actions">
+                <div className="action-menu">
                   <button
-                    onClick={handlePrintComments}
+                    onClick={() => toggleExportDropdown("comments")}
                     className="action-button"
+                    ref={exportButtonRefs.comments}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -862,41 +883,70 @@ const ViewIssue = ({ issue, onBack }) => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <polyline points="6 9 6 2 18 2 18 9" />
-                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                      <rect x="6" y="14" width="12" height="8" />
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
                   </button>
+                  {exportDropdownOpen.comments && (
+                    <div className="action-dropdown export-dropdown" ref={exportDropdownRefs.comments}>
+                      <button className="dropdown-item" onClick={handleExportCSVComments}>
+                        Export as CSV
+                      </button>
+                      <button className="dropdown-item" onClick={handleExportPDFComments}>
+                        Export as PDF
+                      </button>
+                    </div>
+                  )}
                 </div>
+                <button onClick={handlePrintComments} className="action-button">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                </button>
               </div>
-              <div className="issues-comments-list">
-                {issueData.comments.map((comment, index) => (
-                  <div key={index} className="issues-comment-item">
-                    <div className="issues-comment-meta">
-                      <span className="issues-comment-date">
-                        {comment.date}, {comment.time}
-                      </span>
+            </div>
+            <div className="issues-comments-list">
+              {issueData.comments?.length ? (
+                issueData.comments.map((comment) => (
+                  <div key={comment.id} className="issues-comment-item">
+                    <div className="issues-comment-header">
+                      <span className="issues-comment-date">{comment.date}</span> {""}
+                      
                     </div>
                     <div>
-                      <span className="issues-comment-user">
-                        {comment.user}
-                      </span>
-                      <span className="issues-comment-action">
-                        {comment.action}
-                      </span>
+                      <span className="issues-comment-user">({comment.user})</span> {""}
+                      <span className="issues-comment-action">{comment.action}</span> {""}
                     </div>
                     <div className="issues-comment-text">{comment.text}</div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <p>No comments available</p>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Imported Modals */}
           <AddCommentModal
             isOpen={modalOpen === "Add a comment"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveComment}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <EditIssueModal
             isOpen={modalOpen === "Edit issue"}
@@ -904,46 +954,78 @@ const ViewIssue = ({ issue, onBack }) => {
             onSave={handleSaveEdit}
             initialTitle={issueData?.title}
             initialDescription={issueData?.description}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <AddAttachmentModal
             isOpen={modalOpen === "Add an attachment"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveAttachment}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <ChangeCategoryModal
             isOpen={modalOpen === "Change category"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveCategory}
             initialCategory={issueData?.category}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <ChangePriorityModal
             isOpen={modalOpen === "Change Priority"}
             onClose={() => setModalOpen(null)}
             onSave={handleSavePriority}
             initialPriority={issueData?.priority}
+            selectedTenant={tenant}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <ReassignModal
             isOpen={modalOpen === "Reassign"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveReassign}
             initialAssignee={issueData?.assignedTo}
-            staffList={[]}
+            staffList={staffList}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <ChangeStatusModal
             isOpen={modalOpen === "Change Status"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveStatus}
             initialStatus={issueData?.status}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <ContactTenantModal
             isOpen={modalOpen === "Contact tenant by email"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveContact}
+            issueId={issue.id}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
           <MarkAsResolvedModal
             isOpen={modalOpen === "Mark as resolved"}
             onClose={() => setModalOpen(null)}
             onSave={handleSaveResolved}
+            issueId={issue.id}
+            adminId={adminId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
           />
         </div>
       </div>
