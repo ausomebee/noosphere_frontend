@@ -1,4 +1,3 @@
-// src/Component/JiraBoard/Task.js
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -6,62 +5,77 @@ import { FiChevronDown } from 'react-icons/fi';
 import { Menu } from '@headlessui/react';
 import './DragAndDrop.css';
 
-const Task = ({ task, id, onRemoveTask, onEditTask, onMoveTask, columnId, columns }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+const Task = ({
+  task,
+  id,
+  onRemoveTask,
+  onEditTask,
+  onMoveTask,
+  onAssignStaff,
+  onViewCandidate,
+  onEditCandidate,
+  columnId,
+  columns,
+  selected,
+  toggleSelection,
+}) => {
+  if (!task) {
+    console.warn(`Task with ID ${id} is undefined`);
+    return null;
+  }
+
+
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    data: { type: 'Task' },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  const handleEdit = () => {
-    const newCompany = prompt('Enter new company name:', task.company);
-    if (newCompany) {
-      onEditTask(task.id, newCompany);
-    }
-  };
-
-  const handleMove = () => {
-    const targetColumn = prompt(
-      'Enter the target column ID (' +
-        columns.map((col) => `${col.title} (${col.id})`).join(', ') +
-        '):',
-      columnId
-    );
-    if (targetColumn && columns.some((col) => col.id === targetColumn)) {
-      onMoveTask(task.id, targetColumn);
-    }
-  };
-
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`task ${isDragging ? 'dragging' : ''}`}
+      className={`task ${isDragging ? 'dragging' : ''} ${selected ? 'selected' : ''}`}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => {
+        if (e.ctrlKey || e.metaKey) {
+          toggleSelection();
+        }
+      }}
     >
-      <div className="task-content" {...attributes} {...listeners}>
-        <p>{task.company}</p>
-        <span>{task.progress}</span>
+      <div className="task-content">
+        <p>{task.company || 'Unnamed Candidate'}</p>
+        <span>{task.progress} task done</span>
       </div>
       <Menu as="div" className="dropdown-container">
-        <Menu.Button
-          className="dropdown-icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log('Dropdown button clicked');
-          }}
-        >
+        <Menu.Button className="dropdown-icon">
           <FiChevronDown />
         </Menu.Button>
         <Menu.Items className="menu-items">
-          <div className="py-0.25rem">
+          <div>
+            {/* <Menu.Item>
+              {({ active }) => (
+                <button
+                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                  onClick={() => onViewCandidate(columnId, id)} // Reordered args to match JiraBoard
+                >
+                  View candidate information
+                </button>
+              )}
+            </Menu.Item> */}
             <Menu.Item>
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={handleMove}
+                  onClick={() => onEditCandidate(columnId, id)} // Reordered args
                 >
-                  Move prospect
+                  Edit candidate information
                 </button>
               )}
             </Menu.Item>
@@ -69,8 +83,9 @@ const Task = ({ task, id, onRemoveTask, onEditTask, onMoveTask, columnId, column
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                  onClick={() => onAssignStaff(id)}
                 >
-                  Assign prospect to staff
+                  Assign candidate to staff
                 </button>
               )}
             </Menu.Item>
@@ -78,37 +93,19 @@ const Task = ({ task, id, onRemoveTask, onEditTask, onMoveTask, columnId, column
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                  onClick={() => onMoveTask(id, columnId)}
                 >
-                  View prospect information
+                  Move candidate
                 </button>
               )}
             </Menu.Item>
             <Menu.Item>
               {({ active }) => (
                 <button
-                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={handleEdit}
+                  className={`menu-item-delete ${active ? 'menu-item-delete-active' : ''}`}
+                  onClick={() => onRemoveTask(id)}
                 >
-                  Edit prospect
-                </button>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                >
-                  Contact prospect
-                </button>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onRemoveTask(task.id)}
-                >
-                  Remove prospect
+                  Delete candidate
                 </button>
               )}
             </Menu.Item>

@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import './ReusableModal.css';
 
-// Reusable Modal Component
 const ReusableModal = ({
   isOpen,
   onClose,
   title,
   primaryButtonText,
   secondaryButtonText,
-  primaryButtonColor,
-  secondaryButtonColor,
   tabs,
   onPrimaryButtonClick,
   onSecondaryButtonClick,
   children,
+  size = 'medium',
+  titleIcon, // New optional prop for the icon
 }) => {
   const [activeTab, setActiveTab] = useState(tabs && tabs.length > 0 ? tabs[0].name : null);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -26,16 +24,16 @@ const ReusableModal = ({
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.top = `-${window.scrollY}px`;
-      document.body.style.width = '100%'; // Prevent horizontal shift
+      document.body.style.width = '100%';
     } else {
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      window.scrollTo(0, scrollPosition); // Restore scroll position
+      window.scrollTo(0, scrollPosition);
     }
 
-    // Cleanup on unmount or when modal closes
+    // Cleanup
     return () => {
       if (!isOpen) {
         document.body.style.overflow = '';
@@ -50,18 +48,23 @@ const ReusableModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        {/* Modal Title */}
-        <h2 className="modal-title">{title}</h2>
+    <div className="modal">
+      <div className={`modal-content modal-${size}`} role="dialog" aria-labelledby="modal-title">
+        <h2 id="modal-title" className="modal-title flex mx-auto items-center gap-2 mt-4">
+          {titleIcon && (
+            <span className="modal-title-icon" aria-hidden="true">
+              {titleIcon}
+            </span>
+          )}
+          <span>{title}</span>
+        </h2>
 
-        {/* Tabs (if provided) */}
         {tabs && tabs.length > 0 && (
           <div className="modal-tabs">
             {tabs.map((tab) => (
               <button
                 key={tab.name}
-                className={`tab-button ${activeTab === tab.name ? 'active-tab' : ''}`}
+                className={`modal-tab-btn ${activeTab === tab.name ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.name)}
               >
                 {tab.name}
@@ -70,26 +73,22 @@ const ReusableModal = ({
           </div>
         )}
 
-        {/* Tab Content or Children */}
-        <div className="ReuseableModal-body no-scrollbar::-webkit-scrollbar no-scrollbar">
+        <div className="modal-body">
           {tabs && tabs.length > 0
             ? tabs.find((tab) => tab.name === activeTab)?.content
             : children}
         </div>
 
-        {/* Buttons */}
-        <div className="modal-buttons">
+        <div className="modal-btns">
           <button
             onClick={onSecondaryButtonClick || onClose}
-            className="modal-button secondary-button"
-            style={{ backgroundColor: secondaryButtonColor || '#ffffff', color: '#333333' }}
+            className="modal-btn modal-btn-secondary"
           >
             {secondaryButtonText || 'Cancel'}
           </button>
           <button
             onClick={onPrimaryButtonClick || onClose}
-            className="modal-button primary-button"
-            style={{ backgroundColor: primaryButtonColor || '#000000', color: '#ffffff' }}
+            className="modal-btn modal-btn-primary"
           >
             {primaryButtonText || 'Save'}
           </button>
@@ -99,15 +98,12 @@ const ReusableModal = ({
   );
 };
 
-// PropTypes for type checking
 ReusableModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
   primaryButtonText: PropTypes.string,
   secondaryButtonText: PropTypes.string,
-  primaryButtonColor: PropTypes.string,
-  secondaryButtonColor: PropTypes.string,
   tabs: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
@@ -117,6 +113,8 @@ ReusableModal.propTypes = {
   onPrimaryButtonClick: PropTypes.func,
   onSecondaryButtonClick: PropTypes.func,
   children: PropTypes.node,
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  titleIcon: PropTypes.node, // New optional prop
 };
 
 export default ReusableModal;

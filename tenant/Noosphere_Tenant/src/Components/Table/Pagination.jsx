@@ -36,37 +36,41 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         </svg>
         Previous
       </button>
-      {startPage > 1 && (
-        <>
+
+      <div className="pagination-pages">
+        {startPage > 1 && (
+          <>
+            <button
+              className="pagination-page"
+              onClick={() => onPageChange(1)}
+            >
+              1
+            </button>
+            {startPage > 2 && <span className="pagination-ellipsis">...</span>}
+          </>
+        )}
+        {pages.map((page) => (
           <button
-            className="pagination-page"
-            onClick={() => onPageChange(1)}
+            key={page}
+            className={`pagination-page ${page === currentPage ? 'active' : ''}`}
+            onClick={() => onPageChange(page)}
           >
-            1
+            {page}
           </button>
-          {startPage > 2 && <span className="pagination-ellipsis">...</span>}
-        </>
-      )}
-      {pages.map((page) => (
-        <button
-          key={page}
-          className={`pagination-page ${page === currentPage ? 'active' : ''}`}
-          onClick={() => onPageChange(page)}
-        >
-          {page}
-        </button>
-      ))}
-      {endPage < totalPages && (
-        <>
-          {endPage < totalPages - 1 && <span className="pagination-ellipsis">...</span>}
-          <button
-            className="pagination-page"
-            onClick={() => onPageChange(totalPages)}
-          >
-            {totalPages}
-          </button>
-        </>
-      )}
+        ))}
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="pagination-ellipsis">...</span>}
+            <button
+              className="pagination-page"
+              onClick={() => onPageChange(totalPages)}
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+      </div>
+
       <button
         className="pagination-button"
         onClick={() => onPageChange(currentPage + 1)}
