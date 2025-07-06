@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import ReusableModal from "./ReusableModal";
-import { TextInput, SelectInput } from "../Input/Inputs";
-import "./ReusableModal.css";
-import Button from "../Button/Button";
+import ReusableModal from "../ReusableModal";
+import { TextInput, SelectInput } from "../../Input/Inputs";
+import Button from "../../Button/Button";
 
 const AddProspectModal = () => {
   const [isOpen, setIsOpen] = useState(false);

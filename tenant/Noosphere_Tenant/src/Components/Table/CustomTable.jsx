@@ -1,15 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Menu } from "@headlessui/react";
-import { exportTableData, printTableData } from "../../utils/TableUtils";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { exportTableData, printTableData, exportTableToPDF } from "../../utils/TableUtils";
 import Pagination from "./Pagination";
+import TableHeader from "./TableHeader";
+import TableBody from "./TableBody";
+import TableActions from "./TableActions";
 import "./CustomTable.css";
-import {
-  CheckboxInput,
-  SearchInput,
-  SelectInput,
-  SwitchInput,
-  TextInput,
-} from "../Input/Inputs";
+import { parse, isSameDay, isWithinInterval, isValid } from "date-fns";
 
 const CustomTable = ({
   data,
@@ -18,381 +14,355 @@ const CustomTable = ({
   onFilterChange,
   actions,
   showActions = true,
+  showCheckbox = true,
   itemsPerPage = 5,
+  tableName = "Table",
+  onSelectionChange,
+  hasStatusDot = false,
+  actionLinkPrefix,
+  actionText
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [filterValues, setFilterValues] = useState({
+    filter_type: "",
+    value: "", // Second filter value
+    dateAdded: null,
+  });
+  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] = useState(false);
   const tableContainerRef = useRef(null);
-  const menuRefs = useRef([]);
+  const menuRefs = useRef({});
+  const exportButtonRef = useRef(null);
+  const exportDropdownRef = useRef(null);
+  const dateFilterStartInputRef = useRef(null);
+  const dateFilterEndInputRef = useRef(null);
+  const dateFilterDropdownRef = useRef(null);
 
-  // Filter data based on search term
-  const filteredData = data.filter((row) =>
-    Object.values(row).some(
-      (value) =>
-        value &&
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  // Extract unique values for filters
+  const getUniqueValues = useCallback((key) => {
+    if (!key) return [];
+    const values = new Set(data.map((row) => row[key]).filter(Boolean));
+    return Array.from(values).map((value) => ({ value, label: value }));
+  }, [data]);
 
-  // Pagination logic
-  const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = filteredData.slice(startIndex, endIndex);
+  const filterOptions = useMemo(() => [
+    { value: "", label: "Select Filter" },
+    ...columns
+      .filter((col) => col.type === "text" || col.key === "dateTime" || col.key === "approval" || col.key === "ToggleActive")
+      .map((col) => ({ value: col.key, label: col.header })),
+    { value: "clear_filters", label: "Clear Filters" },
+  ], [columns]);
 
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const secondFilterOptions = useMemo(() => {
+    const type = filterValues.filter_type;
+    switch (type) {
+      case "client": return [{ value: "", label: "Select Client" }, ...getUniqueValues("client")];
+      case "serviceType": return [{ value: "", label: "Select Service Type" }, ...getUniqueValues("serviceType")];
+      case "programs": return [{ value: "", label: "Select Programs" }, ...getUniqueValues("programs")];
+      case "sessions": return [{ value: "", label: "Select Sessions" }, ...getUniqueValues("sessions")];
+      case "therapist": return [{ value: "", label: "Select Therapist" }, ...getUniqueValues("therapist")];
+      case "uploadBy": return [{ value: "", label: "Select Upload By" }, ...getUniqueValues("uploadBy")];
+      case "description": return [{ value: "", label: "Select Description" }, ...getUniqueValues("description")];
+      case "code": return [{ value: "", label: "Select Code" }, ...getUniqueValues("code")];
+      case "createdBy": return [{ value: "", label: "Select Created By" }, ...getUniqueValues("createdBy")];
+      case "timeSheetNumber": return [{ value: "", label: "Select TimeSheet Number" }, ...getUniqueValues("timeSheetNumber")];
+      case "approval": return [{ value: "", label: "Select Approval" }, ...getUniqueValues("approval")];
+      case "dateTime": return [];
+      case "ToggleActive": return [{ value: "", label: "Select ToggleActive" }, { value: "true", label: "True" }, { value: "false", label: "False" }];
+      default: return [];
+    }
+  }, [filterValues.filter_type, getUniqueValues]);
 
-  // Handle individual checkbox change
-  const handleCheckboxChange = (rowIndex) => {
-    setSelectedRows((prev) =>
-      prev.includes(rowIndex)
-        ? prev.filter((index) => index !== rowIndex)
-        : [...prev, rowIndex]
-    );
-  };
+  const filteredData = useMemo(() => {
+    let filtered = [...data];
 
-  // Handle "Select All" checkbox change
-  const handleSelectAllChange = () => {
-    if (
-      selectedRows.length ===
-      currentData.filter((row) => row.hasCheckbox).length
-    ) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(
-        currentData
-          .map((row, index) => (row.hasCheckbox ? index : null))
-          .filter((index) => index !== null)
+    // Search across all column keys
+    if (searchTerm) {
+      filtered = filtered.filter((row) =>
+        columns.some((col) => {
+          const value = row[col.key];
+          return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+        })
       );
     }
-  };
 
-  // Handle toggle switch for Active column
-  const handleToggleActive = (rowIndex) => {
-    const updatedData = [...data];
-    updatedData[startIndex + rowIndex].active =
-      !updatedData[startIndex + rowIndex].active;
-    console.log(
-      `Toggled active state for row ${rowIndex}: ${
-        updatedData[startIndex + rowIndex].active
-      }`
-    );
-  };
+    // Filter logic based on filter_type and value
+    const { filter_type, value, dateAdded } = filterValues;
+    if (filter_type && value && filter_type !== "dateTime") {
+      if (filter_type === "ToggleActive") {
+        filtered = filtered.filter((row) => row[filter_type].toString() === value);
+      } else {
+        filtered = filtered.filter((row) => row[filter_type]?.toString().toLowerCase() === value.toLowerCase());
+      }
+    }
 
-  // Handle export and print
-  const handleExport = () => {
-    exportTableData(data, columns, "table-data.csv");
-  };
+    // Date filter logic
+    if (filter_type === "dateTime" && dateAdded && (dateAdded.start || dateAdded.end)) {
+      filtered = filtered.filter((row) => {
+        const rowDate = row.dateTime?.date ? parse(row.dateTime.date, "yyyy-MM-dd", new Date()) : null;
+        if (!isValid(rowDate)) return false;
+        const startDate = dateAdded.start ? new Date(dateAdded.start) : null;
+        const endDate = dateAdded.end ? new Date(dateAdded.end) : null;
+        if (startDate && endDate && !isSameDay(startDate, endDate)) {
+          return isWithinInterval(rowDate, { start: startDate, end: endDate });
+        } else if (startDate) {
+          return isSameDay(rowDate, startDate);
+        }
+        return true;
+      });
+    }
 
-  const handlePrint = () => {
-    printTableData(data, columns);
-  };
+    if (filter_type === "clear_filters") {
+      filtered = [...data];
+      setFilterValues({ filter_type: "", value: "", dateAdded: null });
+      onFilterChange("filter_type", "");
+      onFilterChange("value", "");
+      onFilterChange("dateAdded", null);
+    }
 
-  // Position dropdown within table bounds
-  const positionDropdown = (rowIndex) => {
-    const button = menuRefs.current[rowIndex]?.button;
-    const dropdown = menuRefs.current[rowIndex]?.dropdown;
-    const tableContainer = tableContainerRef.current;
+    return filtered;
+  }, [data, searchTerm, filterValues, columns, onFilterChange]);
 
-    if (!button || !dropdown || !tableContainer) return;
+  const pagination = useMemo(() => {
+    const totalItems = filteredData.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentData = filteredData.slice(startIndex, endIndex);
+    return { totalItems, totalPages, startIndex, endIndex, currentData };
+  }, [filteredData, currentPage, itemsPerPage]);
 
+  const { totalItems, totalPages, currentData } = pagination;
+
+  const handlePageChange = useCallback((page) => setCurrentPage(page), []);
+  const handleCheckboxChange = useCallback(
+    (rowIndex, row) => {
+      const newSelectedRows = selectedRows.includes(rowIndex)
+        ? selectedRows.filter((index) => index !== rowIndex)
+        : [...selectedRows, rowIndex];
+      const newSelectedItems = selectedItems.some((item) => item.id === row.id)
+        ? selectedItems.filter((item) => item.id !== row.id)
+        : [...selectedItems, row];
+      setSelectedRows(newSelectedRows);
+      setSelectedItems(newSelectedItems);
+      if (onSelectionChange) onSelectionChange(newSelectedRows, newSelectedItems);
+    },
+    [selectedRows, selectedItems, onSelectionChange]
+  );
+  const handleSelectAllChange = useCallback(() => {
+    let newSelectedRows = [];
+    let newSelectedItems = [];
+    if (
+      selectedRows.length > 0 &&
+      selectedRows.length === currentData.filter((row) => row.hasCheckbox).length
+    ) {
+      newSelectedRows = [];
+      newSelectedItems = [];
+    } else {
+      newSelectedRows = currentData
+        .map((row, index) => (row.hasCheckbox ? index : null))
+        .filter((index) => index !== null);
+      newSelectedItems = currentData.filter((row) => row.hasCheckbox);
+    }
+    setSelectedRows(newSelectedRows);
+    setSelectedItems(newSelectedItems);
+    if (onSelectionChange) onSelectionChange(newSelectedRows, newSelectedItems);
+  }, [selectedRows, currentData, onSelectionChange]);
+  const handleToggleActive = useCallback(
+    (rowIndex) => {
+      const updatedData = [...data];
+      updatedData[pagination.startIndex + rowIndex].ToggleActive =
+        !updatedData[pagination.startIndex + rowIndex].ToggleActive;
+    },
+    [data, pagination.startIndex]
+  );
+  const handleExportCSV = useCallback(() => {
+    exportTableData(data, columns, `${tableName.toLowerCase().replace(/\s+/g, "-")}.csv`, tableName);
+    setExportDropdownOpen(false);
+  }, [data, columns, tableName]);
+  const handleExportPDF = useCallback(() => {
+    exportTableToPDF(data, columns, `${tableName.toLowerCase().replace(/\s+/g, "-")}.pdf`, tableName);
+    setExportDropdownOpen(false);
+  }, [data, columns, tableName]);
+  const handlePrint = useCallback(() => printTableData(data, columns, tableName), [data, columns, tableName]);
+  const toggleDropdown = useCallback(
+    (rowIndex, colIndex) => {
+      const key = `${rowIndex}-${colIndex}`;
+      setOpenDropdown((prev) => (prev === key ? null : key));
+      if (openDropdown !== key) setTimeout(() => positionDropdown(rowIndex, colIndex), 0);
+    },
+    [openDropdown]
+  );
+  const toggleExportDropdown = useCallback(() => {
+    setExportDropdownOpen((prev) => !prev);
+    if (!exportDropdownOpen) setTimeout(() => positionExportDropdown(), 0);
+  }, [exportDropdownOpen]);
+  const positionDropdown = (rowIndex, colIndex) => {
+    const key = `${rowIndex}-${colIndex}`;
+    const button = menuRefs.current[key]?.button;
+    const dropdown = menuRefs.current[key]?.dropdown;
+    if (!button || !dropdown) return;
     const buttonRect = button.getBoundingClientRect();
-    const tableRect = tableContainer.getBoundingClientRect();
+    const tableRect = tableContainerRef.current.getBoundingClientRect();
+    const headerRect = tableContainerRef.current.querySelector("thead")?.getBoundingClientRect();
+    if (!headerRect) return;
     const dropdownRect = dropdown.getBoundingClientRect();
-
-    // Reset styles
-    dropdown.style.top = '';
-    dropdown.style.bottom = '';
-    dropdown.style.left = '';
-    dropdown.style.right = '';
-    dropdown.style.maxHeight = '';
-    dropdown.style.maxWidth = '';
-
-    // Calculate available space relative to table container's visible area
-    const spaceBelow = tableRect.bottom - buttonRect.bottom;
-    const spaceAbove = buttonRect.top - tableRect.top;
-    const spaceRight = tableRect.right - buttonRect.right;
-    const spaceLeft = buttonRect.left - tableRect.left;
-
-    // Vertical positioning: prioritize above for last item, constrain height
-    if (spaceAbove >= dropdownRect.height && spaceBelow < dropdownRect.height) {
-      // Position above if below would exceed (common for last item)
-      dropdown.style.top = `-${dropdownRect.height + 5}px`;
-      dropdown.style.bottom = 'auto';
+    const dropdownHeight = dropdownRect.height || 150;
+    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
+    const spaceAbove = buttonRect.top - headerRect.bottom - 10;
+    let top;
+    if (spaceBelow >= dropdownHeight) {
+      top = button.offsetHeight + 2;
+      dropdown.style.top = `${top}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceBelow}px`;
+    } else if (spaceAbove >= dropdownHeight) {
+      top = -(dropdownHeight + 2);
+      dropdown.style.top = `${top}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceAbove}px`;
     } else {
-      // Position below and constrain height to fit within table
-      const maxHeight = Math.min(spaceBelow + 5, tableRect.height - buttonRect.height - 10);
-      dropdown.style.top = `${buttonRect.height + 5}px`;
-      dropdown.style.maxHeight = `${maxHeight > 0 ? maxHeight : 10}px`; // Minimum height fallback
-      dropdown.style.overflowY = 'auto';
+      top = -(Math.min(dropdownHeight, spaceAbove) + 2);
+      dropdown.style.top = `${top}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceAbove}px`;
     }
-
-    // Horizontal positioning: keep within table width
-    if (spaceRight >= dropdownRect.width) {
-      dropdown.style.right = '10px'; // Match padding
-    } else if (spaceLeft >= dropdownRect.width) {
-      dropdown.style.left = '10px';
-      dropdown.style.right = 'auto';
-    } else {
-      dropdown.style.right = '10px';
-      dropdown.style.maxWidth = `${spaceRight - 10}px`;
-      dropdown.style.overflowX = 'auto';
+    const additionalOffset = 4;
+    const left = -dropdownRect.width - additionalOffset;
+    dropdown.style.left = `${left}px`;
+    dropdown.style.right = "auto";
+    dropdown.style.position = "absolute";
+    dropdown.style.zIndex = "1000";
+    dropdown.style.overflowY = "auto";
+    const viewportBottom = window.innerHeight;
+    const dropdownBottom = buttonRect.top + top;
+    if (dropdownBottom < 0) {
+      dropdown.style.top = "0";
+      dropdown.style.maxHeight = `${buttonRect.top - 10}px`;
+    } else if (buttonRect.bottom + (dropdownHeight - top) > viewportBottom) {
+      dropdown.style.maxHeight = `${viewportBottom - buttonRect.bottom - 10}px`;
     }
   };
+  const positionExportDropdown = () => {
+    const button = exportButtonRef.current;
+    const dropdown = exportDropdownRef.current;
+    if (!button || !dropdown) return;
+    const buttonRect = button.getBoundingClientRect();
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const dropdownHeight = dropdownRect.height;
+    const spaceAbove = buttonRect.top - 10;
+    const top = -dropdownHeight - 4;
+    dropdown.style.top = `${top}px`;
+    dropdown.style.bottom = "auto";
+    dropdown.style.maxHeight = `${spaceAbove}px`;
+    dropdown.style.position = "absolute";
+    dropdown.style.overflowY = "auto";
+    dropdown.style.right = "0";
+  };
+  const handleFilterValueChange = (filterKey, value) => {
+    setFilterValues((prev) => ({ ...prev, [filterKey]: value }));
+    onFilterChange(filterKey, value);
+  };
+  const handleDateRangeSelect = (range) => {
+    const updatedValues = {
+      ...filterValues,
+      dateAdded: {
+        start: range.start ? new Date(range.start) : null,
+        end: range.end ? new Date(range.end) : null,
+      },
+    };
+    setFilterValues(updatedValues);
+    onFilterChange("dateAdded", updatedValues.dateAdded);
+    setIsDateFilterDropdownOpen(false);
+  };
+  const resetFilters = () => {
+    setFilterValues({ filter_type: "", value: "", dateAdded: null });
+    onFilterChange("filter_type", "");
+    onFilterChange("value", "");
+    onFilterChange("dateAdded", null);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        Object.values(menuRefs.current).some(
+          ({ button, dropdown }) =>
+            (button && button.contains(event.target)) ||
+            (dropdown && dropdown.contains(event.target))
+        ) ||
+        (exportButtonRef.current && exportButtonRef.current.contains(event.target)) ||
+        (exportDropdownRef.current && exportDropdownRef.current.contains(event.target)) ||
+        (dateFilterStartInputRef.current && dateFilterStartInputRef.current.contains(event.target)) ||
+        (dateFilterEndInputRef.current && dateFilterEndInputRef.current.contains(event.target)) ||
+        (dateFilterDropdownRef.current && dateFilterDropdownRef.current.contains(event.target))
+      ) {
+        return;
+      }
+      setOpenDropdown(null);
+      setExportDropdownOpen(false);
+      setIsDateFilterDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="custom-table-container">
-      {/* Search and Filters */}
+    <div className={`custom-table-container ${exportDropdownOpen ? "export-dropdown-open" : ""}`}>
       <div className="table-header">
         <div className="search-filters-container">
-          <div className="search-container">
-            <SearchInput
-              type="text"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="filters-container">
-            <h2 className="filter-text">Filters:</h2>
-            {filters.map((filter, index) => (
-              <SelectInput
-                key={index}
-                value={filter.value}
-                onChange={(e) => onFilterChange(filter.key, e.target.value)}
-                options={filter.options}
-              />
-            ))}
-          </div>
+          <TableHeader
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filters={[{ options: filterOptions }]} // Pass filter options directly
+            filterValues={filterValues}
+            handleFilterValueChange={handleFilterValueChange}
+            handleDateRangeSelect={handleDateRangeSelect}
+            resetFilters={resetFilters}
+            isDateFilterDropdownOpen={isDateFilterDropdownOpen}
+            setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
+            dateFilterStartInputRef={dateFilterStartInputRef}
+            dateFilterEndInputRef={dateFilterEndInputRef}
+            dateFilterDropdownRef={dateFilterDropdownRef}
+            secondFilterOptions={secondFilterOptions} // Pass second filter options
+          />
         </div>
-        <div className="table-actions">
-          <button onClick={handleExport} className="action-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          </button>
-          <button onClick={handlePrint} className="action-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-          </button>
-        </div>
+        {showActions && (
+          <TableActions
+            toggleExportDropdown={toggleExportDropdown}
+            exportDropdownOpen={exportDropdownOpen}
+            handleExportCSV={handleExportCSV}
+            handleExportPDF={handleExportPDF}
+            handlePrint={handlePrint}
+            exportButtonRef={exportButtonRef}
+            exportDropdownRef={exportDropdownRef}
+          />
+        )}
       </div>
-
-      {/* Table */}
-      <div className="table-container" ref={tableContainerRef}>
-        <table className="custom-table">
-          <thead>
-            <tr>
-              <th className="checkbox-column">
-                <CheckboxInput
-                  checked={
-                    selectedRows.length > 0 &&
-                    selectedRows.length ===
-                      currentData.filter((row) => row.hasCheckbox).length
-                  }
-                  onChange={handleSelectAllChange}
-                />
-              </th>
-              {columns.map((col, index) => (
-                <th key={index}>{col.header}</th>
-              ))}
-              {showActions && <th>Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="checkbox-column">
-                  {row.hasCheckbox && (
-                    <CheckboxInput
-                      checked={selectedRows.includes(rowIndex)}
-                      onChange={() => handleCheckboxChange(rowIndex)}
-                    />
-                  )}
-                </td>
-                {columns.map((col, colIndex) => (
-                  <td key={colIndex}>
-                    {col.type === "stage_completion" ? (
-                      <div className="progress-bars">
-                        <div
-                          className="progress-fills"
-                          style={{ width: `${row[col.key]}%` }}
-                        ></div>
-                        <span className="progress-texts">{`${
-                          row[col.key]
-                        }%`}</span>
-                      </div>
-                    ) : col.type === "plan" ? (
-                      <span
-                        className={`plan-label plan-${row[
-                          col.key
-                        ].toLowerCase()}`}
-                      >
-                        {row[col.key]}
-                      </span>
-                    ) : col.type === "status" ? (
-                      <span
-                        className={`status-label status-${row[
-                          col.key
-                        ].toLowerCase()}`}
-                      >
-                        {row[col.key]}
-                      </span>
-                    ) : col.type === "document" ? (
-                      <div className="document-cell">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="document-icon"
-                        >
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                          <line x1="16" y1="13" x2="8" y2="13" />
-                          <line x1="16" y1="17" x2="8" y2="17" />
-                          <polyline points="10 9 9 9 8 9" />
-                        </svg>
-                        {row[col.key]}
-                      </div>
-                    ) : col.type === "severity" ? (
-                      <span
-                        className={`severity-label severity-${row[
-                          col.key
-                        ].toLowerCase()}`}
-                      >
-                        {row[col.key]}
-                      </span>
-                    ) : col.type === "active" ? (
-                      <SwitchInput
-                        checked={row[col.key]}
-                        onChange={() => handleToggleActive(rowIndex)}
-                      />
-                    ) : col.type === "day_time" ? (
-                      <div className="day-time-cell">
-                        <div>{row[col.key].date}</div>
-                        <div>{row[col.key].time}</div>
-                      </div>
-                    ) : col.type === "priority" ? (
-                      <span
-                        className={`priority-label priority-${row[
-                          col.key
-                        ].toLowerCase()}`}
-                      >
-                        {row[col.key]}
-                      </span>
-                    ) : (
-                      row[col.key]
-                    )}
-                  </td>
-                ))}
-                {showActions && (
-                  <td className="action-cell">
-                    {row.hasActions && (
-                      <Menu as="div" className="action-menu">
-                        {({ open }) => (
-                          <>
-                            <Menu.Button
-                              className="action-button"
-                              ref={(el) => {
-                                if (!menuRefs.current[rowIndex])
-                                  menuRefs.current[rowIndex] = {};
-                                menuRefs.current[rowIndex].button = el;
-                              }}
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <circle cx="12" cy="12" r="1" />
-                                <circle cx="12" cy="5" r="1" />
-                                <circle cx="12" cy="19" r="1" />
-                              </svg>
-                            </Menu.Button>
-                            <Menu.Items
-                              className="action-dropdown"
-                              ref={(el) => {
-                                if (!menuRefs.current[rowIndex])
-                                  menuRefs.current[rowIndex] = {};
-                                menuRefs.current[rowIndex].dropdown = el;
-                                if (open) positionDropdown(rowIndex);
-                              }}
-                            >
-                              {actions.map((action, index) => (
-                                <Menu.Item key={index}>
-                                  {({ active }) => (
-                                    <button
-                                      className={`dropdown-item ${
-                                        active ? "active" : ""
-                                      } ${action.className || ""}`}
-                                      onClick={() => action.onClick(row)}
-                                    >
-                                      {action.label}
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                              ))}
-                            </Menu.Items>
-                          </>
-                        )}
-                      </Menu>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar" ref={tableContainerRef}>
+        <TableBody
+          currentData={currentData}
+          columns={columns}
+          showCheckbox={showCheckbox}
+          showActions={showActions}
+          selectedRows={selectedRows}
+          handleCheckboxChange={handleCheckboxChange}
+          handleSelectAllChange={handleSelectAllChange}
+          toggleDropdown={toggleDropdown}
+          openDropdown={openDropdown}
+          menuRefs={menuRefs}
+          actions={actions}
+          tableName={tableName}
+          hasStatusDot={hasStatusDot}
+          handleToggleActive={handleToggleActive}
+          actionText={actionText}
+          actionLinkPrefix={actionLinkPrefix}
+        />
       </div>
-
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   );
 };
