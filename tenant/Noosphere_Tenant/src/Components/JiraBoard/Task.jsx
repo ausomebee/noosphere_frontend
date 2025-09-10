@@ -50,7 +50,7 @@ const Task = ({
       }}
     >
       <div className="task-content">
-        <p>{task.company || 'Unnamed Candidate'}</p>
+        <p>{task.fullName || 'Unnamed Candidate'}</p>
         <span>{task.progress} task done</span>
       </div>
       <Menu as="div" className="dropdown-container">
@@ -59,27 +59,18 @@ const Task = ({
         </Menu.Button>
         <Menu.Items className="menu-items">
           <div>
-            {/* <Menu.Item>
-              {({ active }) => (
-                <button
-                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onViewCandidate(columnId, id)} // Reordered args to match JiraBoard
-                >
-                  View candidate information
-                </button>
-              )}
-            </Menu.Item> */}
+            
             <Menu.Item>
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onEditCandidate(columnId, id)} // Reordered args
+                  onClick={() => onViewCandidate(columnId, id)} // Reordered args
                 >
-                  Edit candidate information
+                  Edit client information
                 </button>
               )}
             </Menu.Item>
-            <Menu.Item>
+            {/* <Menu.Item>
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
@@ -88,7 +79,7 @@ const Task = ({
                   Assign candidate to staff
                 </button>
               )}
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item>
               {({ active }) => (
                 <button

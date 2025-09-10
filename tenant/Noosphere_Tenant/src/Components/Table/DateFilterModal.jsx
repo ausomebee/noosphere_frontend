@@ -65,11 +65,9 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
                 onClick={() => {
                   if (!day) return;
                   if (!tempRange) {
-                    // Start a new selection (single date)
                     setTempRange({ start: day, end: null });
-                    setSelectedRange({ start: day, end: day }); // Set as single date initially
+                    setSelectedRange({ start: day, end: day });
                   } else if (!tempRange.end) {
-                    // Complete the range selection
                     const newEnd = day;
                     const newStart = tempRange.start;
                     if (newEnd < newStart) {
@@ -80,7 +78,6 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
                       setSelectedRange({ start: newStart, end: newEnd });
                     }
                   } else {
-                    // Start a new selection (single date)
                     setTempRange({ start: day, end: null });
                     setSelectedRange({ start: day, end: day });
                   }
@@ -144,16 +141,15 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
           onClick={onClose}
           variant="secondary"
           label={"Cancel"}
-          className="date-filter-button"
+          className="flex-1"
         />
         <Button
           onClick={handleApply}
-          className="date-filter-button date-filter-apply"
           label="Apply"
           variant="primary"
+          width="full"
+          className="flex-1"
         />
-        
-        
       </div>
     </div>
   );

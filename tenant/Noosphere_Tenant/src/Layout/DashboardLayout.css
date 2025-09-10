@@ -1,6 +1,7 @@
 /* Root Variables */
 :root {
   --sidebar-width: 270px;
+  --logo-width: 100px
   --sidebar-collapsed-width: 80px;
   --header-height: 80px;
   --card-padding: 16px;
@@ -100,8 +101,8 @@
   position: relative;
 }
 
-.logo {
-  max-width: 100%;
+.layout-logo {
+  max-width: 120%;
   transition: opacity var(--transition-speed) ease;
 }
 

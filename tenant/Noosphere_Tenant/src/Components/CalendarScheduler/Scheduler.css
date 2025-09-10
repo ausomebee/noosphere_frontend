@@ -1352,7 +1352,7 @@ Appointments Css
   }
   
   .appointment-sched-view-button {
-    width: 33.33%; /* w-4/12 */
+    width: 100%; 
     padding: 0.25rem 0.75rem; /* 4px 12px */
     font-size: 0.875rem; /* 14px */
     font-weight: 500;
@@ -1363,7 +1363,7 @@ Appointments Css
   
   .appointment-sched-view-button-active {
     background-color: #ffffff;
-    color: #3b82f6;
+    color: #004ABA;
     font-weight: 600;
   }
   

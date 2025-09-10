@@ -116,7 +116,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                 &times;
               </button>
             )}
-            <img src={TenantLogo} alt="Logo" className="logo" />
+            <img src={TenantLogo} alt="Logo" className="layout-logo" />
           </div>
           <nav>
             <ul className="nav-list">

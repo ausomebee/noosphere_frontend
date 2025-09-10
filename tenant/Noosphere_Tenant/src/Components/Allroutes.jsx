@@ -16,6 +16,12 @@ import ForgetPassword from "../Pages/Authentication/ForgotPassword/ForgotPasswor
 import ForgotPasswordResetPassword from "../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword";
 import ForgotPasswordAuthenticatorVerifier from "../Pages/Authentication/ForgotPassword/ForgotPasswordAuthenticatorVerifier";
 import ForgotPasswordQuestionVerifier from "../Pages/Authentication/ForgotPassword/ForgotPasswordQuestionVerifier";
+import ProgramLibrary from "../Pages/ProgramLibrary/ProgramLibrary";
+import Pipeline from "../Pages/Client/Pipeline/Pipeline";
+import ManageColumn from "./ManageColumn/ManageColumn";
+import ClientPanel from "../Pages/Client/Pipeline/ClientPanel/ClientPanel";
+import DataDummy from "./ReusableModal/DataCollectionModal/DataDummy";
+import TargetSingle from "../Pages/ProgramLibrary/TargetSingle";
 
 const AllRoutes = () => {
   return (
@@ -60,6 +66,21 @@ const AllRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/scheduler/calendar" element={<Calendar />} />
       <Route path="/scheduler/appointments" element={<Appointments />} />
+      <Route path="/clients/pipeline" element={<Pipeline />} />
+      <Route
+        path="/pipeline/column-single/:pipelineStageId"
+        element={<ManageColumn />}
+      />
+      <Route
+        path="/client/client-single/:pipelineStageId/:pipelineItemId"
+        element={<ClientPanel />}
+      />
+      <Route path="/program-library" element={<ProgramLibrary />} />
+      {/* <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} /> */}
+      <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} />
+
+
+       <Route path="/datacollectiondummy" element={<DataDummy />} />
     </Routes>
   );
 };

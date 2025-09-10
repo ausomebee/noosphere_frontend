@@ -18,35 +18,31 @@ import Task from "./Task";
 import Column from "./Column";
 import NewPipelineColumnModal from "../ReusableModal/PipelineModal/NewPipelineColumnModal";
 import AddProspectModal from "../ReusableModal/PipelineModal/AddProspectModal";
-// import MoveCandidateModal from "../ReusableModal/MoveCandidateModal";
-// import AssignCandidateModal from "../ReusableModal/AssignCandidateModal";
-// import DeleteConfirmationModal from "../ReusableModal/DeleteConfirmationModal";
+import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfirmationModal";
 import LoadingSpinner from "../LoadingSpinner";
 import "./DragAndDrop.css";
-// import {
-//   addColumn,
-//   updateColumnTaskIds,
-//   addTaskToColumn,
-//   removeTaskFromColumn,
-//   updateColumnOrder,
-//   deleteColumn,
-//   fetchPipelineByModule,
-//   fetchPipelineItems,
-//   createPipelineStage,
-//   reorderPipelineStage,
-//   updatePipelineItemActivity,
-//   deletePipelineStage,
-//   deletePipelineItem,
-//   updateCandidate,
-//   reassignCandidateToStaff,
-//   setColumns,
-//   fetchSinglePipelineItem,
-// } from "../../ReduxStore/features/PipelineSlice";
+import {
+  addColumn,
+  updateColumnTaskIds,
+  addTaskToColumn,
+  removeTaskFromColumn,
+  updateColumnOrder,
+  deleteColumn,
+  fetchPipelineByTenantId,
+  fetchPipelineItems,
+  createPipelineStage,
+  reorderPipelineStage,
+  updatePipelineItemActivity,
+  deletePipelineStage,
+  deletePipelineItem,
+  setColumns,
+  fetchSinglePipelineItem,
+} from "../../ReduxStore/features/PipelineSlice";
 import { FaPlus } from "react-icons/fa";
 import { IoWarningOutline } from "react-icons/io5";
 import Button from "../Button/Button";
 import { showToast } from "../../Helper/ShowToast";
-// import api from "../../api/TenantApis";
+import api from "../../api/TenantApis";
 
 const batchPromises = async (items, fn, concurrency = 3) => {
   const results = [];
@@ -63,10 +59,10 @@ const batchPromises = async (items, fn, concurrency = 3) => {
 const JiraBoard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } = useSelector(
-    (state) => state.pipeline
-  );
+  const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } =
+    useSelector((state) => state.pipeline);
   const token = useSelector((state) => state.authentication?.user?.token);
+  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
   const accessToken = token;
   const refreshToken = token;
   const [loadingCount, setLoadingCount] = useState(0);
@@ -76,16 +72,13 @@ const JiraBoard = () => {
   const [draggedColumn, setDraggedColumn] = useState(null);
   const [showAddColumnModal, setShowAddColumnModal] = useState(false);
   const [showAddProspectModal, setShowAddProspectModal] = useState(false);
-  const [showMoveCandidateModal, setShowMoveCandidateModal] = useState(false);
-  const [showAssignCandidateModal, setShowAssignCandidateModal] = useState(false);
-  const [showDeleteCandidateModal, setShowDeleteCandidateModal] = useState(false);
+  const [showDeleteCandidateModal, setShowDeleteCandidateModal] =
+    useState(false);
   const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
   const [selectedColumnId, setSelectedColumnId] = useState(null);
   const [addColumnIndex, setAddColumnIndex] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [staffList, setStaffList] = useState([]);
   const [stages, setStages] = useState([]);
 
   // Selection handling
@@ -122,53 +115,14 @@ const JiraBoard = () => {
     [accessToken, refreshToken]
   );
 
-  const fetchStaffAndStages = useCallback(async () => {
-    if (!authTokens.accessToken || !authTokens.refreshToken) {
+  const fetchPipelineData = useCallback(async () => {
+    if (!authTokens?.accessToken || !authTokens?.refreshToken) {
       showToast("Authentication tokens not available.", "error");
       return;
     }
 
-    startLoading();
-    try {
-      const [adminsResponse, stagesResponse] = await Promise.all([
-        api.getAllAdmins({
-          accessToken: authTokens.accessToken,
-          refreshToken: authTokens.refreshToken,
-        }),
-        pipeline?.id
-          ? api.GetPipelineStage({
-              pipelineId: pipeline.id,
-              accessToken: authTokens.accessToken,
-              refreshToken: authTokens.refreshToken,
-            })
-          : Promise.resolve({ data: { data: [] } }),
-      ]);
-
-      const admins = adminsResponse.data?.data || [];
-      setStaffList(
-        admins.map((admin) => ({
-          staffId: admin.id || `admin-${uuidv4()}`,
-          name: admin.fullName || "Unknown Admin",
-        }))
-      );
-
-      const stagesData = stagesResponse.data?.data || [];
-      setStages(
-        stagesData.map((stage) => ({
-          stageId: stage.id || `stage-${uuidv4()}`,
-          name: stage.name || "Unnamed Stage",
-        }))
-      );
-    } catch (err) {
-      console.error("Failed to fetch staff or stages:", err);
-    } finally {
-      stopLoading();
-    }
-  }, [authTokens, pipeline?.id]);
-
-  const fetchPipelineData = useCallback(async () => {
-    if (!authTokens.accessToken || !authTokens.refreshToken) {
-      showToast("Authentication tokens not available.", "error");
+    if (!tenantId) {
+      showToast("Tenant ID is not available.", "error");
       return;
     }
 
@@ -176,20 +130,25 @@ const JiraBoard = () => {
       return;
     }
 
+    let isMounted = true;
     startLoading();
-    try {
-      const pipelineResult = await dispatch(
-        fetchPipelineByModule(authTokens)
-      ).unwrap();
-      const pipelineId = pipelineResult.data[0]?.id;
 
-      if (!pipelineId) {
+    try {
+      // Fetch pipeline
+      const pipelineResult = await dispatch(
+        fetchPipelineByTenantId({
+          accessToken: authTokens.accessToken,
+          refreshToken: authTokens.refreshToken,
+          tenantId,
+        })
+      ).unwrap();
+      if (!pipelineResult?.data?.length) {
         showToast("No pipeline found.", "warning");
         return;
       }
+      const pipelineId = pipelineResult.data[0].id;
 
-      await fetchStaffAndStages();
-
+      // Fetch pipeline stages
       const stagesResponse = await api.GetPipelineStage({
         pipelineId,
         accessToken: authTokens.accessToken,
@@ -204,6 +163,7 @@ const JiraBoard = () => {
 
       const newColumns = {};
       const newColumnOrder = [];
+      const newStages = [];
       stagesData.forEach((stage) => {
         if (stage.id) {
           newColumns[stage.id] = {
@@ -216,25 +176,35 @@ const JiraBoard = () => {
             colorCode: stage.colourCode || "#000000",
           };
           newColumnOrder.push(stage.id);
+          newStages.push({
+            stageId: stage.id,
+            name: stage.name || "Unnamed Stage",
+          });
         } else {
           console.warn("Skipping stage with missing ID:", stage);
         }
       });
 
+      setStages(newStages);
+
+      if (!newColumnOrder.length) {
+        showToast("No valid stages found.", "warning");
+        return;
+      }
+
       dispatch(setColumns(newColumns));
       dispatch(updateColumnOrder(newColumnOrder));
 
+      // Batch fetch pipeline items
       const results = await batchPromises(
         newColumnOrder,
         (stageId) =>
           dispatch(fetchPipelineItems({ stageId, ...authTokens }))
             .unwrap()
-            .then((response) => {
-              return {
-                stageId,
-                items: response.items || [],
-              };
-            })
+            .then((response) => ({
+              stageId,
+              items: response.items || [],
+            }))
             .catch((err) => {
               console.error(`Failed to fetch items for stage ${stageId}:`, err);
               throw err;
@@ -275,13 +245,23 @@ const JiraBoard = () => {
                 ).unwrap();
                 const pipelineItem = pipelineItemResult.data;
 
-                // Handle doneTasks as an object
-                const doneTasks = pipelineItem?.doneTasks || {};
-                doneTasksCount = Object.values(doneTasks).filter((value) => value === true).length;
+                const doneTasks =
+                  pipelineItem?.doneTasks &&
+                  typeof pipelineItem.doneTasks === "object"
+                    ? pipelineItem.doneTasks
+                    : {};
+                doneTasksCount = Object.values(doneTasks).filter(
+                  (value) => value === true
+                ).length;
 
-                // Handle sentDocuments as an object
-                const sentDocuments = pipelineItem?.sentDocuments || {};
-                sentDocumentsCount = Object.values(sentDocuments).filter((value) => value === true).length;
+                const sentDocuments =
+                  pipelineItem?.sentDocuments &&
+                  typeof pipelineItem.sentDocuments === "object"
+                    ? pipelineItem.sentDocuments
+                    : {};
+                sentDocumentsCount = Object.values(sentDocuments).filter(
+                  (value) => value === true
+                ).length;
               } catch (err) {
                 console.error(`Failed to fetch pipeline item ${item.id}:`, err);
               }
@@ -291,16 +271,18 @@ const JiraBoard = () => {
 
               newTasks[item.id] = {
                 id: item.id,
-                company: item.companyName || `Candidate ${item.id.slice(0, 8)}`,
+                fullName: item.fullName || `Candidate ${item.id.slice(0, 8)}`,
                 progress,
-                staff: item.assignToAdmin || null,
-                contactPerson: item.contactPerson || "",
                 email: item.email || "",
                 phone: item.phoneNumber || "",
-                companySize: item.companySize || "",
-                organizationType: item.organizationType || "",
-                location: item.location || "",
-                leadSource: item.leadSource || "",
+                streetAddress: item.streetAddress || "",
+                city: item.city || "",
+                state: item.state || "",
+                country: item.country || "",
+                zipCode: item.zipCode || "",
+                gender: item.gender || "",
+                DOB: item.DOB || "",
+                createdBy: item.createdBy || "Unknown Admin",
               };
             }
           }
@@ -309,16 +291,32 @@ const JiraBoard = () => {
         }
       }
 
-      setLocalTasks(newTasks);
-      setIsDataLoaded(true);
+      if (fetchErrors.length) {
+        showToast(
+          `Failed to fetch items for ${fetchErrors.length} stage(s).`,
+          "error"
+        );
+      }
 
-     
+      if (isMounted) {
+        setLocalTasks(newTasks);
+        setIsDataLoaded(true);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
+      if (isMounted) {
+        showToast("Failed to fetch pipeline data.", "error");
+      }
     } finally {
-      stopLoading();
+      if (isMounted) {
+        stopLoading();
+      }
     }
-  }, [dispatch, authTokens, isDataLoaded, fetchStaffAndStages]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, authTokens, tenantId, isDataLoaded]);
 
   useEffect(() => {
     let isMounted = true;
@@ -333,37 +331,49 @@ const JiraBoard = () => {
   }, [fetchPipelineData]);
 
   useEffect(() => {
-    if (!pipelineItem || !pipelineItem.id || !columns[pipelineItem.pipelineStageId]) {
+    if (
+      !pipelineItem ||
+      !pipelineItem.id ||
+      !columns[pipelineItem.pipelineStageId]
+    ) {
       return;
     }
 
-    const requiredTasks = columns[pipelineItem.pipelineStageId]?.requiredTasks || [];
-    const requiredDocuments = columns[pipelineItem.pipelineStageId]?.requiredDocuments || [];
+    const requiredTasks =
+      columns[pipelineItem.pipelineStageId]?.requiredTasks || [];
+    const requiredDocuments =
+      columns[pipelineItem.pipelineStageId]?.requiredDocuments || [];
     const totalRequiredItems = requiredTasks.length + requiredDocuments.length;
 
-    // Handle doneTasks as an object
-    const doneTasks = pipelineItem.doneTasks || 
-      requiredTasks.reduce((acc, task) => ({
-        ...acc,
-        [task.name]: false,
-      }), {});
+    const doneTasks =
+      pipelineItem.doneTasks ||
+      requiredTasks.reduce(
+        (acc, task) => ({
+          ...acc,
+          [task.name]: false,
+        }),
+        {}
+      );
 
-    // Count the number of completed tasks (true values in the object)
-    const doneTasksCount = Object.values(doneTasks).filter((value) => value === true).length;
+    const doneTasksCount = Object.values(doneTasks).filter(
+      (value) => value === true
+    ).length;
 
-    // Handle sentDocuments as an object
-    const sentDocuments = pipelineItem.sentDocuments || 
-      requiredDocuments.reduce((acc, doc) => ({
-        ...acc,
-        [doc.name]: false,
-      }), {});
-    const sentDocumentsCount = Object.values(sentDocuments).filter((value) => value === true).length;
+    const sentDocuments =
+      pipelineItem.sentDocuments ||
+      requiredDocuments.reduce(
+        (acc, doc) => ({
+          ...acc,
+          [doc.name]: false,
+        }),
+        {}
+      );
+    const sentDocumentsCount = Object.values(sentDocuments).filter(
+      (value) => value === true
+    ).length;
 
     const doneCount = doneTasksCount + sentDocumentsCount;
     const progress = `${doneCount}/${totalRequiredItems}`;
-
-    // Map the doneTasks object to taskStatuses
-    const taskStatuses = doneTasks;
 
     setLocalTasks((prev) => {
       const updatedTasks = {
@@ -371,7 +381,6 @@ const JiraBoard = () => {
         [pipelineItem.id]: {
           ...prev[pipelineItem.id],
           progress,
-          taskStatuses,
         },
       };
       return updatedTasks;
@@ -435,12 +444,14 @@ const JiraBoard = () => {
         dispatch(updateColumnOrder(newColumnOrder));
 
         try {
-          await api.ReorderPipelineStage({
-            id: activeId,
-            order: overColumnIndex + 1,
-            accessToken,
-            refreshToken,
-          });
+          await dispatch(
+            reorderPipelineStage({
+              id: activeId,
+              order: overColumnIndex + 1,
+              accessToken,
+              refreshToken,
+            })
+          ).unwrap();
         } catch (err) {
           console.error("Failed to reorder column:", err);
           showToast("Failed to update column order.", "error");
@@ -478,12 +489,14 @@ const JiraBoard = () => {
       );
 
       try {
-        await api.UpdatePipelineItemActivity({
-          ids: [activeId],
-          pipelineStageId: activeColumnId,
-          accessToken,
-          refreshToken,
-        });
+        await dispatch(
+          updatePipelineItemActivity({
+            ids: [activeId],
+            pipelineStageId: activeColumnId,
+            accessToken,
+            refreshToken,
+          })
+        ).unwrap();
       } catch (err) {
         console.error("Failed to update task order:", err);
         showToast("Failed to update task order.", "error");
@@ -528,12 +541,14 @@ const JiraBoard = () => {
       }));
 
       try {
-        await api.UpdatePipelineItemActivity({
-          ids: [activeId],
-          pipelineStageId: targetColumnId,
-          accessToken,
-          refreshToken,
-        });
+        await dispatch(
+          updatePipelineItemActivity({
+            ids: [activeId],
+            pipelineStageId: targetColumnId,
+            accessToken,
+            refreshToken,
+          })
+        ).unwrap();
       } catch (err) {
         console.error("Failed to move task:", err);
         showToast("Failed to move task.", "error");
@@ -566,17 +581,19 @@ const JiraBoard = () => {
           ...prev,
           [newTaskId]: {
             id: newTaskId,
-            company:
-              prospectData.company || `New Candidate ${newTaskId.slice(0, 8)}`,
+            fullName:
+              prospectData.fullName || `New Candidate ${newTaskId.slice(0, 8)}`,
             progress: `0/${totalRequiredItems}`,
-            staff: prospectData.assignToAdmin || null,
-            contactPerson: prospectData.contactPerson || "",
             email: prospectData.email || "",
             phone: prospectData.phoneNumber || "",
-            companySize: prospectData.companySize || "",
-            organizationType: prospectData.organizationType || "",
-            location: prospectData.location || "",
-            leadSource: prospectData.leadSource || "",
+            streetAddress: prospectData.streetAddress || "",
+            city: prospectData.city || "",
+            state: prospectData.state || "",
+            country: prospectData.country || "",
+            zipCode: prospectData.zipCode || "",
+            gender: prospectData.gender || "",
+            DOB: prospectData.DOB || "",
+            createdBy: prospectData.createdBy || "Unknown Admin",
           },
         };
         return updatedTasks;
@@ -635,7 +652,6 @@ const JiraBoard = () => {
     } catch (error) {
       console.error("Candidate deletion failed:", error);
       showToast(error?.message || "Failed to delete candidate(s).", "error");
-      setShowErrorModal(true);
     } finally {
       stopLoading();
     }
@@ -645,18 +661,20 @@ const JiraBoard = () => {
     const column = columns[selectedColumnId];
     const columnIndex = columnOrder.indexOf(selectedColumnId);
     const isFirstColumn = columnIndex === 0;
-    const isLastColumn = columnIndex === columnOrder.length - 1;
-    const hasTasks = column.taskIds && column.taskIds.length > 0;
+    const hasTasks = column?.taskIds?.length > 0;
 
     if (isFirstColumn && hasTasks) {
+      showToast(
+        "Cannot delete first column with candidates. Move or delete candidates first.",
+        "error"
+      );
       setShowDeleteColumnModal(false);
-      setShowErrorModal(true);
       return;
     }
 
     startLoading();
     try {
-      if (hasTasks && !isLastColumn) {
+      if (hasTasks && columnIndex > 0) {
         const firstColumnId = columnOrder[0];
         const firstColumn = columns[firstColumnId];
         const updatedFirstColumnTaskIds = [
@@ -664,7 +682,7 @@ const JiraBoard = () => {
           ...column.taskIds,
         ];
 
-        const response = await dispatch(
+        await dispatch(
           updatePipelineItemActivity({
             ids: column.taskIds,
             pipelineStageId: firstColumnId,
@@ -672,240 +690,51 @@ const JiraBoard = () => {
             refreshToken,
           })
         ).unwrap();
-        if (response.status !== "ok") {
-          throw new Error("Failed to move tasks.");
-        }
         dispatch(
           updateColumnTaskIds({
             columnId: firstColumnId,
             taskIds: updatedFirstColumnTaskIds,
           })
         );
-      }
-
-      if (isLastColumn && hasTasks) {
-        const response = await dispatch(
-          deletePipelineItem({
-            ids: column.taskIds,
-            accessToken,
-            refreshToken,
-          })
-        ).unwrap();
-        if (response.status !== "ok") {
-          throw new Error("Failed to delete tasks.");
-        }
         setLocalTasks((prev) => {
           const newTasks = { ...prev };
-          column.taskIds.forEach((taskId) => delete newTasks[taskId]);
+          column.taskIds.forEach((taskId) => {
+            if (newTasks[taskId]) {
+              newTasks[taskId] = {
+                ...newTasks[taskId],
+                progress: `0/${
+                  (columns[firstColumnId]?.requiredTasks?.length || 0) +
+                  (columns[firstColumnId]?.requiredDocuments?.length || 0)
+                }`,
+              };
+            }
+          });
           return newTasks;
         });
       }
 
-      const response = await dispatch(
+      await dispatch(
         deletePipelineStage({
           id: selectedColumnId,
           accessToken,
           refreshToken,
         })
       ).unwrap();
-      if (response.status === "ok") {
-        dispatch(deleteColumn(selectedColumnId));
-        setShowDeleteColumnModal(false);
-        setSelectedColumnId(null);
-        showToast("Column deleted successfully!", "success");
-      } else {
-        throw new Error("Failed to delete column.");
-      }
+      dispatch(deleteColumn(selectedColumnId));
+      setShowDeleteColumnModal(false);
+      setSelectedColumnId(null);
+      showToast("Column deleted successfully!", "success");
+      setIsDataLoaded(false);
     } catch (error) {
       console.error("Column deletion failed:", error);
       showToast(error?.message || "Failed to delete column.", "error");
-      setShowErrorModal(true);
     } finally {
       stopLoading();
-    }
-  };
-
-  const handleEditTask = async (taskId, newCompany) => {
-    setLocalTasks((prev) => ({
-      ...prev,
-      [taskId]: {
-        ...prev[taskId],
-        company: newCompany,
-      },
-    }));
-    startLoading();
-    try {
-      const response = await dispatch(
-        updateCandidate({
-          id: taskId,
-          companyName: newCompany,
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-      if (response.status === "ok") {
-        showToast("Candidate updated successfully!", "success");
-      } else {
-        throw new Error("Failed to update candidate.");
-      }
-    } catch (error) {
-      console.error("Candidate update failed:", error);
-      showToast(error?.message || "Failed to update candidate.", "error");
-      setShowErrorModal(true);
-    } finally {
-      stopLoading();
-    }
-  };
-
-  const handleMoveTask = async (taskIds, targetColumnId) => {
-    const currentColumnIds = taskIds.map((taskId) =>
-      Object.keys(columns).find((colId) =>
-        columns[colId].taskIds.includes(taskId)
-      )
-    );
-    if (
-      !currentColumnIds.every((id) => id) ||
-      currentColumnIds.every((id) => id === targetColumnId)
-    )
-      return;
-
-    const targetColumn = columns[targetColumnId];
-    const totalRequiredItems =
-      (targetColumn.requiredTasks?.length || 0) +
-      (targetColumn.requiredDocuments?.length || 0);
-
-    const updatedTasks = { ...localTasks };
-    for (const taskId of taskIds) {
-      let doneCount = 0;
-      try {
-        const pipelineItemResult = await dispatch(
-          fetchSinglePipelineItem({
-            itemId: taskId,
-            ...authTokens,
-          })
-        ).unwrap();
-        const pipelineItem = pipelineItemResult.data;
-
-        // Handle doneTasks as an object
-        const doneTasks = pipelineItem?.doneTasks || {};
-        const doneTasksCount = Object.values(doneTasks).filter((value) => value === true).length;
-
-        // Handle sentDocuments as an object
-        const sentDocuments = pipelineItem?.sentDocuments || {};
-        const sentDocumentsCount = Object.values(sentDocuments).filter((value) => value === true).length;
-
-        doneCount = doneTasksCount + sentDocumentsCount;
-      } catch (err) {
-        console.error(`Failed to fetch pipeline item ${taskId}:`, err);
-      }
-
-      updatedTasks[taskId] = {
-        ...updatedTasks[taskId],
-        progress: `${doneCount}/${totalRequiredItems}`,
-      };
-    }
-    setLocalTasks(updatedTasks);
-
-    const columnUpdates = {};
-    Object.keys(columns).forEach((colId) => {
-      columnUpdates[colId] = [...columns[colId].taskIds];
-    });
-
-    taskIds.forEach((taskId, index) => {
-      const currentColumnId = currentColumnIds[index];
-      if (currentColumnId) {
-        columnUpdates[currentColumnId] = columnUpdates[currentColumnId].filter(
-          (id) => id !== taskId
-        );
-        columnUpdates[targetColumnId].push(taskId);
-      }
-    });
-
-    Object.keys(columnUpdates).forEach((colId) => {
-      dispatch(
-        updateColumnTaskIds({
-          columnId: colId,
-          taskIds: columnUpdates[colId],
-        })
-      );
-    });
-
-    startLoading();
-    try {
-      const response = await dispatch(
-        updatePipelineItemActivity({
-          ids: taskIds,
-          pipelineStageId: targetColumnId,
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-      if (response.status === "ok") {
-        showToast(
-          `Moved ${taskIds.length} candidate(s) successfully!`,
-          "success"
-        );
-      } else {
-        throw new Error("Failed to move candidates.");
-      }
-    } catch (error) {
-      console.error("Task move failed:", error);
-      showToast(error?.message || "Failed to move candidate(s).", "error");
-      setShowErrorModal(true);
-    } finally {
-      stopLoading();
-      clearSelection();
-    }
-  };
-
-  const handleAssignStaff = async (taskIds, staff) => {
-    setLocalTasks((prev) => {
-      const updatedTasks = { ...prev };
-      taskIds.forEach((taskId) => {
-        updatedTasks[taskId] = {
-          ...updatedTasks[taskId],
-          staff,
-        };
-      });
-      return updatedTasks;
-    });
-    startLoading();
-    try {
-      const response = await dispatch(
-        reassignCandidateToStaff({
-          ids: taskIds,
-          assignToAdmin: staff,
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-      if (response.status === "ok") {
-        showToast(
-          `Assigned ${taskIds.length} candidate(s) successfully!`,
-          "success"
-        );
-      } else {
-        throw new Error("Failed to assign staff.");
-      }
-    } catch (error) {
-      console.error("Staff assignment failed:", error);
-      showToast(
-        error?.message || "Failed to assign staff to candidate(s).",
-        "error"
-      );
-      setShowErrorModal(true);
-    } finally {
-      stopLoading();
-      clearSelection();
     }
   };
 
   const handleViewCandidate = (stageId, taskId) => {
-    navigate(`/tenants/candidate-single/${stageId}/${taskId}`);
-  };
-
-  const handleEditCandidate = (stageId, taskId) => {
-    navigate(`/tenants/candidate-single/${stageId}/${taskId}/edit`);
+    navigate(`/client/client-single/${stageId}/${taskId}`);
   };
 
   const handleAddColumn = (index) => {
@@ -950,7 +779,6 @@ const JiraBoard = () => {
     } catch (error) {
       console.error("Failed to create pipeline stage:", error);
       showToast(error?.message || "Failed to create pipeline stage.", "error");
-      setShowErrorModal(true);
     } finally {
       stopLoading();
     }
@@ -972,7 +800,7 @@ const JiraBoard = () => {
       <div className="apicall">
         <div className="board-header">
           <div className="board-title">
-            <h1>{pipeline?.name || "Client Onboarding"}</h1>
+            <h1>{pipeline?.name || "Pipeline"}</h1>
             <p>
               {pipeline?.description ||
                 "Manage your client intake process seamlessly"}
@@ -1005,30 +833,17 @@ const JiraBoard = () => {
             data={{ tasks: localTasks, columns, columnOrder }}
             onAddTask={handleAddTask}
             onRemoveTask={handleRemoveTask}
-            onEditTask={handleEditTask}
-            onMoveTask={(taskId, columnId) => {
-              setSelectedTaskIds([taskId]);
-              setSelectedColumnId(columnId);
-              setShowMoveCandidateModal(true);
-            }}
-            onAssignStaff={(taskId) => {
-              setSelectedTaskIds([taskId]);
-              setShowAssignCandidateModal(true);
-            }}
             onViewCandidate={handleViewCandidate}
-            onEditCandidate={handleEditCandidate}
             onAddColumn={handleAddColumn}
             onDeleteColumn={(columnId) => {
               setSelectedColumnId(columnId);
               setShowDeleteColumnModal(true);
             }}
             pipelineId={pipeline?.id}
-            staffList={staffList}
             stages={stages}
             selectedTaskIds={selectedTaskIds}
             toggleTaskSelection={toggleTaskSelection}
             setSelectedTaskIds={setSelectedTaskIds}
-            setShowAssignCandidateModal={setShowAssignCandidateModal}
           />
           <DragOverlay>
             {draggedTask ? (
@@ -1067,46 +882,7 @@ const JiraBoard = () => {
           setShowAddProspectModal(false);
         }}
         pipelineId={pipeline?.id}
-        staffList={staffList}
         stages={stages}
-      />
-      {/* <MoveCandidateModal
-        isOpen={showMoveCandidateModal}
-        onClose={() => {
-          setShowMoveCandidateModal(false);
-          setSelectedTaskIds([]);
-          setSelectedColumnId(null);
-        }}
-        onSave={(targetColumnId) => {
-          handleMoveTask(selectedTaskIds, targetColumnId);
-          setShowMoveCandidateModal(false);
-          setSelectedTaskIds([]);
-          setSelectedColumnId(null);
-        }}
-        columns={Object.keys(columns).map((colId) => ({
-          id: colId,
-          title: columns[colId].title,
-        }))}
-        currentColumnId={selectedColumnId}
-        taskIds={selectedTaskIds}
-        accessToken={accessToken}
-        refreshToken={refreshToken}
-        dispatch={dispatch}
-      />
-      <AssignCandidateModal
-        isOpen={showAssignCandidateModal}
-        onClose={() => {
-          setShowAssignCandidateModal(false);
-          setSelectedTaskIds([]);
-        }}
-        onSave={(staff) => {
-          handleAssignStaff(selectedTaskIds, staff);
-          setShowAssignCandidateModal(false);
-          setSelectedTaskIds([]);
-        }}
-        taskIds={selectedTaskIds}
-        tasks={localTasks}
-        staffList={staffList}
       />
       <DeleteConfirmationModal
         isOpen={showDeleteCandidateModal}
@@ -1128,27 +904,14 @@ const JiraBoard = () => {
         }}
         onConfirm={handleDeleteColumn}
         title="Are you sure you want to delete this column?"
-        message="All the candidates within this column will be moved to the first column."
+        message={
+          columnOrder.indexOf(selectedColumnId) > 0
+            ? "All candidates within this column will be moved to the first column."
+            : "This column can be deleted since it has no candidates."
+        }
         confirmButtonText="Delete"
         confirmButtonColor="#D92D20"
       />
-      <DeleteConfirmationModal
-        isOpen={showErrorModal}
-        onClose={() => {
-          setShowErrorModal(false);
-          setSelectedColumnId(null);
-        }}
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <IoWarningOutline size={24} />
-            Oops! We can’t do that
-          </div>
-        }
-        message="You cannot delete this column while it still contains candidates. You need to delete the candidates or move them to another column before performing this action."
-        confirmButtonText="Cancel"
-        confirmButtonColor="#ffffff"
-        showConfirmButton={false}
-      /> */}
     </div>
   );
 };

@@ -27,7 +27,9 @@ const Board = ({
   const columnData = Object.keys(columns).map((colId) => ({
     id: colId,
     title: columns[colId].title,
+
   }));
+  
 
   const [hoverIndex, setHoverIndex] = useState(null);
 

@@ -409,8 +409,6 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
           activeTab === tabs[tabs.length - 1].name ? "Save" : "Next"
         }
         secondaryButtonText={activeTab === tabs[0].name ? "Cancel" : "Previous"}
-        primaryButtonColor="#000000"
-        secondaryButtonColor="#ffffff"
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

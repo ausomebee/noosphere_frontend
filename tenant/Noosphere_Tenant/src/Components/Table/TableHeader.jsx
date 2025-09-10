@@ -30,22 +30,24 @@ const TableHeader = ({
           />
         </div>
       </div>
-      <div className="filters-container">
-        <h2 className="filter-text">Filters:</h2>
-        <TableFilters
-          filters={filters}
-          filterValues={filterValues}
-          handleFilterValueChange={handleFilterValueChange}
-          handleDateRangeSelect={handleDateRangeSelect}
-          resetFilters={resetFilters}
-          isDateFilterDropdownOpen={isDateFilterDropdownOpen}
-          setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
-          dateFilterStartInputRef={dateFilterStartInputRef}
-          dateFilterEndInputRef={dateFilterEndInputRef}
-          dateFilterDropdownRef={dateFilterDropdownRef}
-          secondFilterOptions={secondFilterOptions}
-        />
-      </div>
+      {filters?.length > 0 && (
+        <div className="filters-container">
+          <h2 className="filter-text">Filters:</h2>
+          <TableFilters
+            filters={filters}
+            filterValues={filterValues}
+            handleFilterValueChange={handleFilterValueChange}
+            handleDateRangeSelect={handleDateRangeSelect}
+            resetFilters={resetFilters}
+            isDateFilterDropdownOpen={isDateFilterDropdownOpen}
+            setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
+            dateFilterStartInputRef={dateFilterStartInputRef}
+            dateFilterEndInputRef={dateFilterEndInputRef}
+            dateFilterDropdownRef={dateFilterDropdownRef}
+            secondFilterOptions={secondFilterOptions}
+          />
+        </div>
+      )}
     </div>
   </div>
 );
