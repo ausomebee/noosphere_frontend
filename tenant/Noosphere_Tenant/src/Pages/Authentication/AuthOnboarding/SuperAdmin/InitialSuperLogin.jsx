@@ -105,11 +105,11 @@ const InitialSuperLogin = () => {
                     type="submit"
                     loading={loading}
                   />
-                  <p className="cant-access">
+                  {/* <p className="cant-access">
                     <a href="#" onClick={forgotPassword}>
                       Forgot Password?
                     </a>
-                  </p>
+                  </p> */}
                 </form>
               </div>
             </div>

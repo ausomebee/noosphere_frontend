@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-
+import Select, { components } from "react-select";
+/* =====================  TextInput  ===================== */
 const TextInput = ({
   label,
   value,
@@ -24,6 +25,7 @@ const TextInput = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        
         {...props}
       />
     </div>
@@ -39,6 +41,7 @@ TextInput.propTypes = {
   className: PropTypes.string,
 };
 
+/* =====================  PasswordInput  ===================== */
 const PasswordInput = ({
   label,
   value,
@@ -48,10 +51,7 @@ const PasswordInput = ({
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => setShowPassword((s) => !s);
 
   return (
     <div className="input-group">
@@ -114,90 +114,133 @@ const SelectInput = ({
   width,
   className = "",
   error,
+  isMulti = false,
+  placeholder = "Select an option…",
   ...props
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef(null);
-  const [selectedValue, setSelectedValue] = useState(props.value || "");
+  const selectRef = useRef(null);
+  const [menuPlacement, setMenuPlacement] = useState("bottom");
+  const [menuMaxHeight, setMenuMaxHeight] = useState(200); // Default max height
 
-  // Sync selectedValue with value prop
-  useEffect(() => {
-    setSelectedValue(value || "");
-  }, [value]);
+  const selected = isMulti
+    ? (value || []).map((v) => options.find((o) => o.value === v))
+    : options.find((o) => o.value === value) || null;
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Handle option selection
-  const handleOptionClick = (value) => {
-    setSelectedValue(value);
-    setIsOpen(false); // Close the dropdown after selection
-    if (props.onChange) {
-      props.onChange({
-        target: {
-          name: props.name, // Pass the name prop provided by react-hook-form
-          value: value,     // Pass the selected value
-        },
-      });
-    }
+  const handleChange = (newVal) => {
+    const v = isMulti ? newVal.map((i) => i.value) : newVal?.value || "";
+    onChange?.({ target: { name: props.name, value: v } });
   };
 
-  // Determine the selected label based on the value prop
-  const selectedLabel =
-    options.find((option) => option.value === value)?.label || "";
+  const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
+
+  // Calculate menu placement and max height
+  const updateMenuPlacement = () => {
+    if (!selectRef.current) return;
+
+    const rect = selectRef.current.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const spaceBelow = windowHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
+
+    // Set placement: prefer bottom if enough space, otherwise top
+    setMenuPlacement(spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
+    setMenuMaxHeight(menuHeight);
+  };
+
+  useEffect(() => {
+    updateMenuPlacement();
+    window.addEventListener("resize", updateMenuPlacement);
+    window.addEventListener("scroll", updateMenuPlacement);
+    return () => {
+      window.removeEventListener("resize", updateMenuPlacement);
+      window.removeEventListener("scroll", updateMenuPlacement);
+    };
+  }, []);
+
+  const MultiValueContainer = (p) => (
+    <components.MultiValueContainer {...p}>
+      <span className="selected-label-item">{p.children}</span>
+    </components.MultiValueContainer>
+  );
+
+  const Option = isMulti
+    ? (p) => (
+        <components.Option {...p}>
+          <input
+            type="checkbox"
+            checked={p.isSelected}
+            onChange={() => null}
+            style={{ marginRight: 8 }}
+          />
+          <label>{p.label}</label>
+        </components.Option>
+      )
+    : components.Option;
 
   return (
-    <div className="input-group">
+    <div className={`input-group ${widthClass}`} ref={selectRef}>
       {label && <label className="input-group-label">{label}</label>}
-      <div
-        className={`relative ${width ? `w-${width}` : "w-full"}`}
-        ref={wrapperRef}
-      >
-        <input
-          type="text"
+      <div className="select-input-wrapper">
+        <Select
           className={`input-select ${className}`}
-          value={selectedValue} // Display the selected label instead of value
-          readOnly
-          onClick={() => setIsOpen(!isOpen)}
-          placeholder="Select an option..."
+          classNamePrefix="rs"
+          options={options}
+          value={selected}
+          onChange={handleChange}
+          isMulti={isMulti}
+          menuPosition="absolute"
+          menuPlacement={menuPlacement}
+          placeholder={placeholder}
+          components={{
+            Option,
+            MultiValueContainer,
+            IndicatorSeparator: () => null,
+            ClearIndicator: () => null,
+            DropdownIndicator: () => null,
+          }}
+          styles={{
+            control: (base) => ({
+              ...base,
+              border: 0,
+              boxShadow: "none",
+              background: "transparent",
+              minHeight: isMulti ? 36 : 30,
+              borderRadius: 12,
+              padding: "0 6px",
+              cursor: "pointer",
+            }),
+            menu: (base) => ({
+              ...base,
+              margin: 0,
+              width: selectRef.current?.offsetWidth || "auto", // Match input width
+              maxHeight: `${menuMaxHeight}px`,
+            }),
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            valueContainer: (base) => ({
+              ...base,
+              padding: 0,
+              flexWrap: isMulti ? "wrap" : "nowrap",
+              overflow: "hidden",
+            }),
+            multiValue: () => ({ background: "transparent" }),
+            placeholder: (base) => ({ ...base, color: "#999" }),
+          }}
+          menuPortalTarget={document.body}
+          closeMenuOnSelect={!isMulti}
+          hideSelectedOptions={false}
+          onMenuOpen={updateMenuPlacement} // Recalculate on menu open
           {...props}
         />
-        {isOpen && (
-          <ul className="select-dropdown">
-            {options.map((option) => (
-              <li
-                key={option.value}
-                className={`select-option ${
-                  value === option.value ? "selected" : ""
-                }`}
-                onClick={() => handleOptionClick(option.value)}
-              >
-                {option.label}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
-      {error && (
-        <div className="auth-error-message text-red-500 text-xs mt-1">
-          {error}
-        </div>
-      )}
+      {error && <div className="auth-error-message text-red-500 text-xs mt-1">{error}</div>}
     </div>
   );
 };
 
 SelectInput.propTypes = {
   label: PropTypes.string,
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
   onChange: PropTypes.func.isRequired,
   options: PropTypes.arrayOf(
     PropTypes.shape({
@@ -208,8 +251,12 @@ SelectInput.propTypes = {
   width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
   className: PropTypes.string,
   error: PropTypes.string,
+  isMulti: PropTypes.bool,
+  placeholder: PropTypes.string,
 };
 
+
+/* =====================  rest of components unchanged  ===================== */
 const SearchableSelectInput = ({
   label,
   value,
@@ -217,80 +264,90 @@ const SearchableSelectInput = ({
   options,
   width,
   className = "",
+  placeholder = "Search options…",
   ...props
 }) => {
-  const [search, setSearch] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef(null);
+  const selectRef = useRef(null);
+  const [menuPlacement, setMenuPlacement] = useState("bottom");
+  const [menuMaxHeight, setMenuMaxHeight] = useState(200); // Default max height
 
-  // Sync search field with selected option label
-  useEffect(() => {
-    const selectedOption = options.find((option) => option.value === value);
-    if (selectedOption && search === "") {
-      setSearch(selectedOption.label);
-    }
-  }, [value, options]);
+  const selected = options.find((o) => o.value === value) || null;
 
-  // Close dropdown on outside click
+  const handleChange = (newVal) => {
+    onChange?.({ target: { name: props.name, value: newVal?.value || "" } });
+  };
+
+  const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
+
+  // Calculate menu placement and max height
+  const updateMenuPlacement = () => {
+    if (!selectRef.current) return;
+
+    const rect = selectRef.current.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const spaceBelow = windowHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
+
+    // Set placement: prefer bottom if enough space, otherwise top
+    setMenuPlacement(spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
+    setMenuMaxHeight(menuHeight);
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+    updateMenuPlacement();
+    window.addEventListener("resize", updateMenuPlacement);
+    window.addEventListener("scroll", updateMenuPlacement);
+    return () => {
+      window.removeEventListener("resize", updateMenuPlacement);
+      window.removeEventListener("scroll", updateMenuPlacement);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter options by search
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Handle selection
-  const handleOptionClick = (option) => {
-    onChange({ target: { value: option.value } });
-    setSearch(option.label);
-    setIsOpen(false);
-  };
-
-  // Handle user typing
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setIsOpen(true);
-  };
-
   return (
-    <div className="input-group">
+    <div className={`input-group ${widthClass}`} ref={selectRef}>
       {label && <label className="input-group-label">{label}</label>}
-      <div
-        className={`relative ${width ? `w-${width}` : "w-full"}`}
-        ref={wrapperRef}
-      >
-        <input
-          type="text"
-          value={search}
-          onChange={handleSearchChange}
-          onFocus={() => setIsOpen(true)}
-          placeholder="Search options..."
+      <div className="select-input-wrapper">
+        <Select
           className={`input-select ${className}`}
+          classNamePrefix="rs"
+          options={options}
+          value={selected}
+          onChange={handleChange}
+          placeholder={placeholder}
+          isSearchable
+          menuPosition="absolute"
+          menuPlacement={menuPlacement}
+          components={{
+            IndicatorSeparator: () => null,
+            ClearIndicator: () => null,
+            DropdownIndicator: () => null,
+          }}
+          styles={{
+            control: (base) => ({
+              ...base,
+              border: 0,
+              boxShadow: "none",
+              background: "transparent",
+              minHeight: 36,
+              borderRadius: 12,
+              padding: "0 8px",
+              cursor: "pointer",
+            }),
+            menu: (base) => ({
+              ...base,
+              margin: 0,
+              width: selectRef.current?.offsetWidth || "auto", // Match input width
+              maxHeight: `${menuMaxHeight}px`,
+            }),
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            valueContainer: (base) => ({ ...base, padding: 0, overflow: "hidden" }),
+            placeholder: (base) => ({ ...base, color: "#999" }),
+          }}
+          menuPortalTarget={document.body}
+          onMenuOpen={updateMenuPlacement} // Recalculate on menu open
           {...props}
         />
-        {isOpen && filteredOptions.length > 0 && (
-          <ul className="select-dropdown">
-            {filteredOptions.map((option) => (
-              <li
-                key={option.value}
-                className={`select-option ${
-                  value === option.value ? "selected" : ""
-                }`}
-                onClick={() => handleOptionClick(option)}
-              >
-                {option.label}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
   );
@@ -308,7 +365,9 @@ SearchableSelectInput.propTypes = {
   ).isRequired,
   width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
   className: PropTypes.string,
+  placeholder: PropTypes.string,
 };
+
 
 const CheckboxInput = ({ label, checked, onChange, ...props }) => (
   <div className="form-checkbox-group">
@@ -345,7 +404,14 @@ SwitchInput.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-const TextareaInput = ({ label, value, onChange, placeholder, ...props }) => (
+const TextareaInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  row = "5",
+  ...props
+}) => (
   <div className="input-group">
     {label && <label className="input-group-label">{label}</label>}
     <textarea
@@ -353,6 +419,7 @@ const TextareaInput = ({ label, value, onChange, placeholder, ...props }) => (
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      rows={row}
       {...props}
     />
   </div>
@@ -456,6 +523,75 @@ RadioInput.propTypes = {
   className: PropTypes.string,
 };
 
+const TimeInput = ({ value = { hours: 0, minutes: 0, seconds: 0 }, onChange, disabled }) => {
+  const [time, setTime] = useState(value);
+
+  useEffect(() => {
+    setTime(value);
+  }, [value]);
+
+  const handleChange = (field, val) => {
+    const newValue = Math.max(0, Math.min(parseInt(val) || 0, field === "hours" ? 23 : 59));
+    const newTime = { ...time, [field]: newValue };
+    setTime(newTime);
+    onChange(newTime);
+  };
+
+  const formatTime = () => {
+    return `${time.hours.toString().padStart(2, "0")}:${time.minutes.toString().padStart(2, "0")}:${time.seconds.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="flex items-center space-x-2">
+      <input
+        type="text"
+        value={time.hours}
+        onChange={(e) => handleChange("hours", e.target.value)}
+        min="0"
+        max="23"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span>:</span>
+      <input
+        type="text"
+        value={time.minutes}
+        onChange={(e) => handleChange("minutes", e.target.value)}
+        min="0"
+        max="59"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span>:</span>
+      <input
+        type="text"
+        value={time.seconds}
+        onChange={(e) => handleChange("seconds", e.target.value)}
+        min="0"
+        max="59"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span className="ml-2 text-sm text-gray-600">{formatTime()}</span>
+    </div>
+  );
+};
+
+TimeInput.propTypes = {
+  value: PropTypes.shape({
+    hours: PropTypes.number,
+    minutes: PropTypes.number,
+    seconds: PropTypes.number,
+  }),
+  onChange: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
+};
+
+TimeInput.defaultProps = {
+  value: { hours: 0, minutes: 0, seconds: 0 },
+  disabled: false,
+};
+
 export {
   TextInput,
   PasswordInput,
@@ -466,4 +602,5 @@ export {
   TextareaInput,
   SearchInput,
   RadioInput,
+  TimeInput 
 };

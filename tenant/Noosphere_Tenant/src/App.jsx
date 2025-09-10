@@ -309,3 +309,42 @@ const actions = [
 }
 
 export default App;
+
+
+// Ellipsis (Dropdown) Action
+  // {
+  //   type: "dropdown",
+  //   label: "More",
+  //   items: [
+  //     {
+  //       label: "Move",
+  //       icon: null, // Optional: Can add an icon like <FaArrowsAlt />
+  //       onClick: (item, { setSelectedItem, setShowMoveModal }) => {
+  //         // Example: Open move modal
+  //         setSelectedItem(item);
+  //         setShowMoveModal(true);
+  //       },
+  //       className: "move-option",
+  //     },
+  //     {
+  //       label: "Archive",
+  //       icon: <FaArchive />, // Optional icon
+  //       onClick: (item, { setSelectedItem, setShowArchiveModal }) => {
+  //         // Example: Open archive confirmation
+  //         setSelectedItem(item);
+  //         setShowArchiveModal(true);
+  //       },
+  //       className: "archive-option",
+  //     },
+  //     {
+  //       label: "Details",
+  //       icon: <FaInfoCircle />,
+  //       onClick: (item, { navigate }) => {
+  //         // Example: Navigate to details page
+  //         navigate(`/details/${item.id}`);
+  //       },
+  //       className: "details-option",
+  //     },
+  //   ],
+  //   className: "more-dropdown", // Optional: Custom CSS class for the dropdown trigger
+  // },

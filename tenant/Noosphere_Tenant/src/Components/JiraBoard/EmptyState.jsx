@@ -12,17 +12,13 @@ const EmptyState = ({ onAddFirstStage }) => {
         <div className="icon-container">
           <FaRegFileAlt className="document-icon" />
         </div>
-        <h2>Setup your onboarding pipeline</h2>
-        <p>
-          Set up custom stages to match your organization's unique onboarding
-          flow.
-        </p>
+        <h2>Setup your client onboarding pipeline</h2>
+        <p>Set up custom stages to match your client intake process</p>
 
         <div>
-         
           <Button
             label="Add a first stage"
-            // icon={<FaPlus />}
+            icon={<FaPlus />}
             variant="primary"
             onClick={() => setShowDialog(true)}
             iconPosition="left"

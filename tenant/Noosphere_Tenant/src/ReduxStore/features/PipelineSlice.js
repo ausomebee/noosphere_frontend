@@ -13,7 +13,6 @@ const initialState = {
   pipeline: null,
   columns: {},
   columnOrder: [],
-  staffList: [],
   stages: [],
   status: "idle",
   error: null,
@@ -43,12 +42,8 @@ const pipelineSlice = createSlice({
       );
     },
     toggleTaskRequiredInDraft: (state, action) => {
-      const task = state.draft.requiredTasks.find(
-        (task) => task.id === action.payload
-      );
-      if (task) {
-        task.required = !task.required;
-      }
+      const task = state.draft.requiredTasks.find((task) => task.id === action.payload);
+      if (task) task.required = !task.required;
     },
     addDocumentToDraft: (state, action) => {
       state.draft.requiredDocuments = [
@@ -66,17 +61,12 @@ const pipelineSlice = createSlice({
       );
     },
     toggleDocumentRequiredInDraft: (state, action) => {
-      const doc = state.draft.requiredDocuments.find(
-        (doc) => doc.id === action.payload
-      );
-      if (doc) {
-        doc.required = !doc.required;
-      }
+      const doc = state.draft.requiredDocuments.find((doc) => doc.id === action.payload);
+      if (doc) doc.required = !doc.required;
     },
     addColumn: (state, action) => {
       const { pipelineData, index, stageId } = action.payload;
       const newColumnId = stageId || uuidv4();
-
       state.columns[newColumnId] = {
         id: newColumnId,
         title: pipelineData.name || "New Stage",
@@ -88,17 +78,11 @@ const pipelineSlice = createSlice({
         requiredDocuments: pipelineData.requiredDocuments || [],
         order: pipelineData.order || index || state.columnOrder.length,
       };
-
-      if (
-        index !== undefined &&
-        index >= 0 &&
-        index <= state.columnOrder.length
-      ) {
+      if (index !== undefined && index >= 0 && index <= state.columnOrder.length) {
         state.columnOrder.splice(index, 0, newColumnId);
       } else {
         state.columnOrder.push(newColumnId);
       }
-
       state.draft = initialState.draft;
     },
     resetDraft: (state) => {
@@ -110,7 +94,6 @@ const pipelineSlice = createSlice({
     updateColumnTaskIds: (state, action) => {
       const { columnId, taskIds } = action.payload;
       if (!state.columns[columnId]) return;
-
       state.columns[columnId].taskIds = taskIds.filter(
         (taskId) => taskId != null && typeof taskId === "string"
       );
@@ -119,14 +102,12 @@ const pipelineSlice = createSlice({
     addTaskToColumn: (state, action) => {
       const { columnId, taskId } = action.payload;
       if (!state.columns[columnId] || !taskId) return;
-
       state.columns[columnId].taskIds.push(taskId);
       state.columns[columnId].count = state.columns[columnId].taskIds.length;
     },
     removeTaskFromColumn: (state, action) => {
       const { columnId, taskId } = action.payload;
       if (!state.columns[columnId]) return;
-
       state.columns[columnId].taskIds = state.columns[columnId].taskIds.filter(
         (id) => id !== taskId
       );
@@ -135,10 +116,9 @@ const pipelineSlice = createSlice({
     updateColumnOrder: (state, action) => {
       state.columnOrder = action.payload;
     },
-    deleteColumn: (state, action) => {
+     deleteColumn: (state, action) => {
       const columnId = action.payload;
       if (!state.columns[columnId]) return;
-
       delete state.columns[columnId];
       state.columnOrder = state.columnOrder.filter((id) => id !== columnId);
       state.stages = state.stages.filter((stage) => stage.stageId !== columnId);
@@ -146,15 +126,15 @@ const pipelineSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPipelineByModule.pending, (state) => {
+      .addCase(fetchPipelineByTenantId.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
-      .addCase(fetchPipelineByModule.fulfilled, (state, action) => {
+      .addCase(fetchPipelineByTenantId.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.pipeline = action.payload.data?.[0] || null;
       })
-      .addCase(fetchPipelineByModule.rejected, (state, action) => {
+      .addCase(fetchPipelineByTenantId.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
@@ -165,10 +145,8 @@ const pipelineSlice = createSlice({
       .addCase(fetchPipelineStages.fulfilled, (state, action) => {
         state.status = "succeeded";
         const stages = action.payload.data || [];
-
         state.columns = {};
         state.columnOrder = [];
-
         stages.forEach((stage) => {
           state.columns[stage.id] = {
             id: stage.id,
@@ -183,10 +161,7 @@ const pipelineSlice = createSlice({
           };
           state.columnOrder.push(stage.id);
         });
-
-        state.columnOrder.sort(
-          (a, b) => state.columns[a].order - state.columns[b].order
-        );
+        state.columnOrder.sort((a, b) => state.columns[a].order - state.columns[b].order);
         state.stages = stages.map((stage) => ({
           stageId: stage.id,
           name: stage.name,
@@ -210,9 +185,7 @@ const pipelineSlice = createSlice({
             description: stage.description || "",
             colorCode: stage.colourCode || "#1E40AF",
             requiredTasks: Array.isArray(stage.tasks) ? stage.tasks : [],
-            requiredDocuments: Array.isArray(stage.documents)
-              ? stage.documents
-              : [],
+            requiredDocuments: Array.isArray(stage.documents) ? stage.documents : [],
           };
         }
       })
@@ -227,7 +200,6 @@ const pipelineSlice = createSlice({
       .addCase(fetchPipelineItems.fulfilled, (state, action) => {
         state.status = "succeeded";
         const { stageId, items = [] } = action.payload;
-
         if (!state.columns[stageId]) {
           state.columns[stageId] = {
             id: stageId,
@@ -241,7 +213,6 @@ const pipelineSlice = createSlice({
           };
           state.columnOrder.push(stageId);
         }
-
         state.columns[stageId].taskIds = items
           .map((item) => item?.id)
           .filter((id) => id && typeof id === "string");
@@ -259,7 +230,6 @@ const pipelineSlice = createSlice({
         state.status = "succeeded";
         const stage = action.payload.data;
         if (!stage) return;
-
         const newColumnId = stage.id;
         state.columns[newColumnId] = {
           id: newColumnId,
@@ -272,12 +242,9 @@ const pipelineSlice = createSlice({
           requiredDocuments: stage.documents || [],
           order: stage.order || state.columnOrder.length,
         };
-
         state.columnOrder.push(newColumnId);
         state.stages.push({ stageId: stage.id, name: stage.name });
-        state.columnOrder.sort(
-          (a, b) => state.columns[a].order - state.columns[b].order
-        );
+        state.columnOrder.sort((a, b) => state.columns[a].order - state.columns[b].order);
         state.draft = initialState.draft;
       })
       .addCase(createPipelineStage.rejected, (state, action) => {
@@ -324,11 +291,9 @@ const pipelineSlice = createSlice({
         state.status = "succeeded";
         const candidate = action.payload.data;
         const columnId = candidate.pipelineStageId;
-
         if (state.columns[columnId]) {
           state.columns[columnId].taskIds.push(candidate.id);
-          state.columns[columnId].count =
-            state.columns[columnId].taskIds.length;
+          state.columns[columnId].count = state.columns[columnId].taskIds.length;
         }
       })
       .addCase(createCandidate.rejected, (state, action) => {
@@ -344,16 +309,13 @@ const pipelineSlice = createSlice({
         const stage = action.payload.data;
         if (state.columns[stage.id]) {
           state.columns[stage.id].order = stage.order;
-          state.columnOrder.sort(
-            (a, b) => state.columns[a].order - state.columns[b].order
-          );
+          state.columnOrder.sort((a, b) => state.columns[a].order - state.columns[b].order);
         }
       })
       .addCase(reorderPipelineStage.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
       .addCase(updatePipelineItemActivity.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -364,21 +326,15 @@ const pipelineSlice = createSlice({
         ids.forEach((id) => {
           Object.keys(state.columns).forEach((columnId) => {
             if (columnId !== pipelineStageId) {
-              state.columns[columnId].taskIds = state.columns[
-                columnId
-              ].taskIds.filter((taskId) => taskId !== id);
-              state.columns[columnId].count =
-                state.columns[columnId].taskIds.length;
+              state.columns[columnId].taskIds = state.columns[columnId].taskIds.filter(
+                (taskId) => taskId !== id
+              );
+              state.columns[columnId].count = state.columns[columnId].taskIds.length;
             }
           });
-
-          if (
-            state.columns[pipelineStageId] &&
-            !state.columns[pipelineStageId].taskIds.includes(id)
-          ) {
+          if (state.columns[pipelineStageId] && !state.columns[pipelineStageId].taskIds.includes(id)) {
             state.columns[pipelineStageId].taskIds.push(id);
-            state.columns[pipelineStageId].count =
-              state.columns[pipelineStageId].taskIds.length;
+            state.columns[pipelineStageId].count = state.columns[pipelineStageId].taskIds.length;
           }
         });
       })
@@ -386,23 +342,23 @@ const pipelineSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
-      .addCase(deletePipelineStage.pending, (state) => {
+       .addCase(deletePipelineStage.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
       .addCase(deletePipelineStage.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const { id } = action.payload.data;
-        delete state.columns[id];
-        state.columnOrder = state.columnOrder.filter((colId) => colId !== id);
-        state.stages = state.stages.filter((stage) => stage.stageId !== id);
+        const { id } = action.payload;
+        if (state.columns[id]) {
+          delete state.columns[id];
+          state.columnOrder = state.columnOrder.filter((colId) => colId !== id);
+          state.stages = state.stages.filter((stage) => stage.stageId !== id);
+        }
       })
       .addCase(deletePipelineStage.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
       .addCase(deletePipelineItem.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -412,11 +368,10 @@ const pipelineSlice = createSlice({
         const { ids } = action.payload;
         ids.forEach((id) => {
           Object.keys(state.columns).forEach((columnId) => {
-            state.columns[columnId].taskIds = state.columns[
-              columnId
-            ].taskIds.filter((taskId) => taskId !== id);
-            state.columns[columnId].count =
-              state.columns[columnId].taskIds.length;
+            state.columns[columnId].taskIds = state.columns[columnId].taskIds.filter(
+              (taskId) => taskId !== id
+            );
+            state.columns[columnId].count = state.columns[columnId].taskIds.length;
           });
         });
       })
@@ -424,7 +379,6 @@ const pipelineSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
       .addCase(fetchSinglePipelineItem.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -437,7 +391,6 @@ const pipelineSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
       .addCase(updateCandidate.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -449,19 +402,6 @@ const pipelineSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-
-      .addCase(reassignCandidateToStaff.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(reassignCandidateToStaff.fulfilled, (state) => {
-        state.status = "succeeded";
-      })
-      .addCase(reassignCandidateToStaff.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || action.error.message;
-      })
-
       .addCase(updatePipelineItemTaskToDone.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -472,7 +412,6 @@ const pipelineSlice = createSlice({
           state.pipelineItem.doneTasks = action.payload.data.tasks;
         }
       })
-
       .addCase(updatePipelineItemTaskToDone.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
@@ -494,15 +433,11 @@ const pipelineSlice = createSlice({
   },
 });
 
-export const fetchPipelineByModule = createAsyncThunk(
-  "pipeline/fetchPipelineByModule",
-  async ({ accessToken, refreshToken }, { rejectWithValue }) => {
+export const fetchPipelineByTenantId = createAsyncThunk(
+  "pipeline/fetchPipelineByTenantId",
+  async ({ tenantId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.GetPipelineByModule({
-        modules: "TENANT",
-        accessToken,
-        refreshToken,
-      });
+      const response = await api.GetPipelineByTenantId({ tenantId, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -514,11 +449,7 @@ export const fetchPipelineStages = createAsyncThunk(
   "pipeline/fetchPipelineStages",
   async ({ pipelineId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.GetPipelineStage({
-        pipelineId,
-        accessToken,
-        refreshToken,
-      });
+      const response = await api.GetPipelineStage({ pipelineId, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -530,11 +461,7 @@ export const fetchSinglePipelineItem = createAsyncThunk(
   "pipeline/fetchSinglePipelineItem",
   async ({ itemId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.GetSinglePipelineItem({
-        itemId,
-        accessToken,
-        refreshToken,
-      });
+      const response = await api.GetSinglePipelineItem({ itemId, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -544,16 +471,9 @@ export const fetchSinglePipelineItem = createAsyncThunk(
 
 export const fetchSinglePipelineStages = createAsyncThunk(
   "pipeline/fetchSinglePipelineStages",
-  async (
-    { pipelineStageId, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
+  async ({ pipelineStageId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.GetSinglePipelineStage({
-        pipelineStageId,
-        accessToken,
-        refreshToken,
-      });
+      const response = await api.GetSinglePipelineStage({ pipelineStageId, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -565,33 +485,27 @@ export const fetchPipelineItems = createAsyncThunk(
   "pipeline/fetchPipelineItems",
   async ({ stageId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.GetPipelineItem({
-        stageId,
-        accessToken,
-        refreshToken,
-      });
-
+      const response = await api.GetPipelineItem({ stageId, accessToken, refreshToken });
       const items = Array.isArray(response.data?.data)
         ? response.data.data.map((item) => ({
             id: item.id,
-            companyName: item.tenant?.companyName || "",
-            contactPerson: item.tenant?.contactPerson || "",
-            createdBy: item.tenant?.admin?.fullName || "",
-            createdAt: item.createdAt || "",
-            email: item.tenant?.email || "",
-            phoneNumber: item.tenant?.phoneNumber || "",
-            companySize: item.tenant?.companySize || "",
-            organizationType: item.tenant?.organizationType || "",
-            location: item.tenant?.location || {},
-            leadSource: item.tenant?.leadSource || "",
-            assignToAdmin: item.assignToAdmin || null,
+            fullName: item.client?.fullName || item.fullName || `Candidate ${item.id.slice(0, 8)}`,
+            createdBy: item.client?.tenantLinks?.[0]?.tenantStaff?.fullName || item.createdBy || "Unknown Admin",
+            email: item.client?.email || item.email || "",
+            phoneNumber: item.client?.phoneNumber || item.phoneNumber || "",
+            streetAddress: item.client?.streetAddress || item.streetAddress || "",
+            city: item.client?.city || item.city || "",
+            state: item.client?.state || item.state || "",
+            country: item.client?.country || item.country || "",
+            zipCode: item.client?.zipCode || item.zipCode || "",
+            gender: item.client?.gender || item.gender || "",
+            DOB: item.client?.DOB || item.DOB || "",
             pipelineStageId: item.pipelineStageId || stageId,
-            assignedTo: item.admin?.fullName || null,
-            completionPercentage: item.completionPercentage || 0,
+            assignToTenantStaff: item.assignToTenantStaff || null,
             status: item.status || "pending",
+            createdAt: item.createdAt || ""
           }))
         : [];
-
       return { stageId, items };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -602,16 +516,7 @@ export const fetchPipelineItems = createAsyncThunk(
 export const createPipelineStage = createAsyncThunk(
   "pipeline/createPipelineStage",
   async (
-    {
-      pipelineId,
-      name,
-      description,
-      colourCode,
-      tasks = [],
-      documents = [],
-      accessToken,
-      refreshToken,
-    },
+    { pipelineId, name, description, colourCode, tasks = [], documents = [], accessToken, refreshToken },
     { rejectWithValue }
   ) => {
     try {
@@ -625,13 +530,9 @@ export const createPipelineStage = createAsyncThunk(
         accessToken,
         refreshToken,
       });
-
       if (response.data.status !== "ok") {
-        throw new Error(
-          response.data.message || "Failed to create pipeline stage"
-        );
+        throw new Error(response.data.message || "Failed to create pipeline stage");
       }
-
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -641,10 +542,7 @@ export const createPipelineStage = createAsyncThunk(
 
 export const updateStageTasks = createAsyncThunk(
   "pipeline/updateStageTasks",
-  async (
-    { pipelineStageId, tasks, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
+  async ({ pipelineStageId, tasks, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
       const response = await api.UpdateStageTasks({
         pipelineStageId,
@@ -665,10 +563,7 @@ export const updateStageTasks = createAsyncThunk(
 
 export const updateStageDocuments = createAsyncThunk(
   "pipeline/updateStageDocuments",
-  async (
-    { pipelineStageId, documents, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
+  async ({ pipelineStageId, documents, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
       const response = await api.UpdateStageDocuments({
         pipelineStageId,
@@ -693,19 +588,22 @@ export const createCandidate = createAsyncThunk(
     {
       fullName,
       email,
-      phoneNumber,
+      streetAddress,
       stage,
-      companyName,
-      contactPerson,
-      companySize,
-      organizationType,
-      location,
-      leadSource,
+      city,
+      state,
+      country,
+      zipCode,
+      phoneNumber,
+      gender,
+      DOB,
+      tenantId,
       pipelineStageId,
-      assignToStaff: assignToAdmin,
-      createdBy,
+      assignToTenantStaff,
       accessToken,
       refreshToken,
+      dbAccess,
+      createdBy
     },
     { rejectWithValue }
   ) => {
@@ -713,19 +611,22 @@ export const createCandidate = createAsyncThunk(
       const response = await api.CreateCandidate({
         fullName,
         email,
-        phoneNumber,
+        streetAddress,
         stage,
-        companyName,
-        contactPerson,
-        companySize,
-        organizationType,
-        location,
-        leadSource,
+        city,
+        state,
+        country,
+        zipCode,
+        phoneNumber,
+        gender,
+        DOB,
+        tenantId,
         pipelineStageId,
-        assignToStaff: assignToAdmin,
-        createdBy,
+        assignToTenantStaff,
         accessToken,
         refreshToken,
+        dbAccess,
+        createdBy
       });
       return response.data;
     } catch (error) {
@@ -738,18 +639,14 @@ export const reorderPipelineStage = createAsyncThunk(
   "pipeline/reorderPipelineStage",
   async ({ id, order, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.ReorderPipelineStage({
-        id,
-        order,
-        accessToken,
-        refreshToken,
-      });
+      const response = await api.ReorderPipelineStage({ id, order, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
+
 
 export const updatePipelineItemActivity = createAsyncThunk(
   "pipeline/updatePipelineItemActivity",
@@ -759,7 +656,7 @@ export const updatePipelineItemActivity = createAsyncThunk(
   ) => {
     try {
       const response = await api.UpdatePipelineItemActivity({
-        ids: Array.isArray(ids) ? ids : [ids], // Normalize to array
+        ids: Array.isArray(ids) ? ids : [ids],
         pipelineStageId,
         accessToken,
         refreshToken,
@@ -811,7 +708,6 @@ export const updatePipelineItemDocumentToDone = createAsyncThunk(
         accessToken,
         refreshToken,
       });
-
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -821,13 +717,33 @@ export const updatePipelineItemDocumentToDone = createAsyncThunk(
 
 export const deletePipelineStage = createAsyncThunk(
   "pipeline/deletePipelineStage",
-  async ({ id, accessToken, refreshToken }, { rejectWithValue }) => {
+  async ({ id, accessToken, refreshToken }, { rejectWithValue, dispatch, getState }) => {
     try {
-      const response = await api.DeletePipelineStage({
-        id,
-        accessToken,
-        refreshToken,
-      });
+      const state = getState();
+      const columns = state.pipeline.columns;
+      const columnOrder = state.pipeline.columnOrder;
+      const column = columns[id];
+      const columnIndex = columnOrder.indexOf(id);
+      const isFirstColumn = columnIndex === 0;
+      const hasTasks = column?.taskIds?.length > 0;
+
+      if (isFirstColumn && hasTasks) {
+        throw new Error("Cannot delete first column with candidates. Move or delete candidates first.");
+      }
+
+      if (hasTasks && columnIndex > 0) {
+        const firstColumnId = columnOrder[0];
+        await dispatch(
+          updatePipelineItemActivity({
+            ids: column.taskIds,
+            pipelineStageId: firstColumnId,
+            accessToken,
+            refreshToken,
+          })
+        ).unwrap();
+      }
+
+      const response = await api.DeletePipelineStage({ id, accessToken, refreshToken });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -840,11 +756,11 @@ export const deletePipelineItem = createAsyncThunk(
   async ({ ids, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
       const response = await api.DeletePipelineItem({
-        ids: Array.isArray(ids) ? ids : [ids], // Normalize to array
+        ids: Array.isArray(ids) ? ids : [ids],
         accessToken,
         refreshToken,
       });
-      return { ...response, ids: Array.isArray(ids) ? ids : [ids] }; // Include ids in response
+      return { ...response, ids: Array.isArray(ids) ? ids : [ids] };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to delete pipeline item");
     }
@@ -856,68 +772,50 @@ export const updateCandidate = createAsyncThunk(
   async (
     {
       id,
-      companyName,
       fullName,
       email,
-      phoneNumber,
+      streetAddress,
       stage,
-      contactPerson,
-      companySize,
-      organizationType,
-      location,
-      leadSource,
+      city,
+      state,
+      country,
+      zipCode,
+      phoneNumber,
+      gender,
+      DOB,
+      tenantId,
       pipelineStageId,
-      assignToAdmin,
-      createdBy,
+      assignToTenantStaff,
       accessToken,
       refreshToken,
+      dbAccess,
     },
     { rejectWithValue }
   ) => {
     try {
       const response = await api.UpdateCandidate({
         id,
-        companyName,
         fullName,
         email,
-        phoneNumber,
+        streetAddress,
         stage,
-        contactPerson,
-        companySize,
-        organizationType,
-        location,
-        leadSource,
+        city,
+        state,
+        country,
+        zipCode,
+        phoneNumber,
+        gender,
+        DOB,
+        tenantId,
         pipelineStageId,
-        assignToAdmin,
-        createdBy,
+        assignToTenantStaff,
         accessToken,
         refreshToken,
+        dbAccess,
       });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const reassignCandidateToStaff = createAsyncThunk(
-  "pipeline/reassignCandidateToStaff",
-  async (
-    { ids, assignToAdmin, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.ReassignCandidateToStaff({
-        ids: Array.isArray(ids) ? ids : [ids], // Normalize to array
-        assignToAdmin,
-        accessToken,
-        refreshToken,
-      });
-      return { ...response, ids: Array.isArray(ids) ? ids : [ids] };
-    } catch (error) {
-      return rejectWithValue(
-        error.message || "Failed to reassign candidate to staff"
-      );
     }
   }
 );
@@ -940,11 +838,12 @@ export const {
   deleteColumn,
 } = pipelineSlice.actions;
 
+
+
 export const selectPipeline = (state) => state.pipeline.pipeline;
 export const selectColumns = (state) => state.pipeline.columns;
 export const selectColumnOrder = (state) => state.pipeline.columnOrder;
 export const selectDraft = (state) => state.pipeline.draft;
-export const selectStaffList = (state) => state.pipeline.staffList;
 export const selectStages = (state) => state.pipeline.stages;
 export const selectStatus = (state) => state.pipeline.status;
 export const selectError = (state) => state.pipeline.error;

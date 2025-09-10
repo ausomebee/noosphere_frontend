@@ -1,0 +1,61 @@
+/* Custom CSS for Baseline Data Tables */
+.baseline-table-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.baseline-table-container table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.baseline-table-container th {
+  background-color: #ececec;
+  color: #4b4e54;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.baseline-table-container th,
+.baseline-table-container td {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  border: #ececec 1px solid;
+}
+
+.baseline-table-container tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.baseline-table-container tr:last-child {
+  border-bottom: none;
+}
+
+.baseline-table-container .summary {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.summary-container {
+  background-color: #ececec;
+  color: #4b4e54;
+}
+
+/* Performance Graph Styles */
+.apexcharts-tooltip {
+  background: #f8fafc !important;
+  color: #374151;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.apexcharts-menu {
+  background: #f8fafc !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+}
+
+.apexcharts-menu-item:hover {
+  background: #e5e7eb !important;
+}

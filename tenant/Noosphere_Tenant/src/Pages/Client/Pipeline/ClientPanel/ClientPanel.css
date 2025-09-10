@@ -1,0 +1,93 @@
+.manage-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manage-back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-stage-selector {
+  background-color: #f7f7f7;
+  padding: 10px;
+  width: auto;
+  display: inline-block;
+  border-radius: 12px;
+}
+
+.client-name {
+  font-weight: 700;
+  font-size: 20px;
+  color: #4b4e54;
+}
+
+
+
+.general-info,
+.task-progress,
+.required-documents {
+  margin-top: 20px;
+  padding: 15px;
+  background: #fff;
+  border-radius: 5px;
+}
+
+.general-info h2,
+.task-progress h2,
+.required-documents h2 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #4B4E54;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.document-count{
+    background: #FFFAEB;
+    color: #B54708;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 9999px;
+    margin-left: 5px;
+}
+
+.edit-icon {
+  margin-left: auto;
+  cursor: pointer;
+  color: #007bff;
+  border: 1px solid #DDDDDD;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.general-lead{
+    color: #9097A1;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.general-info-value {
+    color: #5C6167;
+  font-size: 16px;
+    font-weight: 600;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+ 
+}
+
+

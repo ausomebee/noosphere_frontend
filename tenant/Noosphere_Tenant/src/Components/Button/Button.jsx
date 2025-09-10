@@ -29,7 +29,7 @@ const Button = ({
   return (
     <button
       type={type}
-      className={` p-4 btn btn-${variant} btn-${size} w-[${width}] ${
+      className={` p-6 btn btn-${variant} btn-${size} w-[${width}] ${
         disabled || loading ? "btn-disabled" : ""
       } ${className}`}
       disabled={disabled || loading}

@@ -100,13 +100,14 @@
   border-radius: 20px;
 }
 
-.custom-table th,
+
 .custom-table td {
-  padding: 10px;
+  padding: 12px;
   text-align: left;
   font-size: 14px;
   color: #333;
   white-space: nowrap;
+  border-bottom: 1px solid #ECECEC;
 }
 
 .custom-table th {
@@ -117,6 +118,11 @@
   position: sticky;
   top: 0;
   z-index: 5;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
 }
 
 .custom-table th:first-child {
@@ -145,6 +151,10 @@
 .primary-text {
   color: #004ABA !important;
   font-weight: 600;
+}
+.secondary-text {
+  color: #333 !important;
+  font-weight: 500;
 }
 
 .approval-label {
@@ -257,9 +267,9 @@
 
 .action-cell {
   position: relative;
-  width: 1%;
-  white-space: nowrap;
-  padding: 1rem;
+  width: 10%;
+  
+  
 }
 
 .action-dropdown {
@@ -288,7 +298,7 @@
   border: none;
   width: 100%;
   text-align: left;
-  font-size: 12px;
+  font-size: 14px;
   color: #333;
   cursor: pointer;
 }
@@ -309,12 +319,13 @@
 .dropdown-item.remove:hover {
   background-color: #ffe6e6;
 }
-
 .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 15px;
+  position: relative;
+  z-index: 10; /* Set a base z-index for pagination */
 }
 
 .pagination-pages {
@@ -391,7 +402,6 @@
   align-items: center;
   position: relative;
   gap: 8px;
-  margin-bottom: -20px;
   justify-content: end;
   border-radius: 16px;
 }
@@ -407,7 +417,7 @@
 .date-filter-input-start,
 .date-filter-input-end {
   width: 140px;
-  padding: 10px 12px !important;
+  padding: 7px 12px !important;
   border-radius: 10px !important;
 }
 
@@ -521,8 +531,8 @@
 }
 
 .date-filter-footer {
+  width: 100%;
   display: flex;
-  justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
 }
@@ -618,3 +628,16 @@
     width: 120px;
   }
 }
+
+.action-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.action-icon {
+  cursor: pointer;  
+
+ 
+}
+

@@ -1,11 +1,21 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { exportTableData, printTableData, exportTableToPDF } from "../../utils/TableUtils";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+import {
+  exportTableData,
+  printTableData,
+  exportTableToPDF,
+} from "../../utils/TableUtils";
 import Pagination from "./Pagination";
 import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import TableActions from "./TableActions";
 import "./CustomTable.css";
-import { parse, isSameDay, isWithinInterval, isValid } from "date-fns";
+import { parse, isSameDay, isWithinInterval, isValid, format } from "date-fns";
 
 const CustomTable = ({
   data,
@@ -20,20 +30,25 @@ const CustomTable = ({
   onSelectionChange,
   hasStatusDot = false,
   actionLinkPrefix,
-  actionText
+  actionText,
+  loading,
+  hideSearch = false, // New prop to hide search
+  hideTableActions = false // New prop to hide table actions
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [filterValues, setFilterValues] = useState({
     filter_type: "",
-    value: "", // Second filter value
+    value: "",
     dateAdded: null,
+    stage_completion: "",
   });
-  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
+    useState(false);
   const tableContainerRef = useRef(null);
   const menuRefs = useRef({});
   const exportButtonRef = useRef(null);
@@ -42,71 +57,188 @@ const CustomTable = ({
   const dateFilterEndInputRef = useRef(null);
   const dateFilterDropdownRef = useRef(null);
 
-  // Extract unique values for filters
-  const getUniqueValues = useCallback((key) => {
-    if (!key) return [];
-    const values = new Set(data.map((row) => row[key]).filter(Boolean));
-    return Array.from(values).map((value) => ({ value, label: value }));
-  }, [data]);
+  const getUniqueValues = useCallback(
+    (key) => {
+      if (!key) return [];
+      const values = new Set(data.map((row) => row[key]).filter(Boolean));
+      return Array.from(values).map((value) => ({ value, label: value }));
+    },
+    [data]
+  );
 
-  const filterOptions = useMemo(() => [
-    { value: "", label: "Select Filter" },
-    ...columns
-      .filter((col) => col.type === "text" || col.key === "dateTime" || col.key === "approval" || col.key === "ToggleActive")
-      .map((col) => ({ value: col.key, label: col.header })),
-    { value: "clear_filters", label: "Clear Filters" },
-  ], [columns]);
+  const filterOptions = useMemo(() => {
+    if (!filters) return [];
+    return [
+      { value: "", label: "Select Filter" },
+      ...columns
+        .filter(
+          (col) =>
+            col.type === "text" ||
+            col.key === "dateTime" ||
+            col.key === "approval" ||
+            col.key === "ToggleActive" ||
+            col.key === "stage_completion"
+        )
+        .map((col) => ({ value: col.key, label: col.header })),
+      { value: "clear_filters", label: "Clear Filters" },
+    ];
+  }, [columns, filters]);
 
   const secondFilterOptions = useMemo(() => {
+    if (!filters) return [];
     const type = filterValues.filter_type;
     switch (type) {
-      case "client": return [{ value: "", label: "Select Client" }, ...getUniqueValues("client")];
-      case "serviceType": return [{ value: "", label: "Select Service Type" }, ...getUniqueValues("serviceType")];
-      case "programs": return [{ value: "", label: "Select Programs" }, ...getUniqueValues("programs")];
-      case "sessions": return [{ value: "", label: "Select Sessions" }, ...getUniqueValues("sessions")];
-      case "therapist": return [{ value: "", label: "Select Therapist" }, ...getUniqueValues("therapist")];
-      case "uploadBy": return [{ value: "", label: "Select Upload By" }, ...getUniqueValues("uploadBy")];
-      case "description": return [{ value: "", label: "Select Description" }, ...getUniqueValues("description")];
-      case "code": return [{ value: "", label: "Select Code" }, ...getUniqueValues("code")];
-      case "createdBy": return [{ value: "", label: "Select Created By" }, ...getUniqueValues("createdBy")];
-      case "timeSheetNumber": return [{ value: "", label: "Select TimeSheet Number" }, ...getUniqueValues("timeSheetNumber")];
-      case "approval": return [{ value: "", label: "Select Approval" }, ...getUniqueValues("approval")];
-      case "dateTime": return [];
-      case "ToggleActive": return [{ value: "", label: "Select ToggleActive" }, { value: "true", label: "True" }, { value: "false", label: "False" }];
-      default: return [];
+      case "client":
+        return [
+          { value: "", label: "Select Client" },
+          ...getUniqueValues("client"),
+        ];
+      case "serviceType":
+        return [
+          { value: "", label: "Select Service Type" },
+          ...getUniqueValues("serviceType"),
+        ];
+      case "programs":
+        return [
+          { value: "", label: "Select Programs" },
+          ...getUniqueValues("programs"),
+        ];
+      case "sessions":
+        return [
+          { value: "", label: "Select Sessions" },
+          ...getUniqueValues("sessions"),
+        ];
+      case "therapist":
+        return [
+          { value: "", label: "Select Therapist" },
+          ...getUniqueValues("therapist"),
+        ];
+      case "uploadBy":
+        return [
+          { value: "", label: "Select Upload By" },
+          ...getUniqueValues("uploadBy"),
+        ];
+      case "description":
+        return [
+          { value: "", label: "Select Description" },
+          ...getUniqueValues("description"),
+        ];
+      case "code":
+        return [
+          { value: "", label: "Select Code" },
+          ...getUniqueValues("code"),
+        ];
+      case "createdBy":
+        return [
+          { value: "", label: "Select Created By" },
+          ...getUniqueValues("createdBy"),
+        ];
+      case "timeSheetNumber":
+        return [
+          { value: "", label: "Select TimeSheet Number" },
+          ...getUniqueValues("timeSheetNumber"),
+        ];
+      case "approval":
+        return [
+          { value: "", label: "Select Approval" },
+          ...getUniqueValues("approval"),
+        ];
+      case "added_by":
+        return [
+          { value: "", label: "Select Added By" },
+          ...getUniqueValues("added_by"),
+        ];
+      case "":
+        return [];
+      case "ToggleActive":
+        return [
+          { value: "", label: "Select ToggleActive" },
+          { value: "true", label: "True" },
+          { value: "false", label: "False" },
+        ];
+      case "dateTime":
+        return [];
+      case "stage_completion":
+        return [
+          { value: "", label: "Select Stage Completion" },
+          ...Array.from({ length: 11 }, (_, i) => ({
+            value: i * 10,
+            label: `${i * 10}%`,
+          })),
+        ];
+      default:
+        return [];
     }
-  }, [filterValues.filter_type, getUniqueValues]);
+  }, [filterValues.filter_type, getUniqueValues, filters]);
 
   const filteredData = useMemo(() => {
     let filtered = [...data];
 
-    // Search across all column keys
     if (searchTerm) {
       filtered = filtered.filter((row) =>
         columns.some((col) => {
           const value = row[col.key];
-          return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+          return (
+            value &&
+            value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          );
         })
       );
     }
 
-    // Filter logic based on filter_type and value
-    const { filter_type, value, dateAdded } = filterValues;
-    if (filter_type && value && filter_type !== "dateTime") {
-      if (filter_type === "ToggleActive") {
-        filtered = filtered.filter((row) => row[filter_type].toString() === value);
+    if (
+      filters &&
+      filterValues.filter_type &&
+      filterValues.value !== "" &&
+      filterValues.filter_type !== "dateTime" &&
+      filterValues.filter_type !== "stage_completion"
+    ) {
+      if (filterValues.filter_type === "ToggleActive") {
+        filtered = filtered.filter(
+          (row) =>
+            row[filterValues.filter_type]?.toString() === filterValues.value
+        );
       } else {
-        filtered = filtered.filter((row) => row[filter_type]?.toString().toLowerCase() === value.toLowerCase());
+        filtered = filtered.filter(
+          (row) =>
+            row[filterValues.filter_type]?.toString().toLowerCase() ===
+            filterValues.value.toLowerCase()
+        );
       }
     }
 
-    // Date filter logic
-    if (filter_type === "dateTime" && dateAdded && (dateAdded.start || dateAdded.end)) {
+    if (
+      filters &&
+      filterValues.filter_type === "dateTime" &&
+      filterValues.dateAdded &&
+      (filterValues.dateAdded.start || filterValues.dateAdded.end)
+    ) {
       filtered = filtered.filter((row) => {
-        const rowDate = row.dateTime?.date ? parse(row.dateTime.date, "yyyy-MM-dd", new Date()) : null;
+        const dateString = row.dateTime ? String(row.dateTime) : null;
+        const rowDate = dateString
+          ? parse(dateString, "MM/dd/yyyy", new Date())
+          : null;
         if (!isValid(rowDate)) return false;
-        const startDate = dateAdded.start ? new Date(dateAdded.start) : null;
-        const endDate = dateAdded.end ? new Date(dateAdded.end) : null;
+        const startDate = filterValues.dateAdded.start
+          ? parse(
+              format(filterValues.dateAdded.start, "MM/dd/yyyy"),
+              "MM/dd/yyyy",
+              new Date()
+            )
+          : null;
+        const endDate = filterValues.dateAdded.end
+          ? parse(
+              format(filterValues.dateAdded.end, "MM/dd/yyyy"),
+              "MM/dd/yyyy",
+              new Date()
+            )
+          : null;
+        console.log("Date Filter:", {
+          dateString,
+          rowDate,
+          startDate,
+          endDate,
+        });
         if (startDate && endDate && !isSameDay(startDate, endDate)) {
           return isWithinInterval(rowDate, { start: startDate, end: endDate });
         } else if (startDate) {
@@ -116,16 +248,39 @@ const CustomTable = ({
       });
     }
 
-    if (filter_type === "clear_filters") {
+    if (
+      filters &&
+      filterValues.filter_type === "stage_completion" &&
+      filterValues.value !== ""
+    ) {
+      const min = parseInt(filterValues.value, 10);
+      const max = min + 9;
+      filtered = filtered.filter((row) => {
+        const completion =
+          row.stage_completion != null ? parseInt(row.stage_completion, 10) : 0;
+        console.log("Stage Filter:", { min, max, completion, row });
+        return completion >= min && completion <= max;
+      });
+    }
+
+    if (filters && filterValues.filter_type === "clear_filters") {
       filtered = [...data];
-      setFilterValues({ filter_type: "", value: "", dateAdded: null });
-      onFilterChange("filter_type", "");
-      onFilterChange("value", "");
-      onFilterChange("dateAdded", null);
+      setFilterValues({
+        filter_type: "",
+        value: "",
+        dateAdded: null,
+        stage_completion: "",
+      });
+      if (onFilterChange) {
+        onFilterChange("filter_type", "");
+        onFilterChange("value", "");
+        onFilterChange("dateAdded", null);
+        onFilterChange("stage_completion", "");
+      }
     }
 
     return filtered;
-  }, [data, searchTerm, filterValues, columns, onFilterChange]);
+  }, [data, searchTerm, filterValues, columns, filters, onFilterChange]);
 
   const pagination = useMemo(() => {
     const totalItems = filteredData.length;
@@ -149,7 +304,8 @@ const CustomTable = ({
         : [...selectedItems, row];
       setSelectedRows(newSelectedRows);
       setSelectedItems(newSelectedItems);
-      if (onSelectionChange) onSelectionChange(newSelectedRows, newSelectedItems);
+      if (onSelectionChange)
+        onSelectionChange(newSelectedRows, newSelectedItems);
     },
     [selectedRows, selectedItems, onSelectionChange]
   );
@@ -158,7 +314,8 @@ const CustomTable = ({
     let newSelectedItems = [];
     if (
       selectedRows.length > 0 &&
-      selectedRows.length === currentData.filter((row) => row.hasCheckbox).length
+      selectedRows.length ===
+        currentData.filter((row) => row.hasCheckbox).length
     ) {
       newSelectedRows = [];
       newSelectedItems = [];
@@ -181,19 +338,33 @@ const CustomTable = ({
     [data, pagination.startIndex]
   );
   const handleExportCSV = useCallback(() => {
-    exportTableData(data, columns, `${tableName.toLowerCase().replace(/\s+/g, "-")}.csv`, tableName);
+    exportTableData(
+      data,
+      columns,
+      `${tableName.toLowerCase().replace(/\s+/g, "-")}.csv`,
+      tableName
+    );
     setExportDropdownOpen(false);
   }, [data, columns, tableName]);
   const handleExportPDF = useCallback(() => {
-    exportTableToPDF(data, columns, `${tableName.toLowerCase().replace(/\s+/g, "-")}.pdf`, tableName);
+    exportTableToPDF(
+      data,
+      columns,
+      `${tableName.toLowerCase().replace(/\s+/g, "-")}.pdf`,
+      tableName
+    );
     setExportDropdownOpen(false);
   }, [data, columns, tableName]);
-  const handlePrint = useCallback(() => printTableData(data, columns, tableName), [data, columns, tableName]);
+  const handlePrint = useCallback(
+    () => printTableData(data, columns, tableName),
+    [data, columns, tableName]
+  );
   const toggleDropdown = useCallback(
     (rowIndex, colIndex) => {
       const key = `${rowIndex}-${colIndex}`;
       setOpenDropdown((prev) => (prev === key ? null : key));
-      if (openDropdown !== key) setTimeout(() => positionDropdown(rowIndex, colIndex), 0);
+      if (openDropdown !== key)
+        setTimeout(() => positionDropdown(rowIndex, colIndex), 0);
     },
     [openDropdown]
   );
@@ -208,7 +379,9 @@ const CustomTable = ({
     if (!button || !dropdown) return;
     const buttonRect = button.getBoundingClientRect();
     const tableRect = tableContainerRef.current.getBoundingClientRect();
-    const headerRect = tableContainerRef.current.querySelector("thead")?.getBoundingClientRect();
+    const headerRect = tableContainerRef.current
+      .querySelector("thead")
+      ?.getBoundingClientRect();
     if (!headerRect) return;
     const dropdownRect = dropdown.getBoundingClientRect();
     const dropdownHeight = dropdownRect.height || 150;
@@ -263,28 +436,50 @@ const CustomTable = ({
     dropdown.style.overflowY = "auto";
     dropdown.style.right = "0";
   };
-  const handleFilterValueChange = (filterKey, value) => {
-    setFilterValues((prev) => ({ ...prev, [filterKey]: value }));
-    onFilterChange(filterKey, value);
-  };
-  const handleDateRangeSelect = (range) => {
-    const updatedValues = {
-      ...filterValues,
-      dateAdded: {
-        start: range.start ? new Date(range.start) : null,
-        end: range.end ? new Date(range.end) : null,
-      },
-    };
-    setFilterValues(updatedValues);
-    onFilterChange("dateAdded", updatedValues.dateAdded);
-    setIsDateFilterDropdownOpen(false);
-  };
-  const resetFilters = () => {
-    setFilterValues({ filter_type: "", value: "", dateAdded: null });
-    onFilterChange("filter_type", "");
-    onFilterChange("value", "");
-    onFilterChange("dateAdded", null);
-  };
+  const handleFilterValueChange = useCallback(
+    (filterKey, value) => {
+      if (!filters) return;
+      setFilterValues((prev) => {
+        const newValues = { ...prev, [filterKey]: value };
+        console.log("Filter Values Updated:", newValues);
+        return newValues;
+      });
+      if (onFilterChange) onFilterChange(filterKey, value);
+    },
+    [filters, onFilterChange]
+  );
+  const handleDateRangeSelect = useCallback(
+    (range) => {
+      if (!filters) return;
+      const updatedValues = {
+        ...filterValues,
+        dateAdded: {
+          start: range.start ? format(range.start, "MM/dd/yyyy") : null,
+          end: range.end ? format(range.end, "MM/dd/yyyy") : null,
+        },
+      };
+      setFilterValues(updatedValues);
+      if (onFilterChange) onFilterChange("dateAdded", updatedValues.dateAdded);
+      setIsDateFilterDropdownOpen(false);
+    },
+    [filters, filterValues, onFilterChange]
+  );
+  const resetFilters = useCallback(() => {
+    if (!filters) return;
+    setFilterValues({
+      filter_type: "",
+      value: "",
+      dateAdded: null,
+      stage_completion: "",
+    });
+    if (onFilterChange) {
+      onFilterChange("filter_type", "");
+      onFilterChange("value", "");
+      onFilterChange("dateAdded", null);
+      onFilterChange("stage_completion", "");
+      setSearchTerm(""); // Also clear search term when resetting filters
+    }
+  }, [filters, onFilterChange]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -294,11 +489,19 @@ const CustomTable = ({
             (button && button.contains(event.target)) ||
             (dropdown && dropdown.contains(event.target))
         ) ||
-        (exportButtonRef.current && exportButtonRef.current.contains(event.target)) ||
-        (exportDropdownRef.current && exportDropdownRef.current.contains(event.target)) ||
-        (dateFilterStartInputRef.current && dateFilterStartInputRef.current.contains(event.target)) ||
-        (dateFilterEndInputRef.current && dateFilterEndInputRef.current.contains(event.target)) ||
-        (dateFilterDropdownRef.current && dateFilterDropdownRef.current.contains(event.target))
+        (exportButtonRef.current &&
+          exportButtonRef.current.contains(event.target)) ||
+        (exportDropdownRef.current &&
+          exportDropdownRef.current.contains(event.target)) ||
+        (filters &&
+          dateFilterStartInputRef.current &&
+          dateFilterStartInputRef.current.contains(event.target)) ||
+        (filters &&
+          dateFilterEndInputRef.current &&
+          dateFilterEndInputRef.current.contains(event.target)) ||
+        (filters &&
+          dateFilterDropdownRef.current &&
+          dateFilterDropdownRef.current.contains(event.target))
       ) {
         return;
       }
@@ -308,61 +511,104 @@ const CustomTable = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [filters]);
 
   return (
-    <div className={`custom-table-container ${exportDropdownOpen ? "export-dropdown-open" : ""}`}>
-      <div className="table-header">
-        <div className="search-filters-container">
-          <TableHeader
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filters={[{ options: filterOptions }]} // Pass filter options directly
-            filterValues={filterValues}
-            handleFilterValueChange={handleFilterValueChange}
-            handleDateRangeSelect={handleDateRangeSelect}
-            resetFilters={resetFilters}
-            isDateFilterDropdownOpen={isDateFilterDropdownOpen}
-            setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
-            dateFilterStartInputRef={dateFilterStartInputRef}
-            dateFilterEndInputRef={dateFilterEndInputRef}
-            dateFilterDropdownRef={dateFilterDropdownRef}
-            secondFilterOptions={secondFilterOptions} // Pass second filter options
-          />
+    <div
+      className={`custom-table-container ${
+        exportDropdownOpen ? "export-dropdown-open" : ""
+      }`}
+    >
+      {/* Conditionally render table header based on hideSearch prop */}
+      {!hideSearch && (
+        <div className="table-header">
+          <div className="search-filters-container">
+            <TableHeader
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              filters={filters ? [{ options: filterOptions }] : []}
+              filterValues={filters ? filterValues : {}}
+              handleFilterValueChange={
+                filters ? handleFilterValueChange : () => {}
+              }
+              handleDateRangeSelect={filters ? handleDateRangeSelect : () => {}}
+              resetFilters={filters ? resetFilters : () => {}}
+              isDateFilterDropdownOpen={
+                filters ? isDateFilterDropdownOpen : false
+              }
+              setIsDateFilterDropdownOpen={
+                filters ? setIsDateFilterDropdownOpen : () => {}
+              }
+              dateFilterStartInputRef={filters ? dateFilterStartInputRef : null}
+              dateFilterEndInputRef={filters ? dateFilterEndInputRef : null}
+              dateFilterDropdownRef={filters ? dateFilterDropdownRef : null}
+              secondFilterOptions={filters ? secondFilterOptions : []}
+            />
+          </div>
+          {showActions && !hideTableActions && (
+            <TableActions
+              toggleExportDropdown={toggleExportDropdown}
+              exportDropdownOpen={exportDropdownOpen}
+              handleExportCSV={handleExportCSV}
+              handleExportPDF={handleExportPDF}
+              handlePrint={handlePrint}
+              exportButtonRef={exportButtonRef}
+              exportDropdownRef={exportDropdownRef}
+            />
+          )}
         </div>
-        {showActions && (
-          <TableActions
-            toggleExportDropdown={toggleExportDropdown}
-            exportDropdownOpen={exportDropdownOpen}
-            handleExportCSV={handleExportCSV}
-            handleExportPDF={handleExportPDF}
-            handlePrint={handlePrint}
-            exportButtonRef={exportButtonRef}
-            exportDropdownRef={exportDropdownRef}
+      )}
+      <div
+        className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar"
+        ref={tableContainerRef}
+      >
+        {loading ? (
+          <div className="w-full flex justify-center">
+            <span className="btn-spinner">
+              <svg
+                className="spinner animate-spin"
+                width="36"
+                height="36"
+                viewBox="0 0 36 36"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
+                  stroke="#000000"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </div>
+        ) : (
+          <TableBody
+            currentData={currentData}
+            columns={columns}
+            showCheckbox={showCheckbox}
+            showActions={showActions}
+            selectedRows={selectedRows}
+            handleCheckboxChange={handleCheckboxChange}
+            handleSelectAllChange={handleSelectAllChange}
+            toggleDropdown={toggleDropdown}
+            openDropdown={openDropdown}
+            menuRefs={menuRefs}
+            actions={actions}
+            tableName={tableName}
+            hasStatusDot={hasStatusDot}
+            handleToggleActive={handleToggleActive}
+            actionLinkPrefix={actionLinkPrefix}
+            actionText={actionText}
           />
         )}
       </div>
-      <div className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar" ref={tableContainerRef}>
-        <TableBody
-          currentData={currentData}
-          columns={columns}
-          showCheckbox={showCheckbox}
-          showActions={showActions}
-          selectedRows={selectedRows}
-          handleCheckboxChange={handleCheckboxChange}
-          handleSelectAllChange={handleSelectAllChange}
-          toggleDropdown={toggleDropdown}
-          openDropdown={openDropdown}
-          menuRefs={menuRefs}
-          actions={actions}
-          tableName={tableName}
-          hasStatusDot={hasStatusDot}
-          handleToggleActive={handleToggleActive}
-          actionText={actionText}
-          actionLinkPrefix={actionLinkPrefix}
-        />
-      </div>
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };

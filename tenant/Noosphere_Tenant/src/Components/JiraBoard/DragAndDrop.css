@@ -55,7 +55,7 @@ html {
 .column {
   background-color: #ECECEC;
   border-radius: 1rem;
-  width: 19.625rem;
+  width: 21rem;
   min-height: 40rem;
   box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
   display: flex;
@@ -70,10 +70,12 @@ html {
 /* Column Header */
 .column-header {
   display: flex;
+  background-color: #fff;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1rem;
-  border-bottom: 0.0625rem solid #e0e0e0;
+  border: 0.01rem solid #e0e0e0;
+  border-radius: 12px 12px 0 0;
 }
 
 .column-header h3 {
@@ -139,7 +141,7 @@ html {
 .add-column-button {
   background: none;
   border: none;
-  color: #000000;
+  color: #004ABA;
   font-size: 1.5rem;
   cursor: pointer;
   transition: opacity 0.3s ease, transform 0.2s ease;
@@ -220,7 +222,7 @@ html {
 }
 
 .dropdown-icon {
-  color: #6b7280;
+  color: #004ABA;
   font-size: 1.125rem;
   cursor: pointer;
   background: none;
@@ -237,7 +239,6 @@ html {
   top: 100%;
   right: 0;
   background-color: #ffffff;
-  border: 0.0625rem solid #d1d5db;
   border-radius: 0.5rem;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
   width: 13rem;
@@ -261,8 +262,9 @@ html {
 }
 
 .menu-item-active {
-  background-color: #f3f4f6;
-  color: #1f2937;
+  background-color: #F5F9FF;
+  color: #004ABA;
+  font-weight: 600;
 }
 
 .menu-item-delete {
@@ -280,8 +282,9 @@ html {
 }
 
 .menu-item-delete-active {
-  background-color: #f3f4f6;
+  background-color: #F5F9FF;
   color: #c24018;
+  font-weight: 600;
 }
 
 

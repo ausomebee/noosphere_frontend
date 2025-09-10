@@ -32,8 +32,6 @@ const CustomDocumentModal = ({ isOpen, onClose, onSave }) => {
       title="Custom document request"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      primaryButtonColor="#000000"
-      secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={() => {
         setDocumentName('');

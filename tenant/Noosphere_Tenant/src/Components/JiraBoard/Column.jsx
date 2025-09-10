@@ -95,7 +95,7 @@ const Column = ({
   );
 
   const handleManageColumn = useCallback(() => {
-    navigate(`/tenants/column-single/${columnId}`);
+    navigate(`/pipeline/column-single/${columnId}`);
   }, [navigate, columnId]);
 
   const handleDeleteColumn = useCallback(() => {
@@ -176,7 +176,7 @@ const Column = ({
                     className={`menu-item ${active ? 'menu-item-active' : ''}`}
                     onClick={handleManageColumn}
                   >
-                    Manage column
+                    Edit Column Setup
                   </button>
                 )}
               </Menu.Item>

@@ -32,8 +32,6 @@ const CustomTaskModal = ({ isOpen, onClose, onSave }) => {
       title="Add Custom Task"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      primaryButtonColor="#000000"
-      secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={() => {
         setTaskName('');

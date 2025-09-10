@@ -1,6 +1,7 @@
 import React from "react";
 import { CheckboxInput, SwitchInput } from "../Input/Inputs";
 import { Link } from "react-router-dom";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 
 const TableBody = ({
   currentData,
@@ -17,20 +18,23 @@ const TableBody = ({
   tableName,
   hasStatusDot,
   handleToggleActive,
-  actionLinkPrefix = "/details/", // Default route prefix
-  actionText = "View", // Default action text
+  actionLinkPrefix = "",
+  actionText = "View",
 }) => {
   const primaryColumns = [
+    "Candidate Name",
     "Client",
     "ServiceType",
-    "Programs",
+    "Program",
     "Sessions",
+    "Session",
     "Therapist",
     "Upload By",
-    "Description",
     "Code",
     "Created By",
     "TimeSheet Number",
+    "Domain",
+    "Target"
   ];
 
   const getFileIcon = (fileName) => {
@@ -164,7 +168,8 @@ const TableBody = ({
                   <line x1="16" y1="17" x2="8" y2="17" />
                   <polyline points="10 9 9 9 8 9" />
                 </svg>
-                <span>No {tableName} data available</span>
+                <p className="text-lg font-bold text-gray-600">No {tableName} data available</p>
+                <span>{tableName} that you create will be displayed here</span>
               </div>
             </td>
           </tr>
@@ -182,7 +187,7 @@ const TableBody = ({
               {columns.map((col, colIndex) => (
                 <td
                   key={colIndex}
-                  className={`table-cell ${primaryColumns.includes(col.header) ? "primary-text" : ""}`}
+                  className={`table-cell ${primaryColumns.includes(col.header) ? "primary-text" : "secondary-text"}`}
                 >
                   {col.hasColumnActions ? (
                     <div className="action-menu">
@@ -268,69 +273,84 @@ const TableBody = ({
                   )}
                 </td>
               ))}
-              {showActions && (
+              {showActions && row.hasActions && (
                 <td className="action-cell">
-                  {row.hasActions && (
-                    <div className="action-menu">
-                      {row.actionType === "link" ? (
-                        <Link to={`${actionLinkPrefix}${row.item_id || rowIndex}`} className="action-link primary-text">
-                          {actionText}
-                        </Link>
-                      ) : (
-                        <>
+                  <div className="action-group">
+                    {actionLinkPrefix && actionText && (
+                      <Link to={`${actionLinkPrefix}${row.item_id || rowIndex}`} className="action-link primary-text">
+                        {actionText}
+                      </Link>
+                    )}
+                    {actions.map((action, index) => {
+                      if (action.type === "icon") {
+                        return (
                           <button
-                            className="action-button"
-                            onClick={() => toggleDropdown(rowIndex, "action")}
-                            ref={(el) => {
-                              const key = `${rowIndex}-action`;
-                              if (!menuRefs.current[key]) menuRefs.current[key] = {};
-                              menuRefs.current[key].button = el;
-                            }}
+                            key={index}
+                            className={`action-icon ${action.className || ""}`}
+                            onClick={() => action.onClick(row)}
+                            title={action.label}
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="12" cy="5" r="1" />
-                              <circle cx="12" cy="19" r="1" />
-                            </svg>
+                            {action.icon}
                           </button>
-                          {openDropdown === `${rowIndex}-action` && (
-                            <div
-                              className="action-dropdown"
+                        );
+                      } else if (action.type === "dropdown") {
+                        return (
+                          <div key={index} className="action-menu">
+                            <button
+                              className="action-button"
+                              onClick={() => toggleDropdown(rowIndex, `action-${index}`)}
                               ref={(el) => {
-                                const key = `${rowIndex}-action`;
+                                const key = `${rowIndex}-action-${index}`;
                                 if (!menuRefs.current[key]) menuRefs.current[key] = {};
-                                menuRefs.current[key].dropdown = el;
+                                menuRefs.current[key].button = el;
                               }}
                             >
-                              {actions.map((action, index) => (
-                                <button
-                                  key={index}
-                                  className={`dropdown-item ${action.className || ""}`}
-                                  onClick={() => {
-                                    action.onClick(row);
-                                    toggleDropdown(null);
-                                  }}
-                                >
-                                  {action.icon && <span className="dropdown-icon">{action.icon}</span>}
-                                  {action.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="12" cy="5" r="1" />
+                                <circle cx="12" cy="19" r="1" />
+                              </svg>
+                            </button>
+                            {openDropdown === `${rowIndex}-action-${index}` && (
+                              <div
+                                className="action-dropdown"
+                                ref={(el) => {
+                                  const key = `${rowIndex}-action-${index}`;
+                                  if (!menuRefs.current[key]) menuRefs.current[key] = {};
+                                  menuRefs.current[key].dropdown = el;
+                                }}
+                              >
+                                {action.items.map((item, itemIndex) => (
+                                  <button
+                                    key={itemIndex}
+                                    className={`dropdown-item ${item.className || ""}`}
+                                    onClick={() => {
+                                      item.onClick(row);
+                                      toggleDropdown(null);
+                                    }}
+                                  >
+                                    {item.icon && <span className="dropdown-icon">{item.icon}</span>}
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
                 </td>
               )}
             </tr>
