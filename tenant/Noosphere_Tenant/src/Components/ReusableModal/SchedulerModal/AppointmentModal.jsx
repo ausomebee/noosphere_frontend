@@ -231,7 +231,7 @@ const AppointmentModal = ({ isOpen, onClose, staff }) => {
       onSecondaryButtonClick={onClose}
       size="medium"
     >
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+     
         <div>
           <TextInput
             label="Date"
@@ -632,7 +632,7 @@ const AppointmentModal = ({ isOpen, onClose, staff }) => {
             onClose={() => setShowColorPicker(false)}
           />
         )}
-      </form>
+      
     </ReusableModal>
   );
 };

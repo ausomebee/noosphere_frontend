@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -53,11 +53,14 @@ const AddProspectModal = ({ isOpen, onClose, onSave, stages, pipelineId }) => {
     handleSubmit,
     reset,
     setValue,
+    control,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: defaultFormValues,
   });
+
+  const values = useWatch({ control });
 
   useEffect(() => {
     if (stages?.length > 0 && !defaultFormValues.pipelineStageId) {
@@ -168,12 +171,18 @@ const AddProspectModal = ({ isOpen, onClose, onSave, stages, pipelineId }) => {
           error={errors.phoneNumber?.message}
           placeholder="Type something"
         />
-
-        <SelectInput
-          label="Gender"
-          {...register("gender")}
-          options={genderOptions}
-          error={errors.gender?.message}
+        <Controller
+          name="gender"
+          control={control}
+          render={({ field }) => (
+            <SelectInput
+              label="Gender"
+              {...register("gender")}
+              options={genderOptions}
+              error={errors.gender?.message}
+              {...field}
+            />
+          )}
         />
         <TextInput
           label="Date of Birth"
@@ -181,12 +190,19 @@ const AddProspectModal = ({ isOpen, onClose, onSave, stages, pipelineId }) => {
           {...register("DOB")}
           error={errors.DOB?.message}
         />
-        <SelectInput
-          label="Pipeline Stage"
-          {...register("pipelineStageId")}
-          options={stageOptions}
-          error={errors.pipelineStageId?.message}
-          disabled={stages.length === 0}
+        <Controller
+          name="pipelineStageId"
+          control={control}
+          render={({ field }) => (
+            <SelectInput
+              label="Pipeline Stage"
+              {...register("pipelineStageId")}
+              options={stageOptions}
+              error={errors.pipelineStageId?.message}
+              disabled={stages.length === 0}
+              {...field}
+            />
+          )}
         />
 
         <TextInput

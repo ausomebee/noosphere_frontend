@@ -1,0 +1,246 @@
+import React, { useCallback, useMemo, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { SwitchInput, TextInput } from "../Input/Inputs";
+import ReusableModal from "../ReusableModal/ReusableModal";
+
+// Reusable Time Range Input Component
+const TimeRangeInput = React.memo(
+  ({
+    startTime,
+    endTime,
+    onStartTimeChange,
+    onEndTimeChange,
+    disabled = false,
+  }) => {
+    return (
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="custom-time-container">
+            <div className="custom-time-div">
+              <span className="custom-time-label">AM</span>
+            </div>
+            <input
+              type="time"
+              value={startTime || "00:00"} // Changed to "00:00" for valid format
+              onChange={(e) => onStartTimeChange(e.target.value)}
+              disabled={disabled}
+              step="3600"
+              className="custom-time-input"
+            />
+          </div>
+        </div>
+        <span className="custom-to-text">to</span>
+        <div className="flex items-center gap-2">
+          <div className="custom-time-container">
+            <div className="custom-time-div">
+              <span className="custom-time-label">PM</span>
+            </div>
+            <input
+              type="time"
+              value={endTime || "12:00"} // Changed to "12:00" for valid format
+              onChange={(e) => onEndTimeChange(e.target.value)}
+              disabled={disabled}
+              step="3600"
+              className="custom-time-input"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+// Day Row Component
+const DayRow = React.memo(
+  ({
+    day,
+    isAvailable,
+    startTime,
+    endTime,
+    onToggle,
+    onStartTimeChange,
+    onEndTimeChange,
+  }) => {
+    return (
+      <div className="flex items-center justify-between p-6 last:border-b-0">
+        <div className="flex items-center gap-4 min-w-[120px]">
+          <div style={{ marginBottom: "-15px" }}>
+            <SwitchInput checked={isAvailable} onChange={onToggle} size="md" />
+          </div>
+          <span className="text-gray-600 text-lg font-medium capitalize">
+            {day}
+          </span>
+        </div>
+        <div className="flex-1 flex justify-end">
+          {isAvailable ? (
+            <TimeRangeInput
+              startTime={startTime}
+              endTime={endTime}
+              onStartTimeChange={onStartTimeChange}
+              onEndTimeChange={onEndTimeChange}
+            />
+          ) : (
+            <div className="w-60">
+              <div className="p-2 rounded-lg justify-end flex">
+                <div style={{ marginBottom: "-15px" }}>
+                <TextInput width="320" placeholder="Not Available" disabled={true} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+);
+
+const AvailabilityModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialValues = {},
+  isLoading = false,
+}) => {
+  // Days of the week
+  const daysOfWeek = useMemo(
+    () => ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    []
+  );
+
+  // Default availability state with correct time format
+  const defaultAvailability = useMemo(() => ({
+    monday: { available: true, startTime: "00:00", endTime: "12:00" },
+    tuesday: { available: true, startTime: "00:00", endTime: "12:00" },
+    wednesday: { available: false, startTime: "00:00", endTime: "12:00" },
+    thursday: { available: true, startTime: "00:00", endTime: "12:00" },
+    friday: { available: true, startTime: "00:00", endTime: "12:00" },
+    saturday: { available: true, startTime: "00:00", endTime: "12:00" },
+    sunday: { available: false, startTime: "00:00", endTime: "12:00" },
+  }), []);
+
+  // Memoize initialValues
+  const memoizedInitialValues = useMemo(() => ({ ...initialValues }), [initialValues]);
+
+  // Form setup
+  const {
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { isDirty },
+  } = useForm({
+    defaultValues: {
+      availability: { ...defaultAvailability, ...memoizedInitialValues },
+    },
+  });
+
+  const availability = watch("availability");
+
+  // Update availability
+  const updateDayAvailability = useCallback(
+    (day, field, value) => {
+      setValue(`availability.${day}.${field}`, value, { shouldDirty: true });
+    },
+    [setValue]
+  );
+
+  // Toggle availability
+  const toggleDayAvailability = useCallback(
+    (day) => {
+      const currentAvailable = availability[day]?.available || false;
+      updateDayAvailability(day, "available", !currentAvailable);
+    },
+    [availability, updateDayAvailability]
+  );
+
+  // Handle save
+  const handleSave = useCallback(
+    (data) => {
+      onSave(data.availability);
+    },
+    [onSave]
+  );
+
+  // Handle close
+  const handleClose = useCallback(() => {
+    reset();
+    onClose();
+  }, [reset, onClose]);
+
+  // Ref to track initial open
+  const hasOpenedRef = useRef(false);
+
+  // Reset form only on first open
+  useEffect(() => {
+    if (isOpen && !hasOpenedRef.current) {
+      console.log("Resetting form with initial values:", { ...defaultAvailability, ...memoizedInitialValues });
+      reset({
+        availability: { ...defaultAvailability, ...memoizedInitialValues },
+      });
+      hasOpenedRef.current = true;
+    }
+  }, [isOpen, reset, defaultAvailability, memoizedInitialValues]);
+
+  // Enforce time range
+  const enforceTimeRange = useCallback((time, isStart) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    if (isStart) {
+      if (hours >= 12) return "11:59";
+    } else {
+      if (hours < 12) return "12:00";
+    }
+    return time;
+  }, []);
+
+  // Handle time changes
+  const onStartTimeChange = useCallback(
+    (time, day) => {
+      const enforcedTime = enforceTimeRange(time, true);
+      updateDayAvailability(day, "startTime", enforcedTime);
+    },
+    [updateDayAvailability, enforceTimeRange]
+  );
+
+  const onEndTimeChange = useCallback(
+    (time, day) => {
+      const enforcedTime = enforceTimeRange(time, false);
+      updateDayAvailability(day, "endTime", enforcedTime);
+    },
+    [updateDayAvailability, enforceTimeRange]
+  );
+
+  return (
+    <ReusableModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Set your availability"
+      primaryButtonText={isLoading ? "Saving..." : "Save"}
+      secondaryButtonText="Cancel"
+      primaryButtonDisabled={isLoading || !isDirty}
+      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onSecondaryButtonClick={handleClose}
+      size="lg"
+      primaryButtonLoading={isLoading}
+    >
+      <div className="overflow-hidden">
+        {daysOfWeek.map((day) => {
+          const dayData = availability[day] || defaultAvailability[day];
+          return (
+            <DayRow
+              key={day}
+              day={day}
+              isAvailable={dayData.available}
+              startTime={dayData.startTime}
+              endTime={dayData.endTime}
+              onToggle={() => toggleDayAvailability(day)}
+              onStartTimeChange={(time) => onStartTimeChange(time, day)}
+              onEndTimeChange={(time) => onEndTimeChange(time, day)}
+            />
+          );
+        })}
+      </div>
+    </ReusableModal>
+  );
+};
+
+export default React.memo(AvailabilityModal);

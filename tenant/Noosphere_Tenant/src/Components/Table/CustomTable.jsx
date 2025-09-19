@@ -31,9 +31,10 @@ const CustomTable = ({
   hasStatusDot = false,
   actionLinkPrefix,
   actionText,
+  onActionClick, // Ensure onActionClick is included in props
   loading,
-  hideSearch = false, // New prop to hide search
-  hideTableActions = false // New prop to hide table actions
+  hideSearch = false,
+  hideTableActions = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +69,15 @@ const CustomTable = ({
 
   const filterOptions = useMemo(() => {
     if (!filters) return [];
+    
+    if (Array.isArray(filters) && filters.length > 0) {
+      return [
+        { value: "", label: "Select Filter" },
+        ...filters,
+        { value: "clear_filters", label: "Clear Filters" },
+      ];
+    }
+    
     return [
       { value: "", label: "Select Filter" },
       ...columns
@@ -152,9 +162,9 @@ const CustomTable = ({
         return [];
       case "ToggleActive":
         return [
-          { value: "", label: "Select ToggleActive" },
-          { value: "true", label: "True" },
-          { value: "false", label: "False" },
+          { value: "", label: "Select Status" },
+          { value: "true", label: "Active" },
+          { value: "false", label: "Inactive" },
         ];
       case "dateTime":
         return [];
@@ -167,6 +177,12 @@ const CustomTable = ({
           })),
         ];
       default:
+        if (type && getUniqueValues(type).length > 0) {
+          return [
+            { value: "", label: `Select ${type}` },
+            ...getUniqueValues(type),
+          ];
+        }
         return [];
     }
   }, [filterValues.filter_type, getUniqueValues, filters]);
@@ -327,7 +343,8 @@ const CustomTable = ({
     }
     setSelectedRows(newSelectedRows);
     setSelectedItems(newSelectedItems);
-    if (onSelectionChange) onSelectionChange(newSelectedRows, newSelectedItems);
+    if (onSelectionChange)
+      onSelectionChange(newSelectedRows, newSelectedItems);
   }, [selectedRows, currentData, onSelectionChange]);
   const handleToggleActive = useCallback(
     (rowIndex) => {
@@ -477,7 +494,7 @@ const CustomTable = ({
       onFilterChange("value", "");
       onFilterChange("dateAdded", null);
       onFilterChange("stage_completion", "");
-      setSearchTerm(""); // Also clear search term when resetting filters
+      setSearchTerm("");
     }
   }, [filters, onFilterChange]);
 
@@ -519,7 +536,6 @@ const CustomTable = ({
         exportDropdownOpen ? "export-dropdown-open" : ""
       }`}
     >
-      {/* Conditionally render table header based on hideSearch prop */}
       {!hideSearch && (
         <div className="table-header">
           <div className="search-filters-container">
@@ -601,6 +617,7 @@ const CustomTable = ({
             handleToggleActive={handleToggleActive}
             actionLinkPrefix={actionLinkPrefix}
             actionText={actionText}
+            onActionClick={onActionClick} // Pass onActionClick to TableBody
           />
         )}
       </div>

@@ -20,8 +20,12 @@ import ProgramLibrary from "../Pages/ProgramLibrary/ProgramLibrary";
 import Pipeline from "../Pages/Client/Pipeline/Pipeline";
 import ManageColumn from "./ManageColumn/ManageColumn";
 import ClientPanel from "../Pages/Client/Pipeline/ClientPanel/ClientPanel";
-import DataDummy from "./ReusableModal/DataCollectionModal/DataDummy";
 import TargetSingle from "../Pages/ProgramLibrary/TargetSingle";
+import General from "../Pages/Organisation/General/General";
+import PracticeSettings from "../Pages/Organisation/PracticeSettings/PracticeSettings";
+import StaffsAndTeams from "../Pages/Organisation/StaffAndTeams/StaffsAndTeams";
+import SingleStaffByAdmin from "../Pages/Organisation/StaffAndTeams/SingleStaffByAdmin";
+import RoleAndPermission from "../Pages/Organisation/RoleAndPermissions/RoleAndPermission";
 
 const AllRoutes = () => {
   return (
@@ -76,11 +80,17 @@ const AllRoutes = () => {
         element={<ClientPanel />}
       />
       <Route path="/program-library" element={<ProgramLibrary />} />
-      {/* <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} /> */}
-      <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} />
+      <Route
+        path="/target-single/:domainName/:programName/:targetName"
+        element={<TargetSingle />}
+      />
 
-
-       <Route path="/datacollectiondummy" element={<DataDummy />} />
+      {/* Organization */}
+      <Route path="/organization/general" element={<General />} />
+      <Route path="/organization/staff-and-teams" element={<StaffsAndTeams />} />
+      <Route path="/organization/staff-and-teams/single-staff/:tenantStaffId" element={<SingleStaffByAdmin />} />
+      <Route path="/organization/practice-settings" element={<PracticeSettings />} />
+      <Route path="/organization/role-and-permissions" element={<RoleAndPermission />} />
     </Routes>
   );
 };

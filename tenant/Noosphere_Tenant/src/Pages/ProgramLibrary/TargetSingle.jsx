@@ -453,7 +453,7 @@ const TargetSingle = () => {
   };
 
   const renderEmptyState = (title, buttonLabel) => (
-    <div className="bg-gray-200 rounded-sm shadow-md w-full p-20 mb-6">
+    <div className="bg-gray-200 rounded-sm w-full p-20 mb-6">
       <div className="text-center py-8 text-gray-500">
         <div className="table-empty-state-content">
           <svg
@@ -544,7 +544,7 @@ const TargetSingle = () => {
   const renderPerformanceGraph = () => {
     if (loading) return <LoadingSpinner />;
     if (!hasPerformanceData || !showPerformanceGraph) {
-      return renderEmptyState("Performance Data", "Collect Data");
+      return renderEmptyState("Performance Data", );
     }
 
     return (
@@ -711,13 +711,13 @@ const TargetSingle = () => {
             <h1 className="font-bold text-lg text-white-light">
               Target Information
             </h1>
-            {clientId && targetInfo?.dataCollectionType !== "N/A" && (
+            {/* {clientId && targetInfo?.dataCollectionType !== "N/A" && (
               <Button
                 label="Collect Data"
                 variant="primary"
                 onClick={handleCollectData}
               />
-            )}
+            )} */}
           </div>
           {loading ? (
             <LoadingSpinner />

@@ -166,6 +166,7 @@ const DatePickerModal = ({ isOpen, onClose, onDateSelect }) => {
       onRequestClose={onClose}
       className="date-picker-modal-content"
       overlayClassName="date-picker-modal-overlay"
+      appElement={document.getElementById('root')}
     >
       <div className="date-picker-container">
         {/* Sidebar */}
