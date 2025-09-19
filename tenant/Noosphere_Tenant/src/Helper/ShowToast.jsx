@@ -2,57 +2,73 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export const showToast = (message, type) => {
+  // Handle both calling conventions
+  let actualMessage = '';
+  let actualType = 'default';
+  
+  if (typeof message === 'object' && message !== null) {
+    // Called with object: showToast({message: "text", type: "success"})
+    actualMessage = message.message || '';
+    actualType = message.type || 'default';
+  } else {
+    // Called with parameters: showToast("text", "success")
+    actualMessage = message || '';
+    actualType = type || 'default';
+  }
+
   const successToastOptions = {
     position: "top-center",
     style: {
-      background: "#004aba", // Updated to your primary color
+      background: "#004aba",
       color: "#ffffff",
     },
     progressStyle: {
       background: "#ffffff",
     },
     iconTheme: {
-      primary: "#28a745", // Success icon color (green)
-      secondary: "#004aba", // Updated to your primary color
+      primary: "#28a745",
+      secondary: "#004aba",
     },
   };
 
   const errorToastOptions = {
     position: "top-center",
     style: {
-      background: "#004aba", // Updated to your primary color
+      background: "#004aba",
       color: "#ffffff",
     },
     progressStyle: {
       background: "#ffffff",
     },
     iconTheme: {
-      primary: "#dc3545", // Error icon color (red)
-      secondary: "#004aba", // Updated to your primary color
+      primary: "#dc3545",
+      secondary: "#004aba",
     },
   };
 
-  switch (type) {
+  const defaultToastOptions = {
+    position: "top-center",
+    style: {
+      background: "#004aba",
+      color: "#ffffff",
+    },
+    progressStyle: {
+      background: "#ffffff",
+    },
+    iconTheme: {
+      primary: "#ffffff",
+      secondary: "#004aba",
+    },
+  };
+
+  switch (actualType) {
     case "success":
-      toast.success(message, successToastOptions);
+      toast.success(actualMessage, successToastOptions);
       break;
     case "error":
-      toast.error(message, errorToastOptions);
+      toast.error(actualMessage, errorToastOptions);
       break;
     default:
-      toast(message, {
-        position: "top-center",
-        style: {
-          background: "#004aba", // Updated to your primary color
-          color: "#ffffff",
-        },
-        progressStyle: {
-          background: "#ffffff",
-        },
-        iconTheme: {
-          primary: "#ffffff", // Default icon color
-          secondary: "#004aba", // Updated to your primary color
-        },
-      });
+      toast(actualMessage, defaultToastOptions);
   }
 };

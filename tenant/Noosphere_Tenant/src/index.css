@@ -213,9 +213,70 @@ select {
 }
 
 /* Flexbox */
+
+/* Align Items */
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.items-stretch {
+  align-items: stretch;
+}
+
+.items-baseline {
+  align-items: baseline;
+}
+
+/* Justify Content */
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.justify-evenly {
+  justify-content: space-evenly;
+}
+
+/* Flex Direction */
 .flex-row {
   flex-direction: row;
 }
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+.flex-col-reverse {
+  flex-direction: column-reverse;
+}
+
 .flex-1 {
   flex: 1;
 }
@@ -225,21 +286,8 @@ select {
 .flex-3 {
   flex: 3;
 }
-.flex-col {
-  flex-direction: column;
-}
-.items-center {
-  align-items: center;
-}
-.justify-center {
-  justify-content: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.justify-end {
-  justify-content: end;
-}
+
+
 .gap-0 {
   gap: var(--space-0);
 }
@@ -261,6 +309,9 @@ select {
 .gap-10 {
   gap: 10px;
 }
+.gap-16 {
+  gap: 16px;
+}
 .gap-20 {
   gap: 20px;
 }
@@ -277,6 +328,9 @@ select {
 }
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 /* Spacing */
@@ -303,6 +357,18 @@ select {
 .my-1 {
   margin-top: var(--space-1);
   margin-bottom: var(--space-1);
+}
+.my-2 {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.my-3 {
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.my-4 {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 .mt-1 {
   margin-top: var(--space-1);
@@ -387,7 +453,7 @@ select {
 .p-5 {
   padding: var(--space-5);
 }
-.p-6 {
+.p-16 {
   padding: 16px;
 }
 .px-1 {
@@ -464,6 +530,9 @@ select {
 .w-full {
   width: 100%;
 }
+.w-fit {
+  width: fit-content;
+}
 .w-auto {
   width: auto;
 }
@@ -478,6 +547,9 @@ select {
 }
 .w-70 {
   width: 70%;
+}
+.w-60 {
+  width: 60%;
 }
 .w-700 {
   width: 700px;
@@ -590,7 +662,9 @@ select {
 .max-h-90vh {
   max-height: 90vh;
 }
-
+.capitalize {
+    text-transform: capitalize;
+}
 /* Typography */
 .text-xs {
   font-size: var(--text-xs);
@@ -702,17 +776,21 @@ select {
   color: #9097a1;
 }
 .text-gray-600 {
-  color: #6b7280;
+  color: #5C6167; 
 }
 .text-gray-700 {
   color: #4b4e54;
 }
-.text-blue-600 {
-  color: #1e40af;
+.text-gray-700-em {
+  color: #344054;
 }
 .text-blue-600 {
   color: #1e40af;
 }
+.text-blue-primary {
+  color: #004ABA;
+}
+
 .text-white-light {
   color: #A1A8B3;
 }
@@ -756,7 +834,10 @@ select {
   background-color: #00215d;
 }
 .bg-white-light2 {
-  color: #FBFBFB;
+  background-color: #FBFBFB;
+}
+.bg-gray-200 {
+  background-color: #ECECEC;
 }
 .bg-black-overlay {
   background-color: rgba(0, 0, 0, 0.5);
@@ -770,6 +851,7 @@ select {
 .bg-gray-200 {
   background-color: #F7F7F7;
 }
+
 
 /* Borders */
 .border {
@@ -942,6 +1024,9 @@ select {
 }
 .btn:hover {
   background-color: var(--color-secondary);
+}
+.cursor-pointer{
+  cursor: pointer;
 }
 
 /* ============================
@@ -2087,7 +2172,7 @@ input:checked + .slider:before {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   font-family: var(--font-sans);
-  font-weight: 500;
+  font-weight: 600;
   font-size: var(--text-sm);
   cursor: pointer;
   border: 1px solid transparent;
@@ -2760,7 +2845,7 @@ input:checked + .slider:before {
   width: 100%; /* already there */
   border: 1px solid #ccc;
   border-radius: 12px;
-  padding: 6px 8px;
+  padding: 0px 0px;
   min-height: 36px;
   display: flex;
   align-items: center;
@@ -2897,4 +2982,18 @@ input:checked + .slider:before {
   display: flex;
   max-width: 100%;
   word-wrap: break-word;
+}
+
+.organisation-user-avatar {
+  width: 100px;
+  height: 100px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  border: 5px solid #CCE0FF ;
 }

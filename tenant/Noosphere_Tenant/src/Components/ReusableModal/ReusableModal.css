@@ -23,7 +23,7 @@
   overflow: hidden;
 }
 
- .re-modal-header {
+.re-modal-header {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -141,8 +141,7 @@
   opacity: 0.9;
 }
 
-
-  .file-list {
+.file-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -205,7 +204,7 @@
 .progress {
   flex: 1;
   height: 0.6rem;
-  background: #004ABA;
+  background: #004aba;
   border-radius: 0.25rem;
   transition: width 0.3s ease;
 }
@@ -228,7 +227,6 @@
   color: #ef4444;
 }
 
-
 /* Percentage Correct Modal Styles */
 .percentage-correct-modal {
   padding: 0.5rem;
@@ -243,7 +241,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-  
 }
 
 .trials-table th {
@@ -251,8 +248,6 @@
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  
-
 }
 
 .trials-table th:first-child {
@@ -333,8 +328,98 @@
   .performance-cell {
     min-width: 200px;
   }
-  
+
   .notes-cell {
     min-width: 150px;
   }
+}
+.custom-time-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+}
+
+.custom-time-input {
+  padding: 4px 8px 4px 8px;
+  border: none;
+  width: 90px;
+  height: 50px;
+  text-align: center;
+  font-size: 16px;
+  background: transparent;
+}
+
+.custom-time-input-two {
+  padding: 4px 8px 4px 8px;
+  border: none;
+  width: 90px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+  background: transparent;
+}
+
+.custom-time-input-two:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.custom-time-input-two:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: none;
+}
+.custom-time-input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.custom-time-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: none;
+}
+
+.custom-time-div {
+  border-right: 1px solid #d1d5db;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+.custom-time-div-two {
+  border-right: 1px solid #d1d5db;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.custom-time-label {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.custom-to-text {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0 8px;
+}
+.custom-time-label-two {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.custom-to-text-two {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0 8px;
+}
+
+.flex {
+  gap: 16px;
 }

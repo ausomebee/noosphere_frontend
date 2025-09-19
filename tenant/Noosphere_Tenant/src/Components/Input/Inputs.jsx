@@ -25,7 +25,6 @@ const TextInput = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        
         {...props}
       />
     </div>
@@ -144,7 +143,9 @@ const SelectInput = ({
     const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
 
     // Set placement: prefer bottom if enough space, otherwise top
-    setMenuPlacement(spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
+    setMenuPlacement(
+      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
+    );
     setMenuMaxHeight(menuHeight);
   };
 
@@ -205,7 +206,7 @@ const SelectInput = ({
               border: 0,
               boxShadow: "none",
               background: "transparent",
-              minHeight: isMulti ? 36 : 30,
+              minHeight: isMulti ? 20 : 20,
               borderRadius: 12,
               padding: "0 6px",
               cursor: "pointer",
@@ -233,14 +234,21 @@ const SelectInput = ({
           {...props}
         />
       </div>
-      {error && <div className="auth-error-message text-red-500 text-xs mt-1">{error}</div>}
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
 
 SelectInput.propTypes = {
   label: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
+  value: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string),
+  ]),
   onChange: PropTypes.func.isRequired,
   options: PropTypes.arrayOf(
     PropTypes.shape({
@@ -254,7 +262,6 @@ SelectInput.propTypes = {
   isMulti: PropTypes.bool,
   placeholder: PropTypes.string,
 };
-
 
 /* =====================  rest of components unchanged  ===================== */
 const SearchableSelectInput = ({
@@ -290,7 +297,9 @@ const SearchableSelectInput = ({
     const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
 
     // Set placement: prefer bottom if enough space, otherwise top
-    setMenuPlacement(spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
+    setMenuPlacement(
+      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
+    );
     setMenuMaxHeight(menuHeight);
   };
 
@@ -341,7 +350,11 @@ const SearchableSelectInput = ({
               maxHeight: `${menuMaxHeight}px`,
             }),
             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-            valueContainer: (base) => ({ ...base, padding: 0, overflow: "hidden" }),
+            valueContainer: (base) => ({
+              ...base,
+              padding: 0,
+              overflow: "hidden",
+            }),
             placeholder: (base) => ({ ...base, color: "#999" }),
           }}
           menuPortalTarget={document.body}
@@ -367,7 +380,6 @@ SearchableSelectInput.propTypes = {
   className: PropTypes.string,
   placeholder: PropTypes.string,
 };
-
 
 const CheckboxInput = ({ label, checked, onChange, ...props }) => (
   <div className="form-checkbox-group">
@@ -523,7 +535,11 @@ RadioInput.propTypes = {
   className: PropTypes.string,
 };
 
-const TimeInput = ({ value = { hours: 0, minutes: 0, seconds: 0 }, onChange, disabled }) => {
+const TimeInput = ({
+  value = { hours: 0, minutes: 0, seconds: 0 },
+  onChange,
+  disabled,
+}) => {
   const [time, setTime] = useState(value);
 
   useEffect(() => {
@@ -531,14 +547,19 @@ const TimeInput = ({ value = { hours: 0, minutes: 0, seconds: 0 }, onChange, dis
   }, [value]);
 
   const handleChange = (field, val) => {
-    const newValue = Math.max(0, Math.min(parseInt(val) || 0, field === "hours" ? 23 : 59));
+    const newValue = Math.max(
+      0,
+      Math.min(parseInt(val) || 0, field === "hours" ? 23 : 59)
+    );
     const newTime = { ...time, [field]: newValue };
     setTime(newTime);
     onChange(newTime);
   };
 
   const formatTime = () => {
-    return `${time.hours.toString().padStart(2, "0")}:${time.minutes.toString().padStart(2, "0")}:${time.seconds.toString().padStart(2, "0")}`;
+    return `${time.hours.toString().padStart(2, "0")}:${time.minutes
+      .toString()
+      .padStart(2, "0")}:${time.seconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -602,5 +623,5 @@ export {
   TextareaInput,
   SearchInput,
   RadioInput,
-  TimeInput 
+  TimeInput,
 };

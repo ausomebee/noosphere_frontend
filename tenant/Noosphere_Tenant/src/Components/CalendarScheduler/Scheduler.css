@@ -278,7 +278,7 @@
   .cal-sched-left-controls {
     display: flex;
     align-items: center;
-    gap: 1rem; /* 16px, like space-x-4 */
+    gap: 1rem;
   }
   
   .cal-sched-today-button {
@@ -409,7 +409,7 @@
   .cal-sched-search-container {
     position: relative;
     margin-bottom: -20px;
-    margin-left: 40px;
+
   }
   
 
@@ -437,7 +437,6 @@
   
   /* Calendar Container */
   .cal-sched-calendar-container {
-    padding: 1rem; /* 16px */
     position: relative;
     flex: 1; /* Takes remaining space */
     min-width: 0; /* Allows shrinking within flex container */
