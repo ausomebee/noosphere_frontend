@@ -1,5 +1,4 @@
-import React from "react";
-import './Scheduler.css'; // Import the CSS
+import React, { useState } from "react";
 import { CheckboxInput, SearchInput } from "../Input/Inputs";
 
 const StaffClientFilter = ({
@@ -11,10 +10,21 @@ const StaffClientFilter = ({
   onClientChange,
   onHideSidebar,
   activeTab,
+  onFetchClientAppointments,
 }) => {
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredStaff = staff?.filter((member) =>
+    member?.fullName?.toLowerCase?.()?.includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const filteredClients = clients?.filter((client) =>
+    client?.client?.fullName?.toLowerCase?.()?.includes(searchTerm.toLowerCase())
+  ) || [];
+
   return (
     <div className="staff-client-container">
-      {/* Header with Close Button */}
       <div className="staff-client-header">
         <h2 className="staff-client-title">
           View by {activeTab === "staff" ? "staff" : "client"}
@@ -37,54 +47,58 @@ const StaffClientFilter = ({
         </button>
       </div>
 
-      {/* Search Bar */}
       <div className="staff-client-search">
-        <SearchInput 
-        placeholder={`Search ${activeTab === "staff" ? "staff" : "clients"}`}
+        <SearchInput
+          placeholder={`Search ${activeTab === "staff" ? "staff" : "clients"}`}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Scrollable List */}
       <div className="staff-client-list">
-        {/* Staff List */}
         {activeTab === "staff" && (
           <div>
-            {staff.map((member) => (
-              <div key={member.id} className="staff-client-item">
-                <div className="staff-client-item-content">
-                  <span className="staff-client-name">{member.name}</span>
-                  <span className="staff-client-count">
-                    {member.appointmentCount || 14}
-                  </span>
+            {filteredStaff.length > 0 ? (
+              filteredStaff.map((member) => (
+                <div key={member.id} className="staff-client-item">
+                  <div className="staff-client-item-content">
+                    <span className="staff-client-name">{member.fullName || "Unknown Staff"}</span>
+                    <span className="staff-client-count">
+                      {member.appointmentCount || 0}
+                    </span>
+                  </div>
+                  <CheckboxInput
+                    checked={selectedStaff.includes(member.id)}
+                    onChange={() => onStaffChange(member.id)}
+                  />
                 </div>
-               <CheckboxInput 
-                checked={selectedStaff.includes(member.id)}
-                  onChange={() => onStaffChange(member.id)}
-               />
-              </div>
-            ))}
+              ))
+            ) : (
+              <div>No staff available</div>
+            )}
           </div>
         )}
 
-        {/* Client List */}
         {activeTab === "client" && (
           <div>
-            {clients.map((client) => (
-              <div key={client.id} className="staff-client-item">
-                <div className="staff-client-item-content">
-                  <span className="staff-client-name">{client.name}</span>
-                  <span className="staff-client-count">
-                    {client.appointmentCount || 0}
-                  </span>
+            {filteredClients.length > 0 ? (
+              filteredClients.map((client) => (
+                <div key={client.client.id} className="staff-client-item">
+                  <div className="staff-client-item-content">
+                    <span className="staff-client-name">{client.client.fullName || "Unknown Client"}</span>
+                    <span className="staff-client-count">
+                      {client.appointmentCount || 0}
+                    </span>
+                  </div>
+                  <CheckboxInput
+                    checked={selectedClients.includes(client.client.id)}
+                    onChange={() => onClientChange(client.client.id)}
+                  />
                 </div>
-                <input
-                  type="checkbox"
-                  checked={selectedClients.includes(client.id)}
-                  onChange={() => onClientChange(client.id)}
-                  className="staff-client-checkbox"
-                />
-              </div>
-            ))}
+              ))
+            ) : (
+              <div>No clients available</div>
+            )}
           </div>
         )}
       </div>

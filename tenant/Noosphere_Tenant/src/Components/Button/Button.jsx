@@ -29,7 +29,7 @@ const Button = ({
   return (
     <button
       type={type}
-      className={` p-6 btn btn-${variant} btn-${size} w-[${width}] ${
+      className={` p-6 btn btn-${variant} btn-${size} ${width} ${
         disabled || loading ? "btn-disabled" : ""
       } ${className}`}
       disabled={disabled || loading}
@@ -72,6 +72,7 @@ Button.propTypes = {
     "primary",
     "secondary",
     "secondary-danger",
+    "secondary-success",
     "danger",
     "dark",
     "ghost",

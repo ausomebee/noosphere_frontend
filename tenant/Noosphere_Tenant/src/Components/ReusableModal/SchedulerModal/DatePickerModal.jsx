@@ -13,7 +13,7 @@ import {
   subDays,
   isSameMonth,
 } from "date-fns";
-import "./Scheduler.css";
+import "../../CalendarScheduler/Scheduler.css";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const DatePickerModal = ({ isOpen, onClose, onDateSelect }) => {

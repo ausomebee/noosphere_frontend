@@ -2,8 +2,8 @@ import React, { useState, useRef } from "react";
 import DayView from "../../../../Components/CalendarScheduler/DayView";
 import WeekView from "../../../../Components/CalendarScheduler/WeekView";
 import MonthView from "../../../../Components/CalendarScheduler/MonthView";
-import AppointmentDetailsModal from "../../../../Components/CalendarScheduler/AppointmentDetailsModal";
-import AvailabilityModal from "../../../../Components/CalendarScheduler/AvailabilityModal";
+import AppointmentDetailsModal from "../../../../Components/ReusableModal/SchedulerModal/AppointmentDetailsModal";
+import AvailabilityModal from "../../../../Components/ReusableModal/SchedulerModal/AvailabilityModal";
 import UpcomingAppointments from "./UpcomingAppointments";
 import { format, subDays, addDays } from "date-fns";
 import { CgExport } from "react-icons/cg";
@@ -13,7 +13,7 @@ import { FaPlus } from "react-icons/fa";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import Button from "../../../../Components/Button/Button";
 import { SearchInput } from "../../../../Components/Input/Inputs";
-import DatePickerModal from "../../../../Components/CalendarScheduler/DatePickerModal";
+import DatePickerModal from "../../../../Components/ReusableModal/SchedulerModal/DatePickerModal";
 
 const Appointment = () => {
   const [activeTab, setActiveTab] = useState("calendar");

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Button from "../../../../../Components/Button/Button";
@@ -50,8 +50,6 @@ const securityQuestionSchema = yup.object().shape({
     .required("Please confirm your answer")
     .oneOf([yup.ref("answer")], "Answers must match"),
 });
-
-
 
 const QuestionAndAnswer2FA = () => {
   const userId = useSelector((state) => state.authentication?.user?.id);
@@ -152,6 +150,7 @@ const QuestionAndAnswer2FA = () => {
   const {
     register: registerSecurity,
     handleSubmit: handleSecuritySubmit,
+    control,
     formState: { errors: securityErrors },
   } = useForm({
     resolver: yupResolver(securityQuestionSchema),
@@ -179,6 +178,8 @@ const QuestionAndAnswer2FA = () => {
       setLoading(false);
     }
   };
+
+  const values = useWatch({ control });
 
   // Handle security question form submission
   const onSecuritySubmit = async (data) => {
@@ -230,13 +231,22 @@ const QuestionAndAnswer2FA = () => {
                   </p>
                   <form onSubmit={handleSecuritySubmit(onSecuritySubmit)}>
                     <div className="security-question-container">
-                      <SelectInput
-                        label="Please select a security question"
-                        options={securityQuestions}
-                        className={`rounded-12px ${
-                          securityErrors.securityQuestion ? "input-error" : ""
-                        }`}
-                        {...registerSecurity("securityQuestion")}
+                      <Controller
+                        name="securityQuestions"
+                        control={control}
+                        render={({ field }) => (
+                          <SelectInput
+                            label="Please select a security question"
+                            options={securityQuestions}
+                            className={`rounded-12px ${
+                              securityErrors.securityQuestion
+                                ? "input-error"
+                                : ""
+                            }`}
+                            {...registerSecurity("securityQuestion")}
+                            {...field}
+                          />
+                        )}
                       />
                       {securityErrors.securityQuestion && (
                         <p className="auth-error-message">
@@ -280,7 +290,6 @@ const QuestionAndAnswer2FA = () => {
                         variant="secondary"
                         className="w-full"
                         onClick={handleNavBack}
-
                       />
                       <Button
                         type="submit"

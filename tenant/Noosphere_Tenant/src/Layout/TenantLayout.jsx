@@ -13,6 +13,7 @@ import {
   FaBars,
   FaChevronDown,
   FaChevronUp,
+  FaReceipt,
 } from "react-icons/fa";
 import { MdMessage } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
@@ -71,8 +72,17 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       children: [
         { name: "Timesheets", path: "/billing/timesheets" },
         { name: "Claims", path: "/billing/claims" },
-        { name: "Payrolls", path: "/billing/payrolls" },
         { name: "Settings", path: "/billing/settings" },
+      ],
+    },
+    {
+      name: "Payroll",
+      icon: FaReceipt,
+      path: "/payroll",
+      children: [
+        { name: "Payroll", path: "/payroll/payroll-setup" },
+        { name: "Payroll Settings", path: "/payroll/payroll-settings" },
+        
       ],
     },
     { name: "Program Library", icon: FaBook, path: "/program-library" },

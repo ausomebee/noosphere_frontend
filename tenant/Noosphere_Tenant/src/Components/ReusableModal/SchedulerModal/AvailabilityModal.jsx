@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { SwitchInput, TextInput } from "../Input/Inputs";
-import ReusableModal from "../ReusableModal/ReusableModal";
+import { SwitchInput, TextInput } from "../../Input/Inputs";
+import ReusableModal from "../../ReusableModal/ReusableModal";
 
 // Reusable Time Range Input Component
 const TimeRangeInput = React.memo(

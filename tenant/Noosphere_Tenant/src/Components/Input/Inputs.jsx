@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import Select, { components } from "react-select";
+import { GoCalendar } from "react-icons/go";
 /* =====================  TextInput  ===================== */
 const TextInput = ({
   label,
@@ -9,6 +10,7 @@ const TextInput = ({
   placeholder,
   className = "",
   width,
+  error,
   ...props
 }) => {
   const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
@@ -27,6 +29,11 @@ const TextInput = ({
         placeholder={placeholder}
         {...props}
       />
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
@@ -38,6 +45,7 @@ TextInput.propTypes = {
   placeholder: PropTypes.string,
   width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
   className: PropTypes.string,
+  error: PropTypes.string,
 };
 
 /* =====================  PasswordInput  ===================== */
@@ -47,6 +55,7 @@ const PasswordInput = ({
   onChange,
   placeholder,
   className = "",
+  error,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -93,6 +102,11 @@ const PasswordInput = ({
           )}
         </svg>
       </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
@@ -103,6 +117,7 @@ PasswordInput.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   className: PropTypes.string,
+  error: PropTypes.string,
 };
 
 const SelectInput = ({
@@ -119,8 +134,38 @@ const SelectInput = ({
 }) => {
   const selectRef = useRef(null);
   const [menuPlacement, setMenuPlacement] = useState("bottom");
-  const [menuMaxHeight, setMenuMaxHeight] = useState(200); // Default max height
+  const [menuMaxHeight, setMenuMaxHeight] = useState(200);
 
+  /* ---------- 1.  Stable callback ---------- */
+  const updateMenuPlacement = useCallback(() => {
+    if (!selectRef.current) return;
+
+    const rect           = selectRef.current.getBoundingClientRect();
+    const windowHeight   = window.innerHeight;
+    const spaceBelow     = windowHeight - rect.bottom;
+    const spaceAbove     = rect.top;
+    const menuHeight     = Math.min(300, windowHeight * 0.5);
+
+    setMenuPlacement(
+      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
+    );
+    setMenuMaxHeight(menuHeight);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ---------- 2.  Stable effect ---------- */
+  useEffect(() => {
+    updateMenuPlacement(); // initial measure
+
+    window.addEventListener("resize",  updateMenuPlacement);
+    window.addEventListener("scroll",  updateMenuPlacement, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPlacement);
+      window.removeEventListener("scroll", updateMenuPlacement, true);
+    };
+  }, [updateMenuPlacement]);
+
+  /* ---------- 3.  Rest of your logic ---------- */
   const selected = isMulti
     ? (value || []).map((v) => options.find((o) => o.value === v))
     : options.find((o) => o.value === value) || null;
@@ -131,33 +176,6 @@ const SelectInput = ({
   };
 
   const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
-
-  // Calculate menu placement and max height
-  const updateMenuPlacement = () => {
-    if (!selectRef.current) return;
-
-    const rect = selectRef.current.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    const spaceBelow = windowHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
-
-    // Set placement: prefer bottom if enough space, otherwise top
-    setMenuPlacement(
-      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
-    );
-    setMenuMaxHeight(menuHeight);
-  };
-
-  useEffect(() => {
-    updateMenuPlacement();
-    window.addEventListener("resize", updateMenuPlacement);
-    window.addEventListener("scroll", updateMenuPlacement);
-    return () => {
-      window.removeEventListener("resize", updateMenuPlacement);
-      window.removeEventListener("scroll", updateMenuPlacement);
-    };
-  }, []);
 
   const MultiValueContainer = (p) => (
     <components.MultiValueContainer {...p}>
@@ -179,6 +197,7 @@ const SelectInput = ({
       )
     : components.Option;
 
+  /* ---------- 4.  JSX identical to yours ---------- */
   return (
     <div className={`input-group ${widthClass}`} ref={selectRef}>
       {label && <label className="input-group-label">{label}</label>}
@@ -214,7 +233,7 @@ const SelectInput = ({
             menu: (base) => ({
               ...base,
               margin: 0,
-              width: selectRef.current?.offsetWidth || "auto", // Match input width
+              width: selectRef.current?.offsetWidth || "auto",
               maxHeight: `${menuMaxHeight}px`,
             }),
             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -230,7 +249,7 @@ const SelectInput = ({
           menuPortalTarget={document.body}
           closeMenuOnSelect={!isMulti}
           hideSelectedOptions={false}
-          onMenuOpen={updateMenuPlacement} // Recalculate on menu open
+          onMenuOpen={updateMenuPlacement}
           {...props}
         />
       </div>
@@ -271,7 +290,9 @@ const SearchableSelectInput = ({
   options,
   width,
   className = "",
+  error,
   placeholder = "Search options…",
+  disabled, // ✅ ADDED
   ...props
 }) => {
   const selectRef = useRef(null);
@@ -325,6 +346,7 @@ const SearchableSelectInput = ({
           onChange={handleChange}
           placeholder={placeholder}
           isSearchable
+          isDisabled={disabled} // ✅ ADDED
           menuPosition="absolute"
           menuPlacement={menuPlacement}
           components={{
@@ -333,7 +355,7 @@ const SearchableSelectInput = ({
             DropdownIndicator: () => null,
           }}
           styles={{
-            control: (base) => ({
+            control: (base, state) => ({
               ...base,
               border: 0,
               boxShadow: "none",
@@ -341,7 +363,8 @@ const SearchableSelectInput = ({
               minHeight: 36,
               borderRadius: 12,
               padding: "0 8px",
-              cursor: "pointer",
+              cursor: state.isDisabled ? "not-allowed" : "pointer", // ✅ ADDED
+              opacity: state.isDisabled ? 0.5 : 1, // Optional: visual feedback
             }),
             menu: (base) => ({
               ...base,
@@ -358,10 +381,15 @@ const SearchableSelectInput = ({
             placeholder: (base) => ({ ...base, color: "#999" }),
           }}
           menuPortalTarget={document.body}
-          onMenuOpen={updateMenuPlacement} // Recalculate on menu open
+          onMenuOpen={updateMenuPlacement}
           {...props}
         />
       </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
@@ -379,18 +407,27 @@ SearchableSelectInput.propTypes = {
   width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
   className: PropTypes.string,
   placeholder: PropTypes.string,
+  error: PropTypes.string,
+  disabled: PropTypes.bool, // ✅ ADDED
 };
 
-const CheckboxInput = ({ label, checked, onChange, ...props }) => (
-  <div className="form-checkbox-group">
-    <input
-      type="checkbox"
-      className="form-checkbox"
-      checked={checked}
-      onChange={onChange}
-      {...props}
-    />
-    {label && <label className="form-checkbox-label">{label}</label>}
+const CheckboxInput = ({ label, checked, onChange, error, ...props }) => (
+  <div className="flex-col">
+    <div className="form-checkbox-group">
+      <input
+        type="checkbox"
+        className="form-checkbox"
+        checked={checked}
+        onChange={onChange}
+        {...props}
+      />
+      {label && <label className="form-checkbox-label">{label}</label>}
+    </div>
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
   </div>
 );
 
@@ -398,6 +435,7 @@ CheckboxInput.propTypes = {
   label: PropTypes.string,
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
 };
 
 const SwitchInput = ({ label, checked, onChange, ...props }) => (
@@ -422,6 +460,7 @@ const TextareaInput = ({
   onChange,
   placeholder,
   row = "5",
+  error,
   ...props
 }) => (
   <div className="input-group">
@@ -434,6 +473,11 @@ const TextareaInput = ({
       rows={row}
       {...props}
     />
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
   </div>
 );
 
@@ -442,6 +486,7 @@ TextareaInput.propTypes = {
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
+  error: PropTypes.string,
 };
 
 const SearchInput = ({ value, onChange, placeholder, width, ...props }) => (
@@ -492,6 +537,7 @@ const RadioInput = ({
   onChange,
   inputPosition = "before",
   className = "",
+  error,
   ...props
 }) => (
   <div className={`input-radio-group input-position-${inputPosition}`}>
@@ -522,6 +568,11 @@ const RadioInput = ({
         />
       </>
     )}
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
   </div>
 );
 
@@ -533,6 +584,7 @@ RadioInput.propTypes = {
   onChange: PropTypes.func.isRequired,
   inputPosition: PropTypes.oneOf(["before", "after"]),
   className: PropTypes.string,
+  error: PropTypes.string,
 };
 
 const TimeInput = ({
@@ -613,6 +665,55 @@ TimeInput.defaultProps = {
   disabled: false,
 };
 
+const CustomDatePickerInput = ({
+  value,
+  onClick,
+  placeholder,
+  error,
+  onFocus,
+}) => {
+  const inputRef = useRef(null);
+
+  const handleClick = (e) => {
+ 
+    if (onClick) onClick(e);
+    if (inputRef.current) inputRef.current.focus();
+  };
+
+  return (
+    <>
+      <div className="custom-datepicker-input-container">
+        <input
+          type="text"
+          value={value}
+          onClick={handleClick}
+          onFocus={onFocus}
+          placeholder={placeholder}
+          className={`custom-datepicker-input ${
+            error ? "custom-datepicker-input-error" : ""
+          }`}
+          ref={inputRef}
+          readOnly // Explicitly set to read-only
+        />
+        <GoCalendar className="custom-datepicker-icon" />
+      </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error.message || error} {/* Handle error as object or string */}
+        </div>
+      )}
+    </>
+  );
+};
+
+CustomDatePickerInput.propTypes = {
+  value: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  onFocus: PropTypes.func,
+  placeholder: PropTypes.string,
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+};
+
 export {
   TextInput,
   PasswordInput,
@@ -624,4 +725,5 @@ export {
   SearchInput,
   RadioInput,
   TimeInput,
+  CustomDatePickerInput,
 };

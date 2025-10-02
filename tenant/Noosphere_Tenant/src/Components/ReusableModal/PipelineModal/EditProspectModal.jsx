@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -39,6 +38,7 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
     handleSubmit,
     reset,
     setValue,
+    control,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -58,6 +58,7 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
     },
   });
 
+  const values = useWatch({ control });
   useEffect(() => {
     if (isOpen) {
       setValue("id", formData.id || "");
@@ -71,7 +72,11 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
       setValue("zipCode", formData.zipCode || "");
       setValue("gender", formData.gender || "");
       setValue("DOB", formData.DOB || "");
-      setValue("pipelineStageId", formData.pipelineStageId || (stages?.length > 0 ? stages[0].stageId : ""));
+      setValue(
+        "pipelineStageId",
+        formData.pipelineStageId ||
+          (stages?.length > 0 ? stages[0].stageId : "")
+      );
       setValue("dbAccess", formData.dbAccess || false);
     }
   }, [isOpen, formData, setValue, stages]);
@@ -119,7 +124,9 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
         reset(updatedData);
         onClose();
       } else {
-        throw new Error(response.data.message || "Invalid response from server");
+        throw new Error(
+          response.data.message || "Invalid response from server"
+        );
       }
     } catch (err) {
       const errorMessage =
@@ -200,12 +207,18 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
           error={errors.phoneNumber?.message}
           placeholder="Type something"
         />
-
-        <SelectInput
-          label="Gender"
-          {...register("gender")}
-          options={genderOptions}
-          error={errors.gender?.message}
+        <Controller
+          name="gender"
+          control={control}
+          render={({ field }) => (
+            <SelectInput
+              label="Gender"
+              {...register("gender")}
+              options={genderOptions}
+              error={errors.gender?.message}
+              {...field}
+            />
+          )}
         />
         <TextInput
           label="Date of Birth"
@@ -213,12 +226,19 @@ const EditProspectModal = ({ isOpen, onClose, onSave, formData, stages }) => {
           {...register("DOB")}
           error={errors.DOB?.message}
         />
-        <SelectInput
-          label="Pipeline Stage"
-          {...register("pipelineStageId")}
-          options={stageOptions}
-          error={errors.pipelineStageId?.message}
-          disabled={stages.length === 0}
+        <Controller
+          name="pipelineStageId"
+          control={control}
+          render={({ field }) => (
+            <SelectInput
+              label="Pipeline Stage"
+              {...register("pipelineStageId")}
+              options={stageOptions}
+              error={errors.pipelineStageId?.message}
+              disabled={stages.length === 0}
+              {...field}
+            />
+          )}
         />
 
         <TextInput

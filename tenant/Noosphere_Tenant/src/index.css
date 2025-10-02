@@ -1,3 +1,5 @@
+@import "react-multi-date-picker/styles/layouts/mobile.css";
+
 /* ============================
    1. CSS Reset + Normalize
 ============================ */
@@ -67,6 +69,19 @@ a:hover {
   color: var(--color-primary);
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+  font-family: inherit;
+  color: inherit;
+
+}
+
 button,
 input,
 textarea,
@@ -104,6 +119,8 @@ select {
   --button-secondary-hover: #f5f5f5;
   --button-danger-color: #dc2626;
   --button-danger-hover: #b91c1c;
+  --button-success-color: #027A48;
+  --button-success-hover: #194633;
   --button-dark-color: #1a1a1a;
   --button-dark-hover: #333333;
   --button-ghost-hover: #e5e7eb;
@@ -194,6 +211,10 @@ select {
 /* ============================
    4. Utility Classes (Tailwind-like)
 ============================ */
+
+.space-y-5 > * + * {
+  margin-top: 1.25rem; /* 20 px */
+}
 
 /* Display */
 .flex {
@@ -286,7 +307,6 @@ select {
 .flex-3 {
   flex: 3;
 }
-
 
 .gap-0 {
   gap: var(--space-0);
@@ -391,8 +411,17 @@ select {
 .mt-4 {
   margin-top: var(--space-4);
 }
+.mt-5 {
+  margin-top: var(--space-5);
+}
+.mt-6 {
+  margin-top: var(--space-6);
+}
 .mt-60 {
   margin-top: 60px;
+}
+.mt-20 {
+  margin-top: 20px;
 }
 .mb--20 {
   margin-bottom: -20px;
@@ -417,6 +446,9 @@ select {
 }
 .mt-20 {
   margin-top: 20px;
+}
+.mt-32 {
+  margin-top: 32px;
 }
 .mr-05 {
   margin-right: 0.5rem;
@@ -581,7 +613,7 @@ select {
 .w-34 {
   width: 34px;
 }
-.w-50{
+.w-50 {
   width: 50px;
 }
 .w-100 {
@@ -663,7 +695,7 @@ select {
   max-height: 90vh;
 }
 .capitalize {
-    text-transform: capitalize;
+  text-transform: capitalize;
 }
 /* Typography */
 .text-xs {
@@ -776,10 +808,13 @@ select {
   color: #9097a1;
 }
 .text-gray-600 {
-  color: #5C6167; 
+  color: #5c6167;
 }
 .text-gray-700 {
   color: #4b4e54;
+}
+.text-brand-50 {
+  color: #F5F9FF;
 }
 .text-gray-700-em {
   color: #344054;
@@ -788,16 +823,18 @@ select {
   color: #1e40af;
 }
 .text-blue-primary {
-  color: #004ABA;
+  color: #004aba;
+}
+.text-yellow-800 {
+  color: #f79009;
 }
 
 .text-white-light {
-  color: #A1A8B3;
+  color: #a1a8b3;
 }
 .text-white-light2 {
-  color: #ECECEC;
+  color: #ececec;
 }
-
 
 /* Backgrounds */
 .bg-primary {
@@ -811,6 +848,9 @@ select {
 }
 .bg-blue-600 {
   background-color: #4f46e5;
+}
+.bg-brand-50 {
+   background-color: #F5F9FF;
 }
 .bg-indigo-500 {
   background-color: #6366f1;
@@ -834,10 +874,10 @@ select {
   background-color: #00215d;
 }
 .bg-white-light2 {
-  background-color: #FBFBFB;
+  background-color: #fbfbfb;
 }
 .bg-gray-200 {
-  background-color: #ECECEC;
+  background-color: #ececec;
 }
 .bg-black-overlay {
   background-color: rgba(0, 0, 0, 0.5);
@@ -849,9 +889,8 @@ select {
   background-color: #fbfbfb;
 }
 .bg-gray-200 {
-  background-color: #F7F7F7;
+  background-color: #f7f7f7;
 }
-
 
 /* Borders */
 .border {
@@ -1025,7 +1064,7 @@ select {
 .btn:hover {
   background-color: var(--color-secondary);
 }
-.cursor-pointer{
+.cursor-pointer {
   cursor: pointer;
 }
 
@@ -2229,6 +2268,16 @@ input:checked + .slider:before {
   background-color: var(--button-ghost-hover);
   border-color: var(--button-danger-hover);
 }
+.btn-secondary-success {
+  background-color: var(--color-bg);
+  color: var(--button-success-color);
+  border-color: var(--button-success-color);
+}
+
+.btn-secondary-success:hover:not(.btn-disabled) {
+  background-color: var(--button-ghost-hover);
+  border-color: var(--button-success-hover);
+}
 
 .btn-danger {
   background-color: var(--button-danger-color);
@@ -2355,12 +2404,12 @@ input:checked + .slider:before {
 }
 
 /* Spinner Styling */
-.btn-spinner {
+.modal-btn-spinner {
   display: inline-flex;
   align-items: center;
 }
 
-.btn-spinner .spinner {
+.modal-btn-spinner .modal-spinner {
   animation: spin 1s linear infinite;
 }
 
@@ -2887,7 +2936,6 @@ input:checked + .slider:before {
   max-height: 300px;
   overflow-y: auto;
   margin-top: 0;
-  
 }
 
 .select-option {
@@ -2995,5 +3043,258 @@ input:checked + .slider:before {
   justify-content: center;
   font-size: 24px;
   font-weight: bold;
-  border: 5px solid #CCE0FF ;
+  border: 5px solid #cce0ff;
 }
+
+/* Custom DatePicker Input */
+.custom-datepicker-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-datepicker-input {
+  width: 100%;
+  padding: 8px 36px 12px 12px; /* Space for icon */
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: #4b5563; /* Gray-600 equivalent */
+  background-color: #ffffff; /* White */
+  border: 1px solid #d1d5db; /* Gray-300 equivalent */
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-datepicker-input:focus {
+  border-color: #3b82f6; /* Blue-500 equivalent */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* Blue-500 ring */
+}
+
+.custom-datepicker-input-error {
+  border-color: #ef4444; /* Red-500 equivalent */
+}
+
+.custom-datepicker-input::placeholder {
+  color: #9ca3af; /* Gray-400 equivalent */
+}
+
+.custom-datepicker-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af; /* Gray-400 equivalent */
+  font-size: 16px;
+}
+
+/* Calendar Styles */
+.custom-datepicker .rmdp-day {
+  border-radius: 50%;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-weight: 500;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+}
+
+.custom-datepicker .rmdp-day.rmdp-selected,
+.custom-datepicker .rmdp-day.highlight-selected {
+  background-color: #3b82f6; /* Blue-500 */
+  color: #ffffff; /* White */
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.custom-datepicker .rmdp-day:not(.rmdp-selected):not(.rmdp-disabled):hover {
+  background-color: #bfdbfe; /* Blue-200 */
+  border-radius: 50%;
+}
+
+.custom-datepicker .rmdp-header {
+  background-color: #f3f4f6; /* Gray-100 */
+  font-weight: 600;
+  color: #1f2937; /* Gray-800 */
+  padding: 8px;
+}
+
+.custom-datepicker .rmdp-panel {
+  border: 1px solid #d1d5db; /* Gray-300 */
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05); /* Shadow-md equivalent */
+}
+
+.custom-datepicker .rmdp-arrow-container .rmdp-arrow {
+  border-color: #4b5563; /* Gray-600 */
+}
+
+
+
+
+.cancel-modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 800px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+    font-family: var(--font-sans, "Inter", sans-serif);
+}
+
+.cancel-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cancel-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #1a202c;
+}
+
+.cancel-close-button {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #718096;
+  padding: 0;
+  line-height: 1;
+}
+
+.cancel-modal-body{
+  border: 1px solid #ECECEC;
+  padding: 20px;
+  border-radius: 15px;
+}
+.cancel-modal-body h3 {
+ 
+  color: #98A2B3;
+  font-size: 14px;
+}
+
+.cancel-modal-body p {
+  color: #475467;
+  font-size: 16px;
+}
+
+
+.timesheet-approval-container {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+
+}
+
+.timesheet-approval-text {
+  color: #4a5568;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.timesheet-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.timesheet-complete {
+  background-color: #c6f6d5;
+  color: #2d3748;
+}
+
+.timesheet-pending {
+  background-color: #fefcbf;
+  color: #744210;
+}
+.timesheet-rejected {
+  background-color: #FEF3F2;
+  color: #B42318;
+}
+
+.timesheet-separator {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+  margin: 0 8px;
+}
+
+.timesheet-actions-button {
+  background-color: #1d4ed8;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 150px;
+}
+
+.timesheet-dropdown {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 120px;
+}
+
+.timesheet-dropdown-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.timesheet-dropdown-item:hover {
+  background-color: #f1f1f1;
+}
+
+.timesheet-delete {
+  color: #dc3545;
+}
+
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background-color: #f9fafc;
+  transition: all 0.2s;
+}
+
+.document-item:hover {
+  background-color: #f5f7fa;
+}
+
+.document-icon {
+  margin-right: 10px;
+  color: #0066cc;
+}
+
+.document-link {
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.document-link:hover {
+  text-decoration: underline;
+}
+

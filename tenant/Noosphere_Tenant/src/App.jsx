@@ -1,19 +1,5 @@
 import React, { useState, useMemo } from "react";
-import LoadingSpinner from "./Components/LoadingSpinner";
-import {
-  CheckboxInput,
-  PasswordInput,
-  RadioInput,
-  SearchInput,
-  SelectInput,
-  SwitchInput,
-  TextareaInput,
-  TextInput,
-} from "./Components/Input/Inputs";
-import Button from "./Components/Button/Button";
-import JiraBoard from "./Components/JiraBoard/JiraBoard"
 import ErrorBoundary from "./Helper/ErrorBoundary";
-import CalendarScheduler from "./Components/CalendarScheduler/CalendarScheduler";
 import CustomTable from "./Components/Table/CustomTable";
 import AllRoutes from "./Components/Allroutes";
 function App() {
@@ -201,89 +187,14 @@ const actions = [
    
   return (
     <ErrorBoundary>
-    {/* <div className="  flex flex-col px-[24px] p-[24px] sm:p-[32px] md:p-[48px]">
-      <h2 className="text-[32px] font-semibold mb-[16px] sm:mb-[24px] md:mb-[32px]">
-        Welcome to Our Platform
-      </h2>
-      <p className="text-[16px] sm:text-[18px] md:text-[20px] text-muted w-[90%] sm:w-[80%] md:w-[700px] mb-[24px] sm:mb-[32px]">
-        Build responsive, modern web applications with our custom utility
-        framework.
-      </p>
-      <button className="btn bg-[#4f46e5] text-white px-[24px] py-[12px] sm:px-[32px] sm:py-[16px] text-[16px] sm:text-[18px] hover:bg-[#6366f1] rounded-[8px] transition-all">
-        Get Started
-      </button>
-
+    
       
-      <LoadingSpinner />
-
-      <SearchInput />
-      <SelectInput options={currencyOptions} label="first name" />
-      <TextInput label="first name" />
-      <TextareaInput label="first name"/>
-      <SwitchInput />
-      <CheckboxInput />
-      <RadioInput />
-      <PasswordInput />
-
-      <div className="container p-[24px]">
-        <Button
-          label="Primary"
-          variant="primary"
-          size="medium"
-          width="150px"
-          onClick={() => alert("Clicked!")}
-        />
-        <Button
-          label="Secondary"
-          variant="secondary"
-          size="small"
-          width="120px"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          }
-          iconSize={16}
-          iconPosition="right"
-          className="mt-[16px]"
-        />
-        <Button
-          label="Loading"
-          variant="primary"
-          size="large"
-          width="200px"
-          loading={loading}
-          onClick={() => setLoading(!loading)}
-          className="mt-[16px]"
-        />
-        <Button
-          label="Danger"
-          variant="danger"
-          size="medium"
-          width="150px"
-          className="mt-[16px]"
-        />
-        <Button
-          label="Ghost"
-          variant="ghost"
-          size="medium"
-          width="150px"
-          className="mt-[16px]"
-        />
-      </div>
-
-
-      <JiraBoard />
      
-    </div> */}
+
+{/* 
+      <JiraBoard /> */}
+     
+ 
     <AllRoutes />
 
 
@@ -310,41 +221,3 @@ const actions = [
 
 export default App;
 
-
-// Ellipsis (Dropdown) Action
-  // {
-  //   type: "dropdown",
-  //   label: "More",
-  //   items: [
-  //     {
-  //       label: "Move",
-  //       icon: null, // Optional: Can add an icon like <FaArrowsAlt />
-  //       onClick: (item, { setSelectedItem, setShowMoveModal }) => {
-  //         // Example: Open move modal
-  //         setSelectedItem(item);
-  //         setShowMoveModal(true);
-  //       },
-  //       className: "move-option",
-  //     },
-  //     {
-  //       label: "Archive",
-  //       icon: <FaArchive />, // Optional icon
-  //       onClick: (item, { setSelectedItem, setShowArchiveModal }) => {
-  //         // Example: Open archive confirmation
-  //         setSelectedItem(item);
-  //         setShowArchiveModal(true);
-  //       },
-  //       className: "archive-option",
-  //     },
-  //     {
-  //       label: "Details",
-  //       icon: <FaInfoCircle />,
-  //       onClick: (item, { navigate }) => {
-  //         // Example: Navigate to details page
-  //         navigate(`/details/${item.id}`);
-  //       },
-  //       className: "details-option",
-  //     },
-  //   ],
-  //   className: "more-dropdown", // Optional: Custom CSS class for the dropdown trigger
-  // },

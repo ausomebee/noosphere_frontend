@@ -9,6 +9,7 @@ import Authorizations from "../Dashboard/DashboardCards/Authorizations";
 import ProductivityInformation from "../Dashboard/DashboardCards/ProductivityInformation";
 import UpcomingAppointments from "../Dashboard/DashboardCards/UpcomingAppointments";
 import { SelectInput } from "../../Components/Input/Inputs";
+import { Controller } from "react-hook-form";
 
 const DashboardCard = ({
   title,
@@ -21,7 +22,6 @@ const DashboardCard = ({
   count,
   selectInputs = [],
 }) => {
-
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = (e) => {
@@ -52,7 +52,7 @@ const DashboardCard = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <h3 className="text-base font-semibold text-color-sec ">
-             <span>{title}</span> 
+              <span>{title}</span>
               {count !== undefined && count !== null && (
                 <span className="ml-2 bg-blue-600 text-white px-2  rounded-lg inline-block">
                   {count}
@@ -62,13 +62,21 @@ const DashboardCard = ({
             {selectInputs.length > 0 && (
               <div className="flex items-center gap-4 mt-4">
                 {selectInputs.map((input, idx) => (
-                  <SelectInput
-                    key={idx}
-                    options={input.options}
-                    value={input.value}
-                    onChange={input.onChange}
-                    disabled={!hasData}
-                  />
+                  // <Controller
+                  //   name="customRecurrenceUnit"
+                  //   control={control}
+                  //   render={({ field }) => (
+                      <SelectInput
+                        key={idx}
+                        options={input.options}
+                        value={input.value}
+                        onChange={input.onChange}
+                        disabled={!hasData}
+                        // {...Buttonfield}
+                        // {...field}
+                      />
+                  //   )}
+                  // />
                 ))}
               </div>
             )}
