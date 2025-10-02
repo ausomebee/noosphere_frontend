@@ -1,13 +1,16 @@
-import React, { useState, useRef } from "react";
-import { format, addDays, subDays } from "date-fns";
+import React, { useState, useRef, useMemo, useCallback } from "react";
+import { format, addDays, subDays, parse, startOfDay } from "date-fns";
+import { useSelector } from "react-redux";
 import DayView from "./DayView";
 import WeekView from "./WeekView";
 import MonthView from "./MonthView";
 import StaffClientFilter from "./StaffClientFilter";
 import AppointmentModal from "../ReusableModal/SchedulerModal/AppointmentModal";
-import DatePickerModal from "./DatePickerModal";
-import AppointmentDetailsModal from "./AppointmentDetailsModal";
-import "./Scheduler.css"; // Import the CSS
+import DatePickerModal from "../ReusableModal/SchedulerModal/DatePickerModal";
+import AppointmentDetailsModal from "../ReusableModal/SchedulerModal/AppointmentDetailsModal";
+import RescheduleModal from "../ReusableModal/SchedulerModal/RescheduleModal";
+import CancelModal from "../ReusableModal/SchedulerModal/CancelModal";
+import "./Scheduler.css";
 import { SearchInput } from "../Input/Inputs";
 import Button from "../Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -15,9 +18,24 @@ import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import { LuPrinter } from "react-icons/lu";
 import { CgExport } from "react-icons/cg";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import api from "../../api/AppointmentApi";
+import { showToast } from "../../Helper/ShowToast";
 
-const CalendarScheduler = ({ appointments, staff, clients }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+const CalendarScheduler = ({
+  appointments,
+  staff,
+  clients,
+  sessionTypes,
+  initialDate,
+  accessToken,
+  refreshToken,
+  tenantId,
+  role,
+  refreshAppointments,
+  // selectedClients,
+  loading,
+}) => {
+  const [currentDate, setCurrentDate] = useState(initialDate);
   const [view, setView] = useState("month");
   const [selectedStaff, setSelectedStaff] = useState([]);
   const [selectedClients, setSelectedClients] = useState([]);
@@ -31,92 +49,310 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCalendarViewModalOpen, setIsCalendarViewModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelAppointment, setCancelAppointment] = useState(null);
 
   const calendarContainerRef = useRef(null);
 
-  const handleToday = () => setCurrentDate(new Date());
+  const staffWithCounts = useMemo(
+    () =>
+      staff.map((member) => ({
+        ...member,
+        appointmentCount: appointments.filter((appt) =>
+          Array.isArray(appt.clinicians)
+            ? appt.clinicians.includes(member.id)
+            : false
+        ).length,
+      })),
+    [appointments, staff]
+  );
 
-  const handlePrev = () =>
-    setCurrentDate(
-      subDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
-    );
+  const clientsWithCounts = useMemo(
+    () =>
+      clients.map((client) => ({
+        ...client,
+        appointmentCount: appointments.filter(
+          (appt) => appt.clientId === client.clientId
+        ).length,
+      })),
+    [appointments, clients]
+  );
 
-  const handleNext = () =>
-    setCurrentDate(
-      addDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
-    );
-
-  const handleStaffChange = (staffId) =>
-    setSelectedStaff((prev) =>
-      prev.includes(staffId)
-        ? prev.filter((id) => id !== staffId)
-        : [...prev, staffId]
-    );
-
-  const handleClientChange = (clientId) =>
-    setSelectedClients((prev) =>
-      prev.includes(clientId)
-        ? prev.filter((id) => id !== clientId)
-        : [...prev, clientId]
-    );
-
-  const staffWithCounts = staff.map((member) => ({
-    ...member,
-    appointmentCount: appointments.filter((appt) => appt.staffId === member.id)
-      .length,
-  }));
-
-  const clientsWithCounts = clients.map((client) => ({
-    ...client,
-    appointmentCount: appointments.filter((appt) => appt.clientId === client.id)
-      .length,
-  }));
-
-  const filteredAppointments = appointments.filter((appt) => {
-    const staffFilter =
-      activeTab === "staff"
-        ? selectedStaff.length === 0
-          ? true
-          : selectedStaff.includes(appt.staffId)
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appt) => {
+      const staffMatch =
+        selectedStaff.length === 0 ||
+        (Array.isArray(appt.clinicians) &&
+          appt.clinicians.some((c) => selectedStaff.includes(c)));
+      const clientMatch =
+        selectedClients.length === 0 || selectedClients.includes(appt.clientId);
+      const searchMatch = searchTerm
+        ? (
+            clients.find((c) => c.clientId === appt.clientId)?.client
+              ?.fullName || ""
+          )
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (Array.isArray(appt.clinicians) &&
+            appt.clinicians.some((clinicianId) =>
+              (staff.find((s) => s.id === clinicianId)?.fullName || "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
+            )) ||
+          (appt.service?.[0]?.serviceType || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
         : true;
-    const clientFilter =
-      activeTab === "client"
-        ? selectedClients.length === 0
-          ? true
-          : selectedClients.includes(appt.clientId)
-        : true;
-    const searchFilter = searchTerm
-      ? appt.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        appt.staff?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        appt.title?.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    return staffFilter && clientFilter && searchFilter;
-  });
+      return (
+        (activeTab === "staff" ? staffMatch : true) &&
+        (activeTab === "client" ? clientMatch : true) &&
+        searchMatch
+      );
+    });
+  }, [
+    appointments,
+    activeTab,
+    selectedStaff,
+    selectedClients,
+    searchTerm,
+    clients,
+    staff,
+  ]);
 
-  const handleTabClick = (tab) => {
+  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
+  const handlePrev = useCallback(
+    () =>
+      setCurrentDate(
+        subDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
+      ),
+    [currentDate, view]
+  );
+  const handleNext = useCallback(
+    () =>
+      setCurrentDate(
+        addDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
+      ),
+    [currentDate, view]
+  );
+  const handleStaffChange = useCallback(
+    (staffId) =>
+      setSelectedStaff((prev) =>
+        prev.includes(staffId)
+          ? prev.filter((id) => id !== staffId)
+          : [...prev, staffId]
+      ),
+    []
+  );
+  const handleClientChange = useCallback(
+    (clientId) =>
+      setSelectedClients((prev) =>
+        prev.includes(clientId)
+          ? prev.filter((id) => id !== clientId)
+          : [...prev, clientId]
+      ),
+    []
+  );
+  const handleTabClick = useCallback((tab) => {
     setActiveTab(tab);
     setIsSidebarVisible(true);
-  };
-
-  const handleHideSidebar = () => setIsSidebarVisible(false);
-
-  const handleSearchChange = (e) => setSearchTerm(e.target.value);
-
-  const handleFilterClick = () => setIsFilterModalOpen(true);
-
-  const handleCalendarViewClick = () => setIsCalendarViewModalOpen(true);
-
-  const handleSettingsClick = () => setIsSettingsModalOpen(true);
-
-  const handleAppointmentClick = (appt, position) => {
+  }, []);
+  const handleHideSidebar = useCallback(() => setIsSidebarVisible(false), []);
+  const handleSearchChange = useCallback(
+    (e) => setSearchTerm(e.target.value),
+    []
+  );
+  const handleFilterClick = useCallback(() => setIsFilterModalOpen(true), []);
+  const handleCalendarViewClick = useCallback(
+    () => setIsCalendarViewModalOpen(true),
+    []
+  );
+  const handleSettingsClick = useCallback(
+    () => setIsSettingsModalOpen(true),
+    []
+  );
+  const handleAppointmentClick = useCallback((appt, position) => {
     setSelectedAppointment(appt);
     setAppointmentPosition(position);
-  };
-
-  const handleCloseAppointmentDetails = () => {
+  }, []);
+  const handleCloseAppointmentDetails = useCallback(() => {
     setSelectedAppointment(null);
     setAppointmentPosition(null);
+  }, []);
+  const handleEditAppointment = useCallback((appointment) => {
+    setSelectedAppointment(appointment);
+    setIsAppointmentModalOpen(true);
+  }, []);
+  const handleRescheduleAppointment = useCallback((appointment) => {
+    setSelectedAppointment(null);
+    setRescheduleAppointment(appointment);
+    setIsRescheduleModalOpen(true);
+  }, []);
+  const handleCancelAppointment = useCallback((appointment) => {
+    setSelectedAppointment(null);
+    setCancelAppointment(appointment);
+    setIsCancelModalOpen(true);
+  }, []);
+
+  const splitId = (id) => {
+    if (!id) {
+      showToast("Invalid appointment ID", "error");
+      return { uuid: null, timestamp: null };
+    }
+
+    if (id.includes("_")) {
+      const parts = id.split("_");
+      if (parts.length !== 2) {
+        showToast("Malformed appointment ID", "error");
+        return { uuid: null, timestamp: null };
+      }
+      return { uuid: parts[0], timestamp: parts[1] };
+    }
+
+    // If no underscore, treat the whole ID as UUID
+    return { uuid: id, timestamp: null };
   };
+
+  const handleSaveAppointment = useCallback(
+    async (appointmentData) => {
+      try {
+        const payload = {
+          tenantId,
+          clientId: appointmentData.client.replace("client", ""),
+          sessionId: appointmentData.sessionType,
+          clinicians: appointmentData.clinicians.map((id) => ({
+            id: id.replace("clinician", ""),
+          })),
+          service: appointmentData.service,
+          date: appointmentData.date,
+          isRecurring: appointmentData.isRecurring,
+          startTime: appointmentData.startTime,
+          endTime: appointmentData.endTime,
+          recurrence: appointmentData.recurrence || {},
+          isBillable: appointmentData.billable,
+          serviceLocation: appointmentData.serviceLocation,
+          requiresTravel: appointmentData.requiresTravel,
+          colourCode: appointmentData.colorCode,
+          accessToken,
+          refreshToken,
+        };
+
+        let response;
+        if (appointmentData.scope) {
+          const { uuid } = splitId(selectedAppointment?.id);
+          if (!uuid) {
+            showToast("Invalid appointment ID", "error");
+            return;
+          }
+          response = await api.UpdateAppointments({
+            ...payload,
+            id: uuid,
+            relatedAppointment: uuid,
+            forAll: appointmentData.scope === "all",
+          });
+        } else {
+          response = await api.CreateAppointments(payload);
+        }
+
+        showToast("Appointment saved successfully", "success");
+
+        // Refresh appointments after saving
+        if (refreshAppointments) {
+          await refreshAppointments();
+        }
+
+        setIsAppointmentModalOpen(false);
+        setSelectedAppointment(null);
+      } catch (error) {
+        showToast(error.message || "Failed to save appointment", "error");
+      }
+    },
+    [
+      accessToken,
+      refreshToken,
+      tenantId,
+      selectedAppointment,
+      refreshAppointments,
+    ]
+  );
+  const handleSaveReschedule = useCallback(
+    async (rescheduleData) => {
+      try {
+        const { uuid } = splitId(rescheduleAppointment?.id);
+        if (!uuid) {
+          showToast("Invalid appointment ID", "error");
+          return;
+        }
+
+        const payload = {
+          tenantId,
+          id: uuid,
+          date: rescheduleData.date,
+          startTime: rescheduleData.startTime,
+          endTime: rescheduleData.endTime,
+          relatedAppointment: uuid,
+          rescheduled: true,
+          accessToken,
+          refreshToken,
+          forAll: rescheduleData.scope === "all",
+        };
+        console.log(payload);
+        await api.RescheduleAppointments(payload);
+
+        showToast("Appointment rescheduled successfully", "success");
+
+        // Refresh appointments after rescheduling
+        if (refreshAppointments) {
+          await refreshAppointments();
+        }
+
+        setIsRescheduleModalOpen(false);
+        setRescheduleAppointment(null);
+      } catch (error) {
+        showToast(error.message || "Failed to reschedule appointment", "error");
+      }
+    },
+    [accessToken, refreshToken, rescheduleAppointment, refreshAppointments]
+  );
+
+  const handleSaveCancel = useCallback(
+    async (cancelData) => {
+      try {
+        const { uuid } = splitId(cancelAppointment?.id);
+        if (!uuid) {
+          showToast("Invalid appointment ID", "error");
+          return;
+        }
+
+        const payload = {
+          tenantId,
+          id: uuid,
+          reason: cancelData.reason,
+          relatedAppointment: uuid,
+          accessToken,
+          refreshToken,
+          forAll: true,
+        };
+        await api.CancelAppointments(payload);
+
+        showToast("Appointment canceled successfully", "success");
+
+        // Refresh appointments after cancelling
+        if (refreshAppointments) {
+          await refreshAppointments();
+        }
+
+        setIsCancelModalOpen(false);
+        setCancelAppointment(null);
+      } catch (error) {
+        showToast(error.message || "Failed to cancel appointment", "error");
+      }
+    },
+    [accessToken, refreshToken, cancelAppointment, refreshAppointments]
+  );
+
+  const showFilterTabs = role === "Admin";
 
   return (
     <div className="cal-sched-container">
@@ -140,10 +376,10 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
               {format(currentDate, "MMMM yyyy")}
             </span>
             <button onClick={handlePrev} className="cal-sched-nav-button">
-            <IoIosArrowBack />
+              <IoIosArrowBack />
             </button>
             <button onClick={handleNext} className="cal-sched-nav-button">
-              <IoIosArrowForward  />
+              <IoIosArrowForward />
             </button>
           </div>
         </div>
@@ -152,7 +388,9 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
           <button
             onClick={() => setView("day")}
             className={`cal-sched-view-button ${
-              view === "day" ? "cal-sched-view-button-active" : "cal-sched-view-button-inactive"
+              view === "day"
+                ? "cal-sched-view-button-active"
+                : "cal-sched-view-button-inactive"
             }`}
           >
             Day
@@ -191,32 +429,34 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
 
       <div className="cal-sched-filter-section">
         <div className="cal-sched-left-controls">
-          <div className="cal-sched-filter-controls">
-            <span className="cal-sched-filter-label">View by:</span>
-            <div className="cal-sched-tab-container">
-              <button
-                onClick={() => handleTabClick("staff")}
-                className={`cal-sched-tab-button ${
-                  activeTab === "staff"
-                    ? "cal-sched-tab-button-active"
-                    : "cal-sched-tab-button-inactive"
-                }`}
-              >
-                Staff
-              </button>
-              <div className="cal-sched-tab-divider"></div>
-              <button
-                onClick={() => handleTabClick("client")}
-                className={`cal-sched-tab-button ${
-                  activeTab === "client"
-                    ? "cal-sched-tab-button-active"
-                    : "cal-sched-tab-button-inactive"
-                }`}
-              >
-                Client
-              </button>
+          {showFilterTabs && (
+            <div className="cal-sched-filter-controls">
+              <span className="cal-sched-filter-label">View by:</span>
+              <div className="cal-sched-tab-container">
+                <button
+                  onClick={() => handleTabClick("staff")}
+                  className={`cal-sched-tab-button ${
+                    activeTab === "staff"
+                      ? "cal-sched-tab-button-active"
+                      : "cal-sched-tab-button-inactive"
+                  }`}
+                >
+                  Staff
+                </button>
+                <div className="cal-sched-tab-divider"></div>
+                <button
+                  onClick={() => handleTabClick("client")}
+                  className={`cal-sched-tab-button ${
+                    activeTab === "client"
+                      ? "cal-sched-tab-button-active"
+                      : "cal-sched-tab-button-inactive"
+                  }`}
+                >
+                  Client
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="cal-sched-search-container">
             <SearchInput
@@ -248,7 +488,7 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
       </div>
 
       <div className="cal-sched-content">
-        {isSidebarVisible && (
+        {isSidebarVisible && showFilterTabs && (
           <StaffClientFilter
             staff={staffWithCounts}
             clients={clientsWithCounts}
@@ -263,52 +503,136 @@ const CalendarScheduler = ({ appointments, staff, clients }) => {
 
         <div
           className={`cal-sched-calendar-container ${
-            isSidebarVisible
+            isSidebarVisible && showFilterTabs
               ? "cal-sched-calendar-with-sidebar"
               : "cal-sched-calendar-full"
           }`}
           ref={calendarContainerRef}
         >
-          {view === "day" && (
-            <DayView
-              date={currentDate}
-              appointments={filteredAppointments}
-              onAppointmentClick={handleAppointmentClick}
-            />
+          {loading ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <svg
+                width="50"
+                height="50"
+                viewBox="0 0 50 50"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ animation: "spin 1s linear infinite" }}
+              >
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="20"
+                  stroke="#4A90E2"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray="31.4"
+                  strokeDashoffset="0"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    values="0;31.4"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </svg>
+              <style>
+                {`
+                  @keyframes spin {
+                    100% {
+                      transform: rotate(360deg);
+                    }
+                  }
+                `}
+              </style>
+            </div>
+          ) : (
+            <>
+              {view === "day" && (
+                <DayView
+                  date={currentDate}
+                  appointments={filteredAppointments}
+                  clients={clients}
+                  onAppointmentClick={handleAppointmentClick}
+                />
+              )}
+              {view === "week" && (
+                <WeekView
+                  date={currentDate}
+                  appointments={filteredAppointments}
+                  clients={clients}
+                  onAppointmentClick={handleAppointmentClick}
+                />
+              )}
+              {view === "month" && (
+                <MonthView
+                  date={currentDate}
+                  appointments={filteredAppointments}
+                  onAppointmentClick={handleAppointmentClick}
+                />
+              )}
+              <AppointmentDetailsModal
+                isOpen={!!selectedAppointment}
+                onClose={handleCloseAppointmentDetails}
+                appointment={selectedAppointment}
+                position={appointmentPosition}
+                clients={clients}
+                staff={staff}
+                onEdit={handleEditAppointment}
+                onReschedule={handleRescheduleAppointment}
+                onCancel={handleCancelAppointment}
+              />
+            </>
           )}
-          {view === "week" && (
-            <WeekView
-              date={currentDate}
-              appointments={filteredAppointments}
-              onAppointmentClick={handleAppointmentClick}
-            />
-          )}
-          {view === "month" && (
-            <MonthView
-              date={currentDate}
-              appointments={filteredAppointments}
-              onAppointmentClick={handleAppointmentClick}
-            />
-          )}
-
-          <AppointmentDetailsModal
-            isOpen={!!selectedAppointment}
-            onClose={handleCloseAppointmentDetails}
-            appointment={selectedAppointment}
-            position={appointmentPosition}
-          />
         </div>
       </div>
 
       <AppointmentModal
         isOpen={isAppointmentModalOpen}
-        onClose={() => setIsAppointmentModalOpen(false)}
+        onClose={() => {
+          setIsAppointmentModalOpen(false);
+          setSelectedAppointment(null);
+        }}
+        initialData={selectedAppointment}
+        isEditMode={!!selectedAppointment}
+        onSave={handleSaveAppointment}
+        clients={clients}
+        sessionTypes={sessionTypes}
         staff={staff}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
+        tenantId={tenantId}
       />
+
       <DatePickerModal
         isOpen={isDatePickerOpen}
         onClose={() => setIsDatePickerOpen(false)}
         onDateSelect={setCurrentDate}
+      />
+      <RescheduleModal
+        isOpen={isRescheduleModalOpen}
+        onClose={() => {
+          setIsRescheduleModalOpen(false);
+          setRescheduleAppointment(null);
+        }}
+        appointment={rescheduleAppointment}
+        onSave={handleSaveReschedule}
+      />
+      <CancelModal
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setCancelAppointment(null);
+        }}
+        onSave={handleSaveCancel}
+        appointments={cancelAppointment ? [cancelAppointment] : []}
       />
     </div>
   );

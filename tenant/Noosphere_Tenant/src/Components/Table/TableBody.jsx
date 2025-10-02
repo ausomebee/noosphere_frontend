@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { CheckboxInput, SwitchInput } from "../Input/Inputs";
 import { Link } from "react-router-dom";
 
@@ -21,9 +21,12 @@ const TableBody = ({
   actionText = "View",
   onActionClick,
 }) => {
+
+
   const primaryColumns = [
     "Candidate Name",
     "Client",
+    "Client Name",
     "ServiceType",
     "Program",
     "Sessions",
@@ -43,6 +46,10 @@ const TableBody = ({
     "Category",
     "CPT Code(s)",
     "Service Type(s)",
+    "Service Code",
+    "Modifiers",
+    "Rounding Rule",
+    "Insurance Type"
   ];
 
   const getFileIcon = (fileName) => {

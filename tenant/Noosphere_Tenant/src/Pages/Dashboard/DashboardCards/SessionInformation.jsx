@@ -25,7 +25,7 @@ const SessionInformation = ({ hasData }) => {
       stroke: {
         curve: "smooth",
         width: 2,
-        opacity: 0.5,
+       
       },
       fill: {
         type: "gradient",

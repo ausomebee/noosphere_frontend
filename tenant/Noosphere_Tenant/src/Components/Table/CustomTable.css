@@ -215,6 +215,22 @@
   background-color: #ECFDF3;
   color: #be3f3f;
 }
+.status-pending {
+  background-color: #FFFAEB;
+  color: #B54708;
+}
+.status-approved {
+  background-color: #ECFDF3;
+  color: #027A48;
+}
+.status-rejected {
+  background-color: #FEF3F2;
+  color: #B42318;
+}
+.status-in-Revision {
+  background-color: #F5F9FF;
+  color: #003A9B;
+}
 
 .document-cell {
   display: flex;

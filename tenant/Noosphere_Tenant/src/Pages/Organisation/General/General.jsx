@@ -96,7 +96,10 @@ const General = () => {
       });
       setTenantData(response.data.data);
     } catch (error) {
-      showToast(error.message || "Failed to fetch organization information", "error");
+      showToast(
+        error.message || "Failed to fetch organization information",
+        "error"
+      );
       console.error("Error fetching tenant data:", error);
     } finally {
       setLoadingTenant(false);
@@ -140,8 +143,13 @@ const General = () => {
         accessToken,
         refreshToken,
       });
-      const fetchedFiles = Array.isArray(response.data?.data) ? response.data.data : [];
-      const updatedFiles = fetchedFiles.map((file) => ({ ...file, hasActions: true }));
+      const fetchedFiles = Array.isArray(response.data?.data)
+        ? response.data.data
+        : [];
+      const updatedFiles = fetchedFiles.map((file) => ({
+        ...file,
+        hasActions: true,
+      }));
       setFiles(updatedFiles);
     } catch (error) {
       showToast(error.message || "Failed to fetch files", "error");
@@ -175,7 +183,10 @@ const General = () => {
       setShowOrgModal(false);
       showToast("Organization information updated successfully", "success");
     } catch (error) {
-      showToast(error.message || "Failed to save organization information", "error");
+      showToast(
+        error.message || "Failed to save organization information",
+        "error"
+      );
       console.error("Error saving organization:", error);
       throw error;
     }
@@ -196,10 +207,15 @@ const General = () => {
             l.id === payload.id
               ? {
                   ...response.data.data,
-                  licenseName: response.data.data.licenseName || response.data.licenseName,
-                  licenseNumber: response.data.data.licenseNumber || response.data.licenseNumber,
+                  licenseName:
+                    response.data.data.licenseName || response.data.licenseName,
+                  licenseNumber:
+                    response.data.data.licenseNumber ||
+                    response.data.licenseNumber,
                   expiryDate: response.data.data.expiryDate
-                    ? new Date(response.data.data.expiryDate).toISOString().split("T")[0]
+                    ? new Date(response.data.data.expiryDate)
+                        .toISOString()
+                        .split("T")[0]
                     : "",
                   hasActions: true,
                 }
@@ -218,10 +234,14 @@ const General = () => {
           ...prev,
           {
             ...response.data.data,
-            licenseName: response.data.data.licenseName || response.data.licenseName,
-            licenseNumber: response.data.data.licenseNumber || response.data.licenseNumber,
+            licenseName:
+              response.data.data.licenseName || response.data.licenseName,
+            licenseNumber:
+              response.data.data.licenseNumber || response.data.licenseNumber,
             expiryDate: response.data.data.expiryDate
-              ? new Date(response.data.data.expiryDate).toISOString().split("T")[0]
+              ? new Date(response.data.data.expiryDate)
+                  .toISOString()
+                  .split("T")[0]
               : "",
             hasActions: true,
           },
@@ -627,33 +647,33 @@ const IconFile = (props) => (
 const OrgGrid = ({ data }) => (
   <div className="grid grid-cols-4 items-start w-full">
     <div className="items-center flex justify-center h-full">
-    <div className="organisation-user-avatar ">
-      {data.companyName
-        ? data.companyName
-            .split(" ")
-            .map((word) => word.charAt(0))
-            .join("")
-            .slice(0, 2)
-        : "NA"}
-    </div>
+      <div className="organisation-user-avatar ">
+        {data.companyName
+          ? data.companyName
+              .split(" ")
+              .map((word) => word.charAt(0))
+              .join("")
+              .slice(0, 2)
+          : "NA"}
+      </div>
     </div>
     <div className="flex flex-col gap-2">
       <Field label="Name" value={data.companyName || "--"} />
       <Field label="Website" value={data.website || "--"} isLink />
       <Field label="State/Province" value={data.location?.state || "--"} />
-     
     </div>
     <div className="flex flex-col gap-2">
       <Field label="Phone" value={data.phoneNumber || "--"} />
       <Field label="Street Address" value={data.streetAddress || "--"} />
-      <Field label="Country/ZIP" value={`${data.location?.country || "--"} / ${data.zipCode || "--"}`} />
-      
+      <Field
+        label="Country/ZIP"
+        value={`${data.location?.country || "--"} / ${data.zipCode || "--"}`}
+      />
     </div>
     <div className="flex flex-col gap-2">
       <Field label="Email" value={data.email || "--"} />
       <Field label="City" value={data.location?.city || "--"} />
       <Field label="Practice NPI" value={data.practiceNPI || "--"} />
-      
     </div>
   </div>
 );

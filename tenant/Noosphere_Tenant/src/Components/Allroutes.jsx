@@ -26,6 +26,14 @@ import PracticeSettings from "../Pages/Organisation/PracticeSettings/PracticeSet
 import StaffsAndTeams from "../Pages/Organisation/StaffAndTeams/StaffsAndTeams";
 import SingleStaffByAdmin from "../Pages/Organisation/StaffAndTeams/SingleStaffByAdmin";
 import RoleAndPermission from "../Pages/Organisation/RoleAndPermissions/RoleAndPermission";
+import TimeSheet from "../Pages/BillingAndPayment/TimeSheet/TimeSheet";
+import Claims from "../Pages/BillingAndPayment/Claims/Claims";
+import BillingSettings from "../Pages/BillingAndPayment/Settings/BillingSettings";
+import SingleTimeSheet from "../Pages/BillingAndPayment/TimeSheet/SingleTimeSheet";
+import SingleClaim from "../Pages/BillingAndPayment/Claims/SingleClaim";
+import SingleViewPayer from "../Pages/BillingAndPayment/Settings/SettingSubs/SingleViewPayer";
+import Payroll from "../Pages/Payroll/Payroll/Payroll";
+import PayrollSettings from "../Pages/Payroll/PayrollSetting/PayrollSettings";
 
 const AllRoutes = () => {
   return (
@@ -67,9 +75,14 @@ const AllRoutes = () => {
         element={<ForgotPasswordQuestionVerifier />}
       />
 
+      {/* Dashboard */}
       <Route path="/dashboard" element={<Dashboard />} />
+
+      {/* Schdeduler */}
       <Route path="/scheduler/calendar" element={<Calendar />} />
       <Route path="/scheduler/appointments" element={<Appointments />} />
+
+      {/* Clients */}
       <Route path="/clients/pipeline" element={<Pipeline />} />
       <Route
         path="/pipeline/column-single/:pipelineStageId"
@@ -79,6 +92,8 @@ const AllRoutes = () => {
         path="/client/client-single/:pipelineStageId/:pipelineItemId"
         element={<ClientPanel />}
       />
+
+      {/* Program Library */}
       <Route path="/program-library" element={<ProgramLibrary />} />
       <Route
         path="/target-single/:domainName/:programName/:targetName"
@@ -87,10 +102,34 @@ const AllRoutes = () => {
 
       {/* Organization */}
       <Route path="/organization/general" element={<General />} />
-      <Route path="/organization/staff-and-teams" element={<StaffsAndTeams />} />
-      <Route path="/organization/staff-and-teams/single-staff/:tenantStaffId" element={<SingleStaffByAdmin />} />
-      <Route path="/organization/practice-settings" element={<PracticeSettings />} />
-      <Route path="/organization/role-and-permissions" element={<RoleAndPermission />} />
+      <Route
+        path="/organization/staff-and-teams"
+        element={<StaffsAndTeams />}
+      />
+      <Route
+        path="/organization/staff-and-teams/single-staff/:tenantStaffId"
+        element={<SingleStaffByAdmin />}
+      />
+      <Route
+        path="/organization/practice-settings"
+        element={<PracticeSettings />}
+      />
+      <Route
+        path="/organization/role-and-permissions"
+        element={<RoleAndPermission />}
+      />
+
+      {/* Billing and Payment */}
+      <Route path="/billing/timesheets" element={<TimeSheet />} />
+      <Route path="/billing/timesheets/:id" element={<SingleTimeSheet />} />
+      <Route path="/billing/claims" element={<Claims />} />
+      <Route path="/billing/claims/view/:id" element={<SingleClaim />} />
+      <Route path="/billing/settings" element={<BillingSettings />} />
+      <Route path="/billing/settings/view-payer/:id/:payerName" element={<SingleViewPayer />} />
+
+      {/* Payroll */}
+      <Route path="/payroll/payroll-setup" element={<Payroll />} />
+      <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
     </Routes>
   );
 };

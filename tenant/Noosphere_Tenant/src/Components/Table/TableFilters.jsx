@@ -26,6 +26,7 @@ const TableFilters = ({
               value={filterValues.filter_type || ""}
               onChange={(e) => handleFilterValueChange("filter_type", e.target.value)}
               options={filter.options}
+              
             />
           </div>
           {filterValues.filter_type && filterValues.filter_type !== "clear_filters" && filterValues.filter_type !== "dateTime" && (
@@ -34,7 +35,7 @@ const TableFilters = ({
                 value={filterValues.value || ""}
                 onChange={(e) => handleFilterValueChange("value", e.target.value)}
                 options={secondFilterOptions}
-                
+                width={"200"}
               />
             </div>
           )}
@@ -51,6 +52,7 @@ const TableFilters = ({
                 onClick={() => setIsDateFilterDropdownOpen(true)}
                 className="date-filter-input date-filter-input-start"
                 ref={dateFilterStartInputRef}
+                width={"150"}
               />
               <span className="date-filter-demarcator"> - </span>
               <TextInput
@@ -64,6 +66,7 @@ const TableFilters = ({
                 onClick={() => setIsDateFilterDropdownOpen(true)}
                 className="date-filter-input date-filter-input-end"
                 ref={dateFilterEndInputRef}
+                 width={"150"}
               />
               {isDateFilterDropdownOpen && (
                 <div

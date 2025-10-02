@@ -711,13 +711,7 @@ const TargetSingle = () => {
             <h1 className="font-bold text-lg text-white-light">
               Target Information
             </h1>
-            {/* {clientId && targetInfo?.dataCollectionType !== "N/A" && (
-              <Button
-                label="Collect Data"
-                variant="primary"
-                onClick={handleCollectData}
-              />
-            )} */}
+        
           </div>
           {loading ? (
             <LoadingSpinner />

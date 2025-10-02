@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import DashboardLayout from "../../../Layout/TenantLayout";
+import UpcomingAppointments from "./AppointmentSubs/UpcomingAppointments";
+import RescheduleRequests from "./AppointmentSubs/RescheduleRequests";
+import PastAppointments from "./AppointmentSubs/PastAppointments";
+import CancelledAppointments from "./AppointmentSubs/CancelledAppointments";
+
 
 const Appointments = () => {
   const [view, setView] = useState("upcomingAppointments");
   const [counts, setCounts] = useState({
-    upcomingAppointments: 5, // Example count
-    rescheduleRequests: 2,  // Example count
-    pastAppointments: undefined, // No count
-    cancelledAppointments: 1, // Example count
+    upcomingAppointments: 5,
+    rescheduleRequests: 2,
+    pastAppointments: undefined,
+    cancelledAppointments: 1,
   });
 
   return (
@@ -41,7 +46,7 @@ const Appointments = () => {
             >
               <span>Reschedule Requests</span>
               {counts.rescheduleRequests !== undefined && (
-                <span className="ml-2 bg-blue-600 text-white text-sm font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="ml-2 bg-blue-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
                   {counts.rescheduleRequests}
                 </span>
               )}
@@ -79,8 +84,31 @@ const Appointments = () => {
           </div>
         </div>
 
-        <div>
-            
+        <div className="appointment-content">
+          {view === "upcomingAppointments" && (
+            <UpcomingAppointments
+              counts={counts}
+              setCounts={setCounts}
+            />
+          )}
+          {view === "rescheduleRequests" && (
+            <RescheduleRequests
+              counts={counts}
+              setCounts={setCounts}
+            />
+          )}
+          {view === "pastAppointments" && (
+            <PastAppointments
+              counts={counts}
+              setCounts={setCounts}
+            />
+          )}
+          {view === "cancelledAppointments" && (
+            <CancelledAppointments
+              counts={counts}
+              setCounts={setCounts}
+            />
+          )}
         </div>
       </div>
     </DashboardLayout>

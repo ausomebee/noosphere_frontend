@@ -6,6 +6,7 @@ const ReusableModal = ({
   isOpen,
   onClose,
   title,
+  subTitle,
   primaryButtonText,
   secondaryButtonText,
   tabs,
@@ -73,7 +74,10 @@ const ReusableModal = ({
                 {titleIcon}
               </span>
             )}
-            <span>{title}</span>
+            <div className="flex flex-col gap-0">
+              <span>{title}</span>
+              <span className="text-base">{subTitle}</span>
+            </div>
           </h1>
           {tabs && tabs.length > 0 && (
             <button
@@ -87,7 +91,7 @@ const ReusableModal = ({
           )}
         </div>
 
-       {tabs && tabs.length > 0 && (
+        {tabs && tabs.length > 0 && (
           <div className="modal-tabs">
             {tabs.map((tab) => (
               <button
@@ -146,9 +150,9 @@ const ReusableModal = ({
                 disabled={primaryButtonLoading}
               >
                 {primaryButtonLoading ? (
-                  <span className="btn-spinner">
+                  <span className="modal-btn-spinner">
                     <svg
-                      className="spinner animate-spin"
+                      className="modal-spinner animate-spin"
                       width="20"
                       height="20"
                       viewBox="0 0 24 24"
