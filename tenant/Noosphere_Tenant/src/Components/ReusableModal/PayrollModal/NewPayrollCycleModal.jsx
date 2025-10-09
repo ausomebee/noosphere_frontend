@@ -24,7 +24,28 @@ const payrollCycleSchema = yup.object().shape({
   autoRun: yup.boolean().required("Auto Run is required"),
 });
 
-const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData = {} }) => {
+// Transform initial data to form data
+const transformInitialData = (initialData, mode, compensationTypes) => {
+  console.log("transformInitialData - input:", JSON.stringify(initialData, null, 2));
+  const formData = {
+    name: initialData.name || "",
+    appliesTo: initialData.compensationTypeId || initialData.appliesTo || "",
+    intervals: initialData.intervals != null ? Number(initialData.intervals) : 1,
+    startDate: initialData.startDate || "",
+    autoRun: initialData.autoRun !== undefined ? initialData.autoRun : false,
+  };
+  console.log("transformInitialData - output:", JSON.stringify(formData, null, 2));
+  return formData;
+};
+
+const PayrollCycleModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  mode = "add",
+  initialData = {},
+  compensationTypes = [],
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const defaultFormValues = {
@@ -43,33 +64,35 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
     formState: { errors },
   } = useForm({
     resolver: yupResolver(payrollCycleSchema),
-    defaultValues: mode === "edit" ? { ...defaultFormValues, ...initialData } : defaultFormValues,
+    defaultValues: mode === "edit" ? transformInitialData(initialData, mode, compensationTypes) : defaultFormValues,
   });
 
   useEffect(() => {
+
     if (isOpen) {
-      reset(mode === "edit" ? { ...defaultFormValues, ...initialData } : defaultFormValues);
+      reset(mode === "edit" ? transformInitialData(initialData, mode, compensationTypes) : defaultFormValues);
     }
-  }, [isOpen, mode, initialData, reset]);
+  }, [isOpen, mode, initialData, compensationTypes, reset]);
 
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
+      console.log("Form data on save:", JSON.stringify(data, null, 2));
       await onSave(data);
       reset(defaultFormValues);
       onClose();
     } catch (error) {
       console.error("Error saving payroll cycle:", error);
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const appliesToOptions = [
-    { value: "All Employees", label: "All Employees" },
-    { value: "Full-Time", label: "Full-Time" },
-    { value: "Part-Time", label: "Part-Time" },
-  ];
+  const appliesToOptions = compensationTypes.length > 0
+    ? compensationTypes.map((ct) => ({
+        value: ct.id,
+        label: ct.name,
+      }))
+    : [{ value: "", label: "No compensation types available" }];
 
   return (
     <ReusableModal
@@ -96,6 +119,7 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
           {...register("name")}
           error={errors.name?.message}
           placeholder="Enter Name"
+          disabled={mode === "view"}
         />
 
         <div className="flex gap-4 items-center">
@@ -108,7 +132,8 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
                   label="Applies To"
                   options={appliesToOptions}
                   error={errors.appliesTo?.message}
-                  placeholder="Select Payment Schedule"
+                  placeholder="Select Compensation Type"
+                  disabled={mode === "view"}
                   {...field}
                 />
               )}
@@ -122,6 +147,7 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
           {...register("intervals")}
           error={errors.intervals?.message}
           placeholder="Enter Interval"
+          disabled={mode === "view"}
         />
 
         <div className="flex gap-4 items-center">
@@ -132,6 +158,7 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
               {...register("startDate")}
               error={errors.startDate?.message}
               placeholder="Select a Date"
+              disabled={mode === "view"}
             />
           </div>
         </div>
@@ -145,6 +172,7 @@ const PayrollCycleModal = ({ isOpen, onClose, onSave, mode = "add", initialData 
                 label="Run payroll automatically on due date"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
+                disabled={mode === "view"}
               />
             )}
           />

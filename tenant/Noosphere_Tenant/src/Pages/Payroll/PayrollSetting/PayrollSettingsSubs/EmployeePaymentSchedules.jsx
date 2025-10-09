@@ -1,34 +1,89 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import api from "../../../../api/payrollApi";
+import { showToast } from "../../../../Helper/ShowToast";
 
 const EmployeePaymentSchedules = () => {
-  const [scheduleData, setScheduleTableData] = useState([
-    {
-      id: 1,
-      Name: "Hourly",
-      isActive: true,
-    },
-    {
-      id: 2,
-      Name: "Daily",
-      isActive: true,
-    },
-    {
-      id: 3,
-      Name: "Weekly",
-      isActive: true,
-    },
-    {
-      id: 4,
-      Name: "Monthly",
-      isActive: true,
-    },
-  ]);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
 
-   const Columns = [
+  const [scheduleData, setScheduleData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const Columns = [
     { header: "Name", key: "Name", type: "text" },
     { header: "Status", key: "isActive", type: "active" },
   ];
+
+  // Fetch compensation types
+  const fetchCompensationTypes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.GetCompensationTypeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const transformedData = data.data.map((item) => ({
+        id: item.id,
+        Name: item.name || item.compensationTypeName || "Unknown",
+        isActive: item.isActive !== undefined ? item.isActive : true,
+        fullData: item,
+      }));
+      setScheduleData(transformedData);
+    } catch (error) {
+      console.error("Error fetching compensation types:", error);
+
+      setScheduleData([]); // Fallback to empty array
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  // Handle toggle active
+  const handleToggleActive = useCallback(
+    async (row) => {
+      const { id, isActive } = row;
+      const newIsActive = !isActive;
+      const originalData = [...scheduleData];
+
+      // Optimistically update UI
+      setScheduleData((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, isActive: newIsActive } : item
+        )
+      );
+
+      try {
+        await api.UpdateCompensationTypeActiveness({
+          id,
+          isActive: newIsActive,
+          accessToken,
+          refreshToken,
+        });
+        showToast(
+          `Compensation type ${newIsActive ? "activated" : "deactivated"} successfully`,
+          "success"
+        );
+      } catch (error) {
+        console.error("Error updating compensation type status:", error);
+        showToast("Failed to update compensation type status", "error");
+        // Revert on error
+        setScheduleData(originalData);
+      }
+    },
+    [accessToken, refreshToken, scheduleData]
+  );
+
+  useEffect(() => {
+    if (tenantId) {
+      fetchCompensationTypes();
+    }
+  }, [tenantId, fetchCompensationTypes]);
 
   return (
     <div>
@@ -40,6 +95,8 @@ const EmployeePaymentSchedules = () => {
         showActions={false}
         showCheckbox={false}
         hideSearch={true}
+        loading={loading}
+        onToggleActive={handleToggleActive}
       />
     </div>
   );

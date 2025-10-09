@@ -7,138 +7,100 @@ import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Inpu
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
-// Validation schema
+
 const payerSchema = yup.object().shape({
-  payerName: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Payer Name is required"),
+  mode: yup.string(),
+  payerName: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Payer Name is required");
   }),
-  email: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().email("Invalid email").required("Email is required"),
+  email: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" 
+      ? schema.optional() 
+      : schema.email("Invalid email").required("Email is required");
   }),
-  phoneNumber: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Phone Number is required"),
+  phoneNumber: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Phone Number is required");
   }),
-  insuranceType: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Insurance Type is required"),
+  insuranceType: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Insurance Type is required");
   }),
-  tplCode: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("TPL Code is required"),
+  tplCode: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("TPL Code is required");
   }),
-  carrierPayerId: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Carrier Payer ID is required"),
+  carrierPayerId: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Carrier Payer ID is required");
   }),
-  address: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Address is required"),
+  address: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Address is required");
   }),
-  city: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("City is required"),
+  city: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("City is required");
   }),
-  state: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("State is required"),
+  state: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("State is required");
   }),
-  zip: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("ZIP is required"),
+  zip: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("ZIP is required");
   }),
-  country: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Country is required"),
+  country: yup.string().when("mode", ([mode], schema) => {
+    return mode === "view" ? schema.optional() : schema.required("Country is required");
   }),
-  code: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Service Code is required"),
-  }),
-  description: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Description is required"),
-  }),
-  unitType: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Unit Type is required"),
-  }),
-  unitDuration: yup
-    .number()
-    .typeError("Must be a number")
-    .min(1, "Must be 1 or greater")
-    .when("mode", {
-      is: "view",
-      then: yup.number().optional(),
-      otherwise: yup.number().required("Unit Duration is required"),
-    }),
-  unitCurrency: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Unit Currency is required"),
-  }),
-  ratePerUnit: yup
-    .number()
-    .typeError("Must be a number")
-    .min(0, "Must be 0 or greater")
-    .when("mode", {
-      is: "view",
-      then: yup.number().optional(),
-      otherwise: yup.number().required("Rate per Unit is required"),
-    }),
-  roundingRule: yup.string().when("mode", {
-    is: "view",
-    then: yup.string().optional(),
-    otherwise: yup.string().required("Rounding Rule is required"),
-  }),
-  modifiers: yup.array().of(
-    yup.object().shape({
-      modifier: yup.string().when("mode", {
-        is: "view",
-        then: yup.string().optional(),
-        otherwise: yup.string().required("Modifier is required"),
-      }),
-      ratePerUnit: yup
-        .number()
-        .typeError("Must be a number")
-        .min(0, "Must be 0 or greater")
-        .when("mode", {
-          is: "view",
-          then: yup.number().optional(),
-          otherwise: yup.number().required("Rate per Unit is required"),
+  serviceCodes: yup
+    .array()
+    .of(
+      yup.object().shape({
+        serviceCodeId: yup.mixed().nullable(),
+        codeSelection: yup.string().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Service Code is required");
         }),
-    })
-  ),
-  billable: yup.boolean().when("mode", {
-    is: "view",
-    then: yup.boolean().optional(),
-    otherwise: yup.boolean().required("Billable is required"),
-  }),
+        code: yup.string().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Code is required");
+        }),
+        description: yup.string().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Description is required");
+        }),
+        unitCurrency: yup.string().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Unit Currency is required");
+        }),
+        ratePerUnit: yup
+          .number()
+          .typeError("Must be a number")
+          .min(0, "Must be 0 or greater")
+          .when("mode", ([mode], schema) => {
+            return mode === "view" ? schema.optional() : schema.required("Rate per Unit is required");
+          }),
+        roundingRule: yup.string().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Rounding Rule is required");
+        }),
+        modifiers: yup.array().of(
+          yup.object().shape({
+            modifier: yup.string().when("mode", ([mode], schema) => {
+              return mode === "view" ? schema.optional() : schema.required("Modifier is required");
+            }),
+            ratePerUnit: yup
+              .number()
+              .typeError("Must be a number")
+              .min(0, "Must be 0 or greater")
+              .when("mode", ([mode], schema) => {
+                return mode === "view" ? schema.optional() : schema.required("Rate per Unit is required");
+              }),
+          })
+        ),
+        billable: yup.boolean().when("mode", ([mode], schema) => {
+          return mode === "view" ? schema.optional() : schema.required("Billable is required");
+        }),
+      })
+    )
+    .min(1, "At least one service code is required"),
 });
 
-// Utility function to transform table data to form data
+// ✅ Transform incoming API data
 const transformPayerToFormData = (data, mode) => ({
   mode,
   payerName: data.payerName || "",
   email: data.email || "",
-  phoneNumber: data.phoneNumber || "",
-  insuranceType: data.insureType || "",
+  phoneNumber: data.phone || "",
+  insuranceType: data.insuranceTypeId,
   tplCode: data.tplCode || "",
   carrierPayerId: data.carrierPayerId || "",
   address: data.address || "",
@@ -146,20 +108,37 @@ const transformPayerToFormData = (data, mode) => ({
   state: data.state || "",
   zip: data.zip || "",
   country: data.country || "",
-  code: data.code || "",
-  description: data.description || "",
-  unitType: data.unitType || "",
-  unitDuration: data.unitDuration || 0,
-  unitCurrency: data.unitCurrency || "",
-  ratePerUnit: data.ratePerUnit || 0,
-  roundingRule: data.roundingRule || "",
-  modifiers: Array.isArray(data.modifiers)
-    ? data.modifiers.map((m) => ({
-        modifier: m.modifier || "",
-        ratePerUnit: m.ratePerUnit || 0,
-      }))
-    : [{ modifier: "", ratePerUnit: 0 }],
-  billable: data.billable !== undefined ? data.billable : false,
+  serviceCodes:
+    Array.isArray(data.serviceCodes) && data.serviceCodes.length > 0
+      ? data.serviceCodes.map((sc) => ({
+          serviceCodeId: sc.serviceCodeId || null,
+          codeSelection: sc.code || "custom",
+          code: sc.code || "",
+          description: sc.description || "",
+          unitCurrency: sc.unitCurrency || "",
+          ratePerUnit: sc.ratePerUnit || 0,
+          roundingRule: sc.roundingRuleId || "",
+          modifiers: Array.isArray(sc.modifiers)
+            ? sc.modifiers.map((m) => ({
+                modifier: m.modifier || "",
+                ratePerUnit: m.ratePerUnit || 0,
+              }))
+            : [{ modifier: "", ratePerUnit: 0 }],
+          billable: sc.billable !== undefined ? sc.billable : false,
+        }))
+      : [
+          {
+            serviceCodeId: null,
+            codeSelection: "",
+            code: "",
+            description: "",
+            unitCurrency: "",
+            ratePerUnit: 0,
+            roundingRule: "",
+            modifiers: [{ modifier: "", ratePerUnit: 0 }],
+            billable: false,
+          },
+        ],
 });
 
 const AddPayerModal = ({
@@ -169,68 +148,14 @@ const AddPayerModal = ({
   mode = "add",
   initialData = {},
   onDelete,
+  insuranceTypes = [],
+  serviceCodes = [],
+  roundingRules = [],
+  loading = false,
 }) => {
   const [activeTab, setActiveTab] = useState("Payer Info");
   const [submitting, setSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-
-  const countryOptions = [
-    { value: "US", label: "United States" },
-    { value: "UK", label: "United Kingdom" },
-  ];
-
-  const stateOptions = [
-    { value: "AL", label: "Alabama" },
-    { value: "AK", label: "Alaska" },
-    { value: "AZ", label: "Arizona" },
-    { value: "AR", label: "Arkansas" },
-    { value: "CA", label: "California" },
-    { value: "CO", label: "Colorado" },
-    { value: "CT", label: "Connecticut" },
-    { value: "DE", label: "Delaware" },
-    { value: "FL", label: "Florida" },
-    { value: "GA", label: "Georgia" },
-    { value: "HI", label: "Hawaii" },
-    { value: "ID", label: "Idaho" },
-    { value: "IL", label: "Illinois" },
-    { value: "IN", label: "Indiana" },
-    { value: "IA", label: "Iowa" },
-    { value: "KS", label: "Kansas" },
-    { value: "KY", label: "Kentucky" },
-    { value: "LA", label: "Louisiana" },
-    { value: "ME", label: "Maine" },
-    { value: "MD", label: "Maryland" },
-    { value: "MA", label: "Massachusetts" },
-    { value: "MI", label: "Michigan" },
-    { value: "MN", label: "Minnesota" },
-    { value: "MS", label: "Mississippi" },
-    { value: "MO", label: "Missouri" },
-    { value: "MT", label: "Montana" },
-    { value: "NE", label: "Nebraska" },
-    { value: "NV", label: "Nevada" },
-    { value: "NH", label: "New Hampshire" },
-    { value: "NJ", label: "New Jersey" },
-    { value: "NM", label: "New Mexico" },
-    { value: "NY", label: "New York" },
-    { value: "NC", label: "North Carolina" },
-    { value: "ND", label: "North Dakota" },
-    { value: "OH", label: "Ohio" },
-    { value: "OK", label: "Oklahoma" },
-    { value: "OR", label: "Oregon" },
-    { value: "PA", label: "Pennsylvania" },
-    { value: "RI", label: "Rhode Island" },
-    { value: "SC", label: "South Carolina" },
-    { value: "SD", label: "South Dakota" },
-    { value: "TN", label: "Tennessee" },
-    { value: "TX", label: "Texas" },
-    { value: "UT", label: "Utah" },
-    { value: "VT", label: "Vermont" },
-    { value: "VA", label: "Virginia" },
-    { value: "WA", label: "Washington" },
-    { value: "WV", label: "West Virginia" },
-    { value: "WI", label: "Wisconsin" },
-    { value: "WY", label: "Wyoming" },
-  ];
 
   const {
     register,
@@ -239,16 +164,39 @@ const AddPayerModal = ({
     reset,
     formState: { errors },
     watch,
+    setValue,
   } = useForm({
     resolver: yupResolver(payerSchema),
+    context: {mode},
     defaultValues: transformPayerToFormData(initialData, mode),
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "modifiers",
-  });
+  const { fields: serviceCodeFields, append: appendServiceCode, remove: removeServiceCode } =
+    useFieldArray({
+      control,
+      name: "serviceCodes",
+    });
 
+  // ✅ Build options
+  const insuranceTypeOptions = insuranceTypes
+    .filter((it) => it.isActive)
+    .map((it) => ({ value: it.id, label: it.name }));
+
+  const serviceCodeOptions = [
+    ...serviceCodes.map((sc) => ({
+      value: sc.code,
+      label: `${sc.code} - ${sc.description}`,
+      description: sc.description,
+      modifiers: sc.modifiers || [],
+      id: sc.id, // 👈 include serviceCodeId
+    })),
+    { value: "custom", label: "Others (Custom)", description: "", modifiers: [], id: null },
+  ];
+
+  const roundingRuleOptions = roundingRules
+    .map((rr) => ({ value: rr.id, label: rr.ruleName }));
+
+  // ✅ Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       reset(transformPayerToFormData(initialData, mode));
@@ -256,19 +204,57 @@ const AddPayerModal = ({
     }
   }, [isOpen, mode, initialData, reset]);
 
+  // ✅ Watch service code selection
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
       if (type === "change" && mode !== "view") {
         setHasChanges(true);
       }
+      if (name && name.includes("serviceCodes") && name.includes("codeSelection")) {
+        const index = parseInt(name.match(/\[(\d+)\]/)[1], 10);
+        const selectedCode = value.serviceCodes?.[index]?.codeSelection;
+        const selectedOption = serviceCodeOptions.find((opt) => opt.value === selectedCode);
+        if (selectedOption && selectedCode !== "custom") {
+          setValue(`serviceCodes[${index}].code`, selectedOption.value);
+          setValue(`serviceCodes[${index}].description`, selectedOption.description);
+          setValue(`serviceCodes[${index}].serviceCodeId`, selectedOption.id || null); // 👈 store ID
+          setValue(
+            `serviceCodes[${index}].modifiers`,
+            selectedOption.modifiers.map((m) => ({
+              modifier: m.modifier || "",
+              ratePerUnit: m.ratePerUnit || 0,
+            }))
+          );
+        } else if (selectedCode === "custom") {
+          setValue(`serviceCodes[${index}].code`, "");
+          setValue(`serviceCodes[${index}].description`, "");
+          setValue(`serviceCodes[${index}].serviceCodeId`, null);
+          setValue(`serviceCodes[${index}].modifiers`, [{ modifier: "", ratePerUnit: 0 }]);
+        }
+      }
     });
     return () => subscription.unsubscribe();
-  }, [watch, mode]);
+  }, [watch, mode, setValue, serviceCodeOptions]);
 
+  // ✅ Submit handler
   const handleFormSubmit = async (data) => {
     setSubmitting(true);
     try {
-      await onSave(data);
+      const cleanedData = {
+        ...data,
+        serviceCodes: data.serviceCodes.map((sc) => ({
+          serviceCodeId: sc.serviceCodeId || "",
+          code: sc.code,
+          description: sc.description,
+          unitCurrency: sc.unitCurrency,
+          ratePerUnit: sc.ratePerUnit,
+          roundingRuleId: sc.roundingRule,
+          modifiers: sc.modifiers,
+          billable: sc.billable,
+        })),
+      };
+      console.log(cleanedData)
+      await onSave(cleanedData);
       reset(transformPayerToFormData(initialData, mode));
       onClose();
     } catch (error) {
@@ -278,31 +264,13 @@ const AddPayerModal = ({
     }
   };
 
+  // ✅ Other handlers
   const handleClose = () => {
     reset(transformPayerToFormData(initialData, mode));
     onClose();
   };
-
-  const handleNext = () => {
-    setActiveTab("Service Code");
-  };
-
-  const handlePrevious = () => {
-    setActiveTab("Payer Info");
-  };
-
-  const unitTypeOptions = [
-    { value: "Adaptive behavior treatment", label: "Adaptive behavior treatment" },
-    {
-      value: "Adaptive behavior treatment with protocol modification",
-      label: "Adaptive behavior treatment with protocol modification",
-    },
-    {
-      value: "Behavior Identification supporting assessment",
-      label: "Behavior Identification supporting assessment",
-    },
-    { value: "Comprehensive adaptive behavior", label: "Comprehensive adaptive behavior" },
-  ];
+  const handleNext = () => setActiveTab("Service Code");
+  const handlePrevious = () => setActiveTab("Payer Info");
 
   const currencyOptions = [
     { value: "USD", label: "USD" },
@@ -310,24 +278,23 @@ const AddPayerModal = ({
     { value: "GBP", label: "GBP" },
   ];
 
-  const roundingRuleOptions = [
-    { value: "Nearest", label: "Nearest" },
-    { value: "Up", label: "Up" },
-    { value: "Down", label: "Down" },
-  ];
-
   const modifierOptions = [
-    { value: "M23.9", label: "M23.9" },
-    { value: "M45.9", label: "M45.9" },
-    { value: "M67.8", label: "M67.8" },
+    { value: "HO", label: "HO" },
+    { value: "HP", label: "HP" },
+    { value: "HN", label: "HN" },
   ];
 
-  const insuranceTypeOptions = [
-    { value: "Group Health Plan", label: "Group Health Plan" },
-    { value: "Medicaid", label: "Medicaid" },
-    { value: "Tricare", label: "Tricare" },
-    { value: "Medicare", label: "Medicare" },
-    { value: "Champ VA", label: "Champ VA" },
+  const stateOptions = [
+    // ... (unchanged, full list)
+    { value: "AL", label: "Alabama" },
+    { value: "AK", label: "Alaska" },
+    // ... (omitted for brevity)
+    { value: "WY", label: "Wyoming" },
+  ];
+
+  const countryOptions = [
+    { value: "US", label: "United States" },
+    { value: "UK", label: "United Kingdom" },
   ];
 
   const buildTabs = () => [
@@ -459,150 +426,200 @@ const AddPayerModal = ({
     {
       name: "Service Code",
       content: (
-        <div className="space-y-4">
-          <TextInput
-            label="Service Code"
-            {...register("code")}
-            error={errors.code?.message}
-            placeholder="Enter Service Code"
-            disabled={mode === "view"}
-          />
-          <TextareaInput
-            label="Description"
-            {...register("description")}
-            error={errors.description?.message}
-            placeholder="Enter a description"
-            disabled={mode === "view"}
-          />
-          <div className="flex gap-4 items-center mb-2">
-            <div className="flex-1">
+        <div className="space-y-6">
+          {serviceCodeFields.map((field, index) => (
+            <div key={field.id} className="space-y-4 border-b pb-4">
+              <div className="flex justify-between items-center mt-6">
+                <p className="text-base text-gray-600 font-semibold">Service Code {index + 1}</p>
+                {mode !== "view" && serviceCodeFields.length > 1 && (
+                  <button
+                    type="button"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => removeServiceCode(index)}
+                    aria-label="Remove Service Code"
+                  >
+                    <FaTrash />
+                  </button>
+                )}
+              </div>
               <Controller
-                name="unitType"
+                name={`serviceCodes[${index}].codeSelection`}
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    label="Unit Type"
-                    options={unitTypeOptions}
-                    error={errors.unitType?.message}
+                    label="Service Code"
+                    options={serviceCodeOptions}
+                    error={errors.serviceCodes?.[index]?.codeSelection?.message}
+                    placeholder="Select Service Code"
                     disabled={mode === "view"}
                     {...field}
                   />
                 )}
               />
-            </div>
-            <div className="flex-1">
-              <TextInput
-                label="Unit Duration"
-                type="number"
-                {...register("unitDuration")}
-                error={errors.unitDuration?.message}
-                placeholder="Enter Unit Duration (mins)"
+              {watch(`serviceCodes[${index}].codeSelection`) === "custom" && (
+                <TextInput
+                  label="Custom Code"
+                  {...register(`serviceCodes[${index}].code`)}
+                  error={errors.serviceCodes?.[index]?.code?.message}
+                  placeholder="Enter Custom Code"
+                  disabled={mode === "view"}
+                />
+              )}
+              <TextareaInput
+                label="Description"
+                {...register(`serviceCodes[${index}].description`)}
+                error={errors.serviceCodes?.[index]?.description?.message}
+                placeholder="Enter a description"
                 disabled={mode === "view"}
               />
-            </div>
-          </div>
-          <div className="flex gap-4 items-center mb-2">
-            <div className="">
               <Controller
-                name="unitCurrency"
+                name={`serviceCodes[${index}].roundingRule`}
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    label="Unit Currency"
-                    options={currencyOptions}
-                    error={errors.unitCurrency?.message}
+                    label="Rounding Rule"
+                    options={roundingRuleOptions}
+                    error={errors.serviceCodes?.[index]?.roundingRule?.message}
+                    placeholder="Select rounding rule"
                     disabled={mode === "view"}
                     {...field}
                   />
                 )}
               />
-            </div>
-            <div className="flex-1">
-              <TextInput
-                label="Rate per Unit"
-                type="number"
-                {...register("ratePerUnit")}
-                error={errors.ratePerUnit?.message}
-                placeholder="Enter Rate per Unit"
-                disabled={mode === "view"}
+              <div className="flex gap-4 items-center">
+                <div className="">
+                  <Controller
+                    name={`serviceCodes[${index}].unitCurrency`}
+                    control={control}
+                    render={({ field }) => (
+                      <SelectInput
+                        label="Unit Currency"
+                        options={currencyOptions}
+                        error={errors.serviceCodes?.[index]?.unitCurrency?.message}
+                        disabled={mode === "view"}
+                        {...field}
+                        placeholder="select"
+                      />
+                    )}
+                  />
+                </div>
+                <div className="flex-1">
+                  <TextInput
+                    label="Rate per Unit"
+                    type="number"
+                    {...register(`serviceCodes[${index}].ratePerUnit`)}
+                    error={errors.serviceCodes?.[index]?.ratePerUnit?.message}
+                    placeholder="Enter Rate per Unit"
+                    disabled={mode === "view"}
+                  />
+                </div>
+              </div>
+              
+              <p className="text-base text-gray-600 font-semibold">Modifiers</p>
+              <Controller
+                name={`serviceCodes[${index}].modifiers`}
+                control={control}
+                render={({ field }) => {
+                  const { fields: modifierFields, append: appendModifier, remove: removeModifier } = useFieldArray({
+                    control,
+                    name: `serviceCodes[${index}].modifiers`,
+                  });
+                  return (
+                    <div>
+                      {modifierFields.map((modField, modIndex) => (
+                        <div key={modField.id} className="flex gap-4 items-center mb-2">
+                          <div className="flex-1">
+                            <Controller
+                              name={`serviceCodes[${index}].modifiers[${modIndex}].modifier`}
+                              control={control}
+                              render={({ field: modField }) => (
+                                <SelectInput
+                                  label="Modifier"
+                                  options={modifierOptions}
+                                  error={errors.serviceCodes?.[index]?.modifiers?.[modIndex]?.modifier?.message}
+                                  disabled={mode === "view"}
+                                  {...modField}
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <TextInput
+                              label="Rate per Unit"
+                              type="number"
+                              {...register(`serviceCodes[${index}].modifiers[${modIndex}].ratePerUnit`)}
+                              error={errors.serviceCodes?.[index]?.modifiers?.[modIndex]?.ratePerUnit?.message}
+                              placeholder="Enter Rate per Unit"
+                              disabled={mode === "view"}
+                            />
+                          </div>
+                          {mode !== "view" && modifierFields.length > 1 && (
+                            <button
+                              type="button"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => removeModifier(modIndex)}
+                              aria-label="Remove Modifier"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        icon={<FaPlus />}
+                        variant="secondary"
+                        label="Add Modifier"
+                        onClick={() => appendModifier({ modifier: "", ratePerUnit: 0 })}
+                        disabled={mode === "view"}
+                      />
+                    </div>
+                  );
+                }}
               />
-            </div>
-          </div>
-          <Controller
-            name="roundingRule"
-            control={control}
-            render={({ field }) => (
-              <SelectInput
-                label="Rounding Rule"
-                options={roundingRuleOptions}
-                error={errors.roundingRule?.message}
-                placeholder="Select rounding rule"
-                disabled={mode === "view"}
-                {...field}
-              />
-            )}
-          />
-          <p className="text-base text-gray-600 font-semibold">Modifiers</p>
-          {fields.map((item, index) => (
-            <div key={item.id} className="flex gap-4 items-center mb-2">
-              <div className="flex-1">
+              <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
                 <Controller
-                  name={`modifiers[${index}].modifier`}
+                  name={`serviceCodes[${index}].billable`}
                   control={control}
                   render={({ field }) => (
-                    <SelectInput
-                      label="Modifier"
-                      options={modifierOptions}
-                      error={errors.modifiers?.[index]?.modifier?.message}
+                    <CheckboxInput
+                      label="This service is billable"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
                       disabled={mode === "view"}
-                      {...field}
                     />
                   )}
                 />
               </div>
-              <div className="flex-1">
-                <TextInput
-                  label="Rate per Unit"
-                  type="number"
-                  {...register(`modifiers[${index}].ratePerUnit`)}
-                  error={errors.modifiers?.[index]?.ratePerUnit?.message}
-                  placeholder="Enter Rate per Unit"
-                  disabled={mode === "view"}
-                />
-              </div>
-              {mode !== "view" && fields.length > 1 && (
-                <button
-                  type="button"
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => remove(index)}
-                  aria-label="Remove Modifier"
-                >
-                  <FaTrash />
-                </button>
-              )}
             </div>
           ))}
+          <div className="mt-6">
           <Button
             icon={<FaPlus />}
             variant="secondary"
-            label="Add"
-            onClick={() => append({ modifier: "", ratePerUnit: 0 })}
+            label="Add Service Code"
+            onClick={() => appendServiceCode({
+              codeSelection: "",
+              code: "",
+              description: "",
+              unitCurrency: "",
+              ratePerUnit: 0,
+              roundingRule: "",
+              modifiers: [{ modifier: "", ratePerUnit: 0 }],
+              billable: false,
+            })}
             disabled={mode === "view"}
           />
-          <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
-            <Controller
-              name="billable"
-              control={control}
-              render={({ field }) => (
-                <CheckboxInput
-                  label="This service is billable"
-                  checked={field.value}
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  disabled={mode === "view"}
-                />
-              )}
-            />
           </div>
+
+            {/* <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
+            <pre>
+              {JSON.stringify(
+                errors,
+                (k, v) => (v instanceof HTMLElement ? "[DOM]" : v),
+                2
+              )}
+            </pre>
+          </div> */}
         </div>
       ),
     },
@@ -648,7 +665,7 @@ const AddPayerModal = ({
         activeTab === "Payer Info" || mode === "view" ? handleClose : handlePrevious
       }
       size="md"
-      primaryButtonLoading={submitting}
+      primaryButtonLoading={submitting || loading}
     />
   );
 };

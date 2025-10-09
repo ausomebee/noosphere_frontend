@@ -21,8 +21,6 @@ const TableBody = ({
   actionText = "View",
   onActionClick,
 }) => {
-
-
   const primaryColumns = [
     "Candidate Name",
     "Client",
@@ -49,7 +47,7 @@ const TableBody = ({
     "Service Code",
     "Modifiers",
     "Rounding Rule",
-    "Insurance Type"
+    "Insurance Type",
   ];
 
   const getFileIcon = (fileName) => {
@@ -160,7 +158,8 @@ const TableBody = ({
           return (
             <SwitchInput
               checked={row[col.key]}
-              onChange={() => handleToggleActive(rowIndex)}
+              onChange={() => handleToggleActive && handleToggleActive(row)}
+              disabled={!handleToggleActive}
             />
           );
         case "day_time":
@@ -202,7 +201,7 @@ const TableBody = ({
 
   // Helper function to get actions for a specific row
   const getActionsForRow = (row) => {
-    if (typeof actions === 'function') {
+    if (typeof actions === "function") {
       return actions(row);
     }
     return actions || [];
@@ -210,7 +209,7 @@ const TableBody = ({
 
   // Helper function to get items for a dropdown action
   const getActionItems = (action, row) => {
-    if (typeof action.items === 'function') {
+    if (typeof action.items === "function") {
       return action.items(row);
     }
     return action.items || [];
@@ -218,7 +217,7 @@ const TableBody = ({
 
   // Helper function to get label for an action item
   const getItemLabel = (item, row) => {
-    if (typeof item.label === 'function') {
+    if (typeof item.label === "function") {
       return item.label(row);
     }
     return item.label;
@@ -226,7 +225,7 @@ const TableBody = ({
 
   // Helper function to get className for an action item
   const getItemClassName = (item, row) => {
-    if (typeof item.className === 'function') {
+    if (typeof item.className === "function") {
       return item.className(row);
     }
     return item.className || "";

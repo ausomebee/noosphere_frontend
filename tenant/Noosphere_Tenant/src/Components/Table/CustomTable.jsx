@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   exportTableData,
   printTableData,
@@ -35,6 +29,7 @@ const CustomTable = ({
   loading,
   hideSearch = false,
   hideTableActions = false,
+  onToggleActive, // New prop for handling toggle
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,8 +43,7 @@ const CustomTable = ({
   });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
-    useState(false);
+  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] = useState(false);
   const tableContainerRef = useRef(null);
   const menuRefs = useRef({});
   const exportButtonRef = useRef(null);
@@ -94,33 +88,33 @@ const CustomTable = ({
     ];
   }, [columns, filters]);
 
-const secondFilterOptions = useMemo(() => {
-  if (!filters) return [];
-  const type = filterValues.filter_type;
-  const selectedFilter = filters.find((f) => f.value === type);
-  if (selectedFilter && selectedFilter.filterValues) {
-    return [{ value: "", label: `Select ${selectedFilter.label}` }, ...selectedFilter.filterValues];
-  }
-  switch (type) {
-    case "dateTime":
-      return [];
-    case "stage_completion":
-      return [
-        { value: "", label: "Select Stage Completion" },
-        ...Array.from({ length: 11 }, (_, i) => ({
-          value: i * 10,
-          label: `${i * 10}%`,
-        })),
-      ];
-    case "":
-    case "clear_filters":
-      return [];
-    default:
-      return getUniqueValues(type).length > 0
-        ? [{ value: "", label: `Select ${type}` }, ...getUniqueValues(type)]
-        : [];
-  }
-}, [filterValues.filter_type, getUniqueValues, filters]);
+  const secondFilterOptions = useMemo(() => {
+    if (!filters) return [];
+    const type = filterValues.filter_type;
+    const selectedFilter = filters.find((f) => f.value === type);
+    if (selectedFilter && selectedFilter.filterValues) {
+      return [{ value: "", label: `Select ${selectedFilter.label}` }, ...selectedFilter.filterValues];
+    }
+    switch (type) {
+      case "dateTime":
+        return [];
+      case "stage_completion":
+        return [
+          { value: "", label: "Select Stage Completion" },
+          ...Array.from({ length: 11 }, (_, i) => ({
+            value: i * 10,
+            label: `${i * 10}%`,
+          })),
+        ];
+      case "":
+      case "clear_filters":
+        return [];
+      default:
+        return getUniqueValues(type).length > 0
+          ? [{ value: "", label: `Select ${type}` }, ...getUniqueValues(type)]
+          : [];
+    }
+  }, [filterValues.filter_type, getUniqueValues, filters]);
 
   const filteredData = useMemo(() => {
     let filtered = [...data];
@@ -150,12 +144,10 @@ const secondFilterOptions = useMemo(() => {
       );
 
       if (selectedFilter && selectedFilter.filterFunction) {
-        // Use custom filter function if provided
         filtered = filtered.filter((row) =>
           selectedFilter.filterFunction(row, filterValues.value)
         );
       } else {
-        // Fallback for filters without a custom filterFunction
         filtered = filtered.filter((row) => {
           const rowValue = row[filterValues.filter_type];
           const filterValue = filterValues.value;
@@ -309,37 +301,6 @@ const secondFilterOptions = useMemo(() => {
     }
   }, [selectedRows, currentData, onSelectionChange]);
 
-  const handleSelectionChange = useCallback(
-    (rows, items, reset = false) => {
-      console.log("CustomTable handleSelectionChange:", { rows, items, reset });
-      if (reset) {
-        console.log("Resetting selections in CustomTable");
-        setSelectedRows([]);
-        setSelectedItems([]);
-        if (onSelectionChange) {
-          onSelectionChange([], []);
-        }
-      } else {
-        setSelectedRows(rows);
-        setSelectedItems(items);
-        if (onSelectionChange) {
-          onSelectionChange(rows, items);
-        }
-      }
-    },
-    [onSelectionChange]
-  );
-
-  const handleToggleActive = useCallback(
-    (rowIndex) => {
-      console.log("Toggling active for row:", rowIndex);
-      const updatedData = [...data];
-      updatedData[pagination.startIndex + rowIndex].ToggleActive =
-        !updatedData[pagination.startIndex + rowIndex].ToggleActive;
-    },
-    [data, pagination.startIndex]
-  );
-
   const handleExportCSV = useCallback(() => {
     console.log("Exporting to CSV");
     exportTableData(
@@ -457,7 +418,6 @@ const secondFilterOptions = useMemo(() => {
       if (!filters) return;
       setFilterValues((prev) => {
         const newValues = { ...prev, [filterKey]: value };
-
         return newValues;
       });
       if (onFilterChange) onFilterChange(filterKey, value);
@@ -601,7 +561,7 @@ const secondFilterOptions = useMemo(() => {
             actions={actions}
             tableName={tableName}
             hasStatusDot={hasStatusDot}
-            handleToggleActive={handleToggleActive}
+            handleToggleActive={onToggleActive} // Pass the prop
             actionLinkPrefix={actionLinkPrefix}
             actionText={actionText}
             onActionClick={onActionClick}

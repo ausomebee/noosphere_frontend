@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { SelectInput, TextInput } from "../Input/Inputs";
 import Pagination from "./Pagination";
@@ -14,12 +14,14 @@ const AccordionTable = ({
   loading = false,
   onServiceDataChange,
   initialServiceData = {},
+  isEditMode = false,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
   const [serviceRows, setServiceRows] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const { control, watch, setValue, getValues, handleSubmit } = useForm({
+  const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: {
       services: initialServiceData || {},
     },
@@ -37,14 +39,46 @@ const AccordionTable = ({
     { value: "HT", label: "HT" },
   ];
 
+  // Watch form services to detect changes
+  const formServices = watch("services");
+
+  // Track initial form state for comparison
+  const initialFormState = JSON.stringify(initialServiceData);
+
+  // Detect changes in form data
+  useEffect(() => {
+    const currentFormState = JSON.stringify(formServices);
+    setHasChanges(currentFormState !== initialFormState);
+    if (onServiceDataChange) {
+      onServiceDataChange(formServices);
+    }
+  }, [formServices, initialFormState, onServiceDataChange]);
+
+  // Initialize service rows and form data
+  useEffect(() => {
+    console.log("Received initialServiceData:", initialServiceData); // Debug
+    const initialServiceRows = {};
+    Object.keys(initialServiceData).forEach((key) => {
+      initialServiceRows[key] = Math.max(
+        initialServiceData[key]?.length || 1,
+        1
+      );
+    });
+    setServiceRows(initialServiceRows);
+    reset({ services: JSON.parse(JSON.stringify(initialServiceData)) }); // Deep copy
+    console.log("Form initialized with:", getValues("services")); // Debug
+  }, [initialServiceData, reset]);
+
   const toggleRow = (rowIndex) => {
     setExpandedRow(expandedRow === rowIndex ? null : rowIndex);
   };
 
-  const onSubmit = (globalRowIndex) => (data) => {
-    const rowServices = data.services[globalRowIndex];
-    console.log(`Submitting data for row ${globalRowIndex}:`, rowServices);
-    // Add your submission logic here
+  const onSave = (globalRowIndex) => () => {
+    const rowServices = getValues(`services.${globalRowIndex}`);
+    console.log(`Saving data for row ${globalRowIndex}:`, rowServices);
+    reset({ services: getValues("services") });
+    setHasChanges(false);
+    // Add your save logic here (e.g., API call)
   };
 
   const addServiceRow = (globalRowIndex, e) => {
@@ -67,6 +101,7 @@ const AccordionTable = ({
 
     const updatedServices = [...currentServices, newService];
     setValue(`services.${globalRowIndex}`, updatedServices);
+    setHasChanges(true);
   };
 
   const removeServiceRow = (globalRowIndex, serviceIndex, e) => {
@@ -81,6 +116,7 @@ const AccordionTable = ({
     }));
 
     setValue(`services.${globalRowIndex}`, updatedServices);
+    setHasChanges(true);
   };
 
   const getServiceDataForRow = (globalRowIndex) => {
@@ -101,17 +137,6 @@ const AccordionTable = ({
 
     return existingData.slice(0, rowCount);
   };
-
-  React.useEffect(() => {
-    const initialServiceRows = {};
-    Object.keys(initialServiceData).forEach((key) => {
-      initialServiceRows[key] = Math.max(
-        initialServiceData[key]?.length || 1,
-        1
-      );
-    });
-    setServiceRows(initialServiceRows);
-  }, [initialServiceData]);
 
   const pagination = useMemo(() => {
     const totalItems = data.length;
@@ -172,14 +197,6 @@ const AccordionTable = ({
 
     return <span style={{ color: textColor, fontWeight: fontWeight }}>{value}</span>;
   };
-
-  const formServices = watch("services");
-
-  React.useEffect(() => {
-    if (onServiceDataChange) {
-      onServiceDataChange(formServices);
-    }
-  }, [formServices, onServiceDataChange]);
 
   return (
     <div className="accordion-table-container">
@@ -279,11 +296,9 @@ const AccordionTable = ({
                                   <h4>Service Codes</h4>
                                 </div>
 
-                                <form
-                                  onSubmit={handleSubmit(onSubmit(globalRowIndex))}
-                                  className="service-codes-table"
-                                >
+                                <div className="service-codes-table">
                                   <table className="inner-service-table">
+                                   
                                     <tbody>
                                       {rowServices.map((service, serviceIndex) => (
                                         <tr
@@ -294,20 +309,19 @@ const AccordionTable = ({
                                             <Controller
                                               name={`services.${globalRowIndex}.${serviceIndex}.serviceCode`}
                                               control={control}
+                                              defaultValue={service.serviceCode || ""}
                                               render={({ field }) => (
                                                 <SelectInput
                                                   label="Service Code"
                                                   options={serviceCodeOptions}
-                                                  value={serviceCodeOptions.find(
-                                                    (opt) => opt.value === field.value
-                                                  )}
-                                                  onChange={(selectedOption) => {
-                                                    field.onChange(
-                                                      selectedOption?.value || ""
-                                                    );
+                                                  value={field.value}
+                                                  onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setHasChanges(true);
                                                   }}
                                                   placeholder="Select Service Code"
                                                   isSearchable={true}
+                                                  isDisabled={!isEditMode}
                                                 />
                                               )}
                                             />
@@ -316,19 +330,19 @@ const AccordionTable = ({
                                             <Controller
                                               name={`services.${globalRowIndex}.${serviceIndex}.modifiers`}
                                               control={control}
+                                              defaultValue={service.modifiers || ""}
                                               render={({ field }) => (
                                                 <SelectInput
                                                   label="Modifiers"
                                                   options={modifierOptions}
-                                                  value={modifierOptions.find(
-                                                    (opt) => opt.value === field.value
-                                                  )}
-                                                  onChange={(selectedOption) => {
-                                                    field.onChange(
-                                                      selectedOption?.value || ""
-                                                    );
+                                                  value={field.value}
+                                                  onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setHasChanges(true);
                                                   }}
                                                   placeholder="Select Modifier"
+                                                  isSearchable={true}
+                                                  isDisabled={!isEditMode}
                                                 />
                                               )}
                                             />
@@ -337,12 +351,18 @@ const AccordionTable = ({
                                             <Controller
                                               name={`services.${globalRowIndex}.${serviceIndex}.units`}
                                               control={control}
+                                              defaultValue={service.units || ""}
                                               render={({ field }) => (
                                                 <TextInput
                                                   label="Units"
                                                   {...field}
                                                   type="number"
                                                   placeholder="Units"
+                                                  onChange={(e) => {
+                                                    field.onChange(e.target.value);
+                                                    setHasChanges(true);
+                                                  }}
+                                                  disabled={!isEditMode}
                                                 />
                                               )}
                                             />
@@ -351,18 +371,24 @@ const AccordionTable = ({
                                             <Controller
                                               name={`services.${globalRowIndex}.${serviceIndex}.unitRate`}
                                               control={control}
+                                              defaultValue={service.unitRate || ""}
                                               render={({ field }) => (
                                                 <TextInput
                                                   label="Unit Rate"
                                                   {...field}
                                                   type="number"
                                                   placeholder="Unit Rate"
+                                                  onChange={(e) => {
+                                                    field.onChange(e.target.value);
+                                                    setHasChanges(true);
+                                                  }}
+                                                  disabled={!isEditMode}
                                                 />
                                               )}
                                             />
                                           </td>
                                           <td className="action-cell">
-                                            {rowServices.length > 1 && (
+                                            {rowServices.length > 1 && isEditMode && (
                                               <button
                                                 type="button"
                                                 className="delete-btn"
@@ -383,20 +409,25 @@ const AccordionTable = ({
                                       ))}
                                     </tbody>
                                   </table>
-                                  <div className="mt-6 flex gap-4">
-                                    <Button
-                                      label="Add Service Code"
-                                      icon={<FaPlus />}
-                                      variant="secondary"
-                                      onClick={(e) => addServiceRow(globalRowIndex, e)}
-                                    />
-                                    <Button
-                                      type="submit"
-                                      label="Submit Services"
-                                      variant="primary"
-                                    />
-                                  </div>
-                                </form>
+                                  {isEditMode && (
+                                    <div className="mt-6 flex gap-4">
+                                      <Button
+                                        label="Add Service Code"
+                                        icon={<FaPlus />}
+                                        variant="secondary"
+                                        onClick={(e) => addServiceRow(globalRowIndex, e)}
+                                      />
+                                      {hasChanges && (
+                                        <Button
+                                          type="button"
+                                          label="Save"
+                                          variant="primary"
+                                          onClick={onSave(globalRowIndex)}
+                                        />
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>

@@ -78,7 +78,7 @@ const Payroll = () => {
   ]);
 
   const handleActionClick = (row) => {
-    navigate(`/billing/claims/view/${row.id}`);
+    navigate(`/payroll/payroll/view-breakdown/${row.id}`);
   };
 
   const columns = [

@@ -34,6 +34,7 @@ import SingleClaim from "../Pages/BillingAndPayment/Claims/SingleClaim";
 import SingleViewPayer from "../Pages/BillingAndPayment/Settings/SettingSubs/SingleViewPayer";
 import Payroll from "../Pages/Payroll/Payroll/Payroll";
 import PayrollSettings from "../Pages/Payroll/PayrollSetting/PayrollSettings";
+import ViewBreakDown from "../Pages/Payroll/Payroll/ViewBreakDown";
 
 const AllRoutes = () => {
   return (
@@ -129,6 +130,7 @@ const AllRoutes = () => {
 
       {/* Payroll */}
       <Route path="/payroll/payroll-setup" element={<Payroll />} />
+      <Route path="/payroll/payroll/view-breakdown/:id" element={<ViewBreakDown />} />
       <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
     </Routes>
   );

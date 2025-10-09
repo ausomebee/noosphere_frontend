@@ -4,125 +4,141 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
 
 const TimeSheet = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const columns = [
     { header: "Date", key: "dateTime", type: "date" },
-    { header: "Therapist", key: "therapist", type: "text" },
+    { header: "Clinician(s)", key: "therapist", type: "text" },
     { header: "Client Name", key: "clientName", type: "text" },
     { header: "Total Hour(s)", key: "hours", type: "text" },
     { header: "Session Type", key: "sessionType", type: "text" },
-    { header: "Approval Status", key: "statusText", type: "statusText" },
+    { header: "Client Status", key: "clientStatusText", type: "statusText" },
+    {
+      header: "Internal Status",
+      key: "internalStatusText",
+      type: "statusText",
+    },
   ];
 
   const tableData = [
     {
-        id: 1,
+      id: 1,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Pending",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 2,
+      id: 2,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Approved",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 3,
+      id: 3,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Pending",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 4,
+      id: 4,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "In-Revision",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 5,
+      id: 5,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Rejected",
+     clientStatusText: "Pending",
+      internalStatusText: "Approve",
       hasActions: true,
     },
     {
-        id: 6,
+      id: 6,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Pending",
+      clientStatusText: "Pending",
+      internalStatusText: "Update Requested",
       hasActions: true,
     },
     {
-        id: 7,
+      id: 7,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Approved",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 8,
+      id: 8,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Pending",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 9,
+      id: 9,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "In-Revision",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 10,
+      id: 10,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Rejected",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
     {
-        id: 11,
+      id: 11,
       dateTime: "12/10/2024",
       therapist: "Uche Jenkins",
       clientName: "Philip Thomson",
       hours: "4",
       sessionType: "In House",
-      statusText: "Rejected",
+      clientStatusText: "Pending",
+      internalStatusText: "Pending",
       hasActions: true,
     },
   ];
@@ -134,27 +150,27 @@ const TimeSheet = () => {
       items: [
         {
           label: "View",
-         onClick: (row) => {
+          onClick: (row) => {
             // Navigate to /billing/timesheets/:id
             navigate(`/billing/timesheets/${row.id}`);
           },
         },
         {
           label: "Edit",
-         onClick: (row) => {
+          onClick: (row) => {
             // Navigate to /billing/timesheets/:id
             navigate(`/billing/timesheets/${row.id}`);
           },
         },
 
-        {
-          label: "Delete",
+       {
+          label: "Nudge client for approval",
           onClick: (row) => {
-            setSelectedRow(row);
-        
+            // Navigate to /billing/timesheets/:id
+            navigate(`/billing/timesheets/${row.id}`);
           },
-          className: "remove",
         },
+
       ],
       className: "more-dropdown",
     },
@@ -162,9 +178,12 @@ const TimeSheet = () => {
 
   const filters = useMemo(
     () => [
-      { value: "sessionType", label: "Session Type" },
-      { value: "serviceType", label: "Service Type" },
       { value: "dateTime", label: "Date" },
+      { value: "therapist", label: "Clinician" },
+      { value: "clientName", label: "Client Name" },
+      { value: "sessionType", label: "Session Type" },
+      { value: "clientStatusText", label: "Client Approval" },
+      { value: "internalStatusText", label: "Internal Approval" },
     ],
     []
   );

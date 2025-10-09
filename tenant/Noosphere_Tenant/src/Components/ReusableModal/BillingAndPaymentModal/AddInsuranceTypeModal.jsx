@@ -1,39 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
-import { SelectInput } from "../../Input/Inputs";
-// import api from "../../../../api/AppointmentApi"; // Adjust the import path as needed
+import { TextInput, TextareaInput } from "../../Input/Inputs";
+
+// Validation schema
+const insuranceTypeSchema = yup.object().shape({
+  name: yup.string().required("Name is required"),
+  description: yup.string().notRequired().nullable(),
+});
 
 const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialData = {}, isLoading }) => {
-  const { control, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: yupResolver(insuranceTypeSchema),
     defaultValues: {
-      insuranceType: initialData.insureType || "",
+      name: initialData.name || "",
+      description: initialData.description || "",
     },
   });
 
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState([]);
-
-  // Fetch insurance types for SelectInput options
-//   useEffect(() => {
-//     const fetchInsuranceTypes = async () => {
-//       try {
-//         // Mock API call (replace with actual API endpoint)
-//         const response = await api.GetInsuranceType(); // Adjust endpoint
-//         const options = response.data.data.map((type) => ({
-//           value: type.id,
-//           label: type.insureType || `Insurance Type ${type.id}`,
-//         }));
-//         setInsuranceTypeOptions(options);
-//       } catch (err) {
-//         console.error("Error fetching insurance types:", err);
-//       }
-//     };
-
-//     if (isOpen) {
-//       fetchInsuranceTypes();
-//       reset({ insuranceType: initialData.insureType || "" });
-//     }
-//   }, [isOpen, initialData, reset]);
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        name: initialData.name || "",
+        description: initialData.description || "",
+      });
+    }
+  }, [isOpen, initialData, reset]);
 
   const onSubmit = (data) => {
     onSave(data);
@@ -44,7 +38,10 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
   };
 
   const handleClose = () => {
-    reset({ insuranceType: initialData.insureType || "" });
+    reset({
+      name: initialData.name || "",
+      description: initialData.description || "",
+    });
     onClose();
   };
 
@@ -67,24 +64,21 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
       size="medium"
     >
       <div className="flex flex-col gap-4">
-        <Controller
-          name="insuranceType"
-          control={control}
-          rules={{ required: "Insurance Type is required" }}
-          render={({ field }) => (
-            <SelectInput
-              label="Select Insurance Type *"
-              value={field.value}
-              onChange={(value) => field.onChange(value)}
-              options={insuranceTypeOptions}
-              className="rounded-20px"
-              width="full"
-              error={errors.insuranceType?.message}
-              placeholder="Select a Insurance Type"
-              disabled={mode === "view"}
-              {...field}
-            />
-          )}
+        <TextInput
+          label="Name *"
+          {...register("name")}
+          error={errors.name?.message}
+          placeholder="Enter Insurance Type Name"
+          disabled={mode === "view"}
+      
+        />
+        <TextareaInput
+          label="Description"
+          {...register("description")}
+          error={errors.description?.message}
+          placeholder="Enter Insurance Type Description"
+          disabled={mode === "view"}
+         
         />
       </div>
     </ReusableModal>

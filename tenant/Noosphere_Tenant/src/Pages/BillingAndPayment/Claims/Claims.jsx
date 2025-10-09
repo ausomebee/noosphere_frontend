@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../Layout/TenantLayout";
-import Button from "../../../Components/Button/Button";
-import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 
 // import api from "../../../../api/AppointmentApi";
-import AddClaimModal from "../../../Components/ReusableModal/BillingAndPaymentModal/AddClaimModal";
+
 
 const Claims = () => {
   const navigate = useNavigate();
@@ -92,9 +90,8 @@ const Claims = () => {
       hasActions: true,
     },
   ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+
 
   const columns = [
     { header: "Date Created", key: "date", type: "dateTime" },
@@ -113,6 +110,11 @@ const Claims = () => {
         filterFunction: (row, value) => (value ? row.payer === value : true),
       },
       {
+        value: "clientName",
+        label: "Client Name",
+        filterFunction: (row, value) => (value ? row.clientName === value : true),
+      },
+      {
         value: "createdBy",
         label: "Created By",
         filterFunction: (row, value) => (value ? row.createdBy === value : true),
@@ -126,48 +128,9 @@ const Claims = () => {
     []
   );
 
-  const handleAddClaim = () => {
-    setIsModalOpen(true);
-    setError(null);
-  };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
 
-  const handleSaveClaim = async (data) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Placeholder API call; replace with your actual API
-      const response = await api.CreateClaim({
-        timeSheetId: data.timeSheet,
-      });
-      const newClaim = response.data;
-      // Transform the new claim to match tableData structure
-      const formattedClaim = {
-        id: newClaim.id || `${Date.now()}`, // Use API-provided ID or fallback to timestamp
-        date: new Date().toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-        createdBy: newClaim.createdBy || "Current User", // Replace with actual user data
-        clientName: newClaim.clientName || "Unknown Client", // Replace with actual client data
-        totalValues: newClaim.totalValues || "$0", // Replace with actual value
-        timeSheetNumber: newClaim.timeSheetNumber || "Unknown",
-        payer: newClaim.payer || "Unknown",
-        hasActions: true,
-      };
-      setTableData((prev) => [formattedClaim, ...prev]);
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error("Error creating claim:", err);
-      setError("Failed to create claim. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   const handleActionClick = (row) => {
     navigate(`/billing/claims/view/${row.id}`);
@@ -180,16 +143,9 @@ const Claims = () => {
         <h3 className="text-xl text-gray-700 font-500">Manage your claims</h3>
       </div>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Add a new Claim"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={handleAddClaim}
-        />
-      </div>
+      
       <div className="mt-32">
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
         <CustomTable
           data={tableData}
           columns={columns}
@@ -201,15 +157,10 @@ const Claims = () => {
           actionText="View"
           actionLinkPrefix="/claims/view/"
           onActionClick={handleActionClick}
-       
+      //  loading={loading}
         />
       </div>
-      <AddClaimModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSaveClaim}
-        isLoading={isLoading}
-      />
+     
     </DashboardLayout>
   );
 };
