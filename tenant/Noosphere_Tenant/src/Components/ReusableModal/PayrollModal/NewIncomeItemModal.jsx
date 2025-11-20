@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -9,51 +9,85 @@ import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
 const payrollItemSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
   unitType: yup.string().required("Unit Type is required"),
-  rate: yup
-    .number()
-    .typeError("Rate must be a number")
-    .when("unitType", {
-      is: "Flat Rate",
-      then: yup.number().required("Rate is required").min(0, "Rate cannot be negative"),
-      otherwise: yup.number().notRequired(),
-    }),
-  unit: yup
-    .number()
-    .typeError("Unit must be a number")
-    .when("unitType", {
-      is: (val) => val === "Time based" || val === "Percentage based",
-      then: yup.number().required("Unit is required").min(0, "Unit cannot be negative"),
-      otherwise: yup.number().notRequired(),
-    }),
-  unitMinutes: yup
-    .number()
-    .typeError("Unit minutes must be a number")
-    .when("unitType", {
-      is: "Time based",
-      then: yup.number().required("Unit minutes is required").min(1, "Unit minutes must be at least 1"),
-      otherwise: yup.number().notRequired(),
-    }),
-  duration: yup
-    .string()
-    .when("unitType", {
-      is: (val) => val === "Time based" || val === "Percentage based",
-      then: yup.string().required("Duration is required"),
-      otherwise: yup.string().notRequired(),
-    }),
+  rate: yup.object().shape({
+    rate: yup
+      .number()
+      .transform((value, originalValue) => (typeof originalValue === "string" && originalValue === "" ? undefined : value))
+      .typeError("Rate must be a number")
+      .when("unitType", {
+        is: (unitType) => unitType === "Flat Rate",
+        then: () => yup.number().required("Rate is required").min(0, "Rate cannot be negative"),
+        otherwise: () => yup.number().nullable().notRequired(),
+      }),
+    unit: yup
+      .number()
+      .transform((value, originalValue) => (typeof originalValue === "string" && originalValue === "" ? undefined : value))
+      .typeError("Unit must be a number")
+      .when("unitType", {
+        is: (unitType) => unitType === "Time based" || unitType === "Percentage based",
+        then: () => yup.number().required("Unit is required").min(0, "Unit cannot be negative"),
+        otherwise: () => yup.number().nullable().notRequired(),
+      }),
+    unitMinutes: yup
+      .number()
+      .transform((value, originalValue) => (typeof originalValue === "string" && originalValue === "" ? undefined : value))
+      .typeError("Unit minutes must be a number")
+      .when("unitType", {
+        is: (unitType) => unitType === "Time based",
+        then: () => yup.number().required("Unit minutes is required").min(1, "Unit minutes must be at least 1"),
+        otherwise: () => yup.number().nullable().notRequired(),
+      }),
+    duration: yup
+      .string()
+      .when("unitType", {
+        is: (unitType) => unitType === "Time based" || unitType === "Percentage based",
+        then: () => yup.string().required("Duration is required"),
+        otherwise: () => yup.string().nullable().notRequired(),
+      }),
+  }),
   status: yup.boolean().required("Status is required"),
 });
 
-const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData = {}, isDeduction = false }) => {
+// Transform initial data to form data
+const transformInitialData = (initialData, mode) => {
+  console.log("transformInitialData - input:", JSON.stringify(initialData, null, 2));
+  const rate = initialData.rate || {};
+  const formData = {
+    name: initialData.name || "",
+    unitType: initialData.unitType || initialData.type || "",
+    rate: {
+      rate: rate.rate != null ? Number(rate.rate) : undefined,
+      unit: rate.unit != null ? Number(rate.unit) : undefined,
+      unitMinutes: rate.unitMinutes != null ? Number(rate.unitMinutes) : undefined,
+      duration: rate.duration || "",
+    },
+    status: initialData.status !== undefined ? initialData.status : true,
+  };
+  console.log("transformInitialData - output:", JSON.stringify(formData, null, 2));
+  return formData;
+};
+
+const PayrollItemModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  mode = "add",
+  initialData = {},
+  isDeduction = false,
+  existingItems = [],
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const defaultFormValues = {
     name: "",
     unitType: "",
-    rate: 0,
-    unit: 0,
-    unitMinutes: 0,
-    duration: "",
-    status: true, // Default to active
+    rate: {
+      rate: undefined,
+      unit: undefined,
+      unitMinutes: undefined,
+      duration: "",
+    },
+    status: true,
   };
 
   const {
@@ -65,27 +99,28 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
     formState: { errors },
   } = useForm({
     resolver: yupResolver(payrollItemSchema),
-    defaultValues: mode === "edit" ? { ...defaultFormValues, ...initialData } : defaultFormValues,
+    defaultValues: mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues,
   });
 
   // Watch the unitType field
   const unitType = watch("unitType");
 
   useEffect(() => {
+    console.log("initialData:", JSON.stringify(initialData, null, 2));
     if (isOpen) {
-      reset(mode === "edit" ? { ...defaultFormValues, ...initialData } : defaultFormValues);
+      reset(mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues);
     }
   }, [isOpen, mode, initialData, reset]);
 
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
+      console.log("Form data on save:", JSON.stringify(data, null, 2));
       await onSave(data);
       reset(defaultFormValues);
       onClose();
     } catch (error) {
       console.error(`Error saving ${isDeduction ? "deduction" : "income item"}:`, error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -101,10 +136,17 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
     { value: "hours", label: "Hours" },
   ];
 
-  const incomeItemOptions = [
-    { value: "basic_pay", label: "Basic Pay" },
-    { value: "overtime", label: "Overtime" },
-  ];
+  const durationOptions = useMemo(() => {
+    const options = existingItems
+      .filter((item) => mode !== "edit" || item.id !== initialData.id)
+      .map((item) => ({
+        value: item.id,
+        label: item.name,
+      }));
+    return options.length > 0
+      ? [{ value: "", label: "Select" }, ...options]
+      : [{ value: "", label: "No items available" }];
+  }, [existingItems, mode, initialData.id]);
 
   return (
     <ReusableModal
@@ -131,6 +173,7 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
           {...register("name")}
           error={errors.name?.message}
           placeholder="Enter Name"
+          disabled={mode === "view"}
         />
 
         <div className="flex gap-4 items-center">
@@ -143,6 +186,7 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
                   label="Unit Type"
                   options={unitTypeOptions}
                   error={errors.unitType?.message}
+                  disabled={mode === "view"}
                   {...field}
                 />
               )}
@@ -155,9 +199,10 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
             <TextInput
               label="Rate"
               type="number"
-              {...register("rate")}
-              error={errors.rate?.message}
+              {...register("rate.rate")}
+              error={errors.rate?.rate?.message}
               placeholder="Enter Rate"
+              disabled={mode === "view"}
             />
           </div>
         )}
@@ -168,11 +213,11 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
             <div style={{ marginBottom: "-14px" }}>
               <TextInput
                 type="number"
-                {...register("unit")}
+                {...register("rate.unit")}
                 width="70"
                 className="rounded-20px"
                 placeholder="$"
-                error={errors.unit?.message}
+                error={errors.rate?.unit?.message}
                 disabled={mode === "view"}
               />
             </div>
@@ -180,24 +225,25 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
             <div style={{ marginBottom: "-14px" }}>
               <TextInput
                 type="number"
-                {...register("unitMinutes")}
+                {...register("rate.unitMinutes")}
                 width="70"
                 className="rounded-20px"
                 placeholder="0"
-                error={errors.unitMinutes?.message}
+                error={errors.rate?.unitMinutes?.message}
                 disabled={mode === "view"}
               />
             </div>
             <div style={{ marginBottom: "-14px" }}>
               <Controller
-                name="duration"
+                name="rate.duration"
                 control={control}
                 render={({ field }) => (
                   <SelectInput
                     width="150"
                     options={roundingRuleOptions}
-                    error={errors.duration?.message}
+                    error={errors.rate?.duration?.message}
                     placeholder="Select"
+                    disabled={mode === "view"}
                     {...field}
                   />
                 )}
@@ -212,25 +258,26 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
             <div style={{ marginBottom: "-14px" }}>
               <TextInput
                 type="number"
-                {...register("unit")}
+                {...register("rate.unit")}
                 width="70"
                 className="rounded-20px"
                 placeholder="%"
-                error={errors.unit?.message}
+                error={errors.rate?.unit?.message}
                 disabled={mode === "view"}
               />
             </div>
             <p className="text-sm text-gray-700">% of</p>
             <div style={{ marginBottom: "-14px" }}>
               <Controller
-                name="duration"
+                name="rate.duration"
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    options={incomeItemOptions}
-                    error={errors.duration?.message}
+                    options={durationOptions}
+                    error={errors.rate?.duration?.message}
                     placeholder="Select"
                     width="150"
+                    disabled={mode === "view"}
                     {...field}
                   />
                 )}
@@ -247,6 +294,7 @@ const PayrollItemModal = ({ isOpen, onClose, onSave, mode = "add", initialData =
                 label={field.value ? "Active" : "Inactive"}
                 checked={field.value}
                 onChange={(checked) => field.onChange(checked)}
+                disabled={mode === "view"}
               />
             )}
           />

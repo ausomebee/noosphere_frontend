@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   exportTableData,
   printTableData,
@@ -35,6 +29,7 @@ const CustomTable = ({
   loading,
   hideSearch = false,
   hideTableActions = false,
+  onToggleActive, // New prop for handling toggle
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,8 +43,7 @@ const CustomTable = ({
   });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
-    useState(false);
+  const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] = useState(false);
   const tableContainerRef = useRef(null);
   const menuRefs = useRef({});
   const exportButtonRef = useRef(null);
@@ -94,33 +88,33 @@ const CustomTable = ({
     ];
   }, [columns, filters]);
 
-const secondFilterOptions = useMemo(() => {
-  if (!filters) return [];
-  const type = filterValues.filter_type;
-  const selectedFilter = filters.find((f) => f.value === type);
-  if (selectedFilter && selectedFilter.filterValues) {
-    return [{ value: "", label: `Select ${selectedFilter.label}` }, ...selectedFilter.filterValues];
-  }
-  switch (type) {
-    case "dateTime":
-      return [];
-    case "stage_completion":
-      return [
-        { value: "", label: "Select Stage Completion" },
-        ...Array.from({ length: 11 }, (_, i) => ({
-          value: i * 10,
-          label: `${i * 10}%`,
-        })),
-      ];
-    case "":
-    case "clear_filters":
-      return [];
-    default:
-      return getUniqueValues(type).length > 0
-        ? [{ value: "", label: `Select ${type}` }, ...getUniqueValues(type)]
-        : [];
-  }
-}, [filterValues.filter_type, getUniqueValues, filters]);
+  const secondFilterOptions = useMemo(() => {
+    if (!filters) return [];
+    const type = filterValues.filter_type;
+    const selectedFilter = filters.find((f) => f.value === type);
+    if (selectedFilter && selectedFilter.filterValues) {
+      return [{ value: "", label: `Select ${selectedFilter.label}` }, ...selectedFilter.filterValues];
+    }
+    switch (type) {
+      case "dateTime":
+        return [];
+      case "stage_completion":
+        return [
+          { value: "", label: "Select Stage Completion" },
+          ...Array.from({ length: 11 }, (_, i) => ({
+            value: i * 10,
+            label: `${i * 10}%`,
+          })),
+        ];
+      case "":
+      case "clear_filters":
+        return [];
+      default:
+        return getUniqueValues(type).length > 0
+          ? [{ value: "", label: `Select ${type}` }, ...getUniqueValues(type)]
+          : [];
+    }
+  }, [filterValues.filter_type, getUniqueValues, filters]);
 
   const filteredData = useMemo(() => {
     let filtered = [...data];
@@ -150,12 +144,10 @@ const secondFilterOptions = useMemo(() => {
       );
 
       if (selectedFilter && selectedFilter.filterFunction) {
-        // Use custom filter function if provided
         filtered = filtered.filter((row) =>
           selectedFilter.filterFunction(row, filterValues.value)
         );
       } else {
-        // Fallback for filters without a custom filterFunction
         filtered = filtered.filter((row) => {
           const rowValue = row[filterValues.filter_type];
           const filterValue = filterValues.value;
@@ -169,40 +161,46 @@ const secondFilterOptions = useMemo(() => {
       }
     }
 
-    if (
-      filters &&
-      filterValues.filter_type === "dateTime" &&
-      filterValues.dateAdded &&
-      (filterValues.dateAdded.start || filterValues.dateAdded.end)
-    ) {
-      filtered = filtered.filter((row) => {
-        const dateString = row.dateTime ? String(row.dateTime) : null;
-        const rowDate = dateString
-          ? parse(dateString, "MM/dd/yyyy", new Date())
-          : null;
-        if (!isValid(rowDate)) return false;
-        const startDate = filterValues.dateAdded.start
-          ? parse(
-              format(filterValues.dateAdded.start, "MM/dd/yyyy"),
-              "MM/dd/yyyy",
-              new Date()
-            )
-          : null;
-        const endDate = filterValues.dateAdded.end
-          ? parse(
-              format(filterValues.dateAdded.end, "MM/dd/yyyy"),
-              "MM/dd/yyyy",
-              new Date()
-            )
-          : null;
-        if (startDate && endDate && !isSameDay(startDate, endDate)) {
-          return isWithinInterval(rowDate, { start: startDate, end: endDate });
-        } else if (startDate) {
-          return isSameDay(rowDate, startDate);
-        }
-        return true;
-      });
+   // === DATE RANGE FILTER (DD-MM-YYYY in table, but internal uses MM/dd/yyyy) ===
+if (
+  filters &&
+  filterValues.filter_type === "dateTime" &&
+  filterValues.dateAdded?.start &&
+  filterValues.dateAdded?.end
+) {
+  filtered = filtered.filter((row) => {
+    const dateStr = row.dateCreated || row.date || row.dateAdded || row.dateTime;
+    if (!dateStr) return false;
+
+    let rowDate;
+    
+    // Check if date is in yyyy-mm-dd format (has 4 digits at start)
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateStr)) {
+      // Parse yyyy-mm-dd format
+      const [year, month, day] = dateStr.split("-").map(Number);
+      rowDate = new Date(year, month - 1, day);
+    } 
+    // Check if date is in dd-mm-yyyy format
+    else if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(dateStr)) {
+      // Parse dd-mm-yyyy format
+      const [day, month, year] = dateStr.split("-").map(Number);
+      rowDate = new Date(year, month - 1, day);
+    } 
+    else {
+      return false; // Unknown format
     }
+
+    if (!isValid(rowDate)) return false;
+
+    // Parse stored MM/dd/yyyy strings back to Date
+    const startDate = parse(filterValues.dateAdded.start, "MM/dd/yyyy", new Date());
+    const endDate = parse(filterValues.dateAdded.end, "MM/dd/yyyy", new Date());
+
+    if (!isValid(startDate) || !isValid(endDate)) return false;
+
+    return isWithinInterval(rowDate, { start: startDate, end: endDate });
+  });
+}
 
     if (
       filters &&
@@ -308,37 +306,6 @@ const secondFilterOptions = useMemo(() => {
       onSelectionChange(newSelectedRows, newSelectedItems);
     }
   }, [selectedRows, currentData, onSelectionChange]);
-
-  const handleSelectionChange = useCallback(
-    (rows, items, reset = false) => {
-      console.log("CustomTable handleSelectionChange:", { rows, items, reset });
-      if (reset) {
-        console.log("Resetting selections in CustomTable");
-        setSelectedRows([]);
-        setSelectedItems([]);
-        if (onSelectionChange) {
-          onSelectionChange([], []);
-        }
-      } else {
-        setSelectedRows(rows);
-        setSelectedItems(items);
-        if (onSelectionChange) {
-          onSelectionChange(rows, items);
-        }
-      }
-    },
-    [onSelectionChange]
-  );
-
-  const handleToggleActive = useCallback(
-    (rowIndex) => {
-      console.log("Toggling active for row:", rowIndex);
-      const updatedData = [...data];
-      updatedData[pagination.startIndex + rowIndex].ToggleActive =
-        !updatedData[pagination.startIndex + rowIndex].ToggleActive;
-    },
-    [data, pagination.startIndex]
-  );
 
   const handleExportCSV = useCallback(() => {
     console.log("Exporting to CSV");
@@ -457,7 +424,6 @@ const secondFilterOptions = useMemo(() => {
       if (!filters) return;
       setFilterValues((prev) => {
         const newValues = { ...prev, [filterKey]: value };
-
         return newValues;
       });
       if (onFilterChange) onFilterChange(filterKey, value);
@@ -565,7 +531,7 @@ const secondFilterOptions = useMemo(() => {
               secondFilterOptions={filters ? secondFilterOptions : []}
             />
           </div>
-          {showActions && !hideTableActions && (
+          { !hideTableActions && (
             <TableActions
               toggleExportDropdown={toggleExportDropdown}
               exportDropdownOpen={exportDropdownOpen}
@@ -601,7 +567,7 @@ const secondFilterOptions = useMemo(() => {
             actions={actions}
             tableName={tableName}
             hasStatusDot={hasStatusDot}
-            handleToggleActive={handleToggleActive}
+            handleToggleActive={onToggleActive} // Pass the prop
             actionLinkPrefix={actionLinkPrefix}
             actionText={actionText}
             onActionClick={onActionClick}

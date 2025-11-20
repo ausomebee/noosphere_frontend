@@ -34,7 +34,7 @@ const AppointmentModal = ({
   sessionTypes,
   staff,
 }) => {
-  console.log(initialData);
+ 
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -427,6 +427,7 @@ useEffect(() => {
       }
       return time;
     };
+    console.log(initialData)
 
     const formattedData = {
       date: initialData.date
@@ -468,11 +469,7 @@ useEffect(() => {
 
     reset(formattedData);
 
-    // Optional: Log for debugging
-    setTimeout(() => {
-      const currentClinicians = watch("clinicians");
-      console.log("Form clinicians after reset:", currentClinicians);
-    }, 100);
+    
   }
 }, [initialData, isEditMode, reset, watch]);
 
@@ -535,7 +532,7 @@ useEffect(() => {
         colorCode: data.colorCode,
       };
 
-      console.group("Appointment Submission");
+      
       console.log(
         "Form Data Submitted:",
         JSON.stringify(appointmentData, null, 2)

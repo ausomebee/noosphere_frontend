@@ -1,47 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollItemModal from "../../../../Components/ReusableModal/PayrollModal/NewIncomeItemModal";
-
+import api from "../../../../api/payrollApi";
+import { showToast } from "../../../../Helper/ShowToast";
 
 const IncomeItems = () => {
-  const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      name: "Overwork Commission",
-      unitType: "Flat Rate",
-      rate: 100,
-      rates: "$100",
-      status: true,
-      hasActions: true,
-    },
-    {
-      id: 2,
-      name: "Capital Compensation",
-      unitType: "Percentage based",
-      unit: 10,
-      rates: "10% of Basic Pay",
-      duration: "basic_pay",
-      status: true,
-      hasActions: true,
-    },
-    {
-      id: 3,
-      name: "Extraordinary work",
-      unitType: "Time based",
-      unit: 30,
-      rates: "$30 per hour",
-      unitMinutes: 60,
-      duration: "hours",
-      status: true,
-      hasActions: true,
-    },
-  ]);
-
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+  const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const Columns = [
     { header: "Name", key: "name", type: "text" },
@@ -71,50 +46,131 @@ const IncomeItems = () => {
             setIsModalOpen(true);
           },
         },
-        {
-          label: "Deactivate",
-          onClick: (row) => {
-            setTableData(tableData.map((item) =>
-              item.id === row.id ? { ...item, status: false } : item
-            ));
-          },
-          className: "remove",
-        },
       ],
       className: "more-dropdown",
     },
   ];
 
-  const handleSave = (data) => {
-    const formattedData = {
-      ...data,
-      id: mode === "add" ? tableData.length + 1 : selectedRow.id,
-      rates: formatRateDisplay(data),
-      hasActions: true,
-    };
-
-    if (mode === "add") {
-      setTableData([...tableData, formattedData]);
-    } else if (mode === "edit") {
-      setTableData(
-        tableData.map((item) =>
-          item.id === selectedRow.id ? formattedData : item
-        )
-      );
+  // Fetch income items
+  const fetchIncomeItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.GetIncomeItemsByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+    
+      const transformedData = data.data.map((item) => ({
+        id: item.id,
+        name: item.name || "Unknown",
+        unitType: item.type || "",
+        rate: item.rate || {},
+        status: item.isActive !== undefined ? item.isActive : true,
+        rates: formatRateDisplay(item, data.data),
+        hasActions: true,
+        fullData: item,
+      }));
+      setTableData(transformedData);
+    } catch (error) {
+      console.error("Error fetching income items:", error);
+      showToast("Failed to load income items", "error");
+      setTableData([]);
+    } finally {
+      setLoading(false);
     }
-    setIsModalOpen(false);
-  };
+  }, [tenantId, accessToken, refreshToken]);
 
-  const formatRateDisplay = (data) => {
-    if (data.unitType === "Flat Rate") {
-      return `$${data.rate}`;
-    } else if (data.unitType === "Percentage based") {
-      return `${data.unit}% of ${data.duration === "basic_pay" ? "Basic Pay" : "Overtime"}`;
-    } else if (data.unitType === "Time based") {
-      return `$${data.unit} per ${data.duration === "hours" ? "hour" : "minute"}`;
+  // Handle toggle active
+  const handleToggleActive = useCallback(
+    async (row) => {
+      const { id, status } = row;
+      const newStatus = !status;
+      try {
+        await api.UpdateIncomeItemsActiveness({
+          id,
+          isActive: newStatus,
+          accessToken,
+          refreshToken,
+        });
+        showToast(
+          `Income item ${newStatus ? "activated" : "deactivated"} successfully`,
+          "success"
+        );
+        fetchIncomeItems(); // Refresh data
+      } catch (error) {
+        console.error("Error updating income item status:", error);
+        showToast("Failed to update income item status", "error");
+      }
+    },
+    [accessToken, refreshToken, fetchIncomeItems]
+  );
+
+  // Handle save
+  const handleSave = useCallback(
+    async (data) => {
+      const cleanedRate = {};
+      if (data.unitType === "Flat Rate") {
+        cleanedRate.rate = Number(data.rate.rate) || 0;
+      } else if (data.unitType === "Time based") {
+        cleanedRate.unit = Number(data.rate.unit) || 0;
+        cleanedRate.unitMinutes = Number(data.rate.unitMinutes) || 0;
+        cleanedRate.duration = data.rate.duration || "";
+      } else if (data.unitType === "Percentage based") {
+        cleanedRate.unit = Number(data.rate.unit) || 0;
+        cleanedRate.duration = data.rate.duration || "";
+      }
+
+      const payload = {
+        tenantId,
+        name: data.name,
+        type: data.unitType,
+        rate: cleanedRate,
+        isActive: data.status,
+        isDeleted: false,
+        accessToken,
+        refreshToken,
+      };
+
+      if (mode === "edit") {
+        payload.id = selectedRow.id;
+      }
+
+      try {
+        if (mode === "add") {
+          await api.CreateIncomeItems(payload);
+          showToast("Income item created successfully", "success");
+        } else if (mode === "edit") {
+          await api.UpdateIncomeItems(payload);
+          showToast("Income item updated successfully", "success");
+        }
+        setIsModalOpen(false);
+        fetchIncomeItems(); // Refresh data
+      } catch (error) {
+        console.error(`Error saving income item:`, error);
+        showToast(`Failed to ${mode === "add" ? "create" : "update"} income item`, "error");
+      }
+    },
+    [tenantId, accessToken, refreshToken, mode, selectedRow, fetchIncomeItems]
+  );
+
+  const formatRateDisplay = (data, items) => {
+    if (data.type === "Flat Rate") {
+      return `$${data.rate.rate || 0}`;
+    } else if (data.type === "Percentage based") {
+      const referencedItem = items.find((item) => item.id === (data.rate.duration || ""));
+      return `${data.rate.unit || 0}% of ${referencedItem ? referencedItem.name : "Unknown Item"}`;
+    } else if (data.type === "Time based") {
+      return `$${data.rate.unit || 0} per ${data.rate.duration === "hours" ? "hour" : "minute"}`;
     }
     return "";
   };
+
+  useEffect(() => {
+    if (tenantId) {
+      fetchIncomeItems();
+    }
+  }, [tenantId, fetchIncomeItems]);
 
   return (
     <div>
@@ -141,6 +197,8 @@ const IncomeItems = () => {
           showCheckbox={false}
           hideSearch={true}
           hideTableActions={true}
+          loading={loading}
+          onToggleActive={handleToggleActive}
         />
       </div>
       <PayrollItemModal
@@ -150,6 +208,7 @@ const IncomeItems = () => {
         mode={mode}
         initialData={selectedRow || {}}
         isDeduction={false}
+        existingItems={tableData}
       />
     </div>
   );

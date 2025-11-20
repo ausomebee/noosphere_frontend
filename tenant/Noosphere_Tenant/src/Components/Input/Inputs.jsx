@@ -18,7 +18,7 @@ const TextInput = ({
     !isNaN(Number(width)) && width !== "full" ? { width: `${width}px` } : {};
 
   return (
-    <div className="input-group">
+    <div className="input-group" >
       {label && <label className="input-group-label">{label}</label>}
       <input
         type="text"

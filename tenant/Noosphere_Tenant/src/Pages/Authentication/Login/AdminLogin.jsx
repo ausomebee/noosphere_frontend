@@ -132,13 +132,15 @@ const AdminCLogin = () => {
                 <h2>Welcome Back</h2>
                 <p>Please login to your account</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="mb-24">
                   <TextInput
                     label="Email"
                     placeholder="Enter your mail"
-                    className="p-4 mb-24"
+                    className="p-4"
                     {...register("email")}
                     error={errors.email?.message}
                   />
+                  </div>
                   <PasswordInput
                     label="Password"
                     placeholder="Enter your Password"

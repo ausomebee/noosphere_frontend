@@ -34,6 +34,13 @@ import SingleClaim from "../Pages/BillingAndPayment/Claims/SingleClaim";
 import SingleViewPayer from "../Pages/BillingAndPayment/Settings/SettingSubs/SingleViewPayer";
 import Payroll from "../Pages/Payroll/Payroll/Payroll";
 import PayrollSettings from "../Pages/Payroll/PayrollSetting/PayrollSettings";
+import ViewBreakDown from "../Pages/Payroll/Payroll/ViewBreakDown";
+import Forms from "../Pages/CustomForms/Forms/Forms";
+import TemplatesLibrary from "../Pages/CustomForms/TemplatesLibrary/TemplatesLibrary";
+import FormBuilder from "../Pages/CustomForms/Forms/FormBuilder";
+import FormRenderer from "../Pages/CustomForms/FormRender/FormRenderer";
+import ClientList from "../Pages/Client/ClientList/ClientList";
+import ViewPrograms from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ProgramSub/ViewPrograms";
 
 const AllRoutes = () => {
   return (
@@ -82,7 +89,7 @@ const AllRoutes = () => {
       <Route path="/scheduler/calendar" element={<Calendar />} />
       <Route path="/scheduler/appointments" element={<Appointments />} />
 
-      {/* Clients */}
+      {/* Clients Onboarding*/}
       <Route path="/clients/pipeline" element={<Pipeline />} />
       <Route
         path="/pipeline/column-single/:pipelineStageId"
@@ -93,10 +100,26 @@ const AllRoutes = () => {
         element={<ClientPanel />}
       />
 
+
+      {/* Clients Onboarding*/}
+      <Route path="/clients/client-list" element={<ClientList />} />
+      <Route
+        path="/client/view-client/:clientId"
+        element={<ClientPanel />}
+      />
+      <Route
+        path="/client/view-program/:clientId/target/:programId"
+        element={<ViewPrograms />}
+      />
+
       {/* Program Library */}
       <Route path="/program-library" element={<ProgramLibrary />} />
       <Route
         path="/target-single/:domainName/:programName/:targetName"
+        element={<TargetSingle />}
+      />
+      <Route
+        path="/target-single/:programName/:targetName"
         element={<TargetSingle />}
       />
 
@@ -129,7 +152,16 @@ const AllRoutes = () => {
 
       {/* Payroll */}
       <Route path="/payroll/payroll-setup" element={<Payroll />} />
+      <Route path="/payroll/payroll/view-breakdown/:id" element={<ViewBreakDown />} />
       <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
+
+      {/* Custom Forms */}
+      <Route path="/custom-forms/forms" element={<Forms />} />
+      <Route path="/custom-forms/forms/create" element={<FormBuilder />} />
+      <Route path="/custom-forms/forms/create/:formId" element={<FormBuilder />} />
+      <Route path="/custom-forms/forms/renderer/:id" element={<FormRenderer />} />
+      <Route path="/custom-forms/templates-library" element={<TemplatesLibrary />} />
+      
     </Routes>
   );
 };

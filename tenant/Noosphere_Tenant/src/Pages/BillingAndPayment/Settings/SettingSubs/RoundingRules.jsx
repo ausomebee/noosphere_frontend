@@ -1,94 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
-import AddRoundingRule from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddRoundingRule"; // Adjust the import path
+import AddRoundingRule from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddRoundingRule";
+import api from "../../../../api/billingAndPaymentsApi";
+import { useSelector } from "react-redux";
+import { showToast } from "../../../../Helper/ShowToast";
+
+// Standard rule descriptions
+const standardRuleDescriptions = {
+  "8 Minute Rule": "Round up when time is more than 8 min into the next 15 min block",
+  "Midpoint Rule": "Round up when at least half of unit is completed",
+  "Exact Time Reporting": "Bill only what was delivered",
+};
 
 const RoundingRules = () => {
   const navigate = useNavigate();
-  const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 2,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 3,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 4,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 5,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 6,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 7,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 8,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 9,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 10,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 11,
-      roundingRule: "15-Minute Increment Rounding",
-      description: "Round session time to the nearest 15-minute increment",
-      isActive: true,
-      hasActions: true,
-    },
-  ]);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
+  const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [mode, setMode] = useState("add");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch rounding rules
+  useEffect(() => {
+    fetchRoundingRules();
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchRoundingRules = async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const response = await api.GetRoundingRuleByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const data = response.data || [];
+      const transformedData = data
+        .map((item) => ({
+          id: item.id,
+          roundingRule: item.ruleName,
+          description: item.description,
+          isActive: item.isActive,
+          hasActions: true,
+          fullData: item,
+        }));
+
+      setTableData(transformedData);
+    } catch (error) {
+      showToast("Failed to load rounding rules", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     { header: "Rounding Rule", key: "roundingRule", type: "text" },
@@ -96,14 +69,14 @@ const RoundingRules = () => {
     { header: "Status", key: "isActive", type: "active" },
   ];
 
-  const actions = [
+  const getActionsForRow = (row) => [
     {
       type: "dropdown",
       label: "More",
       items: [
         {
           label: "View",
-          onClick: (row) => {
+          onClick: () => {
             setSelectedRow(row);
             setMode("view");
             setIsModalOpen(true);
@@ -111,16 +84,30 @@ const RoundingRules = () => {
         },
         {
           label: "Edit",
-          onClick: (row) => {
+          onClick: () => {
             setSelectedRow(row);
             setMode("edit");
             setIsModalOpen(true);
           },
         },
         {
-          label: "Deactivate",
-          onClick: (row) => {
-            setTableData(tableData.filter((item) => item.id !== row.id));
+          label: row.isActive ? "Deactivate" : "Activate",
+          onClick: async () => {
+            try {
+              await api.UpdateRoundingRuleActiveness({
+                id: row.id,
+                isActive: !row.isActive,
+                accessToken,
+                refreshToken,
+              });
+              await fetchRoundingRules();
+              showToast(
+                `Rounding rule ${row.isActive ? "deactivated" : "activated"} successfully`,
+                "success"
+              );
+            } catch (error) {
+              showToast("Failed to update rounding rule status", "error");
+            }
           },
           className: "remove",
         },
@@ -129,25 +116,74 @@ const RoundingRules = () => {
     },
   ];
 
-  const handleSave = (data) => {
-    const updatedRule = {
-      id: selectedRow?.id || Date.now(),
-      roundingRule: data.parentRole || data.ruleName,
-      description: data.description,
-      isActive: data.status !== undefined ? data.status : true,
-      hasActions: true,
-      minutes: data.minutes || 0,
-      hours: data.hours || 0,
-      unit: data.unit || 0,
-      unitMinutes: data.unitMinutes || 0,
-    };
+  const handleSave = async (formData) => {
+    if (mode === "view") {
+      setIsModalOpen(false);
+      setSelectedRow(null);
+      setMode("add");
+      return;
+    }
 
-    if (mode === "edit" && selectedRow) {
-      setTableData(
-        tableData.map((item) => (item.id === selectedRow.id ? updatedRule : item))
-      );
-    } else {
-      setTableData([...tableData, updatedRule]);
+    setSaving(true);
+    try {
+      let apiPayload;
+
+      if (formData.ruleType === "standard") {
+        const description = standardRuleDescriptions[formData.parentRole];
+        if (!description) throw new Error("Invalid standard rule selected");
+
+        apiPayload = {
+          tenantId,
+          ruleType: "standard",
+          parentRole: formData.parentRole,
+          ruleName: formData.parentRole,
+          description,
+          isActive: formData.active,
+        };
+      } else {
+        // Custom rule with unit + unitMinute inside roundingRule
+        apiPayload = {
+          tenantId,
+          ruleType: "custom",
+          parentRole: null,
+          ruleName: formData.ruleName,
+          description: formData.description,
+          standardUnit: formData.minutes,
+          roundingRule: {
+            unit: formData.unit,
+            unitMinute: formData.unitMinutes, // ✅ fixed mapping
+          },
+          isActive: formData.active,
+        };
+      }
+
+      let response;
+      if (mode === "edit" && selectedRow) {
+        apiPayload.id = selectedRow.id;
+        response = await api.UpdateTenantRoundingRule({
+          ...apiPayload,
+          accessToken,
+          refreshToken,
+        });
+      } else {
+        response = await api.CreateTenantRoundingRule({
+          ...apiPayload,
+          accessToken,
+          refreshToken,
+        });
+      }
+
+      await fetchRoundingRules();
+      setIsModalOpen(false);
+      setSelectedRow(null);
+      setMode("add");
+      showToast("Rounding rule saved successfully", "success");
+      return response;
+    } catch (error) {
+      showToast("Failed to save rounding rule", "error");
+      throw error;
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -167,6 +203,7 @@ const RoundingRules = () => {
             setMode("add");
             setIsModalOpen(true);
           }}
+          disabled={saving}
         />
       </div>
 
@@ -174,11 +211,12 @@ const RoundingRules = () => {
         <CustomTable
           data={tableData}
           columns={columns}
-          actions={actions}
+          actions={getActionsForRow}
           tableName="Rounding Rules"
           itemsPerPage={10}
           showActions={true}
           showCheckbox={false}
+          loading={loading}
         />
       </div>
 
@@ -191,8 +229,9 @@ const RoundingRules = () => {
         }}
         onSave={handleSave}
         mode={mode}
-        initialData={selectedRow || {}}
-        onDelete={() => setTableData(tableData.filter((item) => item.id !== selectedRow?.id))}
+        initialData={selectedRow?.fullData || {}}
+        onDelete={[]}
+        loading={saving}
       />
     </div>
   );

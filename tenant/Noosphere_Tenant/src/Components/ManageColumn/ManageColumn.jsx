@@ -1,30 +1,18 @@
-
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaEye, FaPlus, FaSave, FaTrash } from "react-icons/fa";
-import { AiOutlineDelete } from "react-icons/ai";
-import { SwitchInput, TextareaInput, TextInput } from "../Input/Inputs";
+import { FaArrowLeft, FaPlus, FaSave, FaTrash } from "react-icons/fa";
+import { TextareaInput, TextInput } from "../Input/Inputs";
 import ColorPicker from "../ColorPicker";
 import Layout from "../../Layout/TenantLayout";
 import Button from "../Button/Button";
-import CustomDocumentModal from "../ReusableModal/PipelineModal/CustomDocumentModal";
-import CustomTaskModal from "../ReusableModal/PipelineModal/CustomTaskModal";
 import AddProspectModal from "../ReusableModal/PipelineModal/AddProspectModal";
 import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfirmationModal";
 import "./ManageColumn.css";
 import {
   updateDraft,
-  addTaskToDraft,
-  removeTaskFromDraft,
-  toggleTaskRequiredInDraft,
-  addDocumentToDraft,
-  removeDocumentFromDraft,
-  toggleDocumentRequiredInDraft,
   resetDraft,
   fetchSinglePipelineStages,
-  updateStageTasks,
-  updateStageDocuments,
   fetchPipelineItems,
   updatePipelineItemActivity,
   deletePipelineItem,
@@ -46,9 +34,6 @@ const ManageColumn = () => {
   // State management
   const [activeTab, setActiveTab] = useState("basic");
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showMoveModal, setShowMoveModal] = useState(false);
   const [showAddProspectModal, setShowAddProspectModal] = useState(false);
   const [showDeleteCandidateModal, setShowDeleteCandidateModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -84,10 +69,13 @@ const ManageColumn = () => {
         const mappedData = response.items.map((item) => ({
           id: item.id,
           columnId: pipelineStageId,
-          client: item.fullName || "Unknown Company",
+          client: item.fullName || `${item.firstName} ${item.lastName}`.trim() || "Unknown Candidate",
+          firstName: item.firstName || "",
+          lastName: item.lastName || "",
+          email: item.email || "",
+          phoneNumber: item.phoneNumber || "",
           added_by: item.createdBy || "Unknown Admin",
           dateTime: formatDate(item.createdAt),
-          stage_completion: Math.round((item.completionPercentage || 0) / 10) * 10,
           hasActions: true,
           hasCheckbox: true,
         }));
@@ -141,12 +129,6 @@ const ManageColumn = () => {
                 name: stageData.name || "",
                 description: stageData.description || "",
                 colorCode: stageData.colourCode || "#1E40AF",
-                requiredTasks: Array.isArray(stageData.tasks)
-                  ? stageData.tasks
-                  : [],
-                requiredDocuments: Array.isArray(stageData.documents)
-                  ? stageData.documents
-                  : [],
               })
             );
           }
@@ -195,77 +177,6 @@ const ManageColumn = () => {
       );
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  // Generalized save function for tasks and documents
-  const handleSaveItems = async (type, items, action) => {
-    if (!pipelineStageId) return;
-
-    setIsSaving(true);
-    try {
-      await dispatch(
-        action({
-          pipelineStageId,
-          [type]: items,
-          ...authTokens,
-        })
-      ).unwrap();
-      showToast(
-        `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully!`,
-        "success"
-      );
-    } catch (err) {
-      console.error(`Failed to update ${type}:`, err);
-      showToast(
-        err.response?.data?.message || `Failed to update ${type}`,
-        "error"
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Move candidates to another stage
-  const handleMoveSave = async (targetStageId) => {
-    const stageName =
-      stages.find((s) => s.stageId === targetStageId)?.name || "Unknown Stage";
-    const candidateIds = selectedCandidate
-      ? [selectedCandidate.id]
-      : selectedCandidates;
-
-    if (!candidateIds.length) return;
-
-    setIsSaving(true);
-    try {
-      const response = await dispatch(
-        updatePipelineItemActivity({
-          ids: candidateIds,
-          pipelineStageId: targetStageId,
-          ...authTokens,
-        })
-      ).unwrap();
-
-      if (response.data.status === "ok") {
-        fetchPipelineItemsData();
-        showToast(
-          `Moved ${candidateIds.length} candidate(s) to ${stageName}`,
-          "success"
-        );
-      } else {
-        throw new Error("Failed to move candidates.");
-      }
-    } catch (err) {
-      console.error("Candidate move failed:", err);
-      showToast(
-        err.response?.data?.message || "Failed to move candidate(s).",
-        "error"
-      );
-    } finally {
-      setIsSaving(false);
-      setShowMoveModal(false);
-      setSelectedCandidate(null);
-      setSelectedCandidates([]);
     }
   };
 
@@ -318,20 +229,11 @@ const ManageColumn = () => {
       key: "filter_type",
       value: "",
       options: [
-        { value: "", label: "Select Filter" },
         { value: "dateTime", label: "Date Created" },
         { value: "added_by", label: "Added By" },
-        { value: "stage_completion", label: "Stage Completion" },
-        { value: "clear_filters", label: "Clear Filters" },
       ],
     },
   ];
-
-  // Map stages to columns format for MoveCandidateModal
-  const columnsForModal = stages.map((stage) => ({
-    id: stage.stageId,
-    title: stage.name,
-  }));
 
   const handleEditCandidate = (stageId, taskId) => {
     navigate(`/client/client-single/${pipelineStageId}/${taskId}`);
@@ -360,12 +262,6 @@ const ManageColumn = () => {
             onClick={() => setActiveTab("basic")}
           >
             Basic setup
-          </button>
-          <button
-            className={`tab ${activeTab === "tasks" ? "active" : ""}`}
-            onClick={() => setActiveTab("tasks")}
-          >
-            Tasks & Requirements
           </button>
           <button
             className={`tab ${activeTab === "candidates" ? "active" : ""}`}
@@ -473,238 +369,6 @@ const ManageColumn = () => {
             </div>
           )}
 
-          {activeTab === "tasks" && (
-            <div className="tasks-requirements">
-              {/* Tasks Section */}
-              <div className="tasks-section">
-                <div
-                  className="tasks-header"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "16px",
-                  }}
-                >
-                  <span className="tasks-title">Tasks</span>
-                  <span className="required-title">Required</span>
-                </div>
-                <div className="tasks-list">
-                  {draft.requiredTasks.length > 0 ? (
-                    draft.requiredTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="task-item"
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                       
-                        }}
-                      >
-                        <div
-                          className="task-name-container"
-                          style={{ display: "flex", alignItems: "center" }}
-                        >
-                          <span>{task.name}</span>
-                          <button
-                            className="delete-btn"
-                            onClick={() =>
-                              dispatch(removeTaskFromDraft(task.id))
-                            }
-                            style={{
-                              marginLeft: "8px",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0",
-                            }}
-                          >
-                            <AiOutlineDelete color="red" size={20} />
-                          </button>
-                        </div>
-                        <div className="toggle-switch-container">
-                          <SwitchInput
-                            checked={task.required}
-                            onChange={() =>
-                              dispatch(toggleTaskRequiredInDraft(task.id))
-                            }
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div
-                      className="no-items-message"
-                      style={{ textAlign: "center", margin: "20px 0" }}
-                    >
-                      No tasks added yet
-                    </div>
-                  )}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div className="add-button-container">
-                    <Button
-                      label="Add a new task"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowTaskModal(true)}
-                      width="auto"
-                    />
-                  </div>
-                  <div className="save-button-container">
-                    <Button
-                      label={isSaving ? "Saving..." : "Save Tasks"}
-                      icon={!isSaving && <FaSave />}
-                      onClick={() =>
-                        handleSaveItems(
-                          "tasks",
-                          draft.requiredTasks,
-                          updateStageTasks
-                        )
-                      }
-                      disabled={isSaving}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Documents Section */}
-              <div className="documents-section">
-                <div
-                  className="documents-header"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                   
-                  }}
-                >
-                  <span className="documents-title">Documents</span>
-                  <span className="required-title">Required</span>
-                </div>
-                <div className="documents-lists">
-                  {draft.requiredDocuments.length > 0 ? (
-                    draft.requiredDocuments.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="document-items"
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "16px",
-                        }}
-                      >
-                        <div
-                          className="document-name-container"
-                          style={{ display: "flex", alignItems: "center" }}
-                        >
-                          <span>{doc.name}</span>
-                          <button
-                            className="delete-btn"
-                            onClick={() =>
-                              dispatch(removeDocumentFromDraft(doc.id))
-                            }
-                            style={{
-                              marginLeft: "8px",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0",
-                            }}
-                          >
-                            <AiOutlineDelete color="red" size={20} />
-                          </button>
-                        </div>
-                        <div className="toggle-switch-container">
-                          <SwitchInput
-                            checked={doc.required}
-                            onChange={() =>
-                              dispatch(toggleDocumentRequiredInDraft(doc.id))
-                            }
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div
-                      className="no-items-message"
-                      style={{ textAlign: "center", margin: "20px 0" }}
-                    >
-                      No documents added yet
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div className="add-button-container">
-                    <Button
-                      label="Request a new document"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowDocumentModal(true)}
-                      width="auto"
-                    />
-                  </div>
-                  <div className="save-button-container">
-                    <Button
-                      label={isSaving ? "Saving..." : "Save Documents"}
-                      icon={!isSaving && <FaSave />}
-                      onClick={() =>
-                        handleSaveItems(
-                          "documents",
-                          draft.requiredDocuments,
-                          updateStageDocuments
-                        )
-                      }
-                      disabled={isSaving}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Modals */}
-              <CustomDocumentModal
-                isOpen={showDocumentModal}
-                onClose={() => setShowDocumentModal(false)}
-                onSave={(docData) => {
-                  const newDoc = {
-                    id: `document-${Date.now()}`,
-                    name: docData.name,
-                    required: true,
-                  };
-                  dispatch(addDocumentToDraft(newDoc));
-                  setShowDocumentModal(false);
-                }}
-              />
-
-              <CustomTaskModal
-                isOpen={showTaskModal}
-                onClose={() => setShowTaskModal(false)}
-                onSave={(taskData) => {
-                  const newTask = {
-                    id: `task-${Date.now()}`,
-                    name: taskData.name,
-                    required: true,
-                  };
-                  dispatch(addTaskToDraft(newTask));
-                  setShowTaskModal(false);
-                }}
-              />
-            </div>
-          )}
-
           {activeTab === "candidates" && (
             <div className="candidates-tab">
               <div className="add-candidate-manage">
@@ -729,7 +393,6 @@ const ManageColumn = () => {
                       action.onClick(candidate, {
                         setSelectedCandidate,
                         setSelectedCandidates,
-                        setShowMoveModal,
                         setShowDeleteCandidateModal,
                         navigate,
                       }),
@@ -780,16 +443,11 @@ const ManageColumn = () => {
   );
 };
 
-// Table configuration (moved outside the component to avoid redefinition)
+// Table configuration
 const columns = [
   { key: "client", header: "Candidate Name", type: "text" },
   { key: "dateTime", header: "Date Created", type: "dateTime" },
   { key: "added_by", header: "Added by", type: "text" },
-  {
-    key: "stage_completion",
-    header: "Stage completion",
-    type: "stage_completion",
-  },
 ];
 
 const actions = [

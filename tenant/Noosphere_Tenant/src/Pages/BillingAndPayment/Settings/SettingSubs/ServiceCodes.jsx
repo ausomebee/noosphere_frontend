@@ -1,153 +1,153 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import AddServiceCodeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddServiceCodeModal";
-
+import { useSelector } from "react-redux";
+import { showToast } from "../../../../Helper/ShowToast";
+import api from "../../../../api/billingAndPaymentsApi";
 
 const ServiceCodes = () => {
   const navigate = useNavigate();
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 2,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 3,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 4,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 5,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 6,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 7,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 8,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 9,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 10,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-    {
-      id: 11,
-      serviceCodes: "H0015",
-      modifiers: "M23.9, M45.9, M67.8",
-      rates: "$100",
-      unitTime: "15 mins",
-      description: "General Consultation",
-      isActive: true,
-      hasActions: true,
-    },
-  ]);
-  
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch service codes on mount
+  useEffect(() => {
+    fetchServiceCodes();
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchServiceCodes = async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const response = await api.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      // Assuming response.data is an array of { id, code, description, modifiers (object), isActive, isDeleted }
+      const data = response.data || [];
+      const transformedData = data
+        .filter((item) => !item.isDeleted) // Exclude deleted items
+        .map((item) => ({
+          id: item.id,
+          serviceCodes: item.code,
+          modifiers: item.modifiers
+            ? Object.values(item.modifiers).join(", ") // Transform object to joined string for display
+            : "None",
+          description: item.description,
+          isActive: item.isActive,
+          hasActions: true,
+        }));
+      setTableData(transformedData);
+    } catch (error) {
+      showToast("Failed to load service codes", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     { header: "Service Code", key: "serviceCodes", type: "text" },
     { header: "Modifiers", key: "modifiers", type: "text" },
-    { header: "Unit Rate", key: "rates", type: "text" },
-    { header: "Time per Unit", key: "unitTime", type: "text" },
     { header: "Description", key: "description", type: "text" },
     { header: "Status", key: "isActive", type: "active" },
   ];
 
-  const actions = [
+  const filters = [{ value: "status", label: "Status" }];
+
+  // Transform form data modifiers array to API object format
+  const transformModifiersToApiObject = (modifiersArray) => {
+    return modifiersArray.reduce((acc, { modifier }, index) => {
+      if (modifier) {
+        acc[`modifier${index + 1}`] = modifier;
+      }
+      return acc;
+    }, {});
+  };
+
+  const handleSave = async (data) => {
+    setSaving(true);
+    try {
+      const apiPayload = {
+        tenantId,
+        code: data.code,
+        description: data.description,
+        isActive: data.status,
+        modifiers: transformModifiersToApiObject(data.modifiers),
+      };
+
+      let response;
+      if (selectedService) {
+        // Edit existing
+        apiPayload.id = selectedService.id;
+        response = await api.UpdateTenantServiceCode({
+          ...apiPayload,
+          accessToken,
+          refreshToken,
+        });
+      } else {
+        // Add new
+        response = await api.CreateTenantServiceCode({
+          ...apiPayload,
+          accessToken,
+          refreshToken,
+        });
+      }
+
+      // Refetch data after save
+      await fetchServiceCodes();
+      setIsModalOpen(false);
+      setSelectedService(null);
+      showToast("Service code saved successfully", "success");
+      return response;
+    } catch (error) {
+      showToast("Failed to save service code", "error");
+      throw error; // Let modal handle error display if needed
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Dynamic actions per row - this function is called by CustomTable for each row
+  const getActionsForRow = (row) => [
     {
       type: "dropdown",
       label: "More",
       items: [
         {
-          label: "View",
-          onClick: (row) => {
-            navigate(`/billing/timesheets/${row.id}`);
+          label: "Edit",
+          onClick: () => {
+            setSelectedService(row);
+            setIsModalOpen(true);
           },
         },
         {
-          label: "Edit",
-          onClick: (row) => {
-            setSelectedService(row);
-            setIsModalOpen(true);
+          label: row.isActive ? "Deactivate" : "Activate",
+          onClick: async () => {
+            try {
+              await api.UpdateServiceCodeActiveness({
+                id: row.id,
+                isActive: !row.isActive,
+                accessToken,
+                refreshToken,
+              });
+              // Refetch data after toggle
+              await fetchServiceCodes();
+              showToast(`Service code ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
+            } catch (error) {
+              showToast("Failed to update service code status", "error");
+            }
           },
         },
       ],
@@ -155,45 +155,10 @@ const ServiceCodes = () => {
     },
   ];
 
-  const filters = [
-    { value: "unitType", label: "Unit Type" },
-    { value: "status", label: "Status" },
-  ];
-
-  const handleSave = (data) => {
-    const newModifiers = data.modifiers.map((m) => ({
-      modifier: m.modifier,
-      ratePerUnit: m.ratePerUnit,
-    }));
-    const updatedService = {
-      id: selectedService?.id || Date.now(),
-      serviceCodes: data.code,
-      modifiers: data.modifiers.map((m) => m.modifier).join(", ") || "None",
-      rates: `$${data.ratePerUnit}`,
-      unitTime: `${data.unitDuration} mins`,
-      description: data.description,
-      isActive: data.status,
-      hasActions: true,
-    };
-
-    if (selectedService) {
-      // Edit existing service
-      setTableData(
-        tableData.map((item) =>
-          item.id === selectedService.id ? updatedService : item
-        )
-      );
-    } else {
-      // Add new service
-      setTableData([...tableData, updatedService]);
-    }
-  };
-
   return (
     <div>
       <h2 className="text-20px mt-6 text-gray-400">
-        Setup and manage Service (CPT) codes for the services your organization
-        offers
+        Setup and manage Service (CPT) codes for the services your organization offers
       </h2>
 
       <div className="justify-end flex mt-6">
@@ -205,6 +170,7 @@ const ServiceCodes = () => {
             setSelectedService(null);
             setIsModalOpen(true);
           }}
+          disabled={saving}
         />
       </div>
 
@@ -212,21 +178,26 @@ const ServiceCodes = () => {
         <CustomTable
           data={tableData}
           columns={columns}
-          actions={actions}
+          actions={getActionsForRow}
           filters={filters}
           tableName="Service Codes"
           itemsPerPage={10}
           showActions={true}
           showCheckbox={false}
+          loading={loading}
         />
       </div>
 
       <AddServiceCodeModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedService(null);
+        }}
         onSave={handleSave}
         mode={selectedService ? "edit" : "add"}
         initialData={selectedService || {}}
+        loading={saving}
       />
     </div>
   );

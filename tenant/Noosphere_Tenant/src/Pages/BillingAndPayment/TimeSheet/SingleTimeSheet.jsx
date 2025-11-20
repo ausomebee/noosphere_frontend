@@ -3,14 +3,29 @@ import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaArrowLeft, FaChevronDown } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AccordionTable from "../../../Components/Table/AccordionTable";
+import Button from "../../../Components/Button/Button";
+import RejectTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/RejectTimesheetModal";
+import ApproveTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/ApproveTimeSheetModal";
+import RequestTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/RequestTimeSheetModal";
 
 const SingleTimeSheet = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("timeSheetDetails");
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isRequestUpdateModalOpen, setIsRequestUpdateModalOpen] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [counts, setCounts] = useState({
-    historyAndApprovalsCount: 7, // Updated count based on the actual entries
+    historyAndApprovalsCount: 7,
   });
+  const [approvalData, setApprovalData] = useState({
+    clientApproval: "Approve", // Can be "Approve" or "Pending"
+    supervisorApproval: "Pending", // Can be "Pending", "Approve", "Update Requested", "Rejected"
+  });
+
+  // Destructure approval data
+  const { clientApproval, supervisorApproval } = approvalData;
 
   const columns = [
     { key: "diagnosisCode", header: "Diagnosis Code" },
@@ -55,7 +70,6 @@ const SingleTimeSheet = () => {
     ],
   };
 
-  // Dummy JSON data for each section
   const sessionInfo = {
     date: "2024-06-15",
     clientName: "John Doe",
@@ -77,7 +91,6 @@ const SingleTimeSheet = () => {
     totalBillableTime: "4 hours",
   };
 
-  // Updated historyAndApprovals data structure based on the image content
   const historyAndApprovals = {
     entries: [
       {
@@ -161,15 +174,43 @@ const SingleTimeSheet = () => {
     // Save to state or send to API
   };
 
-  // Helper function to render the approval entry based on type
+  const handleNudgeClient = async () => {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Nudge sent to client:", sessionInfo.clientName);
+      alert("Nudge sent successfully!");
+    } catch (error) {
+      console.error("Error sending nudge:", error);
+      alert("Failed to send nudge.");
+    }
+  };
+
+  const handleRejectSave = async (data) => {
+    console.log("Reject timesheet with reason:", data.reason);
+    setApprovalData({ ...approvalData, supervisorApproval: "Rejected" });
+  };
+
+  const handleApproveSave = async () => {
+    console.log("Timesheet approved and converted to claim");
+    setApprovalData({ ...approvalData, supervisorApproval: "Approve" });
+  };
+
+  const handleRequestUpdateSave = async (data) => {
+    console.log("Update requested with details:", data.request);
+    setApprovalData({ ...approvalData, supervisorApproval: "Update Requested" });
+  };
+
   const renderApprovalEntry = (entry) => {
     switch (entry.type) {
       case "creation":
         return (
           <div className="approval-entry">
-            <span className="text-gray-700 ">
+            <span className="text-gray-700">
               <span className="text-blue-600 font-bold">Timesheet</span> for{" "}
-               <span className="text-blue-600 font-bold">{entry.for}</span> {entry.action} on  <span className="text-blue-600 font-bold">{entry.date}</span> by  <span className="text-blue-600 font-bold">{entry.by}</span>
+              <span className="text-blue-600 font-bold">{entry.for}</span>{" "}
+              {entry.action} on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span> by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span>
             </span>
           </div>
         );
@@ -179,7 +220,9 @@ const SingleTimeSheet = () => {
           <div className="approval-entry">
             <span className="text-gray-700">
               <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action} by  <span className="text-blue-600 font-bold">{entry.by}</span> on  <span className="text-blue-600 font-bold">{entry.date}</span>
+              {entry.action} by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span> on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span>
             </span>
           </div>
         );
@@ -188,7 +231,10 @@ const SingleTimeSheet = () => {
           <div className="approval-entry">
             <span className="text-gray-700">
               <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action} by  <span className="text-blue-600 font-bold">{entry.by}</span> on  <span className="text-blue-600 font-bold">{entry.date}</span> to  <span className="text-blue-600 font-bold">{entry.to}</span>
+              {entry.action} by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span> on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span> to{" "}
+              <span className="text-blue-600 font-bold">{entry.to}</span>
             </span>
           </div>
         );
@@ -197,7 +243,9 @@ const SingleTimeSheet = () => {
           <div className="approval-entry">
             <span className="text-gray-700">
               <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action} by  <span className="text-blue-600 font-bold">{entry.by}</span> on  <span className="text-blue-600 font-bold">{entry.date}</span>
+              {entry.action} by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span> on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span>
             </span>
           </div>
         );
@@ -207,7 +255,9 @@ const SingleTimeSheet = () => {
           <div className="approval-entry">
             <span className="text-gray-700">
               <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action} by  <span className="text-blue-600 font-bold">{entry.by}</span> on  <span className="text-blue-600 font-bold">{entry.date}</span>
+              {entry.action} by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span> on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span>
             </span>
           </div>
         );
@@ -215,7 +265,9 @@ const SingleTimeSheet = () => {
         return (
           <div className="approval-entry">
             <span className="text-gray-700">
-              {entry.action} by  <span className="text-blue-600 font-bold">{entry.by}</span> on  <span className="text-blue-600 font-bold">{entry.date}</span>
+              {entry.action} by{" "}
+              <span className="text-blue-600 font-bold">{entry.by}</span> on{" "}
+              <span className="text-blue-600 font-bold">{entry.date}</span>
             </span>
           </div>
         );
@@ -225,7 +277,7 @@ const SingleTimeSheet = () => {
   return (
     <DashboardLayout>
       <div>
-        <div className="manage-column-header" >
+        <div className="manage-column-header">
           <button className="manage-back-button" onClick={() => navigate(-1)}>
             <FaArrowLeft />
             Back
@@ -271,8 +323,14 @@ const SingleTimeSheet = () => {
                   <span className="timesheet-approval-text">
                     Client Approval
                   </span>
-                  <span className="timesheet-status timesheet-complete">
-                    Complete
+                  <span
+                    className={`timesheet-status ${
+                      clientApproval === "Approve"
+                        ? "timesheet-complete"
+                        : "timesheet-pending"
+                    }`}
+                  >
+                    {clientApproval}
                   </span>
                 </div>
                 <div className="timesheet-separator"></div>
@@ -280,8 +338,18 @@ const SingleTimeSheet = () => {
                   <span className="timesheet-approval-text">
                     Supervisor Approval
                   </span>
-                  <span className="timesheet-status timesheet-pending">
-                    Pending
+                  <span
+                    className={`timesheet-status ${
+                      supervisorApproval === "Approve"
+                        ? "timesheet-complete"
+                        : supervisorApproval === "Rejected"
+                        ? "timesheet-rejected"
+                        : supervisorApproval === "Update Requested"
+                        ? "timesheet-update-requested"
+                        : "timesheet-pending"
+                    }`}
+                  >
+                    {supervisorApproval}
                   </span>
                 </div>
               </div>
@@ -295,19 +363,42 @@ const SingleTimeSheet = () => {
                 </button>
                 {isOpen && (
                   <div className="timesheet-dropdown">
-                    <div className="timesheet-dropdown-item">Edit</div>
-                    <div className="timesheet-dropdown-item">
-                      Convert to Claim
+                    <div
+                      className="timesheet-dropdown-item"
+                      onClick={() => setIsEditMode(true)}
+                    >
+                      Edit
                     </div>
-                    <div className="timesheet-dropdown-item timesheet-delete">
-                      Delete
+                    <div
+                      className="timesheet-dropdown-item"
+                      onClick={handleNudgeClient}
+                    >
+                      Nudge client for approval
+                    </div>
+                    <div
+                      className="timesheet-dropdown-item"
+                      onClick={() => setIsRequestUpdateModalOpen(true)}
+                    >
+                      Request Update
+                    </div>
+                    <div
+                      className="timesheet-dropdown-item"
+                      onClick={() => setIsApproveModalOpen(true)}
+                    >
+                      Approve and Convert to Claim
+                    </div>
+                    <div
+                      className="timesheet-dropdown-item timesheet-delete"
+                      onClick={() => setIsRejectModalOpen(true)}
+                    >
+                      Reject
                     </div>
                   </div>
                 )}
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6 ">
+              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                 Session Information
               </h3>
               <div className="p-20 border border-gray-200 rounded-lg">
@@ -355,7 +446,7 @@ const SingleTimeSheet = () => {
                       <span className="text-gray-400 font-bold">
                         Service Type(s)
                       </span>
-                      <span className="ml-2 text-gray-700 ">
+                      <span className="ml-2 text-gray-700">
                         {sessionInfo.serviceType}
                       </span>
                     </div>
@@ -370,7 +461,7 @@ const SingleTimeSheet = () => {
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6 ">
+              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                 Travel & Time Information
               </h3>
               <div className="p-20 border border-gray-200 rounded-lg">
@@ -406,7 +497,7 @@ const SingleTimeSheet = () => {
                       <span className="text-gray-400 font-bold">
                         Travel Start Time
                       </span>
-                      <span className="ml-2 text-gray-700 ">
+                      <span className="ml-2 text-gray-700">
                         {travelTimeInfo.travelStartTime}
                       </span>
                     </div>
@@ -432,7 +523,7 @@ const SingleTimeSheet = () => {
                       <span className="text-gray-400 font-bold">
                         Total Billable Time
                       </span>
-                      <span className="ml-2 text-gray-700 ">
+                      <span className="ml-2 text-gray-700">
                         {travelTimeInfo.totalBillableTime}
                       </span>
                     </div>
@@ -440,44 +531,76 @@ const SingleTimeSheet = () => {
                 </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6 ">
-                Documents & Data
-              </h3>
-              <div className="documents-list">
-                {issueData.documents?.length ? (
-                  issueData.documents.map((document) => (
-                    <div key={document.id} className="document-item">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="document-icon"
+            <div className="flex">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
+                  Documents & Data
+                </h3>
+                <div className="documents-list">
+                  {issueData.documents?.length ? (
+                    issueData.documents.map((document) => (
+                      <div
+                        key={document.id}
+                        className="document-item justify-between"
                       >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                      </svg>
-                      <a href={document.url} className="document-link">
-                        {document.name}
-                      </a>
+                        <div className="flex">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="document-icon"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                          </svg>
+                          <a href={document.url} className="document-link">
+                            {document.name}
+                          </a>
+                        </div>
+                        <div>
+                          <Button label="View" variant="secondary" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No documents available</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
+                  Client Authorization
+                </h3>
+                <div>
+                  {clientApproval === "Approve" && (
+                    <div className="signature-container p-4 border border-gray-200 rounded-lg">
+                      <h4 className="text-gray-400 font-bold">
+                        Client Signature
+                      </h4>
+                      <img
+                        src="https://via.placeholder.com/150x50?text=Client+Signature"
+                        alt="Client Signature"
+                        className="mt-2"
+                      />
+                      <p className="text-gray-700 mt-2">
+                        Signed by {sessionInfo.clientName} on {sessionInfo.date}
+                      </p>
                     </div>
-                  ))
-                ) : (
-                  <p>No documents available</p>
-                )}
+                  )}
+                </div>
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6 ">
+              <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                 Billing and Authorization
               </h3>
               <div>
@@ -488,18 +611,34 @@ const SingleTimeSheet = () => {
                   itemsPerPage={5}
                   onServiceDataChange={handleServiceDataChange}
                   initialServiceData={initialServiceData}
+                  isEditMode={isEditMode}
                 />
               </div>
             </div>
+            <RejectTimeSheetModal
+              isOpen={isRejectModalOpen}
+              onClose={() => setIsRejectModalOpen(false)}
+              onSave={handleRejectSave}
+            />
+            <ApproveTimeSheetModal
+              isOpen={isApproveModalOpen}
+              onClose={() => setIsApproveModalOpen(false)}
+              onSave={handleApproveSave}
+            />
+            <RequestTimeSheetModal
+              isOpen={isRequestUpdateModalOpen}
+              onClose={() => setIsRequestUpdateModalOpen(false)}
+              onSave={handleRequestUpdateSave}
+            />
           </div>
         )}
 
         {activeTab === "historyAndApprovals" && (
           <div>
-            <div className="p-6  ">
+            <div className="p-6">
               <div className="space-y-4">
                 {historyAndApprovals.entries.map((entry) => (
-                  <div key={entry.id} className="approval-item p-6 ">
+                  <div key={entry.id} className="approval-item p-6">
                     {renderApprovalEntry(entry)}
                   </div>
                 ))}

@@ -153,6 +153,20 @@ const GetTenantStaffByTenantId = async ({
     throw new Error(error.message || "Get Tenant Staff by tenant id failed");
   }
 };
+
+const GetAllAppointments = async ({ tenantId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/tenant/${tenantId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.message || "Get Tenant All Appointments by tenant id failed"
+    );
+  }
+};
 const GetAppointmentByTenantId = async ({
   tenantId,
   accessToken,
@@ -178,7 +192,7 @@ const GetAppointmentByStaffId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/appointments/tenant/${staffId}`
+      `${PLAIN_API_URL}/appointments/staff/${staffId}`
     );
     return response;
   } catch (error) {
@@ -498,4 +512,5 @@ export default {
   GetUpcomingAppointmentByStaffId,
   GetPastAppointmentByTenantId,
   GetPastAppointmentByStaffId,
+  GetAllAppointments
 };

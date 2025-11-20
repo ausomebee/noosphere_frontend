@@ -1,6 +1,13 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
-import { format, addDays, subDays, parse, startOfDay } from "date-fns";
-import { useSelector } from "react-redux";
+// CalendarScheduler.jsx
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useEffect,
+  memo,
+} from "react";
+import { format, addDays, subDays } from "date-fns";
 import DayView from "./DayView";
 import WeekView from "./WeekView";
 import MonthView from "./MonthView";
@@ -21,7 +28,12 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import api from "../../api/AppointmentApi";
 import { showToast } from "../../Helper/ShowToast";
 
-const CalendarScheduler = ({
+// Memoized modals to prevent unnecessary re-renders
+const MemoAppointmentModal = memo(AppointmentModal);
+const MemoRescheduleModal = memo(RescheduleModal);
+const MemoAppointmentDetailsModal = memo(AppointmentDetailsModal);
+
+function CalendarScheduler({
   appointments,
   staff,
   clients,
@@ -31,347 +43,237 @@ const CalendarScheduler = ({
   refreshToken,
   tenantId,
   role,
-  refreshAppointments,
-  // selectedClients,
   loading,
-}) => {
+  selectedClients,
+  selectedStaff,
+  setSelectedClients,
+  setSelectedStaff,
+  fetchAppointmentsByFilter,
+}) {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [view, setView] = useState("month");
-  const [selectedStaff, setSelectedStaff] = useState([]);
-  const [selectedClients, setSelectedClients] = useState([]);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentPosition, setAppointmentPosition] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("staff");
+  const [activeTab, setActiveTab] = useState("client");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [isCalendarViewModalOpen, setIsCalendarViewModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelAppointment, setCancelAppointment] = useState(null);
 
-  const calendarContainerRef = useRef(null);
+  // Auto-show sidebar for Staff/Admin
+  useEffect(() => {
+    if (role === "Staff" || role === "Admin") {
+      setIsSidebarVisible(true);
+    }
+  }, [role]);
 
-  const staffWithCounts = useMemo(
-    () =>
-      staff.map((member) => ({
-        ...member,
-        appointmentCount: appointments.filter((appt) =>
-          Array.isArray(appt.clinicians)
-            ? appt.clinicians.includes(member.id)
-            : false
-        ).length,
-      })),
-    [appointments, staff]
-  );
+  const effectiveActiveTab = role === "Staff" ? "client" : activeTab;
 
-  const clientsWithCounts = useMemo(
-    () =>
-      clients.map((client) => ({
-        ...client,
-        appointmentCount: appointments.filter(
-          (appt) => appt.clientId === client.clientId
-        ).length,
-      })),
-    [appointments, clients]
-  );
-
+  // Client-side search (instant, no API call)
   const filteredAppointments = useMemo(() => {
+    if (!searchTerm) return appointments;
+
+    const term = searchTerm.toLowerCase();
     return appointments.filter((appt) => {
-      const staffMatch =
-        selectedStaff.length === 0 ||
-        (Array.isArray(appt.clinicians) &&
-          appt.clinicians.some((c) => selectedStaff.includes(c)));
-      const clientMatch =
-        selectedClients.length === 0 || selectedClients.includes(appt.clientId);
-      const searchMatch = searchTerm
-        ? (
-            clients.find((c) => c.clientId === appt.clientId)?.client
-              ?.fullName || ""
-          )
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (Array.isArray(appt.clinicians) &&
-            appt.clinicians.some((clinicianId) =>
-              (staff.find((s) => s.id === clinicianId)?.fullName || "")
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())
-            )) ||
-          (appt.service?.[0]?.serviceType || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-        : true;
+      const clientName =
+        clients.find((c) => c.clientId === appt.clientId)?.client?.fullName ||
+        "";
+      const clinicianNames = Array.isArray(appt.clinicianIds)
+        ? appt.clinicianIds
+            .map((id) => staff.find((s) => s.id === id)?.fullName || "")
+            .join(" ")
+        : "";
+      const serviceName = appt.service?.[0]?.serviceType || "";
+
       return (
-        (activeTab === "staff" ? staffMatch : true) &&
-        (activeTab === "client" ? clientMatch : true) &&
-        searchMatch
+        clientName.toLowerCase().includes(term) ||
+        clinicianNames.toLowerCase().includes(term) ||
+        serviceName.toLowerCase().includes(term)
       );
     });
+  }, [appointments, searchTerm, clients, staff]);
+
+  const refreshCurrentView = useCallback(() => {
+    const payload = {
+      clientIds: effectiveActiveTab === "client" ? selectedClients : [],
+      staffIds: effectiveActiveTab === "staff" ? selectedStaff : [],
+    };
+    fetchAppointmentsByFilter(payload);
   }, [
-    appointments,
-    activeTab,
-    selectedStaff,
+    effectiveActiveTab,
     selectedClients,
-    searchTerm,
-    clients,
-    staff,
+    selectedStaff,
+    fetchAppointmentsByFilter,
   ]);
 
-  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
-  const handlePrev = useCallback(
-    () =>
-      setCurrentDate(
-        subDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
-      ),
-    [currentDate, view]
-  );
-  const handleNext = useCallback(
-    () =>
-      setCurrentDate(
-        addDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
-      ),
-    [currentDate, view]
-  );
-  const handleStaffChange = useCallback(
-    (staffId) =>
-      setSelectedStaff((prev) =>
-        prev.includes(staffId)
-          ? prev.filter((id) => id !== staffId)
-          : [...prev, staffId]
-      ),
-    []
-  );
-  const handleClientChange = useCallback(
-    (clientId) =>
-      setSelectedClients((prev) =>
-        prev.includes(clientId)
-          ? prev.filter((id) => id !== clientId)
-          : [...prev, clientId]
-      ),
-    []
-  );
-  const handleTabClick = useCallback((tab) => {
-    setActiveTab(tab);
-    setIsSidebarVisible(true);
+  const splitId = useCallback((id) => {
+    if (!id?.includes("_")) return { uuid: id, timestamp: null };
+    const [uuid, timestamp] = id.split("_");
+    return { uuid, timestamp };
   }, []);
-  const handleHideSidebar = useCallback(() => setIsSidebarVisible(false), []);
-  const handleSearchChange = useCallback(
-    (e) => setSearchTerm(e.target.value),
-    []
-  );
-  const handleFilterClick = useCallback(() => setIsFilterModalOpen(true), []);
-  const handleCalendarViewClick = useCallback(
-    () => setIsCalendarViewModalOpen(true),
-    []
-  );
-  const handleSettingsClick = useCallback(
-    () => setIsSettingsModalOpen(true),
-    []
-  );
-  const handleAppointmentClick = useCallback((appt, position) => {
-    setSelectedAppointment(appt);
-    setAppointmentPosition(position);
-  }, []);
-  const handleCloseAppointmentDetails = useCallback(() => {
+
+  // FIXED: Was "closeAllMod Colonel" → now correct
+  const closeAllModals = useCallback(() => {
     setSelectedAppointment(null);
     setAppointmentPosition(null);
-  }, []);
-  const handleEditAppointment = useCallback((appointment) => {
-    setSelectedAppointment(appointment);
-    setIsAppointmentModalOpen(true);
-  }, []);
-  const handleRescheduleAppointment = useCallback((appointment) => {
-    setSelectedAppointment(null);
-    setRescheduleAppointment(appointment);
-    setIsRescheduleModalOpen(true);
-  }, []);
-  const handleCancelAppointment = useCallback((appointment) => {
-    setSelectedAppointment(null);
-    setCancelAppointment(appointment);
-    setIsCancelModalOpen(true);
+    setIsAppointmentModalOpen(false);
+    setIsRescheduleModalOpen(false);
+    setRescheduleAppointment(null);
+    setIsCancelModalOpen(false);
+    setCancelAppointment(null);
   }, []);
 
-  const splitId = (id) => {
-    if (!id) {
-      showToast("Invalid appointment ID", "error");
-      return { uuid: null, timestamp: null };
+  const handleToday = () => setCurrentDate(new Date());
+  const handlePrev = () =>
+    setCurrentDate(
+      subDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
+    );
+  const handleNext = () =>
+    setCurrentDate(
+      addDays(currentDate, view === "day" ? 1 : view === "week" ? 7 : 30)
+    );
+
+  const handleTabClick = (tab) => {
+    if (role !== "Staff") {
+      setActiveTab(tab);
+      setIsSidebarVisible(true);
     }
-
-    if (id.includes("_")) {
-      const parts = id.split("_");
-      if (parts.length !== 2) {
-        showToast("Malformed appointment ID", "error");
-        return { uuid: null, timestamp: null };
-      }
-      return { uuid: parts[0], timestamp: parts[1] };
-    }
-
-    // If no underscore, treat the whole ID as UUID
-    return { uuid: id, timestamp: null };
   };
 
-  const handleSaveAppointment = useCallback(
-    async (appointmentData) => {
-      try {
-        const payload = {
-          tenantId,
-          clientId: appointmentData.client.replace("client", ""),
-          sessionId: appointmentData.sessionType,
-          clinicians: appointmentData.clinicians.map((id) => ({
-            id: id.replace("clinician", ""),
-          })),
-          service: appointmentData.service,
-          date: appointmentData.date,
-          isRecurring: appointmentData.isRecurring,
-          startTime: appointmentData.startTime,
-          endTime: appointmentData.endTime,
-          recurrence: appointmentData.recurrence || {},
-          isBillable: appointmentData.billable,
-          serviceLocation: appointmentData.serviceLocation,
-          requiresTravel: appointmentData.requiresTravel,
-          colourCode: appointmentData.colorCode,
-          accessToken,
-          refreshToken,
-        };
+  const handleHideSidebar = () => setIsSidebarVisible(false);
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
-        let response;
-        if (appointmentData.scope) {
-          const { uuid } = splitId(selectedAppointment?.id);
-          if (!uuid) {
-            showToast("Invalid appointment ID", "error");
-            return;
-          }
-          response = await api.UpdateAppointments({
-            ...payload,
-            id: uuid,
-            relatedAppointment: uuid,
-            forAll: appointmentData.scope === "all",
-          });
-        } else {
-          response = await api.CreateAppointments(payload);
-        }
+  const handleAppointmentClick = (appt, position) => {
+    setSelectedAppointment(appt);
+    setAppointmentPosition(position);
+  };
 
-        showToast("Appointment saved successfully", "success");
+  const handleEditAppointment = (appt) => {
+    setSelectedAppointment(appt);
+    setIsAppointmentModalOpen(true);
+  };
 
-        // Refresh appointments after saving
-        if (refreshAppointments) {
-          await refreshAppointments();
-        }
+  const handleRescheduleAppointment = (appt) => {
+    setRescheduleAppointment(appt);
+    setIsRescheduleModalOpen(true);
+  };
 
-        setIsAppointmentModalOpen(false);
-        setSelectedAppointment(null);
-      } catch (error) {
-        showToast(error.message || "Failed to save appointment", "error");
-      }
-    },
-    [
-      accessToken,
-      refreshToken,
-      tenantId,
-      selectedAppointment,
-      refreshAppointments,
-    ]
-  );
-  const handleSaveReschedule = useCallback(
-    async (rescheduleData) => {
-      try {
-        const { uuid } = splitId(rescheduleAppointment?.id);
-        if (!uuid) {
-          showToast("Invalid appointment ID", "error");
-          return;
-        }
+  const handleCancelAppointment = (appt) => {
+    setCancelAppointment(appt);
+    setIsCancelModalOpen(true);
+  };
 
-        const payload = {
-          tenantId,
+  const handleSaveAppointment = async (data) => {
+    try {
+      const payload = {
+        tenantId,
+        clientId: data.client,
+        sessionId: data.sessionType,
+        clinicians: data.clinicians.map((id) => ({ id })),
+        service: data.service,
+        date: data.date,
+        isRecurring: data.isRecurring,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        recurrence: data.recurrence || {},
+        isBillable: data.billable,
+        serviceLocation: data.serviceLocation,
+        requiresTravel: data.requiresTravel,
+        colourCode: data.colorCode,
+        accessToken,
+        refreshToken,
+      };
+
+      if (data.scope) {
+        const { uuid } = splitId(selectedAppointment?.id);
+        await api.UpdateAppointments({
+          ...payload,
           id: uuid,
-          date: rescheduleData.date,
-          startTime: rescheduleData.startTime,
-          endTime: rescheduleData.endTime,
-          relatedAppointment: uuid,
-          rescheduled: true,
-          accessToken,
-          refreshToken,
-          forAll: rescheduleData.scope === "all",
-        };
-        console.log(payload);
-        await api.RescheduleAppointments(payload);
-
-        showToast("Appointment rescheduled successfully", "success");
-
-        // Refresh appointments after rescheduling
-        if (refreshAppointments) {
-          await refreshAppointments();
-        }
-
-        setIsRescheduleModalOpen(false);
-        setRescheduleAppointment(null);
-      } catch (error) {
-        showToast(error.message || "Failed to reschedule appointment", "error");
+          forAll: data.scope === "all",
+        });
+      } else {
+        await api.CreateAppointments(payload);
       }
-    },
-    [accessToken, refreshToken, rescheduleAppointment, refreshAppointments]
-  );
 
-  const handleSaveCancel = useCallback(
-    async (cancelData) => {
-      try {
-        const { uuid } = splitId(cancelAppointment?.id);
-        if (!uuid) {
-          showToast("Invalid appointment ID", "error");
-          return;
-        }
+      showToast("Appointment saved", "success");
+      closeAllModals();
+      refreshCurrentView();
+    } catch (err) {
+      showToast(err.message || "Save failed", "error");
+    }
+  };
 
-        const payload = {
-          tenantId,
-          id: uuid,
-          reason: cancelData.reason,
-          relatedAppointment: uuid,
-          accessToken,
-          refreshToken,
-          forAll: true,
-        };
-        await api.CancelAppointments(payload);
+  const handleSaveReschedule = async (data) => {
+    try {
+      const { uuid } = splitId(rescheduleAppointment?.id);
+      await api.RescheduleAppointments({
+        tenantId,
+        id: uuid,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        rescheduled: true,
+        forAll: data.scope === "all",
+        accessToken,
+        refreshToken,
+      });
+      showToast("Rescheduled", "success");
+      closeAllModals();
+      refreshCurrentView();
+    } catch (err) {
+      showToast(err.message || "Reschedule failed", "error");
+    }
+  };
 
-        showToast("Appointment canceled successfully", "success");
-
-        // Refresh appointments after cancelling
-        if (refreshAppointments) {
-          await refreshAppointments();
-        }
-
-        setIsCancelModalOpen(false);
-        setCancelAppointment(null);
-      } catch (error) {
-        showToast(error.message || "Failed to cancel appointment", "error");
-      }
-    },
-    [accessToken, refreshToken, cancelAppointment, refreshAppointments]
-  );
+  const handleSaveCancel = async (data) => {
+    try {
+      const { uuid } = splitId(cancelAppointment?.id);
+      await api.CancelAppointments({
+        tenantId,
+        id: uuid,
+        reason: data.reason,
+        forAll: true,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Cancelled", "success");
+      closeAllModals();
+      refreshCurrentView();
+    } catch (err) {
+      showToast(err.message || "Cancel failed", "error");
+    }
+  };
 
   const showFilterTabs = role === "Admin";
+
+  // Prevent unnecessary re-renders of modals
+  const memoizedSelectedAppointment = useMemo(
+    () => selectedAppointment,
+    [selectedAppointment?.id]
+  );
+  const memoizedRescheduleAppointment = useMemo(
+    () => rescheduleAppointment,
+    [rescheduleAppointment?.id]
+  );
 
   return (
     <div className="cal-sched-container">
       <h1 className="cal-sched-title">Calendar</h1>
+
       <div className="cal-sched-header">
         <div className="cal-sched-left-controls">
-          <div>
-            <button
-              type="button"
-              onClick={handleToday}
-              className="cal-sched-today-button"
-            >
-              Today
-            </button>
-          </div>
+          <button onClick={handleToday} className="cal-sched-today-button">
+            Today
+          </button>
           <div className="cal-sched-date-controls">
             <span
-              className="cal-sched-date-text"
               onClick={() => setIsDatePickerOpen(true)}
+              className="cal-sched-date-text"
             >
               {format(currentDate, "MMMM yyyy")}
             </span>
@@ -384,7 +286,7 @@ const CalendarScheduler = ({
           </div>
         </div>
 
-        <div className="cal-sched-view-switcher">
+       <div className="cal-sched-view-switcher">
           <button
             onClick={() => setView("day")}
             className={`cal-sched-view-button ${
@@ -417,14 +319,15 @@ const CalendarScheduler = ({
           </button>
         </div>
 
-        <div className="cal-sched-left-controls">
-          <Button
-            label="New Appointment"
-            variant="primary"
-            onClick={() => setIsAppointmentModalOpen(true)}
-            icon={<FaPlus />}
-          />
-        </div>
+        <Button
+          label="New Appointment"
+          variant="primary"
+          onClick={() => {
+            setSelectedAppointment(null);
+            setIsAppointmentModalOpen(true);
+          }}
+          icon={<FaPlus />}
+        />
       </div>
 
       <div className="cal-sched-filter-section">
@@ -436,20 +339,16 @@ const CalendarScheduler = ({
                 <button
                   onClick={() => handleTabClick("staff")}
                   className={`cal-sched-tab-button ${
-                    activeTab === "staff"
-                      ? "cal-sched-tab-button-active"
-                      : "cal-sched-tab-button-inactive"
+                    effectiveActiveTab === "staff" ? "active" : ""
                   }`}
                 >
                   Staff
                 </button>
-                <div className="cal-sched-tab-divider"></div>
+                <div className="cal-sched-tab-divider" />
                 <button
                   onClick={() => handleTabClick("client")}
                   className={`cal-sched-tab-button ${
-                    activeTab === "client"
-                      ? "cal-sched-tab-button-active"
-                      : "cal-sched-tab-button-inactive"
+                    effectiveActiveTab === "client" ? "active" : ""
                   }`}
                 >
                   Client
@@ -458,56 +357,54 @@ const CalendarScheduler = ({
             </div>
           )}
 
-          <div className="cal-sched-search-container">
-            <SearchInput
-              placeholder="Search"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              width={300}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            width={300}
+          />
         </div>
 
         <div className="cal-sched-right-controls">
-          <button onClick={handleFilterClick} className="cal-sched-icon-button">
+          <button className="cal-sched-icon-button">
             <CgExport size={24} />
           </button>
-          <button
-            onClick={handleCalendarViewClick}
-            className="cal-sched-icon-button"
-          >
+          <button className="cal-sched-icon-button">
             <LuPrinter size={24} />
           </button>
-          <button
-            onClick={handleSettingsClick}
-            className="cal-sched-icon-button"
-          >
+          <button className="cal-sched-icon-button">
             <HiOutlineCog6Tooth size={24} />
           </button>
         </div>
       </div>
 
       <div className="cal-sched-content">
-        {isSidebarVisible && showFilterTabs && (
+        {(isSidebarVisible || role === "Staff") && (
           <StaffClientFilter
-            staff={staffWithCounts}
-            clients={clientsWithCounts}
+            staff={staff} // staffWithCounts
+            clients={clients} // clientsWithCounts
             selectedStaff={selectedStaff}
             selectedClients={selectedClients}
-            onStaffChange={handleStaffChange}
-            onClientChange={handleClientChange}
+            onStaffChange={(id) =>
+              setSelectedStaff((prev) =>
+                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+              )
+            }
+            onClientChange={(id) =>
+              setSelectedClients((prev) =>
+                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+              )
+            }
             onHideSidebar={handleHideSidebar}
-            activeTab={activeTab}
+            activeTab={effectiveActiveTab}
+            fetchAppointmentsByFilter={fetchAppointmentsByFilter}
           />
         )}
 
         <div
           className={`cal-sched-calendar-container ${
-            isSidebarVisible && showFilterTabs
-              ? "cal-sched-calendar-with-sidebar"
-              : "cal-sched-calendar-full"
+            isSidebarVisible || role === "Staff" ? "with-sidebar" : "full"
           }`}
-          ref={calendarContainerRef}
         >
           {loading ? (
             <div
@@ -575,13 +472,15 @@ const CalendarScheduler = ({
                 <MonthView
                   date={currentDate}
                   appointments={filteredAppointments}
+                  clients={clients}
                   onAppointmentClick={handleAppointmentClick}
                 />
               )}
-              <AppointmentDetailsModal
+
+              <MemoAppointmentDetailsModal
                 isOpen={!!selectedAppointment}
-                onClose={handleCloseAppointmentDetails}
-                appointment={selectedAppointment}
+                onClose={closeAllModals}
+                appointment={memoizedSelectedAppointment}
                 position={appointmentPosition}
                 clients={clients}
                 staff={staff}
@@ -594,14 +493,12 @@ const CalendarScheduler = ({
         </div>
       </div>
 
-      <AppointmentModal
+      <MemoAppointmentModal
+        key={memoizedSelectedAppointment?.id || "new-appointment"}
         isOpen={isAppointmentModalOpen}
-        onClose={() => {
-          setIsAppointmentModalOpen(false);
-          setSelectedAppointment(null);
-        }}
-        initialData={selectedAppointment}
-        isEditMode={!!selectedAppointment}
+        onClose={closeAllModals}
+        initialData={memoizedSelectedAppointment}
+        isEditMode={!!memoizedSelectedAppointment}
         onSave={handleSaveAppointment}
         clients={clients}
         sessionTypes={sessionTypes}
@@ -616,26 +513,23 @@ const CalendarScheduler = ({
         onClose={() => setIsDatePickerOpen(false)}
         onDateSelect={setCurrentDate}
       />
-      <RescheduleModal
+
+      <MemoRescheduleModal
+        key={memoizedRescheduleAppointment?.id || "reschedule"}
         isOpen={isRescheduleModalOpen}
-        onClose={() => {
-          setIsRescheduleModalOpen(false);
-          setRescheduleAppointment(null);
-        }}
-        appointment={rescheduleAppointment}
+        onClose={closeAllModals}
+        appointment={memoizedRescheduleAppointment}
         onSave={handleSaveReschedule}
       />
+
       <CancelModal
         isOpen={isCancelModalOpen}
-        onClose={() => {
-          setIsCancelModalOpen(false);
-          setCancelAppointment(null);
-        }}
+        onClose={closeAllModals}
         onSave={handleSaveCancel}
         appointments={cancelAppointment ? [cancelAppointment] : []}
       />
     </div>
   );
-};
+}
 
 export default CalendarScheduler;

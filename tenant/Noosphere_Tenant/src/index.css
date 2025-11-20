@@ -423,6 +423,9 @@ select {
 .mt-20 {
   margin-top: 20px;
 }
+.mt-40 {
+  margin-top: 40px;
+}
 .mb--20 {
   margin-bottom: -20px;
 }
@@ -556,6 +559,17 @@ select {
 }
 .p-20 {
   padding: 20px;
+}
+.pr-4 {
+  padding-right: 16px;
+}
+
+.pr-10 {
+  padding-right: 40px;
+}
+
+.pl-4 {
+  padding-left: 16px;
 }
 
 /* Width and Height */
@@ -827,6 +841,9 @@ select {
 }
 .text-yellow-800 {
   color: #f79009;
+}
+.text-red-600 {
+  color: #D92D20;
 }
 
 .text-white-light {
@@ -1259,6 +1276,12 @@ select {
 }
 .text-red-500 {
   color: #b42318;
+}
+.text-orange-400 {
+  color: #F04438;
+}
+.text-gray-550 {
+  color: #5C6167;
 }
 
 /* Background Color */
@@ -3242,9 +3265,9 @@ input:checked + .slider:before {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 10;
   top: 100%;
-  left: 0;
+  left: -60px;
   margin-top: 4px;
-  min-width: 120px;
+  min-width: 220px;
 }
 
 .timesheet-dropdown-item {

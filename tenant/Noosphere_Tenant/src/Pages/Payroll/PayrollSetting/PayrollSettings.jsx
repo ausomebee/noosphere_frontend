@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import DashboardLayout from '../../../Layout/TenantLayout';
-import EmployeePaymentSchedules from './PayrollSettingsSubs/EmployeePaymentSchedules';
-import IncomeItems from './PayrollSettingsSubs/IncomeItems';
-import Deductions from './PayrollSettingsSubs/Deductions';
-import PayrollCycles from './PayrollSettingsSubs/PayrollCycles';
-
-
+import React, { useState } from "react";
+import DashboardLayout from "../../../Layout/TenantLayout";
+import EmployeePaymentSchedules from "./PayrollSettingsSubs/EmployeePaymentSchedules";
+import IncomeItems from "./PayrollSettingsSubs/IncomeItems";
+import Deductions from "./PayrollSettingsSubs/Deductions";
+import PayrollCycles from "./PayrollSettingsSubs/PayrollCycles";
 
 const PayrollSettings = () => {
   const [activeTab, setActiveTab] = useState("paymentSchedules");
@@ -42,11 +40,10 @@ const PayrollSettings = () => {
           }`}
           onClick={() => setActiveTab("paymentSchedules")}
         >
-          Employee Payment Schedules
+          Compensation Types
         </button>
         <button
-    
-           className={`tab flex items-center justify-center ${
+          className={`tab flex items-center justify-center ${
             activeTab === "incomeItems" ? "active" : ""
           }`}
           onClick={() => setActiveTab("incomeItems")}
@@ -62,7 +59,7 @@ const PayrollSettings = () => {
           Deductions
         </button>
         <button
-         className={`tab flex items-center justify-center ${
+          className={`tab flex items-center justify-center ${
             activeTab === "payrollCycles" ? "active" : ""
           }`}
           onClick={() => setActiveTab("payrollCycles")}
@@ -71,9 +68,7 @@ const PayrollSettings = () => {
         </button>
       </div>
 
-      <div className="mt-6">
-        {renderActiveTab()}
-      </div>
+      <div className="mt-6">{renderActiveTab()}</div>
     </DashboardLayout>
   );
 };
