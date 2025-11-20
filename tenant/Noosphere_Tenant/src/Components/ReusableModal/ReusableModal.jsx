@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
+import "./ReusableModal.css"
 
 const ReusableModal = ({
   isOpen,
@@ -65,20 +66,18 @@ const ReusableModal = ({
         onSubmit={handleSubmit}
       >
         <div className="re-modal-header">
-          <h1
-            id="modal-title"
-            className="modal-title flex items-center justify-center gap-2"
-          >
-            {titleIcon && (
-              <span className="modal-title-icon" aria-hidden="true">
-                {titleIcon}
-              </span>
-            )}
-            <div className="flex flex-col gap-0">
-              <span>{title}</span>
-              <span className="text-base">{subTitle}</span>
+          {/* Title */}
+          <h1 id="modal-title" className="flex modal-title">
+            {titleIcon && <span className="modal-title-icon">{titleIcon}</span>}
+            <div className="text-center">
+              <div className="font-semibold text-lg">{title}</div>
+              {subTitle && (
+                <div className="text-sm text-gray-500 mt-1">{subTitle}</div>
+              )}
             </div>
           </h1>
+
+          {/* Close button — ONLY when tabs exist */}
           {tabs && tabs.length > 0 && (
             <button
               type="button"
@@ -86,7 +85,7 @@ const ReusableModal = ({
               onClick={onClose}
               aria-label="Close modal"
             >
-              <RxCross2 size={28} />
+              <RxCross2 size={24} />
             </button>
           )}
         </div>

@@ -39,7 +39,6 @@ import {
   fetchSinglePipelineItem,
 } from "../../ReduxStore/features/PipelineSlice";
 import { FaPlus } from "react-icons/fa";
-import { IoWarningOutline } from "react-icons/io5";
 import Button from "../Button/Button";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
@@ -171,8 +170,6 @@ const JiraBoard = () => {
             title: stage.name || "Unnamed Stage",
             taskIds: [],
             count: 0,
-            requiredTasks: stage.tasks || [],
-            requiredDocuments: stage.documents || [],
             colorCode: stage.colourCode || "#000000",
           };
           newColumnOrder.push(stage.id);
@@ -213,17 +210,12 @@ const JiraBoard = () => {
       );
 
       const newTasks = {};
-      let taskCount = 0;
       const fetchErrors = [];
 
       for (const result of results) {
         if (result.status === "fulfilled") {
           const { stageId, items } = result.value;
           if (Array.isArray(items) && items.length) {
-            const stage = stagesData.find((s) => s.id === stageId);
-            const totalRequiredItems =
-              (stage?.tasks?.length || 0) + (stage?.documents?.length || 0);
-
             for (const item of items) {
               if (!item.id || typeof item.id !== "string") {
                 console.warn(
@@ -232,49 +224,15 @@ const JiraBoard = () => {
                 );
                 continue;
               }
-              taskCount++;
-
-              let doneTasksCount = 0;
-              let sentDocumentsCount = 0;
-              try {
-                const pipelineItemResult = await dispatch(
-                  fetchSinglePipelineItem({
-                    itemId: item.id,
-                    ...authTokens,
-                  })
-                ).unwrap();
-                const pipelineItem = pipelineItemResult.data;
-
-                const doneTasks =
-                  pipelineItem?.doneTasks &&
-                  typeof pipelineItem.doneTasks === "object"
-                    ? pipelineItem.doneTasks
-                    : {};
-                doneTasksCount = Object.values(doneTasks).filter(
-                  (value) => value === true
-                ).length;
-
-                const sentDocuments =
-                  pipelineItem?.sentDocuments &&
-                  typeof pipelineItem.sentDocuments === "object"
-                    ? pipelineItem.sentDocuments
-                    : {};
-                sentDocumentsCount = Object.values(sentDocuments).filter(
-                  (value) => value === true
-                ).length;
-              } catch (err) {
-                console.error(`Failed to fetch pipeline item ${item.id}:`, err);
-              }
-
-              const doneCount = doneTasksCount + sentDocumentsCount;
-              const progress = `${doneCount}/${totalRequiredItems}`;
 
               newTasks[item.id] = {
                 id: item.id,
+                firstName: item.firstName || "",
+                lastName: item.lastName || "",
+                preferredName: item.preferredName || "",
                 fullName: item.fullName || `Candidate ${item.id.slice(0, 8)}`,
-                progress,
                 email: item.email || "",
-                phone: item.phoneNumber || "",
+                phoneNumber: item.phoneNumber || "",
                 streetAddress: item.streetAddress || "",
                 city: item.city || "",
                 state: item.state || "",
@@ -282,6 +240,10 @@ const JiraBoard = () => {
                 zipCode: item.zipCode || "",
                 gender: item.gender || "",
                 DOB: item.DOB || "",
+                caregiverName: item.caregiverName || "",
+                relationshipToCaregiver: item.relationshipToCaregiver || "",
+                assignToClinician: item.assignToClinician || "",
+                clientPortalAccess: item.clientPortalAccess || false,
                 createdBy: item.createdBy || "Unknown Admin",
               };
             }
@@ -329,63 +291,6 @@ const JiraBoard = () => {
       isMounted = false;
     };
   }, [fetchPipelineData]);
-
-  useEffect(() => {
-    if (
-      !pipelineItem ||
-      !pipelineItem.id ||
-      !columns[pipelineItem.pipelineStageId]
-    ) {
-      return;
-    }
-
-    const requiredTasks =
-      columns[pipelineItem.pipelineStageId]?.requiredTasks || [];
-    const requiredDocuments =
-      columns[pipelineItem.pipelineStageId]?.requiredDocuments || [];
-    const totalRequiredItems = requiredTasks.length + requiredDocuments.length;
-
-    const doneTasks =
-      pipelineItem.doneTasks ||
-      requiredTasks.reduce(
-        (acc, task) => ({
-          ...acc,
-          [task.name]: false,
-        }),
-        {}
-      );
-
-    const doneTasksCount = Object.values(doneTasks).filter(
-      (value) => value === true
-    ).length;
-
-    const sentDocuments =
-      pipelineItem.sentDocuments ||
-      requiredDocuments.reduce(
-        (acc, doc) => ({
-          ...acc,
-          [doc.name]: false,
-        }),
-        {}
-      );
-    const sentDocumentsCount = Object.values(sentDocuments).filter(
-      (value) => value === true
-    ).length;
-
-    const doneCount = doneTasksCount + sentDocumentsCount;
-    const progress = `${doneCount}/${totalRequiredItems}`;
-
-    setLocalTasks((prev) => {
-      const updatedTasks = {
-        ...prev,
-        [pipelineItem.id]: {
-          ...prev[pipelineItem.id],
-          progress,
-        },
-      };
-      return updatedTasks;
-    });
-  }, [columns, pipelineItem]);
 
   useEffect(() => {
     Object.keys(columns).forEach((columnId) => {
@@ -528,18 +433,6 @@ const JiraBoard = () => {
         })
       );
 
-      const totalRequiredItems =
-        (targetColumn.requiredTasks?.length || 0) +
-        (targetColumn.requiredDocuments?.length || 0);
-
-      setLocalTasks((prev) => ({
-        ...prev,
-        [activeId]: {
-          ...prev[activeId],
-          progress: `0/${totalRequiredItems}`,
-        },
-      }));
-
       try {
         await dispatch(
           updatePipelineItemActivity({
@@ -573,26 +466,28 @@ const JiraBoard = () => {
     try {
       const newTaskId = prospectData.id;
       dispatch(addTaskToColumn({ columnId, taskId: newTaskId }));
-      const totalRequiredItems =
-        (columns[columnId]?.requiredTasks?.length || 0) +
-        (columns[columnId]?.requiredDocuments?.length || 0);
       setLocalTasks((prev) => {
         const updatedTasks = {
           ...prev,
           [newTaskId]: {
             id: newTaskId,
-            fullName:
-              prospectData.fullName || `New Candidate ${newTaskId.slice(0, 8)}`,
-            progress: `0/${totalRequiredItems}`,
+            firstName: prospectData.firstName || "",
+            lastName: prospectData.lastName || "",
+            preferredName: prospectData.preferredName || "",
+            fullName: `${prospectData.firstName || ""} ${prospectData.lastName || ""}`.trim() || `New Candidate ${newTaskId.slice(0, 8)}`,
             email: prospectData.email || "",
-            phone: prospectData.phoneNumber || "",
+            phoneNumber: prospectData.phoneNumber || "",
+            gender: prospectData.gender || "",
+            DOB: prospectData.DOB || "",
+            caregiverName: prospectData.caregiverName || "",
+            relationshipToCaregiver: prospectData.relationshipToCaregiver || "",
             streetAddress: prospectData.streetAddress || "",
             city: prospectData.city || "",
             state: prospectData.state || "",
             country: prospectData.country || "",
             zipCode: prospectData.zipCode || "",
-            gender: prospectData.gender || "",
-            DOB: prospectData.DOB || "",
+            assignToClinician: prospectData.assignToClinician || "",
+            clientPortalAccess: prospectData.clientPortalAccess || false,
             createdBy: prospectData.createdBy || "Unknown Admin",
           },
         };
@@ -696,21 +591,6 @@ const JiraBoard = () => {
             taskIds: updatedFirstColumnTaskIds,
           })
         );
-        setLocalTasks((prev) => {
-          const newTasks = { ...prev };
-          column.taskIds.forEach((taskId) => {
-            if (newTasks[taskId]) {
-              newTasks[taskId] = {
-                ...newTasks[taskId],
-                progress: `0/${
-                  (columns[firstColumnId]?.requiredTasks?.length || 0) +
-                  (columns[firstColumnId]?.requiredDocuments?.length || 0)
-                }`,
-              };
-            }
-          });
-          return newTasks;
-        });
       }
 
       await dispatch(
@@ -751,12 +631,6 @@ const JiraBoard = () => {
           name: pipelineData.name?.trim() || "",
           description: pipelineData.description?.trim() || "",
           colourCode: pipelineData.colorCode || "#000000",
-          tasks: Array.isArray(pipelineData.requiredTasks)
-            ? pipelineData.requiredTasks
-            : [],
-          documents: Array.isArray(pipelineData.requiredDocuments)
-            ? pipelineData.requiredDocuments
-            : [],
           accessToken,
           refreshToken,
         };

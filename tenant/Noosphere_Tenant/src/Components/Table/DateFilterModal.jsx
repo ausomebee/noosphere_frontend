@@ -1,3 +1,4 @@
+// src/Components/DateFilter/DateFilterDropdown.jsx
 import React, { useState } from "react";
 import {
   format,
@@ -8,27 +9,25 @@ import {
   subMonths,
   isWithinInterval,
   isSameDay,
-  addDays,
   isSameMonth,
+  addDays,
+  isValid,
+  parse,
 } from "date-fns";
-import "./CustomTable.css";
 import Button from "../Button/Button";
 
 const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
-  const [selectedRange, setSelectedRange] = useState({
-    start: null,
-    end: null,
-  });
-  const [tempRange, setTempRange] = useState(null);
+  const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
+  const [tempStart, setTempStart] = useState(null);
 
   const renderMonth = (month) => {
     const start = startOfMonth(month);
     const end = endOfMonth(month);
     const days = eachDayOfInterval({ start, end });
     const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sat", "Su"];
-    const firstDayOfMonth = (start.getDay() + 6) % 7; // Adjust for Monday start (0 = Monday, 6 = Sunday)
+    const firstDayOfMonth = (start.getDay() + 6) % 7;
     const paddedDays = Array(firstDayOfMonth).fill(null).concat(days);
     const totalCells = Math.ceil(paddedDays.length / 7) * 7;
     const nextMonthDays = Array(totalCells - paddedDays.length)
@@ -44,7 +43,8 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
               {day}
             </div>
           ))}
-          {allDays.map((day, index) => {
+
+          {allDays.map((day, idx) => {
             const isInRange =
               day &&
               selectedRange.start &&
@@ -53,33 +53,28 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
                 start: selectedRange.start,
                 end: selectedRange.end,
               });
-            const isStart =
-              day && selectedRange.start && isSameDay(day, selectedRange.start);
-            const isEnd =
-              day && selectedRange.end && isSameDay(day, selectedRange.end);
-            const isOutsideMonth = day && !isSameMonth(day, month);
+
+            const isStart = day && selectedRange.start && isSameDay(day, selectedRange.start);
+            const isEnd = day && selectedRange.end && isSameDay(day, selectedRange.end);
+            const isOutside = day && !isSameMonth(day, month);
 
             return (
               <div
-                key={index}
+                key={idx}
                 onClick={() => {
                   if (!day) return;
-                  if (!tempRange) {
-                    setTempRange({ start: day, end: null });
+
+                  if (!tempStart) {
+                    setTempStart(day);
                     setSelectedRange({ start: day, end: day });
-                  } else if (!tempRange.end) {
-                    const newEnd = day;
-                    const newStart = tempRange.start;
-                    if (newEnd < newStart) {
-                      setTempRange({ start: newEnd, end: newStart });
-                      setSelectedRange({ start: newEnd, end: newStart });
-                    } else {
-                      setTempRange({ start: newStart, end: newEnd });
-                      setSelectedRange({ start: newStart, end: newEnd });
-                    }
                   } else {
-                    setTempRange({ start: day, end: null });
-                    setSelectedRange({ start: day, end: day });
+                    const newStart = tempStart;
+                    const newEnd = day;
+                    setSelectedRange({
+                      start: newStart < newEnd ? newStart : newEnd,
+                      end: newStart < newEnd ? newEnd : newStart,
+                    });
+                    setTempStart(null);
                   }
                 }}
                 className={`date-filter-day ${
@@ -87,9 +82,9 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
                 } ${
                   isStart || isEnd
                     ? "date-filter-day-start-end"
-                    : isOutsideMonth
+                    : isOutside
                     ? "date-filter-day-outside"
-                    : "date-filter-day-normal date-filter-day-hover"
+                    : "date-filter-day-hover"
                 } ${
                   isInRange && !isStart && !isEnd
                     ? "date-filter-day-in-range"
@@ -106,16 +101,26 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
   };
 
   const handleApply = () => {
-    if (selectedRange.start) {
-      onDateRangeSelect(selectedRange);
+    if (selectedRange.start && selectedRange.end) {
+      onDateRangeSelect({
+        start: selectedRange.start,
+        end: selectedRange.end,
+      });
       onClose();
     }
+  };
+
+  const handleClear = () => {
+    setSelectedRange({ start: null, end: null });
+    setTempStart(null);
+    onDateRangeSelect(null);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="date-filter-dropdown no-scrollbar::-webkit-scrollbar no-scrollbar">
+    <div className="date-filter-dropdown no-scrollbar">
       <div className="date-filter-header">
         <button
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -137,19 +142,8 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
       {renderMonth(currentMonth)}
 
       <div className="date-filter-footer">
-        <Button
-          onClick={onClose}
-          variant="secondary"
-          label={"Cancel"}
-          className="flex-1"
-        />
-        <Button
-          onClick={handleApply}
-          label="Apply"
-          variant="primary"
-          width="full"
-          className="flex-1"
-        />
+        <Button onClick={handleClear} variant="secondary" label="Clear" className="flex-1" />
+        <Button onClick={handleApply} variant="primary" label="Apply" className="flex-1" />
       </div>
     </div>
   );

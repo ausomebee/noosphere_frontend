@@ -1,13 +1,12 @@
+// Calendar.jsx — FINAL: REAL COUNTS ON LOAD, APPOINTMENTS ONLY ON FILTER
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import {
-  addDays,
-  format
-} from "date-fns";
+import { addDays } from "date-fns";
 import DashboardLayout from "../../../Layout/TenantLayout";
 import CalendarScheduler from "../../../Components/CalendarScheduler/CalendarScheduler";
 import api from "../../../api/AppointmentApi";
 import expand from "../../../utils/expand";
+import { format } from "date-fns";
 
 const toUICard = (apiAppt, masters = []) => {
   if (!apiAppt || typeof apiAppt !== "object") {
@@ -19,7 +18,7 @@ const toUICard = (apiAppt, masters = []) => {
     if (!time) return "";
     const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
     if (!match) {
-      console.warn(`Invalid time format: ${time}, returning empty string`);
+      
       return "";
     }
     const [_, hours, minutes] = match;
@@ -45,7 +44,7 @@ const toUICard = (apiAppt, masters = []) => {
       occurrences: Number.isInteger(recurrence.occurrences) && recurrence.occurrences > 0 ? recurrence.occurrences : 1,
     };
     if (normalized.type !== recurrence.type) {
-      console.warn(`Invalid recurrence type: ${recurrence.type}, defaulting to ${normalized.type}`);
+     
     }
     return normalized;
   };
@@ -59,13 +58,13 @@ const toUICard = (apiAppt, masters = []) => {
     if (typeof c === "object" && c.id) return c;
     const matched = apiAppt.staff?.find((s) => s.id === c);
     if (!matched) {
-      console.warn(`No staff data found for clinician ID: ${c}`);
+     
     }
     return matched ? { id: matched.id, fullName: matched.fullName } : { id: c, fullName: "Unknown Clinician" };
   });
 
   if (!apiAppt.client?.fullName) {
-    console.debug(`Missing client fullName for appointment ID: ${apiAppt.id}`);
+    
   }
 
   return {
@@ -102,12 +101,9 @@ const toUICard = (apiAppt, masters = []) => {
     isRecurringInstance: apiAppt.isRecurringInstance || false,
   };
 };
-
-const Calendar = ({ selectedClients = [], onFetchClientAppointments }) => {
+const Calendar = () => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
-  );
+  const role = useSelector((s) => s.authentication?.user?.role?.name ?? "Client");
   const userId = useSelector((s) => s.authentication?.user?.id);
   const token = useSelector((s) => s.authentication?.user?.token);
   const accessToken = token;
@@ -116,173 +112,128 @@ const Calendar = ({ selectedClients = [], onFetchClientAppointments }) => {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [clients, setClients] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [masters, setMasters] = useState([]);
+  const [allAppointments, setAllAppointments] = useState([]); // For counts only
+  const [filteredAppointments, setFilteredAppointments] = useState([]); // For calendar
   const [loading, setLoading] = useState(true);
 
-const fetchInitialData = useCallback(async () => {
-    if (!tenantId) {
-      setLoading(false);
-      return;
-    }
+  const [selectedClients, setSelectedClients] = useState([]);
+  const [selectedStaff, setSelectedStaff] = useState([]);
 
-    setLoading(true);
+  const [staffWithCounts, setStaffWithCounts] = useState([]);
+  const [clientsWithCounts, setClientsWithCounts] = useState([]);
+
+  // DEBUG
+  useEffect(() => {
+    window.CALENDAR_DEBUG = { staffWithCounts, clientsWithCounts, filteredAppointments: filteredAppointments.length };
+  }, [staffWithCounts, clientsWithCounts, filteredAppointments]);
+
+  // FETCH ALL DATA + COUNTS ON LOAD
+  const fetchInitialData = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+
     try {
-      let appointmentP;
-      if (role === "Admin") {
-        appointmentP = api
-          .GetAppointmentByTenantId({ tenantId, accessToken, refreshToken })
-          .then((r) => r.data.data)
-          .catch(() => []);
-      } else if (role === "Staff") {
-        appointmentP = api
-          .GetAppointmentByStaffId({
-            staffId: userId,
-            accessToken,
-            refreshToken,
-          })
-          .then((r) => r.data.data)
-          .catch(() => []);
-      } else {
-        appointmentP = api
-          .GetAppointmentByClientId({
-            clientId: userId,
-            accessToken,
-            refreshToken,
-          })
-          .then((r) => r.data.data)
-          .catch(() => []);
-      }
-
-      const sessionP = api
-        .GetSessionTypeActiveByTenantId({ tenantId, accessToken, refreshToken })
-        .then((r) => r.data.data)
-        .catch(() => []);
-
-      const clientP = api
-        .GetClientByTenantId({ tenantId, accessToken, refreshToken })
-        .then((r) => r.data.data)
-        .catch(() => []);
-
-      const staffP = api
-        .GetTenantStaffByTenantId({ tenantId, accessToken, refreshToken })
-        .then((r) => r.data.data)
-        .catch(() => []);
-
-      const [sess, clis, stf, appts] = await Promise.all([
-        sessionP,
-        clientP,
-        staffP,
-        appointmentP,
+      const [sess, clis, stf, allAppts] = await Promise.all([
+        api.GetSessionTypeActiveByTenantId({ tenantId, accessToken, refreshToken }).then(r => r.data.data || []),
+        api.GetClientByTenantId({ tenantId, accessToken, refreshToken }).then(r => r.data.data || []),
+        api.GetTenantStaffByTenantId({ tenantId, accessToken, refreshToken }).then(r => r.data.data || []),
+        role === "Admin"
+          ? api.GetAllAppointments({ tenantId, accessToken, refreshToken }).then(r => r.data.data || [])
+          : api.GetAppointmentByClientId({ clientId: userId, accessToken, refreshToken }).then(r => r.data.data || [])
       ]);
-
-      const enrichedAppts = appts.map((appt) => ({
-        ...appt,
-        tenant: appt.tenant || null,
-        client: appt.client || null,
-        staff: stf,
-        session: sess.find((s) => s.id === appt.sessionId) || null,
-        sessionId: appt.sessionId,
-      }));
 
       setSessionTypes(sess);
       setClients(clis);
       setStaff(stf);
-      setMasters(enrichedAppts.map((appt) => toUICard(appt, enrichedAppts))); // Pass enrichedAppts
-    } catch (error) {
 
+      const enriched = allAppts.map(appt => ({
+        ...appt,
+        tenant: appt.tenant || null,
+        client: appt.client || null,
+        staff: stf,
+        session: sess.find(s => s.id === appt.sessionId) || null,
+      }));
+
+      const uiAppointments = enriched.map(appt => toUICard(appt, enriched));
+      setAllAppointments(uiAppointments);
+
+      const viewWindow = { start: addDays(new Date(), -30), end: addDays(new Date(), 180) };
+      const expanded = uiAppointments.flatMap(master => expand(master, viewWindow));
+
+      const counts = expanded.reduce((acc, appt) => {
+        if (appt.clientId) acc.clients[appt.clientId] = (acc.clients[appt.clientId] || 0) + 1;
+        if (Array.isArray(appt.clinicianIds)) {
+          appt.clinicianIds.forEach(id => acc.staff[id] = (acc.staff[id] || 0) + 1);
+        }
+        return acc;
+      }, { staff: {}, clients: {} });
+
+      setStaffWithCounts(stf.map(s => ({ ...s, appointmentCount: counts.staff[s.id] || 0 })));
+      setClientsWithCounts(clis.map(c => ({ ...c, appointmentCount: counts.clients[c.clientId] || 0 })));
+
+    
+
+    } catch (err) {
+     
     } finally {
       setLoading(false);
     }
-  }, [tenantId, role, userId, accessToken, refreshToken]);
-
-  const fetchClientAppointments = useCallback(
-    async (clientIds) => {
-      if (!tenantId || !clientIds.length) return;
-
-      setLoading(true);
-      try {
-        const appointmentP = Promise.all(
-          clientIds.map((clientId) =>
-            api
-              .GetAppointmentByClientId({ clientId, accessToken, refreshToken })
-              .then((r) => r.data.data)
-              .catch(() => [])
-          )
-        ).then((results) => results.flat());
-
-        const [appts] = await Promise.all([appointmentP]);
-
-        const enrichedAppts = appts.map((appt) => ({
-          ...appt,
-          tenant: appt.tenant || null,
-          client: appt.client || null,
-          staff,
-          session: sessionTypes.find((s) => s.id === appt.sessionId) || null,
-          sessionId: appt.sessionId,
-        }));
-
-        setMasters(enrichedAppts.map((appt) => toUICard(appt, enrichedAppts))); // Pass enrichedAppts
-      } catch (error) {
-
-      } finally {
-        setLoading(false);
-      }
-    },
-    [tenantId, accessToken, refreshToken, staff, sessionTypes]
-  );
+  }, [tenantId, accessToken, refreshToken, role, userId]);
 
   useEffect(() => {
-    if (onFetchClientAppointments) {
-      onFetchClientAppointments(fetchClientAppointments);
-    }
-  }, [onFetchClientAppointments, fetchClientAppointments]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadInitialData = async () => {
-      if (isMounted) {
-        await fetchInitialData();
-      }
-    };
-
-    loadInitialData();
-
-    return () => {
-      isMounted = false;
-    };
+    fetchInitialData();
   }, [fetchInitialData]);
 
-  const viewWindow = useMemo(() => {
-    const today = new Date();
-    return { start: addDays(today, -30), end: addDays(today, 180) };
-  }, []);
+  // FILTER APPOINTMENTS ONLY WHEN USER SELECTS
+  const fetchAppointmentsByFilter = useCallback(({ clientIds = [], staffIds = [] }) => {
+    if (clientIds.length === 0 && staffIds.length === 0) {
+      setFilteredAppointments([]);
+      return;
+    }
 
-  const appointments = useMemo(() => {
-  if (!masters.length) return [];
-  const flat = [];
-  masters.forEach((m) => {
-    const expanded = expand(m, viewWindow);
-    flat.push(...expanded);
-  });
-  return flat;
-}, [masters, viewWindow]);
-  
+    const filtered = allAppointments.filter(appt => {
+      const matchesClient = clientIds.length === 0 || clientIds.includes(appt.clientId);
+      const matchesStaff = staffIds.length === 0 || appt.clinicianIds.some(id => staffIds.includes(id));
+      return matchesClient && matchesStaff;
+    });
+
+    setFilteredAppointments(filtered);
+   
+  }, [allAppointments]);
+
+  // AUTO SELECT FOR CLIENT ROLE
+  useEffect(() => {
+    if (role === "Client" && userId && clients.length > 0) {
+      setSelectedClients([userId]);
+      fetchAppointmentsByFilter({ clientIds: [userId] });
+    }
+  }, [role, userId, clients.length, fetchAppointmentsByFilter]);
+
+  const viewWindow = useMemo(() => ({
+    start: addDays(new Date(), -30),
+    end: addDays(new Date(), 180),
+  }), []);
+
+  const expandedAppointments = useMemo(() => {
+    return filteredAppointments.flatMap(master => expand(master, viewWindow));
+  }, [filteredAppointments, viewWindow]);
 
   return (
     <DashboardLayout>
       <CalendarScheduler
-        staff={staff}
-        clients={clients}
+        staff={staffWithCounts}
+        clients={clientsWithCounts}
         sessionTypes={sessionTypes}
-        appointments={appointments}
+        appointments={expandedAppointments}
         initialDate={new Date()}
         accessToken={accessToken}
         refreshToken={refreshToken}
         tenantId={tenantId}
         role={role}
         selectedClients={selectedClients}
-        refreshAppointments={fetchInitialData}
+        selectedStaff={selectedStaff}
+        setSelectedClients={setSelectedClients}
+        setSelectedStaff={setSelectedStaff}
+        fetchAppointmentsByFilter={fetchAppointmentsByFilter}
         loading={loading}
       />
     </DashboardLayout>

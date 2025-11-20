@@ -54,15 +54,60 @@ const TableBody = ({
     const extension = fileName?.split(".").pop()?.toLowerCase();
     switch (extension) {
       case "pdf":
-        return <span style={{ color: "#FF0000" }}>📄</span>;
       case "doc":
       case "docx":
-        return <span style={{ color: "#0000FF" }}>📄</span>;
       case "xls":
       case "xlsx":
-        return <span style={{ color: "#008000" }}>📊</span>;
+        return (
+          <span style={{ color: "#FF0000" }}>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g clip-path="url(#clip0_3846_9175)">
+                <path opacity="0.3" d="M13 4H6V20H18V9H13V4Z" fill="#5686E1" />
+                <path
+                  d="M20 8L14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8ZM18 20H6V4H13V9H18V20Z"
+                  fill="#5686E1"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_3846_9175">
+                  <rect width="24" height="24" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          </span>
+        );
+
       default:
-        return <span style={{ color: "#888" }}>📁</span>;
+        return (
+          <span style={{ color: "#888" }}>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g clip-path="url(#clip0_3846_9120)">
+                <path opacity="0.3" d="M4 8H20V18H4V8Z" fill="#5686E1" />
+                <path
+                  d="M20 6H12L10 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6ZM20 18H4V8H20V18Z"
+                  fill="#5686E1"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_3846_9120">
+                  <rect width="24" height="24" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          </span>
+        );
     }
   };
 
@@ -114,7 +159,9 @@ const TableBody = ({
                       toggleDropdown(null);
                     }}
                   >
-                    {action.icon && <span className="dropdown-icon">{action.icon}</span>}
+                    {action.icon && (
+                      <span className="dropdown-icon">{action.icon}</span>
+                    )}
                     {action.label}
                   </button>
                 ))}
@@ -131,7 +178,9 @@ const TableBody = ({
             <div className="progress-container">
               <div className="progress-bars">
                 <div
-                  className={`progress-fills ${row[col.key] >= 80 ? "high" : ""}`}
+                  className={`progress-fills ${
+                    row[col.key] >= 80 ? "high" : ""
+                  }`}
                   style={{
                     width: `${row[col.key]}%`,
                     backgroundColor: row[col.key] >= 80 ? "#D92D20" : "#004ABA",
@@ -171,14 +220,20 @@ const TableBody = ({
           );
         case "approval":
           return (
-            <span className={`approval-label approval-${row[col.key]?.toLowerCase()}`}>
+            <span
+              className={`approval-label approval-${row[
+                col.key
+              ]?.toLowerCase()}`}
+            >
               <span className="status-dot" />
               {row[col.key]}
             </span>
           );
         case "statusText":
           return (
-            <span className={`status-label status-${row[col.key]?.toLowerCase()}`}>
+            <span
+              className={`status-label status-${row[col.key]?.toLowerCase()}`}
+            >
               {hasStatusDot && <span className="status-dot" />}
               {row[col.key]}
             </span>
@@ -259,9 +314,7 @@ const TableBody = ({
           <tr>
             <td
               colSpan={
-                columns.length +
-                (showActions ? 1 : 0) +
-                (showCheckbox ? 1 : 0)
+                columns.length + (showActions ? 1 : 0) + (showCheckbox ? 1 : 0)
               }
               className="table-empty-state"
             >
@@ -319,25 +372,30 @@ const TableBody = ({
               {showActions && row.hasActions && (
                 <td className="action-cell">
                   <div className="action-group">
-                    {actionText && getActionsForRow(row).every(action => action.type !== "dropdown") && (
-                      <>
-                        {onActionClick ? (
-                          <button
-                            className="action-link primary-text"
-                            onClick={() => onActionClick(row)}
-                          >
-                            {actionText}
-                          </button>
-                        ) : actionLinkPrefix ? (
-                          <Link
-                            to={`${actionLinkPrefix}${row.item_id || rowIndex}`}
-                            className="action-link primary-text"
-                          >
-                            {actionText}
-                          </Link>
-                        ) : null}
-                      </>
-                    )}
+                    {actionText &&
+                      getActionsForRow(row).every(
+                        (action) => action.type !== "dropdown"
+                      ) && (
+                        <>
+                          {onActionClick ? (
+                            <button
+                              className="action-link primary-text"
+                              onClick={() => onActionClick(row)}
+                            >
+                              {actionText}
+                            </button>
+                          ) : actionLinkPrefix ? (
+                            <Link
+                              to={`${actionLinkPrefix}${
+                                row.item_id || rowIndex
+                              }`}
+                              className="action-link primary-text"
+                            >
+                              {actionText}
+                            </Link>
+                          ) : null}
+                        </>
+                      )}
                     {getActionsForRow(row).map((action, i) => {
                       if (action.type === "icon") {
                         return (
@@ -356,9 +414,12 @@ const TableBody = ({
                           <div key={i} className="action-menu">
                             <button
                               className="action-button"
-                              onClick={() => toggleDropdown(rowIndex, `action-${i}`)}
+                              onClick={() =>
+                                toggleDropdown(rowIndex, `action-${i}`)
+                              }
                               ref={(el) => {
-                                if (!menuRefs.current[key]) menuRefs.current[key] = {};
+                                if (!menuRefs.current[key])
+                                  menuRefs.current[key] = {};
                                 menuRefs.current[key].button = el;
                               }}
                             >
@@ -382,23 +443,33 @@ const TableBody = ({
                               <div
                                 className="action-dropdown"
                                 ref={(el) => {
-                                  if (!menuRefs.current[key]) menuRefs.current[key] = {};
+                                  if (!menuRefs.current[key])
+                                    menuRefs.current[key] = {};
                                   menuRefs.current[key].dropdown = el;
                                 }}
                               >
-                                {getActionItems(action, row).map((item, itemIndex) => (
-                                  <button
-                                    key={itemIndex}
-                                    className={`dropdown-item ${getItemClassName(item, row)}`}
-                                    onClick={() => {
-                                      item.onClick(row);
-                                      toggleDropdown(null);
-                                    }}
-                                  >
-                                    {item.icon && <span className="dropdown-icon">{item.icon}</span>}
-                                    {getItemLabel(item, row)}
-                                  </button>
-                                ))}
+                                {getActionItems(action, row).map(
+                                  (item, itemIndex) => (
+                                    <button
+                                      key={itemIndex}
+                                      className={`dropdown-item ${getItemClassName(
+                                        item,
+                                        row
+                                      )}`}
+                                      onClick={() => {
+                                        item.onClick(row);
+                                        toggleDropdown(null);
+                                      }}
+                                    >
+                                      {item.icon && (
+                                        <span className="dropdown-icon">
+                                          {item.icon}
+                                        </span>
+                                      )}
+                                      {getItemLabel(item, row)}
+                                    </button>
+                                  )
+                                )}
                               </div>
                             )}
                           </div>

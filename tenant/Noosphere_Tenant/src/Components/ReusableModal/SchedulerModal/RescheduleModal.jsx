@@ -20,7 +20,6 @@ const convertTo24Hour = (timeStr) => {
 };
 
 const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
-  console.log(appointment)
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState(null);
 
@@ -99,7 +98,7 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
         endTime: appointment.endTime ? convertTo24Hour(appointment.endTime) : "",
       };
       reset(formattedData);
-      console.log(formattedData)
+     
     }
   }, [isOpen, appointment, reset]);
 

@@ -7,8 +7,6 @@ const initialState = {
     name: "",
     description: "",
     colorCode: "#1E40AF",
-    requiredTasks: [],
-    requiredDocuments: [],
   },
   pipeline: null,
   columns: {},
@@ -26,44 +24,6 @@ const pipelineSlice = createSlice({
     updateDraft: (state, action) => {
       state.draft = { ...state.draft, ...action.payload };
     },
-    addTaskToDraft: (state, action) => {
-      state.draft.requiredTasks = [
-        ...state.draft.requiredTasks,
-        {
-          id: uuidv4(),
-          name: action.payload.name,
-          required: action.payload.required,
-        },
-      ];
-    },
-    removeTaskFromDraft: (state, action) => {
-      state.draft.requiredTasks = state.draft.requiredTasks.filter(
-        (task) => task.id !== action.payload
-      );
-    },
-    toggleTaskRequiredInDraft: (state, action) => {
-      const task = state.draft.requiredTasks.find((task) => task.id === action.payload);
-      if (task) task.required = !task.required;
-    },
-    addDocumentToDraft: (state, action) => {
-      state.draft.requiredDocuments = [
-        ...state.draft.requiredDocuments,
-        {
-          id: uuidv4(),
-          name: action.payload.name,
-          required: action.payload.required,
-        },
-      ];
-    },
-    removeDocumentFromDraft: (state, action) => {
-      state.draft.requiredDocuments = state.draft.requiredDocuments.filter(
-        (doc) => doc.id !== action.payload
-      );
-    },
-    toggleDocumentRequiredInDraft: (state, action) => {
-      const doc = state.draft.requiredDocuments.find((doc) => doc.id === action.payload);
-      if (doc) doc.required = !doc.required;
-    },
     addColumn: (state, action) => {
       const { pipelineData, index, stageId } = action.payload;
       const newColumnId = stageId || uuidv4();
@@ -74,8 +34,6 @@ const pipelineSlice = createSlice({
         count: 0,
         description: pipelineData.description,
         colorCode: pipelineData.colorCode,
-        requiredTasks: pipelineData.requiredTasks || [],
-        requiredDocuments: pipelineData.requiredDocuments || [],
         order: pipelineData.order || index || state.columnOrder.length,
       };
       if (index !== undefined && index >= 0 && index <= state.columnOrder.length) {
@@ -116,7 +74,7 @@ const pipelineSlice = createSlice({
     updateColumnOrder: (state, action) => {
       state.columnOrder = action.payload;
     },
-     deleteColumn: (state, action) => {
+    deleteColumn: (state, action) => {
       const columnId = action.payload;
       if (!state.columns[columnId]) return;
       delete state.columns[columnId];
@@ -155,8 +113,6 @@ const pipelineSlice = createSlice({
             count: 0,
             description: stage.description,
             colorCode: stage.colourCode,
-            requiredTasks: stage.tasks || [],
-            requiredDocuments: stage.documents || [],
             order: stage.order || 0,
           };
           state.columnOrder.push(stage.id);
@@ -184,8 +140,6 @@ const pipelineSlice = createSlice({
             name: stage.name || "",
             description: stage.description || "",
             colorCode: stage.colourCode || "#1E40AF",
-            requiredTasks: Array.isArray(stage.tasks) ? stage.tasks : [],
-            requiredDocuments: Array.isArray(stage.documents) ? stage.documents : [],
           };
         }
       })
@@ -206,8 +160,6 @@ const pipelineSlice = createSlice({
             title: `Stage ${stageId.slice(0, 8)}`,
             taskIds: [],
             count: 0,
-            requiredTasks: [],
-            requiredDocuments: [],
             colorCode: "#000000",
             order: state.columnOrder.length,
           };
@@ -238,8 +190,6 @@ const pipelineSlice = createSlice({
           count: 0,
           description: stage.description,
           colorCode: stage.colourCode,
-          requiredTasks: stage.tasks || [],
-          requiredDocuments: stage.documents || [],
           order: stage.order || state.columnOrder.length,
         };
         state.columnOrder.push(newColumnId);
@@ -248,38 +198,6 @@ const pipelineSlice = createSlice({
         state.draft = initialState.draft;
       })
       .addCase(createPipelineStage.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || action.error.message;
-      })
-      .addCase(updateStageTasks.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(updateStageTasks.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const { pipelineStageId, tasks } = action.payload;
-        if (state.columns[pipelineStageId]) {
-          state.columns[pipelineStageId].requiredTasks = tasks;
-          state.draft.requiredTasks = tasks;
-        }
-      })
-      .addCase(updateStageTasks.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || action.error.message;
-      })
-      .addCase(updateStageDocuments.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(updateStageDocuments.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const { pipelineStageId, documents } = action.payload;
-        if (state.columns[pipelineStageId]) {
-          state.columns[pipelineStageId].requiredDocuments = documents;
-          state.draft.requiredDocuments = documents;
-        }
-      })
-      .addCase(updateStageDocuments.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
@@ -342,7 +260,7 @@ const pipelineSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || action.error.message;
       })
-       .addCase(deletePipelineStage.pending, (state) => {
+      .addCase(deletePipelineStage.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
@@ -401,38 +319,11 @@ const pipelineSlice = createSlice({
       .addCase(updateCandidate.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || action.error.message;
-      })
-      .addCase(updatePipelineItemTaskToDone.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(updatePipelineItemTaskToDone.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        if (state.pipelineItem) {
-          state.pipelineItem.doneTasks = action.payload.data.tasks;
-        }
-      })
-      .addCase(updatePipelineItemTaskToDone.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || action.error.message;
-      })
-      .addCase(updatePipelineItemDocumentToDone.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(updatePipelineItemDocumentToDone.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        if (state.pipelineItem) {
-          state.pipelineItem.sentDocuments = action.payload.data.documents;
-        }
-      })
-      .addCase(updatePipelineItemDocumentToDone.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || action.error.message;
       });
   },
 });
 
+// Export async thunks
 export const fetchPipelineByTenantId = createAsyncThunk(
   "pipeline/fetchPipelineByTenantId",
   async ({ tenantId, accessToken, refreshToken }, { rejectWithValue }) => {
@@ -489,21 +380,27 @@ export const fetchPipelineItems = createAsyncThunk(
       const items = Array.isArray(response.data?.data)
         ? response.data.data.map((item) => ({
             id: item.id,
-            fullName: item.client?.fullName || item.fullName || `Candidate ${item.id.slice(0, 8)}`,
-            createdBy: item.client?.tenantLinks?.[0]?.tenantStaff?.fullName || item.createdBy || "Unknown Admin",
+            firstName: item.client?.firstName || item.firstName || "",
+            lastName: item.client?.lastName || item.lastName || "",
+            preferredName: item.client?.preferredName || item.preferredName || "",
+            fullName: `${item.client?.firstName || item.firstName || ""} ${item.client?.lastName || item.lastName || ""}`.trim(),
             email: item.client?.email || item.email || "",
             phoneNumber: item.client?.phoneNumber || item.phoneNumber || "",
+            gender: item.client?.gender || item.gender || "",
+            DOB: item.client?.DOB || item.DOB || "",
+            caregiverName: item.client?.caregiverName || item.caregiverName || "",
+            relationshipToCaregiver: item.client?.relationshipToCaregiver || item.relationshipToCaregiver || "",
             streetAddress: item.client?.streetAddress || item.streetAddress || "",
             city: item.client?.city || item.city || "",
             state: item.client?.state || item.state || "",
             country: item.client?.country || item.country || "",
             zipCode: item.client?.zipCode || item.zipCode || "",
-            gender: item.client?.gender || item.gender || "",
-            DOB: item.client?.DOB || item.DOB || "",
+            assignToClinician: item.assignToClinician || null,
+            clientPortalAccess: item.clientPortalAccess || false,
             pipelineStageId: item.pipelineStageId || stageId,
-            assignToTenantStaff: item.assignToTenantStaff || null,
             status: item.status || "pending",
-            createdAt: item.createdAt || ""
+            createdAt: item.createdAt || "",
+            createdBy: item.createdBy || "Unknown Admin",
           }))
         : [];
       return { stageId, items };
@@ -516,7 +413,7 @@ export const fetchPipelineItems = createAsyncThunk(
 export const createPipelineStage = createAsyncThunk(
   "pipeline/createPipelineStage",
   async (
-    { pipelineId, name, description, colourCode, tasks = [], documents = [], accessToken, refreshToken },
+    { pipelineId, name, description, colourCode, accessToken, refreshToken },
     { rejectWithValue }
   ) => {
     try {
@@ -525,8 +422,6 @@ export const createPipelineStage = createAsyncThunk(
         name,
         description,
         colourCode,
-        tasks: Array.isArray(tasks) ? tasks : [],
-        documents: Array.isArray(documents) ? documents : [],
         accessToken,
         refreshToken,
       });
@@ -540,93 +435,55 @@ export const createPipelineStage = createAsyncThunk(
   }
 );
 
-export const updateStageTasks = createAsyncThunk(
-  "pipeline/updateStageTasks",
-  async ({ pipelineStageId, tasks, accessToken, refreshToken }, { rejectWithValue }) => {
-    try {
-      const response = await api.UpdateStageTasks({
-        pipelineStageId,
-        tasks: tasks.map((task) => ({
-          id: task.id || uuidv4(),
-          name: task.name,
-          required: task.required,
-        })),
-        accessToken,
-        refreshToken,
-      });
-      return { pipelineStageId, tasks };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const updateStageDocuments = createAsyncThunk(
-  "pipeline/updateStageDocuments",
-  async ({ pipelineStageId, documents, accessToken, refreshToken }, { rejectWithValue }) => {
-    try {
-      const response = await api.UpdateStageDocuments({
-        pipelineStageId,
-        documents: documents.map((doc) => ({
-          id: doc.id || uuidv4(),
-          name: doc.name,
-          required: doc.required,
-        })),
-        accessToken,
-        refreshToken,
-      });
-      return { pipelineStageId, documents };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
 export const createCandidate = createAsyncThunk(
   "pipeline/createCandidate",
   async (
     {
-      fullName,
+      firstName,
+      lastName,
+      preferredName,
       email,
+      phoneNumber,
+      gender,
+      DOB,
+      caregiverName,
+      relationshipToCaregiver,
       streetAddress,
-      stage,
       city,
       state,
       country,
       zipCode,
-      phoneNumber,
-      gender,
-      DOB,
       tenantId,
       pipelineStageId,
-      assignToTenantStaff,
+      assignToClinician,
+      clientPortalAccess,
       accessToken,
       refreshToken,
-      dbAccess,
-      createdBy
     },
     { rejectWithValue }
   ) => {
     try {
       const response = await api.CreateCandidate({
-        fullName,
+        firstName,
+        lastName,
+        preferredName,
         email,
+        phoneNumber,
+        gender,
+        DOB,
+        caregiverName,
+        relationshipToCaregiver,
         streetAddress,
-        stage,
         city,
         state,
         country,
         zipCode,
-        phoneNumber,
-        gender,
-        DOB,
         tenantId,
         pipelineStageId,
-        assignToTenantStaff,
+        assignToClinician,
+        clientPortalAccess,
         accessToken,
         refreshToken,
-        dbAccess,
-        createdBy
       });
       return response.data;
     } catch (error) {
@@ -646,7 +503,6 @@ export const reorderPipelineStage = createAsyncThunk(
     }
   }
 );
-
 
 export const updatePipelineItemActivity = createAsyncThunk(
   "pipeline/updatePipelineItemActivity",
@@ -670,47 +526,6 @@ export const updatePipelineItemActivity = createAsyncThunk(
       return rejectWithValue(
         error.message || "Failed to update pipeline item activity"
       );
-    }
-  }
-);
-
-export const updatePipelineItemTaskToDone = createAsyncThunk(
-  "pipeline/updatePipelineItemTaskToDone",
-  async (
-    { pipelineItemId, doneTasks, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.UpdateStageTasksToDone({
-        pipelineItemId,
-        doneTasks,
-        accessToken,
-        refreshToken,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("THUNK ERROR:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const updatePipelineItemDocumentToDone = createAsyncThunk(
-  "pipeline/updatePipelineItemDocumentToDone",
-  async (
-    { pipelineItemId, documents, accessToken, refreshToken },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.UpdateStageDocumentsToDone({
-        pipelineItemId,
-        documents,
-        accessToken,
-        refreshToken,
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -772,46 +587,52 @@ export const updateCandidate = createAsyncThunk(
   async (
     {
       id,
-      fullName,
+      firstName,
+      lastName,
+      preferredName,
       email,
+      phoneNumber,
+      gender,
+      DOB,
+      caregiverName,
+      relationshipToCaregiver,
       streetAddress,
-      stage,
       city,
       state,
       country,
       zipCode,
-      phoneNumber,
-      gender,
-      DOB,
       tenantId,
       pipelineStageId,
-      assignToTenantStaff,
+      assignToClinician,
+      clientPortalAccess,
       accessToken,
       refreshToken,
-      dbAccess,
     },
     { rejectWithValue }
   ) => {
     try {
       const response = await api.UpdateCandidate({
         id,
-        fullName,
+        firstName,
+        lastName,
+        preferredName,
         email,
+        phoneNumber,
+        gender,
+        DOB,
+        caregiverName,
+        relationshipToCaregiver,
         streetAddress,
-        stage,
         city,
         state,
         country,
         zipCode,
-        phoneNumber,
-        gender,
-        DOB,
         tenantId,
         pipelineStageId,
-        assignToTenantStaff,
+        assignToClinician,
+        clientPortalAccess,
         accessToken,
         refreshToken,
-        dbAccess,
       });
       return response.data;
     } catch (error) {
@@ -822,12 +643,6 @@ export const updateCandidate = createAsyncThunk(
 
 export const {
   updateDraft,
-  addTaskToDraft,
-  removeTaskFromDraft,
-  toggleTaskRequiredInDraft,
-  addDocumentToDraft,
-  removeDocumentFromDraft,
-  toggleDocumentRequiredInDraft,
   addColumn,
   resetDraft,
   setColumns,
@@ -837,8 +652,6 @@ export const {
   updateColumnOrder,
   deleteColumn,
 } = pipelineSlice.actions;
-
-
 
 export const selectPipeline = (state) => state.pipeline.pipeline;
 export const selectColumns = (state) => state.pipeline.columns;

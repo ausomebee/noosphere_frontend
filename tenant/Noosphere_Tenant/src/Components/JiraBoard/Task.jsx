@@ -24,8 +24,6 @@ const Task = ({
     return null;
   }
 
-
-
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
     data: { type: 'Task' },
@@ -51,7 +49,7 @@ const Task = ({
     >
       <div className="task-content">
         <p>{task.fullName || 'Unnamed Candidate'}</p>
-        <span>{task.progress} task done</span>
+        <span>{task.email || 'No email'}</span>
       </div>
       <Menu as="div" className="dropdown-container">
         <Menu.Button className="dropdown-icon">
@@ -59,27 +57,16 @@ const Task = ({
         </Menu.Button>
         <Menu.Items className="menu-items">
           <div>
-            
             <Menu.Item>
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onViewCandidate(columnId, id)} // Reordered args
+                  onClick={() => onViewCandidate(columnId, id)}
                 >
                   Edit client information
                 </button>
               )}
             </Menu.Item>
-            {/* <Menu.Item>
-              {({ active }) => (
-                <button
-                  className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onAssignStaff(id)}
-                >
-                  Assign candidate to staff
-                </button>
-              )}
-            </Menu.Item> */}
             <Menu.Item>
               {({ active }) => (
                 <button
