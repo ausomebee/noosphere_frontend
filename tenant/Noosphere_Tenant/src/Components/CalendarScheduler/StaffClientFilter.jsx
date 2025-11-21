@@ -15,12 +15,19 @@ const StaffClientFilter = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
+  console.log(clients)
+
+  // Helper function to get client full name from first and last name
+  const getClientFullName = (client) => {
+    return `${client?.firstName || ''} ${client?.lastName || ''}`.trim() || "Unknown Client";
+  };
+
   const filteredStaff = staff?.filter((s) =>
     s?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const filteredClients = clients?.filter((c) =>
-    c?.client?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
+    getClientFullName(c.client).toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   // HELPER: Build correct IDs after toggle
@@ -90,7 +97,7 @@ const StaffClientFilter = ({
               <div key={client.clientId} className="staff-client-item">
                 <div className="staff-client-item-content">
                   <span className="staff-client-name">
-                    {client.client?.fullName || "Unknown"}
+                    {getClientFullName(client.client)}
                   </span>
                   <span className="staff-client-count">
                     {client.appointmentCount ?? 0}
@@ -114,8 +121,6 @@ const StaffClientFilter = ({
           )
         )}
       </div>
-
-     
     </div>
   );
 };

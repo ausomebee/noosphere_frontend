@@ -4,10 +4,9 @@ import { useSelector } from "react-redux";
 import { addDays } from "date-fns";
 import DashboardLayout from "../../../Layout/TenantLayout";
 import CalendarScheduler from "../../../Components/CalendarScheduler/CalendarScheduler";
-import api from "../../../api/AppointmentApi";
 import expand from "../../../utils/expand";
 import { format } from "date-fns";
-
+import api from "../../../api/AppointmentApi"
 const toUICard = (apiAppt, masters = []) => {
   if (!apiAppt || typeof apiAppt !== "object") {
     console.error("Invalid apiAppt provided to toUICard");
@@ -18,7 +17,6 @@ const toUICard = (apiAppt, masters = []) => {
     if (!time) return "";
     const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
     if (!match) {
-      
       return "";
     }
     const [_, hours, minutes] = match;
@@ -44,7 +42,6 @@ const toUICard = (apiAppt, masters = []) => {
       occurrences: Number.isInteger(recurrence.occurrences) && recurrence.occurrences > 0 ? recurrence.occurrences : 1,
     };
     if (normalized.type !== recurrence.type) {
-     
     }
     return normalized;
   };
@@ -55,23 +52,28 @@ const toUICard = (apiAppt, masters = []) => {
 
   const cliniciansRaw = apiAppt.clinicians || [];
   const clinicians = cliniciansRaw.map((c) => {
-    if (typeof c === "object" && c.id) return c;
+    if (typeof c === "object" && c.id) {
+      // Updated clinician name construction
+      const clinicianName = `${c.firstName || ''} ${c.lastName || ''}`.trim() || "Unknown Clinician";
+      return { ...c, fullName: clinicianName };
+    }
     const matched = apiAppt.staff?.find((s) => s.id === c);
     if (!matched) {
-     
+      return { id: c, fullName: "Unknown Clinician" };
     }
-    return matched ? { id: matched.id, fullName: matched.fullName } : { id: c, fullName: "Unknown Clinician" };
+    // Updated matched clinician name construction
+    const matchedName = `${matched.firstName || ''} ${matched.lastName || ''}`.trim() || "Unknown Clinician";
+    return { ...matched, fullName: matchedName };
   });
 
-  if (!apiAppt.client?.fullName) {
-    
+  if (!apiAppt.client?.firstName && !apiAppt.client?.lastName) {
   }
 
   return {
     id: apiAppt.id,
     client: apiAppt.clientId,
     clientId: apiAppt.clientId,
-    clientName: apiAppt.client?.fullName || "Unknown Client",
+    clientName: `${apiAppt.client?.firstName || ''} ${apiAppt.client?.lastName || ''}`.trim() || "Unknown Client",
     tenantName: apiAppt.tenant?.companyName || "Unknown Tenant",
     clinicians,
     clinicianNames: clinicians.map((c) => c.fullName || "Unknown Clinician"),
@@ -101,6 +103,7 @@ const toUICard = (apiAppt, masters = []) => {
     isRecurringInstance: apiAppt.isRecurringInstance || false,
   };
 };
+
 const Calendar = () => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const role = useSelector((s) => s.authentication?.user?.role?.name ?? "Client");
@@ -167,13 +170,18 @@ const Calendar = () => {
         return acc;
       }, { staff: {}, clients: {} });
 
-      setStaffWithCounts(stf.map(s => ({ ...s, appointmentCount: counts.staff[s.id] || 0 })));
-      setClientsWithCounts(clis.map(c => ({ ...c, appointmentCount: counts.clients[c.clientId] || 0 })));
+      // Update staff with firstName/lastName construction for display
+          setStaffWithCounts(stf.map(s => ({ ...s, appointmentCount: counts.staff[s.id] || 0 })));
 
-    
+
+      // Update clients with firstName/lastName construction for display
+      setClientsWithCounts(clis.map(c => ({ 
+        ...c, 
+        appointmentCount: counts.clients[c.clientId] || 0,
+        fullName: `${c.firstName || ''} ${c.lastName || ''}`.trim() || "Unknown Client"
+      })));
 
     } catch (err) {
-     
     } finally {
       setLoading(false);
     }
@@ -197,7 +205,6 @@ const Calendar = () => {
     });
 
     setFilteredAppointments(filtered);
-   
   }, [allAppointments]);
 
   // AUTO SELECT FOR CLIENT ROLE

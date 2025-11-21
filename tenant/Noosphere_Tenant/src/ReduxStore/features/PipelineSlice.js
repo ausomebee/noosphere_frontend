@@ -208,10 +208,12 @@ const pipelineSlice = createSlice({
       .addCase(createCandidate.fulfilled, (state, action) => {
         state.status = "succeeded";
         const candidate = action.payload.data;
-        const columnId = candidate.pipelineStageId;
-        if (state.columns[columnId]) {
-          state.columns[columnId].taskIds.push(candidate.id);
-          state.columns[columnId].count = state.columns[columnId].taskIds.length;
+        if (candidate && candidate.pipelineStageId) {
+          const columnId = candidate.pipelineStageId;
+          if (state.columns[columnId]) {
+            state.columns[columnId].taskIds.push(candidate.id);
+            state.columns[columnId].count = state.columns[columnId].taskIds.length;
+          }
         }
       })
       .addCase(createCandidate.rejected, (state, action) => {
@@ -377,38 +379,46 @@ export const fetchPipelineItems = createAsyncThunk(
   async ({ stageId, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
       const response = await api.GetPipelineItem({ stageId, accessToken, refreshToken });
+
       const items = Array.isArray(response.data?.data)
-        ? response.data.data.map((item) => ({
-            id: item.id,
-            firstName: item.client?.firstName || item.firstName || "",
-            lastName: item.client?.lastName || item.lastName || "",
-            preferredName: item.client?.preferredName || item.preferredName || "",
-            fullName: `${item.client?.firstName || item.firstName || ""} ${item.client?.lastName || item.lastName || ""}`.trim(),
-            email: item.client?.email || item.email || "",
-            phoneNumber: item.client?.phoneNumber || item.phoneNumber || "",
-            gender: item.client?.gender || item.gender || "",
-            DOB: item.client?.DOB || item.DOB || "",
-            caregiverName: item.client?.caregiverName || item.caregiverName || "",
-            relationshipToCaregiver: item.client?.relationshipToCaregiver || item.relationshipToCaregiver || "",
-            streetAddress: item.client?.streetAddress || item.streetAddress || "",
-            city: item.client?.city || item.city || "",
-            state: item.client?.state || item.state || "",
-            country: item.client?.country || item.country || "",
-            zipCode: item.client?.zipCode || item.zipCode || "",
-            assignToClinician: item.assignToClinician || null,
-            clientPortalAccess: item.clientPortalAccess || false,
-            pipelineStageId: item.pipelineStageId || stageId,
-            status: item.status || "pending",
-            createdAt: item.createdAt || "",
-            createdBy: item.createdBy || "Unknown Admin",
-          }))
+        ? response.data.data.map((item) => {
+            const client = item.client || {};
+            const creator = client.tenantLinks?.[0]?.tenantStaff?.fullName || "Unknown Admin";
+
+            return {
+              id: item.id,
+              firstName: client.firstName || "",
+              lastName: client.lastName || "",
+              preferredName: client.preferredName || "",
+              fullName: `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unknown Candidate",
+              email: client.email || "",
+              phoneNumber: client.phoneNumber || "",
+              gender: client.gender || "",
+              DOB: client.DOB || "",
+              caregiverName: client.caregiverName || "",
+              relationshipToCaregiver: client.relationshipToCaregiver || "",
+              streetAddress: client.streetAddress || "",
+              city: client.city || "",
+              state: client.state || "",
+              country: client.country || "",
+              zipCode: client.zipCode || "",
+              assignToClinician: item.assignToClinician || null,
+              clientPortalAccess: item.clientPortalAccess || false,
+              pipelineStageId: item.pipelineStageId || stageId,
+              status: item.status || "pending",
+              createdAt: item.createdAt || "",
+              createdBy: creator, // Fixed: safe access
+            };
+          })
         : [];
+
       return { stageId, items };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
+
 
 export const createPipelineStage = createAsyncThunk(
   "pipeline/createPipelineStage",
@@ -443,20 +453,30 @@ export const createCandidate = createAsyncThunk(
       lastName,
       preferredName,
       email,
-      phoneNumber,
+      phone,
       gender,
       DOB,
-      caregiverName,
-      relationshipToCaregiver,
+      primaryPayer,
       streetAddress,
       city,
       state,
       country,
-      zipCode,
+      zip,
       tenantId,
       pipelineStageId,
       assignToClinician,
       clientPortalAccess,
+      caregiverName,
+      caregiverRelationship,
+      caregiverPhone,
+      caregiverEmail,
+      caregiverStreetAddress,
+      caregiverCity,
+      caregiverState,
+      caregiverCountry,
+      caregiverZip,
+      documents,
+      createdBy,
       accessToken,
       refreshToken,
     },
@@ -468,20 +488,30 @@ export const createCandidate = createAsyncThunk(
         lastName,
         preferredName,
         email,
-        phoneNumber,
+        phoneNumber: phone, // Map phone to phoneNumber
         gender,
         DOB,
-        caregiverName,
-        relationshipToCaregiver,
+        primaryPayer,
         streetAddress,
         city,
         state,
         country,
-        zipCode,
+        createdBy,
+        zipCode: zip, // Map zip to zipCode
         tenantId,
         pipelineStageId,
         assignToClinician,
         clientPortalAccess,
+        caregiverName,
+        caregiverRelationship,
+        caregiverPhone,
+        caregiverEmail,
+        caregiverStreetAddress,
+        caregiverCity,
+        caregiverState,
+        caregiverCountry,
+        caregiverZip,
+        documents,
         accessToken,
         refreshToken,
       });
@@ -591,20 +621,29 @@ export const updateCandidate = createAsyncThunk(
       lastName,
       preferredName,
       email,
-      phoneNumber,
+      phone,
       gender,
       DOB,
-      caregiverName,
-      relationshipToCaregiver,
+      primaryPayer,
       streetAddress,
       city,
       state,
       country,
-      zipCode,
+      zip,
       tenantId,
       pipelineStageId,
       assignToClinician,
       clientPortalAccess,
+      caregiverName,
+      caregiverRelationship,
+      caregiverPhone,
+      caregiverEmail,
+      caregiverStreetAddress,
+      caregiverCity,
+      caregiverState,
+      caregiverCountry,
+      caregiverZip,
+      documents,
       accessToken,
       refreshToken,
     },
@@ -617,20 +656,29 @@ export const updateCandidate = createAsyncThunk(
         lastName,
         preferredName,
         email,
-        phoneNumber,
+        phoneNumber: phone, // Map phone to phoneNumber
         gender,
         DOB,
-        caregiverName,
-        relationshipToCaregiver,
+        primaryPayer,
         streetAddress,
         city,
         state,
         country,
-        zipCode,
+        zipCode: zip, // Map zip to zipCode
         tenantId,
         pipelineStageId,
         assignToClinician,
         clientPortalAccess,
+        caregiverName,
+        caregiverRelationship,
+        caregiverPhone,
+        caregiverEmail,
+        caregiverStreetAddress,
+        caregiverCity,
+        caregiverState,
+        caregiverCountry,
+        caregiverZip,
+        documents,
         accessToken,
         refreshToken,
       });

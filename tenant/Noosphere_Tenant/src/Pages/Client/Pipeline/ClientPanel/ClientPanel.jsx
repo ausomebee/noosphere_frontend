@@ -1,6 +1,6 @@
 // src/pages/Client/ClinentSubs/ClientPanel.jsx
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./ClientPanel.css";
 import { FaArrowLeft } from "react-icons/fa";
 import ClientInformationTab from "./ClinentSubs/ClientInfo";
@@ -9,18 +9,64 @@ import AppointmentsScheduleTab from "./ClinentSubs/AppointmentsAndSchedules";
 import AuthorizationTab from "./ClinentSubs/Authorization";
 import ClinicalReportsTab from "./ClinentSubs/ClinicalReports";
 import DashboardLayout from "../../../../Layout/TenantLayout";
+import api from "../../../../api/TenantApis"; // adjust path
+import { useSelector } from "react-redux";
+import LoadingSpinner from "../../../../Components/LoadingSpinner";
 
 const ClientPanel = () => {
-  const [view, setView] = useState("clientInformation");
+  const navigate = useNavigate();
+  const { clientId } = useParams(); // <-- get the ID from URL
   const location = useLocation();
+  const [view, setView] = useState("clientInformation");
+  const [clientData, setClientData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Detect if we're in "view" mode
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
   const isViewMode = location.pathname.includes("/view-client/");
 
+  // Fetch single pipeline item
+  useEffect(() => {
+    if (!clientId) return;
+
+    const fetchClient = async () => {
+      try {
+        setLoading(true);
+        const res = await api.GetSinglePipelineItem({
+          itemId: clientId,
+          accessToken,
+          refreshToken,
+        });
+        setClientData(res.data.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClient();
+  }, [clientId, accessToken, refreshToken]);
+
   const renderTabContent = () => {
+    if (loading)
+      return (
+        <div className="p-8 text-center">
+          <LoadingSpinner />{" "}
+        </div>
+      );
+
     switch (view) {
       case "clientInformation":
-        return <ClientInformationTab isViewMode={isViewMode} />;
+        return (
+          <ClientInformationTab
+            clientData={clientData}
+            isViewMode={isViewMode}
+          />
+        );
       case "programs":
         return <ProgramsTab />;
       case "appointmentsAndSchedule":
@@ -30,9 +76,25 @@ const ClientPanel = () => {
       case "clinicalReports":
         return <ClinicalReportsTab />;
       default:
-        return <ClientInformationTab isViewMode={isViewMode} />;
+        return (
+          <ClientInformationTab
+            clientData={clientData}
+            isViewMode={isViewMode}
+          />
+        );
     }
   };
+
+  const onBack = () => {
+    navigate("/clients/pipeline");
+  };
+
+  // Full name for header (fallback to "Client" while loading)
+  const fullName = clientData
+    ? `${clientData.client.firstName || ""} ${
+        clientData.client.lastName || ""
+      }`.trim() || "Client"
+    : "Unknown";
 
   return (
     <DashboardLayout>
@@ -40,12 +102,12 @@ const ClientPanel = () => {
         {/* Header */}
         <div className="manage-column-header">
           <div className="program-column-header">
-            <button className="back-button">
+            <button className="back-button" onClick={onBack}>
               <FaArrowLeft />
               <span className="primary-text">Back</span>
             </button>
             <div className="breadcrumb-trail">
-              <span className="breadcrumb-segment">Clinton Clifford</span>
+              <span className="breadcrumb-segment">{fullName}</span>
             </div>
           </div>
         </div>

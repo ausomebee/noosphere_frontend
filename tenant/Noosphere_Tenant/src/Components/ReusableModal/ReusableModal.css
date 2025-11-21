@@ -4,12 +4,35 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;                    /* Very high z-index */
+  
+  /* BLOCK ALL INTERACTIONS UNDERNEATH */
+  pointer-events: auto;             /* Allow clicks on overlay to close (optional) */
+  touch-action: none;               /* Block touch drag/scroll */
+  overscroll-behavior: contain;     /* Prevent pull-to-refresh */
+  -webkit-overflow-scrolling: touch;
+
+  /* Visual polish */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
 }
+
+/* Re-enable interaction ONLY inside the actual modal card */
+/* .modal-overlay > * {
+  pointer-events: auto !important;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-height: 95vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+} */
 
 /* Modal Size Variants */
 .modal-sm {

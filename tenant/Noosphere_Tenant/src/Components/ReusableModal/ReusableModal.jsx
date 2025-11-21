@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
-import "./ReusableModal.css"
+import "./ReusableModal.css";
 
 const ReusableModal = ({
   isOpen,
@@ -22,42 +23,70 @@ const ReusableModal = ({
   activeTab,
   onTabChange,
 }) => {
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollPositionRef = useRef(0);
+
+  /* ---------- Disable interactions on content behind modal ---------- */
+  useEffect(() => {
+    if (isOpen) {
+      const appRoot = document.getElementById('root');
+      if (appRoot) {
+        appRoot.setAttribute('inert', '');
+      }
+    }
+
+    return () => {
+      if (isOpen) {
+        const appRoot = document.getElementById('root');
+        if (appRoot) {
+          appRoot.removeAttribute('inert');
+        }
+      }
+    };
+  }, [isOpen]);
 
   /* ---------- Body Scroll Lock ---------- */
   useEffect(() => {
     if (isOpen) {
-      setScrollPosition(window.scrollY);
+      scrollPositionRef.current = window.scrollY;
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
-      document.body.style.top = `-${window.scrollY}px`;
+      document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.width = "100%";
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      window.scrollTo(0, scrollPosition);
     }
+
     return () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      window.scrollTo(0, scrollPosition);
+      if (isOpen) {
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        window.scrollTo(0, scrollPositionRef.current);
+      }
     };
-  }, [isOpen, scrollPosition]);
+  }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  /* ---------- Submit Handler ---------- */
   const handleSubmit = (e) => {
     e.preventDefault();
     onPrimaryButtonClick?.(e);
   };
 
-  return (
-    <div className="modal">
+  const blockDrag = (e) => {
+    e.stopPropagation();
+  };
+
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div
+      className="modal-overlay"
+      onDragStart={blockDrag}
+      onDrag={blockDrag}
+      onDragEnd={blockDrag}
+      onDragOver={blockDrag}
+      onDragEnter={blockDrag}
+      onDragLeave={blockDrag}
+      onDrop={blockDrag}
+    >
       <form
         id="modal-form"
         className={`modal-content modal-${size}`}
@@ -66,7 +95,6 @@ const ReusableModal = ({
         onSubmit={handleSubmit}
       >
         <div className="re-modal-header">
-          {/* Title */}
           <h1 id="modal-title" className="flex modal-title">
             {titleIcon && <span className="modal-title-icon">{titleIcon}</span>}
             <div className="text-center">
@@ -77,7 +105,6 @@ const ReusableModal = ({
             </div>
           </h1>
 
-          {/* Close button — ONLY when tabs exist */}
           {tabs && tabs.length > 0 && (
             <button
               type="button"
@@ -96,9 +123,7 @@ const ReusableModal = ({
               <button
                 key={tab.name}
                 type="button"
-                className={`modal-tab-btn ${
-                  activeTab === tab.name ? "active" : ""
-                }`}
+                className={`modal-tab-btn ${activeTab === tab.name ? "active" : ""}`}
                 onClick={() => onTabChange?.(tab.name)}
               >
                 {tab.name}
@@ -107,7 +132,6 @@ const ReusableModal = ({
           </div>
         )}
 
-        {/* ---------- Modal Body – Always Mount Every Tab ---------- */}
         <div className="modal-body">
           {tabs && tabs.length > 0
             ? tabs.map((tab) => (
@@ -121,7 +145,6 @@ const ReusableModal = ({
             : children}
         </div>
 
-        {/* ---------- Footer Buttons ---------- */}
         {(tabs?.length || primaryButtonText || secondaryButtonText) && (
           <div className="modal-btns">
             {secondaryButtonText && (
@@ -156,7 +179,6 @@ const ReusableModal = ({
                       height="20"
                       viewBox="0 0 24 24"
                       fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
                         d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
@@ -177,6 +199,9 @@ const ReusableModal = ({
       </form>
     </div>
   );
+
+  // Render modal outside the app root using Portal
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 ReusableModal.propTypes = {
@@ -194,7 +219,7 @@ ReusableModal.propTypes = {
   onPrimaryButtonClick: PropTypes.func,
   onSecondaryButtonClick: PropTypes.func,
   children: PropTypes.node,
-  size: PropTypes.oneOf(["sm", "md", "lg"]),
+  size: PropTypes.oneOf(["sm", "md", "lg", "xl", "2xl"]),
   titleIcon: PropTypes.node,
   primaryButtonColor: PropTypes.string,
   secondaryButtonColor: PropTypes.string,

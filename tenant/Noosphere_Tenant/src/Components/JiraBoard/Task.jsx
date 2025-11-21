@@ -34,6 +34,34 @@ const Task = ({
     transition,
   };
 
+  // Safe handler for move task
+  const handleMoveTask = () => {
+    if (typeof onMoveTask === 'function') {
+      onMoveTask(id, columnId);
+    } else {
+      console.warn('onMoveTask function is not available');
+      // Optionally show a user-friendly message or implement fallback behavior
+    }
+  };
+
+  // Safe handler for remove task
+  const handleRemoveTask = () => {
+    if (typeof onRemoveTask === 'function') {
+      onRemoveTask(id);
+    } else {
+      console.warn('onRemoveTask function is not available');
+    }
+  };
+
+  // Safe handler for view candidate
+  const handleViewCandidate = () => {
+    if (typeof onViewCandidate === 'function') {
+      onViewCandidate(columnId, id);
+    } else {
+      console.warn('onViewCandidate function is not available');
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -43,7 +71,7 @@ const Task = ({
       {...listeners}
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey) {
-          toggleSelection();
+          toggleSelection && toggleSelection();
         }
       }}
     >
@@ -61,7 +89,7 @@ const Task = ({
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onViewCandidate(columnId, id)}
+                  onClick={handleViewCandidate}
                 >
                   Edit client information
                 </button>
@@ -71,7 +99,8 @@ const Task = ({
               {({ active }) => (
                 <button
                   className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                  onClick={() => onMoveTask(id, columnId)}
+                  onClick={handleMoveTask}
+                  disabled={!onMoveTask} // Disable if function not available
                 >
                   Move candidate
                 </button>
@@ -81,7 +110,7 @@ const Task = ({
               {({ active }) => (
                 <button
                   className={`menu-item-delete ${active ? 'menu-item-delete-active' : ''}`}
-                  onClick={() => onRemoveTask(id)}
+                  onClick={handleRemoveTask}
                 >
                   Delete candidate
                 </button>

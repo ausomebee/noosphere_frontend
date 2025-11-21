@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import Task from './Task';
-import AddProspectModal from '../ReusableModal/PipelineModal/AddProspectModal';
+import AddClientModal from '../ReusableModal/ClientModal/AddClientModal';
 import { FiPlusCircle, FiUserPlus } from 'react-icons/fi';
 import { FaEllipsisV } from 'react-icons/fa';
 import { Menu } from '@headlessui/react';
@@ -26,6 +26,7 @@ const Column = ({
   pipelineId,
   staffList = [],
   stages = [],
+  onOpenAddClientModal, // New prop to handle opening the modal from parent
 }) => {
   // Early return if column is invalid
   if (!column || !column.id) {
@@ -38,7 +39,7 @@ const Column = ({
   const columnTitle = column.title || 'Unnamed Column';
   const taskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
 
-  const [showAddProspectModal, setShowAddProspectModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
   const navigate = useNavigate();
   
   const { setNodeRef: droppableRef } = useDroppable({
@@ -78,18 +79,23 @@ const Column = ({
     [isDragging]
   );
 
-  const handleAddProspectModalOpen = useCallback(() => {
-    setShowAddProspectModal(true);
+  const handleAddClientModalOpen = useCallback(() => {
+    // Use the parent handler if provided, otherwise use local state
+    if (onOpenAddClientModal) {
+      onOpenAddClientModal(columnId);
+    } else {
+      setShowAddClientModal(true);
+    }
+  }, [onOpenAddClientModal, columnId]);
+
+  const handleAddClientModalClose = useCallback(() => {
+    setShowAddClientModal(false);
   }, []);
 
-  const handleAddProspectModalClose = useCallback(() => {
-    setShowAddProspectModal(false);
-  }, []);
-
-  const handleSaveProspect = useCallback(
-    (prospectData) => {
-      onAddTask(columnId, prospectData);
-      setShowAddProspectModal(false);
+  const handleSaveClient = useCallback(
+    (clientData) => {
+      onAddTask(columnId, clientData);
+      setShowAddClientModal(false);
     },
     [onAddTask, columnId]
   );
@@ -164,7 +170,7 @@ const Column = ({
                 {({ active }) => (
                   <button
                     className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                    onClick={handleAddProspectModalOpen}
+                    onClick={handleAddClientModalOpen}
                   >
                     <FiUserPlus className="menu-item-icon" /> Add new candidate
                   </button>
@@ -196,7 +202,7 @@ const Column = ({
       </div>
       {validTaskIds.length === 0 ? (
         <div className="empty-column">
-          <button className="add-candidate" onClick={handleAddProspectModalOpen}>
+          <button className="add-candidate" onClick={handleAddClientModalOpen}>
             <FiPlusCircle /> Add a candidate
           </button>
         </div>
@@ -205,14 +211,16 @@ const Column = ({
           <div className="task-list">{renderTasks}</div>
         </SortableContext>
       )}
-      <AddProspectModal
-        isOpen={showAddProspectModal}
-        onClose={handleAddProspectModalClose}
-        onSave={handleSaveProspect}
-        pipelineId={pipelineId}
-        staffList={staffList}
-        stages={stages}
-      />
+      
+      {/* Only show the modal locally if parent handler is not provided */}
+      {!onOpenAddClientModal && (
+        <AddClientModal
+          isOpen={showAddClientModal}
+          onClose={handleAddClientModalClose}
+          onSubmit={handleSaveClient}
+          initialData={null}
+        />
+      )}
     </div>
   );
 };
@@ -247,6 +255,7 @@ Column.propTypes = {
       name: PropTypes.string.isRequired,
     })
   ),
+  onOpenAddClientModal: PropTypes.func, // New prop for parent-controlled modal
 };
 
 export default Column;

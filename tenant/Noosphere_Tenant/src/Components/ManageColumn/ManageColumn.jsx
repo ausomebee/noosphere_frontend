@@ -6,7 +6,7 @@ import { TextareaInput, TextInput } from "../Input/Inputs";
 import ColorPicker from "../ColorPicker";
 import Layout from "../../Layout/TenantLayout";
 import Button from "../Button/Button";
-import AddProspectModal from "../ReusableModal/PipelineModal/AddProspectModal";
+import AddClientModal from "../ReusableModal/ClientModal/AddClientModal";
 import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfirmationModal";
 import "./ManageColumn.css";
 import {
@@ -16,6 +16,7 @@ import {
   fetchPipelineItems,
   updatePipelineItemActivity,
   deletePipelineItem,
+  createCandidate,
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
 import { showToast } from "../../Helper/ShowToast";
@@ -30,17 +31,20 @@ const ManageColumn = () => {
   const navigate = useNavigate();
   const { pipeline, draft, status, error } = useSelector((state) => state.pipeline);
   const token = useSelector((state) => state.authentication?.user?.token);
+  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
+  const userId = useSelector((state) => state.authentication?.user?.id);
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showAddProspectModal, setShowAddProspectModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteCandidateModal, setShowDeleteCandidateModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [tableDataState, setTableDataState] = useState([]);
   const [stages, setStages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingCandidate, setIsCreatingCandidate] = useState(false);
 
   const authTokens = useMemo(
     () => ({
@@ -80,6 +84,7 @@ const ManageColumn = () => {
           hasCheckbox: true,
         }));
         setTableDataState(mappedData);
+     
       })
       .catch((err) => {
         console.error("Failed to fetch pipeline items:", err);
@@ -145,14 +150,40 @@ const ManageColumn = () => {
     return () => dispatch(resetDraft());
   }, [pipelineStageId, dispatch, authTokens, fetchStages, fetchPipelineItemsData]);
 
-  // Handle candidate addition
-  const handleAddCandidate = useCallback(
-    (candidateData) => {
-      fetchPipelineItemsData();
-      setShowAddProspectModal(false);
-    },
-    [fetchPipelineItemsData]
-  );
+  // Handle candidate addition - FIXED: Now calls the API
+  const handleAddCandidate = useCallback(async (clientData) => {
+    if (!pipelineStageId || !tenantId) {
+      showToast("Pipeline stage ID or Tenant ID is not available.", "error");
+      return;
+    }
+
+    setIsCreatingCandidate(true);
+    try {
+      const result = await dispatch(
+        createCandidate({
+          ...clientData,
+          tenantId,
+          pipelineStageId: pipelineStageId,
+          createdBy: userId,
+          accessToken: authTokens.accessToken,
+          refreshToken: authTokens.refreshToken,
+        })
+      ).unwrap();
+
+      if (result.data) {
+        showToast("Candidate added successfully!", "success");
+        fetchPipelineItemsData(); // Refresh the table data
+        setShowAddClientModal(false);
+      } else {
+        throw new Error("Failed to create candidate");
+      }
+    } catch (error) {
+      console.error("Failed to add candidate:", error);
+      showToast(error?.message || "Failed to add candidate.", "error");
+    } finally {
+      setIsCreatingCandidate(false);
+    }
+  }, [dispatch, pipelineStageId, tenantId, authTokens, fetchPipelineItemsData]);
 
   // Save basic info (name, description, color)
   const handleSaveBasicInfo = async () => {
@@ -378,7 +409,8 @@ const ManageColumn = () => {
                   iconPosition="left"
                   variant="primary"
                   width="auto"
-                  onClick={() => setShowAddProspectModal(true)}
+                  onClick={() => setShowAddClientModal(true)}
+                  disabled={isCreatingCandidate}
                 />
               </div>
               <div className="candidates-content">
@@ -415,12 +447,11 @@ const ManageColumn = () => {
         </div>
 
         {/* Modals */}
-        <AddProspectModal
-          isOpen={showAddProspectModal}
-          onClose={() => setShowAddProspectModal(false)}
-          onSave={handleAddCandidate}
-          stages={stages}
-          pipelineStageId={pipelineStageId}
+        <AddClientModal
+          isOpen={showAddClientModal}
+          onClose={() => setShowAddClientModal(false)}
+          onSubmit={handleAddCandidate}
+          initialData={null}
         />
 
         <DeleteConfirmationModal
@@ -437,7 +468,7 @@ const ManageColumn = () => {
           confirmButtonColor="#D92D20"
         />
 
-        {status === "loading" || isSaving ? <LoadingSpinner /> : null}
+        {(status === "loading" || isSaving || isCreatingCandidate) && <LoadingSpinner />}
       </div>
     </Layout>
   );

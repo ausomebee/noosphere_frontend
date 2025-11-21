@@ -1,4 +1,4 @@
-import axios from "axios";
+
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -18,8 +18,6 @@ const CreatePipelineStage = async ({
   name,
   description,
   colourCode,
-  tasks = [],
-  documents = [],
   accessToken,
   refreshToken,
 }) => {
@@ -30,8 +28,7 @@ const CreatePipelineStage = async ({
       name,
       description,
       colourCode,
-      tasks: Array.isArray(tasks) ? tasks : [],
-      documents: Array.isArray(documents) ? documents : [],
+    
     };
     const response = await authFetch.post(`${PLAIN_API_URL}/pipeline/stage`, payload);
     return response;
@@ -144,94 +141,142 @@ const UpdatePipelineItemActivity = async ({ ids, pipelineStageId, accessToken, r
 };
 
 const CreateCandidate = async ({
-  fullName,
+  firstName,
+  lastName,
+  preferredName,
   email,
+  phoneNumber,
+  gender,
+  DOB,
+  primaryPayer,
   streetAddress,
-  stage,
   city,
   state,
   country,
   zipCode,
-  phoneNumber,
-  gender,
-  DOB,
   tenantId,
   pipelineStageId,
-  assignToTenantStaff,
+  assignToClinician,
+  clientPortalAccess,
+  caregiverName,
+  caregiverRelationship,
+  caregiverPhone,
+  caregiverEmail,
+  caregiverStreetAddress,
+  caregiverCity,
+  caregiverState,
+  caregiverCountry,
+  caregiverZip,
+  documents,
+  createdBy,
   accessToken,
   refreshToken,
-  dbAccess,
-  createdBy
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(`${PLAIN_API_URL}/client`, {
-      fullName,
+      firstName,
+      lastName,
+      preferredName,
       email,
+      phoneNumber,
+      gender,
+      DOB,
+      primaryPayer,
       streetAddress,
-      stage,
       city,
       state,
       country,
       zipCode,
-      phoneNumber,
-      gender,
-      DOB,
       tenantId,
       pipelineStageId,
-      assignToTenantStaff,
-      dbAccess,
-      createdBy
+      assignToClinician,
+      clientPortalAccess,
+      caregiverName,
+      caregiverRelationship,
+      caregiverPhone,
+      caregiverEmail,
+      caregiverStreetAddress,
+      caregiverCity,
+      caregiverState,
+      caregiverCountry,
+      caregiverZip,
+      createdBy,
+      documents,
     });
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Create Pipeline stage Client failed");
+    throw new Error(error.response?.data?.message || "Create Candidate failed");
   }
 };
 
 const UpdateCandidate = async ({
+  id,
+  firstName,
+  lastName,
+  preferredName,
   email,
+  phoneNumber,
+  gender,
+  DOB,
+  primaryPayer,
   streetAddress,
-  stage,
   city,
   state,
   country,
   zipCode,
-  phoneNumber,
-  gender,
-  DOB,
   tenantId,
   pipelineStageId,
-  assignToTenantStaff,
+  assignToClinician,
+  clientPortalAccess,
+  caregiverName,
+  caregiverRelationship,
+  caregiverPhone,
+  caregiverEmail,
+  caregiverStreetAddress,
+  caregiverCity,
+  caregiverState,
+  caregiverCountry,
+  caregiverZip,
+  documents,
   accessToken,
   refreshToken,
-  dbAccess,
-  id,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.put(`${PLAIN_API_URL}/client`, {
+      id,
+      firstName,
+      lastName,
+      preferredName,
       email,
+      phoneNumber,
+      gender,
+      DOB,
+      primaryPayer,
       streetAddress,
-      stage,
       city,
       state,
       country,
       zipCode,
-      phoneNumber,
-      gender,
-      DOB,
       tenantId,
       pipelineStageId,
-      assignToTenantStaff,
-      accessToken,
-      refreshToken,
-      dbAccess,
-      id,
+      assignToClinician,
+      clientPortalAccess,
+      caregiverName,
+      caregiverRelationship,
+      caregiverPhone,
+      caregiverEmail,
+      caregiverStreetAddress,
+      caregiverCity,
+      caregiverState,
+      caregiverCountry,
+      caregiverZip,
+      documents,
     });
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Create Pipeline Stage failed");
+    throw new Error(error.response?.data?.message || "Update Candidate failed");
   }
 };
 
@@ -311,7 +356,6 @@ const UploadDocumentForPipelineItem = async ({
     throw new Error(error.response?.data?.message || "Upload Document for Pipeline Item failed");
   }
 };
-
 
 const MoveCandidateToClient = async ({
   pipelineItemId,

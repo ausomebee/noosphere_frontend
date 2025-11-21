@@ -11,6 +11,10 @@ import { useNavigate } from "react-router-dom";
 import ClientPortalSettingsModal from "../../../../../Components/ReusableModal/ClientModal/ClientAccessModal";
 import AddClientModal from "../../../../../Components/ReusableModal/ClientModal/AddClientModal";
 import NewDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/NewDocumentRequestModal";
+import api from "../../../../../api/TenantApis";
+import { showToast } from "../../../../../Helper/ShowToast";
+import { useSelector } from "react-redux";
+
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
   const visible = assignees.slice(0, maxVisible);
@@ -58,8 +62,19 @@ const Accordion = ({ title, isOpen, onToggle, children, badge }) => {
 };
 
 // Basic Information Section
-const BasicInformation = ({ client, onEdit }) => {
+const BasicInformation = ({ clientData }) => {
   const [isOpen, setIsOpen] = useState(true);
+
+  const client = clientData?.client;
+
+  // Helper to safely display value or "—"
+  const val = (v) => (v ? v : "—");
+
+  // Avatar initials
+  const initials =
+    `${client?.firstName?.[0] || ""}${
+      client?.lastName?.[0] || ""
+    }`.toUpperCase() || "??";
 
   return (
     <Accordion
@@ -71,83 +86,115 @@ const BasicInformation = ({ client, onEdit }) => {
         {/* LEFT COLUMN - Avatar + Name */}
         <div className="flex items-center justify-center">
           <div className="client-avatar-section">
-            <div className="client-avatar">JH</div>
-            <h3 className="client-full-name">Kouthrapauli Ramakrishnan</h3>
-            <p className="client-preferred-name">(Kouth)</p>
+            <div className="client-avatar">{initials}</div>
+            <h3 className="client-full-name">
+              {val(`${client?.firstName} ${client?.lastName}`)}
+            </h3>
+            {client?.preferredName && (
+              <p className="client-preferred-name">({client.preferredName})</p>
+            )}
           </div>
         </div>
-        <div>
-          <div>
-            <div className="info-section-title">Basic Information</div>
-            <div className="basic-info-column flex">
-              <div className="flex-1">
-                <div className="info-row">
-                  <span className="info-label">Gender</span>
-                  <span className="info-value">Male</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Date of Birth</span>
-                  <span className="info-value">12/12/2022</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Primary Payer</span>
-                  <span className="info-value">Medi-cal</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="info-row">
-                  <span className="info-label">Email</span>
-                  <span className="info-value">email@gmail.com</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Phone</span>
-                  <span className="info-value">+441 344 36849</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Address</span>
-                  <span className="info-value">
-                    304 Sharafa Street, Benz, Texas, US, 94562
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="info-section-title">Caregiver Information</div>
-            <div className="basic-info-column flex">
-              <div className="flex-1">
-                <div className="info-row">
-                  <span className="info-label">Name</span>
-                  <span className="info-value">Phillip Harden</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Phone</span>
-                  <span className="info-value">803 234 2345</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Relationship</span>
-                  <span className="info-value">Family</span>
-                </div>
-              </div>
 
-              <div className="flex-1">
-                <div className="info-row">
-                  <span className="info-label">Email</span>
-                  <span className="info-value">email@gmail.com</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Phone</span>
-                  <span className="info-value">+441 344 36849</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Address</span>
-                  <span className="info-value">
-                    304 Sharafa Street, Benz, Texas, US, 94562
-                  </span>
-                </div>
+        {/* RIGHT COLUMN - Details */}
+        <div>
+          <div className="info-section-title">Basic Information</div>
+          <div className="basic-info-column flex">
+            <div className="flex-1">
+              <div className="info-row">
+                <span className="info-label">Gender</span>
+                <span className="info-value">{val(client?.gender)}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Date of Birth</span>
+                <span className="info-value">{val(client?.DOB)}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Primary Payer</span>
+                <span className="info-value">{val(client?.primaryPayer)}</span>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="info-row">
+                <span className="info-label">Email</span>
+                <span className="info-value">{val(client?.email)}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Phone</span>
+                <span className="info-value">{val(client?.phoneNumber)}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Address</span>
+                <span className="info-value">
+                  {[
+                    client?.streetAddress,
+                    client?.city,
+                    client?.state,
+                    client?.country,
+                    client?.zipCode,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "—"}
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Caregiver Section – only show if any caregiver field exists */}
+          {client &&
+            (
+              <>
+                <div className="info-section-title mt-8">
+                  Caregiver Information
+                </div>
+                <div className="basic-info-column flex">
+                  <div className="flex-1">
+                    <div className="info-row">
+                      <span className="info-label">Name</span>
+                      <span className="info-value">
+                        {val(client.caregiverName)}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Phone</span>
+                      <span className="info-value">
+                        {val(client.caregiverPhone)}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Relationship</span>
+                      <span className="info-value">
+                        {val(client.caregiverRelationship)}
+                      </span>
+                    </div>
+                    
+                  </div>
+                  <div className="flex-1">
+                    <div className="info-row">
+                      <span className="info-label">Email</span>
+                      <span className="info-value">
+                        {val(client.caregiverEmail)}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Address</span>
+                      <span className="info-value">
+                        {[
+                          client?.caregiverStreetAddress,
+                          client?.caregiverCity,
+                          client?.caregiverState,
+                          client?.caregiverCountry,
+                          client?.caregiverZip,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
         </div>
       </div>
     </Accordion>
@@ -621,11 +668,15 @@ const DocumentsForms = () => {
     </>
   );
 };
-// Main Tab Component
-const ClientInformationTab = ({ isViewMode = false }) => {
+
+// Main Tab Component - ONLY THE PAYLOAD IS CLEANED (empty values excluded)
+const ClientInformationTab = ({ clientData, isViewMode = false }) => {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const { token: accessToken, refreshToken } = useSelector((s) => s.authentication?.user || {});
 
   const assignees = [
     { id: 1, initials: "MW", color: "#8B5CF6" },
@@ -634,27 +685,68 @@ const ClientInformationTab = ({ isViewMode = false }) => {
     { id: 4, initials: "TL", color: "#10B981" },
   ];
 
-  const client = {
-    id: "1",
-    firstName: "Kouthrapauli",
-    lastName: "Ramakrishnan",
-    preferredName: "Kouth",
-    gender: "Male",
-    dateOfBirth: "2022-12-12",
-    email: "email@gmail.com",
-    phoneNumber: "+441 344 36849",
-    caregiverName: "Phillip Harden",
-    relationshipToCaregiver: "Family",
-    streetAddress: "304 Sharafa Street, Benz, Texas, US, 94562",
-    city: "Benz",
-    state: "Texas",
-    country: "US",
-    zipCode: "94562",
+
+  const handleUpdateClient = async (data) => {
+    setIsUpdating(true);
+
+    // Build payload dynamically — only include non-empty values
+    const payload = {
+      id: clientData?.client?.id,
+      tenantId: clientData?.tenantId,
+      pipelineStageId: clientData?.pipelineStageId,
+      accessToken,
+      refreshToken,
+    };
+
+    // Helper to add field only if value exists (not null, undefined, or empty string)
+    const addIfValue = (key, value) => {
+      if (value !== null && value !== undefined && value !== "") {
+        payload[key] = value;
+      }
+    };
+
+    addIfValue("firstName", data.firstName);
+    addIfValue("lastName", data.lastName);
+    addIfValue("preferredName", data.preferredName);
+    addIfValue("email", data.email);
+    addIfValue("phoneNumber", data.phone);
+    addIfValue("gender", data.gender);
+    addIfValue("DOB", data.DOB);
+    addIfValue("primaryPayer", data.primaryPayer);
+    addIfValue("streetAddress", data.streetAddress);
+    addIfValue("city", data.city);
+    addIfValue("state", data.state);
+    addIfValue("country", data.country || "US");
+    addIfValue("zipCode", data.zip);
+    addIfValue("assignToClinician", data.assignToClinician);
+    addIfValue("clientPortalAccess", data.clientPortalAccess);
+    addIfValue("caregiverName", data.caregiverName);
+    addIfValue("caregiverRelationship", data.caregiverRelationship);
+    addIfValue("caregiverPhone", data.caregiverPhone);
+    addIfValue("caregiverEmail", data.caregiverEmail);
+    addIfValue("caregiverStreetAddress", data.caregiverStreetAddress);
+    addIfValue("caregiverCity", data.caregiverCity);
+    addIfValue("caregiverState", data.caregiverState);
+    addIfValue("caregiverCountry", data.caregiverCountry || "US");
+    addIfValue("caregiverZip", data.caregiverZip);
+    addIfValue("documents", data.documents);
+
+    try {
+      await api.UpdateCandidate(payload);
+
+      showToast("Client updated successfully", "success");
+      setIsAddClientOpen(false);
+      window.location.reload(); // or trigger refetch
+    } catch (err) {
+      showToast(err.message || "Failed to update client", "error");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
     <div className="tab-content">
-      {/* ACTION BAR — Unified for both modes, using your original structure */}
+      {/* ACTION BAR */}
       <div className="action-bar">
         <AssignedTo assignees={assignees} maxVisible={3} />
 
@@ -668,7 +760,6 @@ const ClientInformationTab = ({ isViewMode = false }) => {
 
           {isManageOpen && (
             <div className="timesheet-dropdown">
-              {/* Hidden only in view mode */}
               {!isViewMode && (
                 <div className="timesheet-dropdown-item">
                   Move intake candidate
@@ -716,13 +807,12 @@ const ClientInformationTab = ({ isViewMode = false }) => {
       <AddClientModal
         isOpen={isAddClientOpen}
         onClose={() => setIsAddClientOpen(false)}
-        onSubmit={(data) => {
-          console.log("Client saved:", data);
-        }}
-        initialData={client}
+        onSubmit={handleUpdateClient}
+        initialData={clientData?.client}
+        primaryButtonLoading={isUpdating}
       />
 
-      <BasicInformation client={client} />
+      <BasicInformation clientData={clientData} />
       <DocumentsForms />
     </div>
   );

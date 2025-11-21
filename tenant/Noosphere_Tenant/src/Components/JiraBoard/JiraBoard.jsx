@@ -11,13 +11,12 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 import Board from "./Board";
 import EmptyState from "./EmptyState";
 import Task from "./Task";
 import Column from "./Column";
 import NewPipelineColumnModal from "../ReusableModal/PipelineModal/NewPipelineColumnModal";
-import AddProspectModal from "../ReusableModal/PipelineModal/AddProspectModal";
+import AddClientModal from "../ReusableModal/ClientModal/AddClientModal";
 import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfirmationModal";
 import LoadingSpinner from "../LoadingSpinner";
 import "./DragAndDrop.css";
@@ -36,7 +35,8 @@ import {
   deletePipelineStage,
   deletePipelineItem,
   setColumns,
-  fetchSinglePipelineItem,
+  createCandidate,
+  fetchPipelineStages,
 } from "../../ReduxStore/features/PipelineSlice";
 import { FaPlus } from "react-icons/fa";
 import Button from "../Button/Button";
@@ -60,6 +60,7 @@ const JiraBoard = () => {
   const navigate = useNavigate();
   const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } =
     useSelector((state) => state.pipeline);
+  const userId = useSelector((state) => state.authentication?.user?.id);
   const token = useSelector((state) => state.authentication?.user?.token);
   const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
   const accessToken = token;
@@ -70,7 +71,7 @@ const JiraBoard = () => {
   const [draggedTask, setDraggedTask] = useState(null);
   const [draggedColumn, setDraggedColumn] = useState(null);
   const [showAddColumnModal, setShowAddColumnModal] = useState(false);
-  const [showAddProspectModal, setShowAddProspectModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteCandidateModal, setShowDeleteCandidateModal] =
     useState(false);
   const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
@@ -79,6 +80,7 @@ const JiraBoard = () => {
   const [addColumnIndex, setAddColumnIndex] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [stages, setStages] = useState([]);
+  const [currentPipelineStageId, setCurrentPipelineStageId] = useState(null);
 
   // Selection handling
   const toggleTaskSelection = (taskId) => {
@@ -449,55 +451,80 @@ const JiraBoard = () => {
     }
   };
 
-  const handleAddTask = (columnId, prospectData) => {
+  const handleAddTask = async (columnId, clientData) => {
     if (!columns[columnId]) {
       showToast("Invalid column selected.", "error");
       console.error("Invalid columnId:", columnId);
       return;
     }
 
-    if (!prospectData.id || typeof prospectData.id !== "string") {
-      showToast("Invalid prospect ID.", "error");
-      console.error("Invalid prospectData.id:", prospectData.id);
+    if (!tenantId) {
+      showToast("Tenant ID is not available.", "error");
       return;
     }
 
     startLoading();
     try {
-      const newTaskId = prospectData.id;
-      dispatch(addTaskToColumn({ columnId, taskId: newTaskId }));
-      setLocalTasks((prev) => {
-        const updatedTasks = {
+      // Call the API to create the candidate
+      const result = await dispatch(
+        createCandidate({
+          ...clientData,
+          tenantId,
+          pipelineStageId: columnId,
+          createdBy: userId,
+          accessToken,
+          refreshToken,
+        })
+      ).unwrap();
+
+      if (result.data) {
+        const newCandidate = result.data;
+        
+        // Add the new candidate to the column
+        dispatch(addTaskToColumn({ columnId, taskId: newCandidate.id }));
+        
+        // Update local tasks with the actual candidate data from API
+        setLocalTasks((prev) => ({
           ...prev,
-          [newTaskId]: {
-            id: newTaskId,
-            firstName: prospectData.firstName || "",
-            lastName: prospectData.lastName || "",
-            preferredName: prospectData.preferredName || "",
-            fullName: `${prospectData.firstName || ""} ${prospectData.lastName || ""}`.trim() || `New Candidate ${newTaskId.slice(0, 8)}`,
-            email: prospectData.email || "",
-            phoneNumber: prospectData.phoneNumber || "",
-            gender: prospectData.gender || "",
-            DOB: prospectData.DOB || "",
-            caregiverName: prospectData.caregiverName || "",
-            relationshipToCaregiver: prospectData.relationshipToCaregiver || "",
-            streetAddress: prospectData.streetAddress || "",
-            city: prospectData.city || "",
-            state: prospectData.state || "",
-            country: prospectData.country || "",
-            zipCode: prospectData.zipCode || "",
-            assignToClinician: prospectData.assignToClinician || "",
-            clientPortalAccess: prospectData.clientPortalAccess || false,
-            createdBy: prospectData.createdBy || "Unknown Admin",
+          [newCandidate.id]: {
+            id: newCandidate.id,
+            firstName: newCandidate.firstName || "",
+            lastName: newCandidate.lastName || "",
+            preferredName: newCandidate.preferredName || "",
+            fullName: `${newCandidate.firstName || ""} ${newCandidate.lastName || ""}`.trim() || `New Candidate`,
+            email: newCandidate.email || "",
+            phoneNumber: newCandidate.phoneNumber || "",
+            gender: newCandidate.gender || "",
+            DOB: newCandidate.DOB || "",
+            primaryPayer: newCandidate.primaryPayer || "",
+            streetAddress: newCandidate.streetAddress || "",
+            city: newCandidate.city || "",
+            state: newCandidate.state || "",
+            country: newCandidate.country || "",
+            zipCode: newCandidate.zipCode || "",
+            assignToClinician: newCandidate.assignToClinician || "",
+            clientPortalAccess: newCandidate.clientPortalAccess || false,
+            caregiverName: newCandidate.caregiverName || "",
+            relationshipToCaregiver: newCandidate.relationshipToCaregiver || "",
+            caregiverPhone: newCandidate.caregiverPhone || "",
+            caregiverEmail: newCandidate.caregiverEmail || "",
+            caregiverStreetAddress: newCandidate.caregiverStreetAddress || "",
+            caregiverCity: newCandidate.caregiverCity || "",
+            caregiverState: newCandidate.caregiverState || "",
+            caregiverCountry: newCandidate.caregiverCountry || "",
+            caregiverZip: newCandidate.caregiverZip || "",
+            createdBy: newCandidate.createdBy || "Unknown Admin",
           },
-        };
-        return updatedTasks;
-      });
-      setIsDataLoaded(false);
-      showToast("Candidate added successfully!", "success");
+        }));
+        
+        setIsDataLoaded(false);
+        showToast("Candidate added successfully!", "success");
+      } else {
+        throw new Error("Failed to create candidate");
+      }
     } catch (error) {
       console.error("Failed to add candidate:", error);
-      showToast("Failed to add candidate.", "error");
+      showToast(error?.message || "Failed to add candidate.", "error");
     } finally {
       stopLoading();
     }
@@ -622,40 +649,63 @@ const JiraBoard = () => {
     setShowAddColumnModal(true);
   };
 
-  const handleSaveColumn = async (pipelineData) => {
-    startLoading();
-    try {
-      if (pipeline?.id) {
-        const validatedPipelineData = {
-          pipelineId: pipeline.id,
-          name: pipelineData.name?.trim() || "",
-          description: pipelineData.description?.trim() || "",
-          colourCode: pipelineData.colorCode || "#000000",
+ const handleSaveColumn = async (pipelineData) => {
+  if (!pipeline?.id) {
+    showToast("Pipeline not loaded yet. Please wait.", "error");
+    return;
+  }
+
+  startLoading();
+  try {
+    const payload = {
+      pipelineId: pipeline.id,
+      name: pipelineData.name?.trim() || "New Stage",
+      description: pipelineData.description?.trim() || "",
+      colourCode: pipelineData.colorCode || "#1E40AF",
+      accessToken,
+      refreshToken,
+    };
+
+    const result = await dispatch(createPipelineStage(payload)).unwrap();
+
+    if (result?.data) {
+      showToast("Stage created successfully!", "success");
+
+      // Critical: Re-fetch stages to get updated list + correct order
+      // Instead of refetching everything, just dispatch fetchPipelineStages
+      const pipelineId = pipeline.id;
+      await dispatch(
+        fetchPipelineStages({
+          pipelineId,
           accessToken,
           refreshToken,
-        };
-        const response = await dispatch(
-          createPipelineStage(validatedPipelineData)
-        ).unwrap();
-        if (response.status === "ok") {
-          showToast("Pipeline stage created successfully!", "success");
-          setIsDataLoaded(false);
-          fetchPipelineData();
-        } else {
-          throw new Error("Failed to create pipeline stage.");
-        }
-      } else {
-        dispatch(addColumn({ pipelineData, index: addColumnIndex }));
-        showToast("Pipeline stage added locally!", "success");
-      }
-      setShowAddColumnModal(false);
-      setAddColumnIndex(null);
-    } catch (error) {
-      console.error("Failed to create pipeline stage:", error);
-      showToast(error?.message || "Failed to create pipeline stage.", "error");
-    } finally {
-      stopLoading();
+        })
+      ).unwrap();
+
+      // Then refetch items for the new stage
+      await dispatch(
+        fetchPipelineItems({
+          stageId: result.data.id,
+          accessToken,
+          refreshToken,
+        })
+      ).unwrap();
+
+      setIsDataLoaded(false); // Optional: trigger full reload if needed
     }
+  } catch (error) {
+    console.error("Failed to create stage:", error);
+    showToast(error?.message || "Failed to create stage", "error");
+  } finally {
+    setShowAddColumnModal(false);
+    setAddColumnIndex(null);
+    stopLoading();
+  }
+};
+
+  const handleOpenAddClientModal = (pipelineStageId) => {
+    setCurrentPipelineStageId(pipelineStageId);
+    setShowAddClientModal(true);
   };
 
   const hasColumns = columnOrder.length > 0;
@@ -686,7 +736,11 @@ const JiraBoard = () => {
                 label="Add new candidate"
                 icon={<FaPlus />}
                 variant="primary"
-                onClick={() => setShowAddProspectModal(true)}
+                onClick={() => {
+                  // Get the first column ID as default pipeline stage
+                  const defaultPipelineStageId = columnOrder.length > 0 ? columnOrder[0] : null;
+                  handleOpenAddClientModal(defaultPipelineStageId);
+                }}
                 iconPosition="left"
                 width="300px"
                 disabled={isLoading}
@@ -718,6 +772,7 @@ const JiraBoard = () => {
             selectedTaskIds={selectedTaskIds}
             toggleTaskSelection={toggleTaskSelection}
             setSelectedTaskIds={setSelectedTaskIds}
+            onOpenAddClientModal={handleOpenAddClientModal}
           />
           <DragOverlay>
             {draggedTask ? (
@@ -747,16 +802,14 @@ const JiraBoard = () => {
         }}
         onSave={handleSaveColumn}
       />
-      <AddProspectModal
-        isOpen={showAddProspectModal}
-        onClose={() => setShowAddProspectModal(false)}
-        onSave={(prospectData) => {
-          const targetColumnId = prospectData.pipelineStageId;
-          handleAddTask(targetColumnId, prospectData);
-          setShowAddProspectModal(false);
+      <AddClientModal
+        isOpen={showAddClientModal}
+        onClose={() => setShowAddClientModal(false)}
+        onSubmit={(clientData) => {
+          handleAddTask(currentPipelineStageId, clientData);
+          setShowAddClientModal(false);
         }}
-        pipelineId={pipeline?.id}
-        stages={stages}
+        initialData={null}
       />
       <DeleteConfirmationModal
         isOpen={showDeleteCandidateModal}

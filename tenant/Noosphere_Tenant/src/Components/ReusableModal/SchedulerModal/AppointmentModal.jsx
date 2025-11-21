@@ -45,8 +45,10 @@ const AppointmentModal = ({
   // Map API data to form options
   const clientOptions = clients.map((client) => ({
     value: client.clientId,
-    label: client.client.fullName,
+    label: `${client.client.firstName || ''} ${client.client.lastName || ''}`.trim() || "Unknown  Client",
   }));
+
+  console.log(staff)
 
   const clinicianOptions = useMemo(
     () =>

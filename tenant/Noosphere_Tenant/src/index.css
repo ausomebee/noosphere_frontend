@@ -1343,7 +1343,7 @@ select {
 /* Text Input */
 .form-control {
   width: 100%;
-  padding: 8px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--input-border);
   border-radius: 12px;
   font-size: var(--text-sm);
@@ -1362,7 +1362,7 @@ select {
 /* Select Input */
 .input-select {
   width: 100%;
-  padding: 8px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--input-border);
 
   font-size: var(--text-sm);
@@ -1508,7 +1508,7 @@ input:checked + .slider:before {
 /* Textarea Input */
 .input-textarea {
   width: 100%;
-  padding: 8px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--input-border);
   border-radius: 12px;
   font-size: var(--text-sm);
@@ -1533,7 +1533,7 @@ input:checked + .slider:before {
 
 .input-search {
   width: 100%;
-  padding: 8px 12px 8px 30px;
+  padding: 12px 12px 8px 30px;
   border: 1px solid var(--input-border);
   border-radius: 20px;
   font-size: var(--text-sm);
@@ -2459,28 +2459,47 @@ input:checked + .slider:before {
 /* Modal Overlay */
 .modal {
   position: fixed;
-  top: var(--space-0);
-  left: var(--space-0);
-  right: var(--space-0);
-  bottom: var(--space-0);
-  background-color: var(--modal-overlay-bg);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
+  
+  /* BLOCK ALL INTERACTIONS UNDERNEATH */
+  pointer-events: auto;
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+  
+  /* Visual polish */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Modal Content */
 .modal-content {
   background-color: var(--modal-content-bg);
   border-radius: 8px;
-  width: 100%;
   max-width: 600px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-height: 90vh;
-  display: flex;
   flex-direction: column;
   overflow: hidden;
+  pointer-events: auto;
+  touch-action: auto;
+   /* user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text; */
+  /* -webkit-user-drag: auto; */
+  max-height: 95vh;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
 }
 
 /* Modal Size Variants */
@@ -2979,7 +2998,7 @@ input:checked + .slider:before {
   min-height: 36px;
   height: auto;
   flex-wrap: wrap;
-  padding: 4px 8px;
+  padding: 8px 8px;
 }
 
 .rs__menu {

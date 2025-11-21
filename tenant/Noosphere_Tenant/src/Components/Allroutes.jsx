@@ -96,7 +96,7 @@ const AllRoutes = () => {
         element={<ManageColumn />}
       />
       <Route
-        path="/client/client-single/:pipelineStageId/:pipelineItemId"
+        path="/client/client-single/:pipelineStageId/:clientId"
         element={<ClientPanel />}
       />
 
