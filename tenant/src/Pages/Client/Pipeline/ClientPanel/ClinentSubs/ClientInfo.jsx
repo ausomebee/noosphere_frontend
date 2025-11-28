@@ -251,7 +251,7 @@ const DocumentsForms = () => {
         accessToken,
         refreshToken,
       });
-      console.log(response.data)
+    
       if (response.data) {
         const transformedData = response?.data.data.map((doc) => ({
           id: doc.id,
@@ -262,7 +262,6 @@ const DocumentsForms = () => {
           fileUrl: doc.documentDetails?.fileUrl,
           fileType: doc.documentDetails?.type,
         }));
-        console.log(transformedData)
         setDocumentsData(transformedData);
       }
       

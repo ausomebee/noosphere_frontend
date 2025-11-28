@@ -70,7 +70,7 @@ const ClientPanel = () => {
       case "programs":
         return <ProgramsTab fullName={fullName} />;
       case "appointmentsAndSchedule":
-        return <AppointmentsScheduleTab />;
+        return <AppointmentsScheduleTab fullName={fullName} />;
       case "authorization":
         return <AuthorizationTab />;
       case "clinicalReports":
