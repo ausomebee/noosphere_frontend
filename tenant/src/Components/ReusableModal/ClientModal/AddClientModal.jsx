@@ -1,0 +1,633 @@
+// src/Components/ReusableModal/ClientModal/AddClientModal.jsx
+import React, {
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  useState,
+} from "react";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
+import ReusableModal from "../../ReusableModal/ReusableModal";
+import {
+  setDraftField,
+  resetDraft,
+} from "../../../ReduxStore/features/ClientDraftSlice";
+import { SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
+import FileUploadArea from "../../FileUpload/FileUploadArea";
+import api from "../../../api/AppointmentApi";
+import api2 from "../../../api/billingAndPaymentsApi";
+
+// ==================== SCHEMA ====================
+const schema = yup.object().shape({
+  firstName: yup.string().required("First Name is required"),
+  lastName: yup.string().required("Last Name is required"),
+  preferredName: yup.string().nullable(),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  phone: yup
+    .string()
+    .matches(/^\+?[\d\s-]{10,}$/, "Invalid phone")
+    .required("Phone is required"),
+  DOB: yup.string().nullable(),
+  gender: yup
+    .string()
+    .oneOf(["male", "female", "other", ""])
+    .required("Gender is required"),
+  primaryPayer: yup.string().nullable(),
+  streetAddress: yup.string().nullable(),
+  city: yup.string().nullable(),
+  state: yup.string().nullable(),
+  zip: yup.string().nullable(),
+  country: yup.string().nullable(),
+  assignToClinician: yup.array().of(yup.string()).nullable(),
+  clientPortalAccess: yup.boolean().optional(),
+  caregiverName: yup.string().nullable(),
+  caregiverRelationship: yup.string().nullable(),
+  caregiverPhone: yup.string().nullable(),
+  caregiverEmail: yup.string().email("Invalid email").nullable(),
+  caregiverStreetAddress: yup.string().nullable(),
+  caregiverCity: yup.string().nullable(),
+  caregiverState: yup.string().nullable(),
+  caregiverZip: yup.string().nullable(),
+  caregiverCountry: yup.string().nullable(),
+
+  documentName: yup.string().when("hasDocument", {
+    is: true,
+    then: (s) => s.required("Document name is required").min(2).max(50),
+    otherwise: (s) => s.nullable(),
+  }),
+  hasDocument: yup.boolean().default(false),
+});
+
+const genderOptions = [
+  { value: "", label: "Select Gender" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Prefer not to say" },
+];
+
+const countryOptions = [
+  { value: "", label: "Select Country" },
+  { value: "US", label: "United States" },
+  { value: "UK", label: "United Kingdom" },
+];
+
+const usStates = [
+  { value: "", label: "Select State" },
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
+];
+
+const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
+  const dispatch = useDispatch();
+  const [activeTab, setActiveTab] = useState("Basic Information");
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState(null); // This holds the file
+
+  const [clinicians, setClinicians] = useState([]);
+  const [loadingClinicians, setLoadingClinicians] = useState(false);
+  const [payers, setPayers] = useState([]);
+  const [loadingPayers, setLoadingPayers] = useState(false);
+
+  const hasInitialized = useRef(false);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
+  // Format DOB from ISO string → YYYY-MM-DD
+  const formatDateForInput = (isoString) => {
+    if (!isoString) return "";
+    try {
+      return isoString.split("T")[0]; // "2025-11-27T00:00:00.000Z" → "2025-11-27"
+    } catch {
+      return "";
+    }
+  };
+
+
+
+  // Fetch Clinicians & Payers
+  const fetchClinicians = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingClinicians(true);
+    try {
+      const response = await api.GetTenantStaffByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const staff = response?.data?.data || [];
+      setClinicians(
+        staff.map((c) => ({ value: c.id, label: c.fullName || "Unnamed" }))
+      );
+    } catch (err) {
+      console.error("Failed to load clinicians:", err);
+    } finally {
+      setLoadingClinicians(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchPayers = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingPayers(true);
+    try {
+      const response = await api2.GetPayerByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const payerList = (response?.data || []).map((p) => ({
+        value: p.id,
+        label: p.payerName,
+      }));
+      setPayers(payerList);
+    } catch (err) {
+      console.error("Failed to load payers:", err);
+    } finally {
+      setLoadingPayers(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchClinicians();
+      fetchPayers();
+    }
+  }, [isOpen, fetchClinicians, fetchPayers]);
+
+  const defaultValues = useMemo(() => {
+
+    
+    const docs = initialData?.client?.documents?.[0];
+    const hasDoc = !!docs?.documentDetails?.fileUrl;
+
+    return {
+      firstName: initialData?.client?.firstName || "",
+      lastName: initialData?.client?.lastName || "",
+      preferredName: initialData?.client?.preferredName || "",
+      email: initialData?.client?.email || "",
+      phone: initialData?.client?.phoneNumber || "",
+      DOB: formatDateForInput(initialData?.client?.DOB),
+      gender: initialData?.client?.gender || "",
+      primaryPayer: initialData?.client?.primaryPayer || "",
+      streetAddress: initialData?.client?.streetAddress || "",
+      city: initialData?.client?.city || "",
+      state: initialData?.client?.state || "",
+      zip: initialData?.client?.zipCode || "",
+      country: initialData?.client?.country || "US",
+      assignToClinician: initialData?.client?.assignToClinician || [],
+      clientPortalAccess: initialData?.dbAccess ?? false,
+      caregiverName: initialData?.client?.caregiverName || "",
+      caregiverRelationship: initialData?.client?.caregiverRelationship || "",
+      caregiverPhone: initialData?.client?.caregiverPhone || "",
+      caregiverEmail: initialData?.client?.caregiverEmail || "",
+      caregiverStreetAddress: initialData?.client?.caregiverStreetAddress || "",
+      caregiverCity: initialData?.client?.caregiverCity || "",
+      caregiverState: initialData?.client?.caregiverState || "",
+      caregiverZip: initialData?.client?.caregiverZip || "",
+      caregiverCountry: initialData?.client?.caregiverCountry || "US",
+
+      documentName: hasDoc ? docs.name : "",
+      hasDocument: hasDoc,
+    };
+  }, [initialData]);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    getValues,
+    trigger,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+    mode: "onChange",
+    defaultValues,
+  });
+
+  const documentName = watch("documentName");
+
+  const handleFileUpload = useCallback(
+    (uploadedFiles) => {
+      const file = uploadedFiles[0]; // Safe because maxFiles={1}
+      if (!file) return;
+
+      const fileObj = {
+        name: file.filename,
+        fileUrl: file.url,
+        fileType:
+          file.url.split(".").pop() === "pdf"
+            ? "application/pdf"
+            : "image/jpeg",
+      };
+
+      setUploadedDocument(fileObj);
+      setValue("hasDocument", true, { shouldValidate: true });
+
+      // Auto-fill document name if empty
+      if (!getValues("documentName")) {
+        const cleanName = file.filename
+          .split(".")
+          .slice(0, -1)
+          .join(".")
+          .replace(/[_-]/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        setValue("documentName", cleanName);
+      }
+    },
+    [setValue, getValues]
+  );
+
+  const tabs = useMemo(
+    () => [
+      {
+        name: "Basic Information",
+        content: (
+          <div className="space-y-6">
+            <TextInput
+              label="First Name *"
+              {...register("firstName")}
+              error={errors.firstName?.message}
+            />
+            <TextInput
+              label="Last Name *"
+              {...register("lastName")}
+              error={errors.lastName?.message}
+            />
+
+            <TextInput label="Preferred Name" {...register("preferredName")} />
+            <TextInput
+              label="Email *"
+              type="email"
+              {...register("email")}
+              error={errors.email?.message}
+            />
+            <TextInput
+              label="Phone *"
+              {...register("phone")}
+              error={errors.phone?.message}
+            />
+            <TextInput label="Date of Birth" type="date" {...register("DOB")} />
+
+            <Controller
+              name="gender"
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Gender *"
+                  options={genderOptions}
+                  {...field}
+                  error={errors.gender?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="primaryPayer"
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Primary Payer"
+                  options={payers}
+                  placeholder={loadingPayers ? "Loading..." : "Select payer"}
+                  disabled={loadingPayers}
+                  {...field}
+                />
+              )}
+            />
+
+            <TextInput label="Street Address" {...register("streetAddress")} />
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="City" {...register("city")} />
+              <Controller
+                name="state"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput label="State" options={usStates} {...field} />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="ZIP Code" {...register("zip")} />
+              <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label="Country"
+                    options={countryOptions}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+
+            <Controller
+              name="assignToClinician"
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Assign To Clinician(s)"
+                  options={clinicians}
+                  isMulti
+                  placeholder={
+                    loadingClinicians ? "Loading..." : "Select clinicians"
+                  }
+                  disabled={loadingClinicians}
+                  {...field}
+                />
+              )}
+            />
+
+            <Controller
+              name="clientPortalAccess"
+              control={control}
+              render={({ field }) => (
+                <SwitchInput
+                  {...field}
+                  label="Allow Client Portal Access"
+                  checked={field.value}
+                />
+              )}
+            />
+          </div>
+        ),
+      },
+      {
+        name: "Other Information",
+        content: (
+          <div className="space-y-6">
+            {/* Caregiver fields same as before */}
+            <TextInput label="Caregiver Name" {...register("caregiverName")} />
+            <TextInput
+              label="Relationship"
+              {...register("caregiverRelationship")}
+            />
+            <TextInput
+              label="Caregiver Phone"
+              {...register("caregiverPhone")}
+            />
+            <TextInput
+              label="Caregiver Email"
+              type="email"
+              {...register("caregiverEmail")}
+              error={errors.caregiverEmail?.message}
+            />
+            <TextInput
+              label="Caregiver Address"
+              {...register("caregiverStreetAddress")}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="City" {...register("caregiverCity")} />
+              <Controller
+                name="caregiverState"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput label="State" options={usStates} {...field} />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="ZIP" {...register("caregiverZip")} />
+              <Controller
+                name="caregiverCountry"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label="Country"
+                    options={countryOptions}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Documents",
+        content: (
+          <div className="space-y-6">
+            <h4 className="text-lg font-semibold mb-4 text-center">
+              Upload Document
+            </h4>
+
+            <TextInput
+              label="Document Name *"
+              placeholder="e.g., National ID, Passport, Insurance Card"
+              {...register("documentName")}
+              error={errors.documentName?.message}
+            />
+
+            <FileUploadArea
+              onUploadComplete={handleFileUpload}
+              initialFiles={
+                initialData?.documents?.[0]?.documentDetails
+                  ? [
+                      {
+                        filename: initialData.documents[0].name || "Document",
+                        url: initialData.documents[0].documentDetails.fileUrl,
+                      },
+                    ]
+                  : uploadedDocument
+                  ? [
+                      {
+                        filename: uploadedDocument.name,
+                        url: uploadedDocument.fileUrl,
+                      },
+                    ]
+                  : []
+              }
+              maxFiles={1}
+              maxSizeMB={10}
+              hint="PDF, PNG, JPG — Max 10MB (ID, Passport, Insurance Card)"
+            />
+
+            {uploadedDocument && documentName && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-900">
+                  Will be saved as:
+                </p>
+                <p className="text-sm text-blue-800">
+                  "{documentName}" — {uploadedDocument.name}
+                </p>
+              </div>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [
+      clinicians,
+      loadingClinicians,
+      payers,
+      loadingPayers,
+      documentName,
+      handleFileUpload,
+      control,
+      uploadedDocument,
+      initialData,
+      errors,
+      register,
+    ]
+  );
+
+  useEffect(() => {
+    if (!isOpen) {
+      hasInitialized.current = false;
+      setActiveTab("Basic Information");
+      dispatch(resetDraft());
+      return;
+    }
+    if (isOpen && !hasInitialized.current) {
+      reset(defaultValues);
+      hasInitialized.current = true;
+    }
+  }, [isOpen, reset, defaultValues, dispatch]);
+
+  // const cleanData = (data) => {
+  //   return Object.fromEntries(
+  //     Object.entries(data).filter(
+  //       ([_, v]) => v != null && v !== "" && (!Array.isArray(v) || v.length > 0)
+  //     )
+  //   );
+  // };
+
+  const onFinalSubmit = async (data) => {
+    setSubmitting(true);
+    try {
+      const submitData = { ...data };
+
+      // Use the actual uploaded file from state
+      if (uploadedDocument && data.documentName) {
+        submitData.documents = [
+          {
+            name: data.documentName.trim(),
+            documentDetails: {
+              fileUrl: uploadedDocument.fileUrl,
+              fileType: uploadedDocument.fileType,
+              uploadedAt: new Date().toISOString(),
+            },
+          },
+        ];
+      } else {
+        submitData.documents = [];
+      }
+
+      delete submitData.documentName;
+      delete submitData.hasDocument;
+
+      const cleaned = Object.fromEntries(
+        Object.entries(submitData).filter(
+          ([_, v]) =>
+            v != null && v !== "" && (!Array.isArray(v) || v.length > 0)
+        )
+      );
+
+      console.log("FINAL PAYLOAD →", cleaned);
+      await onSubmit(cleaned);
+      dispatch(resetDraft());
+      onClose();
+    } catch (err) {
+      console.error("Submit error:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const handlePrimaryButtonClick = async () => {
+    if (activeTab === "Documents") {
+      const valid = await trigger();
+      if (valid) handleSubmit(onFinalSubmit)();
+    } else {
+      const isValid = await trigger();
+      if (isValid) {
+        dispatch(setDraftField(getValues()));
+        const idx = tabs.findIndex((t) => t.name === activeTab);
+        if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1].name);
+      }
+    }
+  };
+
+  const handleSecondaryButtonClick = () => {
+    if (activeTab === "Basic Information") onClose();
+    else {
+      const idx = tabs.findIndex((t) => t.name === activeTab);
+      if (idx > 0) setActiveTab(tabs[idx - 1].name);
+    }
+  };
+
+  return (
+    <ReusableModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={initialData ? "Edit Client" : "Add New Client"}
+      primaryButtonText={activeTab === "Documents" ? "Save Client" : "Next"}
+      secondaryButtonText={
+        activeTab === "Basic Information" ? "Cancel" : "Previous"
+      }
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      onPrimaryButtonClick={handlePrimaryButtonClick}
+      onSecondaryButtonClick={handleSecondaryButtonClick}
+      size="lg"
+      primaryButtonLoading={submitting}
+    />
+  );
+};
+
+export default React.memo(AddClientModal);
