@@ -1,15 +1,19 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { useDroppable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import Task from './Task';
-import AddClientModal from '../ReusableModal/ClientModal/AddClientModal';
-import { FiPlusCircle, FiUserPlus } from 'react-icons/fi';
-import { FaEllipsisV } from 'react-icons/fa';
-import { Menu } from '@headlessui/react';
-import './DragAndDrop.css';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback } from "react";
+import PropTypes from "prop-types";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import Task from "./Task";
+import AddClientModal from "../ReusableModal/ClientModal/AddClientModal";
+import { FiPlusCircle, FiUserPlus } from "react-icons/fi";
+import { FaEllipsisV } from "react-icons/fa";
+import { Menu } from "@headlessui/react";
+import "./DragAndDrop.css";
+import { useNavigate } from "react-router-dom";
 
 const Column = ({
   column,
@@ -30,25 +34,33 @@ const Column = ({
 }) => {
   // Early return if column is invalid
   if (!column || !column.id) {
-    console.warn('Invalid column prop received:', column);
-    return null; 
+    console.warn("Invalid column prop received:", column);
+    return null;
   }
+
 
   // Safe access to column properties
   const columnId = column.id;
-  const columnTitle = column.title || 'Unnamed Column';
+  const columnTitle = column.title || "Unnamed Column";
   const taskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const navigate = useNavigate();
-  
+
   const { setNodeRef: droppableRef } = useDroppable({
     id: columnId,
   });
 
-  const { attributes, listeners, setNodeRef: sortableRef, transform, transition, isDragging } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: sortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: columnId,
-    data: { type: 'Column' },
+    data: { type: "Column" },
   });
 
   const style = useMemo(
@@ -70,12 +82,13 @@ const Column = ({
   const candidateCount = useMemo(() => taskIds.length || 0, [taskIds]);
 
   const validTaskIds = useMemo(
-    () => taskIds.filter((taskId) => taskId != null && typeof taskId === 'string'),
+    () =>
+      taskIds.filter((taskId) => taskId != null && typeof taskId === "string"),
     [taskIds]
   );
 
   const columnClassName = useMemo(
-    () => `column ${isDragging ? 'dragging' : ''}`,
+    () => `column ${isDragging ? "dragging" : ""}`,
     [isDragging]
   );
 
@@ -155,8 +168,11 @@ const Column = ({
     >
       <div className="column-header">
         <h3>
-          {columnTitle}{' '}
-          <span className="task-count" style={{ backgroundColor: column.colorCode || '#000000' }}>
+          {columnTitle}{" "}
+          <span
+            className="task-count"
+            style={{ backgroundColor: column.colorCode || "#000000" }}
+          >
             {candidateCount}
           </span>
         </h3>
@@ -169,7 +185,7 @@ const Column = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                    className={`menu-item ${active ? "menu-item-active" : ""}`}
                     onClick={handleAddClientModalOpen}
                   >
                     <FiUserPlus className="menu-item-icon" /> Add new candidate
@@ -179,7 +195,7 @@ const Column = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                    className={`menu-item ${active ? "menu-item-active" : ""}`}
                     onClick={handleManageColumn}
                   >
                     Edit Column Setup
@@ -189,7 +205,9 @@ const Column = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    className={`menu-item-delete ${active ? 'menu-item-delete-active' : ''}`}
+                    className={`menu-item-delete ${
+                      active ? "menu-item-delete-active" : ""
+                    }`}
                     onClick={handleDeleteColumn}
                   >
                     Delete column
@@ -207,11 +225,14 @@ const Column = ({
           </button>
         </div>
       ) : (
-        <SortableContext items={validTaskIds} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={validTaskIds}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="task-list">{renderTasks}</div>
         </SortableContext>
       )}
-      
+
       {/* Only show the modal locally if parent handler is not provided */}
       {!onOpenAddClientModal && (
         <AddClientModal

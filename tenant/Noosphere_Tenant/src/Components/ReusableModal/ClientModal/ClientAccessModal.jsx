@@ -1,21 +1,68 @@
-// src/components/modals/ClientPortalSettingsModal.jsx
-import React, { useState } from "react";
-import ReusableModal from "../../../Components/ReusableModal/ReusableModal"; // adjust path
-import { SwitchInput, TextInput } from "../../../Components/Input/Inputs"; // your SwitchInput
-import { HiOutlineLink } from "react-icons/hi";
+// src/components/ReusableModal/ClientModal/ClientPortalSettingsModal.jsx
 
-const ClientPortalSettingsModal = ({ isOpen, onClose }) => {
+import React, { useState, useEffect } from "react";
+import ReusableModal from "../ReusableModal";
+import { SwitchInput, TextInput } from "../../Input/Inputs";
+import { HiOutlineLink } from "react-icons/hi";
+import api2 from "../../../api/clientPanelApis";
+import { showToast } from "../../../Helper/ShowToast";
+import { useSelector } from "react-redux";
+
+const ClientPortalSettingsModal = ({
+  isOpen,
+  onClose,
+  clientTenantId,
+  initialData = {}, // contains: clientPortalAccess, documentAccess, requestAppointment
+}) => {
   const [enablePortal, setEnablePortal] = useState(false);
   const [allowReschedule, setAllowReschedule] = useState(true);
   const [allowDocumentSharing, setAllowDocumentSharing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
-    console.log("Portal Settings Saved:", {
-      enablePortal,
-      allowReschedule,
-      allowDocumentSharing,
-    });
-    onClose();
+  const { token: accessToken, refreshToken } = useSelector(
+    (s) => s.authentication?.user || {}
+  );
+
+  // Sync with backend data when modal opens
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setEnablePortal(!!initialData.clientPortalAccess);
+      setAllowReschedule(initialData.requestAppointment !== false); // default true
+      setAllowDocumentSharing(!!initialData.documentAccess);
+    }
+  }, [isOpen, initialData]);
+
+  const portalUrl = `https://noosphere/client-org.com/${clientTenantId || "login"}`;
+
+  const handleSave = async () => {
+    if (!clientTenantId) {
+      showToast("Client not found", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api2.UpdateClientPortalAccess({
+        clientTenantId,
+        documentAccess: allowDocumentSharing,
+        dbAccess: enablePortal, // reserved for future
+        requestAppointment: allowReschedule,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast("Portal settings saved successfully", "success");
+      onClose();
+    } catch (err) {
+      showToast(err.message || "Failed to save settings", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(portalUrl);
+    showToast("Link copied to clipboard!", "success");
   };
 
   return (
@@ -27,10 +74,11 @@ const ClientPortalSettingsModal = ({ isOpen, onClose }) => {
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={onClose}
+      primaryButtonLoading={loading}
       size="md"
     >
       <div className="space-y-6 py-4">
-        {/* Enable Client Portal */}
+        {/* MAIN SWITCH: Enable Portal */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div style={{ marginBottom: "-15px" }}>
@@ -40,7 +88,6 @@ const ClientPortalSettingsModal = ({ isOpen, onClose }) => {
                 id="enable-portal"
               />
             </div>
-
             <label
               htmlFor="enable-portal"
               className="text-sm font-medium text-gray-700 cursor-pointer"
@@ -50,36 +97,26 @@ const ClientPortalSettingsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Portal Address - Only show when enabled */}
+        {/* Portal Link */}
         {enablePortal && (
           <div className="my-4">
             <label className="block text-sm font-medium text-gray-600 mb-3">
               Client Portal Address
             </label>
-
-            <div className="flex items-center gap-3  ">
-              {/* Read-only Input Field */}
-              <div className=" relative pr-4">
+            <div className="flex items-center gap-3">
+              <div className="relative pr-4">
                 <div style={{ marginBottom: "-15px" }}>
                   <TextInput
                     type="text"
                     readOnly
-                    value="https://noosphere/client-org.com"
+                    value={portalUrl}
                     width={300}
                   />
                 </div>
               </div>
-
-              {/* Copy Button */}
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    "https://noosphere/client-org.com"
-                  );
-                  // Optional: add toast later
-                  alert("Copied to clipboard!");
-                }}
+                onClick={handleCopy}
                 className="p-6 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 aria-label="Copy portal link"
               >
@@ -100,49 +137,45 @@ const ClientPortalSettingsModal = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Additional Permissions - Only show when portal is enabled */}
+        {/* Permissions - shown only when portal is enabled */}
         {enablePortal && (
-          <>
-            <div className=" pt-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 my-2">
-                  <div style={{ marginBottom: "-15px" }}>
-                    <SwitchInput
-                      checked={allowReschedule}
-                      onChange={(e) => setAllowReschedule(e.target.checked)}
-                      id="allow-reschedule"
-                    />
-                  </div>
-                  <label
-                    htmlFor="allow-reschedule"
-                    className="text-sm font-medium text-gray-700 cursor-pointer"
-                  >
-                    Allow clients to request appointment rescheduling
-                  </label>
+          <div className="pt-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 my-2">
+                <div style={{ marginBottom: "-15px" }}>
+                  <SwitchInput
+                    checked={allowReschedule}
+                    onChange={(e) => setAllowReschedule(e.target.checked)}
+                    id="allow-reschedule"
+                  />
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 my-2">
-                  <div style={{ marginBottom: "-15px" }}>
-                    <SwitchInput
-                      checked={allowDocumentSharing}
-                      onChange={(e) =>
-                        setAllowDocumentSharing(e.target.checked)
-                      }
-                      id="allow-documents"
-                    />
-                  </div>
-                  <label
-                    htmlFor="allow-documents"
-                    className="text-sm font-medium text-gray-700 cursor-pointer"
-                  >
-                    Allow document sharing with client
-                  </label>
-                </div>
+                <label
+                  htmlFor="allow-reschedule"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Allow clients to request appointment rescheduling
+                </label>
               </div>
             </div>
-          </>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 my-2">
+                <div style={{ marginBottom: "-15px" }}>
+                  <SwitchInput
+                    checked={allowDocumentSharing}
+                    onChange={(e) => setAllowDocumentSharing(e.target.checked)}
+                    id="allow-documents"
+                  />
+                </div>
+                <label
+                  htmlFor="allow-documents"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Allow document sharing with client
+                </label>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Message when portal is disabled */}

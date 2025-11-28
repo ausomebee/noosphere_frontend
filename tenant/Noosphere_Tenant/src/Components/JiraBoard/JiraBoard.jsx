@@ -217,7 +217,7 @@ const JiraBoard = () => {
       for (const result of results) {
         if (result.status === "fulfilled") {
           const { stageId, items } = result.value;
-          if (Array.isArray(items) && items.length) {
+          if (Array.isArray(items)) {
             for (const item of items) {
               if (!item.id || typeof item.id !== "string") {
                 console.warn(
@@ -247,6 +247,8 @@ const JiraBoard = () => {
                 assignToClinician: item.assignToClinician || "",
                 clientPortalAccess: item.clientPortalAccess || false,
                 createdBy: item.createdBy || "Unknown Admin",
+                clientId: item.clientId || "",
+                tenantClientId: item.tenantClientId || "",
               };
             }
           }
@@ -479,10 +481,10 @@ const JiraBoard = () => {
 
       if (result.data) {
         const newCandidate = result.data;
-        
+
         // Add the new candidate to the column
         dispatch(addTaskToColumn({ columnId, taskId: newCandidate.id }));
-        
+
         // Update local tasks with the actual candidate data from API
         setLocalTasks((prev) => ({
           ...prev,
@@ -491,7 +493,10 @@ const JiraBoard = () => {
             firstName: newCandidate.firstName || "",
             lastName: newCandidate.lastName || "",
             preferredName: newCandidate.preferredName || "",
-            fullName: `${newCandidate.firstName || ""} ${newCandidate.lastName || ""}`.trim() || `New Candidate`,
+            fullName:
+              `${newCandidate.firstName || ""} ${
+                newCandidate.lastName || ""
+              }`.trim() || `New Candidate`,
             email: newCandidate.email || "",
             phoneNumber: newCandidate.phoneNumber || "",
             gender: newCandidate.gender || "",
@@ -516,7 +521,7 @@ const JiraBoard = () => {
             createdBy: newCandidate.createdBy || "Unknown Admin",
           },
         }));
-        
+
         setIsDataLoaded(false);
         showToast("Candidate added successfully!", "success");
       } else {
@@ -640,8 +645,8 @@ const JiraBoard = () => {
     }
   };
 
-  const handleViewCandidate = (stageId, taskId) => {
-    navigate(`/client/client-single/${stageId}/${taskId}`);
+  const handleViewCandidate = (clientId, tenantId) => {
+    navigate(`/client/client-single/${clientId}/${tenantId}`);
   };
 
   const handleAddColumn = (index) => {
@@ -649,59 +654,59 @@ const JiraBoard = () => {
     setShowAddColumnModal(true);
   };
 
- const handleSaveColumn = async (pipelineData) => {
-  if (!pipeline?.id) {
-    showToast("Pipeline not loaded yet. Please wait.", "error");
-    return;
-  }
-
-  startLoading();
-  try {
-    const payload = {
-      pipelineId: pipeline.id,
-      name: pipelineData.name?.trim() || "New Stage",
-      description: pipelineData.description?.trim() || "",
-      colourCode: pipelineData.colorCode || "#1E40AF",
-      accessToken,
-      refreshToken,
-    };
-
-    const result = await dispatch(createPipelineStage(payload)).unwrap();
-
-    if (result?.data) {
-      showToast("Stage created successfully!", "success");
-
-      // Critical: Re-fetch stages to get updated list + correct order
-      // Instead of refetching everything, just dispatch fetchPipelineStages
-      const pipelineId = pipeline.id;
-      await dispatch(
-        fetchPipelineStages({
-          pipelineId,
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-
-      // Then refetch items for the new stage
-      await dispatch(
-        fetchPipelineItems({
-          stageId: result.data.id,
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-
-      setIsDataLoaded(false); // Optional: trigger full reload if needed
+  const handleSaveColumn = async (pipelineData) => {
+    if (!pipeline?.id) {
+      showToast("Pipeline not loaded yet. Please wait.", "error");
+      return;
     }
-  } catch (error) {
-    console.error("Failed to create stage:", error);
-    showToast(error?.message || "Failed to create stage", "error");
-  } finally {
-    setShowAddColumnModal(false);
-    setAddColumnIndex(null);
-    stopLoading();
-  }
-};
+
+    startLoading();
+    try {
+      const payload = {
+        pipelineId: pipeline.id,
+        name: pipelineData.name?.trim() || "New Stage",
+        description: pipelineData.description?.trim() || "",
+        colourCode: pipelineData.colorCode || "#1E40AF",
+        accessToken,
+        refreshToken,
+      };
+
+      const result = await dispatch(createPipelineStage(payload)).unwrap();
+
+      if (result?.data) {
+        showToast("Stage created successfully!", "success");
+
+        // Critical: Re-fetch stages to get updated list + correct order
+        // Instead of refetching everything, just dispatch fetchPipelineStages
+        const pipelineId = pipeline.id;
+        await dispatch(
+          fetchPipelineStages({
+            pipelineId,
+            accessToken,
+            refreshToken,
+          })
+        ).unwrap();
+
+        // Then refetch items for the new stage
+        await dispatch(
+          fetchPipelineItems({
+            stageId: result.data.id,
+            accessToken,
+            refreshToken,
+          })
+        ).unwrap();
+
+        setIsDataLoaded(false); // Optional: trigger full reload if needed
+      }
+    } catch (error) {
+      console.error("Failed to create stage:", error);
+      showToast(error?.message || "Failed to create stage", "error");
+    } finally {
+      setShowAddColumnModal(false);
+      setAddColumnIndex(null);
+      stopLoading();
+    }
+  };
 
   const handleOpenAddClientModal = (pipelineStageId) => {
     setCurrentPipelineStageId(pipelineStageId);
@@ -738,7 +743,8 @@ const JiraBoard = () => {
                 variant="primary"
                 onClick={() => {
                   // Get the first column ID as default pipeline stage
-                  const defaultPipelineStageId = columnOrder.length > 0 ? columnOrder[0] : null;
+                  const defaultPipelineStageId =
+                    columnOrder.length > 0 ? columnOrder[0] : null;
                   handleOpenAddClientModal(defaultPipelineStageId);
                 }}
                 iconPosition="left"

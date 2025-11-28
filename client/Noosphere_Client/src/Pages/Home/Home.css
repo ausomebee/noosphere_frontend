@@ -1,0 +1,32 @@
+.home-content {
+  width: 100%;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.home-table-section {
+  margin-top: 24px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .home-grid {
+    gap: 16px;
+  }
+
+  .home-table-section {
+    margin-top: 16px;
+  }
+}

@@ -35,7 +35,7 @@ const schema = yup.object().shape({
     .string()
     .oneOf(["male", "female", "other", ""])
     .required("Gender is required"),
-  primaryPayer: yup.string().nullable(), // payer ID (string)
+  primaryPayer: yup.string().nullable(),
   streetAddress: yup.string().nullable(),
   city: yup.string().nullable(),
   state: yup.string().nullable(),
@@ -52,10 +52,15 @@ const schema = yup.object().shape({
   caregiverState: yup.string().nullable(),
   caregiverZip: yup.string().nullable(),
   caregiverCountry: yup.string().nullable(),
-  documents: yup.array().of(yup.object()).nullable(),
+
+  documentName: yup.string().when("hasDocument", {
+    is: true,
+    then: (s) => s.required("Document name is required").min(2).max(50),
+    otherwise: (s) => s.nullable(),
+  }),
+  hasDocument: yup.boolean().default(false),
 });
 
-// ==================== OPTIONS ====================
 const genderOptions = [
   { value: "", label: "Select Gender" },
   { value: "male", label: "Male" },
@@ -122,28 +127,37 @@ const usStates = [
   { value: "WI", label: "Wisconsin" },
   { value: "WY", label: "Wyoming" },
 ];
+
 const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = React.useState("Basic Information");
-  const [submitting, setSubmitting] = React.useState(false);
+  const [activeTab, setActiveTab] = useState("Basic Information");
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState(null); // This holds the file
 
-
-  // Clinicians
   const [clinicians, setClinicians] = useState([]);
   const [loadingClinicians, setLoadingClinicians] = useState(false);
-
-  // Payers
   const [payers, setPayers] = useState([]);
   const [loadingPayers, setLoadingPayers] = useState(false);
 
   const hasInitialized = useRef(false);
-
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const token = useSelector((s) => s.authentication?.user?.token);
   const accessToken = token;
   const refreshToken = token;
 
-  // Fetch Clinicians
+  // Format DOB from ISO string → YYYY-MM-DD
+  const formatDateForInput = (isoString) => {
+    if (!isoString) return "";
+    try {
+      return isoString.split("T")[0]; // "2025-11-27T00:00:00.000Z" → "2025-11-27"
+    } catch {
+      return "";
+    }
+  };
+
+
+
+  // Fetch Clinicians & Payers
   const fetchClinicians = useCallback(async () => {
     if (!tenantId || !accessToken) return;
     setLoadingClinicians(true);
@@ -154,43 +168,37 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         refreshToken,
       });
       const staff = response?.data?.data || [];
-      const clinicianList = staff.map((c) => ({
-        value: c.id,
-        label: c.fullName || "Unnamed Clinician",
-      }));
-      setClinicians(clinicianList);
-    } catch (error) {
-      console.error("Failed to fetch clinicians:", error);
+      setClinicians(
+        staff.map((c) => ({ value: c.id, label: c.fullName || "Unnamed" }))
+      );
+    } catch (err) {
+      console.error("Failed to load clinicians:", err);
     } finally {
       setLoadingClinicians(false);
     }
   }, [tenantId, accessToken, refreshToken]);
 
-  // Fetch Payers
   const fetchPayers = useCallback(async () => {
     if (!tenantId || !accessToken) return;
     setLoadingPayers(true);
     try {
       const response = await api2.GetPayerByTenantId({
-        // or GetPayersByTenantId if that's the correct name
         tenantId,
         accessToken,
         refreshToken,
       });
-console.log(response)
-      const payerList = (response?.data || []).map((payer) => ({
-        value: payer.id,
-        label: payer.payerName,
+      const payerList = (response?.data || []).map((p) => ({
+        value: p.id,
+        label: p.payerName,
       }));
       setPayers(payerList);
-    } catch (error) {
-      console.error("Failed to fetch payers:", error);
+    } catch (err) {
+      console.error("Failed to load payers:", err);
     } finally {
       setLoadingPayers(false);
     }
   }, [tenantId, accessToken, refreshToken]);
 
-  // Load data when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchClinicians();
@@ -198,63 +206,92 @@ console.log(response)
     }
   }, [isOpen, fetchClinicians, fetchPayers]);
 
-  const defaultValues = useMemo(
-    () => ({
-      firstName: initialData?.firstName || "",
-      lastName: initialData?.lastName || "",
-      preferredName: initialData?.preferredName || "",
-      email: initialData?.email || "",
-      phone: initialData?.phoneNumber || "",
-      DOB: initialData?.DOB || "",
-      gender: initialData?.gender || "",
-      primaryPayer: initialData?.primaryPayer || "", // assuming this is the payer ID
-      streetAddress: initialData?.streetAddress || "",
-      city: initialData?.city || "",
-      state: initialData?.state || "",
-      zip: initialData?.zipCode || "",
-      country: initialData?.country || "US",
-      assignToClinician: initialData?.assignToClinician || [],
-      clientPortalAccess: initialData?.clientPortalAccess || false,
-      caregiverName: initialData?.caregiverName || "",
-      caregiverRelationship: initialData?.caregiverRelationship || "",
-      caregiverPhone: initialData?.caregiverPhone || "",
-      caregiverEmail: initialData?.caregiverEmail || "",
-      caregiverStreetAddress: initialData?.caregiverStreetAddress || "",
-      caregiverCity: initialData?.caregiverCity || "",
-      caregiverState: initialData?.caregiverState || "",
-      caregiverZip: initialData?.caregiverZip || "",
-      caregiverCountry: initialData?.caregiverCountry || "US",
-      documents: initialData?.documents || [],
-    }),
-    [initialData]
-  );
+  const defaultValues = useMemo(() => {
+
+    
+    const docs = initialData?.client?.documents?.[0];
+    const hasDoc = !!docs?.documentDetails?.fileUrl;
+
+    return {
+      firstName: initialData?.client?.firstName || "",
+      lastName: initialData?.client?.lastName || "",
+      preferredName: initialData?.client?.preferredName || "",
+      email: initialData?.client?.email || "",
+      phone: initialData?.client?.phoneNumber || "",
+      DOB: formatDateForInput(initialData?.client?.DOB),
+      gender: initialData?.client?.gender || "",
+      primaryPayer: initialData?.client?.primaryPayer || "",
+      streetAddress: initialData?.client?.streetAddress || "",
+      city: initialData?.client?.city || "",
+      state: initialData?.client?.state || "",
+      zip: initialData?.client?.zipCode || "",
+      country: initialData?.client?.country || "US",
+      assignToClinician: initialData?.client?.assignToClinician || [],
+      clientPortalAccess: initialData?.dbAccess ?? false,
+      caregiverName: initialData?.client?.caregiverName || "",
+      caregiverRelationship: initialData?.client?.caregiverRelationship || "",
+      caregiverPhone: initialData?.client?.caregiverPhone || "",
+      caregiverEmail: initialData?.client?.caregiverEmail || "",
+      caregiverStreetAddress: initialData?.client?.caregiverStreetAddress || "",
+      caregiverCity: initialData?.client?.caregiverCity || "",
+      caregiverState: initialData?.client?.caregiverState || "",
+      caregiverZip: initialData?.client?.caregiverZip || "",
+      caregiverCountry: initialData?.client?.caregiverCountry || "US",
+
+      documentName: hasDoc ? docs.name : "",
+      hasDocument: hasDoc,
+    };
+  }, [initialData]);
 
   const {
     register,
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
-    formState: { errors },
-    trigger,
     getValues,
+    trigger,
+    watch,
+    formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
     mode: "onChange",
     defaultValues,
   });
 
-  const documents = watch("documents") || [];
+  const documentName = watch("documentName");
 
-  const handleFileUpload = React.useCallback(
-    (files) => {
-      setValue("documents", [...documents, ...files], { shouldDirty: true });
+  const handleFileUpload = useCallback(
+    (uploadedFiles) => {
+      const file = uploadedFiles[0]; // Safe because maxFiles={1}
+      if (!file) return;
+
+      const fileObj = {
+        name: file.filename,
+        fileUrl: file.url,
+        fileType:
+          file.url.split(".").pop() === "pdf"
+            ? "application/pdf"
+            : "image/jpeg",
+      };
+
+      setUploadedDocument(fileObj);
+      setValue("hasDocument", true, { shouldValidate: true });
+
+      // Auto-fill document name if empty
+      if (!getValues("documentName")) {
+        const cleanName = file.filename
+          .split(".")
+          .slice(0, -1)
+          .join(".")
+          .replace(/[_-]/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        setValue("documentName", cleanName);
+      }
     },
-    [documents, setValue]
+    [setValue, getValues]
   );
 
-  // Tabs with updated Primary Payer as Select
   const tabs = useMemo(
     () => [
       {
@@ -263,32 +300,24 @@ console.log(response)
           <div className="space-y-6">
             <TextInput
               label="First Name *"
-              placeholder="John"
               {...register("firstName")}
               error={errors.firstName?.message}
             />
             <TextInput
               label="Last Name *"
-              placeholder="Doe"
               {...register("lastName")}
               error={errors.lastName?.message}
             />
-            <TextInput
-              label="Preferred Name"
-              placeholder="Johnny"
-              {...register("preferredName")}
-            />
 
+            <TextInput label="Preferred Name" {...register("preferredName")} />
             <TextInput
               label="Email *"
               type="email"
-              placeholder="john.doe@example.com"
               {...register("email")}
               error={errors.email?.message}
             />
             <TextInput
               label="Phone *"
-              placeholder="+1 (555) 123-4567"
               {...register("phone")}
               error={errors.phone?.message}
             />
@@ -307,7 +336,6 @@ console.log(response)
               )}
             />
 
-            {/* Primary Payer - Now a Select */}
             <Controller
               name="primaryPayer"
               control={control}
@@ -315,30 +343,16 @@ console.log(response)
                 <SelectInput
                   label="Primary Payer"
                   options={payers}
-                  placeholder={
-                    loadingPayers
-                      ? "Loading payers..."
-                      : payers.length === 0
-                      ? "No payers found"
-                      : "Select a payer"
-                  }
-                  disabled={loadingPayers || payers.length === 0}
+                  placeholder={loadingPayers ? "Loading..." : "Select payer"}
+                  disabled={loadingPayers}
                   {...field}
                 />
               )}
             />
 
-            <TextInput
-              label="Street Address"
-              placeholder="123 Main St"
-              {...register("streetAddress")}
-            />
+            <TextInput label="Street Address" {...register("streetAddress")} />
             <div className="grid grid-cols-2 gap-4">
-              <TextInput
-                label="City"
-                placeholder="Los Angeles"
-                {...register("city")}
-              />
+              <TextInput label="City" {...register("city")} />
               <Controller
                 name="state"
                 control={control}
@@ -348,11 +362,7 @@ console.log(response)
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput
-                label="ZIP Code"
-                placeholder="90210"
-                {...register("zip")}
-              />
+              <TextInput label="ZIP Code" {...register("zip")} />
               <Controller
                 name="country"
                 control={control}
@@ -366,7 +376,6 @@ console.log(response)
               />
             </div>
 
-            {/* Assign to Clinicians */}
             <Controller
               name="assignToClinician"
               control={control}
@@ -374,23 +383,26 @@ console.log(response)
                 <SelectInput
                   label="Assign To Clinician(s)"
                   options={clinicians}
-                  isMulti={true}
+                  isMulti
                   placeholder={
-                    loadingClinicians
-                      ? "Loading clinicians..."
-                      : clinicians.length === 0
-                      ? "No clinicians found"
-                      : "Select one or more clinicians"
+                    loadingClinicians ? "Loading..." : "Select clinicians"
                   }
-                  disabled={loadingClinicians || clinicians.length === 0}
+                  disabled={loadingClinicians}
                   {...field}
                 />
               )}
             />
 
-            <SwitchInput
-              {...register("clientPortalAccess")}
-              label="Allow Client Portal Access"
+            <Controller
+              name="clientPortalAccess"
+              control={control}
+              render={({ field }) => (
+                <SwitchInput
+                  {...field}
+                  label="Allow Client Portal Access"
+                  checked={field.value}
+                />
+              )}
             />
           </div>
         ),
@@ -399,39 +411,28 @@ console.log(response)
         name: "Other Information",
         content: (
           <div className="space-y-6">
-            <TextInput
-              label="Caregiver Name"
-              placeholder="Jane Doe"
-              {...register("caregiverName")}
-            />
+            {/* Caregiver fields same as before */}
+            <TextInput label="Caregiver Name" {...register("caregiverName")} />
             <TextInput
               label="Relationship"
-              placeholder="Mother, Guardian, Spouse"
               {...register("caregiverRelationship")}
             />
             <TextInput
               label="Caregiver Phone"
-              placeholder="+1 (555) 987-6543"
               {...register("caregiverPhone")}
             />
             <TextInput
               label="Caregiver Email"
               type="email"
-              placeholder="jane@example.com"
               {...register("caregiverEmail")}
               error={errors.caregiverEmail?.message}
             />
             <TextInput
               label="Caregiver Address"
-              placeholder="456 Oak Ave"
               {...register("caregiverStreetAddress")}
             />
             <div className="grid grid-cols-2 gap-4">
-              <TextInput
-                label="City"
-                placeholder="San Francisco"
-                {...register("caregiverCity")}
-              />
+              <TextInput label="City" {...register("caregiverCity")} />
               <Controller
                 name="caregiverState"
                 control={control}
@@ -441,11 +442,7 @@ console.log(response)
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput
-                label="ZIP"
-                placeholder="94105"
-                {...register("caregiverZip")}
-              />
+              <TextInput label="ZIP" {...register("caregiverZip")} />
               <Controller
                 name="caregiverCountry"
                 control={control}
@@ -464,29 +461,71 @@ console.log(response)
       {
         name: "Documents",
         content: (
-          <FileUploadArea
-            onUploadComplete={handleFileUpload}
-            initialFiles={documents}
-            maxSizeMB={50}
-            hint="Drop files here or click to upload (PDF, DOCX, images)"
-          />
+          <div className="space-y-6">
+            <h4 className="text-lg font-semibold mb-4 text-center">
+              Upload Document
+            </h4>
+
+            <TextInput
+              label="Document Name *"
+              placeholder="e.g., National ID, Passport, Insurance Card"
+              {...register("documentName")}
+              error={errors.documentName?.message}
+            />
+
+            <FileUploadArea
+              onUploadComplete={handleFileUpload}
+              initialFiles={
+                initialData?.documents?.[0]?.documentDetails
+                  ? [
+                      {
+                        filename: initialData.documents[0].name || "Document",
+                        url: initialData.documents[0].documentDetails.fileUrl,
+                      },
+                    ]
+                  : uploadedDocument
+                  ? [
+                      {
+                        filename: uploadedDocument.name,
+                        url: uploadedDocument.fileUrl,
+                      },
+                    ]
+                  : []
+              }
+              maxFiles={1}
+              maxSizeMB={10}
+              hint="PDF, PNG, JPG — Max 10MB (ID, Passport, Insurance Card)"
+            />
+
+            {uploadedDocument && documentName && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-900">
+                  Will be saved as:
+                </p>
+                <p className="text-sm text-blue-800">
+                  "{documentName}" — {uploadedDocument.name}
+                </p>
+              </div>
+            )}
+          </div>
         ),
       },
     ],
     [
-      control,
-      errors,
-      register,
-      handleFileUpload,
-      documents,
       clinicians,
       loadingClinicians,
       payers,
       loadingPayers,
+      documentName,
+      handleFileUpload,
+      control,
+      uploadedDocument,
+      initialData,
+      errors,
+      register,
     ]
   );
 
-  // Reset form on open/close
   useEffect(() => {
     if (!isOpen) {
       hasInitialized.current = false;
@@ -494,116 +533,88 @@ console.log(response)
       dispatch(resetDraft());
       return;
     }
-    if (!hasInitialized.current && isOpen) {
+    if (isOpen && !hasInitialized.current) {
       reset(defaultValues);
       hasInitialized.current = true;
     }
   }, [isOpen, reset, defaultValues, dispatch]);
 
-  const handleClose = useCallback(() => {
-    dispatch(resetDraft());
-    onClose();
-  }, [dispatch, onClose]);
-
-  const cleanData = (data) => {
-    return Object.keys(data).reduce((acc, key) => {
-      const value = data[key];
-      if (
-        value === null ||
-        value === undefined ||
-        value === "" ||
-        (Array.isArray(value) && value.length === 0)
-      ) {
-        return acc;
-      }
-      if (typeof value === "boolean") {
-        acc[key] = value;
-        return acc;
-      }
-      if (typeof value === "object" && !Array.isArray(value)) {
-        const nested = cleanData(value);
-        if (Object.keys(nested).length > 0) acc[key] = nested;
-        return acc;
-      }
-      acc[key] = value;
-      return acc;
-    }, {});
-  };
+  // const cleanData = (data) => {
+  //   return Object.fromEntries(
+  //     Object.entries(data).filter(
+  //       ([_, v]) => v != null && v !== "" && (!Array.isArray(v) || v.length > 0)
+  //     )
+  //   );
+  // };
 
   const onFinalSubmit = async (data) => {
     setSubmitting(true);
     try {
-      const cleanedData = cleanData(data);
-      if (
-        cleanedData.assignToClinician &&
-        Array.isArray(cleanedData.assignToClinician)
-      ) {
-        cleanedData.assignToClinician =
-          cleanedData.assignToClinician.map(String);
+      const submitData = { ...data };
+
+      // Use the actual uploaded file from state
+      if (uploadedDocument && data.documentName) {
+        submitData.documents = [
+          {
+            name: data.documentName.trim(),
+            documentDetails: {
+              fileUrl: uploadedDocument.fileUrl,
+              fileType: uploadedDocument.fileType,
+              uploadedAt: new Date().toISOString(),
+            },
+          },
+        ];
+      } else {
+        submitData.documents = [];
       }
-      await onSubmit(cleanedData);
+
+      delete submitData.documentName;
+      delete submitData.hasDocument;
+
+      const cleaned = Object.fromEntries(
+        Object.entries(submitData).filter(
+          ([_, v]) =>
+            v != null && v !== "" && (!Array.isArray(v) || v.length > 0)
+        )
+      );
+
+      console.log("FINAL PAYLOAD →", cleaned);
+      await onSubmit(cleaned);
       dispatch(resetDraft());
-      handleClose();
+      onClose();
     } catch (err) {
-      console.error("Submit failed:", err);
+      console.error("Submit error:", err);
     } finally {
       setSubmitting(false);
     }
   };
-
-  const handlePrimaryButtonClick = useCallback(async () => {
+  const handlePrimaryButtonClick = async () => {
     if (activeTab === "Documents") {
-      handleSubmit(onFinalSubmit)();
+      const valid = await trigger();
+      if (valid) handleSubmit(onFinalSubmit)();
     } else {
-      const fieldsToValidate =
-        activeTab === "Basic Information"
-          ? ["firstName", "lastName", "email", "phone", "gender"]
-          : [];
-      const isValid = await trigger(fieldsToValidate);
+      const isValid = await trigger();
       if (isValid) {
         dispatch(setDraftField(getValues()));
-        const currentIdx = tabs.findIndex((t) => t.name === activeTab);
-        if (currentIdx < tabs.length - 1) {
-          setActiveTab(tabs[currentIdx + 1].name);
-        }
+        const idx = tabs.findIndex((t) => t.name === activeTab);
+        if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1].name);
       }
     }
-  }, [
-    activeTab,
-    handleSubmit,
-    onFinalSubmit,
-    trigger,
-    tabs,
-    getValues,
-    dispatch,
-  ]);
+  };
 
-  const handleSecondaryButtonClick = useCallback(() => {
-    if (activeTab === "Basic Information") {
-      handleClose();
-    } else {
-      dispatch(setDraftField(getValues()));
+  const handleSecondaryButtonClick = () => {
+    if (activeTab === "Basic Information") onClose();
+    else {
       const idx = tabs.findIndex((t) => t.name === activeTab);
       if (idx > 0) setActiveTab(tabs[idx - 1].name);
     }
-  }, [activeTab, handleClose, tabs, getValues, dispatch]);
+  };
 
   return (
     <ReusableModal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       title={initialData ? "Edit Client" : "Add New Client"}
-      titleIcon={
-        <svg
-          width="22"
-          height="16"
-          viewBox="0 0 22 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* SVG paths unchanged */}
-        </svg>
-      }
       primaryButtonText={activeTab === "Documents" ? "Save Client" : "Next"}
       secondaryButtonText={
         activeTab === "Basic Information" ? "Cancel" : "Previous"

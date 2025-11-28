@@ -29,7 +29,7 @@ const CustomTable = ({
   loading,
   hideSearch = false,
   hideTableActions = false,
-  onToggleActive, // New prop for handling toggle
+  onToggleActive, 
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

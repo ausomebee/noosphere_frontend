@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import ReusableModal from './ReusableModal';
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import ReusableModal from "./ReusableModal";
 import { IoMdAlert } from "react-icons/io";
 import { TextInput, SelectInput, PasswordInput } from "../Input/Inputs";
 import "./ReusableModal.css";
@@ -23,8 +23,12 @@ const DeleteConfirmationModal = ({
   featureId,
   requirePassword = false,
 }) => {
-  const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
-  const [step, setStep] = useState(isFeatureDeletion ? (requirePassword ? 1 : 1) : 0);
+  const featureGroups = useSelector(
+    (state) => state.featureManagement.featureGroups
+  );
+  const [step, setStep] = useState(
+    isFeatureDeletion ? (requirePassword ? 1 : 1) : 0
+  );
   const [selectedGroup, setSelectedGroup] = useState("");
   const [password, setPassword] = useState("");
 
@@ -40,10 +44,11 @@ const DeleteConfirmationModal = ({
   // Add placeholder option to featureGroupOptions
   const featureGroupOptions = [
     { value: "", label: "Select ...", disabled: true, hidden: true },
-    ...(providedFeatureGroupOptions || featureGroups.map((group) => ({
-      value: group.title,
-      label: group.title,
-    }))),
+    ...(providedFeatureGroupOptions ||
+      featureGroups.map((group) => ({
+        value: group.title,
+        label: group.title,
+      }))),
   ];
 
   const handleSelectGroup = () => {
@@ -84,66 +89,80 @@ const DeleteConfirmationModal = ({
       isOpen={isOpen}
       onClose={handleCancel}
       title=""
-      primaryButtonText={step === 0 ? "Next" : step === 1 ? confirmButtonText : "Complete"}
+      primaryButtonText={
+        step === 0 ? "Next" : step === 1 ? confirmButtonText : "Complete"
+      }
       secondaryButtonText="Cancel"
       primaryButtonColor={confirmButtonColor}
       secondaryButtonColor="#ffffff"
-      onPrimaryButtonClick={step === 0 ? handleSelectGroup : step === 1 ? (requirePassword ? handleProceedToPassword : handleConfirm) : handleConfirm}
+      onPrimaryButtonClick={
+        step === 0
+          ? handleSelectGroup
+          : step === 1
+          ? requirePassword
+            ? handleProceedToPassword
+            : handleConfirm
+          : handleConfirm
+      }
       onSecondaryButtonClick={handleCancel}
       showPrimaryButton={showConfirmButton}
       showSecondaryButton={showSecondaryButton}
-      primaryButtonDisabled={isLoading || (step === 0 && !selectedGroup) || (step === 2 && requirePassword && !password.trim())}
+      primaryButtonDisabled={
+        isLoading ||
+        (step === 0 && !selectedGroup) ||
+        (step === 2 && requirePassword && !password.trim())
+      }
       secondaryButtonDisabled={isLoading}
       footerClassName={
         showConfirmButton && !showSecondaryButton
-          ? 'center-footer'
+          ? "center-footer"
           : !showConfirmButton && showSecondaryButton
-          ? 'center-footer'
-          : ''
+          ? "center-footer"
+          : ""
       }
     >
-       <form className='modal-form'>
-      <div className="delete-confirmation-content">
-        {step === 0 ? (
-          <>
-            <h3>Select Feature Group to Delete</h3>
-            <SelectInput
-              label="Feature Group"
-              name="featureGroup"
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(e.target.value)}
-              options={featureGroupOptions}
-              placeholder="Select ..."
-            />
-          </>
-        ) : (
-          <>
-            {IconComponent ? (
-              <IconComponent className="warning-icon" />
-            ) : (
-              <IoMdAlert className="warning-icon" />
-            )}
-            <h3>{title}</h3>
-            {step === 1 ? (
-              <p>{message}</p>
-            ) : (
-              <>
-                <form>
-                  <p>Enter administrative password to complete this action</p>
-                  <PasswordInput
-                    label="Administrative Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your Administrative password"
-                    disabled={isLoading}
-                  />
-                </form>
-              </>
-            )}
-          </>
-        )}
-      </div>
+      <form className="modal-form">
+        <div className="delete-confirmation-content">
+          {step === 0 ? (
+            <>
+              <h3>Select Feature Group to Delete</h3>
+              <SelectInput
+                label="Feature Group"
+                name="featureGroup"
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                options={featureGroupOptions}
+                placeholder="Select ..."
+              />
+            </>
+          ) : (
+            <>
+              {IconComponent ? (
+                <IconComponent className="warning-icon" />
+              ) : (
+                <IoMdAlert className="warning-icon" />
+              )}
+              <h3>{title}</h3>
+              {step === 1 ? (
+                <p>{message}</p>
+              ) : (
+                <>
+                  <form>
+                    <p>Enter administrative password to complete this action</p>
+                    <PasswordInput
+                      label="Administrative Password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your Administrative password"
+                      disabled={isLoading}
+                    />
+                  </form>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </form>
     </ReusableModal>
   );

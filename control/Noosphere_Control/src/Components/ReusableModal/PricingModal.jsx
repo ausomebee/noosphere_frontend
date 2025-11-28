@@ -8,7 +8,7 @@ const PricingPlanModal = ({
   onClose,
   onSave,
   initialPlanType = "Standard",
-  features = [], // Default to empty array
+  features = [],
   admins = [],
   tenants = [],
 }) => {

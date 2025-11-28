@@ -1,4 +1,4 @@
-// src/pages/Client/ClinentSubs/AppointmentsAndSchedules/AppointmentsScheduleTab.jsx
+// src/pages/Client/ClientSubs/AppointmentsAndSchedules/AppointmentsScheduleTab.jsx
 import { useState, memo, useCallback, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { format, addDays, subDays } from "date-fns";
@@ -7,13 +7,15 @@ import { FaPlus } from "react-icons/fa";
 import { showToast } from "../../../../../Helper/ShowToast";
 import AppointmentModal from "../../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
 import api from "../../../../../api/AppointmentApi";
+import api2 from "../../../../../api/clientPanelApis";
 import CustomTable from "../../../../../Components/Table/CustomTable";
 import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
 import { SearchInput } from "../../../../../Components/Input/Inputs";
+import { useParams } from "react-router-dom";
 
 const MemoAppointmentModal = memo(AppointmentModal);
 
-const AppointmentsScheduleTab = () => {
+const AppointmentsScheduleTab = ({ fullName }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const token = useSelector((s) => s.authentication?.user?.token);
   const accessToken = token;
@@ -24,6 +26,7 @@ const AppointmentsScheduleTab = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { clientId } = useParams(); // Get clientId from URL params
 
   const [clients, setClients] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
@@ -31,49 +34,125 @@ const AppointmentsScheduleTab = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Get the current client ID from the URL or props
-  // You'll need to pass this from the parent ClientPanel component
-  const getCurrentClientId = () => {
-    // Option 1: Get from URL params (if your route is /client/:clientId)
-    const pathParts = window.location.pathname.split("/");
-    const clientIdFromUrl = pathParts[pathParts.length - 1];
+  const currentClient = useMemo(() => {
+    if (!clientId) return null;
 
-    // Option 2: Get from props (preferred - pass from ClientPanel)
-    // For now, we'll use the URL method
-    return clientIdFromUrl;
-  };
+    // If we have clients loaded, find the current one
+    if (clients.length > 0) {
+      const client = clients.find(
+        (client) => client.id === clientId || client.clientId === clientId
+      );
 
-  const currentClientId = getCurrentClientId();
+      // Return the EXACT structure that AppointmentModal expects
+      if (client) {
+        return {
+          clientId: client.id || client.clientId,
+          client: {
+            firstName:
+              client.firstName || client.fullName?.split(" ")[0] || "Client",
+            lastName:
+              client.lastName ||
+              client.fullName?.split(" ").slice(1).join(" ") ||
+              "",
+          },
+          // Include any other fields that might be in the original client data
+          ...client,
+        };
+      }
+    }
 
-  // Fetch supporting data
+    // Fallback structure that matches modal expectations
+    const nameParts = (fullName || "Current Client").split(" ");
+    const firstName = nameParts[0] || "Client";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    return {
+      clientId: clientId,
+      client: {
+        firstName: firstName,
+        lastName: lastName,
+      },
+      firstName: firstName,
+      lastName: lastName,
+      fullName: fullName || "Current Client",
+    };
+  }, [clients, clientId, fullName]);
+
+  // Fetch supporting data - fix client fetching
   const fetchSupportingData = useCallback(async () => {
     try {
-      const [sess, clis, stf] = await Promise.all([
+      const [sess, stf] = await Promise.all([
         api
           .GetSessionTypeActiveByTenantId({
             tenantId,
             accessToken,
             refreshToken,
           })
-          .then((r) => r.data.data || []),
-        api
-          .GetClientByTenantId({ tenantId, accessToken, refreshToken })
-          .then((r) => r.data.data || []),
+          .then((r) => r.data?.data || []),
         api
           .GetTenantStaffByTenantId({ tenantId, accessToken, refreshToken })
-          .then((r) => r.data.data || []),
+          .then((r) => r.data?.data || []),
       ]);
       setSessionTypes(sess);
-      setClients(clis);
       setStaff(stf);
+
+      // Only fetch current client details
+      if (clientId) {
+        try {
+          const clientResponse = await api2.GetClientById({
+            clientId,
+            accessToken,
+            refreshToken,
+          });
+          if (clientResponse?.data?.data) {
+            const clientData = clientResponse.data.data;
+            // Transform the client data to match modal expectations
+            const transformedClient = {
+              clientId: clientData.id || clientData.clientId,
+              client: {
+                firstName:
+                  clientData.firstName ||
+                  clientData.fullName?.split(" ")[0] ||
+                  "Client",
+                lastName:
+                  clientData.lastName ||
+                  clientData.fullName?.split(" ").slice(1).join(" ") ||
+                  "",
+              },
+              // Include original data
+              ...clientData,
+            };
+            setClients([transformedClient]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch client details:", error);
+          // Create a minimal client object with correct structure
+          const nameParts = (fullName || "Current Client").split(" ");
+          const firstName = nameParts[0] || "Client";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
+          setClients([
+            {
+              clientId: clientId,
+              client: {
+                firstName: firstName,
+                lastName: lastName,
+              },
+              firstName: firstName,
+              lastName: lastName,
+              fullName: fullName || "Current Client",
+            },
+          ]);
+        }
+      }
     } catch (error) {
+      console.error("Failed to load support data:", error);
       showToast("Failed to load support data", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
-
+  }, [tenantId, accessToken, refreshToken, clientId, fullName]);
   // Fetch appointments for the CURRENT CLIENT only
   const fetchAppointments = useCallback(async () => {
-    if (!currentClientId) {
+    if (!clientId) {
       showToast("Client ID not found", "error");
       return;
     }
@@ -83,22 +162,22 @@ const AppointmentsScheduleTab = () => {
       let response;
       switch (activeTab) {
         case "upcomingAppointments":
-          response = await api.GetUpcomingAppointmentByClientId({
-            clientId: currentClientId,
+          response = await api2.GetClientUpcomingAppointments({
+            id: clientId,
             accessToken,
             refreshToken,
           });
           break;
         case "pastAppointments":
-          response = await api.GetPastAppointmentByClientId({
-            clientId: currentClientId,
+          response = await api2.GetClientPastAppointments({
+            id: clientId,
             accessToken,
             refreshToken,
           });
           break;
         case "cancelledAppointments":
-          response = await api.GetCancelledAppointmentByClientId({
-            clientId: currentClientId,
+          response = await api2.GetClientCancelAppointments({
+            id: clientId,
             accessToken,
             refreshToken,
           });
@@ -107,53 +186,67 @@ const AppointmentsScheduleTab = () => {
           response = { data: { data: [] } };
       }
 
+      // Handle the API response structure
       if (response?.data?.data) {
         setAppointments(response.data.data);
+      } else if (response?.data) {
+        // Handle case where data is directly in response.data
+        setAppointments(response.data);
       }
     } catch (error) {
+      console.error("Failed to fetch appointments:", error);
       showToast("Failed to fetch appointments", "error");
     } finally {
       setLoading(false);
     }
-  }, [activeTab, currentClientId, accessToken, refreshToken]);
+  }, [activeTab, clientId, accessToken, refreshToken]);
 
   useEffect(() => {
     fetchSupportingData();
+  }, [fetchSupportingData]);
+
+  useEffect(() => {
     fetchAppointments();
-  }, [fetchSupportingData, fetchAppointments]);
+  }, [fetchAppointments]);
 
-  // Get current client name for display
-  const currentClient = useMemo(() => {
-    return clients.find(
-      (client) =>
-        client.id === currentClientId || client.clientId === currentClientId
-    );
-  }, [clients, currentClientId]);
-
-  // Format appointments for display
+  // Format appointments for display using your API structure
   const formattedAppointments = useMemo(() => {
-    return appointments.map((appt) => ({
-      id: appt.id,
-      clientName:
-        currentClient?.fullName || appt.client?.fullName || "Current Client",
-      therapistName:
-        appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
-      serviceType: appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
-      sessionType: appt.session?.name || "N/A",
-      date: appt.date || "Unknown Date",
-      time:
-        appt.startTime && appt.endTime
-          ? `${appt.startTime} - ${appt.endTime}`
-          : "No Time",
-      dateTime: appt.date
-        ? `${format(new Date(appt.date), "MMM dd, yyyy")} • ${
-            appt.startTime || ""
-          }`
-        : "Unknown Date",
-      colorCode: appt.colourCode || "#3B82F6",
-      hasActions: true,
-      rawData: appt,
-    }));
+    return appointments.map((appt) => {
+      // Safely get client name from appointment data
+      let clientName = "Current Client";
+      if (appt.client) {
+        if (appt.client.firstName && appt.client.lastName) {
+          clientName = `${appt.client.firstName} ${appt.client.lastName}`;
+        } else if (appt.client.fullName) {
+          clientName = appt.client.fullName;
+        }
+      } else if (currentClient?.fullName) {
+        clientName = currentClient.fullName;
+      }
+
+      return {
+        id: appt.id,
+        clientName: clientName,
+        therapistName:
+          appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
+        serviceType:
+          appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
+        sessionType: appt.session?.name || "N/A",
+        date: appt.date || "Unknown Date",
+        time:
+          appt.startTime && appt.endTime
+            ? `${appt.startTime} - ${appt.endTime}`
+            : "No Time",
+        dateTime: appt.date
+          ? `${format(new Date(appt.date), "MMM dd, yyyy")} • ${
+              appt.startTime || ""
+            }`
+          : "Unknown Date",
+        colorCode: appt.colourCode || "#3B82F6",
+        hasActions: true,
+        rawData: appt,
+      };
+    });
   }, [appointments, currentClient]);
 
   // Search filtering - only search within this client's appointments
@@ -175,7 +268,7 @@ const AppointmentsScheduleTab = () => {
   const calendarAppointments = useMemo(() => {
     return filteredAppointments.map((appt) => ({
       id: appt.id,
-      clientId: currentClientId,
+      clientId: clientId,
       clinicianIds: appt.rawData.clinicians?.map((c) => c.id) || [],
       service: appt.rawData.service || [],
       sessionId: appt.rawData.sessionId,
@@ -183,8 +276,9 @@ const AppointmentsScheduleTab = () => {
       startTime: appt.rawData.startTime,
       endTime: appt.rawData.endTime,
       colourCode: appt.colorCode,
+      title: appt.serviceType || "Appointment",
     }));
-  }, [filteredAppointments, currentClientId]);
+  }, [filteredAppointments, clientId]);
 
   // Table filters - only show filters relevant to this client's appointments
   const filters = useMemo(() => {
@@ -264,23 +358,42 @@ const AppointmentsScheduleTab = () => {
   // Calendar appointment click handler
   const handleAppointmentClick = (appointment, position) => {
     console.log("Appointment clicked:", appointment);
-    // You can show a details modal or navigate
+    // Find the full appointment data
+    const fullAppointment = appointments.find(
+      (appt) => appt.id === appointment.id
+    );
+    if (fullAppointment) {
+      openModal(fullAppointment);
+    }
   };
 
   // Action handlers
   const handleViewDetails = (appointment) => {
     console.log("View details:", appointment);
-    // Implement details view
+    openModal(appointment);
   };
 
   const handleReschedule = (appointment) => {
     console.log("Reschedule:", appointment);
-    // Implement reschedule logic
+    openModal(appointment);
   };
 
-  const handleCancel = (appointment) => {
-    console.log("Cancel:", appointment);
-    // Implement cancel logic
+  const handleCancel = async (appointment) => {
+    if (window.confirm("Are you sure you want to cancel this appointment?")) {
+      try {
+        // Implement cancel logic using your API
+        await api.CancelAppointment({
+          id: appointment.id,
+          accessToken,
+          refreshToken,
+        });
+        showToast("Appointment cancelled successfully", "success");
+        fetchAppointments(); // Refresh the list
+      } catch (error) {
+        console.error("Failed to cancel appointment:", error);
+        showToast("Failed to cancel appointment", "error");
+      }
+    }
   };
 
   const openModal = (appointment = null) => {
@@ -295,10 +408,10 @@ const AppointmentsScheduleTab = () => {
 
   const handleSaveAppointment = async (data) => {
     try {
-      // Ensure the appointment is created for the current client
+      // Ensure the appointment is created/updated for the current client
       const appointmentData = {
         ...data,
-        clientId: currentClientId, // Always use the current client
+        clientId: clientId, // Always use the current client
         tenantId,
         accessToken,
         refreshToken,
@@ -320,6 +433,7 @@ const AppointmentsScheduleTab = () => {
       closeModal();
       fetchAppointments(); // Refresh the list
     } catch (error) {
+      console.error("Failed to save appointment:", error);
       showToast("Failed to save appointment", "error");
     }
   };
@@ -437,7 +551,6 @@ const AppointmentsScheduleTab = () => {
                 {format(currentDate, "MMMM yyyy")}
               </span>
             </div>
-            {/* Search Input */}
           </div>
           <div style={{ marginBottom: "-10px" }}>
             <SearchInput
@@ -471,14 +584,13 @@ const AppointmentsScheduleTab = () => {
             <MonthView
               date={currentDate}
               appointments={calendarAppointments}
-              clients={clients}
+              clients={[currentClient].filter(Boolean)} // Only send current client
               onAppointmentClick={handleAppointmentClick}
             />
           </div>
         )}
       </div>
 
-      {/* Modal */}
       <MemoAppointmentModal
         key={selectedAppointment?.id || "new"}
         isOpen={isModalOpen}
@@ -486,14 +598,13 @@ const AppointmentsScheduleTab = () => {
         initialData={selectedAppointment}
         isEditMode={!!selectedAppointment}
         onSave={handleSaveAppointment}
-        clients={clients}
+        clients={currentClient ? [currentClient] : []} // Ensure it's always an array
         sessionTypes={sessionTypes}
         staff={staff}
         accessToken={accessToken}
         refreshToken={refreshToken}
         tenantId={tenantId}
-        // Pre-select the current client in the modal
-        initialClientId={currentClientId}
+        initialClientId={clientId}
       />
     </div>
   );

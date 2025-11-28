@@ -127,7 +127,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
 
       return {
         id: appt.id,
-        clientName: `${appt.client?.firstName || ''} ${appt.client?.lastName || ''}`.trim() || "Unknown Client",
+          clientName: `${appt.client?.firstName || ''} ${appt.client?.lastName || ''}`.trim() || "Unknown Client",
         therapistName:
           appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
         serviceType: truncated,

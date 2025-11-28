@@ -245,62 +245,56 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
 
 export default TargetLibrary;
 
-async function buildTargetFormData(data) {
+
+// At the very end of your file, replace buildTargetFormData:
+async function buildTargetFormData(data, mode) {
   const fd = new FormData();
 
-  /* 1.  BASIC – from local state */
-  fd.append("id", data.id || "");
-  fd.append("name", data.name);
+  if (mode === "edit" && data.id) {
+    fd.append("id", data.id);
+  }
+
+  fd.append("name", data.name || "");
   fd.append("description", data.description || "");
-  fd.append("programId", data.programId);
   fd.append("sd", data.sd || "");
   fd.append("expectedResponse", data.expectedResponse || "");
-  fd.append("teachingProcedure", data.teachingProcedure);
-  fd.append("dataCollectionType", data.dataCollectionType);
-  fd.append("baselineDataRequired", Boolean(data.baselineDataRequired));
-  fd.append("initialStatus", data.statusAndAdmin);
+  fd.append("programId", data.programId); // ← CRITICAL
+  fd.append("teachingProcedure", data.teachingProcedure || "");
+  fd.append("teachingOthers", data.teachingOthers || "");
+  fd.append("dataCollectionType", data.dataCollectionType || "");
+  fd.append("baselineDataRequired", data.baselineDataRequired ? "true" : "false");
+  fd.append("initialStatus", data.statusAndAdmin || "");
   fd.append("notes", data.note || "");
-  fd.append("masteryMetric", data.masteryMetric);
+  fd.append("masteryMetric", data.masteryMetric || "");
 
-  /* 2.  PROMPTING STRATEGY – array of objects  */
-  (data.promptingStrategy || []).forEach((str) =>
-    fd.append("promptingStrategy", JSON.stringify({ label: str, value: str }))
-  );
+  // Prompting Strategy
+  (data.promptingStrategy || []).forEach((strategy) => {
+    fd.append("promptingStrategy[]", strategy); // or JSON.stringify if backend expects object
+  });
   if (data.promptOthers) fd.append("promptOthers", data.promptOthers);
 
-  /* 3.  TASK STEPS  */
-  if (data.dataCollectionType === "Task Analysis" && data.taskSteps?.length) {
-    data.taskSteps.forEach((step) => fd.append("taskSteps", step));
+  // Task Steps
+  (data.taskSteps || []).forEach((step) => {
+    if (step) fd.append("taskSteps[]", step);
+  });
+
+  // Trials / Tasks
+  if (data.percentageCorrectTrialSession) {
+    fd.append("numberOfTrials", data.percentageCorrectTrialSession);
   }
-  /* 4.  TRIALS / TASKS  */
-  if (
-    data.dataCollectionType === "Percentage Correct" &&
-    data.percentageCorrectTrialSession
-  ) {
-    fd.append("numberOfTrials", Number(data.percentageCorrectTrialSession));
-  }
-  if (
-    data.dataCollectionType === "Task Analysis" &&
-    data.trialOrOpportunitiesSession
-  ) {
-    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession)); // ← NEW
-  }
-  if (
-    data.trialOrOpportunitiesSession &&
-    data.dataCollectionType !== "Task Analysis"
-  ) {
-    fd.append("numberOfTrials", Number(data.trialOrOpportunitiesSession));
-    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
+  if (data.trialOrOpportunitiesSession) {
+    fd.append("numberOfTasks", data.trialOrOpportunitiesSession);
+    if (data.dataCollectionType !== "Latency") {
+      fd.append("numberOfTrials", data.trialOrOpportunitiesSession);
+    }
   }
 
-  /* 5.  MASTERY CRITERIA – whole object  */
+  // Mastery Criteria
   fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria || {}));
 
-  /* 6.  ATTACHMENT – raw File  */
+  // Attachment
   if (data.attachment instanceof File) {
-    fd.append("attachment", data.attachment, data.attachment.name);
-  } else {
-    fd.append("attachment", "");
+    fd.append("attachment", data.attachment);
   }
 
   return fd;

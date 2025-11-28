@@ -31,6 +31,7 @@ const Board = ({
   }));
   
 
+
   const [hoverIndex, setHoverIndex] = useState(null);
 
   return (
@@ -38,6 +39,7 @@ const Board = ({
       <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
         {columnOrder.map((columnId, index) => {
           const column = columns[columnId];
+      
           return (
             <div className="column-wrapper" key={columnId}>
               {/* Render "Add Column" button before the first column */}

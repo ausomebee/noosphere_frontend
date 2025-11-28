@@ -9,7 +9,7 @@ import AppointmentsScheduleTab from "./ClinentSubs/AppointmentsAndSchedules";
 import AuthorizationTab from "./ClinentSubs/Authorization";
 import ClinicalReportsTab from "./ClinentSubs/ClinicalReports";
 import DashboardLayout from "../../../../Layout/TenantLayout";
-import api from "../../../../api/TenantApis"; // adjust path
+import api from "../../../../api/clientPanelApis"; // adjust path
 import { useSelector } from "react-redux";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 
@@ -35,8 +35,8 @@ const ClientPanel = () => {
     const fetchClient = async () => {
       try {
         setLoading(true);
-        const res = await api.GetSinglePipelineItem({
-          itemId: clientId,
+        const res = await api.GetSingleClientByClientId({
+          id: clientId,
           accessToken,
           refreshToken,
         });
@@ -68,7 +68,7 @@ const ClientPanel = () => {
           />
         );
       case "programs":
-        return <ProgramsTab />;
+        return <ProgramsTab fullName={fullName} />;
       case "appointmentsAndSchedule":
         return <AppointmentsScheduleTab />;
       case "authorization":
@@ -86,7 +86,7 @@ const ClientPanel = () => {
   };
 
   const onBack = () => {
-    navigate("/clients/pipeline");
+    navigate(-1);
   };
 
   // Full name for header (fallback to "Client" while loading)

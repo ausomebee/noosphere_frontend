@@ -30,7 +30,6 @@ const CreateDiagnosisCode = async ({
   }
 };
 
-
 const UpdateDiagnosisCode = async ({
   id,
   code,
@@ -97,7 +96,12 @@ const GetSingleDiagnosisCodeById = async ({
   }
 };
 
-const UpdateActiveDiagnosisCode = async ({ id, active, accessToken, refreshToken }) => {
+const UpdateActiveDiagnosisCode = async ({
+  id,
+  active,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
@@ -205,7 +209,6 @@ const GetSessionTypeByTenantId = async ({
   }
 };
 
-
 const GetSingleSessionTypeByTenantId = async ({
   id,
   accessToken,
@@ -219,7 +222,8 @@ const GetSingleSessionTypeByTenantId = async ({
     return response;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Get Single session types by tenant id failed"
+      error.response?.data?.message ||
+        "Get Single session types by tenant id failed"
     );
   }
 };
@@ -237,22 +241,22 @@ const UpdateActiveSessionTypeByTenantId = async ({
     return response;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Get Single session types by tenant id failed"
+      error.response?.data?.message ||
+        "Get Single session types by tenant id failed"
     );
   }
 };
 
-
-const CreateDocument = async ({
-  formData,   
-  accessToken,
-  refreshToken,
-}) => {
+const CreateDocument = async ({ formData, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.post(`${PLAIN_API_URL}/organization/document`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await authFetch.post(
+      `${PLAIN_API_URL}/organization/document`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
     return res;
   } catch (e) {
     throw new Error(e.response?.data?.message || "Create Document failed");
@@ -346,7 +350,7 @@ const CreateOrganizationInformation = async ({
 };
 const UpdateOrganizationInformation = async ({
   id,
-   name,
+  name,
   email,
   phoneNumber,
   website,
@@ -365,7 +369,6 @@ const UpdateOrganizationInformation = async ({
     const response = await authFetch.patch(
       `${PLAIN_API_URL}/tenant/organization`,
       {
-
         active,
         id,
         companyName: name,
@@ -395,9 +398,7 @@ const GetOrganizationInformationByTenantId = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/${tenantId}`
-    );
+    const response = await authFetch.get(`${PLAIN_API_URL}/tenant/${tenantId}`);
     return response;
   } catch (error) {
     throw new Error(
@@ -510,8 +511,6 @@ const DeleteLicense = async ({ id, accessToken, refreshToken }) => {
   }
 };
 
-
-
 export default {
   CreateDiagnosisCode,
   UpdateDiagnosisCode,
@@ -534,5 +533,5 @@ export default {
   UpdateOrganizationLicense,
   GetLicenseByTenantId,
   GetSingleLicenseById,
-  DeleteLicense
+  DeleteLicense,
 };

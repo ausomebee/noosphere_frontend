@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           <App />
           <ToastContainer />
         </Router>

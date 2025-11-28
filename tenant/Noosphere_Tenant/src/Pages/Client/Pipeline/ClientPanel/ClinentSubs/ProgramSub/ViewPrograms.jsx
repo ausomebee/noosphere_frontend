@@ -1,100 +1,208 @@
-import React, { useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+// src/pages/Client/ClientSubs/ViewPrograms.jsx (Targets Tab)
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FaChevronDown, FaArrowLeft } from "react-icons/fa";
-import DashboardLayout from "../../../../../../Layout/TenantLayout";
 import Button from "../../../../../../Components/Button/Button";
-import CustomTable from "../../../../../../Components/Table/CustomTable"; // Adjust path if needed
+import CustomTable from "../../../../../../Components/Table/CustomTable";
+import AddTargetModal from "../../../../../../Components/ReusableModal/ProgramLibraryModal/AddTargetModal";
+import DeleteLibraryModal from "../../../../../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
+import TargetLibraryModal from "../../../../../../Components/ReusableModal/ClientModal/TargetLibraryModal";
+import { showToast } from "../../../../../../Helper/ShowToast";
+import api from "../../../../../../api/clientPanelApis";
+import { useSelector } from "react-redux";
+import DashboardLayout from "../../../../../../Layout/TenantLayout";
 
 const ViewPrograms = () => {
   const navigate = useNavigate();
-  const { clientId } = useParams(); // Assuming you're using route params
+  const { clientId, programId } = useParams();
+  const [searchParams] = useSearchParams(); // Correct hook usage
+
+  // Extract query parameters safely
+  const clientName = searchParams.get("client") || "Client";
+  const programName = searchParams.get("name") || "Program";
   const triggerRef = useRef(null);
 
-  // Mock dynamic names (replace with real data from props/params/context)
-  const ClientName = "John Doe";
-  const ProgramName = "Speech Therapy Program";
+  const { token, tenantId } = useSelector((s) => s.authentication?.user || {});
+  const accessToken = token;
+  const refreshToken = token;
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("add");
+  const [selectedTargetRow, setSelectedTargetRow] = useState(null);
 
-  // Table Columns
-  const columns = useMemo(
-    () => [
-      { header: "Target", key: "target" },
-      { header: "Description", key: "description" },
-    ],
-    []
-  );
+  const [targets, setTargets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [libraryTargets, setLibraryTargets] = useState([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
 
-  // Table Data
-  const tableData = useMemo(
-    () => [
-      {
-        id: "1",
-        target: "Target 1",
-        description: "Client will independently request desired items using 2-word phrases in 4/5 opportunities.",
-        hasActions: true
-      },
-      {
-        id: "2",
-        target: "Target 2",
-        description: "Client will follow 2-step directions with 80% accuracy across 3 sessions.",
-        hasActions: true
-    },
+  // Fetch targets for this program
+  const fetchTargets = async () => {
+    if (!programId) return;
+    setLoading(true);
+    try {
+      const response = await api.GetProgramsTargetsByProgramId({
+        programId,
+        accessToken,
+        refreshToken,
+      });
 
-      {
-        id: "3",
-        target: "Target 3",
-        description: "Client will use pronouns correctly in structured sentences during play.",
-        hasActions: true
-    },
-      {
-        id: "4",
-        target: "Target 4",
-        description: "Client will initiate social interactions with peers in 70% of opportunities.",
-        hasActions: true
-    },
-    ],
-    []
-  );
+      const data = response.data.data || [];
+      setTargets(
+        data.map((t) => ({
+          id: t.id,
+          targetName: t.name,
+          description: t.description || "—",
+          hasActions: true,
+        }))
+      );
+    } catch (e) {
+      showToast(e.message || "Failed to load targets", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Dropdown Actions
+  // Fetch tenant's target library
+  const fetchLibraryTargets = async () => {
+    if (!tenantId) return;
+    setLibraryLoading(true);
+    try {
+      const response = await api.GetAllTargetByTenantId({
+        Id: tenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const data = response.data.data || [];
+
+      setLibraryTargets(
+        data.map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+        }))
+      );
+    } catch (e) {
+      showToast(e.message || "Failed to load target library", "error");
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTargets();
+  }, [programId]);
+
+  // Handlers
+  const handleImportTarget = async (targetId, targetName) => {
+    try {
+      await api.AttachTargetToClient({
+        clientId,
+        targetId,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast(`"${targetName}" imported successfully`, "success");
+      fetchTargets();
+    } catch (e) {
+      showToast(
+        e.response?.data?.message || e.message || "Failed to import target",
+        "error"
+      );
+    } finally {
+      setIsLibraryOpen(false); // Always close modal
+    }
+  };
+
+  const handleEditTarget = async (row) => {
+    setModalMode("edit");
+    setSelectedTargetRow(row);
+    setIsAddModalOpen(true);
+  };
+
+  const handleDeleteTarget = (row) => {
+    setSelectedTargetRow(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleModalSubmit = async (formData) => {
+    try {
+      const response =
+        modalMode === "add"
+          ? await api.CreateProgramsTargetByClientId({
+              clientId,
+              programId,
+              formData,
+              accessToken,
+              refreshToken,
+            })
+          : await api.editProgramsTargetByClientId({
+              clientId,
+              programId,
+              formData,
+              accessToken,
+              refreshToken,
+            });
+
+      showToast(response.data.message || "Target saved", "success");
+      fetchTargets();
+      setIsAddModalOpen(false);
+    } catch (e) {
+      showToast(e.message || "Operation failed", "error");
+      throw e;
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await api.deleteProgramsTarget({
+        id: selectedTargetRow.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Target removed", "success");
+      fetchTargets();
+    } catch (e) {
+      showToast(e.message || "Delete failed", "error");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setSelectedTargetRow(null);
+    }
+  };
+
+  const columns = [
+    { header: "Target", key: "targetName", type: "text" },
+    { header: "Description", key: "description", type: "text" },
+  ];
+
   const actions = [
     {
       type: "dropdown",
+      label: "Actions",
       items: [
-        {
-          label: "Record Data",
-          onClick: (row) =>
-            navigate(
-              `/target-single/${ProgramName}/${row.target}?targetId=${row.id}&clientId=${clientId}`
-            ),
-        },
         {
           label: "View Data",
           onClick: (row) =>
             navigate(
-              `/target-single/${ProgramName}/${row.target}?targetId=${row.id}&clientId=${clientId}`
+              `/client/${clientId}/program/${programId}/target/${row.id}/data`
             ),
         },
         {
+          label: "Edit Target",
+          onClick: handleEditTarget,
+        },
+        {
           label: "Remove Target",
-          onClick: () => console.log("Remove target"),
-          className: "remove",
+          onClick: handleDeleteTarget,
+          className: "text-red-600",
         },
       ],
     },
   ];
-
-  const handleNewTarget = (type) => {
-    setIsDropdownOpen(false);
-    if (type === "library") {
-      // Open library modal or navigate
-      console.log("New Target from Library");
-    } else {
-      // Open custom target form
-      console.log("New Custom Target");
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -109,59 +217,159 @@ const ViewPrograms = () => {
         </button>
 
         <div className="breadcrumb-trail text-gray-600">
-          <span>{ClientName}</span>
+          <span>{clientName}</span>
           <span className="mx-2">›</span>
-          <span className="font-semibold text-gray-900">{ProgramName}</span>
+          <span className="font-semibold text-gray-900">{programName}</span>
         </div>
       </div>
 
-      {/* New Button + Dropdown */}
-      <div className="client-dropdown-wrapper flex justify-end mb-6 ">
-     <div
-          ref={triggerRef}
-          onClick={() => setIsDropdownOpen((prev) => !prev)}
-          style={{ cursor: "pointer" }}
-        >
+      {/* New Target Dropdown */}
+      <div className="client-dropdown-wrapper flex justify-end mb-6 relative">
+        <div ref={triggerRef}>
           <Button
             label="New"
             variant="primary"
             icon={<FaChevronDown />}
             iconPosition="right"
-            
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           />
-
-          {/* Dropdown Menu */}
-          {isDropdownOpen && (
-            <div className="client-dropdown-menu w-200">
-              <button
-                onClick={() => handleNewTarget("library")}
-                className="client-dropdown-item"
-              >
-                New Target from Library
-              </button>
-              <button
-                onClick={() => handleNewTarget("custom")}
-                className="client-dropdown-item"
-              >
-                New Custom Target
-              </button>
-            </div>
-          )}
         </div>
+
+        {isDropdownOpen && (
+          <div className="client-dropdown-menu w-64 z-50">
+            <button
+              className="client-dropdown-item"
+              onClick={() => {
+                fetchLibraryTargets();
+                setIsLibraryOpen(true);
+                setIsDropdownOpen(false);
+              }}
+            >
+              Target from Library
+            </button>
+            <button
+              className="client-dropdown-item"
+              onClick={() => {
+                setModalMode("add");
+                setSelectedTargetRow(null);
+                setIsAddModalOpen(true);
+                setIsDropdownOpen(false);
+              }}
+            >
+              Custom Target
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Table */}
+      {/* Targets Table */}
       <CustomTable
-        data={tableData}
+        data={targets}
         columns={columns}
         actions={actions}
+        loading={loading}
         tableName="Program Targets"
         itemsPerPage={10}
-        showCheckbox={false}
         showActions={true}
+        showCheckbox={false}
+      />
+
+      {/* Modals */}
+      <TargetLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelectTarget={handleImportTarget}
+        targets={libraryTargets}
+        loading={libraryLoading}
+      />
+
+      <AddTargetModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedTargetRow(null);
+        }}
+        onSubmit={handleModalSubmit}
+        mode={modalMode}
+        initialData={selectedTargetRow}
+        programId={programId}
+        clientId={clientId}
+      />
+
+      <DeleteLibraryModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDelete={handleDeleteConfirm}
+        title="Remove Target"
+        message={`Are you sure you want to remove "${selectedTargetRow?.targetName}"?`}
       />
     </DashboardLayout>
   );
 };
 
 export default ViewPrograms;
+
+// At the very end of your file, replace buildTargetFormData:
+async function buildTargetFormData(data, mode) {
+  const fd = new FormData();
+
+  if (mode === "edit" && data.id) {
+    fd.append("id", data.id.toString());
+  }
+  fd.append("name", data.name || "");
+  fd.append("description", data.description || "");
+  fd.append("programId", data.programId);
+  fd.append("sd", data.sd || "");
+  fd.append("expectedResponse", data.expectedResponse || "");
+  fd.append("teachingProcedure", data.teachingProcedure || "");
+  fd.append("dataCollectionType", data.dataCollectionType || "");
+  fd.append("baselineDataRequired", Boolean(data.baselineDataRequired));
+  fd.append("initialStatus", data.statusAndAdmin || "");
+  fd.append("notes", data.note || "");
+  fd.append("masteryMetric", data.masteryMetric || "");
+
+  (data.promptingStrategy || []).forEach((str) =>
+    fd.append("promptingStrategy", JSON.stringify({ label: str, value: str }))
+  );
+  if (data.promptOthers) fd.append("promptOthers", data.promptOthers);
+
+  if (data.dataCollectionType === "Task Analysis" && data.taskSteps?.length) {
+    data.taskSteps.forEach((step) => fd.append("taskSteps", step));
+  }
+
+  if (
+    data.dataCollectionType === "Percentage Correct" &&
+    data.percentageCorrectTrialSession
+  ) {
+    fd.append("numberOfTrials", Number(data.percentageCorrectTrialSession));
+  }
+  if (
+    data.dataCollectionType === "Latency" &&
+    data.percentageCorrectTrialSession
+  ) {
+    fd.append("numberOfTrials", Number(data.percentageCorrectTrialSession));
+  }
+  if (
+    data.dataCollectionType === "Task Analysis" &&
+    data.trialOrOpportunitiesSession
+  ) {
+    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
+  }
+  if (
+    data.trialOrOpportunitiesSession &&
+    data.dataCollectionType !== "Task Analysis"
+  ) {
+    fd.append("numberOfTrials", Number(data.trialOrOpportunitiesSession));
+    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
+  }
+
+  fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria || {}));
+
+  if (data.attachment instanceof File) {
+    fd.append("attachment", data.attachment, data.attachment.name);
+  } else {
+    fd.append("attachment", "");
+  }
+
+  return fd;
+}

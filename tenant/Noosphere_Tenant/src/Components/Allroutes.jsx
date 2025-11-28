@@ -96,17 +96,18 @@ const AllRoutes = () => {
         element={<ManageColumn />}
       />
       <Route
-        path="/client/client-single/:pipelineStageId/:clientId"
+        path="/client/client-single/:clientId/:tenantClientId"
+        element={<ClientPanel />}
+      />
+      <Route
+        path="/client/view-client/:clientId/:tenantClientId"
         element={<ClientPanel />}
       />
 
 
       {/* Clients Onboarding*/}
       <Route path="/clients/client-list" element={<ClientList />} />
-      <Route
-        path="/client/view-client/:clientId"
-        element={<ClientPanel />}
-      />
+    
       <Route
         path="/client/view-program/:clientId/target/:programId"
         element={<ViewPrograms />}

@@ -384,9 +384,11 @@ export const fetchPipelineItems = createAsyncThunk(
         ? response.data.data.map((item) => {
             const client = item.client || {};
             const creator = client.tenantLinks?.[0]?.tenantStaff?.fullName || "Unknown Admin";
+            const tenantClientId = client.tenantLinks?.[0]?.id || "Unknown Id";
 
             return {
               id: item.id,
+              clientId: client.id || "",
               firstName: client.firstName || "",
               lastName: client.lastName || "",
               preferredName: client.preferredName || "",
@@ -407,7 +409,8 @@ export const fetchPipelineItems = createAsyncThunk(
               pipelineStageId: item.pipelineStageId || stageId,
               status: item.status || "pending",
               createdAt: item.createdAt || "",
-              createdBy: creator, // Fixed: safe access
+              createdBy: creator,
+              tenantClientId: tenantClientId,
             };
           })
         : [];
