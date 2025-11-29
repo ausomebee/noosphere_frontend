@@ -14,7 +14,7 @@ import ReusableModal from "../../ReusableModal/ReusableModal";
 import {
   setDraftField,
   resetDraft,
-} from "../../../ReduxStore/features/ClientDraftSlice";
+} from "../../../ReduxStore/features/clientDraftSlice";
 import { SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
