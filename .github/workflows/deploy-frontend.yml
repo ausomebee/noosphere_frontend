@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - develop
+      - pre-prod
+      - master
 
 jobs:
   deploy:
@@ -13,63 +15,68 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Show repo structure (debug)
+        run: |
+          pwd
+          ls -R
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'   
 
-      # Build Client app
-      - name: Install & build Client
-        working-directory: ./Client
+      # Build client app
+      - name: Install & build client
+        working-directory: ./client
         run: |
           npm ci
           npm run build
 
-      # Build Control app
-      - name: Install & build Control
-        working-directory: ./Control
+      # Build control app
+      - name: Install & build control
+        working-directory: ./control
         run: |
           npm ci
           npm run build
 
-      # Build Tenant app
-      - name: Install & build Tenant
-        working-directory: ./Tenant
+      # Build tenant app
+      - name: Install & build tenant
+        working-directory: ./tenant
         run: |
           npm ci
           npm run build
 
-      # Upload Client/dist -> /var/www/client
-      - name: Upload Client to EC2
+      # Upload client/dist -> /var/www/client
+      - name: Upload client to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST_FRONTEND }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "Client/dist/*"
-          target: "${{ secrets.FRONTEND_DEPLOY_PATH }}/client"
+          source: "client/dist/*"
+          target: "/var/www/client"
 
-      # Upload Control/dist -> /var/www/control
-      - name: Upload Control to EC2
+      # Upload control/dist -> /var/www/control
+      - name: Upload control to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST_FRONTEND }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "Control/dist/*"
-          target: "${{ secrets.FRONTEND_DEPLOY_PATH }}/control"
+          source: "control/dist/*"
+          target: "/var/www/control"
 
-      # Upload Tenant/dist -> /var/www/tenant
-      - name: Upload Tenant to EC2
+      # Upload tenant/dist -> /var/www/tenant
+      - name: Upload tenant to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST_FRONTEND }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "Tenant/dist/*"
-          target: "${{ secrets.FRONTEND_DEPLOY_PATH }}/tenant"
+          source: "tenant/dist/*"
+          target: "/var/www/tenant"
 
-      # Reload nginx after deploy
+      # Reload nginx on RHEL 9
       - name: Reload nginx on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
