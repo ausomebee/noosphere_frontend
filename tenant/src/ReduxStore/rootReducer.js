@@ -4,7 +4,7 @@ import pipelineReducer from "./features/PipelineSlice";
 import addTargetDraftReducer from "./features/AddTargetDraftSlice";
 import staffFormDraftReducer from "./features/AddStaffDraftSlice";
 import formBuilderReducer from "./features/formBuilderSlice";
-import clientDraftReducer from "./features/ClientDraftSlice"
+import clientDraftReducer from "./features/clientDraftSlice"
 
 
 
