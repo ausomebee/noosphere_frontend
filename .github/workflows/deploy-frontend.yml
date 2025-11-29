@@ -83,7 +83,7 @@ jobs:
           source: "tenant/dist/*"
           target: "/var/www/tenant"
 
-      # Reload nginx
+      # Reload nginx server
       - name: Reload nginx on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
