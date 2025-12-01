@@ -138,6 +138,7 @@ const AddTargetModal = ({
   initialData,
   programId,
 }) => {
+ 
   const [activeTab, setActiveTab] = useState("Basic Info");
   const [submitting, setSubmitting] = useState(false);
   const [taskStepCount, setTaskStepCount] = useState(0);
@@ -169,6 +170,14 @@ const AddTargetModal = ({
   const dataCollectionType = watch("dataCollectionType");
   const masteryMetric = watch("masteryMetric");
   const trialOrOpportunitiesSession = watch("trialOrOpportunitiesSession");
+  const masteryCriteriaOptionOne = watch("masteryCriteriaOptionOne");
+  const masteryCriteriaOptionTwo = watch("masteryCriteriaOptionTwo");
+  const masteryCriteriaOptionThree = watch("masteryCriteriaOptionThree");
+  const customRecurrenceDay = watch("customRecurrenceDay");
+  const consecutiveSessions = watch("consecutiveSessions");
+  const totalSessions = watch("totalSessions");
+  const sessionCount = watch("sessionCount");
+  const customRecurrencePosition = watch("customRecurrencePosition");
 
   /* ---------- Auto-save to Redux and Track Changes ---------- */
   useEffect(() => {
@@ -242,20 +251,20 @@ const AddTargetModal = ({
     }
     setActiveTab("Basic Info");
     setHasChanges(false);
-  }, [isOpen, mode, initialData, programId, reduxDraft, reset, setValue]);
+  }, [isOpen, mode, initialData, programId, reduxDraft, reset, setValue, dispatch]);
 
   /* ---------- Mastery Criteria Logic ---------- */
   useEffect(() => {
     const opts = {
       metric: masteryMetric,
-      optionOne: watch("masteryCriteriaOptionOne"),
-      optionTwo: watch("masteryCriteriaOptionTwo"),
-      optionThree: watch("masteryCriteriaOptionThree"),
-      value: watch("customRecurrenceDay"),
-      sessions: watch("consecutiveSessions"),
-      totalSessions: watch("totalSessions"),
-      sessionCount: watch("sessionCount"),
-      unit: watch("customRecurrencePosition"),
+      optionOne: masteryCriteriaOptionOne,
+      optionTwo: masteryCriteriaOptionTwo,
+      optionThree: masteryCriteriaOptionThree,
+      value: customRecurrenceDay,
+      sessions: consecutiveSessions,
+      totalSessions: totalSessions,
+      sessionCount: sessionCount,
+      unit: customRecurrencePosition,
     };
 
     const criteria = {};
@@ -272,14 +281,14 @@ const AddTargetModal = ({
     setValue("masteryCriteria", criteria);
   }, [
     masteryMetric,
-    watch("masteryCriteriaOptionOne"),
-    watch("masteryCriteriaOptionTwo"),
-    watch("masteryCriteriaOptionThree"),
-    watch("customRecurrenceDay"),
-    watch("consecutiveSessions"),
-    watch("totalSessions"),
-    watch("sessionCount"),
-    watch("customRecurrencePosition"),
+    masteryCriteriaOptionOne,
+    masteryCriteriaOptionTwo,
+    masteryCriteriaOptionThree,
+    customRecurrenceDay,
+    consecutiveSessions,
+    totalSessions,
+    sessionCount,
+    customRecurrencePosition,
     setValue,
   ]);
 
@@ -1272,7 +1281,7 @@ const AddTargetModal = ({
       name: "Status & Admin",
       content: (
         <div>
-          {/* <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
+          <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
             <pre>
               {JSON.stringify(
                 errors,
@@ -1280,7 +1289,7 @@ const AddTargetModal = ({
                 2
               )}
             </pre>
-          </div> */}
+          </div>
           <Controller
             name="statusAndAdmin"
             control={control}

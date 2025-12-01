@@ -335,7 +335,7 @@ const TargetSingle = () => {
   };
 
   const onBack = () => {
-    navigate("/program-library");
+    navigate(-1);
   };
 
   const handleExportCSV = useCallback(() => {

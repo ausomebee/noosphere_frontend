@@ -50,8 +50,8 @@ const ProgramsTab = ({ fullName }) => {
 
       setPrograms(
         clientPrograms.map((item) => ({
-          id: item.id,                    // client-program link ID
-          programId: item.program.id,     // actual program ID
+          id: item.id, // client-program link ID
+          programId: item.program.id, // actual program ID
           programName: item.program.name,
           description: item.program.description || "—",
           hasActions: true,
@@ -119,9 +119,34 @@ const ProgramsTab = ({ fullName }) => {
   };
 
   const handleDeleteProgram = (row) => {
-    setSelectedProgramRow(row);
-    setIsDeleteModalOpen(true);
-  };
+  setSelectedProgramRow({
+    programId: row.programId,
+    programName: row.programName, // optional, only if modal needs it later
+  });
+  setIsDeleteModalOpen(true);
+};
+
+const handleDeleteConfirm = async () => {
+  if (!selectedProgramRow?.programId) {
+    setIsDeleteModalOpen(false);
+    return;
+  }
+
+  try {
+    await api2.deleteClientsProgram({
+      id: selectedProgramRow.programId,
+      accessToken,
+      refreshToken,
+    });
+    showToast("Program removed successfully", "success");
+    fetchPrograms();
+  } catch (e) {
+    showToast(e.response?.data?.message || "Failed to remove program", "error");
+  } finally {
+    setIsDeleteModalOpen(false);
+    setSelectedProgramRow(null);
+  }
+};
 
   const handleModalSubmit = async (formData) => {
     try {
@@ -142,32 +167,21 @@ const ProgramsTab = ({ fullName }) => {
         });
       }
 
-      showToast(`Program ${modalMode === "add" ? "added" : "updated"} successfully`, "success");
+      showToast(
+        `Program ${modalMode === "add" ? "added" : "updated"} successfully`,
+        "success"
+      );
       fetchPrograms();
       setIsAddModalOpen(false);
     } catch (e) {
-      showToast(e.response?.data?.message || e.message || "Operation failed", "error");
+      showToast(
+        e.response?.data?.message || e.message || "Operation failed",
+        "error"
+      );
     }
   };
 
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await api2.deleteClientsProgram({
-        id: selectedProgramRow.programId,
-        accessToken,
-        refreshToken,
-      });
-
-      showToast("Program deleted successfully", "success");
-      fetchPrograms();
-    } catch (e) {
-      showToast(e.response?.data?.message || e.message || "Delete failed", "error");
-    } finally {
-      setIsDeleteModalOpen(false);
-      setSelectedProgramRow(null);
-    }
-  };
 
   const handleImportProgram = (programId, programName) => {
     api2
@@ -188,7 +202,9 @@ const ProgramsTab = ({ fullName }) => {
           label: "View Program",
           onClick: (row) =>
             navigate(
-              `/client/view-program/${clientId}/target/${row.programId}?name=${encodeURIComponent(
+              `/client/view-program/${clientId}/target/${
+                row.programId
+              }?name=${encodeURIComponent(
                 row.programName
               )}&client=${encodeURIComponent(fullName)}`
             ),
@@ -241,7 +257,6 @@ const ProgramsTab = ({ fullName }) => {
                 setIsProgramOpen(false);
               }}
             >
-              
               <span>Custom Program</span>
             </button>
           </div>
@@ -281,10 +296,12 @@ const ProgramsTab = ({ fullName }) => {
 
       <DeleteLibraryModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedProgramRow(null);
+        }}
         onDelete={handleDeleteConfirm}
-         title="Remove Program"
-        message={`Are you sure you want to remove "${selectedProgramRow?.targetName}"?`}
+        title="Remove Program"
       />
     </div>
   );

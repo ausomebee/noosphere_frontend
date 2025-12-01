@@ -71,9 +71,7 @@ const ClientList = () => {
           id: editingClient.client.id,
           tenantId,
           ...formData,
-          zipCode: formData.zip || null,
           phoneNumber: formData.phone || null,
-          pipelineStageId: "99e9b9fe-ed4f-48ee-857e-e6a3d7e6a3cb",
           accessToken,
           documents: formData.documents || [],
           refreshToken,
@@ -85,11 +83,9 @@ const ClientList = () => {
           ...formData,
           tenantId,
           createdBy: userId,
-           zipCode: formData.zip || "",
           phoneNumber: formData.phone || null,
           clientPortalAccess: true,
           documents: formData.documents || [],
-          pipelineStageId: "99e9b9fe-ed4f-48ee-857e-e6a3d7e6a3cb",
           accessToken,
           refreshToken,
         });
@@ -269,7 +265,7 @@ const ClientList = () => {
           isOpen={isAddClientOpen}
           onClose={() => setIsAddClientOpen(false)}
           onSubmit={handleSubmitClient}
-          initialData={editingClient?.client || null}
+          initialData={editingClient || null}
           primaryButtonLoading={isUpdating}
         />
       </div>

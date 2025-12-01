@@ -159,7 +159,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
       items: [
         {
           label: "View",
-          onClick: (row) => window.location.href = `/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`,
+          onClick: (row) => window.location.href = `/tenant/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`,
         },
         { label: "Edit", onClick: handleEditTarget },
         {

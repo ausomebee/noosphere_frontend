@@ -5,6 +5,7 @@ import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import Pagination from "../../Table/Pagination";
+import Button from "../../Button/Button";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -33,7 +34,10 @@ const FormLibraryModal = ({
 
   const totalPages = Math.ceil(filteredForms.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentForms = filteredForms.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentForms = filteredForms.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   const handleUseForm = (form) => {
     onSelectForm(form.id, form.name);
@@ -52,14 +56,16 @@ const FormLibraryModal = ({
       size="lg"
     >
       <div className="py-4 space-y-6">
-        {/* Search Input — using your TextInput */}
-        <TextInput
-          label="Search forms"
-          placeholder="Type to search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
-        />
+        <div className="justify-center flex">
+          <TextInput
+            label="Search forms"
+            placeholder="Type to search..."
+            value={searchTerm}
+            width={400}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+        </div>
 
         {/* Loading State */}
         {loading ? (
@@ -69,7 +75,9 @@ const FormLibraryModal = ({
         ) : currentForms.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {searchTerm ? "No forms match your search" : "No forms in library"}
+              {searchTerm
+                ? "No forms match your search"
+                : "No forms in library"}
             </p>
           </div>
         ) : (
@@ -79,20 +87,18 @@ const FormLibraryModal = ({
               {currentForms.map((form) => (
                 <div
                   key={form.id}
-                  className="flex items-center justify-between p-5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all group border border-gray-200"
+                  className="flex items-center justify-between p-5 bg-gray-50 hover:bg-gray-100 rounded-md transition-all group border border-gray-200 mb-4"
                 >
                   <div>
                     <h4 className="font-semibold text-gray-900 text-base">
                       {form.name}
                     </h4>
-                    <p className="text-xs text-gray-500 mt-1">ID: {form.id}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="primary"
+                    label="Use Form"
                     onClick={() => handleUseForm(form)}
-                    className="px-6 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-lg hover:bg-blue-700 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  >
-                    Use Form
-                  </button>
+                  />
                 </div>
               ))}
             </div>
@@ -110,7 +116,8 @@ const FormLibraryModal = ({
 
             {/* Footer Counter */}
             <div className="text-center text-xs text-gray-500 mt-4">
-              Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredForms.length)} of{" "}
+              Showing {startIndex + 1}–
+              {Math.min(startIndex + ITEMS_PER_PAGE, filteredForms.length)} of{" "}
               {filteredForms.length} form{filteredForms.length !== 1 ? "s" : ""}
             </div>
           </>

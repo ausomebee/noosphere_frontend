@@ -82,7 +82,7 @@ const AuthorizationTab = () => {
       const formattedAuthorizations = authData.map((auth) => ({
         id: auth.id,
         name: auth.title,
-        insuranceCompany: auth.payer,
+        insuranceCompany: auth?.insurance?.name,
         startDate: formatDate(auth.startDate),
         endDate: auth.endDate ? formatDate(auth.endDate) : "—",
         status: getStatus(auth.startDate, auth.endDate),

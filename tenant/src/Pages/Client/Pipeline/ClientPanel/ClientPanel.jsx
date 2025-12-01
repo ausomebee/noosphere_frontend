@@ -155,7 +155,7 @@ const ClientPanel = () => {
             Authorization
             <span className="auth-badge">1</span>
           </button>
-          <button
+          {/* <button
             onClick={() => setView("clinicalReports")}
             className={`appointment-sched-view-button ${
               view === "clinicalReports"
@@ -164,7 +164,7 @@ const ClientPanel = () => {
             }`}
           >
             Clinical Reports
-          </button>
+          </button> */}
         </div>
 
         {/* Dynamic Content */}

@@ -75,6 +75,7 @@ const UpdateClientPortalAccess = async ({
   }
 };
 const CreateClientDocuments = async ({
+  createdBy,
   tenantClientId,
   name,
   documentDetails,
@@ -84,6 +85,7 @@ const CreateClientDocuments = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(`${PLAIN_API_URL}/client-documents`, {
+      createdBy,
       tenantClientId,
       name,
       documentDetails,
@@ -331,13 +333,12 @@ const GetAllTargetByTenantId = async ({ Id, accessToken, refreshToken }) => {
 const CreateProgramsTargetByClientId = async ({
   clientId,
   formData,
-  programId,
   accessToken,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  formData.append("clientId", clientId);
-  formData.append("programId", programId);
+ formData.append("clientId", String(clientId));
+
   try {
     const res = await authFetch.post(
       `${PLAIN_API_URL}/targets/custom`,
@@ -355,22 +356,16 @@ const CreateProgramsTargetByClientId = async ({
 /*  EDIT target – multipart  */
 const editProgramsTargetByClientId = async ({
   formData,
-  clientId,
   programId,
   accessToken,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  formData.append("clientId", clientId);
   formData.append("programId", programId);
   try {
-    const res = await authFetch.patch(
-      `${PLAIN_API_URL}/targets/custom`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const res = await authFetch.patch(`${PLAIN_API_URL}/targets`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res;
   } catch (e) {
     throw new Error(e.response?.data?.message || "Edit target failed");
@@ -379,12 +374,14 @@ const editProgramsTargetByClientId = async ({
 const AttachTargetToClient = async ({
   clientId,
   targetId,
+  programId,
   accessToken,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(`${PLAIN_API_URL}/client-targets`, {
+      programId,
       targetId,
       clientId,
     });
@@ -410,16 +407,19 @@ const CreateClientAuthorization = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/client-authorization`, {
-     tenantClientId,
-  title,
-  authorizationNumber,
-  startDate,
-  endDate,
-  payer,
-  insuranceType,
-  serviceCodes,
-    });
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/client-authorization`,
+      {
+        tenantClientId,
+        title,
+        authorizationNumber,
+        startDate,
+        endDate,
+        payer,
+        insuranceType,
+        serviceCodes,
+      }
+    );
     return response;
   } catch (error) {
     throw new Error(
@@ -441,16 +441,18 @@ const UpdateClientAuthorization = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client-authorization/${id}`, {
-    
-  title,
-  authorizationNumber,
-  startDate,
-  endDate,
-  payer,
-  insuranceType,
-  serviceCodes,
-    });
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/client-authorization/${id}`,
+      {
+        title,
+        authorizationNumber,
+        startDate,
+        endDate,
+        payer,
+        insuranceType,
+        serviceCodes,
+      }
+    );
     return response;
   } catch (error) {
     throw new Error(
@@ -459,55 +461,140 @@ const UpdateClientAuthorization = async ({
   }
 };
 
-
-const GetAllClientAuthorizationByTenantClientId = async ({ tenantClientId, accessToken, refreshToken }) => {
+const GetAllClientAuthorizationByTenantClientId = async ({
+  tenantClientId,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/client-authorization/tenant-client/${tenantClientId}`);
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/client-authorization/tenant-client/${tenantClientId}`
+    );
     return res;
   } catch (e) {
-    throw new Error(e.response?.data?.message || "Get all client Authorization failed");
+    throw new Error(
+      e.response?.data?.message || "Get all client Authorization failed"
+    );
   }
 };
-const GetSingleClientAuthorizationById = async ({ id, accessToken, refreshToken }) => {
+const GetSingleClientAuthorizationById = async ({
+  id,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/client-authorization/single/${id}`);
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/client-authorization/single/${id}`
+    );
     return res;
   } catch (e) {
-    throw new Error(e.response?.data?.message || "Get single client Authorization failed");
+    throw new Error(
+      e.response?.data?.message || "Get single client Authorization failed"
+    );
   }
 };
 
-
-const GetClientUpcomingAppointments = async ({ id, accessToken, refreshToken }) => {
+const GetClientUpcomingAppointments = async ({
+  id,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/client/upcoming/${id}`);
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/client/upcoming/${id}`
+    );
     return res;
   } catch (e) {
-    throw new Error(e.response?.data?.message || "Get Client upcoming appointments failed");
+    throw new Error(
+      e.response?.data?.message || "Get Client upcoming appointments failed"
+    );
   }
 };
 const GetClientPastAppointments = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/client/past/${id}`);
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/client/past/${id}`
+    );
     return res;
   } catch (e) {
-    throw new Error(e.response?.data?.message || "Get Client past appointments failed");
+    throw new Error(
+      e.response?.data?.message || "Get Client past appointments failed"
+    );
   }
 };
-const GetClientCancelAppointments = async ({ id, accessToken, refreshToken }) => {
+const GetClientCancelAppointments = async ({
+  id,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/client/canceled/${id}`);
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/client/canceled/${id}`
+    );
     return res;
   } catch (e) {
-    throw new Error(e.response?.data?.message || "Get Client canceled appointments failed");
+    throw new Error(
+      e.response?.data?.message || "Get Client canceled appointments failed"
+    );
   }
 };
 
+const deleteClientsDocument = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(
+      `${PLAIN_API_URL}/client-documents/${id}`
+    );
+    return response;
+  } catch (e) {
+    throw new Error(
+      e.response?.data?.message || "Delete client documents failed"
+    );
+  }
+};
+
+const AttachFormToClient = async ({
+  tenantClientId,
+  formId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(`${PLAIN_API_URL}/client-forms`, {
+      tenantClientId,
+      formId,
+    });
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Attach forms failed"
+    );
+  }
+};
+
+const GetAllFormsByTenantClientId = async ({
+  tenantClientId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const res = await authFetch.get(
+      `${PLAIN_API_URL}/client-forms/${tenantClientId}`
+    );
+    return res;
+  } catch (e) {
+    throw new Error(
+      e.response?.data?.message || "Get all client Forms failed"
+    );
+  }
+};
 export default {
   GetAllTenantsClient,
   UpdateActiveClient,
@@ -518,6 +605,9 @@ export default {
   GetAllClientDocument,
   CreateClientDocumentsRequest,
   GetAllClientDocumentRequested,
+  deleteClientsDocument,
+  AttachFormToClient,
+  GetAllFormsByTenantClientId,
 
   GetClientsProgramByClientId,
   CreateClientsProgram,
