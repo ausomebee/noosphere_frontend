@@ -13,6 +13,10 @@ import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
 import { SearchInput } from "../../../../../Components/Input/Inputs";
 import { useParams } from "react-router-dom";
 
+// Your two expanders
+import expand from "../../../../../utils/expand"; // For Calendar View
+import expandForAppointments from "../../../../../utils/expandForAppointments"; // For Table View
+
 const MemoAppointmentModal = memo(AppointmentModal);
 
 const AppointmentsScheduleTab = ({ fullName }) => {
@@ -34,16 +38,25 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const prepareModalData = (appt) => {
+    if (!appt) return null;
+
+    return {
+      ...appt,
+      sessionType:
+        appt.sessionId || appt.session?.id || appt.session?.name || "",
+      colorCode: appt.colourCode || appt.colorCode || "#3B82F6",
+    };
+  };
+
   const currentClient = useMemo(() => {
     if (!clientId) return null;
 
-    // If we have clients loaded, find the current one
     if (clients.length > 0) {
       const client = clients.find(
         (client) => client.id === clientId || client.clientId === clientId
       );
 
-      // Return the EXACT structure that AppointmentModal expects
       if (client) {
         return {
           clientId: client.id || client.clientId,
@@ -55,13 +68,11 @@ const AppointmentsScheduleTab = ({ fullName }) => {
               client.fullName?.split(" ").slice(1).join(" ") ||
               "",
           },
-          // Include any other fields that might be in the original client data
           ...client,
         };
       }
     }
 
-    // Fallback structure that matches modal expectations
     const nameParts = (fullName || "Current Client").split(" ");
     const firstName = nameParts[0] || "Client";
     const lastName = nameParts.slice(1).join(" ") || "";
@@ -78,7 +89,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     };
   }, [clients, clientId, fullName]);
 
-  // Fetch supporting data - fix client fetching
   const fetchSupportingData = useCallback(async () => {
     try {
       const [sess, stf] = await Promise.all([
@@ -96,7 +106,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       setSessionTypes(sess);
       setStaff(stf);
 
-      // Only fetch current client details
       if (clientId) {
         try {
           const clientResponse = await api2.GetClientById({
@@ -106,7 +115,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           });
           if (clientResponse?.data?.data) {
             const clientData = clientResponse.data.data;
-            // Transform the client data to match modal expectations
             const transformedClient = {
               clientId: clientData.id || clientData.clientId,
               client: {
@@ -119,14 +127,12 @@ const AppointmentsScheduleTab = ({ fullName }) => {
                   clientData.fullName?.split(" ").slice(1).join(" ") ||
                   "",
               },
-              // Include original data
               ...clientData,
             };
             setClients([transformedClient]);
           }
         } catch (error) {
           console.error("Failed to fetch client details:", error);
-          // Create a minimal client object with correct structure
           const nameParts = (fullName || "Current Client").split(" ");
           const firstName = nameParts[0] || "Client";
           const lastName = nameParts.slice(1).join(" ") || "";
@@ -150,7 +156,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       showToast("Failed to load support data", "error");
     }
   }, [tenantId, accessToken, refreshToken, clientId, fullName]);
-  // Fetch appointments for the CURRENT CLIENT only
+
   const fetchAppointments = useCallback(async () => {
     if (!clientId) {
       showToast("Client ID not found", "error");
@@ -186,11 +192,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           response = { data: { data: [] } };
       }
 
-      // Handle the API response structure
       if (response?.data?.data) {
         setAppointments(response.data.data);
       } else if (response?.data) {
-        // Handle case where data is directly in response.data
         setAppointments(response.data);
       }
     } catch (error) {
@@ -209,24 +213,15 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // Format appointments for display using your API structure
+  // TABLE VIEW → Use safe bounded expansion (expandForAppointments)
   const formattedAppointments = useMemo(() => {
-    return appointments.map((appt) => {
-      // Safely get client name from appointment data
-      let clientName = "Current Client";
-      if (appt.client) {
-        if (appt.client.firstName && appt.client.lastName) {
-          clientName = `${appt.client.firstName} ${appt.client.lastName}`;
-        } else if (appt.client.fullName) {
-          clientName = appt.client.fullName;
-        }
-      } else if (currentClient?.fullName) {
-        clientName = currentClient.fullName;
-      }
+    if (!appointments.length) return [];
 
-      return {
+    // Cancelled appointments are NOT recurring → no expansion
+    if (activeTab === "cancelledAppointments") {
+      return appointments.map((appt) => ({
         id: appt.id,
-        clientName: clientName,
+        clientName: currentClient?.fullName || "Current Client",
         therapistName:
           appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
         serviceType:
@@ -245,11 +240,99 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         colorCode: appt.colourCode || "#3B82F6",
         hasActions: true,
         rawData: appt,
-      };
-    });
-  }, [appointments, currentClient]);
+      }));
+    }
 
-  // Search filtering - only search within this client's appointments
+    // Upcoming & Past → use safe bounded expansion
+    const direction = activeTab === "pastAppointments" ? "past" : "future";
+
+    return appointments.flatMap((master) => {
+      const expanded = expandForAppointments(master, direction);
+
+      return expanded.map((instance) => ({
+        id: instance.id,
+        clientName: currentClient?.fullName || "Current Client",
+        therapistName:
+          instance.clinicians?.map((c) => c.fullName).join(", ") ||
+          "Unassigned",
+        serviceType:
+          instance.service?.map((s) => s.serviceType).join(", ") || "N/A",
+        sessionType: instance.session?.name || "N/A",
+        date: instance.date,
+        time: `${instance.startTime} - ${instance.endTime}`,
+        dateTime: `${format(new Date(instance.date), "MMM dd, yyyy")} • ${
+          instance.startTime
+        }`,
+        colorCode: instance.colourCode || "#3B82F6",
+        hasActions: true,
+        rawData: { ...master, ...instance },
+      }));
+    });
+  }, [appointments, activeTab, currentClient]);
+
+  // CALENDAR VIEW → Use full unlimited expansion (expand)
+  const calendarAppointments = useMemo(() => {
+    if (!appointments.length) return [];
+
+    // Cancelled → no expansion
+    if (activeTab === "cancelledAppointments") {
+      return appointments
+        .filter((a) => a.date)
+        .map((appt) => ({
+          id: appt.id,
+          clientId,
+          clientName:
+            appt.client?.fullName ||
+            currentClient?.fullName ||
+            "Current Client",
+          clinicianIds: appt.clinicians?.map((c) => c.id) || [],
+          service: appt.service || [],
+          sessionId: appt.sessionId,
+          date: appt.date,
+          startTime: appt.startTime,
+          endTime: appt.endTime,
+          colourCode: appt.colourCode || "#3B82F6",
+          title:
+            appt.service?.map((s) => s.serviceType).join(", ") || "Appointment",
+        }));
+    }
+
+    // Full expansion for current month only
+    const viewWindow = {
+      start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      end: new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59
+      ),
+    };
+
+    return appointments.flatMap((master) => {
+      const expanded = expand(master, viewWindow);
+      return expanded.map((instance) => ({
+        id: instance.id,
+        clientId,
+        clientName:
+          instance.client?.fullName ||
+          currentClient?.fullName ||
+          "Current Client",
+        clinicianIds: instance.clinicians?.map((c) => c.id) || [],
+        service: instance.service || [],
+        sessionId: instance.sessionId,
+        date: instance.date,
+        startTime: instance.startTime,
+        endTime: instance.endTime,
+        colourCode: instance.colourCode || "#3B82F6",
+        title:
+          instance.service?.map((s) => s.serviceType).join(", ") ||
+          "Appointment",
+      }));
+    });
+  }, [appointments, activeTab, currentDate, clientId]);
+
   const filteredAppointments = useMemo(() => {
     if (!searchTerm) return formattedAppointments;
 
@@ -264,23 +347,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     );
   }, [formattedAppointments, searchTerm]);
 
-  // Calendar view appointments format
-  const calendarAppointments = useMemo(() => {
-    return filteredAppointments.map((appt) => ({
-      id: appt.id,
-      clientId: clientId,
-      clinicianIds: appt.rawData.clinicians?.map((c) => c.id) || [],
-      service: appt.rawData.service || [],
-      sessionId: appt.rawData.sessionId,
-      date: appt.date,
-      startTime: appt.rawData.startTime,
-      endTime: appt.rawData.endTime,
-      colourCode: appt.colorCode,
-      title: appt.serviceType || "Appointment",
-    }));
-  }, [filteredAppointments, clientId]);
-
-  // Table filters - only show filters relevant to this client's appointments
   const filters = useMemo(() => {
     const clinicians = [
       ...new Set(formattedAppointments.map((a) => a.therapistName)),
@@ -320,7 +386,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     ];
   }, [formattedAppointments]);
 
-  // Table Columns
   const columns = [
     { header: "Clinician(s)", key: "therapistName", type: "text" },
     { header: "Service Type(s)", key: "serviceType", type: "text" },
@@ -329,36 +394,19 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     { header: "Time", key: "time", type: "text" },
   ];
 
-  // Table Actions
   const actions = [
     {
       type: "dropdown",
       items: [
         {
-          label: "View Details",
-          onClick: (row) => handleViewDetails(row),
-        },
-        {
           label: "Edit Appointment",
           onClick: (row) => openModal(row),
-        },
-        {
-          label: "Reschedule",
-          onClick: (row) => handleReschedule(row),
-        },
-        {
-          label: "Cancel Appointment",
-          onClick: (row) => handleCancel(row),
-          className: "remove",
         },
       ],
     },
   ];
 
-  // Calendar appointment click handler
   const handleAppointmentClick = (appointment, position) => {
-    console.log("Appointment clicked:", appointment);
-    // Find the full appointment data
     const fullAppointment = appointments.find(
       (appt) => appt.id === appointment.id
     );
@@ -367,37 +415,15 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     }
   };
 
-  // Action handlers
-  const handleViewDetails = (appointment) => {
-    console.log("View details:", appointment);
-    openModal(appointment);
-  };
-
-  const handleReschedule = (appointment) => {
-    console.log("Reschedule:", appointment);
-    openModal(appointment);
-  };
-
-  const handleCancel = async (appointment) => {
-    if (window.confirm("Are you sure you want to cancel this appointment?")) {
-      try {
-        // Implement cancel logic using your API
-        await api.CancelAppointment({
-          id: appointment.id,
-          accessToken,
-          refreshToken,
-        });
-        showToast("Appointment cancelled successfully", "success");
-        fetchAppointments(); // Refresh the list
-      } catch (error) {
-        console.error("Failed to cancel appointment:", error);
-        showToast("Failed to cancel appointment", "error");
-      }
-    }
-  };
+   const splitId = useCallback((id) => {
+      if (!id?.includes("_")) return { uuid: id, timestamp: null };
+      const [uuid, timestamp] = id.split("_");
+      return { uuid, timestamp };
+    }, []);
 
   const openModal = (appointment = null) => {
-    setSelectedAppointment(appointment);
+    const raw = appointment?.rawData || appointment;
+    setSelectedAppointment(prepareModalData(raw));
     setIsModalOpen(true);
   };
 
@@ -407,38 +433,39 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   };
 
   const handleSaveAppointment = async (data) => {
+    console.log(data);
     try {
-      // Ensure the appointment is created/updated for the current client
       const appointmentData = {
         ...data,
-        clientId: clientId, // Always use the current client
+        sessionId: data.sessionType,
+        clientId: clientId,
         tenantId,
+        colourCode: data.colorCode,
         accessToken,
         refreshToken,
       };
 
-      if (selectedAppointment) {
-        // Update existing appointment
+      if (selectedAppointment && data.scope) {
+        const { uuid } = splitId(selectedAppointment?.id);
         await api.UpdateAppointments({
           ...appointmentData,
-          id: selectedAppointment.id,
+          id: uuid,
+          forAll: data?.scope === "all",
         });
         showToast("Appointment updated successfully!", "success");
       } else {
-        // Create new appointment
         await api.CreateAppointments(appointmentData);
         showToast("Appointment created successfully!", "success");
       }
 
       closeModal();
-      fetchAppointments(); // Refresh the list
+      fetchAppointments();
     } catch (error) {
       console.error("Failed to save appointment:", error);
       showToast("Failed to save appointment", "error");
     }
   };
 
-  // Calendar navigation
   const handlePrevMonth = () => {
     setCurrentDate(subDays(currentDate, 30));
   };
@@ -536,7 +563,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
                 onClick={handlePrevMonth}
                 className="p-2 text-3xl hover:bg-gray-200 rounded"
               >
-                ‹
+                &lt;
               </button>
               <button onClick={handleToday} className="px-3 py-1 ">
                 Today
@@ -545,7 +572,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
                 onClick={handleNextMonth}
                 className="p-2 text-3xl hover:bg-gray-200 rounded"
               >
-                ›
+                &gt;
               </button>
               <span className="ml-4 font-semibold">
                 {format(currentDate, "MMMM yyyy")}
@@ -584,7 +611,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             <MonthView
               date={currentDate}
               appointments={calendarAppointments}
-              clients={[currentClient].filter(Boolean)} // Only send current client
+              clients={[currentClient].filter(Boolean)}
               onAppointmentClick={handleAppointmentClick}
             />
           </div>
@@ -595,10 +622,12 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         key={selectedAppointment?.id || "new"}
         isOpen={isModalOpen}
         onClose={closeModal}
-        initialData={selectedAppointment}
+        initialData={
+          selectedAppointment?.rawData || selectedAppointment || null
+        }
         isEditMode={!!selectedAppointment}
         onSave={handleSaveAppointment}
-        clients={currentClient ? [currentClient] : []} // Ensure it's always an array
+        clients={currentClient ? [currentClient] : []}
         sessionTypes={sessionTypes}
         staff={staff}
         accessToken={accessToken}

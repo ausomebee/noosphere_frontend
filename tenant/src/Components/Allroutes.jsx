@@ -41,6 +41,7 @@ import FormBuilder from "../Pages/CustomForms/Forms/FormBuilder";
 import FormRenderer from "../Pages/CustomForms/FormRender/FormRenderer";
 import ClientList from "../Pages/Client/ClientList/ClientList";
 import ViewPrograms from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ProgramSub/ViewPrograms";
+import Reports from "../Pages/Reports/Reports";
 
 const AllRoutes = () => {
   return (
@@ -163,6 +164,9 @@ const AllRoutes = () => {
       <Route path="/custom-forms/forms/renderer/:id" element={<FormRenderer />} />
       <Route path="/custom-forms/templates-library" element={<TemplatesLibrary />} />
       
+
+      {/* Reports */}
+         <Route path="/reports" element={<Reports/>} />
     </Routes>
   );
 };

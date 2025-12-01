@@ -14,6 +14,7 @@ import api from "../../../../../api/TenantApis";
 import { showToast } from "../../../../../Helper/ShowToast";
 import { useSelector } from "react-redux";
 import api2 from "../../../../../api/clientPanelApis";
+import api3 from "../../../../../api/customFormsApi";
 import FormLibraryModal from "../../../../../Components/ReusableModal/ClientModal/FormLibraryModal";
 import ClientDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentRequestModal";
 import ClientDocumentUploadModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentUploadModal";
@@ -30,23 +31,38 @@ const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
       <div className="avatar-group">
         {visible.map((person, idx) => (
           <div
-            key={person.id || idx}
-            className="avatar"
+            key={person.id}
+            className="avatar tooltip"
+            data-tip={person.fullName} // This works if you're using react-tooltip or similar
             style={{
               zIndex: visible.length - idx,
               marginLeft: idx === 0 ? 0 : "-8px",
               backgroundColor: person.color || "#6B7280",
+              border: "2px solid white",
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontWeight: "600",
+              fontSize: "12px",
             }}
+            title={person.fullName} // Native HTML tooltip fallback
           >
             {person.initials}
           </div>
         ))}
-        {remaining > 0 && <div className="more-count">+{remaining} more</div>}
+        {remaining > 0 && (
+          <div className="more-count" title={`${remaining} more clinicians`}>
+            +{remaining}
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
 // Accordion Component
 const Accordion = ({ title, isOpen, onToggle, children, badge }) => {
   return (
@@ -111,11 +127,15 @@ const BasicInformation = ({ clientData }) => {
               </div>
               <div className="info-row">
                 <span className="info-label">Date of Birth</span>
-                <span className="info-value">{val(client?.DOB)}</span>
+                <span className="info-value">
+                  {val(client?.DOB ? client.DOB.split("T")[0] : null)}
+                </span>
               </div>
               <div className="info-row">
                 <span className="info-label">Primary Payer</span>
-                <span className="info-value">{val(client?.primaryPayer)}</span>
+                <span className="info-value">
+                  {val(client?.payer?.payerName)}
+                </span>
               </div>
             </div>
 
@@ -203,7 +223,6 @@ const BasicInformation = ({ clientData }) => {
   );
 };
 
-// Documents & Forms
 // Documents & Forms - UPDATED WITH REAL API INTEGRATION
 const DocumentsForms = () => {
   const navigate = useNavigate();
@@ -211,6 +230,8 @@ const DocumentsForms = () => {
   const { accessToken, refreshToken } = useSelector(
     (s) => s.authentication?.user || {}
   );
+  const userId = useSelector((s) => s.authentication?.user?.id);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
 
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
@@ -229,19 +250,68 @@ const DocumentsForms = () => {
   });
 
   // Data States
+  const [formsData, setFormsData] = useState([]); // Assigned to this client
+  const [libraryForms, setLibraryForms] = useState([]);
   const [documentsData, setDocumentsData] = useState([]);
   const [requestsData, setRequestsData] = useState([]);
-  const [formsData, setFormsData] = useState([]);
+  const [selectedDocumentRow, setSelectedDocumentRow] = useState(null);
   const [loading, setLoading] = useState({
     documents: false,
     requests: false,
     forms: false,
+    library: false,
   });
 
   // Dropdown States
   const [docDropdownOpen, setDocDropdownOpen] = useState(false);
   const [formDropdownOpen, setFormDropdownOpen] = useState(false);
 
+  const handleDeleteDocument = async () => {
+    if (!selectedDocumentRow) return;
+
+    // Optional: Add nice confirmation dialog
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${selectedDocumentRow.name}"? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) {
+      setSelectedDocumentRow(null);
+      return;
+    }
+
+    try {
+      await api2.deleteClientsDocument({
+        id: selectedDocumentRow.id,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast("Document deleted successfully", "success");
+
+      // Refresh the list
+      fetchDocuments();
+
+      // Clear selection
+      setSelectedDocumentRow(null);
+    } catch (e) {
+      console.error("Delete error:", e);
+      showToast(
+        e.response?.data?.message || "Failed to delete document",
+        "error"
+      );
+    }
+  };
+  useEffect(() => {
+    if (selectedDocumentRow) {
+      handleDeleteDocument();
+    }
+  }, [selectedDocumentRow]);
+
+  useEffect(() => {
+    if (tenantId) {
+      fetchLibraryForms();
+    }
+  }, [tenantId]);
   // Fetch Documents Data
   const fetchDocuments = async () => {
     setLoading((prev) => ({ ...prev, documents: true }));
@@ -251,20 +321,43 @@ const DocumentsForms = () => {
         accessToken,
         refreshToken,
       });
-    
+
       if (response.data) {
-        const transformedData = response?.data.data.map((doc) => ({
-          id: doc.id,
-          name: doc.name,
-          dateCreated: new Date().toLocaleDateString(), // You might want to get actual date from API
-          createdBy: "System", // Adjust based on your API response
-          hasActions: true,
-          fileUrl: doc.documentDetails?.fileUrl,
-          fileType: doc.documentDetails?.type,
-        }));
+        const transformedData = (response?.data?.data || []).map((doc) => {
+          // Safely parse the date
+          const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
+          const dateCreated =
+            createdAt && !isNaN(createdAt)
+              ? createdAt.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "—";
+
+          // Safely get createdBy name (fallback to "System" or ID)
+          const createdBy =
+            doc.tenantStaff?.fullName ||
+            doc.tenantStaff?.name ||
+            doc.tenantStaff?.email ||
+            doc.createdBy ||
+            "System";
+
+          return {
+            id: doc.id,
+            name: doc.name || "Untitled Document",
+            dateCreated,
+            createdBy,
+            hasActions: true,
+            fileUrl: doc.documentDetails?.fileUrl || null,
+            fileType:
+              doc.documentDetails?.type ||
+              doc.documentDetails?.fileType ||
+              "application/octet-stream",
+          };
+        });
         setDocumentsData(transformedData);
       }
-      
     } catch (error) {
       showToast("Failed to fetch documents", "error");
     } finally {
@@ -291,14 +384,86 @@ const DocumentsForms = () => {
     }
   };
 
+  const fetchClientForms = async () => {
+    setLoading((prev) => ({ ...prev, forms: true }));
+    try {
+      const res = await api2.GetAllFormsByTenantClientId({
+        tenantClientId,
+        accessToken,
+        refreshToken,
+      });
+
+      const forms = (res?.data?.data || []).map((f) => ({
+        id: f.id,
+        name: f.form.name,
+        dateCreated: f.createdAt
+          ? new Date(f.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "—",
+        status: f.status || "Assigned",
+        hasActions: true,
+      }));
+
+      setFormsData(forms);
+    } catch (err) {
+      showToast("Failed to load client forms", "error");
+    } finally {
+      setLoading((prev) => ({ ...prev, forms: false }));
+    }
+  };
+
+  // === FETCH TENANT FORM LIBRARY ===
+  const fetchLibraryForms = async () => {
+    if (!tenantId) return;
+    setLoading((prev) => ({ ...prev, library: true }));
+    try {
+      const res = await api3.GetFormsByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const library = (res?.data?.data || []).map((f) => ({
+        id: f.id,
+        name: f.name || "Untitled Form",
+      }));
+      console.log(library);
+
+      setLibraryForms(library);
+    } catch (err) {
+      showToast("Failed to load form library", "error");
+    } finally {
+      setLoading((prev) => ({ ...prev, library: false }));
+    }
+  };
+
+  // === IMPORT FORM TO CLIENT ===
+  const handleImportForm = async (formId, formName) => {
+    try {
+      await api2.AttachFormToClient({
+        tenantClientId,
+        formId,
+        accessToken,
+        refreshToken,
+      });
+      showToast(`"${formName}" assigned successfully`, "success");
+      fetchClientForms(); // Refresh assigned forms
+      setIsFormLibraryOpen(false);
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || "Failed to assign form",
+        "error"
+      );
+    }
+  };
   // Fetch data when tab changes
   useEffect(() => {
-    if (activeTab === "documents") {
-      fetchDocuments();
-    } else if (activeTab === "requests") {
-      fetchDocumentRequests();
-    }
-    // Add forms fetching if you have an endpoint for it
+    if (activeTab === "documents") fetchDocuments();
+    if (activeTab === "requests") fetchDocumentRequests();
+    if (activeTab === "forms") fetchClientForms();
   }, [activeTab, tenantClientId]);
 
   const toggleRow = (id) => {
@@ -335,20 +500,19 @@ const DocumentsForms = () => {
         }
       },
     },
-    {
-      type: "icon",
-      label: "Edit",
-      icon: <FiEdit2 className="w-5 h-5 text-gray-600" />,
-      onClick: (row) => navigate(`/documents/edit/${row.id}`),
-    },
+    // {
+    //   type: "icon",
+    //   label: "Edit",
+    //   icon: <FiEdit2 className="w-5 h-5 text-gray-600" />,
+    //   onClick: (row) => navigate(`/documents/edit/${row.id}`),
+    // },
     {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
       onClick: (row) => {
-        if (window.confirm(`Delete ${row.name}?`)) {
-          console.log("Delete", row.id);
-        }
+        // Set the row first, then ask for confirmation
+        setSelectedDocumentRow(row);
       },
     },
   ];
@@ -373,7 +537,6 @@ const DocumentsForms = () => {
   const formsColumns = [
     { header: "Name", key: "name" },
     { header: "Date Created", key: "dateCreated" },
-    { header: "Due Date", key: "dueDate" },
     {
       header: "Status",
       key: "status",
@@ -389,12 +552,36 @@ const DocumentsForms = () => {
     },
   ];
 
+  const formsActions = [
+    {
+      type: "dropdown",
+      label: "More",
+      items: [
+        {
+          label: "View Form",
+          onClick: (row) =>
+            navigate(`/custom-forms/forms/renderer/${row.id}`),
+        },
+        {
+          label: "Nudge Client",
+          onClick: (row) => {
+            // Implement nudge functionality
+            showToast(`Nudge sent for form "${row.name}"`, "success");
+          }
+        },
+       
+      ],
+      className: "more-dropdown",
+    },
+  ];
+
   // ENDPOINT HANDLERS - UPDATED
   const handleUploadDocument = async (doc) => {
     try {
       await api2.CreateClientDocuments({
         tenantClientId,
         name: doc.name,
+        createdBy: userId,
         documentDetails: {
           size: doc.documentDetails.size,
           type: doc.documentDetails.fileType,
@@ -427,20 +614,6 @@ const DocumentsForms = () => {
       fetchDocumentRequests(); // Refresh the requests list
     } catch (err) {
       showToast("Failed to create request", "error");
-    }
-  };
-
-  const handleImportForm = async (formId, formName) => {
-    try {
-      await api2.AttachFormToClient({
-        tenantClientId,
-        formId,
-        accessToken,
-        refreshToken,
-      });
-      showToast(`"${formName}" imported`, "success");
-    } catch (err) {
-      showToast("Import failed", "error");
     }
   };
 
@@ -549,7 +722,10 @@ const DocumentsForms = () => {
                   label="New form"
                   icon={<FiChevronDown />}
                   iconPosition="right"
-                  onClick={() => setFormDropdownOpen(!formDropdownOpen)}
+                  onClick={() => {
+                    fetchLibraryForms();
+                    setFormDropdownOpen(!formDropdownOpen);
+                  }}
                 />
                 {formDropdownOpen && (
                   <div className="timesheet-dropdown">
@@ -656,13 +832,10 @@ const DocumentsForms = () => {
                                       <div className="space-y-4">
                                         <div className="items-center justify-center flex">
                                           <div>
-                                            {req.note && (
-                                              <p className="text-sm italic text-gray-600">
-                                                {req.note}
-                                              </p>
-                                            )}
-                                            {req.status ===
-                                              "Pending upload" && (
+                                            <h3 className="text-base  text-gray-800">
+                                              Awaiting Upload from the Client..
+                                            </h3>
+                                            {req.status === "PENDING" && (
                                               <div className="flex gap-6">
                                                 <button className="text-primary font-600 text-base hover:underline cursor-pointer">
                                                   Nudge
@@ -783,12 +956,12 @@ const DocumentsForms = () => {
               <CustomTable
                 data={formsData}
                 columns={formsColumns}
-                showActions={false}
-                showCheckbox={false}
-                filters={[]}
-                tableName="forms"
-                itemsPerPage={10}
                 loading={loading.forms}
+                tableName="Assigned Forms"
+                itemsPerPage={10}
+                showCheckbox={false}
+                showActions={true}
+                actions={formsActions}
               />
             )}
           </div>
@@ -821,12 +994,13 @@ const DocumentsForms = () => {
         isOpen={isFormLibraryOpen}
         onClose={() => setIsFormLibraryOpen(false)}
         onSelectForm={handleImportForm}
-        forms={[]}
-        loading={false}
+        forms={libraryForms}
+        loading={loading.library}
       />
     </>
   );
 };
+
 // Main Tab Component - ONLY THE PAYLOAD IS CLEANED (empty values excluded)
 const ClientInformationTab = ({ clientData, isViewMode = false }) => {
   const [isManageOpen, setIsManageOpen] = useState(false);
@@ -838,21 +1012,51 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
     (s) => s.authentication?.user || {}
   );
 
-  const assignees = [
-    { id: 1, initials: "MW", color: "#8B5CF6" },
-    { id: 2, initials: "JK", color: "#EC4899" },
-    { id: 3, initials: "AE", color: "#FBBF24" },
-    { id: 4, initials: "TL", color: "#10B981" },
-  ];
+  // WITH THIS REAL ONE:
+  const assignees = useMemo(() => {
+    return (
+      clientData?.clinicians?.map((clinician) => {
+        const fullName = clinician.fullName || "Unknown";
+        const nameParts = fullName.trim().split(" ");
+        const initials =
+          nameParts.length >= 2
+            ? `${nameParts[0][0]}${
+                nameParts[nameParts.length - 1][0]
+              }`.toUpperCase()
+            : fullName.slice(0, 2).toUpperCase();
+
+        // Optional: generate consistent color from name or ID
+        const colors = [
+          "#8B5CF6",
+          "#EC4899",
+          "#F59E0B",
+          "#10B981",
+          "#3B82F6",
+          "#EF4444",
+          "#6366F1",
+          "#14B8A6",
+          "#F97316",
+          "#06B6D4",
+        ];
+        const color = colors[clinician.id.charCodeAt(0) % colors.length];
+
+        return {
+          id: clinician.id,
+          fullName: fullName,
+          initials,
+          color,
+        };
+      }) || []
+    );
+  }, [clientData?.clinicians]);
 
   const handleUpdateClient = async (data) => {
     setIsUpdating(true);
 
     // Build payload dynamically — only include non-empty values
     const payload = {
-      id: clientData?.client?.id,
+      id: clientData?.clientId,
       tenantId: clientData?.tenantId,
-      pipelineStageId: "99e9b9fe-ed4f-48ee-857e-e6a3d7e6a3cb",
       accessToken,
       refreshToken,
     };
@@ -877,7 +1081,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
     addIfValue("state", data.state);
     addIfValue("country", data.country || "US");
     addIfValue("zipCode", data.zip);
-    addIfValue("assignToClinician", data.assignToClinician);
+    addIfValue("assignToClinicians", data.assignToClinicians);
     addIfValue("clientPortalAccess", data.clientPortalAccess);
     addIfValue("caregiverName", data.caregiverName);
     addIfValue("caregiverRelationship", data.caregiverRelationship);

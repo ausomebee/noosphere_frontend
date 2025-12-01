@@ -86,11 +86,11 @@ const TargetLibraryModal = ({
           </div>
         ) : (
           <>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {currentItems.map((target) => (
                 <div
                   key={target.id}
-                  className="flex items-center justify-between p-5 bg-gray-50 hover:bg-gray-100 rounded-md transition-all group border border-gray-200"
+                  className="flex items-center justify-between p-5 bg-gray-50 hover:bg-gray-100 rounded-md transition-all group border border-gray-200 mb-4"
                 >
                   <div>
                     <h4 className="font-semibold text-gray-900 text-base">

@@ -56,6 +56,7 @@ const ViewPrograms = () => {
           targetName: t.name,
           description: t.description || "—",
           hasActions: true,
+          rawData: t,
         }))
       );
     } catch (e) {
@@ -102,6 +103,7 @@ const ViewPrograms = () => {
       await api.AttachTargetToClient({
         clientId,
         targetId,
+        programId,
         accessToken,
         refreshToken,
       });
@@ -179,6 +181,7 @@ const ViewPrograms = () => {
     { header: "Description", key: "description", type: "text" },
   ];
 
+  const domainName = clientName;
   const actions = [
     {
       type: "dropdown",
@@ -188,7 +191,11 @@ const ViewPrograms = () => {
           label: "View Data",
           onClick: (row) =>
             navigate(
-              `/client/${clientId}/program/${programId}/target/${row.id}/data`
+              `/target-single/${encodeURIComponent(
+                domainName
+              )}/${encodeURIComponent(programName)}/${encodeURIComponent(
+                row.targetName
+              )}?targetId=${row.id}&clientId=${clientId}`
             ),
         },
         {
@@ -291,9 +298,84 @@ const ViewPrograms = () => {
         }}
         onSubmit={handleModalSubmit}
         mode={modalMode}
-        initialData={selectedTargetRow}
         programId={programId}
         clientId={clientId}
+        initialData={
+          selectedTargetRow
+            ? {
+                // Core
+                id: selectedTargetRow.id,
+                name: selectedTargetRow.targetName,
+                description:
+                  selectedTargetRow.description === "—"
+                    ? ""
+                    : selectedTargetRow.description,
+                sd: selectedTargetRow.rawData?.sd || "",
+                expectedResponse:
+                  selectedTargetRow.rawData?.expectedResponse || "",
+
+                // Direct mappings
+                teachingProcedure:
+                  selectedTargetRow.rawData?.teachingProcedure || "",
+                dataCollectionType:
+                  selectedTargetRow.rawData?.dataCollectionType || "",
+                baselineDataRequired: Boolean(
+                  selectedTargetRow.rawData?.baselineDataRequired
+                ),
+                statusAndAdmin:
+                  selectedTargetRow.rawData?.initialStatus ||
+                  selectedTargetRow.rawData?.statusAndAdmin ||
+                  "",
+                note:
+                  selectedTargetRow.rawData?.note ||
+                  selectedTargetRow.rawData?.notes ||
+                  "",
+                masteryMetric: selectedTargetRow.rawData?.masteryMetric || "",
+                masteryCriteria:
+                  selectedTargetRow.rawData?.masteryCriteria || {},
+
+                // Trial settings
+                trialOrOpportunitiesSession:
+                  selectedTargetRow.rawData?.numberOfTrials ||
+                  selectedTargetRow.rawData?.numberOfTasks ||
+                  "",
+                percentageCorrectTrialSession:
+                  selectedTargetRow.rawData?.numberOfTrials || "",
+
+                // Task steps
+                taskSteps: Array.isArray(selectedTargetRow.rawData?.taskSteps)
+                  ? selectedTargetRow.rawData.taskSteps
+                  : [],
+
+                // THIS IS THE ONLY FIX NEEDED:
+                promptingStrategy: (() => {
+                  const raw = selectedTargetRow.rawData?.promptingStrategy;
+                  if (!raw || !Array.isArray(raw)) return [];
+
+                  return raw
+                    .map((item) => {
+                      // If it's a JSON string → parse it
+                      if (typeof item === "string") {
+                        try {
+                          const parsed = JSON.parse(item);
+                          return parsed.value || parsed.label || item;
+                        } catch {
+                          return item;
+                        }
+                      }
+                      // If it's already an object
+                      if (typeof item === "object" && item !== null) {
+                        return item.value || item.label || "";
+                      }
+                      return item;
+                    })
+                    .filter(Boolean);
+                })(),
+
+                attachment: null, // Never pre-fill file input
+              }
+            : null
+        }
       />
 
       <DeleteLibraryModal

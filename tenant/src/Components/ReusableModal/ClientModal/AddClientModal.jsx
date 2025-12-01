@@ -39,9 +39,13 @@ const schema = yup.object().shape({
   streetAddress: yup.string().nullable(),
   city: yup.string().nullable(),
   state: yup.string().nullable(),
-  zip: yup.string().nullable(),
+  zipCode: yup.string().nullable(),
   country: yup.string().nullable(),
-  assignToClinician: yup.array().of(yup.string()).nullable(),
+  assignToClinician: yup
+    .array()
+    .of(yup.string().uuid().required())
+    .nullable()
+    .default([]),
   clientPortalAccess: yup.boolean().optional(),
   caregiverName: yup.string().nullable(),
   caregiverRelationship: yup.string().nullable(),
@@ -50,7 +54,7 @@ const schema = yup.object().shape({
   caregiverStreetAddress: yup.string().nullable(),
   caregiverCity: yup.string().nullable(),
   caregiverState: yup.string().nullable(),
-  caregiverZip: yup.string().nullable(),
+  caregiverzipCode: yup.string().nullable(),
   caregiverCountry: yup.string().nullable(),
 
   documentName: yup.string().when("hasDocument", {
@@ -129,6 +133,7 @@ const usStates = [
 ];
 
 const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
+
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("Basic Information");
   const [submitting, setSubmitting] = useState(false);
@@ -154,8 +159,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       return "";
     }
   };
-
-
 
   // Fetch Clinicians & Payers
   const fetchClinicians = useCallback(async () => {
@@ -207,8 +210,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   }, [isOpen, fetchClinicians, fetchPayers]);
 
   const defaultValues = useMemo(() => {
-
-    
     const docs = initialData?.client?.documents?.[0];
     const hasDoc = !!docs?.documentDetails?.fileUrl;
 
@@ -224,9 +225,9 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       streetAddress: initialData?.client?.streetAddress || "",
       city: initialData?.client?.city || "",
       state: initialData?.client?.state || "",
-      zip: initialData?.client?.zipCode || "",
+      zipCode: initialData?.client?.zipCodeCode || "",
       country: initialData?.client?.country || "US",
-      assignToClinician: initialData?.client?.assignToClinician || [],
+      assignToClinician: initialData?.clinicians?.map((c) => c.id) || [],
       clientPortalAccess: initialData?.dbAccess ?? false,
       caregiverName: initialData?.client?.caregiverName || "",
       caregiverRelationship: initialData?.client?.caregiverRelationship || "",
@@ -235,7 +236,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       caregiverStreetAddress: initialData?.client?.caregiverStreetAddress || "",
       caregiverCity: initialData?.client?.caregiverCity || "",
       caregiverState: initialData?.client?.caregiverState || "",
-      caregiverZip: initialData?.client?.caregiverZip || "",
+      caregiverzipCode: initialData?.client?.caregiverzipCode || "",
       caregiverCountry: initialData?.client?.caregiverCountry || "US",
 
       documentName: hasDoc ? docs.name : "",
@@ -362,7 +363,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="ZIP Code" {...register("zip")} />
+              <TextInput label="zipCode Code" {...register("zipCode")} />
               <Controller
                 name="country"
                 control={control}
@@ -442,7 +443,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="ZIP" {...register("caregiverZip")} />
+              <TextInput label="zipCode" {...register("caregiverzipCode")} />
               <Controller
                 name="caregiverCountry"
                 control={control}
@@ -476,11 +477,13 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             <FileUploadArea
               onUploadComplete={handleFileUpload}
               initialFiles={
-                initialData?.documents?.[0]?.documentDetails
+                initialData?.client?.documents?.[0]
                   ? [
                       {
-                        filename: initialData.documents[0].name || "Document",
-                        url: initialData.documents[0].documentDetails.fileUrl,
+                        filename:
+                          initialData.client.documents[0].name || "Document",
+                        url: initialData.client.documents[0].documentDetails
+                          .fileUrl,
                       },
                     ]
                   : uploadedDocument
@@ -496,17 +499,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               maxSizeMB={10}
               hint="PDF, PNG, JPG — Max 10MB (ID, Passport, Insurance Card)"
             />
-
-            {uploadedDocument && documentName && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-blue-900">
-                  Will be saved as:
-                </p>
-                <p className="text-sm text-blue-800">
-                  "{documentName}" — {uploadedDocument.name}
-                </p>
-              </div>
-            )}
           </div>
         ),
       },
@@ -516,7 +508,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       loadingClinicians,
       payers,
       loadingPayers,
-      documentName,
       handleFileUpload,
       control,
       uploadedDocument,
@@ -552,8 +543,18 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     try {
       const submitData = { ...data };
 
-      // Use the actual uploaded file from state
-      if (uploadedDocument && data.documentName) {
+      // Transform assignToClinician (array of strings) → assignToClinicians (array of {id})
+      submitData.assignToClinicians = (data.assignToClinician || []).map(
+        (id) => ({
+          id,
+        })
+      );
+
+      // Remove the temporary form field
+      delete submitData.assignToClinician;
+
+      // Handle document upload
+      if (uploadedDocument && data.documentName?.trim()) {
         submitData.documents = [
           {
             name: data.documentName.trim(),
@@ -571,6 +572,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       delete submitData.documentName;
       delete submitData.hasDocument;
 
+      // Remove unused fields
       const cleaned = Object.fromEntries(
         Object.entries(submitData).filter(
           ([_, v]) =>
@@ -580,6 +582,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
       console.log("FINAL PAYLOAD →", cleaned);
       await onSubmit(cleaned);
+
       dispatch(resetDraft());
       onClose();
     } catch (err) {

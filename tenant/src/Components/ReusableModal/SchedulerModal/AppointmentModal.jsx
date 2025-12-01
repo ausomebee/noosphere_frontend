@@ -34,7 +34,7 @@ const AppointmentModal = ({
   sessionTypes,
   staff,
 }) => {
- 
+ console.log(initialData)
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -48,7 +48,7 @@ const AppointmentModal = ({
     label: `${client.client.firstName || ''} ${client.client.lastName || ''}`.trim() || "Unknown  Client",
   }));
 
-  console.log(staff)
+
 
   const clinicianOptions = useMemo(
     () =>
@@ -475,6 +475,10 @@ useEffect(() => {
   }
 }, [initialData, isEditMode, reset, watch]);
 
+const transformClinicians = (clinicianIds = []) => {
+  return clinicianIds.map(id => ({ id }));
+};
+
   const handleSubmitForm = async (data) => {
     setIsLoading(true);
     try {
@@ -521,7 +525,7 @@ useEffect(() => {
         endTime: data.endTime,
         client: data.client,
         sessionType: data.sessionType,
-        clinicians: data.clinicians,
+        clinicians: transformClinicians(data.clinicians),
         service: data.service.map((svc) => ({
           serviceType: svc.serviceType,
           modifierType: svc.modifierType || "",
@@ -627,7 +631,7 @@ useEffect(() => {
         endTime: data.endTime,
         client: data.client,
         sessionType: data.sessionType,
-        clinicians: data.clinicians,
+       clinicians: transformClinicians(data.clinicians),
         service: data.service,
         serviceLocation: data.serviceLocation,
         isRecurring: data.isRecurring,
