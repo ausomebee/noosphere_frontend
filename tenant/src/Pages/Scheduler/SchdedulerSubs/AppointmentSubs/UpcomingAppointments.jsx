@@ -38,6 +38,13 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
+  const splitId = useCallback((id) => {
+    if (!id) return { uuid: null, timestamp: null };
+    if (!id.includes("_")) return { uuid: id, timestamp: null };
+    const [uuid, timestamp] = id.split("_");
+    return { uuid, timestamp };
+  }, []);
+
   // Fetch master appointments
   const fetchAppointments = useCallback(async () => {
     try {
@@ -127,7 +134,10 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
 
       return {
         id: appt.id,
-          clientName: `${appt.client?.firstName || ''} ${appt.client?.lastName || ''}`.trim() || "Unknown Client",
+        clientName:
+          `${appt.client?.firstName || ""} ${
+            appt.client?.lastName || ""
+          }`.trim() || "Unknown Client",
         therapistName:
           appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
         serviceType: truncated,
@@ -319,6 +329,26 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     }
   };
 
+  const getAppointmentUuid = useCallback((id) => {
+    if (!id) return null;
+    return id.includes("_") ? id.split("_")[0] : id;
+  }, []);
+
+  // Handle "Start Appointment" click from table row
+  const handleStartAppointment = useCallback(
+    (item) => {
+      const appointmentId = getAppointmentUuid(item.id);
+      const clientId = item.rawData?.client?.id || item.rawData?.clientId;
+
+      if (!appointmentId || !clientId) {
+        showToast("Cannot start: missing appointment or client ID", "error");
+        return;
+      }
+
+      navigate(`/appointments/start/${appointmentId}/${clientId}`);
+    },
+    [navigate, getAppointmentUuid]
+  );
   // Actions dropdown
   const Actions = [
     {
@@ -335,7 +365,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
         {
           label: "Start Appointment",
           icon: <IoCheckmarkCircleOutline />,
-          onClick: (item) => navigate(`/start-appointment/details/${item.id}`),
+          onClick: handleStartAppointment,
           className: "text-primary font-bold bg-brand-50",
         },
       ],

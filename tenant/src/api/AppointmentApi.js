@@ -1,6 +1,4 @@
-import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
-import { get } from "react-hook-form";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
@@ -285,7 +283,6 @@ const RescheduleAppointments = async ({
       isRecurring: false,
       recurrence: {},
       rescheduled,
-   
     };
 
     console.log("Sending payload:", payload);
@@ -413,7 +410,6 @@ const RejectRescheduledReq = async ({
   }
 };
 
-
 const GetUpcomingAppointmentByTenantId = async ({
   tenantId,
   accessToken,
@@ -446,12 +442,10 @@ const GetUpcomingAppointmentByStaffId = async ({
     return response;
   } catch (error) {
     throw new Error(
-      error.message ||
-        "Get staff All Upcoming Appointments by staff id failed"
+      error.message || "Get staff All Upcoming Appointments by staff id failed"
     );
   }
 };
-
 
 const GetPastAppointmentByTenantId = async ({
   tenantId,
@@ -466,8 +460,7 @@ const GetPastAppointmentByTenantId = async ({
     return response;
   } catch (error) {
     throw new Error(
-      error.message ||
-        "Get Tenant All past Appointments by tenant id failed"
+      error.message || "Get Tenant All past Appointments by tenant id failed"
     );
   }
 };
@@ -485,9 +478,74 @@ const GetPastAppointmentByStaffId = async ({
     return response;
   } catch (error) {
     throw new Error(
-      error.message ||
-        "Get staff All Past Appointments by staff id failed"
+      error.message || "Get staff All Past Appointments by staff id failed"
     );
+  }
+};
+
+const GetClientProgramAndTargetsDetails = async ({
+  clientId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/client-programs/target/${clientId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.message || "Get Client Appointments Details by client id failed"
+    );
+  }
+};
+const GetClientAppointmentDetails = async ({
+  Id,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/appointments/${Id}`);
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.message || "Get Client Appointments Details by client id failed"
+    );
+  }
+};
+
+const SubmitStartAppointment = async ({
+  appointmentId,
+  note,
+  startTime,
+  endTime,
+  travelStartTime,
+  travelEndTime,
+  sessionDatas,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const payload = {
+      appointmentId,
+      note,
+      startTime,
+      endTime,
+      travelStartTime,
+      travelEndTime,
+      sessionDatas,
+    };
+
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/sessions`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Submitting Appointment failed");
   }
 };
 
@@ -512,5 +570,9 @@ export default {
   GetUpcomingAppointmentByStaffId,
   GetPastAppointmentByTenantId,
   GetPastAppointmentByStaffId,
-  GetAllAppointments
+  GetAllAppointments,
+
+  GetClientProgramAndTargetsDetails,
+  GetClientAppointmentDetails,
+  SubmitStartAppointment
 };

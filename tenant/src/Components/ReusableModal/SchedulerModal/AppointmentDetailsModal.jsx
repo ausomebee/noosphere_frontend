@@ -1,8 +1,9 @@
-import React, { useRef, useMemo, useEffect, useState } from "react";
+import React, { useRef, useMemo, useEffect, useState, useCallback } from "react";
 import Button from "../../Button/Button";
 import { RxCross2 } from "react-icons/rx";
 import { FiRefreshCw, FiEdit2 } from "react-icons/fi";
 import { format, parse, isValid } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const AppointmentDetailsModal = ({
   isOpen,
@@ -17,6 +18,15 @@ const AppointmentDetailsModal = ({
 }) => {
   const modalRef = useRef(null);
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
+  const navigate = useNavigate();
+
+  
+const splitId = useCallback((id) => {
+  if (!id) return { uuid: null, timestamp: null };
+  if (!id.includes("_")) return { uuid: id, timestamp: null };
+  const [uuid, timestamp] = id.split("_");
+  return { uuid, timestamp };
+}, []);
 
   // Measure modal size after render
   useEffect(() => {
@@ -28,25 +38,30 @@ const AppointmentDetailsModal = ({
 
   const parseTime = (timeStr, dateStr) => {
     const defaultDate = new Date();
-    if (!timeStr || !dateStr || typeof timeStr !== "string" || typeof dateStr !== "string") {
-
+    if (
+      !timeStr ||
+      !dateStr ||
+      typeof timeStr !== "string" ||
+      typeof dateStr !== "string"
+    ) {
       return defaultDate;
     }
 
     try {
       const normalizedTime = timeStr.replace(/:\d{2}$/, "");
-      const parsedDate = parse(`${dateStr} ${normalizedTime}`, "yyyy-MM-dd HH:mm", new Date());
+      const parsedDate = parse(
+        `${dateStr} ${normalizedTime}`,
+        "yyyy-MM-dd HH:mm",
+        new Date()
+      );
       if (!isValid(parsedDate)) {
-       
         return defaultDate;
       }
       return parsedDate;
     } catch (error) {
-
       const [h, m] = timeStr.split(":");
       const d = new Date(dateStr);
       if (!isValid(d)) {
-       
         return defaultDate;
       }
       d.setHours(Number(h) || 0, Number(m?.slice(0, 2)) || 0, 0, 0);
@@ -61,39 +76,39 @@ const AppointmentDetailsModal = ({
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    
+
     // Convert click position to pixels
     const clickX = position.x;
     const clickY = position.y;
-    
+
     // Use measured modal size or fallback
     const modalWidth = modalSize.width || 400; // fallback width
     const modalHeight = modalSize.height || 300; // fallback height
-    
+
     const offset = 10; // pixel offset from click position
-    
+
     // Calculate initial position (below and right of click)
     let x = clickX + offset;
     let y = clickY + offset;
-    
+
     // Check right boundary
     if (x + modalWidth > vw) {
       x = clickX - modalWidth - offset; // position to the left
     }
-    
+
     // Check bottom boundary
     if (y + modalHeight > vh) {
       y = clickY - modalHeight - offset; // position above
     }
-    
+
     // Ensure modal stays within viewport
     x = Math.max(0, Math.min(x, vw - modalWidth));
     y = Math.max(0, Math.min(y, vh - modalHeight));
-    
+
     // Convert back to viewport units for styling
     return {
       x: (x / vw) * 100,
-      y: (y / vh) * 100
+      y: (y / vh) * 100,
     };
   }, [isOpen, appointment, position, modalSize]);
 
@@ -105,9 +120,10 @@ const AppointmentDetailsModal = ({
   const startTime = isValid(start) ? format(start, "h:mm a") : "Invalid Time";
   const endTime = isValid(end) ? format(end, "h:mm a") : "Invalid Time";
   const timeRange = `${startTime} - ${endTime}`;
-  const dateDisplay = appointment.date && isValid(new Date(appointment.date))
-    ? format(new Date(appointment.date), "MM/dd/yyyy")
-    : "Invalid Date";
+  const dateDisplay =
+    appointment.date && isValid(new Date(appointment.date))
+      ? format(new Date(appointment.date), "MM/dd/yyyy")
+      : "Invalid Date";
 
   const getRecurrenceDescription = () => {
     if (!appointment.isRecurring || !appointment.recurrence)
@@ -140,6 +156,24 @@ const AppointmentDetailsModal = ({
     return "Custom Recurrence";
   };
 
+
+// Updated handler
+const handleStartAppointment = () => {
+  if (!appointment?.id || !appointment?.clientId) {
+    alert("Missing appointment or client ID");
+    return;
+  }
+
+  const { uuid: appointmentUuid } = splitId(appointment.id);
+
+  if (!appointmentUuid) {
+    alert("Invalid appointment ID");
+    return;
+  }
+
+  // Use only the clean UUID part
+  navigate(`/appointments/start/${appointmentUuid}/${appointment.clientId}`);
+};
   return (
     <div
       ref={modalRef}
@@ -188,7 +222,8 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <span className="detail-label">Therapist</span>
                   <span className="detail-value">
-                    {appointment.clinicianNames?.join(", ") || "Unknown Therapist"}
+                    {appointment.clinicianNames?.join(", ") ||
+                      "Unknown Therapist"}
                   </span>
                 </div>
               </div>
@@ -210,7 +245,9 @@ const AppointmentDetailsModal = ({
                   <span className="detail-value">
                     {appointment.service
                       ?.map((svc) => {
-                        const mod = svc.modifierType ? ` (${svc.modifierType})` : "";
+                        const mod = svc.modifierType
+                          ? ` (${svc.modifierType})`
+                          : "";
                         return `${svc.serviceType}${mod}`;
                       })
                       .join(", ") || "Not specified"}
@@ -266,7 +303,7 @@ const AppointmentDetailsModal = ({
             label="Start Appointment"
             variant="primary"
             width="w-full"
-            onClick={onClose}
+            onClick={handleStartAppointment}
           />
         </div>
       </div>

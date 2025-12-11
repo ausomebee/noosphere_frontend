@@ -9,7 +9,7 @@ import Authorizations from "../Dashboard/DashboardCards/Authorizations";
 import ProductivityInformation from "../Dashboard/DashboardCards/ProductivityInformation";
 import UpcomingAppointments from "../Dashboard/DashboardCards/UpcomingAppointments";
 import { SelectInput } from "../../Components/Input/Inputs";
-import { Controller } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 const DashboardCard = ({
   title,
@@ -21,8 +21,11 @@ const DashboardCard = ({
   onMove,
   count,
   selectInputs = [],
+  viewMoreRoute,
+  onViewMore,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const navigate = useNavigate();
 
   const handleDragStart = (e) => {
     setIsDragging(true);
@@ -31,6 +34,14 @@ const DashboardCard = ({
 
   const handleDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const handleViewMoreClick = () => {
+    if (onViewMore) {
+      onViewMore();
+    } else if (viewMoreRoute) {
+      navigate(viewMoreRoute);
+    }
   };
 
   return (
@@ -48,52 +59,45 @@ const DashboardCard = ({
       }}
     >
       <div className="flex flex-col gap-4">
-        {/* Header Section */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <h3 className="text-base font-semibold text-color-sec ">
+            <h3 className="text-base font-semibold text-color-sec">
               <span>{title}</span>
-              {count !== undefined && count !== null && (
-                <span className="ml-2 bg-blue-600 text-white px-2  rounded-lg inline-block">
+              {count !== undefined && count !== null && count > 0 && (
+                <span className="ml-2 bg-blue-600 text-white px-2 py-2 rounded-full text-base  font-bold">
                   {count}
                 </span>
               )}
             </h3>
+
             {selectInputs.length > 0 && (
               <div className="flex items-center gap-4 mt-4">
                 {selectInputs.map((input, idx) => (
-                  // <Controller
-                  //   name="customRecurrenceUnit"
-                  //   control={control}
-                  //   render={({ field }) => (
-                      <SelectInput
-                        key={idx}
-                        options={input.options}
-                        value={input.value}
-                        onChange={input.onChange}
-                        disabled={!hasData}
-                        // {...Buttonfield}
-                        // {...field}
-                      />
-                  //   )}
-                  // />
+                  <SelectInput
+                    key={idx}
+                    options={input.options}
+                    value={input.value}
+                    onChange={input.onChange}
+                    disabled={!hasData}
+                  />
                 ))}
               </div>
             )}
           </div>
+
           <div className="flex items-center gap-4">
             <Menu as="div" className="relative">
               <Menu.Button
-                className={`
-                  button-base
-                  ${!hasData ? "button-disabled" : "button-hover:hover"}
-                `}
+                className={`button-base ${
+                  !hasData ? "button-disabled" : "button-hover:hover"
+                }`}
                 disabled={!hasData}
               >
                 <HiOutlineCog6Tooth size={24} />
               </Menu.Button>
+
               {hasData && (
-                <Menu.Items className="absolute right-0 mt-2 w-150 bg-white border border-gray-200 p-6 rounded-md shadow-lg">
+                <Menu.Items className="absolute right-0 mt-2 w-150 bg-white border border-gray-200 p-6 rounded-md shadow-lg z-50">
                   <Menu.Item>
                     {({ active }) => (
                       <button
@@ -123,32 +127,35 @@ const DashboardCard = ({
                 </Menu.Items>
               )}
             </Menu>
-            {hasData && title !== "Productivity Information" && (
-              <Button
-                label="View more"
-                variant="important"
-                onClick={() => (window.location.href = "/view-more")}
-                className="text-sm"
-                icon={
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="#003A9B"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    style={{ marginLeft: "8px" }}
-                  >
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                }
-                iconPosition="right"
-              />
-            )}
+
+            {hasData &&
+              (viewMoreRoute || onViewMore) &&
+              title !== "Productivity Information" && (
+                <Button
+                  label="View more"
+                  variant="important"
+                  onClick={handleViewMoreClick}
+                  className="text-sm"
+                  icon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="#003A9B"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      style={{ marginLeft: "8px" }}
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  }
+                  iconPosition="right"
+                />
+              )}
           </div>
         </div>
-        {/* Content Section */}
+
         <div className="content-area">{children}</div>
       </div>
     </div>
@@ -156,48 +163,81 @@ const DashboardCard = ({
 };
 
 const Dashboard = () => {
+  // State for all controlled inputs
+  const [upcomingAppointmentsCount, setUpcomingAppointmentsCount] = useState(0);
+  const [authorizationStatus, setAuthorizationStatus] = useState("expired");
+  const [authorizationModalOpen, setAuthorizationModalOpen] = useState(false);
+  const [sessionType, setSessionType] = useState("completedSessions");
+  const [sessionPeriod, setSessionPeriod] = useState("period");
+
   const [cards, setCards] = useState([
-    { title: "Intake Pipeline", hasData: true },
+    {
+      title: "Intake Pipeline",
+      hasData: true,
+      viewMoreRoute: "/clients/pipeline",
+    },
     {
       title: "Session Information",
       hasData: true,
-      selectInputs: [
-        {
-          options: [
-            { value: "completedSessions", label: "Completed Sessions" },
-            { value: "scheduledSessions", label: "Scheduled Sessions" },
-          ],
-          value: "completedSessions",
-          onChange: () => {},
-        },
-        {
-          options: [
-            { value: "period", label: "Period" },
-            { value: "month", label: "Month" },
-          ],
-          value: "period",
-          onChange: () => {},
-        },
-      ],
+      viewMoreRoute: "/billing/timesheets",
     },
     {
       title: "Authorizations",
       hasData: true,
-      selectInputs: [
-        {
-          options: [
-            { value: "expiredAuthorizations", label: "Expired Authorizations" },
-            { value: "activeAuthorizations", label: "Active Authorizations" },
-          ],
-          value: "expiredAuthorizations",
-          onChange: () => {},
-        },
-      ],
     },
-    { title: "Productivity Information", hasData: true },
-    { title: "Upcoming Appointments", hasData: true, count: 19 },
+    {
+      title: "Productivity Information",
+      hasData: true,
+    },
+    {
+      title: "Upcoming Appointments",
+      hasData: true,
+      viewMoreRoute: "/scheduler/appointments",
+    },
   ]);
+
   const [hiddenCards, setHiddenCards] = useState([]);
+
+  // Get dynamic select inputs based on card title
+  const getSelectInputs = (title) => {
+    switch (title) {
+      case "Session Information":
+        return [
+          {
+            options: [
+              { value: "completedSessions", label: "Completed Sessions" },
+              { value: "canceledSessions", label: "Canceled Sessions" },
+              { value: "rescheduledSessions", label: "Rescheduled Sessions" },
+            ],
+            value: sessionType,
+            onChange: (e) => setSessionType(e.target.value),
+          },
+          {
+            options: [
+              { value: "day", label: "Last 30 Days" },
+              { value: "month", label: "This Month" },
+              { value: "year", label: "This Year" },
+            ],
+            value: sessionPeriod,
+            onChange: (e) => setSessionPeriod(e.target.value),
+          },
+        ];
+      case "Authorizations":
+        return [
+          {
+            options: [
+              { value: "expired", label: "Expired Authorizations" },
+              { value: "expiring", label: "Expiring Authorizations" },
+              { value: "active", label: "Active Authorizations" },
+            ],
+            value: authorizationStatus,
+            onChange: (e) => setAuthorizationStatus(e.target.value),
+          },
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleRearrange = (fromIndex, toIndex) => {
     const updatedCards = [...cards];
@@ -214,7 +254,7 @@ const Dashboard = () => {
 
   const handleMove = (fromIndex, toIndex) => {
     const targetIndex = parseInt(toIndex);
-    if (targetIndex >= 0 && targetIndex <= 4) {
+    if (targetIndex >= 0 && targetIndex < cards.length) {
       const updatedCards = [...cards];
       const [movedCard] = updatedCards.splice(fromIndex, 1);
       updatedCards.splice(targetIndex, 0, movedCard);
@@ -222,18 +262,47 @@ const Dashboard = () => {
     }
   };
 
+  const handleAuthorizationViewMore = () => {
+    setAuthorizationModalOpen(true);
+  };
+
+  const getCardViewMoreHandler = (title) => {
+    if (title === "Authorizations") {
+      return handleAuthorizationViewMore;
+    }
+    return undefined;
+  };
+
   const renderCardContent = (title, hasData) => {
     switch (title) {
+      case "Upcoming Appointments":
+        return (
+          <UpcomingAppointments
+            hasData={hasData}
+            setCount={setUpcomingAppointmentsCount}
+          />
+        );
+      case "Authorizations":
+        return (
+          <Authorizations
+            hasData={hasData}
+            selectedStatus={authorizationStatus}
+            isModalOpen={authorizationModalOpen}
+            setIsModalOpen={setAuthorizationModalOpen}
+          />
+        );
       case "Intake Pipeline":
         return <IntakePipeline hasData={hasData} />;
       case "Session Information":
-        return <SessionInformation hasData={hasData} />;
-      case "Authorizations":
-        return <Authorizations hasData={hasData} />;
+        return (
+          <SessionInformation
+            hasData={hasData}
+            sessionType={sessionType}
+            sessionPeriod={sessionPeriod}
+          />
+        );
       case "Productivity Information":
         return <ProductivityInformation hasData={hasData} />;
-      case "Upcoming Appointments":
-        return <UpcomingAppointments hasData={hasData} />;
       default:
         return null;
     }
@@ -242,7 +311,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card, index) => (
             <DashboardCard
               key={card.title}
@@ -252,8 +321,14 @@ const Dashboard = () => {
               onHide={handleHide}
               onMove={handleMove}
               hasData={card.hasData}
-              count={card.count} // Removed optional chaining since count is defined
-              selectInputs={card.selectInputs}
+              count={
+                card.title === "Upcoming Appointments"
+                  ? upcomingAppointmentsCount
+                  : card.count
+              }
+              selectInputs={getSelectInputs(card.title)}
+              viewMoreRoute={card.viewMoreRoute}
+              onViewMore={getCardViewMoreHandler(card.title)}
             >
               {renderCardContent(card.title, card.hasData)}
             </DashboardCard>
