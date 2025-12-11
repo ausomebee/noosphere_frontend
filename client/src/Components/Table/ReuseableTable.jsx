@@ -60,7 +60,7 @@ const ReusableTable = ({
     if (!pagination) return null;
     const { currentPage, totalPages } = pagination;
     const pages = [];
-    
+
     // Build page numbers
     for (let i = 1; i <= Math.min(3, totalPages); i++) {
       pages.push(i);
@@ -86,12 +86,14 @@ const ReusableTable = ({
           <IoArrowBack size={16} />
           <span>Previous</span>
         </button>
-        
+
         <div className="pagination-pages">
           {pages.map((page, idx) => (
             <button
               key={idx}
-              className={`pagination-page ${page === currentPage ? "active" : ""} ${page === "..." ? "dots" : ""}`}
+              className={`pagination-page ${
+                page === currentPage ? "active" : ""
+              } ${page === "..." ? "dots" : ""}`}
               onClick={() => page !== "..." && onPageChange?.(page)}
               disabled={page === "..."}
             >
@@ -204,13 +206,13 @@ const ReusableTable = ({
             <tbody>
               {data.map((row, rowIndex) => (
                 <React.Fragment key={row.id || rowIndex}>
-                  <tr className={expandedRows.includes(row.id) ? "expanded" : ""}>
+                  <tr
+                    onClick={() => toggleRowExpand(row.id)}
+                    className={expandedRows.includes(row.id) ? "expanded" : ""}
+                  >
                     {renderExpandedRow && (
                       <td className="expand-col">
-                        <button
-                          className="expand-btn"
-                          onClick={() => toggleRowExpand(row.id)}
-                        >
+                        <button className="expand-btn">
                           {expandedRows.includes(row.id) ? (
                             <IoChevronUp size={16} />
                           ) : (
@@ -221,7 +223,9 @@ const ReusableTable = ({
                     )}
                     {columns.map((col) => (
                       <td key={col.key} data-label={col.title}>
-                        {col.render ? col.render(row[col.key], row) : row[col.key]}
+                        {col.render
+                          ? col.render(row[col.key], row)
+                          : row[col.key]}
                       </td>
                     ))}
                     {actions && (

@@ -1,0 +1,300 @@
+/* DocumentRequests.css */
+
+.document-requests-container {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Section Wrapper */
+.section-wrapper {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Section Header */
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1967d2;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  line-height: 1;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  color: #5f6368;
+  margin: 0;
+}
+
+/* Overdue Alert */
+.overdue-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #fef3f2;
+  border-radius: 8px;
+}
+
+.overdue-text {
+  font-size: 14px;
+  color: #d93025;
+  font-weight: 500;
+}
+
+/* Document Name Cell */
+.document-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.expand-toggle {
+  background: none;
+  border: none;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.expand-toggle:hover {
+  background-color: #f1f3f4;
+}
+
+.document-name-link,
+.form-name-link {
+  color: #1967d2;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.document-name-link:hover,
+.form-name-link:hover {
+  color: #1557b0;
+  text-decoration: underline;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-warning {
+  background-color: #fef7e0;
+  color: #c17d11;
+}
+
+.status-success {
+  background-color: #e6f4ea;
+  color: #137333;
+}
+
+.status-danger {
+  background-color: #fce8e6;
+  color: #c5221f;
+}
+
+/* Expanded Document Content */
+.document-expanded-content {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+
+.upload-status {
+  font-size: 14px;
+  color: #98A2B3;
+  margin-bottom: 16px;
+}
+
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Action Menu Trigger */
+.action-menu-trigger {
+  background: none;
+  border: none;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.action-menu-trigger:hover {
+  background-color: #f1f3f4;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .document-requests-container {
+    padding: 20px;
+  }
+
+  .section-wrapper {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .upload-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .document-requests-container {
+    padding: 16px;
+  }
+
+  .section-wrapper {
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+  }
+
+  .section-title-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .new-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .section-subtitle {
+    font-size: 13px;
+  }
+
+  .overdue-alert {
+    padding: 10px;
+    margin-bottom: 16px;
+  }
+
+  .overdue-text {
+    font-size: 13px;
+  }
+
+  /* Make table more mobile-friendly */
+  .document-name-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .expand-toggle {
+    align-self: flex-start;
+  }
+
+  .status-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
+
+  .document-expanded-content {
+    padding: 16px;
+  }
+
+  .upload-status {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .upload-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .document-requests-container {
+    padding: 12px;
+  }
+
+  .section-wrapper {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+  }
+
+  .document-name-link,
+  .form-name-link {
+    font-size: 14px;
+  }
+
+  .document-expanded-content {
+    padding: 12px;
+  }
+}
+
+
