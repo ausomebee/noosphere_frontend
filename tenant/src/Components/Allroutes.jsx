@@ -42,6 +42,7 @@ import FormRenderer from "../Pages/CustomForms/FormRender/FormRenderer";
 import ClientList from "../Pages/Client/ClientList/ClientList";
 import ViewPrograms from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ProgramSub/ViewPrograms";
 import Reports from "../Pages/Reports/Reports";
+import StartAppointment from "../Pages/Scheduler/StartAppointment/StartAppointment";
 
 const AllRoutes = () => {
   return (
@@ -89,6 +90,8 @@ const AllRoutes = () => {
       {/* Schdeduler */}
       <Route path="/scheduler/calendar" element={<Calendar />} />
       <Route path="/scheduler/appointments" element={<Appointments />} />
+      <Route path="/appointments/start/:appointmentId/:clientId" element={<StartAppointment />} />
+
 
       {/* Clients Onboarding*/}
       <Route path="/clients/pipeline" element={<Pipeline />} />

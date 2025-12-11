@@ -1,40 +1,97 @@
 import React from "react";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
+import api from "../../../api/DashboardApis";
+import { useSelector } from "react-redux";
 
 const IntakePipeline = ({ hasData }) => {
-  const dummyData = {
-    stages: [
-      { name: "Consultation", count: 45 },
-      { name: "Assessment", count: 12 },
-      { name: "Authorization", count: 8 },
-      { name: "Documentation", count: 5 },
-      { name: "Treatment setup", count: 3 },
-    ],
-  };
+  const [stages, setStages] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+
+  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
+  const token = useSelector((s) => s.authentication?.user?.token);
+  const accessToken = token;
+  const refreshToken = token;
+
+  React.useEffect(() => {
+    if (!hasData) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchIntakePipeline = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        const response = await api.GetDashboardIntakeByTenantId({
+          tenantId,
+          accessToken,
+          refreshToken,
+        });
+
+        const pipelineStages = response?.data?.data?.pipelineStages || [];
+
+        const transformed = pipelineStages
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+          .slice(0, 6) // Maximum 6 stages
+          .map((stage) => ({
+            name: stage.name || "Unnamed Stage",
+            count: stage._count?.pipelineItem || 0,
+          }));
+
+        setStages(transformed);
+      } catch (err) {
+        console.error("Failed to load intake pipeline:", err);
+        setError(true);
+        setStages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIntakePipeline();
+  }, [tenantId, accessToken, refreshToken]);
+
+  // No data setup needed
+  if (!hasData) {
+    return <Button label="Setup Intake Pipeline" variant="primary" />;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32 text-gray-500">
+        Loading pipeline...
+      </div>
+    );
+  }
+
+  if (error || stages.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        No pipeline stages configured yet.
+      </div>
+    );
+  }
 
   return (
-    <>
-      {hasData ? (
-        <div>
-          <div className="intake-stages flex justify-between">
-            {dummyData.stages.map((stage, index) => (
-              <div key={stage.name} className="intake-stage">
-                <span className="stage-name">{stage.name}</span>
-                <div className={`stage-divider stage-color-${index + 1}`}></div>
-                <span className="stage-count">
-                  {stage.count} <span className="stage-value">Candidates</span>
-                </span>
-              </div>
-            ))}
+    <div>
+      <div className="intake-stages flex justify-between">
+        {stages.map((stage, index) => (
+          <div key={stage.name} className="intake-stage">
+            <span className="stage-name">{stage.name}</span>
+            <div className={`stage-divider stage-color-${index + 1}`}></div>
+            <span className="stage-count">
+              {stage.count}{" "}
+              <span className="stage-value">
+                {stage.count === 1 ? "Candidate" : "Candidates"}
+              </span>
+            </span>
           </div>
-        </div>
-      ) : (
-        <>
-          <Button label="Setup Intake Pipeline" variant="primary" />
-        </>
-      )}
-    </>
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -3,22 +3,8 @@ import ErrorBoundary from "./Helper/ErrorBoundary";
 import CustomTable from "./Components/Table/CustomTable";
 import AllRoutes from "./Components/Allroutes";
 function App() {
-  const [loading, setLoading] = useState(false);
 
 
-  const currencyOptions = [
-    { value: "USD", label: "USD" },
-    { value: "EUR", label: "EUR" },
-    { value: "GBP", label: "GBP" },
-  ];
-
-
-
-  
-
-const handleSelectionChange = (selectedRows, selectedItems) => {
-    console.log("Selected Rows:", selectedRows, "Selected Items:", selectedItems);
-  };
 
 const columns = [
   { header: "Client", key: "client", type: "text" },

@@ -443,6 +443,19 @@ const UpdatePayerServiceCodeActiveness = async ({
   }
 };
 
+
+const GetTimeSheetByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/appointment/${tenantId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get Timesheets by tenant id failed");
+  }
+};
+
 export default {
   CreateTenantServiceCode,
   UpdateTenantServiceCode,
@@ -461,5 +474,6 @@ export default {
   UpdatePayerActiveness,
   GetPayerByTenantId,
   GetSInglePayerById,
-  UpdatePayerServiceCodeActiveness
+  UpdatePayerServiceCodeActiveness,
+  GetTimeSheetByTenantId
 };
