@@ -1,0 +1,207 @@
+/* Notifications.css */
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Container */
+.notifications-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.notifications-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Header */
+.notifications-header {
+  padding: 20px 0 30px 0;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #202124;
+}
+
+/* Content */
+.notifications-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Section */
+.notifications-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #5f6368;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Notification Card */
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background-color: white;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.notification-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Icon */
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e8f0fe;
+  border-radius: 8px;
+}
+
+/* Notification Body */
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1967d2;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.notification-message {
+  font-size: 14px;
+  color: #5f6368;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.notification-footer {
+  display: flex;
+  align-items: center;
+}
+
+.notification-time {
+  font-size: 13px;
+  color: #80868b;
+}
+
+/* Action Button */
+.notification-action {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background-color: transparent;
+  color: #1967d2;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.notification-action:hover {
+  background-color: #f8f9fa;
+  border-color: #c4c7c9;
+}
+
+.notification-action:active {
+  background-color: #e8eaed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .notifications-container {
+    padding: 16px;
+  }
+
+  .notifications-header {
+    padding: 16px 0 24px 0;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .notifications-content {
+    gap: 24px;
+  }
+
+  .notification-card {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .notification-action {
+    align-self: flex-start;
+    width: 100%;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notifications-container {
+    padding: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .notification-card {
+    padding: 14px;
+  }
+
+  .notification-title {
+    font-size: 14px;
+  }
+
+  .notification-message {
+    font-size: 13px;
+  }
+
+  .notification-action {
+    font-size: 13px;
+    padding: 7px 14px;
+  }
+}

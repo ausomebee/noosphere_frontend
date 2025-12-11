@@ -1,0 +1,397 @@
+/* MyDocuments.css */
+
+.my-documents-container {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header */
+.documents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  padding: 0 4px;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.documents-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #202124;
+  margin: 0 0 6px 0;
+}
+
+.documents-subtitle {
+  font-size: 14px;
+  color: #5f6368;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.new-button-wrapper {
+  position: relative;
+}
+
+.new-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  padding: 8px 0;
+  z-index: 100;
+}
+
+.new-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: #202124;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: left;
+}
+
+.new-menu-item:hover {
+  background-color: #f1f3f4;
+}
+
+.new-menu-item svg {
+  color: #5f6368;
+}
+
+/* Section Wrapper */
+.section-wrapper {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.section-heading {
+  font-size: 18px;
+  font-weight: 600;
+  color: #202124;
+  margin: 0 0 20px 0;
+}
+
+/* Folders Grid */
+.folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.folder-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.folder-card:hover {
+  background-color: #f1f3f4;
+  border-color: #dadce0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.folder-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e8f0fe;
+  border-radius: 8px;
+  color: #1967d2;
+  flex-shrink: 0;
+}
+
+.folder-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folder-meta {
+  font-size: 12px;
+  color: #5f6368;
+  margin: 0;
+}
+
+/* Recent Files Grid */
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.recent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recent-card:hover {
+  background-color: #f1f3f4;
+  border-color: #dadce0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.recent-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  color: #1967d2;
+  flex-shrink: 0;
+}
+
+.recent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #202124;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-meta {
+  font-size: 11px;
+  color: #5f6368;
+  margin: 0;
+}
+
+/* File Name Cell in Table */
+.file-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  color: #1967d2;
+  flex-shrink: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  color: #202124;
+  font-weight: 500;
+}
+
+/* Action Menu Trigger */
+.action-menu-trigger {
+  background: none;
+  border: none;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.action-menu-trigger:hover {
+  background-color: #f1f3f4;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .my-documents-container {
+    padding: 20px;
+  }
+
+  .documents-header {
+    margin-bottom: 24px;
+  }
+
+  .documents-title {
+    font-size: 24px;
+  }
+
+  .folders-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .recent-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .section-wrapper {
+    padding: 20px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .my-documents-container {
+    padding: 16px;
+  }
+
+  .documents-header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .new-button-wrapper {
+    width: 100%;
+  }
+
+  .documents-title {
+    font-size: 22px;
+  }
+
+  .documents-subtitle {
+    font-size: 13px;
+  }
+
+  .section-wrapper {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .section-heading {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .folders-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .recent-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .folder-card,
+  .recent-card {
+    padding: 12px;
+  }
+
+  .new-menu {
+    left: 0;
+    right: 0;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-documents-container {
+    padding: 12px;
+  }
+
+  .documents-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .documents-title {
+    font-size: 20px;
+  }
+
+  .section-wrapper {
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .section-heading {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .folder-card,
+  .recent-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .folder-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .recent-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .folder-name,
+  .recent-name {
+    font-size: 13px;
+  }
+
+  .folder-meta,
+  .recent-meta {
+    font-size: 11px;
+  }
+}
+
