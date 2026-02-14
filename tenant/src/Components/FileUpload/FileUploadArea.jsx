@@ -22,7 +22,7 @@ const FileUploadArea = memo(
     const [files, setFiles] = useState([]);
     const fileInputRef = useRef(null);
 
-    const { token: accessToken, refreshToken } = useSelector(
+    const { accessToken, refreshToken } = useSelector(
       (s) => s.authentication?.user || {}
     );
 

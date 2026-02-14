@@ -12,6 +12,22 @@
   padding-top: 70px;
 }
 
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
 .table-filter-select {
   margin-bottom: -40px;
   margin-top: 10px;
@@ -305,16 +321,12 @@
 }
 
 .action-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: auto;
-  right: 20px;
-  margin-top: 0.25rem;
-  z-index: 1002;
+  position: fixed;
+  z-index: 9999;
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   max-width: 370px;
   max-height: 200px;

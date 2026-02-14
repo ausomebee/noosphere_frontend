@@ -524,6 +524,7 @@ const SubmitStartAppointment = async ({
   travelStartTime,
   travelEndTime,
   sessionDatas,
+  createdBy,
   accessToken,
   refreshToken,
 }) => {
@@ -537,6 +538,7 @@ const SubmitStartAppointment = async ({
       travelStartTime,
       travelEndTime,
       sessionDatas,
+      createdBy
     };
 
     const response = await authFetch.post(

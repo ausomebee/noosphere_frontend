@@ -29,9 +29,8 @@ const TargetSingle = () => {
   const [searchParams] = useSearchParams();
   const targetId = searchParams.get("targetId");
   const clientId = searchParams.get("clientId");
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   // State for dropdowns and data
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -135,12 +134,14 @@ const TargetSingle = () => {
             taskSteps = Array.isArray(target.taskSteps)
               ? target.taskSteps.map((step, index) => ({
                   id: index + 1,
-                  description: typeof step === "string" ? step : step.description || "",
+                  description:
+                    typeof step === "string" ? step : step.description || "",
                 }))
               : typeof target.taskSteps === "string"
                 ? JSON.parse(target.taskSteps).map((step, index) => ({
                     id: index + 1,
-                    description: typeof step === "string" ? step : step.description || "",
+                    description:
+                      typeof step === "string" ? step : step.description || "",
                   }))
                 : [];
           } catch (e) {
@@ -159,13 +160,15 @@ const TargetSingle = () => {
           teachingProcedure: target.teachingProcedure || "N/A",
           promptingStrategy: target.promptingStrategy
             ? Array.isArray(target.promptingStrategy)
-              ? target.promptingStrategy.map((p) => {
-                  try {
-                    return JSON.parse(p).label;
-                  } catch {
-                    return p;
-                  }
-                }).join(", ")
+              ? target.promptingStrategy
+                  .map((p) => {
+                    try {
+                      return JSON.parse(p).label;
+                    } catch {
+                      return p;
+                    }
+                  })
+                  .join(", ")
               : target.promptingStrategy
             : "N/A",
           dataCollectionType: target.dataCollectionType || "N/A",
@@ -241,43 +244,54 @@ const TargetSingle = () => {
 
   const formatTimeFromString = (timeString) => {
     if (!timeString) return "12:00:00 AM";
-    
+
     // Split the time string into hours, minutes, seconds
-    const timeParts = timeString.split(':');
-    
+    const timeParts = timeString.split(":");
+
     // Ensure we have at least 3 parts (HH:mm:ss)
     if (timeParts.length >= 3) {
       let hours = parseInt(timeParts[0] || "00");
       const minutes = timeParts[1] || "00";
       const seconds = timeParts[2] || "00";
-      
+
       // Determine AM/PM
-      const period = hours >= 12 ? 'PM' : 'AM';
-      
+      const period = hours >= 12 ? "PM" : "AM";
+
       // Convert to 12-hour format
       hours = hours % 12 || 12;
-      
+
       // Format hours to always have 2 digits
-      const formattedHours = hours.toString().padStart(2, '0');
-      
+      const formattedHours = hours.toString().padStart(2, "0");
+
       return `${formattedHours}:${minutes}:${seconds} ${period}`;
     }
-    
+
     return "12:00:00 AM";
   };
 
   const getDataRows = (type, data) => {
     switch (type) {
       case "Frequency":
-        return [{ count: data.numberOfOccurrence || 0, notes: data.notes || "N/A" }];
+        return [
+          { count: data.numberOfOccurrence || 0, notes: data.notes || "N/A" },
+        ];
       case "Duration":
-        return [{ duration: formatTime(data.duration || 0), notes: data.notes || "N/A" }];
+        return [
+          {
+            duration: formatTime(data.duration || 0),
+            notes: data.notes || "N/A",
+          },
+        ];
       case "Rate":
         return [
           {
             count: data.numberOfOccurrence || 0,
             duration: data.duration || 0,
-            rate: data.duration > 0 ? (data.numberOfOccurrence / (data.duration / 60)).toFixed(2) + "/min" : "N/A",
+            rate:
+              data.duration > 0
+                ? (data.numberOfOccurrence / (data.duration / 60)).toFixed(2) +
+                  "/min"
+                : "N/A",
             notes: data.notes || "N/A",
           },
         ];
@@ -301,7 +315,10 @@ const TargetSingle = () => {
         return (data.trials || []).map((trial) => ({
           trialCount: trial.trial,
           sdTime: formatTimeFromString(trial.stimulusPresented),
-          response: trial.latency !== null ? `${trial.latency >= 0 ? "+" : ""}${trial.latency} secs` : "NR",
+          response:
+            trial.latency !== null
+              ? `${trial.latency >= 0 ? "+" : ""}${trial.latency} secs`
+              : "NR",
           notes: data.notes || "N/A",
         }));
       default:
@@ -313,13 +330,21 @@ const TargetSingle = () => {
     switch (type) {
       case "Percentage Correct":
         const percentageTrials = (data.trials || []).length;
-        const correct = (data.trials || []).filter((t) => t.performance === "correct").length;
+        const correct = (data.trials || []).filter(
+          (t) => t.performance === "correct",
+        ).length;
         return `Total Correct: ${correct}/${percentageTrials} | Accuracy: ${data.percentageCorrect || 0}%`;
       case "Trials/Opportunities":
         const trials = data.trials || [];
-        const correctCount = trials.filter((t) => t.performance === "correct").length;
-        const incorrectCount = trials.filter((t) => t.performance === "incorrect").length;
-        const promptedCount = trials.filter((t) => t.promptLevel !== "independent").length;
+        const correctCount = trials.filter(
+          (t) => t.performance === "correct",
+        ).length;
+        const incorrectCount = trials.filter(
+          (t) => t.performance === "incorrect",
+        ).length;
+        const promptedCount = trials.filter(
+          (t) => t.promptLevel !== "independent",
+        ).length;
         return `Trials: ${trials.length} | Correct: ${correctCount} | Incorrect: ${incorrectCount} | Prompted: ${promptedCount}`;
       default:
         return null;
@@ -393,13 +418,22 @@ const TargetSingle = () => {
 
   const handleCollectData = () => {
     if (!clientId) {
-      showToast("No client selected. Please select a client to collect data.", "error");
+      showToast(
+        "No client selected. Please select a client to collect data.",
+        "error",
+      );
       console.error("No clientId provided, cannot open modal");
       return;
     }
-    if (!targetInfo?.dataCollectionType || targetInfo.dataCollectionType === "N/A") {
+    if (
+      !targetInfo?.dataCollectionType ||
+      targetInfo.dataCollectionType === "N/A"
+    ) {
       showToast("No valid data collection type found.", "error");
-      console.error("No valid dataCollectionType found:", targetInfo?.dataCollectionType);
+      console.error(
+        "No valid dataCollectionType found:",
+        targetInfo?.dataCollectionType,
+      );
       return;
     }
 
@@ -429,19 +463,27 @@ const TargetSingle = () => {
         modalName = "latency";
         break;
       default:
-        showToast(`Unknown data collection type: ${targetInfo.dataCollectionType}`, "error");
-        console.error("Unknown dataCollectionType:", targetInfo.dataCollectionType);
+        showToast(
+          `Unknown data collection type: ${targetInfo.dataCollectionType}`,
+          "error",
+        );
+        console.error(
+          "Unknown dataCollectionType:",
+          targetInfo.dataCollectionType,
+        );
         return;
     }
 
     const extra = {};
     if (["percentage", "trials", "latency"].includes(modalName)) {
-      extra.trialCount = targetInfo.numberOfTrials !== "N/A" ? targetInfo.numberOfTrials : 0;
+      extra.trialCount =
+        targetInfo.numberOfTrials !== "N/A" ? targetInfo.numberOfTrials : 0;
     }
     if (modalName === "task") {
-      extra.steps = targetInfo.taskSteps && targetInfo.taskSteps !== "N/A"
-        ? targetInfo.taskSteps
-        : [];
+      extra.steps =
+        targetInfo.taskSteps && targetInfo.taskSteps !== "N/A"
+          ? targetInfo.taskSteps
+          : [];
       console.log("Task Analysis steps:", extra.steps);
     }
 
@@ -544,7 +586,7 @@ const TargetSingle = () => {
   const renderPerformanceGraph = () => {
     if (loading) return <LoadingSpinner />;
     if (!hasPerformanceData || !showPerformanceGraph) {
-      return renderEmptyState("Performance Data", );
+      return renderEmptyState("Performance Data");
     }
 
     return (
@@ -711,7 +753,6 @@ const TargetSingle = () => {
             <h1 className="font-bold text-lg text-white-light">
               Target Information
             </h1>
-        
           </div>
           {loading ? (
             <LoadingSpinner />
@@ -724,15 +765,21 @@ const TargetSingle = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-400">Program</p>
-                    <p className="font-medium text-gray-600">{targetInfo.program}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.program}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-400">Domain</p>
-                    <p className="font-medium text-gray-600">{targetInfo.domain}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.domain}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-400">Target</p>
-                    <p className="font-medium text-gray-600">{targetInfo.target}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.target}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-400">Status</p>
@@ -753,15 +800,21 @@ const TargetSingle = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-600">Expected Response</p>
-                    <p className="font-medium text-gray-600">{targetInfo.expectedResponse}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.expectedResponse}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-600">Teaching Procedure</p>
-                    <p className="font-medium text-gray-600">{targetInfo.teachingProcedure}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.teachingProcedure}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-600">Prompting Strategy</p>
-                    <p className="font-medium text-gray-600 w-70">{targetInfo.promptingStrategy}</p>
+                    <p className="font-medium text-gray-600 w-70">
+                      {targetInfo.promptingStrategy}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -772,11 +825,15 @@ const TargetSingle = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-600">Type</p>
-                    <p className="font-medium text-gray-600">{targetInfo.dataCollectionType}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.dataCollectionType}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-gray-600">No of Trials</p>
-                    <p className="font-medium text-gray-600">{targetInfo.numberOfTrials}</p>
+                    <p className="font-medium text-gray-600">
+                      {targetInfo.numberOfTrials}
+                    </p>
                   </div>
                 </div>
               </div>

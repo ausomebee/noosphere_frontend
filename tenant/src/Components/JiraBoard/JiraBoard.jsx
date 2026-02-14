@@ -61,10 +61,9 @@ const JiraBoard = () => {
   const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } =
     useSelector((state) => state.pipeline);
   const userId = useSelector((state) => state.authentication?.user?.id);
-  const token = useSelector((state) => state.authentication?.user?.token);
   const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((state) => state.authentication?.user?.accessToken);
+  const refreshToken = useSelector((state) => state.authentication?.user?.refreshToken);
   const [loadingCount, setLoadingCount] = useState(0);
   const isLoading = loadingCount > 0;
   const [localTasks, setLocalTasks] = useState({});

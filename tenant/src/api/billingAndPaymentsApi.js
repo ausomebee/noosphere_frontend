@@ -1,4 +1,4 @@
-import axios from "axios";
+
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -443,8 +443,11 @@ const UpdatePayerServiceCodeActiveness = async ({
   }
 };
 
-
-const GetTimeSheetByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
+const GetTimeSheetByTenantId = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
@@ -453,6 +456,95 @@ const GetTimeSheetByTenantId = async ({ tenantId, accessToken, refreshToken }) =
     return response.data;
   } catch (error) {
     throw new Error(error.message || "Get Timesheets by tenant id failed");
+  }
+};
+
+const GetSingleTimeSheetByTimesheetId = async ({
+  timeSheetId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/${timeSheetId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.message || "Get Single Timesheets by timesheet id failed"
+    );
+  }
+};
+
+const ApproveTimeSheetBySupervisor = async ({
+  timeSheetId,
+  supervisorId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/sessions/approve/${timeSheetId}/${supervisorId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.message || "Approve Timesheet by timesheet id failed"
+    );
+  }
+};
+const RejectTimeSheetBySupervisor = async ({
+  timeSheetId,
+  supervisorId,
+  reason,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/sessions/reject/${timeSheetId}/${supervisorId}`,
+      {
+        reason,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.message || "Approve Timesheet by timesheet id failed"
+    );
+  }
+};
+
+const GetSessionsTimesheetHistoryByTimesheetId = async ({
+  timeSheetId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions-timesheet-history/session/${timeSheetId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.message || "Get Sessions Timesheet History by timesheet id failed"
+    );
+  }
+};
+
+const GetClaimsByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/claims/${tenantId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get Claims by tenant id failed");
   }
 };
 
@@ -475,5 +567,11 @@ export default {
   GetPayerByTenantId,
   GetSInglePayerById,
   UpdatePayerServiceCodeActiveness,
-  GetTimeSheetByTenantId
+  GetTimeSheetByTenantId,
+  GetSingleTimeSheetByTimesheetId,
+  GetClaimsByTenantId,
+  GetSessionsTimesheetHistoryByTimesheetId,
+  ApproveTimeSheetBySupervisor,
+  RejectTimeSheetBySupervisor
+
 };

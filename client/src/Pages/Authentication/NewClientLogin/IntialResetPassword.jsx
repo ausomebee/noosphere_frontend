@@ -7,7 +7,8 @@ import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import { useNavigate } from "react-router-dom";
-
+import { useSelector } from "react-redux";
+import api from "../../../api/authApis";
 // Validation schema
 const resetPasswordSchema = yup.object().shape({
   password: yup
@@ -28,8 +29,10 @@ const resetPasswordSchema = yup.object().shape({
 });
 
 const InitialResetPassword = () => {
+  const clientTenantId = useSelector((state) => state.auth?.user?.tenantLinks[0]?.id);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  console.log("Client Tenant ID:", clientTenantId);
   const {
     register,
     handleSubmit,
@@ -45,12 +48,14 @@ const InitialResetPassword = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Simulate API call
-      console.log("Form submitted:", data);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await api.ClientSetPassword({
+        clientTenantId,
+        password: data.password,
+      });
 
-      // Handle successful password reset here
-      showToast("Password reset successful!", "success");
+      const successMessage =
+        response?.data?.message || "Password updated successfully!";
+      showToast(successMessage, "success");
       navigate("/intialResetSuccessful");
     } catch (error) {
       console.error("Reset password error:", error);

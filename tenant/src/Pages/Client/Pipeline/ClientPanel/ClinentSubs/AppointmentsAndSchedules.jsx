@@ -8,29 +8,29 @@ import { showToast } from "../../../../../Helper/ShowToast";
 import AppointmentModal from "../../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
 import api from "../../../../../api/AppointmentApi";
 import api2 from "../../../../../api/clientPanelApis";
+import api3 from "../../../../../api/billingAndPaymentsApi"; // For real service codes
 import CustomTable from "../../../../../Components/Table/CustomTable";
 import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
 import { SearchInput } from "../../../../../Components/Input/Inputs";
 import { useParams } from "react-router-dom";
 
-// Your two expanders
-import expand from "../../../../../utils/expand"; // For Calendar View
-import expandForAppointments from "../../../../../utils/expandForAppointments"; // For Table View
+import expand from "../../../../../utils/expand";
+import expandForAppointments from "../../../../../utils/expandForAppointments";
 
 const MemoAppointmentModal = memo(AppointmentModal);
 
 const AppointmentsScheduleTab = ({ fullName }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+
   const [activeTab, setActiveTab] = useState("upcomingAppointments");
   const [viewMode, setViewMode] = useState("table");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { clientId } = useParams(); // Get clientId from URL params
+  const { clientId } = useParams();
 
   const [clients, setClients] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
@@ -38,14 +38,83 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Real service code map: serviceCodeId → code (e.g., "97158")
+  const [serviceCodeMap, setServiceCodeMap] = useState({});
+  // Full list of service codes to pass to modal
+  const [serviceCodes, setServiceCodes] = useState([]);
+
+  // Fetch real service codes
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+
+    try {
+      const response = await api3.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || [];
+
+      const map = {};
+      const fullList = data.filter((item) => !item.isDeleted && item.isActive);
+
+      fullList.forEach((item) => {
+        map[item.id] = item.code;
+      });
+
+      setServiceCodeMap(map);
+      setServiceCodes(fullList); // Pass full objects to modal
+    } catch (error) {
+      console.error("Failed to load service codes:", error);
+      showToast("Failed to load service codes", "error");
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    fetchServiceCodes();
+  }, [fetchServiceCodes]);
+
+  // Prepare data for modal — consistent with CalendarScheduler
   const prepareModalData = (appt) => {
     if (!appt) return null;
 
+    const clinicianIds = appt.clinicians?.map((c) => c.id.toString()) || [];
+
+    const service = (appt.appointmentServices || []).map((as) => ({
+      serviceCodeId: as.serviceCodeId,
+      modifier: as.modifiers?.modifier || "", // "HP"
+    }));
+
     return {
       ...appt,
-      sessionType:
-        appt.sessionId || appt.session?.id || appt.session?.name || "",
-      colorCode: appt.colourCode || appt.colorCode || "#3B82F6",
+      sessionType: appt.session?.id || "",
+      clinicians: clinicianIds,
+      service:
+        service.length > 0 ? service : [{ serviceCodeId: "", modifier: "" }],
+      colorCode: appt.colourCode || "#3B82F6",
+    };
+  };
+
+  // Transform for table — use real code from map
+  const toTableRow = (apiAppt) => {
+    const service = (apiAppt.appointmentServices || []).map((as) => {
+      const code = serviceCodeMap[as.serviceCodeId] || "N/A";
+      const modifier = as.modifiers?.modifier
+        ? ` (${as.modifiers.modifier})`
+        : "";
+
+      return {
+        serviceType: `${code}${modifier}`,
+      };
+    });
+
+    return {
+      ...apiAppt,
+      service: service.length > 0 ? service : [{ serviceType: "N/A" }],
+      client: apiAppt.client || { fullName: "Unknown Client" },
+      clinicians: apiAppt.clinicians || [],
+      session: apiAppt.session || { name: "Unknown Session" },
+      colourCode: apiAppt.colourCode || "#3B82F6",
     };
   };
 
@@ -54,9 +123,8 @@ const AppointmentsScheduleTab = ({ fullName }) => {
 
     if (clients.length > 0) {
       const client = clients.find(
-        (client) => client.id === clientId || client.clientId === clientId
+        (c) => c.id === clientId || c.clientId === clientId
       );
-
       if (client) {
         return {
           clientId: client.id || client.clientId,
@@ -74,17 +142,14 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     }
 
     const nameParts = (fullName || "Current Client").split(" ");
-    const firstName = nameParts[0] || "Client";
-    const lastName = nameParts.slice(1).join(" ") || "";
-
     return {
-      clientId: clientId,
+      clientId,
       client: {
-        firstName: firstName,
-        lastName: lastName,
+        firstName: nameParts[0] || "Client",
+        lastName: nameParts.slice(1).join(" ") || "",
       },
-      firstName: firstName,
-      lastName: lastName,
+      firstName: nameParts[0] || "Client",
+      lastName: nameParts.slice(1).join(" ") || "",
       fullName: fullName || "Current Client",
     };
   }, [clients, clientId, fullName]);
@@ -108,60 +173,40 @@ const AppointmentsScheduleTab = ({ fullName }) => {
 
       if (clientId) {
         try {
-          const clientResponse = await api2.GetClientById({
-            clientId,
+          const res = await api2.GetSingleClientByClientId({
+            id: clientId,
             accessToken,
             refreshToken,
           });
-          if (clientResponse?.data?.data) {
-            const clientData = clientResponse.data.data;
-            const transformedClient = {
-              clientId: clientData.id || clientData.clientId,
-              client: {
-                firstName:
-                  clientData.firstName ||
-                  clientData.fullName?.split(" ")[0] ||
-                  "Client",
-                lastName:
-                  clientData.lastName ||
-                  clientData.fullName?.split(" ").slice(1).join(" ") ||
-                  "",
+          if (res?.data?.data) {
+            const data = res.data.data;
+            setClients([
+              {
+                clientId: data.id || data.clientId,
+                client: {
+                  firstName:
+                    data.firstName || data.fullName?.split(" ")[0] || "Client",
+                  lastName:
+                    data.lastName ||
+                    data.fullName?.split(" ").slice(1).join(" ") ||
+                    "",
+                },
+                ...data,
               },
-              ...clientData,
-            };
-            setClients([transformedClient]);
+            ]);
           }
-        } catch (error) {
-          console.error("Failed to fetch client details:", error);
-          const nameParts = (fullName || "Current Client").split(" ");
-          const firstName = nameParts[0] || "Client";
-          const lastName = nameParts.slice(1).join(" ") || "";
-
-          setClients([
-            {
-              clientId: clientId,
-              client: {
-                firstName: firstName,
-                lastName: lastName,
-              },
-              firstName: firstName,
-              lastName: lastName,
-              fullName: fullName || "Current Client",
-            },
-          ]);
+        } catch (err) {
+          console.error("Failed to fetch client:", err);
         }
       }
-    } catch (error) {
-      console.error("Failed to load support data:", error);
+    } catch (err) {
+      console.error("Failed to load support data:", err);
       showToast("Failed to load support data", "error");
     }
-  }, [tenantId, accessToken, refreshToken, clientId, fullName]);
+  }, [tenantId, accessToken, refreshToken, clientId]);
 
   const fetchAppointments = useCallback(async () => {
-    if (!clientId) {
-      showToast("Client ID not found", "error");
-      return;
-    }
+    if (!clientId) return showToast("Client ID not found", "error");
 
     setLoading(true);
     try {
@@ -192,18 +237,16 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           response = { data: { data: [] } };
       }
 
-      if (response?.data?.data) {
-        setAppointments(response.data.data);
-      } else if (response?.data) {
-        setAppointments(response.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch appointments:", error);
+      const raw = response?.data?.data || response?.data || [];
+      const transformed = raw.map(toTableRow);
+      setAppointments(transformed);
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err);
       showToast("Failed to fetch appointments", "error");
     } finally {
       setLoading(false);
     }
-  }, [activeTab, clientId, accessToken, refreshToken]);
+  }, [activeTab, clientId, accessToken, refreshToken, serviceCodeMap]);
 
   useEffect(() => {
     fetchSupportingData();
@@ -213,11 +256,10 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // TABLE VIEW → Use safe bounded expansion (expandForAppointments)
+  // TABLE VIEW
   const formattedAppointments = useMemo(() => {
     if (!appointments.length) return [];
 
-    // Cancelled appointments are NOT recurring → no expansion
     if (activeTab === "cancelledAppointments") {
       return appointments.map((appt) => ({
         id: appt.id,
@@ -243,7 +285,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       }));
     }
 
-    // Upcoming & Past → use safe bounded expansion
     const direction = activeTab === "pastAppointments" ? "past" : "future";
 
     return appointments.flatMap((master) => {
@@ -253,28 +294,28 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         id: instance.id,
         clientName: currentClient?.fullName || "Current Client",
         therapistName:
-          instance.clinicians?.map((c) => c.fullName).join(", ") ||
-          "Unassigned",
+          (instance.clinicians || master.clinicians)
+            ?.map((c) => c.fullName)
+            .join(", ") || "Unassigned",
         serviceType:
-          instance.service?.map((s) => s.serviceType).join(", ") || "N/A",
-        sessionType: instance.session?.name || "N/A",
+          master.service?.map((s) => s.serviceType).join(", ") || "N/A",
+        sessionType: (instance.session || master.session)?.name || "N/A",
         date: instance.date,
         time: `${instance.startTime} - ${instance.endTime}`,
         dateTime: `${format(new Date(instance.date), "MMM dd, yyyy")} • ${
           instance.startTime
         }`,
-        colorCode: instance.colourCode || "#3B82F6",
+        colorCode: instance.colourCode || master.colourCode || "#3B82F6",
         hasActions: true,
         rawData: { ...master, ...instance },
       }));
     });
   }, [appointments, activeTab, currentClient]);
 
-  // CALENDAR VIEW → Use full unlimited expansion (expand)
+  // CALENDAR VIEW
   const calendarAppointments = useMemo(() => {
     if (!appointments.length) return [];
 
-    // Cancelled → no expansion
     if (activeTab === "cancelledAppointments") {
       return appointments
         .filter((a) => a.date)
@@ -285,9 +326,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             appt.client?.fullName ||
             currentClient?.fullName ||
             "Current Client",
-          clinicianIds: appt.clinicians?.map((c) => c.id) || [],
+          clinicianIds: appt.clinicians?.map((c) => c.id.toString()) || [],
           service: appt.service || [],
-          sessionId: appt.sessionId,
+          sessionId: appt.session?.id || "",
           date: appt.date,
           startTime: appt.startTime,
           endTime: appt.endTime,
@@ -297,7 +338,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         }));
     }
 
-    // Full expansion for current month only
     const viewWindow = {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
       end: new Date(
@@ -319,31 +359,29 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           instance.client?.fullName ||
           currentClient?.fullName ||
           "Current Client",
-        clinicianIds: instance.clinicians?.map((c) => c.id) || [],
-        service: instance.service || [],
-        sessionId: instance.sessionId,
+        clinicianIds: instance.clinicians?.map((c) => c.id.toString()) || [],
+        service: master.service || [],
+        sessionId: master.session?.id || "",
         date: instance.date,
         startTime: instance.startTime,
         endTime: instance.endTime,
         colourCode: instance.colourCode || "#3B82F6",
         title:
-          instance.service?.map((s) => s.serviceType).join(", ") ||
-          "Appointment",
+          master.service?.map((s) => s.serviceType).join(", ") || "Appointment",
       }));
     });
-  }, [appointments, activeTab, currentDate, clientId]);
+  }, [appointments, activeTab, currentDate, clientId, currentClient]);
 
   const filteredAppointments = useMemo(() => {
     if (!searchTerm) return formattedAppointments;
-
     const term = searchTerm.toLowerCase();
     return formattedAppointments.filter(
       (appt) =>
-        appt.therapistName.toLowerCase().includes(term) ||
-        appt.serviceType.toLowerCase().includes(term) ||
-        appt.sessionType.toLowerCase().includes(term) ||
-        appt.date.toLowerCase().includes(term) ||
-        appt.time.toLowerCase().includes(term)
+        appt.therapistName?.toLowerCase().includes(term) ||
+        appt.serviceType?.toLowerCase().includes(term) ||
+        appt.sessionType?.toLowerCase().includes(term) ||
+        appt.date?.toLowerCase().includes(term) ||
+        appt.time?.toLowerCase().includes(term)
     );
   }, [formattedAppointments, searchTerm]);
 
@@ -397,33 +435,38 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const actions = [
     {
       type: "dropdown",
-      items: [
-        {
-          label: "Edit Appointment",
-          onClick: (row) => openModal(row),
-        },
-      ],
+      items: [{ label: "Edit Appointment", onClick: (row) => openModal(row) }],
     },
   ];
 
-  const handleAppointmentClick = (appointment, position) => {
-    const fullAppointment = appointments.find(
-      (appt) => appt.id === appointment.id
+  const handleAppointmentClick = (appointment) => {
+    const full = appointments.find(
+      (a) => a.id === appointment.id.split("_")[0]
     );
-    if (fullAppointment) {
-      openModal(fullAppointment);
-    }
+    if (full) openModal(full);
   };
 
-   const splitId = useCallback((id) => {
-      if (!id?.includes("_")) return { uuid: id, timestamp: null };
-      const [uuid, timestamp] = id.split("_");
-      return { uuid, timestamp };
-    }, []);
-
   const openModal = (appointment = null) => {
-    const raw = appointment?.rawData || appointment;
-    setSelectedAppointment(prepareModalData(raw));
+    if (!appointment) {
+      setSelectedAppointment(null);
+      setIsModalOpen(true);
+      return;
+    }
+
+    const fullAppt = appointment.rawData || appointment;
+    const preparedData = prepareModalData(fullAppt);
+
+    if (!preparedData) {
+      showToast("Failed to prepare appointment data", "error");
+      return;
+    }
+
+    // Ensure at least one service entry
+    if (!preparedData.service || preparedData.service.length === 0) {
+      preparedData.service = [{ serviceCodeId: "", modifier: "" }];
+    }
+
+    setSelectedAppointment(preparedData);
     setIsModalOpen(true);
   };
 
@@ -433,54 +476,45 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   };
 
   const handleSaveAppointment = async (data) => {
-    console.log(data);
     try {
-      const appointmentData = {
+      const payload = {
         ...data,
         sessionId: data.sessionType,
-        clientId: clientId,
+        clientId,
         tenantId,
         colourCode: data.colorCode,
         accessToken,
         refreshToken,
       };
 
-      if (selectedAppointment && data.scope) {
-        const { uuid } = splitId(selectedAppointment?.id);
+      if (selectedAppointment?.id) {
+        const id =
+          selectedAppointment.id.split("_")[0] || selectedAppointment.id;
         await api.UpdateAppointments({
-          ...appointmentData,
-          id: uuid,
-          forAll: data?.scope === "all",
+          ...payload,
+          id,
+          forAll: data.scope === "all",
         });
-        showToast("Appointment updated successfully!", "success");
+        showToast("Appointment updated!", "success");
       } else {
-        await api.CreateAppointments(appointmentData);
-        showToast("Appointment created successfully!", "success");
+        await api.CreateAppointments(payload);
+        showToast("Appointment created!", "success");
       }
 
       closeModal();
       fetchAppointments();
-    } catch (error) {
-      console.error("Failed to save appointment:", error);
+    } catch (err) {
+      console.error(err);
       showToast("Failed to save appointment", "error");
     }
   };
 
-  const handlePrevMonth = () => {
-    setCurrentDate(subDays(currentDate, 30));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(addDays(currentDate, 30));
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
+  const handlePrevMonth = () => setCurrentDate(subDays(currentDate, 30));
+  const handleNextMonth = () => setCurrentDate(addDays(currentDate, 30));
+  const handleToday = () => setCurrentDate(new Date());
 
   return (
     <div className="p-6">
-      {/* Tabs */}
       <div className="documents-tabs w-full">
         {[
           "upcomingAppointments",
@@ -501,10 +535,8 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         ))}
       </div>
 
-      {/* View Toggle + Search + New Button */}
       <div className="flex justify-between items-center mt-6 mb-4">
         <div className="flex items-center gap-4">
-          {/* View Toggle */}
           <div className="cal-sched-filter-controls">
             <div className="cal-sched-tab-container">
               <button
@@ -545,7 +577,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             </div>
           </div>
         </div>
-
         <Button
           label="New Appointment"
           variant="primary"
@@ -554,7 +585,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         />
       </div>
 
-      {/* Calendar Controls (only show in calendar view) */}
       {viewMode === "calendar" && (
         <div className="flex mt-6 items-center">
           <div className="flex justify-between items-center mb-4 p-4 bg-gray-50 rounded-lg">
@@ -565,7 +595,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
               >
                 &lt;
               </button>
-              <button onClick={handleToday} className="px-3 py-1 ">
+              <button onClick={handleToday} className="px-3 py-1">
                 Today
               </button>
               <button
@@ -590,7 +620,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         </div>
       )}
 
-      {/* Content: Table or Calendar */}
       <div className="mt-4">
         {viewMode === "table" ? (
           <CustomTable
@@ -598,9 +627,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             columns={columns}
             actions={actions}
             filters={filters}
-            tableName={`${activeTab
+            tableName={activeTab
               .replace(/([A-Z])/g, " $1")
-              .replace(/^./, (str) => str.toUpperCase())}`}
+              .replace(/^./, (str) => str.toUpperCase())}
             itemsPerPage={10}
             loading={loading}
             showCheckbox={false}
@@ -619,17 +648,15 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       </div>
 
       <MemoAppointmentModal
-        key={selectedAppointment?.id || "new"}
         isOpen={isModalOpen}
         onClose={closeModal}
-        initialData={
-          selectedAppointment?.rawData || selectedAppointment || null
-        }
+        initialData={selectedAppointment || null}
         isEditMode={!!selectedAppointment}
         onSave={handleSaveAppointment}
         clients={currentClient ? [currentClient] : []}
         sessionTypes={sessionTypes}
         staff={staff}
+        serviceCodes={serviceCodes}
         accessToken={accessToken}
         refreshToken={refreshToken}
         tenantId={tenantId}

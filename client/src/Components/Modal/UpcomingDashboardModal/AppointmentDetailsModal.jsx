@@ -13,6 +13,9 @@ const AppointmentDetailsModal = ({
 }) => {
   if (!isOpen || !appointment) return null;
 
+  // Extract data from the API response structure
+  const appointmentData = appointment.originalData || appointment;
+
   const parseTime = (timeStr, dateStr) => {
     const defaultDate = new Date();
     if (
@@ -46,20 +49,55 @@ const AppointmentDetailsModal = ({
     }
   };
 
-  const start = parseTime(appointment.startTime, appointment.date);
-  const end = parseTime(appointment.endTime, appointment.date);
+  // Parse date and time from API response
+  const appointmentDate = appointmentData.date || new Date().toISOString().split('T')[0];
+  const startTimeStr = appointmentData.startTime || "00:00";
+  const endTimeStr = appointmentData.endTime || "00:00";
+
+  const start = parseTime(startTimeStr, appointmentDate);
+  const end = parseTime(endTimeStr, appointmentDate);
   const startTime = isValid(start) ? format(start, "h:mm a") : "Invalid Time";
   const endTime = isValid(end) ? format(end, "h:mm a") : "Invalid Time";
   const timeRange = `${startTime} - ${endTime}`;
-  const dateDisplay =
-    appointment.date && isValid(new Date(appointment.date))
-      ? format(new Date(appointment.date), "MM/dd/yyyy")
-      : "Invalid Date";
+  const dateDisplay = appointmentDate && isValid(new Date(appointmentDate))
+    ? format(new Date(appointmentDate), "MM/dd/yyyy")
+    : "Invalid Date";
+
+  // Extract client information
+  const clientName = appointmentData.client
+    ? `${appointmentData.client.firstName} ${appointmentData.client.lastName}${
+        appointmentData.client.preferredName 
+          ? ` (${appointmentData.client.preferredName})` 
+          : ""
+      }`
+    : appointment.clientName || "Unknown Client";
+
+  // Extract clinician names
+  const clinicianNames = appointmentData.clinicians
+    ? appointmentData.clinicians.map(c => c.fullName).join(", ")
+    : appointment.clinician || "Not assigned";
+
+  // Extract service types
+  const serviceTypes = appointmentData.appointmentServices
+    ? appointmentData.appointmentServices
+        .map(service => {
+          const code = service.serviceCode?.code || "";
+          const description = service.serviceCode?.description || "";
+          return `${code}${description ? ` - ${description}` : ""}`;
+        })
+        .join(", ")
+    : appointment.serviceType || "Not specified";
+
+  // Extract session information
+  const sessionName = appointmentData.session?.name || appointment.sessionType || "Group Training";
+  const serviceLocation = appointmentData.serviceLocation || appointment.serviceLocation || "Clinic";
 
   const getRecurrenceDescription = () => {
-    if (!appointment.isRecurring || !appointment.recurrence)
+    if (!appointmentData.isRecurring || !appointmentData.recurrence)
       return "Does not repeat";
-    const r = appointment.recurrence;
+    
+    const r = appointmentData.recurrence;
+    
     if (r.type === "day")
       return r.interval
         ? `Every ${r.interval} days`
@@ -70,12 +108,14 @@ const AppointmentDetailsModal = ({
               ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
               : ""
           }`;
+    
     if (r.type === "week")
       return `Weekly on ${(r.days || []).join(", ")}${
         r.endType === "on" && r.endOn && isValid(new Date(r.endOn))
           ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
           : ""
       }`;
+    
     if (r.type === "month")
       return `Monthly on day ${r.day || 1}${
         r.endType === "after"
@@ -84,6 +124,7 @@ const AppointmentDetailsModal = ({
           ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
           : ""
       }`;
+    
     return "Custom Recurrence";
   };
 
@@ -91,7 +132,7 @@ const AppointmentDetailsModal = ({
     <div className="appointment-details-overlay" onClick={onClose}>
       <div
         className="appointment-details-modal"
-        onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="modal-header">
@@ -106,7 +147,7 @@ const AppointmentDetailsModal = ({
           <div className="client-section">
             <div className="client-name">
               <h3 className="client-name-label">Client</h3>
-              {appointment.clientName || "Unknown Client"}
+              {clientName}
             </div>
             <div className="appointment-frequency-section">
               <h3 className="appointment-frequency-label">
@@ -125,7 +166,7 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <div className="detail-label">Clinician(s)</div>
                   <div className="detail-value">
-                    {appointment.clinicianNames?.join(", ") || "Not assigned"}
+                    {clinicianNames}
                   </div>
                 </div>
               </div>
@@ -134,7 +175,7 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <div className="detail-label">Date and Time</div>
                   <div className="detail-value">
-                    {appointment.dateDisplay} • {appointment.timeRange}
+                    {dateDisplay} • {timeRange}
                   </div>
                 </div>
               </div>
@@ -146,7 +187,7 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <div className="detail-label">Service Type</div>
                   <div className="detail-value">
-                    {appointment.serviceTypes || "Not specified"}
+                    {serviceTypes}
                   </div>
                 </div>
               </div>
@@ -155,7 +196,7 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <div className="detail-label">Service Location</div>
                   <div className="detail-value">
-                    {appointment.serviceLocation || "Clinic"}
+                    {serviceLocation}
                   </div>
                 </div>
               </div>
@@ -167,10 +208,21 @@ const AppointmentDetailsModal = ({
                 <div className="detail-column">
                   <div className="detail-label">Session Type</div>
                   <div className="detail-value">
-                    {appointment.sessionName || "Group Training"}
+                    {sessionName}
                   </div>
                 </div>
               </div>
+              {appointmentData.requiresTravel !== undefined && (
+                <div className="detail-row">
+                  <span className="bullet">•</span>
+                  <div className="detail-column">
+                    <div className="detail-label">Requires Travel</div>
+                    <div className="detail-value">
+                      {appointmentData.requiresTravel ? "Yes" : "No"}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -178,7 +230,7 @@ const AppointmentDetailsModal = ({
         {/* Footer */}
         <div className="details-modal-footer">
           <Button
-       className="w-full"
+            className="w-full"
             label="Request Reschedule"
             icon={<FiRefreshCw size={18} />}
             variant="secondary"

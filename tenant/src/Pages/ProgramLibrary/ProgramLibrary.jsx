@@ -23,10 +23,9 @@ const ProgramLibrary = () => {
   const [loading, setLoading] = useState(true);
 
   /* ----------  auth  ---------- */
-  const token = useSelector((s) => s.authentication?.user?.token);
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   /* ----------  helpers  ---------- */
   const domainType = view === "skillAcquisition" ? "SKILL_ACQUISITION" : "BEHAVIOR_REDUCTION";

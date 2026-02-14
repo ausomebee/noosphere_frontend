@@ -9,9 +9,8 @@ import { showToast } from "../../../../Helper/ShowToast";
 
 const IncomeItems = () => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");

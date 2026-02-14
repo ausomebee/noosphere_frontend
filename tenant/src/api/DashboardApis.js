@@ -77,10 +77,64 @@ const GetTenantSessionMetrics = async ({
     );
   }
 };
+const GetTenantSessionOverviewMetrics = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/tenant/overview/${tenantId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Session Overview Metric by tenant id failed"
+    );
+  }
+};
+const GetTenantAvailabilityCount = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/count-staff/${tenantId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Tenant Availability Count by tenant id failed"
+    );
+  }
+};
+const GetTenantCaseloadCount = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/avg-staff/${tenantId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Tenant Caseload Count by tenant id failed"
+    );
+  }
+};
 
 export default {
   GetDashboardIntakeByTenantId,
   GetTenantClientAuthorizationMetrics,
   GetAllTenantClientAuthorization,
   GetTenantSessionMetrics,
+  GetTenantSessionOverviewMetrics,
+  GetTenantAvailabilityCount,
+  GetTenantCaseloadCount,
 };

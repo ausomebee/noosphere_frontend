@@ -10,9 +10,8 @@ const IntakePipeline = ({ hasData }) => {
   const [error, setError] = React.useState(false);
 
   const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   React.useEffect(() => {
     if (!hasData) {

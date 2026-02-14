@@ -19,11 +19,10 @@ const ClientList = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
 
-  const  token  = useSelector((s) => s.authentication?.user?.token);
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   // Fetch all clients for this tenant
   const fetchClients = useCallback(async () => {

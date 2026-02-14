@@ -1,4 +1,4 @@
-// utils/expandForAppointments.js
+// src/utils/expandForAppointments.js
 import {
   parseISO,
   isValid,
@@ -6,9 +6,9 @@ import {
   isBefore,
   startOfDay,
   format,
+  addMonths,
   addDays,
   isSameDay,
-  addMonths,
 } from "date-fns";
 import expand from "./expand";
 
@@ -17,30 +17,30 @@ const expandForAppointments = (master, direction = "future") => {
   
   const now = startOfDay(new Date());
   
-  // Define appropriate view windows based on direction
   let viewWindow;
   
   if (direction === "future") {
-    // For upcoming appointments: from today to 6 months in the future
     viewWindow = {
       start: now,
-      end: addMonths(now, 6) // 6 months limit for upcoming appointments
+      end: addMonths(now, 6)
     };
   } else if (direction === "past") {
-    // For past appointments: from 6 months ago to yesterday
     viewWindow = {
-      start: addMonths(now, -6), // 6 months lookback for past appointments
-      end: addDays(now, -1) // Up to yesterday
+      start: addMonths(now, -6),
+      end: addDays(now, -1)
     };
   } else {
     return instances;
   }
 
-  // Use your existing expand function with the appropriate view window
+  // This gives us all the instances with correct date, id, etc.
   const expandedInstances = expand(master, viewWindow);
   
-  // Filter based on direction and ensure we're within reasonable bounds
-  return expandedInstances.filter(instance => {
+  // THIS IS THE ONLY LINE YOU WERE MISSING:
+  return expandedInstances.map(instance => ({
+    ...master,      // ← THIS brings back the .service array you added in toTableRow!
+    ...instance     // ← then overrides date, id, etc.
+  })).filter(instance => {
     const instanceDate = parseISO(instance.date);
     if (!isValid(instanceDate)) return false;
     

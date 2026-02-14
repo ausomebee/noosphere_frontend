@@ -1,0 +1,242 @@
+/* GoalsTargetsSection.css */
+.crb-section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Goal Card Styles */
+.goal-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.goal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.goal-card-header h5 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.goal-delete-btn {
+ background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.goal-delete-btn:hover {
+  background: #fee2e2;
+}
+
+.goal-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Target Behaviors Input */
+.target-behaviors-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.target-behaviors-notes {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.target-behaviors-notes p {
+  margin: 4px 0;
+}
+
+.target-behaviors-notes p:first-child {
+  margin-top: 0;
+}
+
+.target-behaviors-notes p:last-child {
+  margin-bottom: 0;
+}
+
+/* Targets Section */
+.targets-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.targets-section-title {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Target Card Styles */
+.target-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.target-card:last-child {
+  margin-bottom: 0;
+}
+
+.target-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.target-card-header h6 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.target-delete-btn {
+   background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.target-delete-btn:hover {
+  background: #fee2e2;
+}
+
+.target-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Select with Other Container */
+.select-with-other-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.other-input-wrapper {
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Buttons Wrapper */
+.goal-add-wrapper,
+.target-add-wrapper{
+      display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  padding: 16px 0;
+  border-top: 1px dashed #cbd5e0;
+}
+
+.section-remove-btn-wrapper {
+   display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.target-add-wrapper {
+  margin-top: 8px;
+}
+
+/* Error Styles */
+.report-builder-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .goal-card {
+    padding: 16px;
+  }
+  
+  .goal-card-header,
+  .target-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .goal-delete-btn,
+  .target-delete-btn {
+    align-self: flex-start;
+  }
+  
+  .target-card {
+    padding: 16px;
+  }
+}
+
+/* Spacing adjustments for nested structure */
+.crb-section-fields .goal-card + .goal-card {
+  margin-top: 8px;
+}
+
+.targets-section + .goal-add-wrapper {
+  margin-top: 16px;
+}
+
+/* Input field spacing within cards */
+.goal-card-content > *:not(:last-child),
+.target-card-content > *:not(:last-child) {
+  margin-bottom: 4px;
+}

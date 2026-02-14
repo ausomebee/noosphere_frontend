@@ -13,35 +13,57 @@ import storage from 'redux-persist/lib/storage';
 import rootReducer from './rootReducer';
 
 // Define your app version
-const APP_VERSION = '0.0.0';
+const APP_VERSION = '1.0.0';
 
 const persistConfig = {
   key: 'root',
   storage,
   version: APP_VERSION,
+  // Whitelist the slices you want to persist
+  whitelist: ['auth', 'formBuilder', 'formResponse'],
   migrate: (state) => {
     const currentVersion = state?._persist?.version;
     if (currentVersion !== APP_VERSION) {
-      storage.removeItem('persist:root');
-      return Promise.resolve(undefined);
+      console.log(`Migrating from version ${currentVersion} to ${APP_VERSION}`);
+      // For auth migration, preserve important fields
+      if (state.auth) {
+        // If old structure had 'token', migrate to 'accessToken'
+        if (state.auth.token && !state.auth.accessToken) {
+          state.auth.accessToken = state.auth.token;
+        }
+      }
+      return Promise.resolve(state);
     }
     return Promise.resolve(state);
-  }
+  },
+  // Transform to handle serialization of complex objects
+  transforms: [],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// ✅ Fix non-serializable value warning by ignoring redux-persist actions
 const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredPaths: ['formResponse.files', 'auth.user'], // Add auth.user if needed
       },
     }),
 });
 
 const persistor = persistStore(store);
+
+// Optional: Add rehydration callback
+persistor.subscribe(() => {
+  const state = store.getState();
+  console.log('Auth state after rehydration:', {
+    isAuthenticated: state.auth.isAuthenticated,
+    hasUser: !!state.auth.user,
+    hasAccessToken: !!state.auth.accessToken,
+    hasRefreshToken: !!state.auth.refreshToken,
+  });
+});
 
 export { store, persistor };

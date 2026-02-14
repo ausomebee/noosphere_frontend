@@ -19,7 +19,7 @@ const AccordionTableRobust = ({
   onEdit,
   onDeactivate,
   onDelete,
-  onSave, // New prop for saving changes
+  onSave,
   serviceCodes = [],
   loadingServiceCodes = false,
 }) => {
@@ -31,23 +31,22 @@ const AccordionTableRobust = ({
 
   const initialDataRef = useRef(initialServiceData);
 
-  const {
-    control,
-    watch,
-    setValue,
-    getValues,
-    reset,
-    formState: { isDirty },
-  } = useForm({
+  const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: { services: initialServiceData },
   });
 
   const modifierOptions = [
-    { value: "", label: "None" },
-    { value: "HM", label: "HM - Less than Bachelor's" },
-    { value: "HN", label: "HN - Bachelor's Degree" },
-    { value: "HO", label: "HO - Master's Degree" },
-    { value: "HP", label: "HP - Doctoral Level" },
+   { value: "", label: "No Modifier" },
+    { value: "HO", label: "HO - Master's-level provider" },
+    { value: "HP", label: "HP - Doctoral-level provider" },
+    { value: "HN", label: "HN - Associate's-level provider" },
+    { value: "HM", label: "HM - Bachelor's-level provider" },
+    { value: "95", label: "95 - Synchronous telehealth" },
+    { value: "GT", label: "GT - Interactive audio/video" },
+    { value: "KX", label: "KX - Requirements met" },
+    { value: "59", label: "59 - Distinct procedural service" },
+    { value: "76", label: "76 - Repeat same provider" },
+    { value: "77", label: "77 - Repeat different provider" },
   ];
 
   const perOptions = [
@@ -55,18 +54,15 @@ const AccordionTableRobust = ({
     { value: "week", label: "Per Week" },
     { value: "month", label: "Per Month" },
     { value: "year", label: "Per Year" },
+    { value: "SESSION", label: "Per Session" },
   ];
 
   const formServices = watch("services");
 
-  // Only call onServiceDataChange when formServices actually changes
   useEffect(() => {
-    if (formServices && Object.keys(formServices).length > 0) {
-      onServiceDataChange?.(formServices);
-    }
-  }, [formServices]);
+    if (formServices) onServiceDataChange?.(formServices);
+  }, [formServices, onServiceDataChange]);
 
-  // Reset form when initialServiceData changes
   useEffect(() => {
     if (
       JSON.stringify(initialDataRef.current) !==
@@ -78,15 +74,11 @@ const AccordionTableRobust = ({
     }
   }, [initialServiceData, reset]);
 
-  // Check for changes
   useEffect(() => {
-    const subscription = watch((value) => {
-      setHasChanges(true);
-    });
+    const subscription = watch(() => setHasChanges(true));
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -100,10 +92,7 @@ const AccordionTableRobust = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
-  const toggleRow = (idx) => {
-    setExpandedRow(expandedRow === idx ? null : idx);
-  };
-
+  const toggleRow = (idx) => setExpandedRow(expandedRow === idx ? null : idx);
   const toggleDropdown = (idx, e) => {
     e.stopPropagation();
     setDropdownOpen(dropdownOpen === idx ? null : idx);
@@ -116,7 +105,13 @@ const AccordionTableRobust = ({
       `services.${authId}`,
       [
         ...current,
-        { serviceCode: "", modifier: "", units: "", per: "", utilization: 0 },
+        {
+          serviceCode: "",
+          modifier: "",
+          units: "",
+          per: "SESSION",
+          utilization: 0,
+        },
       ],
       { shouldDirty: true }
     );
@@ -137,22 +132,30 @@ const AccordionTableRobust = ({
   };
 
   const handleSaveChanges = async () => {
+    if (expandedRow === null) {
+      showToast("Please expand an authorization to save changes", "warning");
+      return;
+    }
+
+    const row = pagination.currentData[expandedRow];
+    const authId = row.id;
+    const currentServices = getValues(`services.${authId}`) || [];
+
+    const invalid = currentServices.some(
+      (s) => !s.serviceCode || !s.units || parseInt(s.units) <= 0
+    );
+    if (invalid) {
+      showToast("Please fill service code and units for all rows", "warning");
+      return;
+    }
+
     setSaving(true);
     try {
-      const currentData = getValues("services");
-      console.log("Saving changes:", currentData);
-
-      // Call the onSave prop with the updated service data
-      if (onSave) {
-        await onSave(currentData);
-        showToast("Changes saved successfully", "success");
-        setHasChanges(false);
-      } else {
-        showToast("Save functionality not implemented", "warning");
-      }
-    } catch (error) {
-      console.error("Failed to save changes:", error);
-      showToast("Failed to save changes", "error");
+      const payload = { [authId]: currentServices };
+      if (onSave) await onSave(payload);
+      setHasChanges(false);
+    } catch (err) {
+      // Error handled in parent
     } finally {
       setSaving(false);
     }
@@ -179,10 +182,7 @@ const AccordionTableRobust = ({
   const pagination = useMemo(() => {
     const totalPages = Math.ceil(data.length / itemsPerPage);
     const start = (currentPage - 1) * itemsPerPage;
-    return {
-      totalPages,
-      currentData: data.slice(start, start + itemsPerPage),
-    };
+    return { totalPages, currentData: data.slice(start, start + itemsPerPage) };
   }, [data, currentPage, itemsPerPage]);
 
   const handlePageChange = (page) => {
@@ -351,10 +351,6 @@ const AccordionTableRobust = ({
                                           placeholder="Select service code"
                                           isDisabled={!isEditMode || used}
                                           isLoading={loadingServiceCodes}
-                                          onChange={(e) => {
-                                            field.onChange(e);
-                                            setHasChanges(true);
-                                          }}
                                         />
                                       )}
                                     />
@@ -368,10 +364,6 @@ const AccordionTableRobust = ({
                                           options={modifierOptions}
                                           placeholder="Select modifier"
                                           isDisabled={!isEditMode || used}
-                                          onChange={(e) => {
-                                            field.onChange(e);
-                                            setHasChanges(true);
-                                          }}
                                         />
                                       )}
                                     />
@@ -385,10 +377,6 @@ const AccordionTableRobust = ({
                                           type="number"
                                           placeholder="Enter units"
                                           disabled={!isEditMode || used}
-                                          onChange={(e) => {
-                                            field.onChange(e);
-                                            setHasChanges(true);
-                                          }}
                                         />
                                       )}
                                     />
@@ -402,10 +390,6 @@ const AccordionTableRobust = ({
                                           options={perOptions}
                                           placeholder="Select per"
                                           isDisabled={!isEditMode || used}
-                                          onChange={(e) => {
-                                            field.onChange(e);
-                                            setHasChanges(true);
-                                          }}
                                         />
                                       )}
                                     />
@@ -429,6 +413,7 @@ const AccordionTableRobust = ({
                                         {service.utilization || 0}%
                                       </span>
                                     </div>
+
                                     {isEditMode &&
                                       services.length > 1 &&
                                       !used && (
@@ -437,7 +422,7 @@ const AccordionTableRobust = ({
                                           onClick={(e) =>
                                             removeServiceRow(authId, sIdx, e)
                                           }
-                                          title="Remove service code"
+                                          title="Remove"
                                         >
                                           <FaTrash />
                                         </button>
@@ -446,7 +431,7 @@ const AccordionTableRobust = ({
                                 ))
                               ) : (
                                 <div className="robust-no-services">
-                                  No service codes found for this authorization
+                                  No service codes assigned
                                 </div>
                               )}
 
@@ -460,8 +445,9 @@ const AccordionTableRobust = ({
                                   />
                                 </div>
                               )}
-                              {hasChanges && isEditMode && (
-                                <div className="flex justify-end mb-4">
+
+                              {hasChanges && isEditMode && !used && (
+                                <div className="flex justify-end mt-4">
                                   <Button
                                     label={
                                       saving ? "Saving..." : "Save Changes"

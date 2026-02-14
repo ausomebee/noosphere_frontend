@@ -14,8 +14,8 @@ const Authorizations = ({
   setIsModalOpen,
 }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.token);
-  const refreshToken = accessToken;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [authorizationData, setAuthorizationData] = useState([
     { label: "Expired", value: 0, color: "#3B82F6" },
@@ -136,7 +136,9 @@ const Authorizations = ({
               className="auth-item flex items-center justify-between py-3 border-b "
             >
               <div className="flex-1">
-                <p className="font-bold text-sm font-medium text-gray-600">{item.name}</p>
+                <p className="font-bold text-sm font-medium text-gray-600">
+                  {item.name}
+                </p>
               </div>
               <div className="flex-1">
                 <p className="font-bold text-blue-primary">{item.details}</p>

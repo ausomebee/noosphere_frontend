@@ -22,9 +22,9 @@ const ViewPrograms = () => {
   const programName = searchParams.get("name") || "Program";
   const triggerRef = useRef(null);
 
-  const { token, tenantId } = useSelector((s) => s.authentication?.user || {});
-  const accessToken = token;
-  const refreshToken = token;
+  const { tenantId } = useSelector((s) => s.authentication?.user || {});
+   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);

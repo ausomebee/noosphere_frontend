@@ -9,9 +9,8 @@ import { showToast } from "../../../../Helper/ShowToast";
 
 const Deductions = () => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");
@@ -95,7 +94,7 @@ const Deductions = () => {
         });
         showToast(
           `Deduction ${newStatus ? "activated" : "deactivated"} successfully`,
-          "success"
+          "success",
         );
         fetchDeductions(); // Refresh data
       } catch (error) {
@@ -103,7 +102,7 @@ const Deductions = () => {
         showToast("Failed to update deduction status", "error");
       }
     },
-    [accessToken, refreshToken, fetchDeductions]
+    [accessToken, refreshToken, fetchDeductions],
   );
 
   // Handle save
@@ -148,17 +147,22 @@ const Deductions = () => {
         fetchDeductions(); // Refresh data
       } catch (error) {
         console.error(`Error saving deduction:`, error);
-        showToast(`Failed to ${mode === "add" ? "create" : "update"} deduction`, "error");
+        showToast(
+          `Failed to ${mode === "add" ? "create" : "update"} deduction`,
+          "error",
+        );
       }
     },
-    [tenantId, accessToken, refreshToken, mode, selectedRow, fetchDeductions]
+    [tenantId, accessToken, refreshToken, mode, selectedRow, fetchDeductions],
   );
 
   const formatRateDisplay = (data, items) => {
     if (data.type === "Flat Rate") {
       return `$${data.rate.rate || 0}`;
     } else if (data.type === "Percentage based") {
-      const referencedItem = items.find((item) => item.id === (data.rate.duration || ""));
+      const referencedItem = items.find(
+        (item) => item.id === (data.rate.duration || ""),
+      );
       return `${data.rate.unit || 0}% of ${referencedItem ? referencedItem.name : "Unknown Item"}`;
     } else if (data.type === "Time based") {
       return `$${data.rate.unit || 0} per ${data.rate.duration === "hours" ? "hour" : "minute"}`;

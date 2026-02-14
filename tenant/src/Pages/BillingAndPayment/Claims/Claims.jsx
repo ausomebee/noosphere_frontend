@@ -1,107 +1,82 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../Layout/TenantLayout";
 import CustomTable from "../../../Components/Table/CustomTable";
+import api from "../../../api/billingAndPaymentsApi";
+import { useSelector } from "react-redux";
 
-// import api from "../../../../api/AppointmentApi";
-
+// Helper function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  } catch (error) {
+    return "Invalid date";
+  }
+};
 
 const Claims = () => {
   const navigate = useNavigate();
-  const [tableData, setTableData] = useState([
-    {
-      id: "1",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12850",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "2",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12851",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "3",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12852",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "4",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12853",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "5",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12854",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "6",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12855",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "7",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12856",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-    {
-      id: "8",
-      date: "12/10/2024",
-      createdBy: "Uche Jenkins",
-      clientName: "Philip Thomson",
-      totalValues: "$400",
-      timeSheetNumber: "T12857",
-      payer: "Medicaid",
-      hasActions: true,
-    },
-  ]);
+  
+  // Redux state
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  
+  // State
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch claims data
+  useEffect(() => {
+    if (tenantId && accessToken) {
+      fetchClaimsData();
+    }
+  }, [tenantId, accessToken]);
 
+  const fetchClaimsData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.GetClaimsByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      
+      // Transform API data to match table structure - ONLY THE 4 COLUMNS
+      const transformedData = response.data.map((claim) => ({
+        id: claim.id,
+        date: formatDate(claim.date),
+        createdBy: claim.approver?.fullName || "N/A",
+        clientName: claim.clientName || "N/A",
+        payer: claim.authorizationsUsed?.[0]?.payerDetails?.payerName || "N/A",
+        hasActions: true,
+      }));
+      
+      setTableData(transformedData);
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      // Empty table if API fails
+      setTableData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Define columns - ONLY THE 4 YOU WANT
   const columns = [
     { header: "Date Created", key: "date", type: "dateTime" },
     { header: "Created By", key: "createdBy", type: "text" },
     { header: "Client Name", key: "clientName", type: "text" },
-    { header: "Total Value", key: "totalValues", type: "text" },
-    { header: "TimeSheet Number", key: "timeSheetNumber", type: "text" },
-    { header: "Payer", key: "payer", type: "text" }, // Changed type to "text" as "payer" is not a standard type
+    { header: "Payer", key: "payer", type: "text" },
   ];
 
+  // Define filters
   const filters = useMemo(
     () => [
       {
@@ -128,10 +103,6 @@ const Claims = () => {
     []
   );
 
-
-
-
-
   const handleActionClick = (row) => {
     navigate(`/billing/claims/view/${row.id}`);
   };
@@ -143,9 +114,7 @@ const Claims = () => {
         <h3 className="text-xl text-gray-700 font-500">Manage your claims</h3>
       </div>
 
-      
       <div className="mt-32">
-
         <CustomTable
           data={tableData}
           columns={columns}
@@ -157,10 +126,9 @@ const Claims = () => {
           actionText="View"
           actionLinkPrefix="/claims/view/"
           onActionClick={handleActionClick}
-      //  loading={loading}
+          loading={loading}
         />
       </div>
-     
     </DashboardLayout>
   );
 };

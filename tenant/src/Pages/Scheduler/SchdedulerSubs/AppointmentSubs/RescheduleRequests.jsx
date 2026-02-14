@@ -1,12 +1,13 @@
+// src/Pages/Scheduler/SchdedulerSubs/AppointmentSubs/RescheduleRequests.jsx
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import Button from "../../../../Components/Button/Button";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
+import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
 import { useSelector } from "react-redux";
 import api from "../../../../api/AppointmentApi";
-import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
 
 // Convert 24-hour time to 12-hour AM/PM
 const convertTo12Hour = (timeStr) => {
@@ -19,11 +20,13 @@ const convertTo12Hour = (timeStr) => {
 
 const RescheduleRequests = ({ counts, setCounts }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector((s) => s.authentication?.user?.role?.name ?? "Client");
+  const role = useSelector(
+    (s) => s.authentication?.user?.role?.name ?? "Client",
+  );
   const userId = useSelector((s) => s.authentication?.user?.id);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -32,57 +35,108 @@ const RescheduleRequests = ({ counts, setCounts }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch reschedule requests based on role
+  const toTableRow = (apiAppt) => {
+    const service = (apiAppt.appointmentServices || []).map((as) => {
+      const modifier = as.modifiers?.modifier
+        ? ` (${as.modifiers.modifier})`
+        : "";
+
+      const code = as.serviceCode?.code || "Unknown";
+
+      return {
+        serviceType: `${code}${modifier}`,
+        modifierType: as.modifiers?.modifier || "",
+      };
+    });
+
+    const client = apiAppt.client || {};
+    const clientFullName = [client.firstName, client.lastName]
+      .filter(Boolean)
+      .join(" ") || "Unknown Client";
+
+    return {
+      ...apiAppt,
+      service: service.length > 0 ? service : [],
+      client: { ...client, fullName: clientFullName },
+      clinicians: apiAppt.clinicians || [],
+      session: apiAppt.session || { name: "Unknown Session" },
+      colourCode: apiAppt.colourCode || "#3B82F6",
+    };
+  };
+
+  // Fetch reschedule requests
   const fetchRescheduleRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await (role === "Staff"
-        ? api.GetRescheduleAppointmentReqByStaffId({ staffId: userId, accessToken, refreshToken })
-        : api.GetRescheduleAppointmentReqByTenantId({ tenantId, accessToken, refreshToken }));
+        ? api.GetRescheduleAppointmentReqByStaffId({
+            staffId: userId,
+            accessToken,
+            refreshToken,
+          })
+        : api.GetRescheduleAppointmentReqByTenantId({
+            tenantId,
+            accessToken,
+            refreshToken,
+          }));
 
-      const mappedAppointments = response.data.data.map((appt) => {
-        const serviceTypeText = appt.service?.map((s) => s.serviceType).join(", ") || "N/A";
+      const rawData = response?.data?.data || [];
+      const transformed = rawData.map(toTableRow);
+
+      const mappedAppointments = transformed.map((appt) => {
+        const serviceText =
+          appt.service?.map((s) => s.serviceType).join(", ") || "N/A";
         const truncatedServiceType =
-          serviceTypeText.length > 20
-            ? serviceTypeText.substring(0, 20) + "..."
-            : serviceTypeText;
+          serviceText.length > 20
+            ? serviceText.substring(0, 20) + "..."
+            : serviceText;
 
-        // Separate arrays for filtering
         const therapistNames = appt.clinicians?.map((c) => c.fullName) || [];
         const serviceTypes = appt.service?.map((s) => s.serviceType) || [];
 
         return {
           id: appt.id,
           clientId: appt.clientId,
-          clientName: appt.client.fullName,
-          therapistName: therapistNames.length > 0 ? therapistNames.join(", ") : "Unassigned",
+          clientName: appt.client?.fullName || "Unknown Client",
+          therapistName:
+            therapistNames.length > 0
+              ? therapistNames.join(", ")
+              : "Unassigned",
           serviceType: truncatedServiceType,
-          sessionType: appt.session.name,
+          sessionType: appt.session?.name || "N/A",
           prevDateTime: {
             date: appt.previousDate || "N/A",
-            time: appt.previousStartTime && appt.previousEndTime
-              ? `${convertTo12Hour(appt.previousStartTime)} - ${convertTo12Hour(appt.previousEndTime)}`
-              : "N/A",
+            time:
+              appt.previousStartTime && appt.previousEndTime
+                ? `${convertTo12Hour(
+                    appt.previousStartTime,
+                  )} - ${convertTo12Hour(appt.previousEndTime)}`
+                : "N/A",
           },
           newDateTime: {
             date: appt.date,
-            time: `${convertTo12Hour(appt.startTime)} - ${convertTo12Hour(appt.endTime)}`,
+            time: `${convertTo12Hour(appt.startTime)} - ${convertTo12Hour(
+              appt.endTime,
+            )}`,
           },
           date: appt.date,
           startTime: convertTo12Hour(appt.startTime),
           endTime: convertTo12Hour(appt.endTime),
           hasActions: true,
           hasCheckbox: true,
-          // Arrays for filtering
           therapistNames,
           serviceTypes,
         };
       });
 
       setAppointments(mappedAppointments);
-      setCounts((prev) => ({ ...prev, rescheduleRequests: mappedAppointments.length }));
+      setCounts((prev) => ({
+        ...prev,
+        rescheduleRequests: mappedAppointments.length,
+      }));
     } catch (err) {
+      console.error("Fetch error:", err);
       setError(err.message || "Failed to fetch reschedule requests");
     } finally {
       setLoading(false);
@@ -93,85 +147,87 @@ const RescheduleRequests = ({ counts, setCounts }) => {
     fetchRescheduleRequests();
   }, [fetchRescheduleRequests]);
 
-  // Generate unique filter values and custom filter functions
+  // Filters
   const filters = useMemo(() => {
     const uniqueTherapistNames = [
       ...new Set(appointments.flatMap((appt) => appt.therapistNames || [])),
     ]
       .filter(Boolean)
       .map((name) => ({ value: name, label: name }));
+
     const uniqueServiceTypes = [
       ...new Set(appointments.flatMap((appt) => appt.serviceTypes || [])),
     ]
       .filter(Boolean)
       .map((type) => ({ value: type, label: type }));
+
     const uniqueSessionTypes = [
       ...new Set(appointments.map((appt) => appt.sessionType)),
     ]
       .filter(Boolean)
       .map((type) => ({ value: type, label: type }));
-    const uniqueDates = [
-      ...new Set(appointments.map((appt) => appt.date)),
-    ]
+
+    const uniqueDates = [...new Set(appointments.map((appt) => appt.date))]
       .filter(Boolean)
       .map((date) => ({ value: date, label: date }));
 
     return [
-     
       {
         value: "therapistNames",
         label: "Select Therapist",
         filterValues: uniqueTherapistNames,
-        filterFunction: (row, value) => {
-          return value ? row.therapistNames.includes(value) : true;
-        },
+        filterFunction: (row, value) =>
+          !value || row.therapistNames.includes(value),
       },
       {
         value: "sessionType",
         label: "Session Type",
         filterValues: uniqueSessionTypes,
-        filterFunction: (row, value) => {
-          return value ? row.sessionType === value : true;
-        },
+        filterFunction: (row, value) => !value || row.sessionType === value,
       },
       {
         value: "serviceTypes",
         label: "Service Type",
         filterValues: uniqueServiceTypes,
-        filterFunction: (row, value) => {
-          return value ? row.serviceTypes.includes(value) : true;
-        },
+        filterFunction: (row, value) =>
+          !value || row.serviceTypes.includes(value),
       },
       {
         value: "dateTime",
         label: "Date",
         filterValues: uniqueDates,
-        filterFunction: (row, value) => {
-          return value ? row.date === value : true;
-        },
+        filterFunction: (row, value) => !value || row.date === value,
       },
-     
     ];
   }, [appointments]);
 
-  const columns = useMemo(() => [
-    { header: "Client", key: "clientName", type: "text" },
-    { header: "Clinician(s)", key: "therapistName", type: "text" },
-    { header: "Service Type(s)", key: "serviceType", type: "text" },
-    { header: "Sessions Type", key: "sessionType", type: "text" },
-    { header: "Prev. Date & Time", key: "prevDateTime", type: "day_time" },
-    { header: "New Date & Time", key: "newDateTime", type: "day_time" },
-  ], []);
+  const columns = useMemo(
+    () => [
+      { header: "Client", key: "clientName", type: "text" },
+      { header: "Clinician(s)", key: "therapistName", type: "text" },
+      { header: "Service Type(s)", key: "serviceType", type: "text" },
+      { header: "Session Type", key: "sessionType", type: "text" },
+      { header: "Prev. Date & Time", key: "prevDateTime", type: "day_time" },
+      { header: "New Date & Time", key: "newDateTime", type: "day_time" },
+    ],
+    [],
+  );
 
   const handleApprove = useCallback(
     async (items, clearSelection) => {
       try {
         const appointments = items.map((item) => ({ id: item.id }));
-        if (!appointments.length) {
-          throw new Error("No appointments selected");
-        }
-        await api.ApproveRescheduledReq({ appointments, accessToken, refreshToken });
-        setAppointments((prev) => prev.filter((appt) => !items.some((item) => item.id === appt.id)));
+        if (!appointments.length) throw new Error("No appointments selected");
+
+        await api.ApproveRescheduledReq({
+          appointments,
+          accessToken,
+          refreshToken,
+        });
+
+        setAppointments((prev) =>
+          prev.filter((appt) => !items.some((item) => item.id === appt.id)),
+        );
         setCounts((prev) => ({
           ...prev,
           rescheduleRequests: prev.rescheduleRequests - items.length,
@@ -181,10 +237,10 @@ const RescheduleRequests = ({ counts, setCounts }) => {
         clearSelection();
       } catch (err) {
         console.error("Approve Error:", err);
-        setError(err.message || "Failed to approve reschedule requests");
+        setError(err.message || "Failed to approve");
       }
     },
-    [accessToken, refreshToken, setCounts]
+    [accessToken, refreshToken, setCounts],
   );
 
   const handleReject = useCallback((items) => {
@@ -196,17 +252,23 @@ const RescheduleRequests = ({ counts, setCounts }) => {
     async (rejectData, clearSelection) => {
       try {
         const appointments = Array.isArray(rejectData.appointments)
-          ? rejectData.appointments.map((appt) => ({ id: appt.id }))
+          ? rejectData.appointments.map((a) => ({ id: a.id }))
           : [{ id: rejectData.appointments.id }];
-        if (!appointments.length) {
-          throw new Error("No appointments selected");
-        }
-        await api.RejectRescheduledReq({ appointments, accessToken, refreshToken });
-        setAppointments((prev) => prev.filter((appt) => !appointments.some((item) => item.id === appt.id)));
+
+        await api.RejectRescheduledReq({
+          appointments,
+          accessToken,
+          refreshToken,
+        });
+
+        setAppointments((prev) =>
+          prev.filter((appt) => !appointments.some((a) => a.id === appt.id)),
+        );
         setCounts((prev) => ({
           ...prev,
           rescheduleRequests: prev.rescheduleRequests - appointments.length,
-          cancelledAppointments: prev.cancelledAppointments + appointments.length,
+          cancelledAppointments:
+            prev.cancelledAppointments + appointments.length,
         }));
         setIsRejectModalOpen(false);
         setSelectedAppointment(null);
@@ -214,88 +276,51 @@ const RescheduleRequests = ({ counts, setCounts }) => {
         clearSelection();
       } catch (err) {
         console.error("Reject Error:", err);
-        setError(err.message || "Failed to reject reschedule requests");
+        setError(err.message || "Failed to reject");
       }
     },
-    [accessToken, refreshToken, setCounts]
+    [accessToken, refreshToken, setCounts],
   );
 
   const handleModify = useCallback((items) => {
-    if (items.length === 1) {
-      const appt = items[0];
-      setSelectedAppointment({
-        ...appt,
-        date: appt.newDateTime.date,
-        startTime: appt.startTime,
-        endTime: appt.endTime,
-      });
-    } else {
-      setSelectedAppointment(items);
-    }
+    setSelectedAppointment(items.length === 1 ? items[0] : items);
     setIsRescheduleModalOpen(true);
   }, []);
 
-  const handleSaveReschedule = useCallback(async (rescheduleData, clearSelection) => {
-    try {
-      const isArray = Array.isArray(rescheduleData);
-      const items = isArray ? rescheduleData : [rescheduleData];
-      
-      await Promise.all(
-        items.map((item) => {
-          return api.RescheduleAppointments({
-            tenantId,
-            id: item.id,
-            date: new Date(item.date),
-            startTime: item.startTime,
-            endTime: item.endTime,
-            relatedAppointment: item.relatedAppointment || null,
-            forAll: item.scope === "all",
-            rescheduled: true,
-            accessToken,
-            refreshToken,
-          });
-        })
-      );
+  const handleSaveReschedule = useCallback(
+    async (rescheduleData, clearSelection) => {
+      try {
+        const items = Array.isArray(rescheduleData)
+          ? rescheduleData
+          : [rescheduleData];
 
-      setAppointments((prev) =>
-        isArray
-          ? prev.map((appt) =>
-              rescheduleData.some((item) => item.id === appt.id)
-                ? {
-                    ...appt,
-                    newDateTime: {
-                      date: rescheduleData.find((item) => item.id === appt.id).date,
-                      time: `${convertTo12Hour(rescheduleData.find((item) => item.id === appt.id).startTime)} - ${convertTo12Hour(rescheduleData.find((item) => item.id === appt.id).endTime)}`,
-                    },
-                    date: rescheduleData.find((item) => item.id === appt.id).date,
-                    startTime: convertTo12Hour(rescheduleData.find((item) => item.id === appt.id).startTime),
-                    endTime: convertTo12Hour(rescheduleData.find((item) => item.id === appt.id).endTime),
-                  }
-                : appt
-            )
-          : prev.map((appt) =>
-              appt.id === rescheduleData.id
-                ? {
-                    ...appt,
-                    newDateTime: {
-                      date: rescheduleData.date,
-                      time: `${convertTo12Hour(rescheduleData.startTime)} - ${convertTo12Hour(rescheduleData.endTime)}`,
-                    },
-                    date: rescheduleData.date,
-                    startTime: convertTo12Hour(rescheduleData.startTime),
-                    endTime: convertTo12Hour(rescheduleData.endTime),
-                  }
-                : appt
-            )
-      );
-      setIsRescheduleModalOpen(false);
-      setSelectedAppointment(null);
-      setSelectedItems([]);
-      clearSelection();
-    } catch (err) {
-      setError(err.message || "Failed to reschedule appointments");
-    }
-  }, [tenantId, accessToken, refreshToken]);
+        await Promise.all(
+          items.map((item) =>
+            api.RescheduleAppointments({
+              tenantId,
+              id: item.id,
+              date: item.date,
+              startTime: item.startTime,
+              endTime: item.endTime,
+              forAll: item.scope === "all",
+              rescheduled: true,
+              accessToken,
+              refreshToken,
+            }),
+          ),
+        );
+
+        fetchRescheduleRequests(); // Refresh list
+        setIsRescheduleModalOpen(false);
+        setSelectedAppointment(null);
+        setSelectedItems([]);
+        clearSelection();
+      } catch (err) {
+        setError(err.message || "Failed to modify reschedule");
+      }
+    },
+    [tenantId, accessToken, refreshToken, fetchRescheduleRequests],
+  );
 
   const handleSelectionChange = useCallback((rows, items, reset = false) => {
     if (reset) {
@@ -320,17 +345,15 @@ const RescheduleRequests = ({ counts, setCounts }) => {
       items: [
         {
           label: "Approve",
-          icon: null,
-          onClick: (item) => handleApprove([item], () => handleSelectionChange([], [], true)),
+          onClick: (item) =>
+            handleApprove([item], () => handleSelectionChange([], [], true)),
         },
         {
           label: "Reject",
-          icon: null,
           onClick: (item) => handleReject([item]),
         },
         {
           label: "Modify",
-          icon: null,
           onClick: (item) => handleModify([item]),
         },
       ],
@@ -340,12 +363,16 @@ const RescheduleRequests = ({ counts, setCounts }) => {
   return (
     <div className="appointment-tab-content mt-20">
       {selectedItems.length > 0 && (
-        <div className="justify-end flex mb-4">
+        <div className="flex justify-end mb-4 gap-4">
           <Button
             label="Approve"
             variant="secondary-success"
             icon={<IoCheckmarkCircleOutline size={24} />}
-            onClick={() => handleApprove(selectedItems, () => handleSelectionChange([], [], true))}
+            onClick={() =>
+              handleApprove(selectedItems, () =>
+                handleSelectionChange([], [], true),
+              )
+            }
           />
           <Button
             label="Reject"
@@ -355,6 +382,9 @@ const RescheduleRequests = ({ counts, setCounts }) => {
           />
         </div>
       )}
+
+      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+
       <CustomTable
         data={appointments}
         columns={columns}
@@ -367,17 +397,29 @@ const RescheduleRequests = ({ counts, setCounts }) => {
         onSelectionChange={handleSelectionChange}
         loading={loading}
       />
+
       <RescheduleModal
         isOpen={isRescheduleModalOpen}
         onClose={handleModalClose}
         appointment={selectedAppointment}
-        onSave={(data) => handleSaveReschedule(data, () => handleSelectionChange([], [], true))}
+        onSave={(data) =>
+          handleSaveReschedule(data, () => handleSelectionChange([], [], true))
+        }
       />
+
       <RejectConfirmationModal
         isOpen={isRejectModalOpen}
         onClose={handleModalClose}
-        onConfirm={(data) => handleSaveReject(data, () => handleSelectionChange([], [], true))}
-        appointments={Array.isArray(selectedAppointment) ? selectedAppointment : selectedAppointment ? [selectedAppointment] : []}
+        onConfirm={(data) =>
+          handleSaveReject(data, () => handleSelectionChange([], [], true))
+        }
+        appointments={
+          Array.isArray(selectedAppointment)
+            ? selectedAppointment
+            : selectedAppointment
+              ? [selectedAppointment]
+              : []
+        }
       />
     </div>
   );

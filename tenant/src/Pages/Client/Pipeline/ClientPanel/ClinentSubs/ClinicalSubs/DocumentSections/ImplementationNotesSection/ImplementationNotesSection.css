@@ -1,0 +1,109 @@
+/* ImplementationNotesSection.css */
+.crb-section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Select with Other Container */
+.select-with-other-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.other-input-wrapper {
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error Styles */
+.report-builder-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* Remove Section Button */
+.section-remove-btn-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+/* Spacing between fields */
+.crb-section-fields > *:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+/* Radio Group Styles */
+.report-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-radio-group-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.report-radio-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.report-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.report-radio-input {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-radio-input:checked {
+  border-color: #3b82f6;
+  background-color: #3b82f6;
+  background-image: radial-gradient(circle, white 35%, transparent 40%);
+}
+
+.report-radio-label {
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .crb-section-fields {
+    gap: 16px;
+  }
+  
+  .report-radio-options {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

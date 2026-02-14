@@ -1,15 +1,19 @@
-import React, { useState } from "react";
-import { IoChevronDown } from "react-icons/io5";
+import React from "react";
 import "./OverviewCard.css";
 import { SelectInput } from "../../../Input/Inputs";
 
-const OverviewCard = ({ data }) => {
-  const [period, setPeriod] = useState("month");
-  const isEmpty = !data;
+const OverviewCard = ({ data, onPeriodChange, selectedPeriod }) => {
+  const isEmpty = !data || !data.chartData || data.chartData.length === 0;
 
   const maxValue = isEmpty
     ? 24
     : Math.max(...data.chartData.map((d) => d.value));
+
+  const handlePeriodChange = (e) => {
+    if (onPeriodChange) {
+      onPeriodChange(e.target.value);
+    }
+  };
 
   return (
     <div className="overview-card">
@@ -26,18 +30,18 @@ const OverviewCard = ({ data }) => {
           <>
             <div className="stat-item">
               <span className="stat-value">
-                {data.completedSessions.toLocaleString()}
+                {data.completedSessions?.toLocaleString() || 0}
               </span>
               <span className="stat-label">Completed sessions</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-value">{data.avgSessionDuration}</span>
+              <span className="stat-value">{data.avgSessionDuration || "00:00hrs"}</span>
               <span className="stat-label">Avg Session Duration</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-value">{data.upcomingSessions}</span>
+              <span className="stat-value">{data.upcomingSessions || 0}</span>
               <span className="stat-label">Upcoming Session</span>
             </div>
           </>
@@ -47,17 +51,14 @@ const OverviewCard = ({ data }) => {
       {/* Period Selector */}
       <div className="overview-period">
         <span className="period-label">Sessions per:</span>
-     
-
-        <SelectInput
-          options={[
-            { value: "month", label: "Month" },
-            { value: "week", label: "Week" },
-          ]}
-          placeholder="select"
+        <select 
           className="period-select"
-          width={100}
-        />
+          value={selectedPeriod || "month"}
+          onChange={handlePeriodChange}
+        >
+          <option value="month">Month</option>
+          <option value="week">Week</option>
+        </select>
       </div>
 
       {/* Chart */}
@@ -82,8 +83,8 @@ const OverviewCard = ({ data }) => {
                     <span className="bar-label">{month}</span>
                   </div>
                 ))
-              : data.chartData.map((item) => (
-                  <div key={item.month} className="bar-group">
+              : data.chartData.map((item, index) => (
+                  <div key={index} className="bar-group">
                     <div className="bar-wrapper">
                       <div
                         className="bar"

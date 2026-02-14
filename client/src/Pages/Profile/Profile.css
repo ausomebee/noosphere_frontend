@@ -65,12 +65,28 @@
   border-radius: 20%;
   overflow: hidden;
   border: 4px solid #f0f0f0;
+  position: relative;
 }
 
 .profile-picture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
 }
 
 .change-picture-btn {
@@ -81,6 +97,46 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  margin-top: 12px;
+}
+
+.change-picture-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.change-picture-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-image-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.change-image-btn {
+  color: #007bff;
+  border: none;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.change-image-btn:hover:not(:disabled) {
+  color: #0056b3;
+  background: #f8f9fa;
+}
+
+.change-image-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #666;
 }
 
 .password-field-replacement {
@@ -111,17 +167,25 @@
   color: #333;
 }
 
-.change-image-btn {
-  color: #007bff;
-  border: none;
+.password-input-wrapper button {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  color: #007bff;
 }
 
-.change-picture-btn:hover {
-  background: #f5f5f5;
+.password-input-wrapper button:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #007bff;
+}
+
+.password-input-wrapper button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .name-row {
@@ -130,6 +194,7 @@
   gap: 16px;
   margin-bottom: 20px;
 }
+
 .form-fields {
   margin-top: 40px;
 }
@@ -148,7 +213,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
- 
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.notification-item.highlight {
+  border-color: #a855f7;
+  background: #f8f0ff;
 }
 
 .notification-item.highlight .notification-label::before {
@@ -168,11 +241,76 @@
   flex: 1;
 }
 
+.loading-notifications {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
 .action-buttons {
   padding: 24px 32px;
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.password-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.password-modal h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.password-error {
+  color: #dc3545;
+  font-size: 14px;
+  padding: 12px;
+  background: #f8d7da;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-top: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
 }
 
 /* Responsive Design */
@@ -182,17 +320,15 @@
     gap: 24px;
   }
 
-  .profile-picture-section {
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 20px;
+  .profile-image-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 
   .profile-picture {
-    width: 80px;
-    height: 80px;
-    margin: 0;
+    width: 120px;
+    height: 120px;
   }
 
   .name-row {
@@ -215,6 +351,14 @@
   .action-buttons button {
     width: 100%;
   }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .password-modal {
+    padding: 24px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -229,4 +373,42 @@
   .profile-header h1 {
     font-size: 20px;
   }
+
+  .profile-picture {
+    width: 100px;
+    height: 100px;
+  }
+
+  .password-modal {
+    padding: 20px;
+  }
+}
+
+/* Animation for modal */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.password-modal {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Loading state for buttons */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Input disabled state */
+input:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
 }

@@ -4,10 +4,10 @@ import pipelineReducer from "./features/PipelineSlice";
 import addTargetDraftReducer from "./features/AddTargetDraftSlice";
 import staffFormDraftReducer from "./features/AddStaffDraftSlice";
 import formBuilderReducer from "./features/formBuilderSlice";
-import clientDraftReducer from "./features/clientDraftSlice"
-
-
-
+import clientDraftReducer from "./features/clientDraftSlice";
+import tenantSubdomainReducer from "./features/tenantSlice";
+import clinicalReportBuilderReducer from "./features/clinicalReportSlice";
+import clinicalTemplateBuilderReducer from "./features/clinicalReportTemplateSlice";
 
 const rootReducer = combineReducers({
   authentication: authReducer,
@@ -15,7 +15,10 @@ const rootReducer = combineReducers({
   addTargetDraft: addTargetDraftReducer,
   staffFormDraft: staffFormDraftReducer,
   formBuilder: formBuilderReducer,
-  addClient: clientDraftReducer
+  addClient: clientDraftReducer,
+  subDomain: tenantSubdomainReducer,
+clinicalReportTemplate: clinicalTemplateBuilderReducer,  // matches selector
+clinicalReport: clinicalReportBuilderReducer,                   
 });
 
 export default rootReducer;

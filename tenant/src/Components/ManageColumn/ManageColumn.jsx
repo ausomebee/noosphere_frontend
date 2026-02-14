@@ -29,16 +29,24 @@ const ManageColumn = () => {
   const { pipelineStageId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, draft, status, error } = useSelector((state) => state.pipeline);
-  const token = useSelector((state) => state.authentication?.user?.token);
+  const { pipeline, draft, status, error } = useSelector(
+    (state) => state.pipeline,
+  );
   const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
+  const accessToken = useSelector(
+    (state) => state.authentication?.user?.accessToken,
+  );
+  const refreshToken = useSelector(
+    (state) => state.authentication?.user?.refreshToken,
+  );
   const userId = useSelector((state) => state.authentication?.user?.id);
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
-  const [showDeleteCandidateModal, setShowDeleteCandidateModal] = useState(false);
+  const [showDeleteCandidateModal, setShowDeleteCandidateModal] =
+    useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [tableDataState, setTableDataState] = useState([]);
@@ -48,10 +56,10 @@ const ManageColumn = () => {
 
   const authTokens = useMemo(
     () => ({
-      accessToken: token,
-      refreshToken: token,
+      accessToken,
+      refreshToken,
     }),
-    [token]
+    [accessToken, refreshToken],
   );
 
   // Date formatting function
@@ -73,7 +81,10 @@ const ManageColumn = () => {
         const mappedData = response.items.map((item) => ({
           id: item.id,
           columnId: pipelineStageId,
-          client: item.fullName || `${item.firstName} ${item.lastName}`.trim() || "Unknown Candidate",
+          client:
+            item.fullName ||
+            `${item.firstName} ${item.lastName}`.trim() ||
+            "Unknown Candidate",
           firstName: item.firstName || "",
           lastName: item.lastName || "",
           email: item.email || "",
@@ -84,7 +95,6 @@ const ManageColumn = () => {
           hasCheckbox: true,
         }));
         setTableDataState(mappedData);
-     
       })
       .catch((err) => {
         console.error("Failed to fetch pipeline items:", err);
@@ -107,7 +117,7 @@ const ManageColumn = () => {
         stagesResponse.data?.data?.map((stage) => ({
           stageId: stage.id,
           name: stage.name || "Unnamed Stage",
-        })) || []
+        })) || [],
       );
     } catch (err) {
       console.error("Failed to fetch stages:", err);
@@ -122,7 +132,7 @@ const ManageColumn = () => {
         fetchSinglePipelineStages({
           pipelineStageId,
           ...authTokens,
-        })
+        }),
       )
         .unwrap()
         .then((response) => {
@@ -134,7 +144,7 @@ const ManageColumn = () => {
                 name: stageData.name || "",
                 description: stageData.description || "",
                 colorCode: stageData.colourCode || "#1E40AF",
-              })
+              }),
             );
           }
         })
@@ -148,42 +158,51 @@ const ManageColumn = () => {
     }
 
     return () => dispatch(resetDraft());
-  }, [pipelineStageId, dispatch, authTokens, fetchStages, fetchPipelineItemsData]);
+  }, [
+    pipelineStageId,
+    dispatch,
+    authTokens,
+    fetchStages,
+    fetchPipelineItemsData,
+  ]);
 
   // Handle candidate addition - FIXED: Now calls the API
-  const handleAddCandidate = useCallback(async (clientData) => {
-    if (!pipelineStageId || !tenantId) {
-      showToast("Pipeline stage ID or Tenant ID is not available.", "error");
-      return;
-    }
-
-    setIsCreatingCandidate(true);
-    try {
-      const result = await dispatch(
-        createCandidate({
-          ...clientData,
-          tenantId,
-          pipelineStageId: pipelineStageId,
-          createdBy: userId,
-          accessToken: authTokens.accessToken,
-          refreshToken: authTokens.refreshToken,
-        })
-      ).unwrap();
-
-      if (result.data) {
-        showToast("Candidate added successfully!", "success");
-        fetchPipelineItemsData(); // Refresh the table data
-        setShowAddClientModal(false);
-      } else {
-        throw new Error("Failed to create candidate");
+  const handleAddCandidate = useCallback(
+    async (clientData) => {
+      if (!pipelineStageId || !tenantId) {
+        showToast("Pipeline stage ID or Tenant ID is not available.", "error");
+        return;
       }
-    } catch (error) {
-      console.error("Failed to add candidate:", error);
-      showToast(error?.message || "Failed to add candidate.", "error");
-    } finally {
-      setIsCreatingCandidate(false);
-    }
-  }, [dispatch, pipelineStageId, tenantId, authTokens, fetchPipelineItemsData]);
+
+      setIsCreatingCandidate(true);
+      try {
+        const result = await dispatch(
+          createCandidate({
+            ...clientData,
+            tenantId,
+            pipelineStageId: pipelineStageId,
+            createdBy: userId,
+            accessToken: authTokens.accessToken,
+            refreshToken: authTokens.refreshToken,
+          }),
+        ).unwrap();
+
+        if (result.data) {
+          showToast("Candidate added successfully!", "success");
+          fetchPipelineItemsData(); // Refresh the table data
+          setShowAddClientModal(false);
+        } else {
+          throw new Error("Failed to create candidate");
+        }
+      } catch (error) {
+        console.error("Failed to add candidate:", error);
+        showToast(error?.message || "Failed to add candidate.", "error");
+      } finally {
+        setIsCreatingCandidate(false);
+      }
+    },
+    [dispatch, pipelineStageId, tenantId, authTokens, fetchPipelineItemsData],
+  );
 
   // Save basic info (name, description, color)
   const handleSaveBasicInfo = async () => {
@@ -204,7 +223,7 @@ const ManageColumn = () => {
       console.error("Failed to update stage:", err);
       showToast(
         err.response?.data?.message || "Failed to update stage information",
-        "error"
+        "error",
       );
     } finally {
       setIsSaving(false);
@@ -225,14 +244,14 @@ const ManageColumn = () => {
         deletePipelineItem({
           ids: selectedIds,
           ...authTokens,
-        })
+        }),
       ).unwrap();
 
       if (response.status === "ok") {
         fetchPipelineItemsData();
         showToast(
           `Deleted ${selectedIds.length} candidate(s) successfully!`,
-          "success"
+          "success",
         );
       } else {
         throw new Error("Failed to delete candidates.");
@@ -241,7 +260,7 @@ const ManageColumn = () => {
       console.error("Candidate deletion failed:", err);
       showToast(
         err.response?.data?.message || "Failed to delete candidate(s).",
-        "error"
+        "error",
       );
     } finally {
       setIsSaving(false);
@@ -280,7 +299,10 @@ const ManageColumn = () => {
             Back
           </button>
           <h1>{draft.name || "Pipeline Stage"}</h1>
-          <button className="manage-back-button" style={{ opacity: 0, pointerEvents: "none" }}>
+          <button
+            className="manage-back-button"
+            style={{ opacity: 0, pointerEvents: "none" }}
+          >
             <FaArrowLeft />
             Back
           </button>
@@ -468,7 +490,9 @@ const ManageColumn = () => {
           confirmButtonColor="#D92D20"
         />
 
-        {(status === "loading" || isSaving || isCreatingCandidate) && <LoadingSpinner />}
+        {(status === "loading" || isSaving || isCreatingCandidate) && (
+          <LoadingSpinner />
+        )}
       </div>
     </Layout>
   );
@@ -487,7 +511,14 @@ const actions = [
     type: "icon",
     label: "Delete",
     icon: <BsTrash size={20} />,
-    onClick: (item, { setSelectedCandidate, setSelectedCandidates, setShowDeleteCandidateModal }) => {
+    onClick: (
+      item,
+      {
+        setSelectedCandidate,
+        setSelectedCandidates,
+        setShowDeleteCandidateModal,
+      },
+    ) => {
       setSelectedCandidate(item);
       setSelectedCandidates([item.id]);
       setShowDeleteCandidateModal(true);

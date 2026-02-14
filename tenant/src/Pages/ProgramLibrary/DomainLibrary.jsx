@@ -25,9 +25,8 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
   const [loading, setLoading] = useState(true);
 
   /* ----------  auth  ---------- */
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+    const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+    const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   /* ----------  fetch programs  ---------- */
   const fetchPrograms = async () => {

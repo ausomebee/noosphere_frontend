@@ -1,110 +1,236 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
 import {
   IoAddOutline,
   IoFolderOutline,
   IoDocumentTextOutline,
-  IoImageOutline,
   IoDocumentOutline,
   IoSearchOutline,
+  IoFolderOpenOutline,
 } from "react-icons/io5";
-import { BsGrid, BsListUl, BsThreeDotsVertical } from "react-icons/bs";
-import "./MyDocuments.css";
+import { BsGrid, BsListUl } from "react-icons/bs";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { FiEdit3 } from "react-icons/fi";
+import "./MyDocuments.css";
+import { showToast } from "../../../Helper/ShowToast";
+import api from "../../../api/documentsAndFormsApis";
+
+import NewFolderModal from "../../../Components/Modal/DocumentModal/NewFolderModal";
+import NewFileModal from "../../../Components/Modal/DocumentModal/NewFileModal";
+import FolderFilesModal from "../../../Components/Modal/DocumentModal/FolderFileModal";
+import { useSelector } from "react-redux";
 
 const MyDocuments = () => {
+  const clientTenantId = useSelector(
+    (state) => state.auth?.user?.tenantLinks?.[0]?.id,
+  );
+  const userId = useSelector(
+    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId,
+  );
+  const accessToken = useSelector((state) => state.auth?.accessToken);
+  const refreshToken = useSelector((state) => state.auth?.refreshToken);
+
   const [showNewMenu, setShowNewMenu] = useState(false);
-const [searchTerm, setSearchTerm] = useState("");
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showRenameFolderModal, setShowRenameFolderModal] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [showFolderFilesModal, setShowFolderFilesModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [viewType, setViewType] = useState("list");
-  // Folders Data
-  const foldersData = [
-    {
-      id: 1,
-      name: "Children's Documents",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoFolderOutline size={20} />,
-    },
-    {
-      id: 2,
-      name: "Teacher's Documents",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoFolderOutline size={20} />,
-    },
-    {
-      id: 3,
-      name: "Choir Documents",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoFolderOutline size={20} />,
-    },
-  ];
 
-  // Recent Files Data
-  const recentFiles = [
-    {
-      id: 1,
-      name: "Tech requirements.pdf",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoDocumentTextOutline size={20} />,
-    },
-    {
-      id: 2,
-      name: "Tech requirements.pdf",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoDocumentTextOutline size={20} />,
-    },
-    {
-      id: 3,
-      name: "Tech requirements.pdf",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoDocumentTextOutline size={20} />,
-    },
-    {
-      id: 4,
-      name: "Tech requirements.pdf",
-      date: "Aug 6, 2024",
-      size: "1345 MB",
-      icon: <IoDocumentTextOutline size={20} />,
-    },
-  ];
+  // Data states
+  const [foldersData, setFoldersData] = useState([]);
+  const [recentFiles, setRecentFiles] = useState([]);
+  const [allFilesData, setAllFilesData] = useState([]);
 
-  // All Files Data
-  const allFilesData = [
-    {
-      id: 1,
-      name: "Eye check up",
-      uploadedBy: "Olivia Rhye",
-      icon: <IoDocumentOutline size={20} />,
-    },
-    {
-      id: 2,
-      name: "Leg check up",
-      uploadedBy: "Phoenix Baker",
-      icon: <IoImageOutline size={20} />,
-    },
-    {
-      id: 3,
-      name: "Nose check up",
-      uploadedBy: "Lana Steiner",
-      icon: <IoDocumentTextOutline size={20} />,
-    },
-  ];
+  // Isolated loading states
+  const [foldersLoading, setFoldersLoading] = useState(true);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [allFilesLoading, setAllFilesLoading] = useState(true);
 
-  // All Files Columns
+  const [selectedFolder, setSelectedFolder] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(allFilesData.length / itemsPerPage);
+
+  const pagination = {
+    currentPage,
+    totalPages: totalPages || 1,
+  };
+
+  const toggleNewMenu = () => setShowNewMenu(!showNewMenu);
+  const handleSearch = (e) => setSearchTerm(e.target.value);
+
+  useEffect(() => {
+    if (!clientTenantId || !accessToken || !refreshToken) {
+      console.warn("Missing auth data");
+      setFoldersLoading(false);
+      setRecentLoading(false);
+      setAllFilesLoading(false);
+      return;
+    }
+
+    const loadAllData = async () => {
+      // Load in parallel
+      const promises = [
+        // Folders
+        api
+          .GetAllFolders({ clientTenantId, accessToken, refreshToken })
+          .then((res) => {
+            setFoldersData(res?.data?.data || []);
+          })
+          .catch((err) => {
+            console.error("Folders fetch failed:", err);
+            showToast("Failed to load folders", "error");
+          })
+          .finally(() => setFoldersLoading(false)),
+
+        // Recent files
+        api
+          .GetRecentFiles({ clientTenantId, accessToken, refreshToken })
+          .then((res) => {
+            setRecentFiles(
+              (res?.data?.data || []).map((f) => ({
+                id: f.id,
+                name: f.name,
+                date: new Date(f.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                }),
+                size: f.size || "—",
+                icon: <IoDocumentOutline size={20} />,
+                url: f.url || f.fileUrl || f.downloadUrl || f.previewUrl || "",
+              })),
+            );
+          })
+          .catch((err) => {
+            console.error("Recent files fetch failed:", err);
+            showToast("Failed to load recent files", "error");
+          })
+          .finally(() => setRecentLoading(false)),
+
+        // All files
+        api
+          .GetAllFiles({ clientTenantId, accessToken, refreshToken })
+          .then((res) => {
+            setAllFilesData(
+              (res?.data?.data || []).map((f) => ({
+                id: f.id,
+                name: f.name,
+                uploadedBy: f.uploadedBy || "Unknown",
+                icon: <IoDocumentOutline size={20} />,
+                url: f.url || f.fileUrl || f.downloadUrl || f.previewUrl || "",
+              })),
+            );
+          })
+          .catch((err) => {
+            console.error("All files fetch failed:", err);
+            showToast("Failed to load all files", "error");
+          })
+          .finally(() => setAllFilesLoading(false)),
+      ];
+
+      await Promise.all(promises);
+    };
+
+    loadAllData();
+  }, [clientTenantId, accessToken, refreshToken]);
+
+  const handleCreateFolder = async (folderData) => {
+    try {
+      showToast("Creating folder...", "info");
+      const res = await api.CreateNewFolder({
+        clientTenantId,
+        folderName: folderData.name.trim(),
+        accessToken,
+        refreshToken,
+      });
+      setFoldersData((prev) => [...prev, res?.data?.data]);
+      showToast(`Folder "${folderData.name}" created`, "success");
+    } catch (err) {
+      showToast("Failed to create folder", "error");
+    }
+  };
+
+  const handleRenameFolder = async (folderId, newName) => {
+    try {
+      await api.UpdateFolderName({
+        folderId,
+        name: newName.trim(),
+        accessToken,
+        refreshToken,
+      });
+      setFoldersData((prev) =>
+        prev.map((f) =>
+          f.id === folderId ? { ...f, name: newName.trim() } : f,
+        ),
+      );
+      showToast("Folder renamed successfully", "success");
+    } catch (err) {
+      showToast("Failed to rename folder", "error");
+    }
+  };
+
+  const handleCreateFile = async (payloads) => {
+    try {
+      showToast("Uploading file(s)...", "info");
+      for (const payload of payloads) {
+        await api.CreateNewFile({
+          clientTenantId,
+          name: payload.name,
+          url: payload.url,
+          size: payload.size,
+          fileType: payload.fileType,
+          folderId: payload.folderId || null,
+          accessToken,
+          refreshToken,
+        });
+      }
+      showToast("File(s) uploaded successfully", "success");
+      // Tip: you could trigger a refresh of recent/all files here
+    } catch (err) {
+      showToast("Failed to upload file", "error");
+    }
+  };
+
+  const handleRecentFileClick = (file) => {
+    if (file.url?.trim()) {
+      window.open(file.url, "_blank", "noopener,noreferrer");
+    } else {
+      showToast("No file link available", "warning");
+    }
+  };
+
   const allFilesColumns = [
     {
       key: "name",
       title: "Name",
       render: (value, row) => (
-        <div className="file-name-cell">
+        <div
+          className="file-name-cell"
+          style={{ cursor: row.url ? "pointer" : "default" }}
+          onClick={() => {
+            if (row.url?.trim()) {
+              window.open(row.url, "_blank", "noopener,noreferrer");
+            } else {
+              showToast("No file link available", "warning");
+            }
+          }}
+        >
           <div className="file-icon">{row.icon}</div>
-          <span className="file-name">{value}</span>
+          <span
+            className="file-name"
+            style={{
+              color: row.url ? "#1e40af" : "inherit",
+              textDecoration: row.url ? "underline" : "none",
+            }}
+          >
+            {value}
+          </span>
         </div>
       ),
     },
@@ -114,45 +240,26 @@ const [searchTerm, setSearchTerm] = useState("");
     },
   ];
 
-  // Actions for All Files
   const fileActions = [
     {
       menu: true,
-      
-      label: "Download",
-      onClick: (row) => console.log("Download", row),
-    },
-    {
-      menu: true,
-      label: "Delete",
-      onClick: (row) => console.log("Delete", row),
-    },
-    {
-      menu: true,
-      label: "Share",
-      onClick: (row) => console.log("Share", row),
+      label: "View",
+      onClick: (row) => {
+        if (row.url?.trim()) {
+          window.open(row.url, "_blank", "noopener,noreferrer");
+        } else {
+          showToast(
+            "No preview/download link available for this file",
+            "warning",
+          );
+        }
+      },
     },
   ];
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const pagination = {
-    currentPage: currentPage,
-    totalPages: 10,
-  };
-
-  const toggleNewMenu = () => {
-    setShowNewMenu(!showNewMenu);
-  };
-   const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    onSearch?.(value);
-  };
-
   return (
     <div className="my-documents-container">
-      {/* Header */}
+      {/* Header – always visible */}
       <div className="documents-header">
         <div className="header-text">
           <h1 className="documents-title">My Documents</h1>
@@ -161,43 +268,42 @@ const [searchTerm, setSearchTerm] = useState("");
           </p>
         </div>
       </div>
+
       <div className="documents-header">
         <div className="table-controls">
           <div className="table-search">
             <IoSearchOutline size={18} className="search-icon" />
             <input
               type="text"
-              placeholder="search Documents"
+              placeholder="Search Documents"
               value={searchTerm}
               onChange={handleSearch}
             />
           </div>
 
           <div className="table-actions">
-           
-              <button className="filter-btn">
-                <HiOutlineAdjustmentsHorizontal size={18} />
-                <span>Filters</span>
+            <button className="filter-btn">
+              <HiOutlineAdjustmentsHorizontal size={18} />
+              <span>Filters</span>
+            </button>
+
+            <div className="view-toggle">
+              <button
+                className={`view-btn ${viewType === "list" ? "active" : ""}`}
+                onClick={() => setViewType("list")}
+              >
+                <BsListUl size={18} />
               </button>
-            
-            
-              <div className="view-toggle">
-                <button
-                  className={`view-btn ${viewType === "list" ? "active" : ""}`}
-                  onClick={() => setViewType("list")}
-                >
-                  <BsListUl size={18} />
-                </button>
-                <button
-                  className={`view-btn ${viewType === "grid" ? "active" : ""}`}
-                  onClick={() => setViewType("grid")}
-                >
-                  <BsGrid size={16} />
-                </button>
-              </div>
-            
+              <button
+                className={`view-btn ${viewType === "grid" ? "active" : ""}`}
+                onClick={() => setViewType("grid")}
+              >
+                <BsGrid size={16} />
+              </button>
+            </div>
           </div>
         </div>
+
         <div className="header-actions">
           <div className="new-button-wrapper">
             <Button
@@ -208,11 +314,23 @@ const [searchTerm, setSearchTerm] = useState("");
             />
             {showNewMenu && (
               <div className="new-menu">
-                <button className="new-menu-item">
+                <button
+                  className="new-menu-item"
+                  onClick={() => {
+                    setShowNewMenu(false);
+                    setShowFolderModal(true);
+                  }}
+                >
                   <IoFolderOutline size={18} />
                   <span>New Folder</span>
                 </button>
-                <button className="new-menu-item">
+                <button
+                  className="new-menu-item"
+                  onClick={() => {
+                    setShowNewMenu(false);
+                    setShowFileModal(true);
+                  }}
+                >
                   <IoDocumentOutline size={18} />
                   <span>New File</span>
                 </button>
@@ -225,53 +343,163 @@ const [searchTerm, setSearchTerm] = useState("");
       {/* Folders Section */}
       <div className="section-wrapper">
         <h2 className="section-heading">Folders</h2>
-        <div className="folders-grid">
-          {foldersData.map((folder) => (
-            <div key={folder.id} className="folder-card">
-              <div className="folder-icon-wrapper">{folder.icon}</div>
-              <div className="folder-info">
-                <h3 className="folder-name">{folder.name}</h3>
-                <p className="folder-meta">
-                  {folder.date} {folder.size}
-                </p>
+
+        {foldersLoading ? (
+          <div className="section-loader">Loading folders...</div>
+        ) : foldersData.length === 0 ? (
+          <div className="empty-state">
+            <IoFolderOpenOutline size={48} className="empty-icon" />
+            <h3>No folders yet</h3>
+            <p>Create your first folder to start organizing files.</p>
+            <Button
+              label="New Folder"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFolderModal(true)}
+            />
+          </div>
+        ) : (
+          <div className="folders-grid">
+            {foldersData.map((folder) => (
+              <div
+                key={folder.id}
+                className="folder-card"
+                onClick={() => {
+                  setSelectedFolder(folder);
+                  setShowFolderFilesModal(true);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="folder-icon-wrapper">
+                  <IoFolderOutline size={20} />
+                </div>
+                <div className="folder-info">
+                  <h3 className="folder-name">{folder.name}</h3>
+                  <p className="folder-meta">
+                    {new Date(folder.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    {" • "}
+                    {folder.folderSize || "0"} items
+                  </p>
+                </div>
+                <FiEdit3
+                  style={{ cursor: "pointer", marginLeft: "auto" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFolder(folder);
+                    setShowRenameFolderModal(true);
+                  }}
+                />
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Files Section */}
       <div className="section-wrapper">
         <h2 className="section-heading">Recent</h2>
-        <div className="recent-grid">
-          {recentFiles.map((file) => (
-            <div key={file.id} className="recent-card">
-              <div className="recent-icon-wrapper">{file.icon}</div>
-              <div className="recent-info">
-                <h3 className="recent-name">{file.name}</h3>
-                <p className="recent-meta">
-                  {file.date} {file.size}
-                </p>
+
+        {recentLoading ? (
+          <div className="section-loader">Loading recent files...</div>
+        ) : recentFiles.length === 0 ? (
+          <div className="empty-state">
+            <IoDocumentTextOutline size={48} className="empty-icon" />
+            <h3>No recent files</h3>
+            <p>Files you recently worked on will appear here.</p>
+          </div>
+        ) : (
+          <div className="recent-grid">
+            {recentFiles.map((file) => (
+              <div
+                key={file.id}
+                className="recent-card"
+                onClick={() => handleRecentFileClick(file)}
+                style={{ cursor: file.url ? "pointer" : "default" }}
+              >
+                <div className="recent-icon-wrapper">{file.icon}</div>
+                <div className="recent-info">
+                  <h3
+                    className="recent-name"
+                    style={{
+                      color: file.url ? "#1e40af" : "inherit",
+                      textDecoration: file.url ? "underline" : "none",
+                    }}
+                  >
+                    {file.name}
+                  </h3>
+                  <p className="recent-meta">
+                    {file.date} • {file.size}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* All Files Section */}
       <div className="section-wrapper">
         <h2 className="section-heading">All files</h2>
-        <ReusableTable
-          columns={allFilesColumns}
-          data={allFilesData}
-          searchPlaceholder="Search Documents"
-          showFilters={true}
-          showViewToggle={true}
-          actions={fileActions}
-          pagination={pagination}
-          onPageChange={setCurrentPage}
-        />
+
+        {allFilesLoading ? (
+          <div className="section-loader">Loading all files...</div>
+        ) : allFilesData.length === 0 ? (
+          <div className="empty-state">
+            <IoDocumentOutline size={48} className="empty-icon" />
+            <h3>No files uploaded yet</h3>
+            <p>Upload your first document to get started.</p>
+            <Button
+              label="Upload File"
+              variant="primary"
+              size="sm"
+              onClick={() => setShowFileModal(true)}
+            />
+          </div>
+        ) : (
+          <ReusableTable
+            columns={allFilesColumns}
+            data={allFilesData}
+            searchPlaceholder="Search Documents"
+            showFilters={true}
+            showViewToggle={true}
+            actions={fileActions}
+            pagination={pagination}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
+
+      {/* Modals */}
+      <NewFolderModal
+        isOpen={showFolderModal || showRenameFolderModal}
+        onClose={() => {
+          setShowFolderModal(false);
+          setShowRenameFolderModal(false);
+        }}
+        onCreate={showFolderModal ? handleCreateFolder : undefined}
+        onRename={showRenameFolderModal ? handleRenameFolder : undefined}
+        isRenameMode={showRenameFolderModal}
+        initialName={showRenameFolderModal ? selectedFolder?.name || "" : ""}
+        folderId={showRenameFolderModal ? selectedFolder?.id : null}
+      />
+
+      <NewFileModal
+        isOpen={showFileModal}
+        onClose={() => setShowFileModal(false)}
+        onCreate={handleCreateFile}
+        folders={foldersData}
+      />
+
+      <FolderFilesModal
+        isOpen={showFolderFilesModal}
+        onClose={() => setShowFolderFilesModal(false)}
+        folder={selectedFolder}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
+      />
     </div>
   );
 };

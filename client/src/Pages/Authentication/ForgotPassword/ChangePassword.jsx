@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import AuthLayout from "../AuthLayout";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import api from "../../../api/authApis";
 
 // Validation schema
 const changePasswordSchema = yup.object().shape({
@@ -30,6 +31,9 @@ const changePasswordSchema = yup.object().shape({
 const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { clientTenantId } = useParams();
+
+  console.log(clientTenantId);
 
   const {
     register,
@@ -45,12 +49,16 @@ const ChangePassword = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    try {
-      // Simulate API call
-      console.log("Form submitted:", data);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      showToast("Password reset successful!", "success");
+    try {
+      const response = await api.ClientSetPassword({
+        clientTenantId,
+        password: data.password,
+      });
+
+      const successMessage =
+        response?.data?.message || "Password updated successfully!";
+      showToast(successMessage, "success");
       navigate("/");
     } catch (error) {
       console.error("Change password error:", error);

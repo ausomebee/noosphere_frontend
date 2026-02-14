@@ -359,46 +359,41 @@ if (
     const dropdown = menuRefs.current[key]?.dropdown;
     if (!button || !dropdown) return;
     const buttonRect = button.getBoundingClientRect();
-    const tableRect = tableContainerRef.current.getBoundingClientRect();
-    const headerRect = tableContainerRef.current
-      .querySelector("thead")
-      ?.getBoundingClientRect();
-    if (!headerRect) return;
-    const dropdownRect = dropdown.getBoundingClientRect();
-    const dropdownHeight = dropdownRect.height || 150;
+    const dropdownHeight = dropdown.scrollHeight || 150;
+    const dropdownWidth = dropdown.offsetWidth || 180;
     const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
-    const spaceAbove = buttonRect.top - headerRect.bottom - 10;
-    let top;
+    const spaceAbove = buttonRect.top - 10;
+
+    // Use fixed positioning so the dropdown escapes table overflow clipping
+    dropdown.style.position = "fixed";
+    dropdown.style.zIndex = "9999";
+    dropdown.style.overflowY = "auto";
+
+    // Position horizontally: align right edge to the left of the button
+    const leftPos = buttonRect.left - dropdownWidth - 4;
+    dropdown.style.left = `${Math.max(leftPos, 4)}px`;
+    dropdown.style.right = "auto";
+
+    // Position vertically: prefer below, flip above if not enough space
     if (spaceBelow >= dropdownHeight) {
-      top = button.offsetHeight + 2;
-      dropdown.style.top = `${top}px`;
+      dropdown.style.top = `${buttonRect.bottom + 2}px`;
       dropdown.style.bottom = "auto";
       dropdown.style.maxHeight = `${spaceBelow}px`;
     } else if (spaceAbove >= dropdownHeight) {
-      top = -(dropdownHeight + 2);
-      dropdown.style.top = `${top}px`;
+      dropdown.style.top = `${buttonRect.top - dropdownHeight - 2}px`;
       dropdown.style.bottom = "auto";
       dropdown.style.maxHeight = `${spaceAbove}px`;
     } else {
-      top = -(Math.min(dropdownHeight, spaceAbove) + 2);
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceAbove}px`;
-    }
-    const additionalOffset = 4;
-    const left = -dropdownRect.width - additionalOffset;
-    dropdown.style.left = `${left}px`;
-    dropdown.style.right = "auto";
-    dropdown.style.position = "absolute";
-    dropdown.style.zIndex = "1000";
-    dropdown.style.overflowY = "auto";
-    const viewportBottom = window.innerHeight;
-    const dropdownBottom = buttonRect.top + top;
-    if (dropdownBottom < 0) {
-      dropdown.style.top = "0";
-      dropdown.style.maxHeight = `${buttonRect.top - 10}px`;
-    } else if (buttonRect.bottom + (dropdownHeight - top) > viewportBottom) {
-      dropdown.style.maxHeight = `${viewportBottom - buttonRect.bottom - 10}px`;
+      // Not enough room either way — use the larger side
+      if (spaceBelow >= spaceAbove) {
+        dropdown.style.top = `${buttonRect.bottom + 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceBelow}px`;
+      } else {
+        dropdown.style.top = `${buttonRect.top - Math.min(dropdownHeight, spaceAbove) - 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceAbove}px`;
+      }
     }
   };
 
@@ -497,7 +492,17 @@ if (
       setIsDateFilterDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    // Close fixed-position dropdowns on scroll so they don't float detached
+    const handleScroll = () => {
+      setOpenDropdown(null);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, [filters]);
 
   return (

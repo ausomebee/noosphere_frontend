@@ -1,11 +1,9 @@
-// src/pages/StartAppointment.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Button from "../../../Components/Button/Button";
 import "./StartAppointment.css";
 import api from "../../../api/AppointmentApi";
-
 
 // Data Collection Modals
 import FrequencyModal from "../../../Components/ReusableModal/DataCollectionModal/FrequencyModal";
@@ -26,8 +24,9 @@ const StartAppointment = () => {
   const { clientId, appointmentId } = useParams();
   const navigate = useNavigate();
 
-  const accessToken = useSelector((s) => s.authentication?.user?.token);
-  const refreshToken = accessToken;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const userId = useSelector((s) => s.authentication?.user?.id);
 
   // States
   const [appointment, setAppointment] = useState(null);
@@ -41,18 +40,15 @@ const StartAppointment = () => {
   const [sessionNotes, setSessionNotes] = useState("");
   const [seconds, setSeconds] = useState(0);
 
-  // Travel Time: stores HH:mm strings
-  const [travelTime, setTravelTime] = useState({
-    start: null,
-    end: null,
+  const [travelTime, setTravelTime] = useState({ start: null, end: null });
+
+  // Unified data collection modal state
+  const [currentModal, setCurrentModal] = useState({
+    type: null, // "frequency" | "duration" | "rate" | "percentage" | "trials" | "task" | "latency"
+    isOpen: false,
+    props: {}, // trialCount, steps, etc.
   });
 
-  // Modal states
-  const [dataModal, setDataModal] = useState({
-    open: false,
-    type: "",
-    target: null,
-  });
   const [travelModalOpen, setTravelModalOpen] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
@@ -60,18 +56,18 @@ const StartAppointment = () => {
   const pendingCloseRef = useRef(null);
   const [collectedData, setCollectedData] = useState({});
 
-  // Accurate timer refs
-  const sessionStartTimestampRef = useRef(null); // Real start time in milliseconds (Date.now())
+  // Timer refs
+  const sessionStartTimestampRef = useRef(null);
   const animationFrameRef = useRef(null);
 
-  // Save session start time on mount
+  // Session start time
   useEffect(() => {
     const now = Date.now();
     sessionStartTimestampRef.current = now;
     sessionStorage.setItem(`sessionStartTime_${appointmentId}`, now.toString());
   }, [appointmentId]);
 
-  // Accurate timer: updates smoothly when visible, corrects instantly when returning
+  // Accurate timer
   useEffect(() => {
     if (!appointment) return;
 
@@ -84,23 +80,18 @@ const StartAppointment = () => {
       animationFrameRef.current = requestAnimationFrame(updateTimer);
     };
 
-    // Start updating
     animationFrameRef.current = requestAnimationFrame(updateTimer);
 
-    // Handle visibility change: correct time instantly when tab becomes visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Tab became visible → immediately correct the displayed time
         if (sessionStartTimestampRef.current !== null) {
           const elapsedMs = Date.now() - sessionStartTimestampRef.current;
           const elapsedSeconds = Math.floor(elapsedMs / 1000);
           setSeconds(elapsedSeconds);
         }
-        // Resume smooth updates
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = requestAnimationFrame(updateTimer);
       } else {
-        // Tab hidden → stop rAF to save resources (throttling would happen anyway)
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
@@ -159,7 +150,59 @@ const StartAppointment = () => {
                 : "—",
               dataCollectionType: t.dataCollectionType || "Frequency",
               numberOfTrials: t.numberOfTrials || null,
-              taskSteps: t.taskSteps || [],
+              taskSteps: (() => {
+                if (!t.taskSteps) return [];
+
+                // Case 1: Already array of objects with description
+                if (
+                  Array.isArray(t.taskSteps) &&
+                  t.taskSteps.length > 0 &&
+                  t.taskSteps[0]?.description !== undefined
+                ) {
+                  return t.taskSteps.map((step, index) => ({
+                    id: step.id || index + 1,
+                    description: step.description || "",
+                  }));
+                }
+
+                // Case 2: Array of strings → convert to objects
+                if (
+                  Array.isArray(t.taskSteps) &&
+                  t.taskSteps.length > 0 &&
+                  typeof t.taskSteps[0] === "string"
+                ) {
+                  return t.taskSteps.map((desc, index) => ({
+                    id: index + 1,
+                    description: desc.trim(),
+                  }));
+                }
+
+                // Case 3: JSON string like '["Step 1", "Step 2"]'
+                if (typeof t.taskSteps === "string") {
+                  try {
+                    const parsed = JSON.parse(t.taskSteps);
+                    if (
+                      Array.isArray(parsed) &&
+                      parsed.every((s) => typeof s === "string")
+                    ) {
+                      return parsed.map((desc, index) => ({
+                        id: index + 1,
+                        description: desc.trim(),
+                      }));
+                    }
+                    if (Array.isArray(parsed)) {
+                      return parsed.map((step, index) => ({
+                        id: step.id || index + 1,
+                        description: step.description || "",
+                      }));
+                    }
+                  } catch (e) {
+                    console.warn("Failed to parse taskSteps:", t.taskSteps, e);
+                  }
+                }
+
+                return [];
+              })(),
               initialStatus: t.initialStatus || "Not Introduced",
               description: t.description,
               notes: t.notes,
@@ -178,7 +221,6 @@ const StartAppointment = () => {
 
     fetchData();
   }, [clientId, appointmentId, accessToken, refreshToken]);
-
   // Format helpers
   const formatTotalTime = (totalSeconds) => {
     const h = Math.floor(totalSeconds / 3600);
@@ -187,22 +229,16 @@ const StartAppointment = () => {
     return `${h > 0 ? h + "hrs " : ""}${m}m ${s}s`;
   };
 
-  // Format "HH:mm" (24-hour) to 12-hour with AM/PM
   const formatTime = (timeStr) => {
     if (!timeStr || timeStr === "—") return "—";
-
     const [hours, minutes] = timeStr.split(":");
     let h = parseInt(hours, 10);
     const m = minutes || "00";
     const period = h >= 12 ? "PM" : "AM";
-
-    h = h % 12;
-    if (h === 0) h = 12;
-
+    h = h % 12 || 12;
     return `${h}:${m} ${period}`;
   };
 
-  // Convert HH:mm string to full ISO datetime
   const timeStringToIso = (timeStr) => {
     if (!timeStr) return null;
     const today = new Date().toISOString().slice(0, 10);
@@ -212,26 +248,78 @@ const StartAppointment = () => {
   // Current selections
   const currentProgram = programs.find((p) => p.id === selectedProgramId);
   const currentTarget = currentProgram?.targets.find(
-    (t) => t.id === selectedTargetId
+    (t) => t.id === selectedTargetId,
   );
   const hasCollectedData = selectedTargetId
     ? !!collectedData[selectedTargetId]
     : false;
 
-  // Handlers
-  const openDataModal = () => {
-    if (!currentTarget) return;
-    setDataModal({
-      open: true,
-      type: currentTarget.dataCollectionType,
-      target: currentTarget,
+  // Robust data collection handler
+  const handleCollectData = () => {
+    if (!currentTarget) {
+      showToast("Please select a target first", "warning");
+      return;
+    }
+
+    const type = currentTarget.dataCollectionType;
+    if (!type || type === "N/A") {
+      showToast("No valid data collection type found.", "error");
+      return;
+    }
+
+    let modalType = null;
+    const extraProps = {};
+
+    switch (type) {
+      case "Frequency":
+        modalType = "frequency";
+        break;
+      case "Duration":
+        modalType = "duration";
+        break;
+      case "Rate":
+        modalType = "rate";
+        break;
+      case "Percentage Correct":
+        modalType = "percentage";
+        extraProps.trialCount = currentTarget.numberOfTrials || 10;
+        break;
+      case "Trials/Opportunities":
+        modalType = "trials";
+        extraProps.trialCount = currentTarget.numberOfTrials || 10;
+        break;
+      case "Task Analysis":
+        modalType = "task";
+        extraProps.steps =
+          Array.isArray(currentTarget.taskSteps) &&
+          currentTarget.taskSteps.length > 0
+            ? currentTarget.taskSteps
+            : [];
+        console.log("Opening Task Analysis with steps:", extraProps.steps);
+        break;
+      case "Latency":
+        modalType = "latency";
+        extraProps.trialCount = currentTarget.numberOfTrials || 10;
+        break;
+      default:
+        showToast(`Unsupported data collection type: ${type}`, "error");
+        return;
+    }
+
+    setCurrentModal({
+      type: modalType,
+      isOpen: true,
+      props: extraProps,
     });
+  };
+
+  const closeDataModal = () => {
+    setCurrentModal({ type: null, isOpen: false, props: {} });
   };
 
   const requestCloseDataModal = () => {
     setConfirmCancelOpen(true);
-    pendingCloseRef.current = () =>
-      setDataModal({ open: false, type: "", target: null });
+    pendingCloseRef.current = closeDataModal;
   };
 
   const saveCollectedData = (data) => {
@@ -239,28 +327,26 @@ const StartAppointment = () => {
       ...prev,
       [selectedTargetId]: data,
     }));
-    setDataModal({ open: false, type: "", target: null });
+    closeDataModal();
   };
 
   const handleBackClick = () => setConfirmLeaveOpen(true);
 
-  // Finish Appointment
   const finishAppointment = async () => {
     if (submitting) return;
-
     cancelAnimationFrame(animationFrameRef.current);
     setSubmitting(true);
 
     const sessionEndTime = new Date().toISOString();
     const sessionStartIso = new Date(
-      sessionStartTimestampRef.current
+      sessionStartTimestampRef.current,
     ).toISOString();
 
     const sessionDatas = Object.entries(collectedData).map(
       ([targetId, data]) => ({
         targetId,
         data: data || {},
-      })
+      }),
     );
 
     const payload = {
@@ -269,6 +355,7 @@ const StartAppointment = () => {
       startTime: sessionStartIso,
       endTime: sessionEndTime,
       sessionDatas,
+      createdBy: userId,
     };
 
     if (appointment?.requiresTravel && travelTime.start && travelTime.end) {
@@ -277,21 +364,22 @@ const StartAppointment = () => {
     }
 
     try {
-      const response = await api.SubmitStartAppointment({
+      await api.SubmitStartAppointment({
         ...payload,
         accessToken,
         refreshToken,
       });
-
-      console.log("Session submitted successfully:", response);
-     showToast("Appointment finished and session saved successfully!");
-
+      showToast(
+        "Appointment finished and session saved successfully!",
+        "success",
+      );
       sessionStorage.removeItem(`sessionStartTime_${appointmentId}`);
       navigate(-1);
     } catch (err) {
       console.error("Failed to submit session:", err);
       showToast(
-        `Error: ${err.message || "Failed to submit session. Please try again."}`
+        `Error: ${err.message || "Failed to submit session."}`,
+        "error",
       );
     } finally {
       setSubmitting(false);
@@ -410,7 +498,7 @@ const StartAppointment = () => {
       if (type === "Percentage Correct") {
         const trials = data.trials || [];
         const correct = trials.filter(
-          (t) => t.performance === "correct"
+          (t) => t.performance === "correct",
         ).length;
         return `Total Correct: ${correct}/${trials.length} | Accuracy: ${
           data.percentageCorrect || 0
@@ -419,13 +507,13 @@ const StartAppointment = () => {
       if (type === "Trials/Opportunities") {
         const trials = data.trials || [];
         const correct = trials.filter(
-          (t) => t.performance === "correct"
+          (t) => t.performance === "correct",
         ).length;
         const incorrect = trials.filter(
-          (t) => t.performance === "incorrect"
+          (t) => t.performance === "incorrect",
         ).length;
         const prompted = trials.filter(
-          (t) => t.promptLevel !== "independent"
+          (t) => t.promptLevel !== "independent",
         ).length;
         return `Trials: ${trials.length} | Correct: ${correct} | Incorrect: ${incorrect} | Prompted: ${prompted}`;
       }
@@ -515,7 +603,7 @@ const StartAppointment = () => {
     serviceLocation,
     session,
     clinicians,
-    service,
+    appointmentServices,
   } = appointment;
 
   return (
@@ -572,10 +660,12 @@ const StartAppointment = () => {
             <div className="info-section">
               <h3>Service Type</h3>
               <ul>
-                {service.map((s, i) => (
+                {appointmentServices?.map((s, i) => (
                   <li key={i}>
-                    {s.serviceType}{" "}
-                    {s.modifierType ? `+ ${s.modifierType}` : ""}
+                    {s.modifiers?.modifiers}{" "}
+                    {s.modifiers?.modifiers
+                      ? `+ ${s.modifiers?.modifiers}`
+                      : ""}
                   </li>
                 ))}
               </ul>
@@ -705,7 +795,7 @@ const StartAppointment = () => {
                       label="Collect Data"
                       variant="primary"
                       size="large"
-                      onClick={openDataModal}
+                      onClick={handleCollectData}
                       icon={
                         <svg
                           width="20"
@@ -770,42 +860,42 @@ const StartAppointment = () => {
 
       {/* Modals */}
       <FrequencyModal
-        isOpen={dataModal.open && dataModal.type === "Frequency"}
+        isOpen={currentModal.isOpen && currentModal.type === "frequency"}
         onClose={requestCloseDataModal}
         onSave={saveCollectedData}
       />
       <DurationModal
-        isOpen={dataModal.open && dataModal.type === "Duration"}
+        isOpen={currentModal.isOpen && currentModal.type === "duration"}
         onClose={requestCloseDataModal}
         onSave={saveCollectedData}
       />
       <RateModal
-        isOpen={dataModal.open && dataModal.type === "Rate"}
+        isOpen={currentModal.isOpen && currentModal.type === "rate"}
         onClose={requestCloseDataModal}
         onSave={saveCollectedData}
       />
       <PercentageCorrectModal
-        isOpen={dataModal.open && dataModal.type === "Percentage Correct"}
+        isOpen={currentModal.isOpen && currentModal.type === "percentage"}
         onClose={requestCloseDataModal}
-        trialCount={currentTarget?.numberOfTrials || 10}
+        trialCount={currentModal.props.trialCount}
         onSave={saveCollectedData}
       />
       <TrialsOpportunitiesModal
-        isOpen={dataModal.open && dataModal.type === "Trials/Opportunities"}
+        isOpen={currentModal.isOpen && currentModal.type === "trials"}
         onClose={requestCloseDataModal}
-        trialCount={currentTarget?.numberOfTrials || 10}
+        trialCount={currentModal.props.trialCount}
         onSave={saveCollectedData}
       />
       <TaskAnalysisModal
-        isOpen={dataModal.open && dataModal.type === "Task Analysis"}
+        isOpen={currentModal.isOpen && currentModal.type === "task"}
         onClose={requestCloseDataModal}
-        steps={currentTarget?.taskSteps || []}
+        steps={currentModal.props.steps}
         onSave={saveCollectedData}
       />
       <LatencyModal
-        isOpen={dataModal.open && dataModal.type === "Latency"}
+        isOpen={currentModal.isOpen && currentModal.type === "latency"}
         onClose={requestCloseDataModal}
-        trialCount={currentTarget?.numberOfTrials || 10}
+        trialCount={currentModal.props.trialCount}
         onSave={saveCollectedData}
       />
 

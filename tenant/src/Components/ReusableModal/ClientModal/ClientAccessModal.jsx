@@ -19,7 +19,7 @@ const ClientPortalSettingsModal = ({
   const [allowDocumentSharing, setAllowDocumentSharing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { token: accessToken, refreshToken } = useSelector(
+  const { accessToken, refreshToken } = useSelector(
     (s) => s.authentication?.user || {}
   );
 

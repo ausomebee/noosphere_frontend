@@ -12,18 +12,17 @@ import { useSelector } from "react-redux";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
-import expandForAppointments from "../../../../utils/expandForAppointments"; // Fixed import name
+import expandForAppointments from "../../../../utils/expandForAppointments";
 
 const UpcomingAppointments = ({ counts, setCounts }) => {
   const navigate = useNavigate();
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
+    (s) => s.authentication?.user?.role?.name ?? "Client",
   );
   const userId = useSelector((s) => s.authentication?.user?.id);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   // State
   const [masters, setMasters] = useState([]);
@@ -45,6 +44,37 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     return { uuid, timestamp };
   }, []);
 
+  // Transform raw API appointment to include service array
+  const toTableRow = (apiAppt) => {
+    const service = (apiAppt.appointmentServices || []).map((as) => {
+      const modifier = as.modifiers?.modifier
+        ? ` (${as.modifiers.modifier})`
+        : "";
+
+      // Hardcoded known service code mapping (add more as needed)
+      const knownCodes = {
+        "4e304a36-8fe8-41fd-85f1-0398a25a50dd": "97158",
+        // Add other serviceCodeId → code mappings here
+      };
+
+      const code = knownCodes[as.serviceCodeId] || "Unknown";
+
+      return {
+        serviceType: `${code}${modifier}`,
+        modifierType: as.modifiers?.modifier || "",
+      };
+    });
+
+    return {
+      ...apiAppt,
+      service: service.length > 0 ? service : [], // empty array if no services
+      client: apiAppt.client || { fullName: "Unknown Client" },
+      clinicians: apiAppt.clinicians || [],
+      session: apiAppt.session || { name: "Unknown Session" },
+      colourCode: apiAppt.colourCode || "#3B82F6",
+    };
+  };
+
   // Fetch master appointments
   const fetchAppointments = useCallback(async () => {
     try {
@@ -63,7 +93,9 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
             });
 
       if (response?.data?.data) {
-        setMasters(response.data.data);
+        // Transform each appointment to include .service
+        const transformed = response.data.data.map(toTableRow);
+        setMasters(transformed);
       }
     } catch (error) {
       showToast("Failed to fetch appointments", "error");
@@ -103,7 +135,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     fetchSupportingData();
   }, [fetchAppointments, fetchSupportingData]);
 
-  // Expand ALL master appointments for upcoming appointments
+  // Expand ALL master appointments for upcoming
   const allExpandedAppointments = useMemo(() => {
     if (masters.length === 0) return [];
 
@@ -122,7 +154,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     });
   }, [masters]);
 
-  // Format appointments for table
+  // Format for table
   const formattedAppointments = useMemo(() => {
     return allExpandedAppointments.map((appt) => {
       const serviceText =
@@ -203,7 +235,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
         label: "Date",
         filterValues: dates,
         filterFunction: (row, val) => !val || row.date === val,
-        filter_type: "dateTime", // Add this for date range filtering
+        filter_type: "dateTime",
       },
     ];
   }, [formattedAppointments]);
@@ -214,7 +246,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     { header: "Clinician(s)", key: "therapistName", type: "text" },
     { header: "Service Type(s)", key: "serviceType", type: "text" },
     { header: "Session Type", key: "sessionType", type: "text" },
-    { header: "Date", key: "date", type: "dateTime" }, // Changed to dateTime
+    { header: "Date", key: "date", type: "dateTime" },
     { header: "Time", key: "time", type: "text" },
   ];
 
@@ -334,7 +366,6 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     return id.includes("_") ? id.split("_")[0] : id;
   }, []);
 
-  // Handle "Start Appointment" click from table row
   const handleStartAppointment = useCallback(
     (item) => {
       const appointmentId = getAppointmentUuid(item.id);
@@ -347,8 +378,9 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
 
       navigate(`/appointments/start/${appointmentId}/${clientId}`);
     },
-    [navigate, getAppointmentUuid]
+    [navigate, getAppointmentUuid],
   );
+
   // Actions dropdown
   const Actions = [
     {
