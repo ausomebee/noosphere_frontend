@@ -26,6 +26,36 @@ const CreateTenantStaff = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
+    // Build payroll conditionally
+    const payrollPayload = {
+      paymentSchedule: payroll?.paymentSchedule || "",
+      ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
+      // minimumHours conditional
+      ...(payroll?.paymentSchedule === "Salaried" &&
+      payroll?.minimumHours &&
+      !isNaN(Number(payroll.minimumHours))
+        ? { minimumHours: String(payroll.minimumHours) }
+        : {}),
+      otherPays:
+        payroll?.otherPays
+          ?.filter((pay) => pay && pay.trim() !== "")
+          .map((pay) => ({ id: pay })) || [], // ← { id: pay }
+      deductions:
+        payroll?.deductions
+          ?.filter((ded) => ded && ded.trim() !== "")
+          .map((ded) => ({ id: ded })) || [], // ← { id: ded }
+      tenantId,
+    };
+
+    // Only add minimumHours if it's Salaried and has a real value
+    if (
+      payroll?.paymentSchedule === "Salaried" &&
+      payroll?.minimumHours &&
+      !isNaN(Number(payroll.minimumHours))
+    ) {
+      payrollPayload.minimumHours = String(payroll.minimumHours);
+    }
+
     const payload = {
       fullName,
       email,
@@ -56,39 +86,22 @@ const CreateTenantStaff = async ({
             ? new Date(license.expiryDate).toISOString()
             : undefined,
         })) || [],
-      payroll: {
-        paymentSchedule: payroll?.paymentSchedule || "",
-        ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
-        minimumHours: payroll?.minimumHours ? String(payroll.minimumHours) : "",
-        otherPays:
-          payroll?.otherPays
-            ?.filter((pay) => pay.type && pay.rate)
-            .map((pay) => ({
-              type: pay.type,
-              rate: String(pay.rate),
-            })) || [],
-        deductions:
-          payroll?.deductions
-            ?.filter((ded) => ded.type && ded.rate)
-            .map((ded) => ({
-              type: ded.type,
-              rate: String(ded.rate),
-            })) || [],
-      },
+      payroll: payrollPayload,
       tenantId,
     };
 
     const response = await authFetch.post(
       `${PLAIN_API_URL}/organization-staff/staff`,
-      payload
+      payload,
     );
-    return response.data; // Return response.data for consistency
+    return response.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Create Tenant Staff failed"
+      error.response?.data?.message || "Create Tenant Staff failed",
     );
   }
 };
+
 const UpdateTenantStaff = async ({
   id,
   fullName,
@@ -113,6 +126,37 @@ const UpdateTenantStaff = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
+    // Build payroll conditionally
+    const payrollPayload = {
+      id: payroll?.id || undefined,
+      paymentSchedule: payroll?.paymentSchedule || "",
+      ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
+      tenantStaffId: payroll?.tenantStaffId || id,
+      // minimumHours conditional
+      ...(payroll?.paymentSchedule === "Salaried" &&
+      payroll?.minimumHours &&
+      !isNaN(Number(payroll.minimumHours))
+        ? { minimumHours: String(payroll.minimumHours) }
+        : {}),
+      otherPays:
+        payroll?.otherPays
+          ?.filter((pay) => pay && pay.trim() !== "")
+          .map((pay) => ({ id: pay })) || [], // ← { id: pay }
+      deductions:
+        payroll?.deductions
+          ?.filter((ded) => ded && ded.trim() !== "")
+          .map((ded) => ({ id: ded })) || [],
+    };
+
+    // Only add minimumHours if it's Salaried and has a real value
+    if (
+      payroll?.paymentSchedule === "Salaried" &&
+      payroll?.minimumHours &&
+      !isNaN(Number(payroll.minimumHours))
+    ) {
+      payrollPayload.minimumHours = String(payroll.minimumHours);
+    }
+
     const payload = {
       id,
       fullName,
@@ -149,39 +193,19 @@ const UpdateTenantStaff = async ({
             : undefined,
           tenantStaffId: license.tenantStaffId || id,
         })) || [],
-      payroll: {
-        id: payroll?.id || undefined,
-        paymentSchedule: payroll?.paymentSchedule || "",
-        ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
-        tenantStaffId: payroll?.tenantStaffId || id,
-        minimumHours: payroll?.minimumHours ? String(payroll.minimumHours) : "",
-        otherPays:
-          payroll?.otherPays
-            ?.filter((pay) => pay.type && pay.rate)
-            .map((pay) => ({
-              type: pay.type,
-              rate: String(pay.rate),
-            })) || [],
-        deductions:
-          payroll?.deductions
-            ?.filter((ded) => ded.type && ded.rate)
-            .map((ded) => ({
-              type: ded.type,
-              rate: String(ded.rate),
-            })) || [],
-      },
+      payroll: payrollPayload,
     };
 
-    console.log("UpdateTenantStaff Payload:", payload); // Debugging
+    console.log("UpdateTenantStaff Payload:", payload);
 
     const response = await authFetch.put(
       `${PLAIN_API_URL}/organization-staff/staff`,
-      payload
+      payload,
     );
-    return response.data; // Return response.data for consistency
+    return response.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Update Tenant Staff failed"
+      error.response?.data?.message || "Update Tenant Staff failed",
     );
   }
 };
@@ -222,18 +246,16 @@ const UpdateTenantStaffBasicInfo = async ({
       country,
       phoneNumber,
       active,
-     
     };
 
-    
     const response = await authFetch.put(
       `${PLAIN_API_URL}/organization-staff/staff/staff`,
-      payload
+      payload,
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Update Tenant Staff failed"
+      error.response?.data?.message || "Update Tenant Staff failed",
     );
   }
 };
@@ -245,12 +267,12 @@ const GetAllStaffByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization-staff/staff/tenant/${tenantId}`
+      `${PLAIN_API_URL}/organization-staff/staff/tenant/${tenantId}`,
     );
     return response;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Get Staffs by tenant id failed"
+      error.response?.data?.message || "Get Staffs by tenant id failed",
     );
   }
 };
@@ -264,7 +286,7 @@ const UpdateActiveTenantStaff = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/organization-staff/staff/active/${id}/${active}`
+      `${PLAIN_API_URL}/organization-staff/staff/active/${id}/${active}`,
     );
     return response;
   } catch (error) {
@@ -276,13 +298,13 @@ const GetSingleTenantStaffById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization-staff/staff/details/${id}`
+      `${PLAIN_API_URL}/organization-staff/staff/details/${id}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Get Single Tenant Staff by tenant id failed"
+        "Get Single Tenant Staff by tenant id failed",
     );
   }
 };
@@ -291,13 +313,13 @@ const GetAllStaffLicenseById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization-staff/license/tenant-staff/${id}`
+      `${PLAIN_API_URL}/organization-staff/license/tenant-staff/${id}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Get All License by tenant staff id failed"
+        "Get All License by tenant staff id failed",
     );
   }
 };
@@ -306,13 +328,13 @@ const GetAllStaffDocumentById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization-staff/document/tenant-staff/${id}`
+      `${PLAIN_API_URL}/organization-staff/document/tenant-staff/${id}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Get All Document by tenant staff id failed"
+        "Get All Document by tenant staff id failed",
     );
   }
 };
@@ -340,13 +362,13 @@ const UpdateTenantStaffLicense = async ({
         issueState,
         expiryDate,
         tenantStaffId,
-      }
+      },
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Updating License by tenant staff id failed"
+        "Updating License by tenant staff id failed",
     );
   }
 };
@@ -359,13 +381,13 @@ const DeleteLicenseByTenantStaff = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/organization-staff/license/deleted/${id}/${isDeleted}`
+      `${PLAIN_API_URL}/organization-staff/license/deleted/${id}/${isDeleted}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Updating License by tenant staff id failed"
+        "Updating License by tenant staff id failed",
     );
   }
 };
@@ -378,13 +400,13 @@ const DeleteDocumentByTenantStaff = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/organization-staff/document/deleted/${id}/${isDeleted}`
+      `${PLAIN_API_URL}/organization-staff/document/deleted/${id}/${isDeleted}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Updating License by tenant staff id failed"
+        "Updating License by tenant staff id failed",
     );
   }
 };
@@ -411,7 +433,7 @@ const CreateDocumentForStaff = async ({
         uploadedBy,
         documentsUrl,
         tenantStaffId,
-      }
+      },
     );
     return response;
   } catch (e) {
@@ -438,12 +460,12 @@ const CreateLicenseForStaff = async ({
         licenseNumber,
         issueState,
         expiryDate,
-      }
+      },
     );
     return response;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Create Organization Licenses failed"
+      error.response?.data?.message || "Create Organization Licenses failed",
     );
   }
 };
@@ -451,13 +473,13 @@ const GetAllStaffPayrollById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization-staff/payroll/tenant-staff/${id}`
+      `${PLAIN_API_URL}/organization-staff/payroll/tenant-staff/${id}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message ||
-        "Get All Payroll by tenant staff id failed"
+        "Get All Payroll by tenant staff id failed",
     );
   }
 };
@@ -496,12 +518,12 @@ const UpdateTenantStaffPayroll = async ({
 
     const response = await authFetch.put(
       `${PLAIN_API_URL}/organization-staff/payroll`,
-      payload
+      payload,
     );
     return response.data; // Return response.data for consistency
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Update Tenant Staff failed"
+      error.response?.data?.message || "Update Tenant Staff failed",
     );
   }
 };
@@ -521,5 +543,5 @@ export default {
   CreateLicenseForStaff,
   GetAllStaffPayrollById,
   UpdateTenantStaffPayroll,
-  UpdateTenantStaffBasicInfo
+  UpdateTenantStaffBasicInfo,
 };

@@ -133,7 +133,6 @@ const usStates = [
 ];
 
 const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
-
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("Basic Information");
   const [submitting, setSubmitting] = useState(false);
@@ -146,9 +145,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const hasInitialized = useRef(false);
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   // Format DOB from ISO string → YYYY-MM-DD
   const formatDateForInput = (isoString) => {
@@ -172,7 +170,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       });
       const staff = response?.data?.data || [];
       setClinicians(
-        staff.map((c) => ({ value: c.id, label: c.fullName || "Unnamed" }))
+        staff.map((c) => ({ value: c.id, label: c.fullName || "Unnamed" })),
       );
     } catch (err) {
       console.error("Failed to load clinicians:", err);
@@ -290,7 +288,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         setValue("documentName", cleanName);
       }
     },
-    [setValue, getValues]
+    [setValue, getValues],
   );
 
   const tabs = useMemo(
@@ -487,13 +485,13 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                       },
                     ]
                   : uploadedDocument
-                  ? [
-                      {
-                        filename: uploadedDocument.name,
-                        url: uploadedDocument.fileUrl,
-                      },
-                    ]
-                  : []
+                    ? [
+                        {
+                          filename: uploadedDocument.name,
+                          url: uploadedDocument.fileUrl,
+                        },
+                      ]
+                    : []
               }
               maxFiles={1}
               maxSizeMB={10}
@@ -514,7 +512,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       initialData,
       errors,
       register,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -547,7 +545,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       submitData.assignToClinicians = (data.assignToClinician || []).map(
         (id) => ({
           id,
-        })
+        }),
       );
 
       // Remove the temporary form field
@@ -576,8 +574,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       const cleaned = Object.fromEntries(
         Object.entries(submitData).filter(
           ([_, v]) =>
-            v != null && v !== "" && (!Array.isArray(v) || v.length > 0)
-        )
+            v != null && v !== "" && (!Array.isArray(v) || v.length > 0),
+        ),
       );
 
       console.log("FINAL PAYLOAD →", cleaned);

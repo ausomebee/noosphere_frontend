@@ -1,11 +1,19 @@
-import React, {useState} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
-import { TextInput, SelectInput, TextareaInput, CheckboxInput } from "../../Input/Inputs";
+import {
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  CheckboxInput,
+} from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
+import api2 from "../../../api/billingAndPaymentsApi";
+import { useSelector } from "react-redux";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const serviceTypeSchema = yup.object({
@@ -23,6 +31,7 @@ const serviceTypeSchema = yup.object({
 
 // Sample state options (replace with actual data)
 const stateOptions = [
+  { value: "", label: "Select State" },
   { value: "AL", label: "Alabama" },
   { value: "AK", label: "Alaska" },
   { value: "AZ", label: "Arizona" },
@@ -33,10 +42,61 @@ const stateOptions = [
   { value: "DE", label: "Delaware" },
   { value: "FL", label: "Florida" },
   { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
 ];
 
-const AddServiceType = ({ isOpen, onClose, onSave, mode = "add", initialData = {} }) => {
+const AddServiceType = ({
+  isOpen,
+  onClose,
+  onSave,
+  mode = "add",
+  initialData = {},
+}) => {
   const [submitting, setSubmitting] = useState(false);
+  const [serviceCodes, setServiceCodes] = useState([]);
+  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const {
     register,
@@ -46,18 +106,21 @@ const AddServiceType = ({ isOpen, onClose, onSave, mode = "add", initialData = {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(serviceTypeSchema),
-    defaultValues: mode === "edit" ? { ...initialData } : {
-      code: "",
-      serviceDescription: "",
-      unitType: "",
-      unitDuration: "",
-      rate: "",
-      rateCurrency: "",
-      roundingRule: "",
-      modifier: "",
-      ratePerUnit: "",
-      billable: false,
-    },
+    defaultValues:
+      mode === "edit"
+        ? { ...initialData }
+        : {
+            code: "",
+            serviceDescription: "",
+            unitType: "",
+            unitDuration: "",
+            rate: "",
+            rateCurrency: "",
+            roundingRule: "",
+            modifier: "",
+            ratePerUnit: "",
+            billable: false,
+          },
   });
 
   const handleFormSubmit = async (data) => {
@@ -72,6 +135,37 @@ const AddServiceType = ({ isOpen, onClose, onSave, mode = "add", initialData = {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchServiceCodes();
+    }
+  }, [isOpen, fetchServiceCodes]);
+
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingServiceCodes(true);
+    try {
+      const response = await api2.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || [];
+      const serviceCodeList = data
+        .filter((item) => !item.isDeleted && item.isActive)
+        .map((item) => ({
+          value: item.code,
+          label: `${item.code} - ${item.description}`,
+        }));
+      setServiceCodes(serviceCodeList);
+    } catch (error) {
+      console.error("Failed to load service codes:", error);
+      showToast("Failed to load service codes", "error");
+    } finally {
+      setLoadingServiceCodes(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
 
   return (
     <ReusableModal

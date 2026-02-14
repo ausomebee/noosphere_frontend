@@ -14,9 +14,8 @@ import { showToast } from "../../../Helper/ShowToast";
 const TemplatesLibrary = () => {
   const navigate = useNavigate();
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,14 +41,13 @@ const TemplatesLibrary = () => {
             hasActions: true,
             _raw: t,
           }));
-          setTableData(formatted)
-        ;
+          setTableData(formatted);
         } else {
           showToast("No templates found", "error");
         }
       } catch (err) {
         console.error("Fetch templates error:", err);
-        showToast( err.message || "Failed to load templates", "error");
+        showToast(err.message || "Failed to load templates", "error");
       } finally {
         setLoading(false);
       }
@@ -61,7 +59,6 @@ const TemplatesLibrary = () => {
   const columns = [{ header: "Name", key: "name", type: "text" }];
 
   const actions = [
-   
     {
       type: "icon",
       label: "Edit",
@@ -91,9 +88,9 @@ const TemplatesLibrary = () => {
             setTableData((prev) => [...prev, newCopy]);
           }
 
-          showToast( "Template duplicated successfully", "success");
+          showToast("Template duplicated successfully", "success");
         } catch (e) {
-          showToast( e.message || "Failed to duplicate template", "error");
+          showToast(e.message || "Failed to duplicate template", "error");
         }
       },
     },
@@ -112,10 +109,10 @@ const TemplatesLibrary = () => {
             refreshToken,
           });
 
-          showToast( "Template deleted successfully", "success");
+          showToast("Template deleted successfully", "success");
           setTableData((prev) => prev.filter((item) => item.id !== row.id));
         } catch (e) {
-          showToast( e.message || "Failed to delete template", "error");
+          showToast(e.message || "Failed to delete template", "error");
         }
       },
       className: "remove",

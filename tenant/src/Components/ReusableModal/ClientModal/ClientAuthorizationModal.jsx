@@ -21,22 +21,28 @@ const AddAuthorizationModal = ({
     endDate: initialData.endDate || "",
     payer: initialData.payer || "",
     insuranceType: initialData.insuranceType || "",
-    serviceCodes: initialData.serviceCodes?.length > 0 
-      ? initialData.serviceCodes 
-      : [{ code: "", modifier: "", units: "", per: "" }],
+    // Changed key from serviceCodes → service
+    service:
+      initialData.service?.length > 0
+        ? initialData.service.map((item) => ({
+            serviceCodeId: item.serviceCodeId || "",
+            modifier: "", // we'll extract later if needed
+            units: item.units || "",
+            per: item.per || "",
+          }))
+        : [{ serviceCodeId: "", modifier: "", units: "", per: "" }],
   });
 
   const [payers, setPayers] = useState([]);
-  const [serviceCodes, setServiceCodes] = useState([]);
+  const [serviceCodes, setServiceCodes] = useState([]); // Full list with id + code
   const [insuranceTypes, setInsuranceTypes] = useState([]);
   const [loadingPayers, setLoadingPayers] = useState(false);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
   const [loadingInsuranceTypes, setLoadingInsuranceTypes] = useState(false);
 
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const fetchPayers = useCallback(async () => {
     if (!tenantId || !accessToken) return;
@@ -70,12 +76,18 @@ const AddAuthorizationModal = ({
         refreshToken,
       });
       const data = response?.data || [];
-      const serviceCodeList = data
-        .filter((item) => !item.isDeleted && item.isActive)
-        .map((item) => ({
-          value: item.code,
-          label: `${item.code} - ${item.description}`,
-        }));
+      const activeCodes = data.filter(
+        (item) => !item.isDeleted && item.isActive
+      );
+
+      // Store full objects: { id, code, description }
+      const serviceCodeList = activeCodes.map((item) => ({
+        value: item.id, // ← Use ID as value now
+        label: `${item.code} - ${item.description}`,
+        code: item.code,
+        id: item.id,
+      }));
+
       setServiceCodes(serviceCodeList);
     } catch (error) {
       console.error("Failed to load service codes:", error);
@@ -110,7 +122,6 @@ const AddAuthorizationModal = ({
     }
   }, [tenantId, accessToken, refreshToken]);
 
-  // Fetch data when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchPayers();
@@ -123,74 +134,108 @@ const AddAuthorizationModal = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleServiceCodeChange = (index, field, value) => {
+  const handleServiceChange = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      serviceCodes: prev.serviceCodes.map((service, i) =>
-        i === index ? { ...service, [field]: value } : service
+      service: prev.service.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
       ),
     }));
   };
 
-  const handleAddServiceCode = () => {
+  const handleAddService = () => {
     setFormData((prev) => ({
       ...prev,
-      serviceCodes: [
-        ...prev.serviceCodes,
-        { code: "", modifier: "", units: "", per: "" },
+      service: [
+        ...prev.service,
+        { serviceCodeId: "", modifier: "", units: "", per: "" },
       ],
     }));
   };
 
-  const handleRemoveServiceCode = (index) => {
-    if (formData.serviceCodes.length === 1) {
+  const handleRemoveService = (index) => {
+    if (formData.service.length === 1) {
       showToast("At least one service code is required", "warning");
       return;
     }
-    
+
     setFormData((prev) => ({
       ...prev,
-      serviceCodes: prev.serviceCodes.filter((_, i) => i !== index),
+      service: prev.service.filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = () => {
-    if (!formData.title || !formData.authNumber || !formData.startDate || !formData.payer) {
+    // Validation
+    if (
+      !formData.title ||
+      !formData.authNumber ||
+      !formData.startDate ||
+      !formData.payer
+    ) {
       showToast("Please fill all required fields", "error");
       return;
     }
 
-    const invalidServiceCodes = formData.serviceCodes.filter(
-      (service) => !service.code || !service.units || Number(service.units) <= 0
+    const invalidServices = formData.service.filter(
+      (s) => !s.serviceCodeId || !s.units || Number(s.units) <= 0
     );
 
-    if (invalidServiceCodes.length > 0) {
-      showToast("Please fill all required service code fields with valid units", "error");
+    if (invalidServices.length > 0) {
+      showToast("Please select a service code and enter valid units", "error");
       return;
     }
 
-    const serviceCodeKeys = formData.serviceCodes.map(
-      (service) => `${service.code}-${service.modifier}`
-    );
-    const hasDuplicates = new Set(serviceCodeKeys).size !== serviceCodeKeys.length;
-    
+    // Check for duplicate serviceCodeId
+    const ids = formData.service.map((s) => s.serviceCodeId);
+    const hasDuplicates = new Set(ids).size !== ids.length;
     if (hasDuplicates) {
-      showToast("Duplicate service code and modifier combinations found", "error");
+      showToast("Duplicate service codes are not allowed", "error");
       return;
     }
 
-    const formattedData = {
-      ...formData,
-      serviceCodes: formData.serviceCodes.map(service => ({
-        ...service,
-        units: Number(service.units)
-      }))
+    // Final payload: match exact backend format
+    const payload = {
+      title: formData.title,
+      authNumber: formData.authNumber,
+      startDate: formData.startDate,
+      endDate: formData.endDate || null,
+      payer: formData.payer,
+      insuranceType: formData.insuranceType || null,
+      service: formData.service.map((item) => ({
+        serviceCodeId: item.serviceCodeId,
+        modifiers: item.modifier, // Empty object as requested
+        units: Number(item.units),
+        per: item.per || "SESSION", // default if empty
+      })),
     };
 
-    onSubmit(formattedData);
-
+    onSubmit(payload);
     onClose();
   };
+
+  // Hardcoded options (can be made dynamic later)
+  const modifierOptions = [
+    { value: "", label: "No Modifier" },
+    { value: "HO", label: "HO - Master's-level provider" },
+    { value: "HP", label: "HP - Doctoral-level provider" },
+    { value: "HN", label: "HN - Associate's-level provider" },
+    { value: "HM", label: "HM - Bachelor's-level provider" },
+    { value: "95", label: "95 - Synchronous telehealth" },
+    { value: "GT", label: "GT - Interactive audio/video" },
+    { value: "KX", label: "KX - Requirements met" },
+    { value: "59", label: "59 - Distinct procedural service" },
+    { value: "76", label: "76 - Repeat same provider" },
+    { value: "77", label: "77 - Repeat different provider" },
+  ];
+
+  const perOptions = [
+    { value: "SESSION", label: "Per Session" },
+    { value: "DAY", label: "Per Day" },
+    { value: "WEEK", label: "Per Week" },
+    { value: "MONTH", label: "Per Month" },
+    { value: "YEAR", label: "Per Year" },
+  ];
 
   return (
     <ReusableModal
@@ -255,63 +300,75 @@ const AddAuthorizationModal = ({
 
         {/* Service Codes Section */}
         <div className="border-t pt-6 mt-6">
-          <h3 className="text-lg font-medium mb-4">Add Service Codes</h3>
+          <h3 className="text-lg font-medium mb-4">Authorized Services</h3>
 
-          {/* Replicated Service Code Forms */}
-          <div className="space-y-4">
-            {formData.serviceCodes.map((serviceCode, index) => (
-              <div key={index} className="">
-                <div className="flex">
+          <div className="space-y-6">
+            {formData.service.map((serviceItem, index) => (
+              <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex gap-4 items-end">
                   <div className="flex-2">
                     <SelectInput
-                      label="Service code"
-                      placeholder="Service Code *"
+                      label="Service Code *"
+                      placeholder="Select service code"
                       options={serviceCodes}
-                      value={serviceCode.code}
-                      onChange={(e) => handleServiceCodeChange(index, "code", e.target.value)}
+                      value={serviceItem.serviceCodeId}
+                      onChange={(e) =>
+                        handleServiceChange(
+                          index,
+                          "serviceCodeId",
+                          e.target.value
+                        )
+                      }
                       isLoading={loadingServiceCodes}
                     />
                   </div>
 
                   <div className="flex-2">
                     <SelectInput
-                      label="Modifiers"
-                      placeholder="Modifier (optional)"
+                      label="Modifier"
+                      placeholder="Optional"
                       options={modifierOptions}
-                      value={serviceCode.modifier}
-                      onChange={(e) => handleServiceCodeChange(index, "modifier", e.target.value)}
+                      value={serviceItem.modifier}
+                      onChange={(e) =>
+                        handleServiceChange(index, "modifier", e.target.value)
+                      }
                     />
                   </div>
 
                   <div className="flex-1">
                     <TextInput
-                      label="Units"
+                      label="Units *"
                       type="number"
-                      placeholder="Units *"
                       min="1"
-                      value={serviceCode.units}
-                      onChange={(e) => handleServiceCodeChange(index, "units", e.target.value)}
+                      placeholder="e.g. 10"
+                      value={serviceItem.units}
+                      onChange={(e) =>
+                        handleServiceChange(index, "units", e.target.value)
+                      }
                     />
                   </div>
 
                   <div className="flex-1">
                     <SelectInput
                       label="Per"
-                      placeholder="Per"
+                      placeholder="Per..."
                       options={perOptions}
-                      value={serviceCode.per}
-                      onChange={(e) => handleServiceCodeChange(index, "per", e.target.value)}
+                      value={serviceItem.per}
+                      onChange={(e) =>
+                        handleServiceChange(index, "per", e.target.value)
+                      }
                     />
                   </div>
-                  <div className="flex justify-between items-center mb-3">
-                    {formData.serviceCodes.length > 1 && (
+
+                  <div className="col-span-1 flex justify-center">
+                    {formData.service.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveServiceCode(index)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Remove service code"
+                        onClick={() => handleRemoveService(index)}
+                        className="text-red-600 hover:text-red-800 mt-6"
+                        title="Remove"
                       >
-                        <FaTrash className="w-4 h-4" />
+                        <FaTrash className="w-5 h-5" />
                       </button>
                     )}
                   </div>
@@ -320,12 +377,12 @@ const AddAuthorizationModal = ({
             ))}
           </div>
 
-          <div className="mt-4">
+          <div className="mt-6">
             <Button
-              label="Add Service Code"
+              label="Add Another Service"
               variant="secondary"
-              icon={<FaPlus className="w-4 h-4" />}
-              onClick={handleAddServiceCode}
+              icon={<FaPlus />}
+              onClick={handleAddService}
             />
           </div>
         </div>
@@ -333,21 +390,5 @@ const AddAuthorizationModal = ({
     </ReusableModal>
   );
 };
-
-// Options data
-const modifierOptions = [
-  { value: "", label: "None" },
-  { value: "HM", label: "HM - Less than Bachelor's" },
-  { value: "HN", label: "HN - Bachelor's Degree" },
-  { value: "HO", label: "HO - Master's Degree" },
-  { value: "HP", label: "HP - Doctoral Level" },
-];
-
-const perOptions = [
-  { value: "day", label: "Per Day" },
-  { value: "week", label: "Per Week" },
-  { value: "month", label: "Per Month" },
-  { value: "year", label: "Per Year" },
-];
 
 export default AddAuthorizationModal;

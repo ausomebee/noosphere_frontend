@@ -20,11 +20,9 @@ const PracticeSettings = () => {
   const [loading, setLoading] = useState(false);
 
   const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
-  /* ----------------------------- FETCH DATA ----------------------------- */
   useEffect(() => {
     if (tenantId) {
       fetchDiagnosisCodes();
@@ -41,17 +39,12 @@ const PracticeSettings = () => {
         accessToken,
         refreshToken,
       });
-
       const codes = Array.isArray(response.data?.data)
         ? response.data.data
         : [];
-
-      const updatedCodes = codes.map((code) => ({ ...code, hasActions: true }));
-
-      setDiagnosisCodes(updatedCodes);
+      setDiagnosisCodes(codes.map((code) => ({ ...code, hasActions: true })));
     } catch (error) {
-      showToast(error.message || "Failed to fetch diagnosis codes", "error");
-      console.error("Error fetching diagnosis codes:", error);
+      showToast("Failed to fetch diagnosis codes", "error");
     } finally {
       setLoading(false);
     }
@@ -66,23 +59,18 @@ const PracticeSettings = () => {
         accessToken,
         refreshToken,
       });
-
       const types = Array.isArray(response.data?.data)
         ? response.data.data
         : [];
-
-      const updatedTypes = types.map((type) => ({ ...type, hasActions: true }));
-
-      setSessionTypes(updatedTypes);
+      setSessionTypes(types.map((type) => ({ ...type, hasActions: true })));
     } catch (error) {
-      showToast(error.message || "Failed to fetch session types", "error");
-      console.error("Error fetching session types:", error);
+      showToast("Failed to fetch session types", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ------------------------ TABLE COLUMNS & ACTIONS ------------------------ */
+  /* ======================== TABLE COLUMNS ======================== */
   const DiagnosisCodesColumns = [
     { header: "Diagnosis Description", key: "description", type: "text" },
     { header: "Code", key: "code", type: "text" },
@@ -94,23 +82,27 @@ const PracticeSettings = () => {
     { header: "Category", key: "category", type: "text" },
     {
       header: "CPT Code(s)",
-      key: "service",
+      key: "sessionTypeServices",
       type: "custom",
       render: (row) => {
-        const service = row.service;
+        const services = row.sessionTypeServices || [];
 
-        if (!service || typeof service !== "object") return "-";
+        if (!Array.isArray(services) || services.length === 0) return "-";
 
-        if (Array.isArray(service)) {
-          return (
-            service
-              .map((s) => s.modifierType || "-")
-              .filter(Boolean)
-              .join(", ") || "-"
-          );
-        } else {
-          return service.modifierType || "-";
-        }
+        const displayText = services
+          .map((s) => {
+            const code = s.serviceCode?.code || "N/A";
+            const modifier = s.modifiers?.modifier
+              ? ` (${s.modifiers.modifier})`
+              : "";
+            return `${code}${modifier}`;
+          })
+          .join(", ");
+
+        // Truncate if longer than 20 characters
+        return displayText.length > 20
+          ? `${displayText.substring(0, 20)}...`
+          : displayText;
       },
     },
     {
@@ -122,7 +114,7 @@ const PracticeSettings = () => {
     { header: "Status", key: "isActive", type: "active" },
   ];
 
-  /* ----------------------------- CRUD HANDLERS ----------------------------- */
+  /* ======================== SAVE HANDLERS ======================== */
   const handleSaveDiagnosisCode = async (data) => {
     try {
       let response;
@@ -136,7 +128,6 @@ const PracticeSettings = () => {
           accessToken,
           refreshToken,
         });
-
         const updatedItem = response.data?.data || response.data;
         setDiagnosisCodes((prev) =>
           prev.map((item) =>
@@ -155,7 +146,6 @@ const PracticeSettings = () => {
           accessToken,
           refreshToken,
         });
-
         const newItem = response.data?.data || response.data;
         setDiagnosisCodes((prev) => [
           ...prev,
@@ -166,26 +156,15 @@ const PracticeSettings = () => {
       setIsAddModalOpen(false);
       setSelectedRow(null);
     } catch (error) {
-      showToast(error.message || `Failed to ${modalMode} diagnosis code`, "error");
-      console.error(`Error ${modalMode} diagnosis code:`, error);
+      showToast(`Failed to ${modalMode} diagnosis code`, "error");
     }
   };
 
-  const handleSaveSessionType = async (data) => {
+  const handleSaveSessionType = async (payload) => {
     try {
       const sessionTypeData = {
         tenantId,
-        name: data.name,
-        category: data.category,
-        service: data.service || [],
-        staffRolesAllowed: data.staffRole ? [data.staffRole] : [],
-        locationsAllowed: Array.isArray(data.location)
-          ? data.location
-          : [data.location].filter(Boolean),
-        defaultDuration: (data.hours || 0) * 60 + (data.minutes || 0),
-        isActive: data.status,
-        isBillable: data.billable || false,
-        hasActions: true,
+        ...payload,
       };
 
       let response;
@@ -196,7 +175,6 @@ const PracticeSettings = () => {
           accessToken,
           refreshToken,
         });
-
         const updatedItem = response.data?.data || response.data;
         setSessionTypes((prev) =>
           prev.map((item) =>
@@ -212,7 +190,6 @@ const PracticeSettings = () => {
           accessToken,
           refreshToken,
         });
-
         const newItem = response.data?.data || response.data;
         setSessionTypes((prev) => [...prev, { ...newItem, hasActions: true }]);
         showToast("Session type created successfully", "success");
@@ -220,11 +197,12 @@ const PracticeSettings = () => {
       setIsAddModalOpen(false);
       setSelectedRow(null);
     } catch (error) {
-      showToast(error.message || `Failed to ${modalMode} session type`, "error");
-      console.error(`Error ${modalMode} session type:`, error);
+      showToast(`Failed to ${modalMode} session type`, "error");
+      console.error(error);
     }
   };
 
+  /* ======================== TOGGLE STATUS ======================== */
   const handleToggleDiagnosisCodeStatus = async (id, newStatus) => {
     try {
       const response = await api.UpdateActiveDiagnosisCode({
@@ -240,16 +218,13 @@ const PracticeSettings = () => {
         )
       );
       showToast(
-        `Diagnosis code ${newStatus ? "activated" : "deactivated"} successfully`,
+        `Diagnosis code ${
+          newStatus ? "activated" : "deactivated"
+        } successfully`,
         "success"
       );
     } catch (error) {
-      showToast(
-        error.message || "Failed to toggle diagnosis code status",
-        "error"
-      );
-      console.error("Error toggling diagnosis code status:", error);
-      throw error;
+      showToast("Failed to toggle status", "error");
     }
   };
 
@@ -272,16 +247,11 @@ const PracticeSettings = () => {
         "success"
       );
     } catch (error) {
-      showToast(
-        error.message || "Failed to toggle session type status",
-        "error"
-      );
-      console.error("Error toggling session type status:", error);
-      throw error;
+      showToast("Failed to toggle status", "error");
     }
   };
 
-  /* ----------------------------- TABLE CONFIG ----------------------------- */
+  /* ======================== ACTIONS ======================== */
   const DiagnosisCodesActions = [
     {
       type: "dropdown",
@@ -365,14 +335,11 @@ const PracticeSettings = () => {
 
   const filters = useMemo(() => {
     if (view === "diagnosisCodes") return [];
-    if (view === "sessionTypes") {
-      return [
-        { value: "category", label: "Category" },
-        { value: "service", label: "Service" },
-        { value: "isActive", label: "Status" },
-      ];
-    }
-    return [];
+    return [
+      { value: "category", label: "Category" },
+      { value: "sessionTypeServices", label: "Service" },
+      { value: "isActive", label: "Status" },
+    ];
   }, [view]);
 
   const handleAdd = () => {

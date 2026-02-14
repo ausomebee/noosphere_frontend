@@ -48,6 +48,8 @@ const TableBody = ({
     "Modifiers",
     "Rounding Rule",
     "Insurance Type",
+    "Document Title",
+    "Template Name",
   ];
 
   const getFileIcon = (fileName) => {

@@ -23,7 +23,10 @@ import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import DatePicker from "react-multi-date-picker";
 import { showToast } from "../../../Helper/ShowToast";
-import {format } from "date-fns";
+import { format } from "date-fns";
+import api2 from "../../../api/billingAndPaymentsApi";
+import { useSelector } from "react-redux";
+
 const AppointmentModal = ({
   isOpen,
   onClose,
@@ -34,21 +37,63 @@ const AppointmentModal = ({
   sessionTypes,
   staff,
 }) => {
- console.log(initialData)
+  console.log(initialData);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Added for loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [serviceCodes, setServiceCodes] = useState([]);
+  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+
   const datePickerRef = useRef(null);
   const [forceUpdate, setForceUpdate] = useState(0);
 
-  // Map API data to form options
-  const clientOptions = clients.map((client) => ({
-    value: client.clientId,
-    label: `${client.client.firstName || ''} ${client.client.lastName || ''}`.trim() || "Unknown  Client",
-  }));
+  // Fetch real service codes from tenant
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingServiceCodes(true);
+    try {
+      const response = await api2.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || [];
+      const options = data
+        .filter((item) => !item.isDeleted && item.isActive)
+        .map((item) => ({
+          value: item.id,
+          label: `${item.code} - ${item.description || "No description"}`,
+        }));
+      setServiceCodes(options);
+    } catch (error) {
+      console.error("Failed to load service codes:", error);
+      showToast("Failed to load service codes", "error");
+    } finally {
+      setLoadingServiceCodes(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
 
+  useEffect(() => {
+    if (isOpen) fetchServiceCodes();
+  }, [isOpen, fetchServiceCodes]);
 
+  // Map clients and staff
+  const clientOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.clientId,
+        label:
+          `${client.client.firstName || ""} ${
+            client.client.lastName || ""
+          }`.trim() || "Unknown Client",
+      })),
+    [clients]
+  );
 
   const clinicianOptions = useMemo(
     () =>
@@ -69,28 +114,6 @@ const AppointmentModal = ({
     [sessionTypes]
   );
 
-  const serviceTypeOptions = Array.from(
-    new Set(
-      sessionTypes.flatMap((st) =>
-        (st.service || []).map((svc) => svc.serviceType)
-      )
-    )
-  ).map((serviceType) => ({
-    value: serviceType,
-    label: serviceType,
-  }));
-
-  const modifierOptions = Array.from(
-    new Set(
-      sessionTypes.flatMap((st) =>
-        (st.service || []).map((svc) => svc.modifierType).filter(Boolean)
-      )
-    )
-  ).map((modifierType) => ({
-    value: modifierType,
-    label: modifierType,
-  }));
-
   const locationOptions = [
     { value: "Clinic/Center", label: "Clinic/Center" },
     { value: "Home", label: "Home" },
@@ -99,6 +122,21 @@ const AppointmentModal = ({
     { value: "Telehealth", label: "Telehealth" },
     { value: "Telephonic", label: "Telephonic" },
     { value: "Other", label: "Other" },
+  ];
+
+  // Standard ABA modifiers
+  const modifierOptions = [
+    { value: "", label: "No Modifier" },
+    { value: "HO", label: "HO - Master's-level provider" },
+    { value: "HP", label: "HP - Doctoral-level provider" },
+    { value: "HN", label: "HN - Associate's-level provider" },
+    { value: "HM", label: "HM - Bachelor's-level provider" },
+    { value: "95", label: "95 - Synchronous telehealth" },
+    { value: "GT", label: "GT - Interactive audio/video" },
+    { value: "KX", label: "KX - Requirements met" },
+    { value: "59", label: "59 - Distinct procedural service" },
+    { value: "76", label: "76 - Repeat same provider" },
+    { value: "77", label: "77 - Repeat different provider" },
   ];
 
   const validationSchema = Yup.object({
@@ -160,11 +198,11 @@ const AppointmentModal = ({
     service: Yup.array()
       .of(
         Yup.object({
-          serviceType: Yup.string().required("Service type is required"),
-          modifierType: Yup.string().nullable(),
+          serviceCodeId: Yup.string().required("Service code is required"),
+          modifier: Yup.string().nullable(),
         })
       )
-      .min(1, "At least one service type is required"),
+      .min(1, "At least one service is required"),
     serviceLocation: Yup.string().required("Service location is required"),
     isRecurring: Yup.boolean(),
     recurrenceType: Yup.string().when("isRecurring", {
@@ -317,12 +355,12 @@ const AppointmentModal = ({
     resolver: yupResolver(validationSchema),
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
-      startTime: "", 
+      startTime: "",
       endTime: "",
       client: "",
       sessionType: "",
       clinicians: [],
-      service: [{ serviceType: "", modifierType: "" }],
+      service: [],
       serviceLocation: "",
       isRecurring: false,
       recurrenceType: "day",
@@ -341,7 +379,7 @@ const AppointmentModal = ({
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "service",
   });
@@ -354,68 +392,58 @@ const AppointmentModal = ({
   const endType = watch("endType");
   const sessionType = watch("sessionType");
   const clinicians = watch("clinicians");
-  const service = watch("service");
 
+  // Auto-populate service codes and modifiers when session type changes
   useEffect(() => {
+    if (isEditMode && initialData) return;
 
-    if (initialData && isEditMode) {
-    return;
-  }
     if (!sessionType) {
-      setValue("service", [{ serviceType: "", modifierType: "" }]);
+      replace([]);
       return;
     }
 
     const selectedSession = sessionTypes.find((st) => st.id === sessionType);
-    if (!selectedSession) {
-      setValue("service", [{ serviceType: "", modifierType: "" }]);
+    if (
+      !selectedSession ||
+      !selectedSession.sessionTypeServices ||
+      selectedSession.sessionTypeServices.length === 0
+    ) {
+      replace([]);
       return;
     }
 
-    const mappedServices = (selectedSession.service || []).map((svc) => ({
-      serviceType: svc.serviceType || "",
-      modifierType: svc.modifierType || "",
-    }));
+    const mappedServices = selectedSession.sessionTypeServices.map((svc) => {
+      let defaultModifier = svc.modifiers?.modifier || "";
+      if (!defaultModifier && svc.serviceCode?.modifiers?.modifier1) {
+        defaultModifier = svc.serviceCode.modifiers.modifier1;
+      }
 
-    setValue(
-      "service",
-      mappedServices.length
-        ? mappedServices
-        : [{ serviceType: "", modifierType: "" }]
-    );
+      return {
+        serviceCodeId: svc.serviceCodeId,
+        modifier: defaultModifier,
+      };
+    });
 
+    replace(mappedServices);
+
+    const duration = selectedSession.defaultDuration || 60;
     const now = new Date();
-    const end = new Date(
-      now.getTime() + (selectedSession.defaultDuration || 60) * 60_000
-    );
+    const end = new Date(now.getTime() + duration * 60 * 1000);
     setValue("startTime", now.toTimeString().slice(0, 5));
     setValue("endTime", end.toTimeString().slice(0, 5));
 
-    const [firstLoc] = selectedSession.locationsAllowed || ["Clinic/Center"];
-    if (firstLoc) setValue("serviceLocation", firstLoc);
+    if (
+      selectedSession.locationsAllowed &&
+      selectedSession.locationsAllowed.length > 0
+    ) {
+      setValue("serviceLocation", selectedSession.locationsAllowed[0]);
+    }
+  }, [sessionType, sessionTypes, setValue, replace, isEditMode, initialData]);
 
-    const invalid = clinicians
-      .map((id) => clinicianOptions.find((c) => c.value === id))
-      .filter(Boolean)
-      .filter(
-        (clin) => !(selectedSession.staffRolesAllowed || []).includes(clin.role)
-      );
+  // Edit mode: populate from initialData
+  useEffect(() => {
+    if (!isEditMode || !initialData) return;
 
-    setWarnings((prev) => {
-      const next = prev.filter((w) => w.type !== "clinicianRole");
-      if (invalid.length)
-        next.push({
-          type: "clinicianRole",
-          message:
-            "Please review your selections and ensure only eligible clinicians are assigned to this appointment.",
-        });
-      return next;
-    });
-  }, [sessionType, clinicians, sessionTypes, clinicianOptions, setValue]);
-
-
-useEffect(() => {
-  if (initialData && isEditMode) {
     const normalizeTime = (time) => {
       if (!time) return "";
       if (typeof time === "string") {
@@ -429,7 +457,12 @@ useEffect(() => {
       }
       return time;
     };
-    console.log(initialData)
+
+    // Map service correctly: use serviceCodeId and modifierType → modifier
+    const mappedServices = (initialData.service || []).map((svc) => ({
+      serviceCodeId: svc.serviceCodeId || "",
+      modifier: svc.modifierType || "", // ← Key fix: map modifierType → modifier
+    }));
 
     const formattedData = {
       date: initialData.date
@@ -437,24 +470,23 @@ useEffect(() => {
         : new Date().toISOString().split("T")[0],
       startTime: normalizeTime(initialData.startTime),
       endTime: normalizeTime(initialData.endTime),
-      client: initialData.clientId || initialData.client || "",
+      client: initialData.clientId || "",
       sessionType: initialData.sessionType || "",
-      clinicians: Array.isArray(initialData.clinicians)
-        ? initialData.clinicians.map((c) => c.id.toString()) // Transform to array of IDs
-        : [],
+      clinicians: initialData.clinicianIds || [], // Already array of strings
       service:
-        initialData.service && initialData.service.length > 0
-          ? initialData.service
-          : [{ serviceType: "", modifierType: "" }],
+        mappedServices.length > 0
+          ? mappedServices
+          : [{ serviceCodeId: "", modifier: "" }],
       serviceLocation: initialData.serviceLocation || "",
       isRecurring: initialData.isRecurring || false,
       recurrenceType: initialData.recurrence?.type || "day",
       recurrenceDays: initialData.recurrence?.days || [],
-      customRecurrenceInterval: initialData.recurrence?.interval?.toString() || "",
+      customRecurrenceInterval:
+        initialData.recurrence?.interval?.toString() || "",
       customRecurrenceUnit: initialData.recurrence?.unit || "month",
       customRecurrenceDay: initialData.recurrence?.day
         ? Array.isArray(initialData.recurrence.day)
-          ? initialData.recurrence.day
+          ? initialData.recurrence.day.map(Number)
           : [parseInt(initialData.recurrence.day)]
         : [],
       customRecurrencePosition: initialData.recurrence?.position || "on",
@@ -470,23 +502,43 @@ useEffect(() => {
     };
 
     reset(formattedData);
+    // Force replace the field array to ensure UI updates
+    replace(
+      mappedServices.length > 0
+        ? mappedServices
+        : [{ serviceCodeId: "", modifier: "" }]
+    );
+  }, [initialData, isEditMode, reset, replace]);
+  // Clinician role warning - FIXED
+  useEffect(() => {
+    if (!sessionType) return;
 
-    
-  }
-}, [initialData, isEditMode, reset, watch]);
+    const selectedSession = sessionTypes.find((st) => st.id === sessionType);
+    if (!selectedSession) return;
 
-const transformClinicians = (clinicianIds = []) => {
-  return clinicianIds.map(id => ({ id }));
-};
+    const allowedRoles = selectedSession.staffRolesAllowed || [];
+
+    const invalid = clinicians
+      .map((id) => clinicianOptions.find((c) => c.value === id))
+      .filter(Boolean)
+      .filter((clin) => !allowedRoles.includes(clin.role));
+
+    setWarnings((prev) => {
+      const next = prev.filter((w) => w.type !== "clinicianRole");
+      if (invalid.length > 0) {
+        next.push({
+          type: "clinicianRole",
+          message:
+            "Please review your selections and ensure only eligible clinicians are assigned to this appointment.",
+        });
+      }
+      return next;
+    });
+  }, [sessionType, clinicians, sessionTypes, clinicianOptions]);
 
   const handleSubmitForm = async (data) => {
     setIsLoading(true);
     try {
-      // Validate service array
-      if (data.service.some((svc) => !svc.serviceType)) {
-        throw new Error("All service types must be selected");
-      }
-
       const recurrence = data.isRecurring
         ? {
             type: data.recurrenceType,
@@ -525,25 +577,20 @@ const transformClinicians = (clinicianIds = []) => {
         endTime: data.endTime,
         client: data.client,
         sessionType: data.sessionType,
-        clinicians: transformClinicians(data.clinicians),
+        clinicians: data.clinicians, // ← FIXED: No wrapping, just array of IDs
         service: data.service.map((svc) => ({
-          serviceType: svc.serviceType,
-          modifierType: svc.modifierType || "",
+          serviceCodeId: svc.serviceCodeId,
+          modifiers: {
+            modifier: svc.modifier || "",
+          },
         })),
         serviceLocation: data.serviceLocation,
         isRecurring: data.isRecurring,
-        recurrence,
+        recurrence, // ← FIXED: Now properly included
         billable: data.billable,
         requiresTravel: data.requiresTravel,
         colorCode: data.colorCode,
       };
-
-      
-      console.log(
-        "Form Data Submitted:",
-        JSON.stringify(appointmentData, null, 2)
-      );
-      console.groupEnd();
 
       if (isEditMode && data.isRecurring) {
         setShowConfirmation(true);
@@ -556,7 +603,7 @@ const transformClinicians = (clinicianIds = []) => {
           client: "",
           sessionType: "",
           clinicians: [],
-          service: [{ serviceType: "", modifierType: "" }],
+          service: [],
           serviceLocation: "",
           isRecurring: false,
           recurrenceType: "day",
@@ -577,17 +624,17 @@ const transformClinicians = (clinicianIds = []) => {
       }
     } catch (error) {
       console.error("Submission error:", error.message);
-      // Display error to user
-      showToast(error.message); // Replace with toast notification if preferred
+      showToast(error.message || "Failed to save appointment");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleConfirmSave = async (scope) => {
-    setIsLoading(true); // Set loading state
+    setIsLoading(true);
     try {
       const data = watch();
+
       const recurrence = data.isRecurring
         ? (() => {
             const baseRecurrence = {
@@ -631,17 +678,21 @@ const transformClinicians = (clinicianIds = []) => {
         endTime: data.endTime,
         client: data.client,
         sessionType: data.sessionType,
-       clinicians: transformClinicians(data.clinicians),
-        service: data.service,
+        clinicians: data.clinicians, // ← Array of IDs only
+        service: data.service.map((svc) => ({
+          serviceCodeId: svc.serviceCodeId,
+          modifiers: {
+            modifier: svc.modifier || "",
+          },
+        })),
         serviceLocation: data.serviceLocation,
         isRecurring: data.isRecurring,
-        recurrence,
+        recurrence, // ← Included here too
         billable: data.billable,
         requiresTravel: data.requiresTravel,
         colorCode: data.colorCode,
         scope: scope,
       };
-   
 
       await onSave(appointmentData);
       reset({
@@ -651,7 +702,7 @@ const transformClinicians = (clinicianIds = []) => {
         client: "",
         sessionType: "",
         clinicians: [],
-        service: [{ serviceType: "", modifierType: "" }],
+        service: [],
         serviceLocation: "",
         isRecurring: false,
         recurrenceType: "day",
@@ -671,7 +722,7 @@ const transformClinicians = (clinicianIds = []) => {
       onClose();
       setShowConfirmation(false);
     } finally {
-      setIsLoading(false); // Reset loading state
+      setIsLoading(false);
     }
   };
 
@@ -681,31 +732,7 @@ const transformClinicians = (clinicianIds = []) => {
 
   const onError = (errors) => {
     console.group("Form Validation Errors");
-    const simplifiedErrors = Object.keys(errors).reduce((acc, key) => {
-      const error = errors[key];
-      if (error.message)
-        acc[key] = { message: error.message, type: error.type };
-      else if (Array.isArray(error))
-        acc[key] = error.map((item, index) => ({
-          index,
-          message: item.message,
-          type: item.type,
-        }));
-      else if (typeof error === "object")
-        acc[key] = Object.keys(error).reduce((subAcc, subKey) => {
-          if (error[subKey].message)
-            subAcc[subKey] = {
-              message: error[subKey].message,
-              type: error[subKey].type,
-            };
-          return subAcc;
-        }, {});
-      return acc;
-    }, {});
-    console.error(
-      "Validation failed with errors:",
-      JSON.stringify(simplifiedErrors, null, 2)
-    );
+    console.error(JSON.stringify(errors, null, 2));
     console.groupEnd();
   };
 
@@ -798,70 +825,59 @@ const transformClinicians = (clinicianIds = []) => {
       <p className="text-base text-gray-600 font-semibold">
         Service and CPT Code(s)
       </p>
-      {fields.map((item, index) => (
-        <div key={item.id} className="flex gap-4 items-center mb-2">
-          <div className="flex-1">
-            <Controller
-              name={`service.${index}.serviceType`}
-              control={control}
-              render={({ field }) => (
-                <SelectInput
-                  label={`Service Type * ${index + 1}`}
-                  options={serviceTypeOptions}
-                  placeholder="Select Service Type"
-                  error={errors.service?.[index]?.serviceType?.message}
-                  value={field.value || ""}
-                  onChange={(value) => field.onChange(value || "")}
-                  className="rounded-12px"
-                  {...field}
-                />
-              )}
-            />
+      {fields.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">
+          No services defined for this session type.
+        </p>
+      ) : (
+        fields.map((item, index) => (
+          <div key={item.id} className="flex gap-4 items-end mb-4">
+            <div className="flex-1">
+              <Controller
+                name={`service.${index}.serviceCodeId`}
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label={index === 0 ? "Service Code (CPT/HCPCS) *" : ""}
+                    options={serviceCodes}
+                    isLoading={loadingServiceCodes}
+                    placeholder={
+                      loadingServiceCodes
+                        ? "Loading codes..."
+                        : "Select service code"
+                    }
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.service?.[index]?.serviceCodeId?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+            <div className="flex-1">
+              <Controller
+                name={`service.${index}.modifier`}
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label={index === 0 ? "Modifier" : ""}
+                    options={modifierOptions}
+                    placeholder="Select modifier (optional)"
+                    value={field.value}
+                    onChange={field.onChange}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <Controller
-              name={`service.${index}.modifierType`}
-              control={control}
-              render={({ field }) => (
-                <SelectInput
-                  label={`Modifier ${index + 1}`}
-                  options={[{ value: "", label: "None" }, ...modifierOptions]}
-                  placeholder="Select Modifier"
-                  error={errors.service?.[index]?.modifierType?.message}
-                  value={field.value || ""}
-                  onChange={(value) => field.onChange(value || "")}
-                  className="rounded-12px"
-                  {...field}
-                />
-              )}
-            />
-          </div>
-          {fields.length > 1 && (
-            <button
-              type="button"
-              className="text-red-500 hover:text-red-700"
-              onClick={() => remove(index)}
-              aria-label="Remove Service"
-            >
-              <FaTrash />
-            </button>
-          )}
-        </div>
-      ))}
+        ))
+      )}
       <Button
         icon={<FaPlus />}
         variant="secondary"
-        label="Add"
-        onClick={() => {
-          const currentServices = watch("service");
-          if (currentServices.some((svc) => !svc.serviceType)) {
-            showToast(
-              "Please select a service type for all existing rows before adding a new one."
-            );
-            return;
-          }
-          append({ serviceType: "", modifierType: "" });
-        }}
+        label="Add Service Code"
+        onClick={() => append({ serviceCodeId: "", modifier: "" })}
       />
       <div className="mt-6">
         <TextInput
@@ -1219,50 +1235,44 @@ const transformClinicians = (clinicianIds = []) => {
         )}
       </div>
 
-     <div className="flex gap-4">
-  <div className="flex-1">
-    <Controller
-      name="startTime"
-      control={control}
-      render={({ field }) => (
-        <TextInput
-          label="Start Time *"
-          type="time"
-          value={field.value || ""}
-          onChange={(e) => {
-           
-            field.onChange(e.target.value);
-          }}
-          onBlur={field.onBlur}
-          placeholder="HH:MM"
-          width="full"
-          error={errors.startTime?.message}
-        />
-      )}
-    />
-  </div>
-  <div className="flex-1">
-    <Controller
-      name="endTime"
-      control={control}
-      render={({ field }) => (
-        <TextInput
-          label="End Time *"
-          type="time"
-          value={field.value || ""}
-          onChange={(e) => {
-           
-            field.onChange(e.target.value);
-          }}
-          onBlur={field.onBlur}
-          placeholder="HH:MM"
-          width="full"
-          error={errors.endTime?.message}
-        />
-      )}
-    />
-  </div>
-</div>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Controller
+            name="startTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                label="Start Time *"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.startTime?.message}
+              />
+            )}
+          />
+        </div>
+        <div className="flex-1">
+          <Controller
+            name="endTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                label="End Time *"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.endTime?.message}
+              />
+            )}
+          />
+        </div>
+      </div>
       <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
         <Controller
           name="billable"
@@ -1282,7 +1292,7 @@ const transformClinicians = (clinicianIds = []) => {
         render={({ field }) => (
           <SelectInput
             label="Service Location *"
-            options={locationOptions} // Use all possible locations
+            options={locationOptions}
             value={field.value}
             onChange={(value) => field.onChange(value)}
             className="rounded-12px"
@@ -1395,7 +1405,7 @@ const transformClinicians = (clinicianIds = []) => {
           : handleSubmit(onSubmitWithErrorHandling, onError)
       }
       onSecondaryButtonClick={showConfirmation ? undefined : onClose}
-      primaryButtonLoading={isLoading} // Pass isLoading to ReusableModal
+      primaryButtonLoading={isLoading}
       size="medium"
     >
       {showConfirmation ? renderConfirmation() : renderMainForm()}

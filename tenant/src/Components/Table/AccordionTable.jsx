@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { SelectInput, TextInput } from "../Input/Inputs";
 import Pagination from "./Pagination";
 import "./AccordionTable.css";
 import Button from "../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import api2 from "../../api/billingAndPaymentsApi";
 
 const AccordionTable = ({
   data,
@@ -20,23 +22,76 @@ const AccordionTable = ({
   const [expandedRow, setExpandedRow] = useState(null);
   const [serviceRows, setServiceRows] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [serviceCodes, setServiceCodes] = useState([]);
+  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+
+  // Get user data from Redux
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: {
-      services: initialServiceData || {},
+      services: {},
     },
   });
 
-  const serviceCodeOptions = [
-    { value: "H2002", label: "H2002" },
-    { value: "H2003", label: "H2003" },
-    { value: "H2004", label: "H2004" },
-  ];
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingServiceCodes(true);
+    try {
+      const response = await api2.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const responseData = response?.data || [];
+      const activeCodes = responseData.filter(
+        (item) => !item.isDeleted && item.isActive
+      );
+
+      // Store full objects: { id, code, description }
+      const serviceCodeList = activeCodes.map((item) => ({
+        value: item.id, // Use ID as value
+        label: `${item.code} - ${item.description}`,
+        code: item.code,
+        id: item.id,
+        description: item.description,
+      }));
+
+      setServiceCodes(serviceCodeList);
+    } catch (error) {
+      
+    } finally {
+      setLoadingServiceCodes(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  // Fetch service codes on component mount
+  useEffect(() => {
+    fetchServiceCodes();
+  }, [fetchServiceCodes]);
 
   const modifierOptions = [
-    { value: "BT", label: "BT" },
-    { value: "GT", label: "GT" },
-    { value: "HT", label: "HT" },
+    { value: "", label: "No Modifier" },
+    { value: "HO", label: "HO - Master's-level provider" },
+    { value: "HP", label: "HP - Doctoral-level provider" },
+    { value: "HN", label: "HN - Associate's-level provider" },
+    { value: "HM", label: "HM - Bachelor's-level provider" },
+    { value: "95", label: "95 - Synchronous telehealth" },
+    { value: "GT", label: "GT - Interactive audio/video" },
+    { value: "KX", label: "KX - Requirements met" },
+    { value: "59", label: "59 - Distinct procedural service" },
+    { value: "76", label: "76 - Repeat same provider" },
+    { value: "77", label: "77 - Repeat different provider" },
+  ];
+
+  const perOptions = [
+    { value: "SESSION", label: "Per Session" },
+    { value: "DAY", label: "Per Day" },
+    { value: "WEEK", label: "Per Week" },
+    { value: "MONTH", label: "Per Month" },
+    { value: "YEAR", label: "Per Year" },
   ];
 
   // Watch form services to detect changes
@@ -56,17 +111,33 @@ const AccordionTable = ({
 
   // Initialize service rows and form data
   useEffect(() => {
-    console.log("Received initialServiceData:", initialServiceData); // Debug
+    if (!initialServiceData || Object.keys(initialServiceData).length === 0) {
+      return;
+    }
+
+    const processedServiceData = {};
     const initialServiceRows = {};
-    Object.keys(initialServiceData).forEach((key) => {
-      initialServiceRows[key] = Math.max(
-        initialServiceData[key]?.length || 1,
-        1
-      );
+
+    // Process each row in initialServiceData
+    Object.keys(initialServiceData).forEach((rowKey) => {
+      const services = initialServiceData[rowKey] || [];
+
+      // Process each service in the row
+      const processedServices = services.map((service) => {
+        return {
+          serviceCode: service.serviceCodeId || "",
+          modifiers: service.modifiers || "",
+          units: service.units || "",
+          per: service.per || "SESSION",
+        };
+      });
+
+      processedServiceData[rowKey] = processedServices;
+      initialServiceRows[rowKey] = Math.max(processedServices.length, 1);
     });
+
     setServiceRows(initialServiceRows);
-    reset({ services: JSON.parse(JSON.stringify(initialServiceData)) }); // Deep copy
-    console.log("Form initialized with:", getValues("services")); // Debug
+    reset({ services: processedServiceData });
   }, [initialServiceData, reset]);
 
   const toggleRow = (rowIndex) => {
@@ -75,10 +146,8 @@ const AccordionTable = ({
 
   const onSave = (globalRowIndex) => () => {
     const rowServices = getValues(`services.${globalRowIndex}`);
-    console.log(`Saving data for row ${globalRowIndex}:`, rowServices);
     reset({ services: getValues("services") });
     setHasChanges(false);
-    // Add your save logic here (e.g., API call)
   };
 
   const addServiceRow = (globalRowIndex, e) => {
@@ -96,7 +165,7 @@ const AccordionTable = ({
       serviceCode: "",
       modifiers: "",
       units: "",
-      unitRate: "",
+      per: "SESSION",
     };
 
     const updatedServices = [...currentServices, newService];
@@ -109,7 +178,9 @@ const AccordionTable = ({
     const currentServices = getValues(`services.${globalRowIndex}`) || [];
     if (currentServices.length <= 1) return;
 
-    const updatedServices = currentServices.filter((_, index) => index !== serviceIndex);
+    const updatedServices = currentServices.filter(
+      (_, index) => index !== serviceIndex
+    );
     setServiceRows((prev) => ({
       ...prev,
       [globalRowIndex]: Math.max(updatedServices.length, 1),
@@ -130,7 +201,7 @@ const AccordionTable = ({
           serviceCode: "",
           modifiers: "",
           units: "",
-          unitRate: "",
+          per: "SESSION",
         }));
       return [...existingData, ...emptyRows];
     }
@@ -163,13 +234,20 @@ const AccordionTable = ({
     const fontWeight = shouldColor ? "bold" : "normal";
 
     if (typeof col.render === "function") {
-      return <span style={{ color: textColor, fontWeight: fontWeight }}>{col.render(row)}</span>;
+      return (
+        <span style={{ color: textColor, fontWeight: fontWeight }}>
+          {col.render(row)}
+        </span>
+      );
     }
 
     if (col.type === "stage_completion" || col.key === "utilization") {
       const percentage = parseInt(row[col.key]) || 0;
       return (
-        <div className="progress-container" style={{ color: textColor, fontWeight: fontWeight }}>
+        <div
+          className="progress-container"
+          style={{ color: textColor, fontWeight: fontWeight }}
+        >
           <div className="progress-bars">
             <div
               className={`progress-fills ${percentage >= 80 ? "high" : ""}`}
@@ -192,10 +270,20 @@ const AccordionTable = ({
     }
 
     const value = row[col.key];
-    if (value === null || value === undefined) return <span style={{ color: textColor, fontWeight: fontWeight }}>N/A</span>;
-    if (typeof value === "object") return <span style={{ color: textColor, fontWeight: fontWeight }}>{JSON.stringify(value)}</span>;
+    if (value === null || value === undefined)
+      return (
+        <span style={{ color: textColor, fontWeight: fontWeight }}>N/A</span>
+      );
+    if (typeof value === "object")
+      return (
+        <span style={{ color: textColor, fontWeight: fontWeight }}>
+          {JSON.stringify(value)}
+        </span>
+      );
 
-    return <span style={{ color: textColor, fontWeight: fontWeight }}>{value}</span>;
+    return (
+      <span style={{ color: textColor, fontWeight: fontWeight }}>{value}</span>
+    );
   };
 
   return (
@@ -298,124 +386,160 @@ const AccordionTable = ({
 
                                 <div className="service-codes-table">
                                   <table className="inner-service-table">
-                                   
+                                    
                                     <tbody>
-                                      {rowServices.map((service, serviceIndex) => (
-                                        <tr
-                                          key={serviceIndex}
-                                          className="service-row"
-                                        >
-                                          <td>
-                                            <Controller
-                                              name={`services.${globalRowIndex}.${serviceIndex}.serviceCode`}
-                                              control={control}
-                                              defaultValue={service.serviceCode || ""}
-                                              render={({ field }) => (
-                                                <SelectInput
-                                                  label="Service Code"
-                                                  options={serviceCodeOptions}
-                                                  value={field.value}
-                                                  onChange={(e) => {
-                                                    field.onChange(e);
-                                                    setHasChanges(true);
-                                                  }}
-                                                  placeholder="Select Service Code"
-                                                  isSearchable={true}
-                                                  isDisabled={!isEditMode}
-                                                />
-                                              )}
-                                            />
-                                          </td>
-                                          <td>
-                                            <Controller
-                                              name={`services.${globalRowIndex}.${serviceIndex}.modifiers`}
-                                              control={control}
-                                              defaultValue={service.modifiers || ""}
-                                              render={({ field }) => (
-                                                <SelectInput
-                                                  label="Modifiers"
-                                                  options={modifierOptions}
-                                                  value={field.value}
-                                                  onChange={(e) => {
-                                                    field.onChange(e);
-                                                    setHasChanges(true);
-                                                  }}
-                                                  placeholder="Select Modifier"
-                                                  isSearchable={true}
-                                                  isDisabled={!isEditMode}
-                                                />
-                                              )}
-                                            />
-                                          </td>
-                                          <td>
-                                            <Controller
-                                              name={`services.${globalRowIndex}.${serviceIndex}.units`}
-                                              control={control}
-                                              defaultValue={service.units || ""}
-                                              render={({ field }) => (
-                                                <TextInput
-                                                  label="Units"
-                                                  {...field}
-                                                  type="number"
-                                                  placeholder="Units"
-                                                  onChange={(e) => {
-                                                    field.onChange(e.target.value);
-                                                    setHasChanges(true);
-                                                  }}
-                                                  disabled={!isEditMode}
-                                                />
-                                              )}
-                                            />
-                                          </td>
-                                          <td>
-                                            <Controller
-                                              name={`services.${globalRowIndex}.${serviceIndex}.unitRate`}
-                                              control={control}
-                                              defaultValue={service.unitRate || ""}
-                                              render={({ field }) => (
-                                                <TextInput
-                                                  label="Unit Rate"
-                                                  {...field}
-                                                  type="number"
-                                                  placeholder="Unit Rate"
-                                                  onChange={(e) => {
-                                                    field.onChange(e.target.value);
-                                                    setHasChanges(true);
-                                                  }}
-                                                  disabled={!isEditMode}
-                                                />
-                                              )}
-                                            />
-                                          </td>
-                                          <td className="action-cell">
-                                            {rowServices.length > 1 && isEditMode && (
-                                              <button
-                                                type="button"
-                                                className="delete-btn"
-                                                onClick={(e) =>
-                                                  removeServiceRow(
-                                                    globalRowIndex,
-                                                    serviceIndex,
-                                                    e
-                                                  )
+                                      {rowServices.map(
+                                        (service, serviceIndex) => (
+                                          <tr
+                                            key={serviceIndex}
+                                            className="service-row"
+                                          >
+                                            <td>
+                                              <Controller
+                                                name={`services.${globalRowIndex}.${serviceIndex}.serviceCode`}
+                                                control={control}
+                                                defaultValue={
+                                                  service.serviceCode || ""
                                                 }
-                                                title="Remove service code"
-                                              >
-                                                <FaTrash />
-                                              </button>
+                                                render={({ field }) => (
+                                                  <SelectInput
+                                                    label="Service Code"
+                                                    options={serviceCodes}
+                                                    value={field.value}
+                                                    onChange={(e) => {
+                                                      if (isEditMode) {
+                                                        field.onChange(e);
+                                                        setHasChanges(true);
+                                                      }
+                                                    }}
+                                                    placeholder="Select Service Code"
+                                                    isSearchable={true}
+                                                    isDisabled={
+                                                      !isEditMode ||
+                                                      loadingServiceCodes
+                                                    }
+                                                    isLoading={
+                                                      loadingServiceCodes
+                                                    }
+                                                    readOnly={!isEditMode}
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                            <td>
+                                              <Controller
+                                                name={`services.${globalRowIndex}.${serviceIndex}.modifiers`}
+                                                control={control}
+                                                defaultValue={
+                                                  service.modifiers || ""
+                                                }
+                                                render={({ field }) => (
+                                                  <SelectInput
+                                                    label="Modifiers"
+                                                    options={modifierOptions}
+                                                    value={field.value}
+                                                    onChange={(e) => {
+                                                      if (isEditMode) {
+                                                        field.onChange(e);
+                                                        setHasChanges(true);
+                                                      }
+                                                    }}
+                                                    placeholder="Select Modifier"
+                                                    isSearchable={true}
+                                                    isDisabled={!isEditMode}
+                                                    readOnly={!isEditMode}
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                            <td>
+                                              <Controller
+                                                name={`services.${globalRowIndex}.${serviceIndex}.units`}
+                                                control={control}
+                                                defaultValue={
+                                                  service.units || ""
+                                                }
+                                                render={({ field }) => (
+                                                  <TextInput
+                                                    label="Units"
+                                                    {...field}
+                                                    type="number"
+                                                    placeholder="Units"
+                                                    onChange={(e) => {
+                                                      if (isEditMode) {
+                                                        field.onChange(
+                                                          e.target.value
+                                                        );
+                                                        setHasChanges(true);
+                                                      }
+                                                    }}
+                                                    disabled={!isEditMode}
+                                                    readOnly={!isEditMode}
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                            <td>
+                                              <Controller
+                                                name={`services.${globalRowIndex}.${serviceIndex}.per`}
+                                                control={control}
+                                                defaultValue={
+                                                  service.per || "SESSION"
+                                                }
+                                                render={({ field }) => (
+                                                  <SelectInput
+                                                  
+                                                    label="Per"
+                                                    options={perOptions}
+                                                    value={field.value}
+                                                    onChange={(e) => {
+                                                      if (isEditMode) {
+                                                        field.onChange(e);
+                                                        setHasChanges(true);
+                                                      }
+                                                    }}
+                                                    placeholder="Select Time Period"
+                                                    isSearchable={true}
+                                                    isDisabled={!isEditMode}
+                                                    readOnly={!isEditMode}
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                            {isEditMode && (
+                                              <td className="action-cell">
+                                                {rowServices.length > 1 && (
+                                                  <button
+                                                    type="button"
+                                                    className="delete-btn"
+                                                    onClick={(e) =>
+                                                      removeServiceRow(
+                                                        globalRowIndex,
+                                                        serviceIndex,
+                                                        e
+                                                      )
+                                                    }
+                                                    title="Remove service code"
+                                                  >
+                                                    <FaTrash />
+                                                  </button>
+                                                )}
+                                              </td>
                                             )}
-                                          </td>
-                                        </tr>
-                                      ))}
+                                          </tr>
+                                        )
+                                      )}
                                     </tbody>
                                   </table>
                                   {isEditMode && (
-                                    <div className="mt-6 flex gap-4">
+                                    <div className="service-actions">
                                       <Button
                                         label="Add Service Code"
                                         icon={<FaPlus />}
                                         variant="secondary"
-                                        onClick={(e) => addServiceRow(globalRowIndex, e)}
+                                        onClick={(e) =>
+                                          addServiceRow(globalRowIndex, e)
+                                        }
                                       />
                                       {hasChanges && (
                                         <Button

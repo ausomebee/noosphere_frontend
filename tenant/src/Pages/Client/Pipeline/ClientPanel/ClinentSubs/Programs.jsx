@@ -19,9 +19,9 @@ const ProgramsTab = ({ fullName }) => {
   const menuRef = useRef(null);
   const triggerRef = useRef(null);
 
-  const { token, tenantId } = useSelector((s) => s.authentication?.user || {});
-  const accessToken = token;
-  const refreshToken = token;
+  const { tenantId } = useSelector((s) => s.authentication?.user || {});
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [isProgramOpen, setIsProgramOpen] = useState(false);
   const [programs, setPrograms] = useState([]);

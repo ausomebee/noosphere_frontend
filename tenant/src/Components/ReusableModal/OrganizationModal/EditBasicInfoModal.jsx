@@ -106,9 +106,15 @@ const stateOptions = [
   { value: "WY", label: "Wyoming" },
 ];
 
-const BasicInfoModal = ({ isOpen, onClose, onSave, initialData, tenantStaffId }) => {
-  const accessToken = useSelector((s) => s.authentication?.token);
-  const refreshToken = useSelector((s) => s.authentication?.refreshToken);
+const BasicInfoModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  tenantStaffId,
+}) => {
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -198,7 +204,10 @@ const BasicInfoModal = ({ isOpen, onClose, onSave, initialData, tenantStaffId })
       reset(); // Reset form after successful save
       onClose();
     } catch (e) {
-      const errorMessage = e.response?.data?.message || e.message || "Failed to save basic information";
+      const errorMessage =
+        e.response?.data?.message ||
+        e.message ||
+        "Failed to save basic information";
       setSubmitError(errorMessage);
       console.error("Save error:", {
         message: errorMessage,

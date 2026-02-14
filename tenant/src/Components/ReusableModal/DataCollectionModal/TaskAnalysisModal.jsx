@@ -34,6 +34,7 @@ const TaskAnalysisModal = ({
   onSave,
   submitting = false,
 }) => {
+
   // Create validation schema based on steps
   const validationSchema = createValidationSchema(steps);
 

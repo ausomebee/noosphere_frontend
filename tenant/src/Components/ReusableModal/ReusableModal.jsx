@@ -132,7 +132,7 @@ const ReusableModal = ({
           </div>
         )}
 
-        <div className="modal-body">
+        <div className="ReuseableModal-body">
           {tabs && tabs.length > 0
             ? tabs.map((tab) => (
                 <div

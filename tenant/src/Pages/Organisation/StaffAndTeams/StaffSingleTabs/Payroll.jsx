@@ -76,8 +76,8 @@ const tableData = appointments.map((appt) => ({
 }));
 
 const Payroll = () => {
-  const accessToken = useSelector((s) => s.authentication?.token);
-  const refreshToken = useSelector((s) => s.authentication?.refreshToken);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const user = useSelector((s) => s.authentication?.user);
   const { tenantStaffId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -97,22 +97,27 @@ const Payroll = () => {
   // Fetch payroll settings from API
   const fetchPayrollSettings = useCallback(async () => {
     try {
-
       const res = await api.GetAllStaffPayrollById({
         id: tenantStaffId,
         accessToken,
         refreshToken,
       });
-   
 
-      if (res?.data?.status === "ok" && Array.isArray(res.data.data) && res.data.data.length > 0) {
+      if (
+        res?.data?.status === "ok" &&
+        Array.isArray(res.data.data) &&
+        res.data.data.length > 0
+      ) {
         const payroll = res.data.data[0]; // Use first record
         setPayrollSettings({
           id: payroll.id || null,
           paymentSchedule: payroll.paymentSchedule || "Weekly",
           rate: `$${payroll.ratePerHour || "0"}`,
           minimumHours: payroll.minimumHours || "0",
-          monthlyFlatFee: payroll.paymentSchedule === "Monthly" ? payroll.monthlyFlatFee || "N/A" : "N/A",
+          monthlyFlatFee:
+            payroll.paymentSchedule === "Monthly"
+              ? payroll.monthlyFlatFee || "N/A"
+              : "N/A",
           otherPay: Array.isArray(payroll.otherPays)
             ? payroll.otherPays.map((op) => ({
                 label: op.type.charAt(0).toUpperCase() + op.type.slice(1),
@@ -131,7 +136,6 @@ const Payroll = () => {
         throw new Error(res?.data?.message || "No payroll data found");
       }
     } catch (e) {
-    
       setError(e.message || "Failed to fetch payroll settings");
     }
   }, [tenantStaffId, accessToken, refreshToken]);
@@ -154,7 +158,6 @@ const Payroll = () => {
 
   const savePayroll = async ({ id, payroll }) => {
     try {
-
       const response = await api.UpdateTenantStaffPayroll({
         id,
         payroll,
@@ -184,7 +187,9 @@ const Payroll = () => {
         </div>
       )}
       <div className="flex items-center gap-4">
-        <h2 className="font-bold text-lg text-gray-600 mb-4">Payroll Settings</h2>
+        <h2 className="font-bold text-lg text-gray-600 mb-4">
+          Payroll Settings
+        </h2>
         <div
           className="bg-white-bg p-5 rounded-md border border-gray-200 self-start cursor-pointer"
           onClick={() => handleOpenModal(null, "edit")}
@@ -197,13 +202,22 @@ const Payroll = () => {
         <div className="grid grid-cols-3 items-center w-full">
           <div>
             <h2 className="font-bold text-lg text-gray-600">Basic</h2>
-            <Row label="Payment Schedule" value={payrollSettings.paymentSchedule} />
+            <Row
+              label="Payment Schedule"
+              value={payrollSettings.paymentSchedule}
+            />
             <Row label="Rate" value={payrollSettings.rate} />
             {payrollSettings.paymentSchedule !== "Monthly" && (
-              <Row label="Minimum Number of Hours" value={payrollSettings.minimumHours} />
+              <Row
+                label="Minimum Number of Hours"
+                value={payrollSettings.minimumHours}
+              />
             )}
             {payrollSettings.paymentSchedule === "Monthly" && (
-              <Row label="Monthly Flat Fee" value={payrollSettings.monthlyFlatFee} />
+              <Row
+                label="Monthly Flat Fee"
+                value={payrollSettings.monthlyFlatFee}
+              />
             )}
           </div>
 
@@ -238,7 +252,11 @@ const Payroll = () => {
           columns={[
             { header: "Payroll Date", key: "payrollDate", type: "text" },
             { header: "Pay Period", key: "payPeriod", type: "text" },
-            { header: "Total Payroll Value", key: "payrollValue", type: "text" },
+            {
+              header: "Total Payroll Value",
+              key: "payrollValue",
+              type: "text",
+            },
           ]}
           actionText="View BreakDown"
           actionLinkPrefix={[]}

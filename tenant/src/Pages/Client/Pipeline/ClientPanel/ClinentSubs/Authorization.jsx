@@ -13,27 +13,28 @@ import { useParams } from "react-router-dom";
 
 const AuthorizationTab = () => {
   const [authorizations, setAuthorizations] = useState([]);
-  const [serviceData, setServiceData] = useState({});
+  const [serviceData, setServiceData] = useState({}); // authId → array of services for inline editing
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingAuth, setEditingAuth] = useState(null);
   const [editingAuthData, setEditingAuthData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEditData, setLoadingEditData] = useState(false);
-  const [serviceCodes, setServiceCodes] = useState([]);
-  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
-  const { clientId, tenantClientId } = useParams();
 
+  // Tenant service codes for dropdowns
+  const [tenantServiceCodes, setTenantServiceCodes] = useState([]);
+  const [loadingTenantServiceCodes, setLoadingTenantServiceCodes] =
+    useState(false);
+
+  const { tenantClientId } = useParams();
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
-  // Fetch service codes on component mount
-  const fetchServiceCodes = async () => {
+  // Fetch tenant service codes (for dropdown)
+  const fetchTenantServiceCodes = async () => {
     if (!tenantId || !accessToken) return;
-
-    setLoadingServiceCodes(true);
+    setLoadingTenantServiceCodes(true);
     try {
       const response = await api2.GetTenantServiceCodeByTenantId({
         tenantId,
@@ -41,30 +42,32 @@ const AuthorizationTab = () => {
         refreshToken,
       });
       const data = response?.data || [];
-      const serviceCodeList = data
-        .filter((item) => !item.isDeleted && item.isActive)
-        .map((item) => ({
-          value: item.code,
-          label: `${item.code} - ${item.description}`,
-        }));
-      setServiceCodes(serviceCodeList);
+      const active = data.filter((item) => !item.isDeleted && item.isActive);
+
+      const list = active.map((item) => ({
+        id: item.id,
+        code: item.code,
+        description: item.description,
+        label: `${item.code} - ${item.description}`,
+        value: item.id,
+      }));
+
+      setTenantServiceCodes(list);
     } catch (error) {
       console.error("Failed to load service codes:", error);
       showToast("Failed to load service codes", "error");
     } finally {
-      setLoadingServiceCodes(false);
+      setLoadingTenantServiceCodes(false);
     }
   };
 
-  // Fetch authorizations on component mount or when clientId changes
   useEffect(() => {
     if (tenantClientId) {
       fetchAuthorizations();
-      fetchServiceCodes();
+      fetchTenantServiceCodes();
     }
   }, [tenantClientId]);
 
-  // In your fetchAuthorizations function, update the service data formatting:
   const fetchAuthorizations = async () => {
     if (!tenantClientId || !accessToken) return;
 
@@ -77,34 +80,57 @@ const AuthorizationTab = () => {
       });
 
       const authData = response?.data?.data || [];
-      console.log("Fetched authorizations:", authData);
 
-      const formattedAuthorizations = authData.map((auth) => ({
-        id: auth.id,
-        name: auth.title,
-        insuranceCompany: auth?.insurance?.name,
-        startDate: formatDate(auth.startDate),
-        endDate: auth.endDate ? formatDate(auth.endDate) : "—",
-        status: getStatus(auth.startDate, auth.endDate),
-        utilization: calculateUtilization(auth.serviceCodes),
-        rawData: auth,
-      }));
+      const formatted = authData.map((auth) => {
+        // Calculate total utilization for the row
+        const totalUnits =
+          auth.clientAuthorizationServices?.reduce(
+            (sum, s) => sum + (s.units || 0),
+            0,
+          ) || 0;
+        const usedUnits =
+          auth.clientAuthorizationServices?.reduce(
+            (sum, s) => sum + (s.usedUnit || 0),
+            0,
+          ) || 0;
+        const utilization =
+          totalUnits > 0 ? Math.round((usedUnits / totalUnits) * 100) : 0;
 
-      const formattedServiceData = {};
-      authData.forEach((auth) => {
-        // Make sure we're properly mapping the service codes from the API response
-        formattedServiceData[auth.id] =
-          auth.serviceCodes?.map((service) => ({
-            serviceCode: service.code || "", // This should match the field name in the table
-            modifier: service.modifier || "",
-            units: service.units?.toString() || "0",
-            per: service.per || "",
-            utilization: 0,
-          })) || [];
+        return {
+          id: auth.id,
+          name: auth.title || "Untitled",
+          insuranceCompany: auth.payerDetails?.payerName || "—",
+          startDate: formatDate(auth.startDate),
+          endDate: auth.endDate ? formatDate(auth.endDate) : "—",
+          status: getStatus(auth.startDate, auth.endDate),
+          utilization,
+          rawData: auth,
+        };
       });
 
-      console.log("Formatted service data:", formattedServiceData); // Debug log
-      setAuthorizations(formattedAuthorizations);
+      // Build serviceData for inline editing from clientAuthorizationServices
+      const formattedServiceData = {};
+      authData.forEach((auth) => {
+        const services = auth.clientAuthorizationServices || [];
+
+        formattedServiceData[auth.id] = services.map((svc) => {
+          const codeInfo = svc.serviceCode || {};
+          return {
+            serviceCode: svc.serviceCodeId || "",
+            serviceCodeDisplay: `${codeInfo.code || "—"} - ${
+              codeInfo.description || "No description"
+            }`,
+            modifier: svc.modifiers || "",
+            units: (svc.units || 0).toString(),
+            usedUnits: svc.usedUnit || 0,
+            per: svc.per || "SESSION",
+            utilization:
+              svc.units > 0 ? Math.round((svc.usedUnit / svc.units) * 100) : 0,
+          };
+        });
+      });
+
+      setAuthorizations(formatted);
       setServiceData(formattedServiceData);
     } catch (error) {
       console.error("Failed to fetch authorizations:", error);
@@ -116,7 +142,6 @@ const AuthorizationTab = () => {
 
   const fetchSingleAuthorization = async (id) => {
     if (!id || !accessToken) return null;
-
     setLoadingEditData(true);
     try {
       const response = await api.GetSingleClientAuthorizationById({
@@ -124,56 +149,29 @@ const AuthorizationTab = () => {
         accessToken,
         refreshToken,
       });
-
       return response?.data || null;
     } catch (error) {
-      console.error("Failed to fetch authorization details:", error);
-      showToast("Failed to load authorization details", "error");
+      console.error("Failed to fetch authorization:", error);
+      showToast("Failed to load details", "error");
       return null;
     } finally {
       setLoadingEditData(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (error) {
-      console.error("Error formatting date:", dateString, error);
-      return "—";
-    }
+  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
+  const getStatus = (start, end) => {
+    const now = new Date();
+    const s = new Date(start);
+    const e = end ? new Date(end) : null;
+    if (e && now > e) return "Expired";
+    if (now < s) return "Pending";
+    return "Active";
   };
 
-  const getStatus = (startDate, endDate) => {
-    try {
-      const now = new Date();
-      const start = new Date(startDate);
-      const end = endDate ? new Date(endDate) : null;
-
-      if (end && now > end) return "Expired";
-      if (now < start) return "Pending";
-      return "Active";
-    } catch (error) {
-      console.error("Error determining status:", error);
-      return "Unknown";
-    }
-  };
-
-  const calculateUtilization = (serviceCodes) => {
-    if (!serviceCodes || serviceCodes.length === 0) return 0;
-    return Math.floor(Math.random() * 100);
-  };
-
-  // Table Columns
   const columns = [
     { header: "Name", key: "name" },
-    {
-      header: "Insurance company",
-      key: "insuranceCompany",
-      render: (row) => row.rawData?.payerName || row.insuranceCompany || "—",
-    },
+    { header: "Insurance company", key: "insuranceCompany" },
     { header: "Start date", key: "startDate" },
     { header: "End date", key: "endDate" },
     {
@@ -203,178 +201,130 @@ const AuthorizationTab = () => {
     },
   ];
 
-  // Handlers
-  const handleAddAuthorization = async (data) => {
+  // CREATE
+  const handleAddAuthorization = async (payload) => {
+
     try {
-      const response = await api.CreateClientAuthorization({
+      await api.CreateClientAuthorization({
         tenantClientId,
-        title: data.title,
-        authorizationNumber: data.authNumber,
-        startDate: data.startDate,
-        endDate: data.endDate || null,
-        payer: data.payer,
-        insuranceType: data.insuranceType,
-        serviceCodes: data.serviceCodes.map((service) => ({
-          ...service,
-          units: parseInt(service.units) || 0,
-        })),
+        title: payload.title,
+        authorizationNumber: payload.authNumber,
+        startDate: payload.startDate,
+        endDate: payload.endDate || null,
+        payer: payload.payer,
+        insuranceType: payload.insuranceType || null,
+        serviceCodes: payload.service, // Ensure modal sends correct format
         accessToken,
         refreshToken,
       });
 
-      if (response.status === 200 || response.status === 201) {
-        showToast("Authorization added successfully", "success");
-        fetchAuthorizations();
-        setIsAddModalOpen(false);
-      }
+      showToast("Authorization added successfully", "success");
+      fetchAuthorizations();
+      setIsAddModalOpen(false);
     } catch (error) {
-      console.error("Failed to create authorization:", error);
-      showToast(error.message || "Failed to add authorization", "error");
+      console.error(error);
+      showToast(error?.message || "Failed to add authorization", "error");
     }
   };
 
+  // FULL EDIT: Open modal
   const handleEdit = async (auth) => {
     setEditingAuth(auth);
     setLoadingEditData(true);
+    const data = await fetchSingleAuthorization(auth.id);
+    if (data) {
+      setEditingAuthData(data);
+      setIsEditModalOpen(true);
+    }
+    setLoadingEditData(false);
+  };
 
+  // FULL EDIT: Save
+  const handleEditSave = async (payload) => {
     try {
-      const authData = await fetchSingleAuthorization(auth.id);
-      if (authData) {
-        setEditingAuthData(authData);
-        setIsEditModalOpen(true);
-      } else {
-        showToast("Failed to load authorization details", "error");
-      }
+      await api.UpdateClientAuthorization({
+        id: editingAuth.id,
+        title: payload.title,
+        authorizationNumber: payload.authNumber,
+        startDate: payload.startDate,
+        endDate: payload.endDate || null,
+        payer: payload.payer,
+        insuranceType: payload.insuranceType || null,
+        serviceCodes: payload.serviceCodes,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast("Authorization updated successfully", "success");
+      fetchAuthorizations();
+      setIsEditModalOpen(false);
+      setEditingAuth(null);
+      setEditingAuthData(null);
     } catch (error) {
-      console.error("Error loading authorization for edit:", error);
-      showToast("Failed to load authorization details", "error");
-    } finally {
-      setLoadingEditData(false);
+      console.error(error);
+      showToast(error?.message || "Failed to update authorization", "error");
     }
   };
 
-  const handleSaveServiceCodes = async (updatedServiceData) => {
+  // INLINE SAVE: Update clientAuthorizationServices
+  const handleInlineSave = async (updatedServices) => {
+    const authId = Object.keys(updatedServices)[0];
+    const newServices = updatedServices[authId];
+
+    const payloadServiceCodes = newServices.map((s) => ({
+      serviceCodeId: s.serviceCode,
+      modifiers: s.modifier || null,
+      units: parseInt(s.units) || 0,
+      per: s.per || "SESSION",
+    }));
+
     try {
-      // For each authorization that has updated service codes
-      const updatePromises = Object.entries(updatedServiceData).map(
-        async ([authId, serviceCodes]) => {
-          const auth = authorizations.find((a) => a.id === authId);
-          if (!auth) return;
-
-          // Get the original authorization data to preserve other fields
-          const originalAuth = auth.rawData;
-
-          // Prepare the update payload
-          const updatePayload = {
-            id: authId,
-            title: originalAuth.title,
-            authorizationNumber: originalAuth.authorizationNumber,
-            startDate: originalAuth.startDate,
-            endDate: originalAuth.endDate || null,
-            payer: originalAuth.payer,
-            insuranceType: originalAuth.insuranceType,
-            serviceCodes: serviceCodes.map((service) => ({
-              code: service.serviceCode,
-              modifier: service.modifier || "",
-              units: parseInt(service.units) || 0,
-              per: service.per || "",
-            })),
-            accessToken,
-            refreshToken,
-          };
-
-          // Call the update API
-          return await api.UpdateClientAuthorization(updatePayload);
-        }
-      );
-
-      // Wait for all updates to complete
-      await Promise.all(updatePromises);
-
-      // Refresh the authorizations to get the updated data
-      await fetchAuthorizations();
+      await api.UpdateClientAuthorization({
+        id: authId,
+        serviceCodes: payloadServiceCodes,
+        accessToken,
+        refreshToken,
+      });
 
       showToast("Service codes updated successfully", "success");
-      return true;
+      await fetchAuthorizations();
     } catch (error) {
       console.error("Failed to update service codes:", error);
-      showToast(error.message || "Failed to update service codes", "error");
-      return false;
+      showToast(error?.message || "Failed to update service codes", "error");
+      throw error;
     }
   };
 
-  const handleDeactivate = async (auth) => {
-    if (window.confirm("Deactivate this authorization?")) {
-      try {
-        setAuthorizations((prev) =>
-          prev.map((a) => (a.id === auth.id ? { ...a, status: "Inactive" } : a))
-        );
-        showToast("Authorization deactivated", "info");
-      } catch (error) {
-        console.error("Failed to deactivate authorization:", error);
-        showToast("Failed to deactivate authorization", "error");
-      }
-    }
-  };
-
-  const handleDelete = async (auth) => {
-    if (window.confirm("Delete this authorization permanently?")) {
-      try {
-        setAuthorizations((prev) => prev.filter((a) => a.id !== auth.id));
-        setServiceData((prev) => {
-          const { [auth.id]: _, ...rest } = prev;
-          return rest;
-        });
-        showToast("Authorization deleted", "success");
-      } catch (error) {
-        console.error("Failed to delete authorization:", error);
-        showToast("Failed to delete authorization", "error");
-      }
-    }
-  };
-
-  // Format the editing data for the modal
+  // Prepare data for full edit modal
   const getEditingAuthData = () => {
     if (!editingAuthData) return {};
+
+    const services = (editingAuthData.clientAuthorizationServices || []).map(
+      (s) => ({
+        serviceCodeId: s.serviceCodeId,
+        modifier: s.modifiers || "",
+        units: (s.units || "").toString(),
+        per: s.per || "SESSION",
+      }),
+    );
 
     return {
       title: editingAuthData.title || "",
       authNumber: editingAuthData.authorizationNumber || "",
-      startDate: convertToInputDate(editingAuthData.startDate),
+      startDate: editingAuthData.startDate
+        ? new Date(editingAuthData.startDate).toISOString().split("T")[0]
+        : "",
       endDate: editingAuthData.endDate
-        ? convertToInputDate(editingAuthData.endDate)
+        ? new Date(editingAuthData.endDate).toISOString().split("T")[0]
         : "",
       payer: editingAuthData.payer || "",
       insuranceType: editingAuthData.insuranceType || "",
-      serviceCodes: editingAuthData.serviceCodes?.map((service) => ({
-        code: service.code || "",
-        modifier: service.modifier || "",
-        units: service.units?.toString() || "",
-        per: service.per || "",
-      })) || [{ code: "", modifier: "", units: "", per: "" }],
+      serviceCodes: services,
     };
-  };
-
-  const convertToInputDate = (dateString) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split("T")[0];
-    } catch (error) {
-      console.error("Error converting date for input:", dateString, error);
-      return "";
-    }
-  };
-
-  const handleEditModalClose = () => {
-    setIsEditModalOpen(false);
-    setEditingAuth(null);
-    setEditingAuthData(null);
   };
 
   return (
     <div className="authorization-tab mt-6">
-      {/* Add Button */}
       <div className="flex justify-end mb-6">
         <Button
           label="Add Authorization"
@@ -385,12 +335,10 @@ const AuthorizationTab = () => {
         />
       </div>
 
-      {/* Loading State */}
       {loading && (
-        <div className="text-center py-4">Loading authorizations...</div>
+        <div className="text-center py-8">Loading authorizations...</div>
       )}
 
-      {/* Main Table */}
       {!loading && authorizations.length > 0 && (
         <AccordionTableRobust
           data={authorizations}
@@ -401,23 +349,18 @@ const AuthorizationTab = () => {
           onServiceDataChange={setServiceData}
           isEditMode={true}
           onEdit={handleEdit}
-          onDeactivate={handleDeactivate}
-          onDelete={handleDelete}
-          onSave={handleSaveServiceCodes} // Add this line
-          serviceCodes={serviceCodes}
-          loadingServiceCodes={loadingServiceCodes}
-       
+          onSave={handleInlineSave}
+          serviceCodes={tenantServiceCodes}
+          loadingServiceCodes={loadingTenantServiceCodes}
         />
       )}
 
-      {/* No Data State */}
       {!loading && authorizations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No authorizations found. Click "Add Authorization" to create one.
         </div>
       )}
 
-      {/* Modals */}
       <AddAuthorizationModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -427,16 +370,19 @@ const AuthorizationTab = () => {
 
       <AddAuthorizationModal
         isOpen={isEditModalOpen}
-        onClose={handleEditModalClose}
-        onSubmit={handleSaveServiceCodes}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingAuth(null);
+          setEditingAuthData(null);
+        }}
+        onSubmit={handleEditSave}
         initialData={getEditingAuthData()}
         mode="edit"
       />
 
-      {/* Loading overlay for edit modal */}
-      {loadingEditData && isEditModalOpen && (
+      {loadingEditData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
             Loading authorization details...
           </div>
         </div>

@@ -1,3 +1,4 @@
+// src/components/Dashboard/UpcomingAppointments.jsx (or wherever it lives)
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
@@ -10,12 +11,43 @@ const ITEMS_PER_PAGE = 5;
 
 const UpcomingAppointments = ({ hasData, setCount }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.token);
-  const refreshToken = accessToken;
+   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // FIXED: Transform appointmentServices → service array
+  const toTableRow = (apiAppt) => {
+    const service = (apiAppt.appointmentServices || []).map((as) => {
+      const modifier = as.modifiers?.modifier
+        ? ` (${as.modifiers.modifier})`
+        : "";
+
+      // Known serviceCodeId → code mapping
+      const knownCodes = {
+        "4e304a36-8fe8-41fd-85f1-0398a25a50dd": "97158",
+        // Add more mappings as needed
+      };
+
+      const code = knownCodes[as.serviceCodeId] || "Unknown";
+
+      return {
+        serviceType: `${code}${modifier}`,
+        modifierType: as.modifiers?.modifier || "",
+      };
+    });
+
+    return {
+      ...apiAppt,
+      service: service.length > 0 ? service : [],
+      client: apiAppt.client || { firstName: "", lastName: "" },
+      clinicians: apiAppt.clinicians || [],
+      session: apiAppt.session || { name: "Unknown" },
+      colourCode: apiAppt.colourCode || "#3B82F6",
+    };
+  };
 
   // Fetch upcoming appointments (tenant-wide only)
   const fetchAppointments = useCallback(async () => {
@@ -32,12 +64,13 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
         refreshToken,
       });
 
-      const data = response?.data?.data || [];
-      setMasters(data);
+      const rawData = response?.data?.data || [];
+      const transformed = rawData.map(toTableRow);
+      setMasters(transformed);
 
       // Send total count to parent (for badge)
       if (setCount) {
-        const totalInstances = data.reduce((total, master) => {
+        const totalInstances = transformed.reduce((total, master) => {
           const instances = expandForAppointments(master, "future");
           return total + instances.length;
         }, 0);
@@ -88,12 +121,18 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
 
   // Format for CustomTable
   const tableData = paginatedData.map((appt) => ({
-    clientName: `${appt.client?.firstName || ""} ${appt.client?.lastName || ""}`.trim() || "Unknown",
-    therapistName: appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
+    clientName:
+      `${appt.client?.firstName || ""} ${appt.client?.lastName || ""}`.trim() ||
+      "Unknown",
+    therapistName:
+      appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
     serviceType: appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
     sessionType: appt.session?.name || "N/A",
     date: appt.date || "—",
-    time: appt.startTime && appt.endTime ? `${appt.startTime} - ${appt.endTime}` : "—",
+    time:
+      appt.startTime && appt.endTime
+        ? `${appt.startTime} - ${appt.endTime}`
+        : "—",
   }));
 
   const columns = [
@@ -122,7 +161,11 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
   }
 
   if (loading) {
-    return <div className="text-center py-8 text-gray-500">Loading appointments...</div>;
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Loading appointments...
+      </div>
+    );
   }
 
   if (allAppointments.length === 0) {
@@ -148,6 +191,7 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
         tableName=""
       />
 
+      {/* Uncomment when you want "Load more" */}
       {/* {hasMore && (
         <div className="text-center mt-4">
           <Button

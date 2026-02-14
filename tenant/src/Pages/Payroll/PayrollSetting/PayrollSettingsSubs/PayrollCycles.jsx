@@ -9,9 +9,8 @@ import { showToast } from "../../../../Helper/ShowToast";
 
 const PayrollCycles = () => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const [tableData, setTableData] = useState([]);
   const [compensationTypes, setCompensationTypes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,7 +61,7 @@ const PayrollCycles = () => {
         data.data.map((item) => ({
           id: item.id,
           name: item.name || "Unknown",
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error fetching compensation types:", error);
@@ -118,7 +117,7 @@ const PayrollCycles = () => {
         });
         showToast(
           `Payroll cycle ${newStatus ? "activated" : "deactivated"} successfully`,
-          "success"
+          "success",
         );
         fetchPayrollCycles();
       } catch (error) {
@@ -126,7 +125,7 @@ const PayrollCycles = () => {
         showToast("Failed to update payroll cycle status", "error");
       }
     },
-    [accessToken, refreshToken, fetchPayrollCycles]
+    [accessToken, refreshToken, fetchPayrollCycles],
   );
 
   // Handle save
@@ -163,10 +162,20 @@ const PayrollCycles = () => {
         fetchPayrollCycles();
       } catch (error) {
         console.error(`Error saving payroll cycle:`, error);
-        showToast(`Failed to ${mode === "add" ? "create" : "update"} payroll cycle`, "error");
+        showToast(
+          `Failed to ${mode === "add" ? "create" : "update"} payroll cycle`,
+          "error",
+        );
       }
     },
-    [tenantId, accessToken, refreshToken, mode, selectedRow, fetchPayrollCycles]
+    [
+      tenantId,
+      accessToken,
+      refreshToken,
+      mode,
+      selectedRow,
+      fetchPayrollCycles,
+    ],
   );
 
   // Fetch compensation types when tenantId changes

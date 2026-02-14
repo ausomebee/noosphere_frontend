@@ -16,8 +16,8 @@ import { showToast } from "../../../Helper/ShowToast";
 
 const SingleStaffByAdmin = () => {
   const navigate = useNavigate();
-  const accessToken = useSelector((s) => s.authentication?.token);
-  const refreshToken = useSelector((s) => s.authentication?.token);
+   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const user = useSelector((s) => s.authentication?.user);
   const { tenantStaffId } = useParams();
   const [searchParams] = useSearchParams();

@@ -8,7 +8,6 @@ import CustomTable from "../../Components/Table/CustomTable";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/ProgramLibraryApis";
 
-
 const columns = [
   { header: "Target", key: "targetName", type: "text" },
   { header: "Description", key: "targetDescription", type: "text" },
@@ -22,9 +21,8 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
   const [modalMode, setModalMode] = useState("add");
   const [loading, setLoading] = useState(true);
 
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const fetchTargets = async () => {
     if (!programId) return;
@@ -41,7 +39,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
           targetName: t.name,
           targetDescription: t.description,
           hasActions: true,
-        }))
+        })),
       );
     } catch (e) {
       showToast(e.message || "Could not load targets", "error");
@@ -84,7 +82,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
       teachingProcedure: full.teachingProcedure,
       teachingOthers: full.teachingOthers || "",
       promptingStrategy: (full.promptingStrategy || []).map((s) =>
-        typeof s === "string" ? JSON.parse(s).value : s
+        typeof s === "string" ? JSON.parse(s).value : s,
       ),
       numberOfTrials: full.numberOfTrials || "",
       numberOfTasks: full.numberOfTasks || "",
@@ -159,7 +157,8 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
       items: [
         {
           label: "View",
-          onClick: (row) => window.location.href = `/tenant/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`,
+          onClick: (row) =>
+            (window.location.href = `/tenant/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`),
         },
         { label: "Edit", onClick: handleEditTarget },
         {
@@ -245,7 +244,6 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
 
 export default TargetLibrary;
 
-
 // At the very end of your file, replace buildTargetFormData:
 async function buildTargetFormData(data, mode) {
   const fd = new FormData();
@@ -262,7 +260,10 @@ async function buildTargetFormData(data, mode) {
   fd.append("teachingProcedure", data.teachingProcedure || "");
   fd.append("teachingOthers", data.teachingOthers || "");
   fd.append("dataCollectionType", data.dataCollectionType || "");
-  fd.append("baselineDataRequired", data.baselineDataRequired ? "true" : "false");
+  fd.append(
+    "baselineDataRequired",
+    data.baselineDataRequired ? "true" : "false",
+  );
   fd.append("initialStatus", data.statusAndAdmin || "");
   fd.append("notes", data.note || "");
   fd.append("masteryMetric", data.masteryMetric || "");

@@ -9,7 +9,7 @@ import AddStaffModal from "../../../Components/ReusableModal/OrganizationModal/A
 import AddTeamsModal from "../../../Components/ReusableModal/OrganizationModal/AddTeamsModal";
 import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
-
+import "../../../Components/CalendarScheduler/Scheduler.css";
 const StaffsAndTeams = () => {
   const [view, setView] = useState("staff");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -20,7 +20,8 @@ const StaffsAndTeams = () => {
   const [loading, setLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const accessToken = useSelector((s) => s.authentication?.token);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
   const navigate = useNavigate();
 
@@ -28,7 +29,7 @@ const StaffsAndTeams = () => {
     if (view !== "staff" || !tenantId) return;
     setLoading(true);
     try {
-      const res = await api.GetAllStaffByTenantId({ tenantId, accessToken });
+      const res = await api.GetAllStaffByTenantId({ tenantId, accessToken, refreshToken });
       const rows = (res.data?.data || []).map((u) => ({
         id: u.id,
         name: u.fullName,
@@ -40,7 +41,10 @@ const StaffsAndTeams = () => {
       }));
       setStaffData(rows);
     } catch (err) {
-      showToast({ message: err.message || "Failed to load staff data", type: "error" });
+      showToast({
+        message: err.message || "Failed to load staff data",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -86,14 +90,17 @@ const StaffsAndTeams = () => {
           label: "View Staff Information",
           onClick: (row) =>
             navigate(
-              `/organization/staff-and-teams/single-staff/${row.id}?name=${encodeURIComponent(row.name)}`
+              `/organization/staff-and-teams/single-staff/${row.id}?name=${encodeURIComponent(row.name)}`,
             ),
         },
         {
           label: "Edit Staff Information",
           onClick: async (row) => {
             try {
-              const res = await api.GetSingleTenantStaffById({ id: row.id, accessToken });
+              const res = await api.GetSingleTenantStaffById({
+                id: row.id,
+                accessToken,
+              });
               const staffData = res.data?.data;
               const formattedData = {
                 id: staffData.staff.id,
@@ -143,7 +150,10 @@ const StaffsAndTeams = () => {
                 },
                 documents: staffData.document.map((d) => ({
                   id: d.id,
-                  documentsUrl: { filename: d.documentsUrl.filename, url: d.documentsUrl.url },
+                  documentsUrl: {
+                    filename: d.documentsUrl.filename,
+                    url: d.documentsUrl.url,
+                  },
                   tenantStaffId: d.tenantStaffId,
                 })),
               };
@@ -152,12 +162,16 @@ const StaffsAndTeams = () => {
               setModalType("staff");
               setIsAddModalOpen(true);
             } catch (err) {
-              showToast({ message: err.message || "Failed to load staff details", type: "error" });
+              showToast({
+                message: err.message || "Failed to load staff details",
+                type: "error",
+              });
             }
           },
         },
         {
-          label: (row) => (row.status === "Active" ? "Deactivate Staff" : "Activate Staff"),
+          label: (row) =>
+            row.status === "Active" ? "Deactivate Staff" : "Activate Staff",
           onClick: async (row) => {
             try {
               await api.UpdateActiveTenantStaff({
@@ -168,9 +182,12 @@ const StaffsAndTeams = () => {
               setStaffData((prev) =>
                 prev.map((s) =>
                   s.id === row.id
-                    ? { ...s, status: row.status === "Active" ? "Inactive" : "Active" }
-                    : s
-                )
+                    ? {
+                        ...s,
+                        status: row.status === "Active" ? "Inactive" : "Active",
+                      }
+                    : s,
+                ),
               );
               showToast({
                 message: `Staff ${row.name} ${row.status === "Active" ? "deactivated" : "activated"} successfully`,
@@ -178,7 +195,10 @@ const StaffsAndTeams = () => {
               });
               setRefreshTrigger((prev) => prev + 1);
             } catch (err) {
-              showToast({ message: err.message || "Failed to update staff status", type: "error" });
+              showToast({
+                message: err.message || "Failed to update staff status",
+                type: "error",
+              });
             }
           },
           className: (row) => (row.status === "Active" ? "remove" : ""),
@@ -197,7 +217,10 @@ const StaffsAndTeams = () => {
           label: "View Team Details",
           onClick: (row) => {
             setSelectedRow(row);
-            showToast({ message: `Viewing details for team ${row.name}`, type: "info" });
+            showToast({
+              message: `Viewing details for team ${row.name}`,
+              type: "info",
+            });
           },
         },
         {
@@ -216,9 +239,15 @@ const StaffsAndTeams = () => {
             try {
               // Placeholder: Replace with actual API call
               await api.DeactivateTeam({ id: row.id, accessToken });
-              showToast({ message: `Team ${row.name} deactivated successfully`, type: "success" });
+              showToast({
+                message: `Team ${row.name} deactivated successfully`,
+                type: "success",
+              });
             } catch (err) {
-              showToast({ message: err.message || "Failed to deactivate team", type: "error" });
+              showToast({
+                message: err.message || "Failed to deactivate team",
+                type: "error",
+              });
             }
           },
         },
@@ -228,9 +257,15 @@ const StaffsAndTeams = () => {
             try {
               // Placeholder: Replace with actual API call
               await api.DeleteTeam({ id: row.id, accessToken });
-              showToast({ message: `Team ${row.name} deleted successfully`, type: "success" });
+              showToast({
+                message: `Team ${row.name} deleted successfully`,
+                type: "success",
+              });
             } catch (err) {
-              showToast({ message: err.message || "Failed to delete team", type: "error" });
+              showToast({
+                message: err.message || "Failed to delete team",
+                type: "error",
+              });
             }
           },
           className: "remove",
@@ -244,12 +279,31 @@ const StaffsAndTeams = () => {
     setModalType(view);
     setSelectedRow(null);
     setIsAddModalOpen(true);
-    
   };
 
   const handleStaffSubmit = async (data) => {
     setLoading(true);
     try {
+      // Build payroll object conditionally
+      const payroll = {
+        id: selectedRow?.payroll?.id,
+        paymentSchedule: data.paymentSchedule || "",
+        ratePerHour: data.ratePerHour ? String(data.ratePerHour) : "",
+        tenantStaffId: selectedRow?.id,
+        // Only include minimumHours if it's Salaried AND has a value
+        ...(data.paymentSchedule === "Salaried" &&
+        data.minimumHours &&
+        !isNaN(Number(data.minimumHours))
+          ? { minimumHours: String(data.minimumHours) }
+          : {}),
+        otherPays: (data.otherPays || [])
+          .filter((p) => p.type && p.type.trim() !== "")
+          .map((p) => p.type),
+        deductions: (data.deductions || [])
+          .filter((d) => d.type && d.type.trim() !== "")
+          .map((d) => d.type),
+      };
+
       const payload = {
         id: modalMode === "edit" ? selectedRow?.id : undefined,
         fullName: data.fullName || "",
@@ -264,7 +318,7 @@ const StaffsAndTeams = () => {
         zip: data.zip || "",
         country: data.country || "",
         active: data.active ?? true,
-        roleId: "8285a9a5-0455-447d-9dbe-00ad68d6a0e5",
+        roleId: "2da05342-993a-414c-a660-c7382d2a823d",
         tenantId: modalMode === "add" ? tenantId : selectedRow?.tenantId,
         documents: data.documents
           .filter((f) => !f.error)
@@ -274,7 +328,9 @@ const StaffsAndTeams = () => {
             tenantStaffId: selectedRow?.id,
           })),
         licenses: (data.licenses || [])
-          .filter((l) => l.licenseName && l.licenseNumber && l.expiryDate && l.state)
+          .filter(
+            (l) => l.licenseName && l.licenseNumber && l.expiryDate && l.state,
+          )
           .map((l) => ({
             id: l.id,
             licenseName: l.licenseName,
@@ -283,20 +339,11 @@ const StaffsAndTeams = () => {
             expiryDate: new Date(l.expiryDate).toISOString(),
             tenantStaffId: selectedRow?.id,
           })),
-        payroll: {
-          id: selectedRow?.payroll?.id,
-          paymentSchedule: data.paymentSchedule || "",
-          ratePerHour: data.ratePerHour ? String(data.ratePerHour) : "",
-          minimumHours: data.minimumHours ? String(data.minimumHours) : "",
-          otherPays: (data.otherPays || [])
-            .filter((p) => p.type && p.rate)
-            .map((p) => ({ type: p.type, rate: String(p.rate) })),
-          deductions: (data.deductions || [])
-            .filter((d) => d.type && d.rate)
-            .map((d) => ({ type: d.type, rate: String(d.rate) })),
-          tenantStaffId: selectedRow?.id,
-        },
+        payroll,
       };
+
+      // Debug: see exactly what is being sent
+      console.log("FINAL PAYLOAD TO API:", JSON.stringify(payload, null, 2));
 
       modalMode === "edit"
         ? await api.UpdateTenantStaff({ ...payload, accessToken })
@@ -309,12 +356,14 @@ const StaffsAndTeams = () => {
         type: "success",
       });
     } catch (err) {
-      showToast({ message: err.message || "Failed to save staff", type: "error" });
+      showToast({
+        message: err.message || "Failed to save staff",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
-
   const handleTeamSubmit = async (data) => {
     try {
       // Placeholder: Replace with actual API call
@@ -327,7 +376,10 @@ const StaffsAndTeams = () => {
         type: "success",
       });
     } catch (err) {
-      showToast({ message: err.message || "Failed to save team", type: "error" });
+      showToast({
+        message: err.message || "Failed to save team",
+        type: "error",
+      });
     }
   };
 
@@ -354,7 +406,7 @@ const StaffsAndTeams = () => {
             { value: "status", label: "Status" },
           ]
         : [{ value: "teamLead", label: "Team Lead" }],
-    [view]
+    [view],
   );
 
   return (

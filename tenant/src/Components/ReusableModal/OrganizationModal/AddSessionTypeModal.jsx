@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,8 +11,11 @@ import {
 } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import api2 from "../../../api/billingAndPaymentsApi"; // For fetching service codes
+import { useSelector } from "react-redux";
+import { showToast } from "../../../Helper/ShowToast";
 
-// Validation schema
+// Updated validation schema
 const sessionTypeSchema = yup.object().shape({
   name: yup.string().required("Session name is required"),
   category: yup.string().required("Category is required"),
@@ -29,36 +32,32 @@ const sessionTypeSchema = yup.object().shape({
     .max(59, "Must be less than 60")
     .optional(),
   status: yup.boolean().default(true),
-  service: yup.array().of(
+  services: yup.array().of(
     yup.object().shape({
-      serviceType: yup.string().required("Service Type is required"),
-      modifierType: yup.string().required("Modifier Type is required"),
+      serviceCodeId: yup.string().required("Service code is required"),
+      modifier: yup.string().optional().nullable(),
     })
   ),
   location: yup.array().of(yup.string()).optional(),
   staffRole: yup.string().optional(),
 });
 
-// Dummy options
-const serviceTypeOptions = [
-  { value: "Adaptive behavior treatment", label: "Adaptive behavior treatment" },
-  {
-    value: "Adaptive behavior treatment with protocol modification",
-    label: "Adaptive behavior treatment with protocol modification",
-  },
-  {
-    value: "Behavior Identification supporting assessment",
-    label: "Behavior Identification supporting assessment",
-  },
-  { value: "Comprehensive adaptive behavior", label: "Comprehensive adaptive behavior" },
-];
-
+// Modifier options from ABA billing standards
 const modifierOptions = [
-  { value: "Modifier 1", label: "Modifier 1" },
-  { value: "Modifier 2", label: "Modifier 2" },
-  { value: "Modifier 3", label: "Modifier 3" },
+  { value: "", label: "No Modifier" },
+  { value: "HO", label: "HO - Master's-level provider" },
+  { value: "HP", label: "HP - Doctoral-level provider" },
+  { value: "HN", label: "HN - Associate's-level provider" },
+  { value: "HM", label: "HM - Bachelor's-level provider" },
+  { value: "95", label: "95 - Synchronous telehealth" },
+  { value: "GT", label: "GT - Via interactive audio and video (older telehealth modifier)" },
+  { value: "KX", label: "KX - Documentation requirements met" },
+  { value: "59", label: "59 - Distinct procedural service" },
+  { value: "76", label: "76 - Repeat procedure/same provider" },
+  { value: "77", label: "77 - Repeat procedure/different provider" },
 ];
 
+// Category and other options (kept as before)
 const categoryOptions = [
   { value: "Assessment", label: "Assessment" },
   { value: "Planning/Admin", label: "Planning/Admin" },
@@ -87,7 +86,7 @@ const staffRoleOptions = [
   { value: "Role 3", label: "Role 3" },
 ];
 
-// Utility function to transform API data to form data
+// Utility to transform initial data for edit mode
 const transformSessionTypeToFormData = (data) => {
   const defaultDuration = data.defaultDuration || 0;
   const hours = Math.floor(defaultDuration / 60);
@@ -100,14 +99,17 @@ const transformSessionTypeToFormData = (data) => {
     hours,
     minutes,
     status: data.isActive !== undefined ? data.isActive : true,
-    service: Array.isArray(data.service)
-      ? data.service.map((s) => ({
-          serviceType: s.serviceType || "",
-          modifierType: s.modifierType || "",
-        }))
-      : [{ serviceType: "", modifierType: "" }],
+    services:
+      data.service && Array.isArray(data.service)
+        ? data.service.map((s) => ({
+            serviceCodeId: s.serviceCodeId || "",
+            modifier: s.modifiers?.modifier || "",
+          }))
+        : [{ serviceCodeId: "", modifier: "" }],
     location: Array.isArray(data.locationsAllowed) ? data.locationsAllowed : [],
-    staffRole: Array.isArray(data.staffRolesAllowed) ? data.staffRolesAllowed[0] || "" : "",
+    staffRole: Array.isArray(data.staffRolesAllowed)
+      ? data.staffRolesAllowed[0] || ""
+      : "",
   };
 };
 
@@ -119,6 +121,12 @@ const AddSessionTypeModal = ({
   initialData = {},
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [serviceCodes, setServiceCodes] = useState([]);
+  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const defaultFormValues = {
     name: "",
@@ -127,7 +135,7 @@ const AddSessionTypeModal = ({
     hours: 0,
     minutes: 0,
     status: true,
-    service: [{ serviceType: "", modifierType: "" }],
+    services: [{ serviceCodeId: "", modifier: "" }],
     location: [],
     staffRole: "",
   };
@@ -137,6 +145,8 @@ const AddSessionTypeModal = ({
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(sessionTypeSchema),
@@ -145,27 +155,90 @@ const AddSessionTypeModal = ({
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "service",
+    name: "services",
   });
 
-  // Reset form when isOpen, mode, or initialData changes
+  const services = watch("services");
+
+  // Fetch service codes when modal opens
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingServiceCodes(true);
+    try {
+      const response = await api2.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || [];
+      const options = data
+        .filter((item) => !item.isDeleted && item.isActive)
+        .map((item) => ({
+          value: item.id, // Use the UUID as value
+          label: `${item.code} - ${item.description || "No description"}`,
+        }));
+      setServiceCodes(options);
+    } catch (error) {
+      console.error("Failed to load service codes:", error);
+      showToast("Failed to load service codes", "error");
+    } finally {
+      setLoadingServiceCodes(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
   useEffect(() => {
     if (isOpen) {
-      const values = mode === "edit" ? transformSessionTypeToFormData(initialData) : defaultFormValues;
+      fetchServiceCodes();
+      const values =
+        mode === "edit"
+          ? transformSessionTypeToFormData(initialData)
+          : defaultFormValues;
       reset(values);
     }
-  }, [isOpen, mode, initialData, reset]);
+  }, [isOpen, mode, initialData, reset, fetchServiceCodes]);
 
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
-      await onSave(data);
+      // Transform services to required backend format
+      const transformedServices = data.services
+        .filter((s) => s.serviceCodeId) // Remove empty rows
+        .map((s) => ({
+          serviceCodeId: s.serviceCodeId,
+          modifiers: {
+            modifier: s.modifier || "",
+          },
+        }));
+
+      const payload = {
+        name: data.name,
+        category: data.category,
+        service: transformedServices,
+        staffRolesAllowed: data.staffRole ? [data.staffRole] : [],
+        locationsAllowed: data.location || [],
+        defaultDuration: (data.hours || 0) * 60 + (data.minutes || 0),
+        isBillable: data.billable,
+        isActive: data.status,
+      };
+
+      await onSave(payload);
       reset(defaultFormValues);
       onClose();
     } catch (error) {
       console.error("Error saving session type:", error);
+      showToast("Failed to save session type", "error");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const addServiceRow = () => {
+    append({ serviceCodeId: "", modifier: "" });
+  };
+
+  const removeServiceRow = (index) => {
+    if (fields.length > 1) {
+      remove(index);
     }
   };
 
@@ -186,7 +259,7 @@ const AddSessionTypeModal = ({
         onClose();
       }}
       size="lg"
-       primaryButtonLoading={isLoading}s
+      primaryButtonLoading={isLoading}
     >
       <div className="mt-5 space-y-4">
         <TextInput
@@ -215,16 +288,18 @@ const AddSessionTypeModal = ({
         </p>
 
         {fields.map((item, index) => (
-          <div key={item.id} className="flex gap-4 items-center mb-2">
+          <div key={item.id} className="flex gap-4 items-end mb-4">
             <div className="flex-1">
               <Controller
-                name={`service.${index}.serviceType`}
+                name={`services.${index}.serviceCodeId`}
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    label="Service Type"
-                    options={serviceTypeOptions}
-                    error={errors.service?.[index]?.serviceType?.message}
+                    label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
+                    options={serviceCodes}
+                    isLoading={loadingServiceCodes}
+                    placeholder="Select a service code"
+                    error={errors.services?.[index]?.serviceCodeId?.message}
                     {...field}
                   />
                 )}
@@ -233,13 +308,14 @@ const AddSessionTypeModal = ({
 
             <div className="flex-1">
               <Controller
-                name={`service.${index}.modifierType`}
+                name={`services.${index}.modifier`}
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    label="Modifier"
+                    label={index === 0 ? "Modifier" : ""}
                     options={modifierOptions}
-                    error={errors.service?.[index]?.modifierType?.message}
+                    placeholder="Select a modifier (optional)"
+                    error={errors.services?.[index]?.modifier?.message}
                     {...field}
                   />
                 )}
@@ -247,14 +323,13 @@ const AddSessionTypeModal = ({
             </div>
 
             {fields.length > 1 && (
-              <button
+              <Button
                 type="button"
-                className="text-red-500 hover:text-red-700"
-                onClick={() => remove(index)}
-                aria-label="Remove Service"
-              >
-                <FaTrash />
-              </button>
+                variant="danger"
+                icon={<FaTrash />}
+                onClick={() => removeServiceRow(index)}
+                className="mb-1"
+              />
             )}
           </div>
         ))}
@@ -262,8 +337,8 @@ const AddSessionTypeModal = ({
         <Button
           icon={<FaPlus />}
           variant="secondary"
-          label="Add"
-          onClick={() => append({ serviceType: "", modifierType: "" })}
+          label="Add Another Service Code"
+          onClick={addServiceRow}
         />
 
         <div className="mt-4">
@@ -290,8 +365,8 @@ const AddSessionTypeModal = ({
               label="Location(s) Allowed"
               options={locationOptions}
               error={errors.location?.message}
-              placeholder="Select location"
-              isMulti="true"
+              placeholder="Select location(s)"
+              isMulti={true}
               {...field}
             />
           )}
@@ -302,7 +377,7 @@ const AddSessionTypeModal = ({
           <div style={{ marginBottom: "-14px" }}>
             <TextInput
               type="number"
-              {...register("hours")}
+              {...register("hours", { valueAsNumber: true })}
               width="70"
               className="rounded-20px"
               placeholder="0"
@@ -313,7 +388,7 @@ const AddSessionTypeModal = ({
           <div style={{ marginBottom: "-14px" }}>
             <TextInput
               type="number"
-              {...register("minutes")}
+              {...register("minutes", { valueAsNumber: true })}
               width="70"
               className="rounded-20px"
               placeholder="0"
@@ -329,7 +404,7 @@ const AddSessionTypeModal = ({
             control={control}
             render={({ field }) => (
               <CheckboxInput
-                label="This service is billable"
+                label="This session type is billable"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
               />

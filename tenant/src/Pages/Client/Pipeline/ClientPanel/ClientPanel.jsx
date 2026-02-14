@@ -22,9 +22,8 @@ const ClientPanel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const isViewMode = location.pathname.includes("/view-client/");
 
@@ -74,7 +73,7 @@ const ClientPanel = () => {
       case "authorization":
         return <AuthorizationTab />;
       case "clinicalReports":
-        return <ClinicalReportsTab />;
+        return <ClinicalReportsTab clientData={clientData} />;
       default:
         return (
           <ClientInformationTab
@@ -155,7 +154,7 @@ const ClientPanel = () => {
             Authorization
             <span className="auth-badge">1</span>
           </button>
-          {/* <button
+          <button
             onClick={() => setView("clinicalReports")}
             className={`appointment-sched-view-button ${
               view === "clinicalReports"
@@ -164,7 +163,7 @@ const ClientPanel = () => {
             }`}
           >
             Clinical Reports
-          </button> */}
+          </button>
         </div>
 
         {/* Dynamic Content */}

@@ -168,11 +168,11 @@ const FieldRenderer = ({ field, errors = {} }) => {
       maxFiles: 1,
       maxSize: "10MB",
       allowedTypes: ["PDF", "Image", "DOCX", "Spreadsheet", "Video"],
-    }
+    },
   );
 
   const [allowUpload, setAllowUpload] = useState(
-    field.allowSignatureUpload ?? false
+    field.allowSignatureUpload ?? false,
   );
 
   useEffect(() => {
@@ -215,7 +215,7 @@ const FieldRenderer = ({ field, errors = {} }) => {
           updateElement({
             id: field.id,
             updates: { options: ["Option 1", "Option 2"] },
-          })
+          }),
         );
       }
     }
@@ -275,7 +275,7 @@ const FieldRenderer = ({ field, errors = {} }) => {
                         id: field.id,
                         index: i,
                         value: e.target.value,
-                      })
+                      }),
                     )
                   }
                   className="option-input"
@@ -437,7 +437,7 @@ const ImportTemplateModal = ({
 
   const filtered = useMemo(() => {
     return templates.filter((t) =>
-      t.name.toLowerCase().includes(search.toLowerCase())
+      t.name.toLowerCase().includes(search.toLowerCase()),
     );
   }, [templates, search]);
 
@@ -519,12 +519,11 @@ const NewFormBuilder = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { formName, elements, status } = useSelector(
-    (state) => state.formBuilder
+    (state) => state.formBuilder,
   );
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const token = useSelector((s) => s.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -534,7 +533,9 @@ const NewFormBuilder = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   /* ────── LOAD FORM (EDIT MODE) ────── */
@@ -589,9 +590,9 @@ const NewFormBuilder = () => {
             status: data.isDraft
               ? "draft"
               : data.isTemplate
-              ? "template"
-              : "published",
-          })
+                ? "template"
+                : "published",
+          }),
         );
 
         showToast("Form loaded successfully", "success");
@@ -688,7 +689,7 @@ const NewFormBuilder = () => {
             ? ["Option 1", "Option 2"]
             : [],
           maxStars: sidebarItem.type === "starRating" ? 5 : undefined,
-        })
+        }),
       );
     } else {
       const oldIndex = elements.findIndex((el) => String(el.id) === activeId);
@@ -771,7 +772,7 @@ const NewFormBuilder = () => {
     const isTemplate = type === "template";
 
     dispatch(
-      setStatus(isDraft ? "draft" : isTemplate ? "template" : "published")
+      setStatus(isDraft ? "draft" : isTemplate ? "template" : "published"),
     );
 
     const payload = {
@@ -803,15 +804,15 @@ const NewFormBuilder = () => {
         type === "publish"
           ? "published"
           : type === "template"
-          ? "saved as template"
-          : "saved as draft";
+            ? "saved as template"
+            : "saved as draft";
 
       showToast(`Form ${action} successfully!`, "success");
     } catch (err) {
       console.error("Save error:", err);
       showToast(
         err.message || "Failed to save form. Please try again.",
-        "error"
+        "error",
       );
     } finally {
       setSaving(false);
@@ -864,7 +865,7 @@ const NewFormBuilder = () => {
           formName: data.name,
           elements: mapped,
           status: "draft",
-        })
+        }),
       );
 
       showToast(`Template "${data.name}" imported!`, "success");
@@ -973,7 +974,6 @@ const NewFormBuilder = () => {
                 size="large"
                 onClick={() => handleSave("draft")}
                 disabled={saving}
-                
               />
             </div>
             <div>

@@ -96,7 +96,15 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
         { name: "Templates Library", path: "/custom-forms/templates-library" },
       ],
     },
-    { name: "Help & Support", icon: FaQuestionCircle, path: "/help" },
+    {
+      name: "Help & Support",
+      icon: FaQuestionCircle,
+      path: "/help",
+      children: [
+        { name: "Support Requests", path: "/help/support-requests" },
+        { name: "Knowledge Base", path: "/help/knowledge-base" },
+      ],
+    },
     { name: "Settings", icon: FaCog, path: "/settings" },
   ];
 

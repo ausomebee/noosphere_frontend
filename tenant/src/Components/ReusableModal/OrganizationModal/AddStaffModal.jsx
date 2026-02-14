@@ -1,19 +1,40 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { debounce } from "lodash";
-import { setDraftField, resetDraft } from "../../../ReduxStore/features/AddStaffDraftSlice";
+import {
+  setDraftField,
+  resetDraft,
+} from "../../../ReduxStore/features/AddStaffDraftSlice";
 import ReusableModal from "../ReusableModal";
-import { BsCloudUpload, BsFileEarmarkPdf, BsFileEarmarkPlay } from "react-icons/bs";
-import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle, FaPlus } from "react-icons/fa";
+import {
+  BsCloudUpload,
+  BsFileEarmarkPdf,
+  BsFileEarmarkPlay,
+} from "react-icons/bs";
+import {
+  FaRegFile,
+  FaPhotoVideo,
+  FaImage,
+  FaCheckCircle,
+  FaPlus,
+} from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoMdRefresh } from "react-icons/io";
 import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import uploadApi from "../../../api/ImageUpload";
+import api from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
+import { RxCross2 } from "react-icons/rx";
 
 const schema = yup.object().shape({
   fullName: yup.string().required("Full Name is required"),
@@ -44,50 +65,43 @@ const schema = yup.object().shape({
       licenseNumber: yup.string().required("License Number is required"),
       expiryDate: yup.date().required("Expiration Date is required"),
       state: yup.string().required("State is required"),
-    })
+    }),
   ),
-  paymentSchedule: yup.string().required("Payment Schedule is required"),
+  paymentSchedule: yup
+    .string()
+    .oneOf(["Hourly", "Daily", "Salaried"])
+    .required("Compensation type is required"),
   ratePerHour: yup
     .number()
     .typeError("Must be a valid number")
-    .when("paymentSchedule", {
-      is: (s) => !!s,
-      then: (s) => s.required("Pay Rate is required"),
-      otherwise: (s) => s.nullable(),
-    }),
+    .positive("Rate must be positive")
+    .required("Pay rate is required"),
+
   minimumHours: yup
     .number()
     .typeError("Must be a valid number")
+    .positive("Must be positive")
+    .nullable()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue == null ? null : value,
+    )
     .when("paymentSchedule", {
-      is: (s) => ["Daily", "Weekly", "Bi-Weekly"].includes(s),
-      then: (s) => s.required("Minimum hours are required"),
-      otherwise: (s) => s.nullable(),
+      is: "Salaried",
+      then: (schema) =>
+        schema.required(
+          "Minimum hours per month is required for Salaried staff",
+        ),
+      otherwise: (schema) => schema.notRequired().nullable(),
     }),
   otherPays: yup.array().of(
     yup.object().shape({
       type: yup.string().required("Pay type is required"),
-      rate: yup
-        .number()
-        .typeError("Must be a valid number")
-        .when("type", {
-          is: (t) => !!t,
-          then: (s) => s.required("Pay rate is required"),
-          otherwise: (s) => s.nullable(),
-        }),
-    })
+    }),
   ),
   deductions: yup.array().of(
     yup.object().shape({
       type: yup.string().required("Deduction type is required"),
-      rate: yup
-        .number()
-        .typeError("Must be a valid number")
-        .when("type", {
-          is: (t) => !!t,
-          then: (s) => s.required("Deduction rate is required"),
-          otherwise: (s) => s.nullable(),
-        }),
-    })
+    }),
   ),
   documents: yup.array().optional(),
 });
@@ -142,8 +156,12 @@ const FileUploadArea = React.memo(
           sizeInMB < 1
             ? (file.size / 1024).toFixed(0) + " KB"
             : sizeInMB.toFixed(1) + " MB";
+
         if (sizeInMB > maxSizeMB) {
-          showToast({ message: `File ${file.name} exceeds ${maxSizeMB}MB limit`, type: "error" });
+          showToast({
+            message: `File ${file.name} exceeds ${maxSizeMB}MB limit`,
+            type: "error",
+          });
           return {
             file,
             name: file.name || "Unknown File",
@@ -164,7 +182,10 @@ const FileUploadArea = React.memo(
 
       setFiles((prev) => [...prev, ...newFiles]);
       onFiles(newFiles);
-      showToast({ message: `${newFiles.length} file(s) selected`, type: "info" });
+      showToast({
+        message: `${newFiles.length} file(s) selected`,
+        type: "info",
+      });
 
       newFiles.forEach((fileObj, idx) => {
         if (fileObj.error) return;
@@ -173,20 +194,14 @@ const FileUploadArea = React.memo(
           progress += 10;
           setFiles((prev) =>
             prev.map((f, i) =>
-              i === prev.length - newFiles.length + idx ? { ...f, progress } : f
-            )
+              i === prev.length - newFiles.length + idx
+                ? { ...f, progress }
+                : f,
+            ),
           );
-          if (progress >= 100) {
-            clearInterval(interval);
-
-          }
+          if (progress >= 100) clearInterval(interval);
         }, 300);
       });
-
-      // Trigger the upload after rendering files in the UI
-      if (newFiles.some((f) => !f.error)) {
-        onFiles(newFiles); // Call onFiles again to ensure parent has the latest file objects
-      }
 
       if (fileInputRef.current) fileInputRef.current.value = null;
     };
@@ -194,7 +209,10 @@ const FileUploadArea = React.memo(
     const handleRemoveFile = (idx) => {
       setFiles((prev) => {
         const removedFile = prev[idx];
-        showToast({ message: `File ${removedFile.name} removed`, type: "info" });
+        showToast({
+          message: `File ${removedFile.name} removed`,
+          type: "info",
+        });
         return prev.filter((_, i) => i !== idx);
       });
     };
@@ -202,27 +220,38 @@ const FileUploadArea = React.memo(
     const handleRetryFile = (idx) => {
       setFiles((prev) => {
         const retryFile = prev[idx];
-        showToast({ message: `Retrying upload for ${retryFile.name}`, type: "info" });
+        showToast({
+          message: `Retrying upload for ${retryFile.name}`,
+          type: "info",
+        });
         return prev.map((f, i) =>
-          i === idx ? { ...f, progress: 0, error: false, errorMessage: null } : f
+          i === idx
+            ? { ...f, progress: 0, error: false, errorMessage: null }
+            : f,
         );
       });
+
       let progress = 0;
       const interval = setInterval(() => {
         progress += 10;
         setFiles((prev) =>
-          prev.map((f, i) => (i === idx ? { ...f, progress } : f))
+          prev.map((f, i) => (i === idx ? { ...f, progress } : f)),
         );
         if (progress >= 100) {
           clearInterval(interval);
-          showToast({ message: `Retry upload simulation completed for ${files[idx].name}`, type: "success" });
+          showToast({
+            message: `Retry upload simulation completed`,
+            type: "success",
+          });
         }
       }, 300);
     };
 
     return (
       <div className="mb-6">
-        <p className="text-sm text-gray-700 font-semibold mb-2">Upload Documents</p>
+        <p className="text-sm text-gray-700 font-semibold mb-2">
+          Upload Documents
+        </p>
         <div className="upload-area">
           <div className="upload-icon">
             <BsCloudUpload size={24} />
@@ -240,6 +269,7 @@ const FileUploadArea = React.memo(
             multiple
           />
         </div>
+
         {files.length > 0 && (
           <div className="file-list mt-3">
             {files.map((file, idx) => (
@@ -288,7 +318,7 @@ const FileUploadArea = React.memo(
         )}
       </div>
     );
-  }
+  },
 );
 
 const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
@@ -299,10 +329,15 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   const [fileResults, setFileResults] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Dynamic payroll options
+  const [incomeOptions, setIncomeOptions] = useState([]);
+  const [deductionOptions, setDeductionOptions] = useState([]);
+
   const dispatch = useDispatch();
-  const reduxDraft = useSelector((s) => s.staffFormDraft.formData);
-  const accessToken = useSelector((s) => s.authentication?.token);
-  const refreshToken = useSelector((s) => s.authentication?.token);
+  const reduxDraft = useSelector((s) => s.staffFormDraft?.formData);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
 
   const {
     register,
@@ -311,15 +346,15 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     reset,
     setValue,
     control,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       licenses: [
         { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
       ],
-      otherPays: [{ type: "", rate: "" }],
-      deductions: [{ type: "", rate: "" }],
+      otherPays: [{ type: "" }],
+      deductions: [{ type: "" }],
       documents: [],
       programId: "",
       staffId: "",
@@ -328,65 +363,78 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       paymentSchedule: "",
       ratePerHour: "",
       minimumHours: "",
-      ...(mode === "edit" && initialData
-        ? {
-            fullName: initialData.fullName || "",
-            email: initialData.email || "",
-            phoneNumber: initialData.phoneNumber || "",
-            DOB: initialData.DOB || "",
-            gender: initialData.gender || "",
-            practiceNPI: initialData.practiceNPI || "",
-            staffRole: initialData.staffRole || "",
-            address: initialData.address || "",
-            city: initialData.city || "",
-            state: initialData.state || "",
-            zip: initialData.zip || "",
-            country: initialData.country || "",
-            active: initialData.active ?? true,
-            licenses: initialData.licenses?.length
-              ? initialData.licenses
-              : [
-                  {
-                    licenseName: "",
-                    licenseNumber: "",
-                    expiryDate: "",
-                    state: "",
-                  },
-                ],
-            paymentSchedule: initialData.payroll?.paymentSchedule || "",
-            ratePerHour: initialData.payroll?.ratePerHour || "",
-            minimumHours: initialData.payroll?.minimumHours || "",
-            otherPays: initialData.payroll?.otherPays?.length
-              ? initialData.payroll.otherPays.map((p) => ({
-                  type: p.type,
-                  rate: p.rate,
-                }))
-              : [{ type: "", rate: "" }],
-            deductions: initialData.payroll?.deductions?.length
-              ? initialData.payroll.deductions.map((d) => ({
-                  type: d.type,
-                  rate: d.rate,
-                }))
-              : [{ type: "", rate: "" }],
-            documents: initialData.documents?.length
-              ? initialData.documents
-              : [],
-          }
-        : {}),
     },
   });
 
   const values = useWatch({ control });
   const paymentSchedule = watch("paymentSchedule");
 
+  // Fetch income items (other pays) & deductions — silently on modal open
+  const fetchIncomeItems = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    try {
+      const data = await api.GetIncomeItemsByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const options = (data.data || []).map((item) => ({
+        value: item.id,
+        label: item.name || "Unknown Income",
+      }));
+      setIncomeOptions(options);
+    } catch (error) {
+      console.error("Error fetching income items:", error);
+      // Silent fail — no toast shown as requested
+      setIncomeOptions([]);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchDeductions = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    try {
+      const data = await api.GetDeductionsByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const options = (data.data || []).map((item) => ({
+        value: item.id,
+        label: item.name || "Unknown Deduction",
+      }));
+      setDeductionOptions(options);
+    } catch (error) {
+      console.error("Error fetching deductions:", error);
+      // Silent fail — no toast shown as requested
+      setDeductionOptions([]);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  // Fetch once when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchIncomeItems();
+      fetchDeductions();
+    }
+  }, [isOpen, fetchIncomeItems, fetchDeductions]);
+
+  const compensationTypeOptions = useMemo(
+    () => [
+      { value: "Hourly", label: "Hourly" },
+      { value: "Daily", label: "Daily" },
+      { value: "Salaried", label: "Salaried" },
+    ],
+    [],
+  );
+
   const genderOptions = useMemo(
     () => [
       { value: "male", label: "Male" },
       { value: "female", label: "Female" },
-     
     ],
-    []
+    [],
   );
+
   const staffRoleOptions = useMemo(
     () => [
       { value: "8285a9a5-0455-447d-9dbe-00ad68d6a0e5", label: "Admin" },
@@ -394,46 +442,17 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       { value: "b2c3d4e5-f6a7-8901-bcde-f23456789012", label: "Supervisor" },
       { value: "d4e5f6a7-b8c9-0123-def0-456789012345", label: "Assistant" },
     ],
-    []
+    [],
   );
+
   const countryOptions = useMemo(
     () => [
       { value: "US", label: "United States" },
       { value: "UK", label: "United Kingdom" },
     ],
-    []
+    [],
   );
-  const paymentScheduleOptions = useMemo(
-    () => [
-      { value: "Hourly", label: "Hourly" },
-      { value: "Daily", label: "Daily" },
-      { value: "Weekly", label: "Weekly" },
-      { value: "Bi-Weekly", label: "Bi-Weekly" },
-      { value: "Monthly", label: "Monthly" },
-      { value: "Bi-Monthly", label: "Bi-Monthly" },
-      { value: "Quarterly", label: "Quarterly" },
-      { value: "Annually", label: "Annually" },
-    ],
-    []
-  );
-  const otherPayOptions = useMemo(
-    () => [
-      { value: "overtime", label: "Overtime" },
-      { value: "commission", label: "Commission" },
-      { value: "bonus", label: "Bonus" },
-      { value: "allowance", label: "Allowance" },
-    ],
-    []
-  );
-  const deductionsOptions = useMemo(
-    () => [
-      { value: "tax", label: "Tax" },
-      { value: "insurance", label: "Insurance" },
-      { value: "retirement", label: "Retirement" },
-      { value: "other", label: "Other" },
-    ],
-    []
-  );
+
   const stateOptions = useMemo(
     () => [
       { value: "AL", label: "Alabama" },
@@ -487,7 +506,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       { value: "WI", label: "Wisconsin" },
       { value: "WY", label: "Wyoming" },
     ],
-    []
+    [],
   );
 
   const handleFileUpload = useCallback(
@@ -502,7 +521,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
             filename: f.name,
             url: null,
             error: f.errorMessage,
-          })
+          }),
         );
         setFileResults((prev) => [...prev, ...newResults]);
         setUploadingFiles(false);
@@ -533,14 +552,21 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           setValue("documents", [...(values.documents || []), ...ups], {
             shouldDirty: true,
           });
-          showToast({ message: `${ups.length} file(s) uploaded successfully`, type: "success" });
+          showToast({
+            message: `${ups.length} file(s) uploaded successfully`,
+            type: "success",
+          });
         } else throw new Error(res.error || "Upload failed");
       } catch (e) {
         validFiles.forEach((f) =>
-          newResults.push({ filename: f.name, url: null, error: e.message })
+          newResults.push({ filename: f.name, url: null, error: e.message }),
         );
-        showToast({ message: `Failed to upload file(s): ${e.message}`, type: "error" });
+        showToast({
+          message: `Failed to upload file(s): ${e.message}`,
+          type: "error",
+        });
       }
+
       fileObjects.forEach((f) => {
         if (f.error)
           newResults.push({
@@ -549,10 +575,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
             error: f.errorMessage,
           });
       });
+
       setFileResults((prev) => [...prev, ...newResults]);
       setUploadingFiles(false);
     },
-    [accessToken, refreshToken, setValue, values.documents]
+    [accessToken, refreshToken, setValue, values.documents],
   );
 
   const debouncedUpdateRef = useRef(
@@ -564,7 +591,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         tenantStaffId: d.tenantStaffId,
       }));
       dispatch(setDraftField(clone));
-    }, 500)
+    }, 500),
   );
 
   useEffect(() => {
@@ -574,8 +601,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         licenses: [
           { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
         ],
-        otherPays: [{ type: "", rate: "" }],
-        deductions: [{ type: "", rate: "" }],
+        otherPays: [{ type: "" }],
+        deductions: [{ type: "" }],
         documents: [],
         programId: "",
         staffId: "",
@@ -590,6 +617,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       setHasChanges(false);
       setSubmitError("");
       setFileResults([]);
+      setIncomeOptions([]);
+      setDeductionOptions([]);
       return;
     }
 
@@ -599,17 +628,28 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       clone.licenses =
         Array.isArray(clone.licenses) && clone.licenses.length
           ? clone.licenses
-          : [{ licenseName: "", licenseNumber: "", expiryDate: "", state: "" }];
+          : [
+              {
+                licenseName: "",
+                licenseNumber: "",
+                expiryDate: "",
+                state: "",
+              },
+            ];
       clone.otherPays =
         Array.isArray(clone.payroll?.otherPays) &&
         clone.payroll.otherPays.length
-          ? clone.payroll.otherPays
-          : [{ type: "", rate: "" }];
+          ? clone.payroll.otherPays.map((p) => ({
+              type: p.type || p || "",
+            }))
+          : [{ type: "" }];
       clone.deductions =
         Array.isArray(clone.payroll?.deductions) &&
         clone.payroll.deductions.length
-          ? clone.payroll.deductions
-          : [{ type: "", rate: "" }];
+          ? clone.payroll.deductions.map((d) => ({
+              type: d.type || d || "",
+            }))
+          : [{ type: "" }];
       clone.documents = Array.isArray(clone.documents)
         ? clone.documents.map((d) => ({
             id: d.id,
@@ -628,21 +668,22 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       clone.paymentSchedule = clone.payroll?.paymentSchedule || "";
       clone.ratePerHour = clone.payroll?.ratePerHour || "";
       clone.minimumHours = clone.payroll?.minimumHours || "";
+
       reset(clone);
       setFileResults(
         clone.documents.map((d) => ({
           filename: d.documentsUrl.filename || "Unknown File",
           url: d.documentsUrl.url,
           error: null,
-        }))
+        })),
       );
     } else {
-      const def = {
+      reset({
         licenses: [
           { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
         ],
-        otherPays: [{ type: "", rate: "" }],
-        deductions: [{ type: "", rate: "" }],
+        otherPays: [{ type: "" }],
+        deductions: [{ type: "" }],
         documents: [],
         programId: "",
         staffId: "",
@@ -652,15 +693,14 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         paymentSchedule: "",
         ratePerHour: "",
         minimumHours: "",
-      };
-      reset(def);
+      });
     }
     setHasChanges(false);
   }, [isOpen, mode, initialData, reduxDraft, reset, dispatch]);
 
   const tabsList = useMemo(
     () => ["Basic Information", "Licenses", "Payroll Settings", "Documents"],
-    []
+    [],
   );
 
   const validateTab = useCallback(
@@ -694,20 +734,22 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       });
       if (invalid) {
         setSubmitError(`Please fix errors in the ${tabName} tab`);
-        showToast({ message: `Please fix errors in the ${tabName} tab`, type: "error" });
+        showToast({
+          message: `Please fix errors in the ${tabName} tab`,
+          type: "error",
+        });
         return false;
       }
       setSubmitError("");
       return true;
     },
-    [errors, values.licenses]
+    [errors, values.licenses],
   );
 
   const handleNext = useCallback(() => {
     const idx = tabsList.indexOf(activeTab);
     if (idx < tabsList.length - 1 && validateTab(activeTab)) {
       setActiveTab(tabsList[idx + 1]);
-     
     }
   }, [activeTab, tabsList, validateTab]);
 
@@ -715,7 +757,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     const idx = tabsList.indexOf(activeTab);
     if (idx > 0) {
       setActiveTab(tabsList[idx - 1]);
-      
     }
   }, [activeTab, tabsList]);
 
@@ -725,8 +766,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       licenses: [
         { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
       ],
-      otherPays: [{ type: "", rate: "" }],
-      deductions: [{ type: "", rate: "" }],
+      otherPays: [{ type: "" }],
+      deductions: [{ type: "" }],
       documents: [],
       programId: "",
       staffId: "",
@@ -741,65 +782,134 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     setSubmitError("");
     setHasChanges(false);
     setFileResults([]);
+    setIncomeOptions([]);
+    setDeductionOptions([]);
     onClose();
-
   }, [dispatch, reset, onClose]);
+
+  // const handleFormSubmit = useCallback(
+  //   async (data) => {
+  //     if (Object.keys(errors).length) {
+  //       showToast({ message: "Please fix form errors before submitting", type: "error" });
+  //       return;
+  //     }
+  //     if (uploadingFiles) {
+  //       showToast({ message: "Please wait until uploads finish", type: "error" });
+  //       return;
+  //     }
+
+  //     // Transform otherPays and deductions to array of IDs (strings)
+  //     const transformedData = {
+  //       ...data,
+  //       payroll: {
+  //         paymentSchedule: data.paymentSchedule,
+  //         ratePerHour: Number(data.ratePerHour),
+  //         minimumHours: data.minimumHours ? Number(data.minimumHours) : null,
+  //         otherPays: (data.otherPays || [])
+  //           .filter(p => p.type && p.type.trim() !== "")
+  //           .map(p => p.type),   // extract just the IDs
+  //         deductions: (data.deductions || [])
+  //           .filter(d => d.type && d.type.trim() !== "")
+  //           .map(d => d.type),   // extract just the IDs
+  //       },
+  //       documents: fileResults,
+  //       // remove payroll from root level if backend doesn't want it there
+  //       // delete data.payroll; // ← optional
+  //     };
+
+  //     console.log("TRANSFORMED PAYLOAD:", JSON.stringify(transformedData, null, 2));
+
+  //     setSubmitting(true);
+  //     setSubmitError("");
+
+  //     try {
+  //       await onSubmit(transformedData);
+  //       // ... reset logic ...
+  //     } catch (e) {
+  //       setSubmitError(e.message || "Save failed");
+  //     } finally {
+  //       setSubmitting(false);
+  //     }
+  //   },
+  //   [errors, uploadingFiles, fileResults, onSubmit, dispatch, reset, onClose]
+  // );
 
   const handleFormSubmit = useCallback(
     async (data) => {
       if (Object.keys(errors).length) {
-        showToast({ message: "Please fix form errors before submitting", type: "error" });
+        showToast({
+          message: "Please fix form errors before submitting",
+          type: "error",
+        });
         return;
       }
       if (uploadingFiles) {
-        setSubmitError("Please wait until uploads finish");
-        showToast({ message: "Please wait until uploads finish", type: "error" });
+        showToast({
+          message: "Please wait until uploads finish",
+          type: "error",
+        });
         return;
       }
-      // if (fileResults.some((r) => r.error)) {
-      //   // setSubmitError("Some files failed to upload");
-      //   showToast({ message: "Some files failed to upload", type: "error" });
-      //   return;
-      // }
+
+      const payroll = {
+        paymentSchedule: data.paymentSchedule,
+        ratePerHour: Number(data.ratePerHour),
+        // Only include minimumHours if it's Salaried
+        ...(data.paymentSchedule === "Salaried" && data.minimumHours != null
+          ? { minimumHours: Number(data.minimumHours) }
+          : {}),
+        otherPays: (data.otherPays || [])
+          .filter((p) => p.type && p.type.trim() !== "")
+          .map((p) => p.type),
+        deductions: (data.deductions || [])
+          .filter((d) => d.type && d.type.trim() !== "")
+          .map((d) => d.type),
+      };
+
+      const transformedData = {
+        ...data,
+        payroll: {
+          paymentSchedule: data.paymentSchedule,
+          ratePerHour: Number(data.ratePerHour),
+          // minimumHours conditional (your previous logic)
+          ...(data.paymentSchedule === "Salaried" && data.minimumHours != null
+            ? { minimumHours: Number(data.minimumHours) }
+            : {}),
+          otherPays: (data.otherPays || [])
+            .filter((p) => p.type && p.type.trim() !== "")
+            .map((p) => ({ id: p.type })), // ← changed to { id: ... }
+          deductions: (data.deductions || [])
+            .filter((d) => d.type && d.type.trim() !== "")
+            .map((d) => ({ id: d.type })), // ← changed to { id: ... }
+        },
+        documents: fileResults,
+      };
+      console.log(
+        "TRANSFORMED PAYLOAD:",
+        JSON.stringify(transformedData, null, 2),
+      );
 
       setSubmitting(true);
       setSubmitError("");
 
       try {
-        await onSubmit({
-          ...data,
-          documents: fileResults,
-        });
+        await onSubmit(transformedData);
+        // reset logic...
         dispatch(resetDraft());
         reset({
-          licenses: [
-            { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
-          ],
-          otherPays: [{ type: "", rate: "" }],
-          deductions: [{ type: "", rate: "" }],
-          documents: [],
-          programId: "",
-          staffId: "",
-          active: true,
-          phoneNumber: "",
-          DOB: "",
-          paymentSchedule: "",
-          ratePerHour: "",
-          minimumHours: "",
+          /* your defaults */
         });
         setActiveTab("Basic Information");
         setHasChanges(false);
         setFileResults([]);
         onClose();
-
       } catch (e) {
         setSubmitError(e.message || "Save failed");
-
       } finally {
         setSubmitting(false);
       }
     },
-    [errors, uploadingFiles, fileResults, onSubmit, dispatch, reset, onClose, mode]
+    [errors, uploadingFiles, fileResults, onSubmit, dispatch, reset, onClose],
   );
 
   const basicInfoTab = useMemo(
@@ -945,7 +1055,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       staffRoleOptions,
       stateOptions,
       countryOptions,
-    ]
+    ],
   );
 
   const licensesTab = useMemo(
@@ -1000,7 +1110,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                     setValue(
                       "licenses",
                       values.licenses.filter((_, i) => i !== idx),
-                      { shouldDirty: true }
+                      { shouldDirty: true },
                     );
                     showToast({ message: "License removed", type: "info" });
                   }}
@@ -1027,9 +1137,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   state: "",
                 },
               ],
-              { shouldDirty: true }
+              { shouldDirty: true },
             );
-            
           }}
         />
       </div>
@@ -1041,59 +1150,66 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       control,
       stateOptions,
       setValue,
-    ]
+    ],
   );
 
   const payrollTab = useMemo(
     () => (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <Controller
           name="paymentSchedule"
           control={control}
           render={({ field }) => (
             <SelectInput
-              label="Payment Schedule"
-              options={paymentScheduleOptions}
+              label="Compensation Type"
+              options={compensationTypeOptions}
               error={errors.paymentSchedule?.message}
-              placeholder="Select payment schedule"
+              placeholder="Select compensation type"
               {...field}
             />
           )}
         />
+
         {paymentSchedule && (
           <TextInput
-            label="Pay Rate"
+            label={
+              paymentSchedule === "Hourly"
+                ? "Pay Rate (per hour)"
+                : paymentSchedule === "Daily"
+                  ? "Pay Rate (per day)"
+                  : "Pay Rate (Salary)"
+            }
             type="number"
             step="0.01"
             {...register("ratePerHour")}
             error={errors.ratePerHour?.message}
-            placeholder="Enter per hour rate"
+            placeholder={
+              paymentSchedule === "Hourly"
+                ? "e.g. 45.50"
+                : paymentSchedule === "Daily"
+                  ? "e.g. 320.00"
+                  : "e.g. 5200.00"
+            }
           />
         )}
-        {paymentSchedule &&
-          ![
-            "Hourly",
-            "Monthly",
-            "Bi-Monthly",
-            "Quarterly",
-            "Annually",
-          ].includes(paymentSchedule) && (
-            <TextInput
-              label={`Minimum Hours per ${paymentSchedule.toLowerCase()}`}
-              type="number"
-              step="0.5"
-              {...register("minimumHours")}
-              error={errors.minimumHours?.message}
-              placeholder={`Enter minimum hours per ${paymentSchedule.toLowerCase()}`}
-            />
-          )}
-        <div className="space-y-4 items-center">
+
+        {paymentSchedule === "Salaried" && (
+          <TextInput
+            label="Minimum Number of Hours per Month"
+            type="number"
+            step="0.5"
+            {...register("minimumHours")}
+            error={errors.minimumHours?.message}
+            placeholder="e.g. 160"
+          />
+        )}
+
+        {/* Other Pay Section */}
+        <div className="space-y-4 mt-8">
           <h4 className="font-medium">Other Pay</h4>
+
           {values.otherPays?.map((p, idx) => (
-            <div
-              key={idx}
-              className="flex gap-4 items-center p-3 border-b mb-6"
-            >
+            <div key={idx} className="flex items-center gap-16 p-3 ">
               <div className="flex-1">
                 <Controller
                   name={`otherPays.${idx}.type`}
@@ -1101,7 +1217,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   render={({ field }) => (
                     <SelectInput
                       label="Pay Type"
-                      options={otherPayOptions}
+                      options={incomeOptions}
                       error={errors.otherPays?.[idx]?.type?.message}
                       placeholder="Select pay type"
                       {...field}
@@ -1109,54 +1225,54 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   )}
                 />
               </div>
-              {p.type && (
-                <div>
-                  <TextInput
-                    label="Pay Rate"
-                    type="number"
-                    step="0.01"
-                    {...register(`otherPays.${idx}.rate`)}
-                    error={errors.otherPays?.[idx]?.rate?.message}
-                    placeholder="Enter rate"
-                  />
-                </div>
-              )}
-              {idx > 0 && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  label="Remove"
-                  onClick={() => {
+
+              {/* Remove button beside EVERY row */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (values.otherPays.length === 1) {
+                    // Optional: clear instead of remove last one
+                    setValue(`otherPays.${idx}.type`, "", {
+                      shouldDirty: true,
+                    });
+                  } else {
                     setValue(
                       "otherPays",
                       values.otherPays.filter((_, i) => i !== idx),
-                      { shouldDirty: true }
+                      { shouldDirty: true },
                     );
-                    showToast({ message: "Other pay removed", type: "info" });
-                  }}
-                />
-              )}
+                  }
+                  showToast({ message: "Other pay removed", type: "info" });
+                }}
+                className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-full hover:bg-red-50"
+                title="Remove this pay item"
+              >
+                <RxCross2 size={20} />
+              </button>
             </div>
           ))}
+
           <Button
             icon={<FaPlus />}
             variant="secondary"
-            label="Add"
+            label="Add Other Pay"
             className="mb-6"
             onClick={() => {
               setValue(
                 "otherPays",
-                [...(values.otherPays || []), { type: "", rate: "" }],
-                { shouldDirty: true }
+                [...(values.otherPays || []), { type: "" }],
+                { shouldDirty: true },
               );
-              
             }}
           />
         </div>
-        <div className="space-y-4">
+
+        {/* Deductions Section */}
+        <div className="space-y-4 mt-8">
           <h4 className="font-medium">Deductions</h4>
+
           {values.deductions?.map((d, idx) => (
-            <div key={idx} className="flex gap-4 items-center p-3 border-b mb-6">
+            <div key={idx} className="flex items-center gap-16 p-3 ">
               <div className="flex-1">
                 <Controller
                   name={`deductions.${idx}.type`}
@@ -1164,7 +1280,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   render={({ field }) => (
                     <SelectInput
                       label="Deduction Type"
-                      options={deductionsOptions}
+                      options={deductionOptions}
                       error={errors.deductions?.[idx]?.type?.message}
                       placeholder="Select deduction type"
                       {...field}
@@ -1172,47 +1288,44 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   )}
                 />
               </div>
-              {d.type && (
-                <div>
-                  <TextInput
-                    label="Deduction Rate"
-                    type="number"
-                    step="0.01"
-                    {...register(`deductions.${idx}.rate`)}
-                    error={errors.deductions?.[idx]?.rate?.message}
-                    placeholder="Enter rate"
-                  />
-                </div>
-              )}
-              {idx > 0 && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  label="Remove"
-                  onClick={() => {
+
+              {/* Remove button beside EVERY row */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (values.deductions.length === 1) {
+                    // Optional: clear instead of remove last one
+                    setValue(`deductions.${idx}.type`, "", {
+                      shouldDirty: true,
+                    });
+                  } else {
                     setValue(
                       "deductions",
                       values.deductions.filter((_, i) => i !== idx),
-                      { shouldDirty: true }
+                      { shouldDirty: true },
                     );
-                    showToast({ message: "Deduction removed", type: "info" });
-                  }}
-                />
-              )}
+                  }
+                  showToast({ message: "Deduction removed", type: "info" });
+                }}
+                className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-full hover:bg-red-50"
+                title="Remove this deduction"
+              >
+                <RxCross2 size={20} />
+              </button>
             </div>
           ))}
+
           <Button
             icon={<FaPlus />}
             variant="secondary"
-            label="Add"
+            label="Add Deduction"
             className="mb-6"
             onClick={() => {
               setValue(
                 "deductions",
-                [...(values.deductions || []), { type: "", rate: "" }],
-                { shouldDirty: true }
+                [...(values.deductions || []), { type: "" }],
+                { shouldDirty: true },
               );
-              
             }}
           />
         </div>
@@ -1226,14 +1339,23 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       control,
       register,
       setValue,
-      paymentScheduleOptions,
-      otherPayOptions,
-      deductionsOptions,
-    ]
+      compensationTypeOptions,
+      incomeOptions,
+      deductionOptions,
+    ],
   );
 
   const documentsTab = (
     <div>
+      <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
+        <pre>
+          {JSON.stringify(
+            errors,
+            (k, v) => (v instanceof HTMLElement ? "[DOM]" : v),
+            2,
+          )}
+        </pre>
+      </div>
       <FileUploadArea
         onFiles={(fileObjects) => {
           setValue("documents", [...(values.documents || []), ...fileObjects], {
@@ -1245,11 +1367,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         maxSizeMB={50}
         initialFiles={values.documents || []}
       />
-      {/* {submitError && (
+      {submitError && (
         <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded">
           {submitError}
         </div>
-      )} */}
+      )}
     </div>
   );
 
@@ -1260,7 +1382,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       { name: "Payroll Settings", content: payrollTab },
       { name: "Documents", content: documentsTab },
     ],
-    [basicInfoTab, licensesTab, payrollTab]
+    [basicInfoTab, licensesTab, payrollTab, documentsTab],
   );
 
   const getPrimaryButtonText = useCallback(() => {
@@ -1270,13 +1392,13 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
   const getSecondaryButtonText = useCallback(
     () => (activeTab === "Basic Information" ? "Cancel" : "Previous"),
-    [activeTab]
+    [activeTab],
   );
 
   const getPrimaryButtonAction = useCallback(
     () =>
       activeTab === "Documents" ? handleSubmit(handleFormSubmit) : handleNext,
-    [activeTab, handleSubmit, handleFormSubmit, handleNext]
+    [activeTab, handleSubmit, handleFormSubmit, handleNext],
   );
 
   useEffect(() => () => debouncedUpdateRef.current.cancel(), []);
