@@ -59,21 +59,26 @@ const ReusableTable = ({
   const renderPagination = () => {
     if (!pagination) return null;
     const { currentPage, totalPages } = pagination;
+    if (totalPages <= 1) return null;
     const pages = [];
 
-    // Build page numbers
-    for (let i = 1; i <= Math.min(3, totalPages); i++) {
-      pages.push(i);
-    }
-    if (totalPages > 5) {
-      pages.push("...");
-      for (let i = totalPages - 2; i <= totalPages; i++) {
-        if (i > 3) pages.push(i);
-      }
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      for (let i = 4; i <= totalPages; i++) {
-        pages.push(i);
-      }
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) pages.push("...");
+
+      // Pages around current
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+
+      if (currentPage < totalPages - 2) pages.push("...");
+
+      // Always show last page
+      pages.push(totalPages);
     }
 
     return (

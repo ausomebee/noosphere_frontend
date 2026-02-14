@@ -7,6 +7,7 @@ import AuthLayout from "../AuthLayout";
 import { TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import api from "../../../api/authApis";
 
 // Validation schema
 const forgotPasswordSchema = yup.object().shape({
@@ -18,6 +19,7 @@ const forgotPasswordSchema = yup.object().shape({
 
 const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -33,17 +35,25 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    try {
-      // Simulate API call
-      console.log("Form submitted:", data);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Handle successful submission
-      showToast("Reset instructions sent to your email!", "success");
-      navigate("/checkEmail");
+    setErrorMessage("");
+    try {
+      const response = await api.ClientForgetPassword({
+        email: data.email,
+      });
+      if (response.data.message === "email sent successfully") {
+        showToast("Password reset email sent successfully!", "success");
+      } else {
+        throw new Error("Failed to initiate password reset.");
+      }
+      navigate("/checkEmail", { state: { email: data.email } });
     } catch (error) {
       console.error("Forgot password error:", error);
-      showToast("Something went wrong. Please try again.", "error");
+      const msg =
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to send reset email. Please try again.";
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -66,6 +76,10 @@ const ForgotPassword = () => {
             error={errors.email?.message}
           />
         </div>
+        {errors.email && (
+          <p className="error-message">{errors.email.message}</p>
+        )}
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         <Button
           label="Reset password"

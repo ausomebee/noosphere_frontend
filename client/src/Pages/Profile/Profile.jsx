@@ -1,58 +1,300 @@
-import React, { useState, useRef } from "react";
-import {
-  SwitchInput,
-  PasswordInput,
-  TextInput,
-} from "../../Components/Input/Inputs";
+import React, { useState, useRef, useEffect } from "react";
+import { PasswordInput, TextInput } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import "./Profile.css";
 import DashboardLayout from "../../layouts/ClientLayout";
+import { useSelector } from "react-redux";
+import api from "../../api/ImageUpload";
+import api2 from "../../api/profileAndSettingsApi";
+import { showToast } from "../../Helper/ShowToast";
+import { useNotificationSettings } from "../../hooks/useNotificationSettings";
+import NotificationSettings from "../../Components/NotificationSettings/NotificationSettings";
+
+// Default fallback avatar - you can use a placeholder image or an initials generator
+const DEFAULT_AVATAR =
+  "https://via.placeholder.com/120x120/cccccc/666666?text=Profile";
+
+// Function to generate avatar URL with fallback
+const getAvatarUrl = (url, firstName, lastName) => {
+  if (url && url.trim() !== "") {
+    return url;
+  }
+
+  // Optional: Generate initials-based avatar as fallback
+  // You can use a service like ui-avatars.com
+  const initials =
+    `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  if (initials) {
+    return `https://ui-avatars.com/api/?name=${initials}&size=120&background=CCCCCC&color=666666`;
+  }
+
+  return DEFAULT_AVATAR;
+};
 
 const Profile = () => {
-  const [firstName, setFirstName] = useState("Oiva");
-  const [lastName, setLastName] = useState("Rhye");
-  const [email] = useState("email@email.com");
-  const [profileImage, setProfileImage] = useState(
-    "https://via.placeholder.com/120x120/cccccc/666666?text=Profile"
-  ); // Initial image
-  const fileInputRef = useRef(null);
-  const [notifications, setNotifications] = useState({
-    scheduled: true,
-    starts: true,
-    completed: true,
-    awaitingReview: true,
-    rescheduleApproved: true,
-  });
+  const clientTenantId = useSelector(
+    (state) => state.auth?.user?.tenantLinks?.[0]?.id,
+  );
+  const clientId = useSelector(
+    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId,
+  );
+  const accessToken = useSelector((state) => state.auth?.accessToken);
+  const refreshToken = useSelector((state) => state.auth?.refreshToken);
 
-  const handleNotificationToggle = (key) => {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  // Profile states
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [gender, setGender] = useState("");
+  const [DOB, setDOB] = useState("");
+  const [preferredName, setPreferredName] = useState("");
+  const [profileImage, setProfileImage] = useState(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState(""); // Store the actual avatar URL
+  const fileInputRef = useRef(null);
+  const [clientData, setClientData] = useState(null);
+
+  // Use the isolated notification hook
+  const {
+    notifications,
+    isLoading: isLoadingNotifications,
+    toggleNotification,
+    resetToSaved: resetNotifications,
+  } = useNotificationSettings(clientTenantId, accessToken, refreshToken);
+
+  // Password states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Load initial data on component mount
+  useEffect(() => {
+    if (clientTenantId && accessToken) {
+      loadClientDetails();
+    }
+  }, [clientTenantId, accessToken]);
+
+  const loadClientDetails = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api2.GetClientDetails({
+        clientId,
+        accessToken,
+        refreshToken,
+      });
+
+      if (response.data?.data?.client) {
+        const clientData = response.data.data.client;
+        setFirstName(clientData.firstName || "");
+        setLastName(clientData.lastName || "");
+        setEmail(clientData.email || "");
+        setPhoneNumber(clientData.phoneNumber || "");
+        setGender(clientData.gender || "");
+        setDOB(clientData.DOB || "");
+        setPreferredName(clientData.preferredName || "");
+
+        // Store the actual avatar URL
+        setAvatarUrl(clientData.avatarUrl || "");
+
+        // Set profile image with fallback
+        setProfileImage(
+          getAvatarUrl(
+            clientData.avatarUrl,
+            clientData.firstName,
+            clientData.lastName,
+          ),
+        );
+
+        setClientData(clientData);
+      }
+    } catch (error) {
+      showToast("Failed to load client details", "error");
+      console.error("Error loading client details:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      // Preview the selected image
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      showToast("Please upload a valid image file (JPEG, PNG, GIF)", "error");
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast("Image size should be less than 5MB", "error");
+      return;
+    }
+
+    try {
+      setIsLoadingProfile(true);
+
+      // Show preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImage(reader.result); // Update preview
+        setProfileImage(reader.result);
       };
       reader.readAsDataURL(file);
 
-      // Simulate sending/uploading the image
-      console.log("Uploading image:", file);
-      // Here you would normally send it to your backend:
-      // const formData = new FormData();
-      // formData.append('profileImage', file);
-      // await fetch('/api/upload-profile-image', { method: 'POST', body: formData });
+      const formData = new FormData();
+      formData.append("images", file);
 
-      alert(
-        `Image selected: ${file.name}\n(In a real app, this would upload to the server)`
-      );
+      const uploadResponse = await api.UploadImage({
+        formData,
+        accessToken,
+        refreshToken,
+      });
+
+      if (
+        !uploadResponse.success ||
+        !uploadResponse.data ||
+        uploadResponse.data.length === 0
+      ) {
+        throw new Error(uploadResponse.error || "Failed to upload image");
+      }
+
+      const imageUrl = uploadResponse.data[0].url;
+
+      await api2.UploadProfileImage({
+        clientId,
+        avatarUrl: imageUrl,
+        accessToken,
+        refreshToken,
+      });
+
+      // Update avatar URL and profile image
+      setAvatarUrl(imageUrl);
+      setProfileImage(imageUrl);
+      showToast("Profile image updated successfully", "success");
+
+      // Reload client details to ensure data is in sync
+      loadClientDetails();
+    } catch (error) {
+      // Revert to previous image on error
+      setProfileImage(getAvatarUrl(avatarUrl, firstName, lastName));
+      showToast(error.message || "Failed to upload image", "error");
+      console.error("Error uploading image:", error);
+    } finally {
+      setIsLoadingProfile(false);
+      event.target.value = "";
     }
   };
 
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleSaveProfile = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      showToast("First name and last name are required", "error");
+      return;
+    }
+
+    try {
+      setIsLoadingProfile(true);
+
+      const updateData = {
+        clientId,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: clientData?.email || "",
+        phoneNumber: clientData?.phoneNumber || "",
+        gender: clientData?.gender || "",
+        DOB: clientData?.DOB || "",
+        preferredName: clientData?.preferredName || "",
+        streetAddress: clientData?.streetAddress || "",
+        city: clientData?.city || "",
+        state: clientData?.state || "",
+        country: clientData?.country || "",
+        zipCode: clientData?.zipCode || "",
+        accessToken,
+        refreshToken,
+      };
+
+      await api2.UpdateClientDetails(updateData);
+      showToast("Profile updated successfully", "success");
+
+      // Reload client details to get updated data
+      loadClientDetails();
+    } catch (error) {
+      showToast(error.message || "Failed to update profile", "error");
+      console.error("Error updating profile:", error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  const handleChangePasswordClick = () => {
+    setShowPasswordModal(true);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+  };
+
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All fields are required");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      setPasswordError("New password must be different from current password");
+      return;
+    }
+
+    try {
+      setIsLoadingPassword(true);
+      setPasswordError("");
+
+      await api2.UpdatePassword({
+        clientTenantId,
+        currentPassword,
+        newPassword,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast("Password changed successfully", "success");
+      setShowPasswordModal(false);
+    } catch (error) {
+      setPasswordError(error.message || "Failed to change password");
+      showToast(error.message || "Failed to change password", "error");
+    } finally {
+      setIsLoadingPassword(false);
+    }
+  };
+
+  const handleCancel = () => {
+    loadClientDetails();
+    resetNotifications();
+    showToast("Changes discarded", "info");
+  };
+
+  // Handle image error - fallback to initials or default
+  const handleImageError = () => {
+    setProfileImage(getAvatarUrl("", firstName, lastName));
   };
 
   return (
@@ -72,23 +314,33 @@ const Profile = () => {
               Update your photo and personal details here.
             </p>
 
-            <div className="">
+            <div className="profile-image-section">
               <div className="profile-picture">
-                <img src={profileImage} alt="Profile" />
+                <img
+                  src={profileImage}
+                  alt={`${firstName} ${lastName}`}
+                  onError={handleImageError}
+                />
+                {isLoadingProfile && (
+                  <div className="image-loading-overlay">Uploading...</div>
+                )}
               </div>
-               <input
+              <input
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept="image/*"
                 style={{ display: "none" }}
               />
-              <button className="change-image-btn" onClick={triggerFileSelect}>
-                Change Picture
+              <button
+                className="change-image-btn"
+                onClick={triggerFileSelect}
+                disabled={isLoadingProfile}
+              >
+                {isLoadingProfile ? "Uploading..." : "Change Picture"}
               </button>
             </div>
 
-            {/* Form Fields */}
             <div className="form-fields">
               <div className="name-row">
                 <TextInput
@@ -96,12 +348,14 @@ const Profile = () => {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First Name"
+                  disabled={isLoading}
                 />
                 <TextInput
                   label="Last Name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last Name"
+                  disabled={isLoading}
                 />
               </div>
               <div className="name-row">
@@ -121,73 +375,94 @@ const Profile = () => {
                       disabled
                       className="disabled-password-input"
                     />
-                    <button type="button">Change</button>
+                    <button
+                      type="button"
+                      onClick={handleChangePasswordClick}
+                      disabled={isLoading}
+                    >
+                      Change
+                    </button>
                   </div>
                 </div>
               </div>
-             
             </div>
           </section>
 
-          {/* Notifications Section */}
-          <section className="section">
-            <h2 className="profile-section-title">Notifications</h2>
-            <p className="section-description">
-              Manage how and when you'd like to receive updates.
-            </p>
-
-            <div className="profile-notifications-list">
-              <NotificationItem
-                label="Notify me when a session has been scheduled"
-                checked={notifications.scheduled}
-                onChange={() => handleNotificationToggle("scheduled")}
-              />
-              <NotificationItem
-                label="Notify me when a session starts"
-                checked={notifications.starts}
-                onChange={() => handleNotificationToggle("starts")}
-              
-              />
-              <NotificationItem
-                label="Notify me when a session is marked as completed"
-                checked={notifications.completed}
-                onChange={() => handleNotificationToggle("completed")}
-              />
-              <NotificationItem
-                label="Notify me when a session is awaiting review"
-                checked={notifications.awaitingReview}
-                onChange={() => handleNotificationToggle("awaitingReview")}
-              />
-              <NotificationItem
-                label="Notify me when a reschedule has been approved"
-                checked={notifications.rescheduleApproved}
-                onChange={() => handleNotificationToggle("rescheduleApproved")}
-              />
-            </div>
-          </section>
+          {/* Isolated Notification Settings Component */}
+          <NotificationSettings
+            notifications={notifications}
+            isLoading={isLoadingNotifications}
+            onToggle={toggleNotification}
+          />
 
           {/* Action Buttons */}
           <div className="action-buttons">
-            <Button label="Save Changes" variant="primary" />
-            <Button label="Cancel" variant="secondary" />
+            <Button
+              label={isLoadingProfile ? "Saving..." : "Save Changes"}
+              variant="primary"
+              onClick={handleSaveProfile}
+              disabled={isLoading || isLoadingProfile}
+            />
+            <Button
+              label="Cancel"
+              variant="secondary"
+              onClick={handleCancel}
+              disabled={isLoading || isLoadingProfile || isLoadingNotifications}
+            />
           </div>
         </div>
       </div>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="password-modal">
+            <h3>Change Password</h3>
+            <div className="modal-content">
+              <PasswordInput
+                label="Current Password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+              <PasswordInput
+                label="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+              <PasswordInput
+                label="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+              {passwordError && (
+                <div className="password-error">{passwordError}</div>
+              )}
+              <div className="modal-actions">
+                <Button
+                  label={isLoadingPassword ? "Changing..." : "Change Password"}
+                  variant="primary"
+                  onClick={handlePasswordChange}
+                  disabled={isLoadingPassword}
+                />
+                <Button
+                  label="Cancel"
+                  variant="secondary"
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={isLoadingPassword}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
 
-// Reusable Notification Switch Component
-const NotificationItem = ({ label, checked, onChange, highlight }) => {
-  return (
-    <div className={`notification-item ${highlight ? "highlight" : ""}`}>
-      <span className="notification-label">{label}</span>
-      <SwitchInput checked={checked} onChange={onChange} />
-    </div>
-  );
-};
-
-// Simple Mail Icon SVG (you can replace with your own)
+// Simple Mail Icon SVG
 const MailIcon = () => (
   <svg
     width="20"

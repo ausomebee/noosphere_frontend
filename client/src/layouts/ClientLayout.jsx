@@ -7,12 +7,20 @@ import { LuUser } from "react-icons/lu";
 import { MdOutlineNotificationsNone } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { VscClose } from "react-icons/vsc";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../ReduxStore/features/authentication";
 import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const firstName = useSelector((state) => state.auth?.user?.firstName || "");
+  const lastName = useSelector((state) => state.auth?.user?.lastName || "");
+  const avatarUrl = useSelector((state) => state.auth?.user?.avatarUrl);
+  const displayName = `${firstName} ${lastName}`.trim() || "User";
 
   const navItems = [
     { icon: <GoHome size={20} />, label: "Home", path: "/dashboard" },
@@ -23,7 +31,7 @@ const DashboardLayout = ({ children }) => {
   ];
 
   const handleLogout = () => {
-    // Add your logout logic here (clear tokens, etc.)
+    dispatch(logout());
     navigate("/login");
   };
 
@@ -59,14 +67,31 @@ const DashboardLayout = ({ children }) => {
         <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-profile">
             <div className="profile-avatar">
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face"
-                alt="Profile"
-              />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "50%",
+                    background: "#3b82f6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontSize: "18px",
+                    fontWeight: "600",
+                  }}
+                >
+                  {firstName?.charAt(0)?.toUpperCase() || "U"}
+                  {lastName?.charAt(0)?.toUpperCase() || ""}
+                </div>
+              )}
             </div>
             <div className="profile-info">
               <h3>Welcome</h3>
-              <p>Oluwaseyitantan</p>
+              <p>{displayName}</p>
             </div>
           </div>
 

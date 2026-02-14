@@ -7,6 +7,8 @@ import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { ClientLogin } from "../../../ReduxStore/features/authentication";
 
 // Validation schema
 const loginSchema = yup.object().shape({
@@ -21,7 +23,7 @@ const loginSchema = yup.object().shape({
 });
 
 const InitialLogin = () => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
     register,
@@ -34,22 +36,24 @@ const InitialLogin = () => {
       password: "",
     },
   });
+  const { loading } = useSelector((state) => state.auth);
 
   const onSubmit = async (data) => {
-    setLoading(true);
     try {
-      // Simulate API call
-      console.log("Form submitted:", data);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const resultAction = await dispatch(ClientLogin(data));
 
-      // Handle successful login here
-      showToast("Login successful!", "success");
-      navigate("/intialResetPassword");
+      if (ClientLogin.fulfilled.match(resultAction)) {
+        // const user = resultAction.payload.data;
+        showToast("Login successful", "success");
+
+        navigate("/intialResetPassword");
+      } else {
+        const errorMessage = resultAction.payload?.message || "Login failed";
+        showToast(errorMessage, "error");
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      showToast("Login failed. Please try again.", "error");
-    } finally {
-      setLoading(false);
+      console.error("Unexpected error:", error);
+      showToast("An unexpected error occurred. Please try again.", "error");
     }
   };
 

@@ -7,8 +7,10 @@ import AuthLayout from "../AuthLayout";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import { useDispatch, useSelector } from "react-redux";
+import { ClientLogin } from "../../../ReduxStore/features/authentication";
 
-// Validation schema
+// Validation schema 
 const loginSchema = yup.object().shape({
   email: yup
     .string()
@@ -20,8 +22,8 @@ const loginSchema = yup.object().shape({
     .min(8, "Password must be at least 8 characters"),
 });
 
-const ClientLogin = () => {
-  const [loading, setLoading] = useState(false);
+const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const {
@@ -35,22 +37,24 @@ const ClientLogin = () => {
       password: "",
     },
   });
+  // const { loading } = useSelector((state) => state.authentication);
 
   const onSubmit = async (data) => {
-    setLoading(true);
     try {
-      // Simulate API call
-      console.log("Form submitted:", data);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const resultAction = await dispatch(ClientLogin(data));
 
-      // Handle successful login here
-      showToast("Login successful!", "success");
-      navigate("/dashboard");
+      if (ClientLogin.fulfilled.match(resultAction)) {
+        // const user = resultAction.payload.data;
+        showToast("Login successful", "success");
+
+        navigate("/dashboard");
+      } else {
+        const errorMessage = resultAction.payload?.message || "Login failed";
+        showToast(errorMessage, "error");
+      }
     } catch (error) {
       console.error("Login error:", error);
       showToast("Login failed. Please try again.", "error");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -77,7 +81,10 @@ const ClientLogin = () => {
           />
 
           <div className="text-right">
-            <Link to="/forgotPassword" className="text-blue-600 text-sm font-semibold hover:underline">
+            <Link
+              to="/forgotPassword"
+              className="text-blue-600 text-sm font-semibold hover:underline"
+            >
               Forgot password?
             </Link>
           </div>
@@ -89,11 +96,11 @@ const ClientLogin = () => {
           size="large"
           className="w-full mt-4"
           type="submit"
-          loading={loading}
+          // loading={loading}
         />
       </form>
     </AuthLayout>
   );
 };
 
-export default ClientLogin;
+export default Login;

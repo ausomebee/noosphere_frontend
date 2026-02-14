@@ -5,7 +5,7 @@ const Button = ({
   label,
   variant = "primary",
   size = "medium",
-  width = "100%",
+  width = "w-full",
   icon,
   iconSize = 20,
   iconPosition = "left",

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";           // ← add this
 import AuthLayout from "../AuthLayout";
 import { showToast } from "../../../Helper/ShowToast";
+import api from "../../../api/authApis";                 // ← import api
 
 const EmailSentIllustration = () => (
   <svg
@@ -53,17 +55,38 @@ const EmailSentIllustration = () => (
 );
 
 const CheckEmail = () => {
+  const { state } = useLocation();
+  const email = state?.email || "";   // fallback to empty string
+
   const [loading, setLoading] = useState(false);
+  const [lastSent, setLastSent] = useState(0);           // optional: simple rate-limit
 
   const handleResend = async () => {
+    if (!email) {
+      showToast("No email found. Please go back and try again.", "error");
+      return;
+    }
+
+    // Optional: prevent spam (e.g. max 1 resend every 45 seconds)
+    const now = Date.now();
+    if (now - lastSent < 45_000) {
+      showToast("Please wait a moment before resending", "info");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      showToast("Email resent successfully!", "success");
+      await api.ClientForgetPassword({ email });
+
+      showToast("Reset email resent successfully!", "success");
+      setLastSent(Date.now());
     } catch (error) {
-      console.error("Resend error:", error);
-      showToast("Failed to resend email. Please try again.", "error");
+      console.error("Resend failed:", error);
+      const msg =
+        error?.response?.data?.message ||
+        "Failed to resend email. Please try again later.";
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -79,17 +102,28 @@ const CheckEmail = () => {
         <h1 className="text-2xl font-semibold text-gray-900 mb-4 mt-6">
           Reset instructions sent!
         </h1>
-        <p className="text-gray-500 mb-4">Please check your email</p>
 
-        <p className="text-gray-600 text-base mt-20">
+        <p className="text-gray-500 mb-6">
+          We sent reset instructions to <strong>{email || "your email"}</strong>
+        </p>
+
+        <p className="text-gray-600 text-base mt-16">
           Didn't receive the email?{" "}
           <button
             onClick={handleResend}
             disabled={loading}
-            className="text-blue-600 text-base font-semibold hover:underline disabled:opacity-50"
+            className={`
+              text-blue-600 text-base font-semibold hover:underline
+              disabled:opacity-50 disabled:cursor-not-allowed
+            `}
           >
             {loading ? "Resending..." : "Resend it"}
           </button>
+        </p>
+
+        {/* Optional extra help text */}
+        <p className="text-gray-500 text-sm mt-8">
+          Check your spam/junk folder if it doesn't arrive soon.
         </p>
       </div>
     </AuthLayout>

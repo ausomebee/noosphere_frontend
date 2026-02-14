@@ -1,23 +1,34 @@
 import React from "react";
-import { IoChevronDown, IoTimeOutline } from "react-icons/io5";
+import { IoTimeOutline } from "react-icons/io5";
 import "./AuthorizationCard.css";
 import { SelectInput } from "../../../Input/Inputs";
 
-const AuthorizationCard = ({ data }) => {
+const AuthorizationCard = ({ 
+  data, 
+  serviceCodeOptions = [], 
+  onServiceCodeChange,
+  selectedServiceCodeId 
+}) => {
   const isEmpty = !data;
 
-  const totalAuthorized = isEmpty ? 0 : data.totalAuthorized;
-  const totalCompleted = isEmpty ? 0 : data.totalCompleted;
-  const totalRemaining = isEmpty ? 0 : data.totalRemaining;
+  const totalAuthorized = isEmpty ? 0 : data.totalAuthorized || 0;
+  const totalCompleted = isEmpty ? 0 : data.totalCompleted || 0;
+  const totalRemaining = isEmpty ? 0 : data.totalRemaining || 0;
 
   // Calculate percentage for the arc (completed / authorized)
-  const percentage = isEmpty ? 0 : (totalCompleted / totalAuthorized) * 100;
+  const percentage = totalAuthorized > 0 ? (totalCompleted / totalAuthorized) * 100 : 0;
 
   // SVG arc calculation
   const radius = 80;
   const strokeWidth = 12;
   const circumference = Math.PI * radius; // Half circle
   const filledLength = (percentage / 100) * circumference;
+
+  const handleServiceCodeChange = (value) => {
+    if (onServiceCodeChange) {
+      onServiceCodeChange(value);
+    }
+  };
 
   return (
     <div className="authorization-card">
@@ -26,17 +37,17 @@ const AuthorizationCard = ({ data }) => {
         <p className="authorization-subtitle">Overview of authorization usage</p>
       </div>
 
-      {/* Service Type Dropdown */}
-  
-       <SelectInput
-                options={[
-                  { value: "month", label: "Month" },
-                  { value: "week", label: "Week" },
-                ]}
-                placeholder="Select Service Type"
-                className="period-select"
-              
-              />
+      {/* Service Type Dropdown using SelectInput */}
+      <div className="service-type-selector">
+        <SelectInput
+          options={serviceCodeOptions}
+          value={selectedServiceCodeId}
+          onChange={handleServiceCodeChange}
+          placeholder="Select Service Type"
+          width="100%"
+          disabled={serviceCodeOptions.length === 0}
+        />
+      </div>
 
       {/* Gauge Chart */}
       <div className="gauge-container">
@@ -87,7 +98,9 @@ const AuthorizationCard = ({ data }) => {
           <div className="stat-dot light-blue" />
           <div className="stat-content">
             <span className="stat-number">{totalRemaining}</span>
-            <span className="stat-text">{isEmpty ? "Total Authorized" : "Total Remaining"}</span>
+            <span className="stat-text">
+              {isEmpty ? "Total Authorized" : "Total Remaining"}
+            </span>
           </div>
         </div>
       </div>
