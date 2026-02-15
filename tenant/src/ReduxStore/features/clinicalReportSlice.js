@@ -118,6 +118,18 @@ export const saveDraft = createAsyncThunk(
         return sectionPayload;
       });
 
+      // Auto-append Consent & Signatures as the last section if not already present
+      const hasConsent = sections.some(
+        (s) => s.section === "Consent & Signatures",
+      );
+      if (!hasConsent) {
+        sections.push({
+          section: "Consent & Signatures",
+          content: sectionData["consentSignatures"] || {},
+          order: sections.length,
+        });
+      }
+
       const payload = {
         tenantId: metadata.tenantId,
         clientTenantId: metadata.clientTenantId,
@@ -180,6 +192,18 @@ export const publishReport = createAsyncThunk(
 
         return sectionPayload;
       });
+
+      // Auto-append Consent & Signatures as the last section if not already present
+      const hasConsent = sections.some(
+        (s) => s.section === "Consent & Signatures",
+      );
+      if (!hasConsent) {
+        sections.push({
+          section: "Consent & Signatures",
+          content: sectionData["consentSignatures"] || {},
+          order: sections.length,
+        });
+      }
 
       const payload = {
         tenantId: metadata.tenantId,

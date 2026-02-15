@@ -25,7 +25,11 @@ const schema = yup.object().shape({
   documentName: yup.string().required("Document Name is required"),
   document: yup
     .mixed()
-    .test("file-required", "A document is required", (value) => value && value.length === 1),
+    .test(
+      "file-required",
+      "A document is required",
+      (value) => value && value.length === 1,
+    ),
 });
 
 // FileUploadArea Component
@@ -43,7 +47,10 @@ const FileUploadArea = React.memo(
     useEffect(() => {
       if (initialFile && (initialFile.documentsUrl || initialFile.filename)) {
         const newFile = {
-          name: initialFile.documentsUrl?.filename || initialFile.filename || "Unknown File",
+          name:
+            initialFile.documentsUrl?.filename ||
+            initialFile.filename ||
+            "Unknown File",
           url: initialFile.documentsUrl?.url || initialFile.url,
           size: initialFile.size || "Unknown",
           progress: 100,
@@ -60,7 +67,8 @@ const FileUploadArea = React.memo(
         return <FaRegFile size={16} className="file-icon" />;
       }
       const ext = fileName.split(".").pop()?.toLowerCase();
-      if (ext === "pdf") return <BsFileEarmarkPdf size={16} className="file-icon" />;
+      if (ext === "pdf")
+        return <BsFileEarmarkPdf size={16} className="file-icon" />;
       if (["mp4", "avi", "mov"].includes(ext))
         return <FaPhotoVideo size={16} className="file-icon" />;
       if (["gif"].includes(ext))
@@ -108,7 +116,8 @@ const FileUploadArea = React.memo(
           size: sizeDisplay,
           progress: 0,
           error: true,
-          errorMessage: "Supported formats: PDF, JPG, JPEG, PNG, GIF, MP4, AVI, MOV",
+          errorMessage:
+            "Supported formats: PDF, JPG, JPEG, PNG, GIF, MP4, AVI, MOV",
         };
       } else {
         newFile = {
@@ -142,7 +151,12 @@ const FileUploadArea = React.memo(
 
     const handleRetryFile = () => {
       if (!file) return;
-      const newFile = { ...file, progress: 0, error: false, errorMessage: null };
+      const newFile = {
+        ...file,
+        progress: 0,
+        error: false,
+        errorMessage: null,
+      };
       setFile(newFile);
       onFileChange([newFile]);
       let progress = 0;
@@ -215,7 +229,7 @@ const FileUploadArea = React.memo(
         )}
       </div>
     );
-  }
+  },
 );
 
 // Main Modal Component
@@ -231,9 +245,9 @@ const UploadTenantStaffDocumentModal = ({
   const [submitError, setSubmitError] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [fileResult, setFileResult] = useState(null);
-  const accessToken = useSelector((state) => state.authentication?.token);
-  const refreshToken = useSelector((state) => state.authentication?.token);
-  const user = useSelector((state) => state.authentication?.user);
+  const user = useSelector((s) => s.authentication?.user);
+  const accessToken = user?.accessToken;
+  const refreshToken = user?.refreshToken;
 
   const {
     register,
@@ -289,7 +303,11 @@ const UploadTenantStaffDocumentModal = ({
             error: null,
           });
           setValue("document", [
-            { ...fileObj, url: res.data[0].url, filename: res.data[0].filename },
+            {
+              ...fileObj,
+              url: res.data[0].url,
+              filename: res.data[0].filename,
+            },
           ]);
         } else {
           throw new Error(res.error || "Upload failed");
@@ -304,7 +322,7 @@ const UploadTenantStaffDocumentModal = ({
         setUploadingFile(false);
       }
     },
-    [accessToken, refreshToken, setValue]
+    [accessToken, refreshToken, setValue],
   );
 
   useEffect(() => {
@@ -380,7 +398,17 @@ const UploadTenantStaffDocumentModal = ({
         setSubmitting(false);
       }
     },
-    [errors, uploadingFile, fileResult, user, tenantStaffId, initialValues, onSave, reset, onClose]
+    [
+      errors,
+      uploadingFile,
+      fileResult,
+      user,
+      tenantStaffId,
+      initialValues,
+      onSave,
+      reset,
+      onClose,
+    ],
   );
 
   const handleClose = useCallback(() => {

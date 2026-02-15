@@ -1,4 +1,5 @@
 // TemplateAndReportApi.js
+import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -210,7 +211,7 @@ const GetSingleClinicalReportById = async ({
 };
 
 const GeClinicalReportByTenantIdAndStatus = async ({
-  TenantId,
+  clientTenantId,
   status,
   accessToken,
   refreshToken,
@@ -218,7 +219,7 @@ const GeClinicalReportByTenantIdAndStatus = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/clinical-reports/tenant/${TenantId}/status/${status}`,
+      `${PLAIN_API_URL}/clinical-reports/client/${clientTenantId}/status/${status}`,
     );
     return response.data;
   } catch (error) {
@@ -231,12 +232,13 @@ const GeClinicalReportByTenantIdAndStatus = async ({
 const GetClinicalReportByApproverId = async ({
   approverId,
   accessToken,
+  clientTenantId,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/clinical-reports/approver/${approverId}`,
+      `${PLAIN_API_URL}/clinical-reports/approver/${approverId}/client/${clientTenantId}`,
     );
     return response.data;
   } catch (error) {
@@ -321,19 +323,16 @@ const UpdateClinicalReportStatus = async ({
 const CreateClinicalReportChangeRequest = async ({
   clinicalReportId,
   description,
-  clientTenantId,
   approverId,
+  clientTenantId,
   accessToken,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const payload = {
-      clinicalReportId,
-      description,
-      clientTenantId,
-      approverId,
-    };
+    const payload = { clinicalReportId, description };
+    if (approverId) payload.approverId = approverId;
+    if (clientTenantId) payload.clientTenantId = clientTenantId;
 
     const response = await authFetch.post(
       `${PLAIN_API_URL}/clinical-report-change-requests`,
@@ -383,6 +382,94 @@ const GetClinicalReportChangeRequestById = async ({
   }
 };
 
+
+const WithdrawClientClinicalReport = async ({
+  clinicalReportId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/clinical-reports/${clinicalReportId}/withdraw-token`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Withdraw Clinical Report failed");
+  }
+};
+
+const NudgeClientForReport = async ({
+  clinicalReportId,
+  accessToken,
+  refreshToken,}) => {
+   const authFetch = AxiosInterceptor(accessToken, refreshToken);
+    try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/clinical-reports/${clinicalReportId}/nudge`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Nudge client for report failed");
+  }
+};
+
+const ApproveClinicalReport = async ({
+  clinicalReportId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/clinical-reports/approve/${clinicalReportId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Approve Clinical Report failed");
+  }
+};
+
+const ValidateClientReportToken = async ({ token }) => {
+  const authFetch = AxiosInterceptor(token, token);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/clinical-reports/validate/${token}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Token validation failed");
+  }
+};
+
+const SignClinicalReport = async ({ id, content }) => {
+  try {
+    const response = await axios.post(
+      `${PLAIN_API_URL}/clinical-reports/submit-signature`,
+      { id, content },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Sign Clinical Report failed");
+  }
+};
+
+const ResubmitClinicalReport = async ({
+  clinicalReportId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/clinical-reports/resubmit/${clinicalReportId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Resubmit Clinical Report failed");
+  }
+};
+
 export default {
   CreateClinicalReportTemplate,
   UpdateClinicalReportTemplate,
@@ -403,5 +490,10 @@ export default {
   GetClinicalReportAuditTrails,
   GetClinicalReportChangeRequests,
   GetClinicalReportChangeRequestById,
-  
+  WithdrawClientClinicalReport,
+  NudgeClientForReport,
+  ApproveClinicalReport,
+  ValidateClientReportToken,
+  SignClinicalReport,
+  ResubmitClinicalReport,
 };

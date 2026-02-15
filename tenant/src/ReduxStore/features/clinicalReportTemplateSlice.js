@@ -120,6 +120,15 @@ export const saveTemplate = createAsyncThunk(
         uniqueSections.push(sectionPayload);
       });
 
+      // Auto-append Consent & Signatures as the last section if not already present
+      if (!seen.has("Consent & Signatures")) {
+        uniqueSections.push({
+          section: "Consent & Signatures",
+          content: sectionData["consentSignatures"] || {},
+          order: uniqueSections.length,
+        });
+      }
+
       const payload = {
         tenantId: templateMetadata.tenantId,
         title: templateMetadata.title,

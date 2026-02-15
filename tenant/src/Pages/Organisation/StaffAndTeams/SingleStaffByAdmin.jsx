@@ -353,9 +353,23 @@ const SingleStaffByAdmin = () => {
           />
         );
       case "appointmentSchedule":
-        return <Appointment />;
+        return (
+          <Appointment
+            staffId={tenantStaffId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
+            tenantId={user?.tenantId}
+          />
+        );
       case "staffClient":
-        return <Client />;
+        return (
+          <Client
+            staffId={tenantStaffId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
+            tenantId={user?.tenantId}
+          />
+        );
       case "payrollSettings":
         return <Payroll />;
       default:

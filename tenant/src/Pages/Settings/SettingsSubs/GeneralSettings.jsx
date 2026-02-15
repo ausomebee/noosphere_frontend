@@ -79,6 +79,13 @@ const GeneralSettings = () => {
   // Edit question state
   const [editingQuestion, setEditingQuestion] = useState(null);
 
+  // Change password modal state
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaveLoading, setPasswordSaveLoading] = useState(false);
+
   // Change modals for general settings
   const [isDateFormatModalOpen, setIsDateFormatModalOpen] = useState(false);
   const [isTimeFormatModalOpen, setIsTimeFormatModalOpen] = useState(false);
@@ -86,6 +93,9 @@ const GeneralSettings = () => {
   const [tempDateFormat, setTempDateFormat] = useState(dateFormat);
   const [tempTimeFormat, setTempTimeFormat] = useState(timeFormat);
   const [tempCurrency, setTempCurrency] = useState(currency);
+
+  // Tenant email state (fetched from /tenant/{tenantId})
+  const [tenantEmail, setTenantEmail] = useState("");
 
   // Fetch general settings
   const fetchGeneralSettings = useCallback(async () => {
@@ -130,10 +140,61 @@ const GeneralSettings = () => {
     }
   }, [tenantId, accessToken, refreshToken]);
 
+  // Fetch 2FA choices from /tenant/tenantadminchoices/{tenantId}
+  const fetchTenantAdminChoices = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      const response = await api.GetTenantAdminChoices({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data;
+      if (data) {
+        const has2FA = data.Authenticator2FA || data.securityQuestion;
+        setTwoFactorEnabled(has2FA);
+        setAuthMethods([
+          {
+            id: 1,
+            name: "Security Question",
+            isDefault: !!data.securityQuestion,
+          },
+          {
+            id: 2,
+            name: "Authenticator App",
+            isDefault: !!data.Authenticator2FA,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch tenant admin choices:", error);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  // Fetch tenant email from /tenant/{tenantId}
+  const fetchTenantInfo = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      const response = await api.GetTenantById({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data;
+      if (data?.email) {
+        setTenantEmail(data.email);
+      }
+    } catch (error) {
+      console.error("Failed to fetch tenant info:", error);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
   useEffect(() => {
     fetchGeneralSettings();
     fetchSecurityQuestions();
-  }, [fetchGeneralSettings, fetchSecurityQuestions]);
+    fetchTenantAdminChoices();
+    fetchTenantInfo();
+  }, [fetchGeneralSettings, fetchSecurityQuestions, fetchTenantAdminChoices, fetchTenantInfo]);
 
   // Save general settings (create or update)
   const saveGeneralSettings = async (newDateFormat, newTimeFormat, newCurrency) => {
@@ -182,17 +243,50 @@ const GeneralSettings = () => {
     await saveGeneralSettings(dateFormat, timeFormat, tempCurrency);
   };
 
+  // Change password
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim() || !newPassword.trim()) {
+      showToast("Please fill in all fields", "error");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast("New password and confirm password do not match", "error");
+      return;
+    }
+    setPasswordSaveLoading(true);
+    try {
+      await api.ChangePassword({
+        currentPassword,
+        newPassword,
+        staffId: user?.userId || user?.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Password changed successfully", "success");
+      setIsPasswordModalOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      showToast(error.message || "Failed to change password", "error");
+    } finally {
+      setPasswordSaveLoading(false);
+    }
+  };
+
   // Save 2FA default
   const handleSaveAuthenticator = async () => {
     setTfaSaveLoading(true);
     try {
+      await api.Set2FASetDefault({
+        tenantId,
+        Authenticator2FA: true,
+        securityQuestion: false,
+        setForAll: authenticatorDefault,
+        accessToken,
+        refreshToken,
+      });
       if (authenticatorDefault) {
-        await api.Set2FASetDefault({
-          tenantId,
-          authenticatorType: "authenticator_app",
-          accessToken,
-          refreshToken,
-        });
         setAuthMethods((prev) =>
           prev.map((m) => ({
             ...m,
@@ -213,13 +307,15 @@ const GeneralSettings = () => {
   const handleSaveSecurityQuestion = async () => {
     setTfaSaveLoading(true);
     try {
+      await api.Set2FASetDefault({
+        tenantId,
+        Authenticator2FA: false,
+        securityQuestion: true,
+        setForAll: securityQuestionDefault,
+        accessToken,
+        refreshToken,
+      });
       if (securityQuestionDefault) {
-        await api.Set2FASetDefault({
-          tenantId,
-          authenticatorType: "security_question",
-          accessToken,
-          refreshToken,
-        });
         setAuthMethods((prev) =>
           prev.map((m) => ({
             ...m,
@@ -388,16 +484,9 @@ const GeneralSettings = () => {
             <div className="settings-row-info">
               <span className="settings-row-label">Email</span>
               <span className="settings-row-value">
-                {user?.email || "Not set"}
+                {tenantEmail || user?.email || "Not set"}
               </span>
             </div>
-            <Button
-              label="Change"
-              variant="ghost"
-              size="small"
-              width="auto"
-              className="settings-change-link"
-            />
           </div>
 
           <div className="settings-row">
@@ -411,6 +500,12 @@ const GeneralSettings = () => {
               size="small"
               width="auto"
               className="settings-change-link"
+              onClick={() => {
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setIsPasswordModalOpen(true);
+              }}
             />
           </div>
 
@@ -628,6 +723,43 @@ const GeneralSettings = () => {
           onChange={(e) => setNewQuestion(e.target.value)}
           placeholder="Enter your security question"
         />
+      </ReusableModal>
+
+      {/* Change Password Modal */}
+      <ReusableModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        title="Change Password"
+        primaryButtonText="Save"
+        secondaryButtonText="Cancel"
+        onPrimaryButtonClick={handleChangePassword}
+        onSecondaryButtonClick={() => setIsPasswordModalOpen(false)}
+        primaryButtonLoading={passwordSaveLoading}
+        size="sm"
+      >
+        <div className="settings-modal-content">
+          <TextInput
+            label="Current Password"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter current password"
+          />
+          <TextInput
+            label="New Password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <TextInput
+            label="Confirm New Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
+          />
+        </div>
       </ReusableModal>
     </div>
   );

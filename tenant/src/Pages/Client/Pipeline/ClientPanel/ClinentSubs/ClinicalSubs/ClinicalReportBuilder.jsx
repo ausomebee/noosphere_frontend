@@ -562,6 +562,7 @@ const ClinicalReportBuilder = () => {
   const [changeRequests, setChangeRequests] = useState([]);
   const [changeRequestsLoading, setChangeRequestsLoading] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   const [isEditingAfterSigned, setIsEditingAfterSigned] = useState(false);
 
@@ -783,7 +784,6 @@ const ClinicalReportBuilder = () => {
       await api.CreateClinicalReportChangeRequest({
         clinicalReportId: storedReportId,
         description: changeRequestText,
-        clientTenantId: metadata?.clientTenantId,
         approverId: metadata?.approverId,
         accessToken,
         refreshToken,
@@ -827,9 +827,8 @@ const ClinicalReportBuilder = () => {
   const handleApprove = useCallback(async () => {
     setIsApproving(true);
     try {
-      await api.UpdateClinicalReportStatus({
-        reportId: storedReportId,
-        status: "approved",
+      await api.ApproveClinicalReport({
+        clinicalReportId: storedReportId,
         accessToken,
         refreshToken,
       });
@@ -839,6 +838,24 @@ const ClinicalReportBuilder = () => {
       showToast("Failed to approve document", "error");
     } finally {
       setIsApproving(false);
+    }
+  }, [storedReportId, accessToken, refreshToken, navigate]);
+
+  // Resubmit after changes requested
+  const handleResubmit = useCallback(async () => {
+    setIsResubmitting(true);
+    try {
+      await api.ResubmitClinicalReport({
+        clinicalReportId: storedReportId,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Document resubmitted for signature!", "success");
+      navigate(-1);
+    } catch {
+      showToast("Failed to resubmit document", "error");
+    } finally {
+      setIsResubmitting(false);
     }
   }, [storedReportId, accessToken, refreshToken, navigate]);
 
@@ -925,10 +942,10 @@ const ClinicalReportBuilder = () => {
           />
           <Button
             variant="primary"
-            label={isPublishing ? "Submitting..." : "Submit for Signature"}
-            onClick={handlePublish}
-            disabled={activeSections.length === 0 || isSaving || isPublishing}
-            loading={isPublishing}
+            label={isResubmitting ? "Submitting..." : "Submit for Signature"}
+            onClick={handleResubmit}
+            disabled={activeSections.length === 0 || isSaving || isResubmitting}
+            loading={isResubmitting}
           />
         </>
       );
@@ -1274,11 +1291,28 @@ const ClinicalReportBuilder = () => {
                       className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-12"
                     >
                       <p className="text-gray-700 mb-4 font-medium">
-                        Requested by: {cr.approver?.fullName || cr.approverId || "Approver"}
+                        Requested by:{" "}
+                        {cr.requester?.fullName ||
+                          cr.approver?.fullName ||
+                          cr.approverId ||
+                          "Approver"}
                       </p>
+                      {cr.approver?.fullName && cr.requester?.fullName && (
+                        <p className="text-gray-600 mb-4 text-sm">
+                          Approver: {cr.approver.fullName}
+                        </p>
+                      )}
                       <p className="text-gray-800 whitespace-pre-wrap">
                         {cr.description || "No details provided."}
                       </p>
+                      {cr.status && (
+                        <p className="text-sm text-gray-500 mt-4">
+                          Status:{" "}
+                          <span className="font-medium">
+                            {cr.status.replace(/_/g, " ")}
+                          </span>
+                        </p>
+                      )}
                       {cr.createdAt && (
                         <p className="text-sm text-gray-400 mt-4">
                           {new Date(cr.createdAt).toLocaleDateString("en-US", {

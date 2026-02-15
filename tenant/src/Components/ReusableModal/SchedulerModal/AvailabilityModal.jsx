@@ -107,15 +107,15 @@ const AvailabilityModal = ({
     []
   );
 
-  // Default availability state with correct time format
+  // Default availability state — all off until populated
   const defaultAvailability = useMemo(() => ({
-    monday: { available: true, startTime: "00:00", endTime: "12:00" },
-    tuesday: { available: true, startTime: "00:00", endTime: "12:00" },
-    wednesday: { available: false, startTime: "00:00", endTime: "12:00" },
-    thursday: { available: true, startTime: "00:00", endTime: "12:00" },
-    friday: { available: true, startTime: "00:00", endTime: "12:00" },
-    saturday: { available: true, startTime: "00:00", endTime: "12:00" },
-    sunday: { available: false, startTime: "00:00", endTime: "12:00" },
+    monday: { available: false, startTime: "09:00", endTime: "17:00" },
+    tuesday: { available: false, startTime: "09:00", endTime: "17:00" },
+    wednesday: { available: false, startTime: "09:00", endTime: "17:00" },
+    thursday: { available: false, startTime: "09:00", endTime: "17:00" },
+    friday: { available: false, startTime: "09:00", endTime: "17:00" },
+    saturday: { available: false, startTime: "09:00", endTime: "17:00" },
+    sunday: { available: false, startTime: "09:00", endTime: "17:00" },
   }), []);
 
   // Memoize initialValues
@@ -167,18 +167,16 @@ const AvailabilityModal = ({
     onClose();
   }, [reset, onClose]);
 
-  // Ref to track initial open
-  const hasOpenedRef = useRef(false);
+  // Reset form every time modal opens with latest data
+  const prevOpenRef = useRef(false);
 
-  // Reset form only on first open
   useEffect(() => {
-    if (isOpen && !hasOpenedRef.current) {
-      console.log("Resetting form with initial values:", { ...defaultAvailability, ...memoizedInitialValues });
+    if (isOpen && !prevOpenRef.current) {
       reset({
         availability: { ...defaultAvailability, ...memoizedInitialValues },
       });
-      hasOpenedRef.current = true;
     }
+    prevOpenRef.current = isOpen;
   }, [isOpen, reset, defaultAvailability, memoizedInitialValues]);
 
   // Enforce time range

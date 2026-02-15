@@ -144,7 +144,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       switch (activeTab) {
         case "drafts":
           response = await api.GeClinicalReportByTenantIdAndStatus({
-            TenantId: tenantId,
+            clientTenantId: tenantClientId,
             status: "DRAFT",
             accessToken,
             refreshToken,
@@ -153,13 +153,14 @@ const ClinicalReportsTab = ({ clientData }) => {
         case "submittedForApproval":
           response = await api.GetClinicalReportByApproverId({
             approverId: userId,
+            clientTenantId: tenantClientId,
             accessToken,
             refreshToken,
           });
           break;
         case "approved":
           response = await api.GeClinicalReportByTenantIdAndStatus({
-            TenantId: tenantId,
+            clientTenantId: tenantClientId,
             status: "APPROVED",
             accessToken,
             refreshToken,
@@ -167,7 +168,7 @@ const ClinicalReportsTab = ({ clientData }) => {
           break;
         case "awaitingSignature":
           response = await api.GeClinicalReportByTenantIdAndStatus({
-            TenantId: tenantId,
+            clientTenantId: tenantClientId,
             status: "AWAITING_SIGNATURE",
             accessToken,
             refreshToken,
@@ -175,7 +176,7 @@ const ClinicalReportsTab = ({ clientData }) => {
           break;
         case "changeRequested":
           response = await api.GeClinicalReportByTenantIdAndStatus({
-            TenantId: tenantId,
+            clientTenantId: tenantClientId,
             status: "CHANGES_REQUESTED",
             accessToken,
             refreshToken,
@@ -183,7 +184,7 @@ const ClinicalReportsTab = ({ clientData }) => {
           break;
         case "clientSigned":
           response = await api.GeClinicalReportByTenantIdAndStatus({
-            TenantId: tenantId,
+            clientTenantId: tenantClientId,
             status: "SIGNED",
             accessToken,
             refreshToken,
@@ -267,6 +268,35 @@ const ClinicalReportsTab = ({ clientData }) => {
   const cancelDelete = () => {
     setDeleteModalOpen(false);
     setReportToDelete(null);
+  };
+
+  const handleWithdrawReport = async (row) => {
+    try {
+      await api.WithdrawClientClinicalReport({
+        clinicalReportId: row.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Report withdrawn successfully", "success");
+      fetchReports();
+    } catch (err) {
+      console.error("Withdraw failed:", err);
+      showToast("Failed to withdraw report", "error");
+    }
+  };
+
+  const handleNudgeClient = async (row) => {
+    try {
+      await api.NudgeClientForReport({
+        clinicalReportId: row.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Nudge sent to client successfully", "success");
+    } catch (err) {
+      console.error("Nudge failed:", err);
+      showToast("Failed to nudge client", "error");
+    }
   };
 
   const handleDuplicateReport = async (row) => {
@@ -360,6 +390,15 @@ const ClinicalReportsTab = ({ clientData }) => {
             {
               label: "View",
               onClick: (row) => navigateToBuilder(row, "awaitingSignature"),
+            },
+            {
+              label: "Nudge Client",
+              onClick: (row) => handleNudgeClient(row),
+            },
+            {
+              label: "Withdraw",
+              onClick: (row) => handleWithdrawReport(row),
+              danger: true,
             },
           ],
         },
