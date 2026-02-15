@@ -528,6 +528,125 @@ const UpdateTenantStaffPayroll = async ({
   }
 };
 
+// ─── Staff Appointments ───
+
+const GetStaffUpcomingAppointments = async ({
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/staff/upcoming/${staffId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff upcoming appointments failed",
+    );
+  }
+};
+
+const GetStaffAppointments = async ({
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/appointments/staff/${staffId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff appointments failed",
+    );
+  }
+};
+
+// ─── Staff Availability ───
+
+const CreateStaffAvailability = async ({
+  staffId,
+  availabilityDays,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/organization/staff-availability`,
+      { staffId, availabilityDays },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Create staff availability failed",
+    );
+  }
+};
+
+const UpdateStaffAvailability = async ({
+  id,
+  availabilityDays,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/organization/staff-availability`,
+      { id, availabilityDays },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Update staff availability failed",
+    );
+  }
+};
+
+const GetStaffAvailability = async ({
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/organization/staff-availability/staff/${staffId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff availability failed",
+    );
+  }
+};
+
+// ─── Staff Clients ───
+
+const GetStaffClients = async ({
+  staffId,
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/client/clinician/${staffId}/${tenantId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff clients failed",
+    );
+  }
+};
+
 export default {
   CreateTenantStaff,
   UpdateTenantStaff,
@@ -544,4 +663,10 @@ export default {
   GetAllStaffPayrollById,
   UpdateTenantStaffPayroll,
   UpdateTenantStaffBasicInfo,
+  GetStaffUpcomingAppointments,
+  GetStaffAppointments,
+  CreateStaffAvailability,
+  UpdateStaffAvailability,
+  GetStaffAvailability,
+  GetStaffClients,
 };

@@ -1,0 +1,944 @@
+/* ─── Page ──────────────────────────────────────────── */
+.crv-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  color: #1f2937;
+}
+
+/* ─── Loading / Error / Success States ──────────────── */
+.crv-loading,
+.crv-error-state,
+.crv-success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.crv-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #0066cc;
+  border-radius: 50%;
+  animation: crv-spin 0.8s linear infinite;
+}
+
+@keyframes crv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.crv-error-state svg {
+  color: #ef4444;
+}
+
+.crv-error-state h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.crv-error-state p {
+  color: #6b7280;
+  max-width: 400px;
+}
+
+.crv-success-state {
+  gap: 12px;
+}
+
+.crv-success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #ecfdf5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  margin-bottom: 8px;
+}
+
+.crv-success-state h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.crv-success-state p {
+  color: #4b5563;
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.crv-success-sub {
+  color: #9ca3af !important;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+/* ─── Toast ─────────────────────────────────────────── */
+.crv-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 9999;
+  animation: crv-slideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.crv-toast-success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.crv-toast-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.crv-toast button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 2px;
+  display: flex;
+}
+
+@keyframes crv-slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ─── Header ────────────────────────────────────────── */
+.crv-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.crv-header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crv-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #0066cc;
+}
+
+.crv-header-left h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+/* ─── Status Badge ──────────────────────────────────── */
+.crv-status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.crv-status-submitted {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.crv-status-approved {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.crv-status-draft {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.crv-status-awaiting_signature {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.crv-status-changes_requested {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.crv-status-signed {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+/* ─── Main ──────────────────────────────────────────── */
+.crv-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ─── Info Card ─────────────────────────────────────── */
+.crv-info-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.crv-info-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.crv-client-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #0066cc;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.crv-client-details h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.crv-doc-title {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.crv-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.crv-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crv-info-item svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.crv-info-label {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  min-width: 80px;
+}
+
+.crv-info-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* ─── Change Requests Alert ─────────────────────────── */
+.crv-change-alert {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.crv-change-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+
+.crv-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.crv-change-item {
+  background-color: #ffffff;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.crv-change-desc {
+  margin: 0 0 6px;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.crv-change-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* ─── Section Cards ─────────────────────────────────── */
+.crv-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.crv-section-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.crv-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 20px;
+  background-color: #f9fafb;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  transition: background-color 0.15s;
+}
+
+.crv-section-header:hover {
+  background-color: #f3f4f6;
+}
+
+.crv-section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crv-section-header-left svg {
+  color: #0066cc;
+}
+
+.crv-section-header-left h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.crv-section-body {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ─── Section Fields ────────────────────────────────── */
+.crv-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.crv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crv-field-full {
+  grid-column: 1 / -1;
+}
+
+.crv-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.crv-field-value {
+  font-size: 0.875rem;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.crv-html-content {
+  font-size: 0.875rem;
+  color: #1f2937;
+  line-height: 1.6;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #f3f4f6;
+}
+
+.crv-html-content h1,
+.crv-html-content h2,
+.crv-html-content h3,
+.crv-html-content h4 {
+  margin: 0 0 8px;
+}
+
+.crv-html-content p {
+  margin: 0 0 8px;
+}
+
+.crv-html-content ul,
+.crv-html-content ol {
+  padding-left: 20px;
+  margin: 0 0 8px;
+}
+
+/* Nested items (e.g. diagnoses, items array) */
+.crv-nested-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crv-nested-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.crv-item-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.crv-item-card:last-child {
+  margin-bottom: 0;
+}
+
+.crv-item-header {
+  background-color: #f3f4f6;
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.crv-item-card > .crv-fields-grid {
+  padding: 16px;
+}
+
+/* ─── Signature Section ─────────────────────────────── */
+.crv-signature-section {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.crv-signature-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.crv-signature-desc {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* Signature Type Tabs */
+.crv-signature-types {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.crv-sig-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.crv-sig-type-btn:hover {
+  border-color: #0066cc;
+  color: #0066cc;
+}
+
+.crv-sig-type-btn.active {
+  border-color: #0066cc;
+  background-color: #eff6ff;
+  color: #0066cc;
+}
+
+/* Signature Input Area */
+.crv-signature-input-area {
+  margin-bottom: 24px;
+}
+
+.crv-signature-input-area label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+/* Type Signature */
+.crv-typed-signature {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #1f2937;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.crv-typed-signature:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.crv-signature-preview-typed {
+  margin-top: 12px;
+  padding: 20px;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  text-align: center;
+  font-family: "Brush Script MT", "Dancing Script", cursive;
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+/* Draw Signature */
+.crv-signature-draw {
+  position: relative;
+}
+
+.crv-signature-canvas {
+  width: 100%;
+  height: 200px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  background-color: #ffffff;
+}
+
+.crv-clear-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.crv-clear-btn:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Upload Signature */
+.crv-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.crv-upload-area:hover {
+  border-color: #0066cc;
+}
+
+.crv-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.crv-upload-label span {
+  font-size: 0.875rem;
+}
+
+.crv-upload-hint {
+  font-size: 0.75rem !important;
+  color: #9ca3af !important;
+}
+
+.crv-upload-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: #f9fafb;
+}
+
+.crv-upload-preview img {
+  max-width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.crv-remove-upload {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.crv-remove-upload:hover {
+  background-color: #dc2626;
+}
+
+/* Signer Info */
+.crv-signer-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.crv-signer-field label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.crv-signer-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.crv-signer-field input:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.crv-signer-field input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ─── Actions ───────────────────────────────────────── */
+.crv-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.crv-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.crv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crv-btn-primary {
+  background-color: #0066cc;
+  color: #ffffff;
+}
+
+.crv-btn-primary:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.crv-btn-secondary {
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.crv-btn-secondary:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.crv-spin {
+  animation: crv-spin 1s linear infinite;
+}
+
+/* ─── Modal ─────────────────────────────────────────── */
+.crv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.crv-modal {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: crv-modalIn 0.2s ease;
+}
+
+@keyframes crv-modalIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.crv-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.crv-modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.crv-modal-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  display: flex;
+  border-radius: 4px;
+}
+
+.crv-modal-header button:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.crv-modal-body {
+  padding: 24px;
+}
+
+.crv-modal-desc {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.crv-modal-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #1f2937;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.crv-modal-textarea:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.crv-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ─── Responsive ────────────────────────────────────── */
+@media (max-width: 640px) {
+  .crv-header-inner {
+    padding: 0 16px;
+  }
+
+  .crv-header-left h1 {
+    font-size: 1rem;
+  }
+
+  .crv-main {
+    padding: 20px 16px 48px;
+  }
+
+  .crv-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crv-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crv-nested-card {
+    grid-template-columns: 1fr;
+  }
+
+  .crv-signature-types {
+    flex-direction: column;
+  }
+
+  .crv-signer-info {
+    grid-template-columns: 1fr;
+  }
+
+  .crv-actions {
+    flex-direction: column;
+  }
+
+  .crv-actions .crv-btn {
+    justify-content: center;
+  }
+
+  .crv-modal {
+    margin: 16px;
+  }
+}
+
+/* ─── Print Styles ──────────────────────────────────── */
+@media print {
+  .crv-header {
+    position: static;
+  }
+
+  .crv-signature-section,
+  .crv-actions,
+  .crv-change-alert {
+    display: none;
+  }
+
+  .crv-section-header {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .crv-page {
+    background-color: #ffffff;
+  }
+}

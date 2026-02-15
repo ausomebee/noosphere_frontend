@@ -1,5 +1,7 @@
 import React, { useState, useRef } from "react";
-import { FiChevronDown, FiUploadCloud } from "react-icons/fi";
+import { useSelector } from "react-redux";
+import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
+import uploadApi from "../../../api/ImageUpload";
 import "./ReportInput.css";
 // Text Input Component
 const ReportTextInput = ({
@@ -211,41 +213,138 @@ const ReportRadioGroup = ({ label, options, value, onChange }) => {
 const ReportFileUpload = ({
   label,
   acceptedFormats,
+  value = [],
+  onChange,
   onUpload,
   multiple = false,
+  readOnly = false,
 }) => {
- const fileInputRef = useRef(null);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector(
+    (s) => s.authentication?.user?.refreshToken,
+  );
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = (e) => {
+  // Build accept string from acceptedFormats like "PDF, DOCX, PNG, JPG"
+  const acceptString = acceptedFormats
+    ? acceptedFormats
+        .split(",")
+        .map((f) => `.${f.trim().toLowerCase()}`)
+        .join(",")
+    : "";
+
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
-    setUploadedFiles(files);
-    onUpload?.(files);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("images", file));
+
+      const res = await uploadApi.UploadImage({
+        formData,
+        accessToken,
+        refreshToken,
+      });
+
+      if (res.success && res.data?.length > 0) {
+        const uploaded = res.data.map((item) => ({
+          filename: item.filename,
+          url: item.url,
+        }));
+        const currentFiles = Array.isArray(value) ? value : [];
+        const newValue = multiple
+          ? [...currentFiles, ...uploaded]
+          : uploaded;
+        onChange?.(newValue);
+        onUpload?.(newValue);
+      }
+    } catch (err) {
+      console.error("File upload failed:", err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
+
+  const handleRemove = (index) => {
+    const currentFiles = Array.isArray(value) ? value : [];
+    const newValue = currentFiles.filter((_, i) => i !== index);
+    onChange?.(newValue);
+    onUpload?.(newValue);
+  };
+
+  const displayFiles = Array.isArray(value) ? value : [];
 
   return (
     <div className="report-builder-field">
       <label className="report-builder-label">{label}</label>
-      <div className="report-builder-file-upload-wrapper" onClick={() => fileInputRef.current?.click()}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="report-builder-file-input"
-          onChange={handleFileChange}
-          multiple={multiple}
-          style={{ display: "none" }}
-        />
-        <div className="report-builder-file-upload-area">
-          <FiUploadCloud className="report-builder-upload-icon" />
-          <div className="report-builder-upload-text-primary">Click to upload</div>
-          <div className="report-builder-upload-text-secondary">{acceptedFormats}</div>
+
+      {!readOnly && (
+        <div
+          className={`report-builder-file-upload-wrapper ${uploading ? "uploading" : ""}`}
+          onClick={() => !uploading && fileInputRef.current?.click()}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="report-builder-file-input"
+            onChange={handleFileChange}
+            multiple={multiple}
+            accept={acceptString}
+            style={{ display: "none" }}
+          />
+          <div className="report-builder-file-upload-area">
+            {uploading ? (
+              <>
+                <FiLoader className="report-builder-upload-icon report-builder-spin" />
+                <div className="report-builder-upload-text-primary">
+                  Uploading...
+                </div>
+              </>
+            ) : (
+              <>
+                <FiUploadCloud className="report-builder-upload-icon" />
+                <div className="report-builder-upload-text-primary">
+                  Click to upload
+                </div>
+                <div className="report-builder-upload-text-secondary">
+                  {acceptedFormats}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      {uploadedFiles.length > 0 && (
-        <div style={{ flex: 1, marginTop: 12 }}>
-          {uploadedFiles.map((file, index) => (
-            <div key={index} className="report-builder-uploaded-file">
-              {file.name}
+      )}
+
+      {displayFiles.length > 0 && (
+        <div className="report-builder-uploaded-list">
+          {displayFiles.map((file, index) => (
+            <div key={file.url || index} className="report-builder-uploaded-file">
+              <FiFile size={14} />
+              <a
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="report-builder-uploaded-link"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {file.filename || `File ${index + 1}`}
+              </a>
+              {!readOnly && (
+                <button
+                  type="button"
+                  className="report-builder-file-remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(index);
+                  }}
+                >
+                  <FiX size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>

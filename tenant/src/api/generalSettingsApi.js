@@ -152,18 +152,22 @@ const GetTenantSecurityQuestionsById = async ({
 
 const Set2FASetDefault = async ({
   tenantId,
+  Authenticator2FA,
+  securityQuestion,
+  setForAll,
   accessToken,
   refreshToken,
-  authenticatorType, 
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const payload = {
+      Authenticator2FA,
+      securityQuestion,
+      setForAll,
       tenantId,
-      authenticatorType, 
     };
-    const response = await authFetch.post(
-      `${PLAIN_API_URL}/tenant/2fa-default`,
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/tenant/tenantadminchoices`,
       payload,
     );
     return response.data;
@@ -172,7 +176,58 @@ const Set2FASetDefault = async ({
   }
 };
 
-// Export the function to make it accessible
+const ChangePassword = async ({
+  currentPassword,
+  newPassword,
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const payload = { currentPassword, newPassword, staffId };
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/tenant/change-password`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Change password failed");
+  }
+};
+
+const GetTenantAdminChoices = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/tenantadminchoices/${tenantId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get tenant admin choices failed");
+  }
+};
+
+const GetTenantById = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/${tenantId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get tenant failed");
+  }
+};
+
 export default {
   CreateGeneralSettings,
   UpdateGeneralSettings,
@@ -181,5 +236,8 @@ export default {
   UpdateTenantSecurityQuestions,
   GetTenantSecurityQuestionsByTenantId,
   Set2FASetDefault,
-  GetTenantSecurityQuestionsById
+  GetTenantSecurityQuestionsById,
+  ChangePassword,
+  GetTenantAdminChoices,
+  GetTenantById,
 };

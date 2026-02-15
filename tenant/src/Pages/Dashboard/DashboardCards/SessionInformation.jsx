@@ -8,8 +8,8 @@ import api from "../../../api/DashboardApis"; // Adjust path if needed
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.token);
-  const refreshToken = accessToken;
+  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
+  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [chartData, setChartData] = useState({
     series: [{ name: "Sessions", data: [] }],

@@ -4,6 +4,7 @@ import UpcomingAppointments from "./AppointmentSubs/UpcomingAppointments";
 import RescheduleRequests from "./AppointmentSubs/RescheduleRequests";
 import PastAppointments from "./AppointmentSubs/PastAppointments";
 import CancelledAppointments from "./AppointmentSubs/CancelledAppointments";
+import "./"
 
 
 const Appointments = () => {

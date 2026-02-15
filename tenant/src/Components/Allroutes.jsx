@@ -162,13 +162,21 @@ const ViewRequestDetails = React.lazy(() =>
 
 const Settings = React.lazy(() => import("../Pages/Settings/settings"));
 
-
+const ClientReportView = React.lazy(() =>
+  import("../Pages/ClientReportView/ClientReportView")
+);
 
 const AllRoutes = () => {
   return (
     <Routes>
       {/* Public / Auth Routes - Available on root domain and subdomains */}
       <Route path="/" element={<AdminLogin />} />
+
+      {/* Public Client Report View - No auth/layout required, link sent via email */}
+      <Route
+        path="/report/client-view/:reportId"
+        element={<ClientReportView />}
+      />
       <Route
         path="/auth/2fa/login-authenticator"
         element={<Admin2FAAuthenticatorLogin />}

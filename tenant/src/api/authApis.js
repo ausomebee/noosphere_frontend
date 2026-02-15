@@ -83,7 +83,7 @@ const SuperAdminChoices = async ({
   tenantId
 }) => {
   try {
-    const response = await axios.post(
+    const response = await axios.patch(
       `${PLAIN_API_URL}/tenant/tenantadminchoices`,
       {
         Authenticator2FA,

@@ -1,90 +1,50 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import api from "../../../../api/organisationStaffApis";
 
-const Client = () => {
-  const appointments = [
-    {
-      id: 1,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 2,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 3,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 4,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 5,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 6,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-    {
-      id: 7,
-      client: "Kelly Rowland",
-      dateAdded: "1/10/2024",
-      email: "email@email.com",
-      emergencyContact: "Michael Scoffied",
-      phoneNo: "201 764 4579",
-      status: "Active",
-      hasActions: true,
-    },
-  ];
+const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Format the appointment data for the table
-  const tableData = appointments.map((appt) => ({
-    id: appt.id,
-    clientName: appt.client || "Unknown Client",
-    dateAdded: appt.dateAdded || "N/A",
-    email: appt.email || "N/A",
-    emergencyContact: appt.emergencyContact || "N/A",
-    phoneNo: appt.phoneNo || "N/A",
-    status: appt.status || "N/A",
-    hasActions: appt.hasActions || true,
+  const fetchClients = useCallback(async () => {
+    if (!staffId || !tenantId || !accessToken) return;
+    setLoading(true);
+    try {
+      const response = await api.GetStaffClients({
+        staffId,
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || response;
+      const list = Array.isArray(data) ? data : [];
+      setClients(list);
+    } catch (error) {
+      console.error("Failed to fetch staff clients:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [staffId, tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  const tableData = clients.map((client) => ({
+    id: client.id,
+    clientName:
+      client.fullName ||
+      `${client.firstName || ""} ${client.lastName || ""}`.trim() ||
+      "Unknown Client",
+    dateAdded: client.createdAt
+      ? new Date(client.createdAt).toLocaleDateString()
+      : "N/A",
+    email: client.email || "N/A",
+    emergencyContact: client.caregiverName || client.emergencyContact || "N/A",
+    phoneNo: client.phoneNumber || client.phoneNo || "N/A",
+    status: client.active !== undefined
+      ? client.active ? "Active" : "Inactive"
+      : client.status || "N/A",
   }));
 
   return (
@@ -97,29 +57,10 @@ const Client = () => {
           { header: "Email", key: "email", type: "text" },
           { header: "Emergency Contact", key: "emergencyContact", type: "text" },
           { header: "Phone", key: "phoneNo", type: "text" },
-          { header: "Status", key: "status", type: "active" }, // Changed key to 'status' and added type
+          { header: "Status", key: "status", type: "active" },
         ]}
-        actions={[
-          {
-            type: "dropdown",
-            label: "More",
-            items: [
-              {
-                label: "View Details",
-                onClick: (row) => console.log("View appointment:", row),
-              },
-              {
-                label: "Reschedule",
-                onClick: (row) => console.log("Reschedule appointment:", row),
-              },
-              {
-                label: "Cancel",
-                onClick: (row) => console.log("Cancel appointment:", row),
-              },
-            ],
-          },
-        ]}
-        showActions
+        loading={loading}
+        showActions={false}
         showCheckbox={false}
         itemsPerPage={10}
         hideSearch
