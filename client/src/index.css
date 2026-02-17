@@ -1053,6 +1053,7 @@ select {
 ============================ */
 .input-group {
   margin-bottom: var(--space-4);
+  min-width: 0;
 }
 
 .input-group-label {
@@ -2318,14 +2319,14 @@ input:checked + .slider:before {
 /* ============================
    10. Responsive Design
 ============================ */
-@media (max-width: var(--breakpoint-lg)) {
+@media (max-width: 1024px) {
   .container {
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }
 }
 
-@media (max-width: var(--breakpoint-md)) {
+@media (max-width: 768px) {
   .container {
     padding-left: var(--space-1);
     padding-right: var(--space-1);
@@ -2470,4 +2471,132 @@ input:checked + .slider:before {
   border: 1px dashed #d1d5db;
 }
 
-/* Responsive utilities would go here - removed for brevity but follow the same consolidation pattern */
+/* ============================
+   11. Responsive Utilities
+============================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .modal-content {
+    max-width: 90vw;
+  }
+
+  .cancel-modal-content {
+    width: 90%;
+    max-width: 700px;
+  }
+
+  .w-600,
+  .w-700,
+  .w-800 {
+    width: 100%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 95vw;
+    margin: 0 8px;
+    max-height: 85vh;
+  }
+
+  .modal-btns {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+
+  .cancel-modal-content {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .cancel-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .cancel-modal-body {
+    padding: 16px;
+  }
+
+  .breadcrumb-trail {
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb-segment {
+    font-size: 16px;
+  }
+
+  .breadcrumb-separator {
+    font-size: 20px;
+  }
+
+  .breadcrumb-current {
+    font-size: 16px;
+  }
+
+  .timesheet-approval-container {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .timesheet-actions-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .timesheet-dropdown {
+    left: 0;
+    right: 0;
+    min-width: auto;
+  }
+
+  .w-400,
+  .w-600,
+  .w-700,
+  .w-800 {
+    width: 100%;
+  }
+
+  .w-473 {
+    width: 100%;
+  }
+
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .modal-content {
+    border-radius: 12px;
+  }
+
+  .btn-lg {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .text-3xl {
+    font-size: var(--text-2xl);
+  }
+
+  .text-4xl {
+    font-size: var(--text-2xl);
+  }
+
+  .p-32 {
+    padding: 16px;
+  }
+
+  .p-48 {
+    padding: 24px;
+  }
+}

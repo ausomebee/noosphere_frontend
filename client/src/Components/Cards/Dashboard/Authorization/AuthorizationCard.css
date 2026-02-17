@@ -142,14 +142,86 @@
   background: #e2e8f0;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
 @media (max-width: 1024px) {
+  .gauge-svg {
+    width: 200px;
+    height: 120px;
+  }
+
+  .gauge-value {
+    font-size: 28px;
+  }
+
+  .gauge-container {
+    margin-bottom: 16px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .authorization-card {
+    padding: 16px;
+  }
+
+  .authorization-header {
+    margin-bottom: 12px;
+  }
+
+  .authorization-title {
+    font-size: 18px;
+  }
+
+  .authorization-subtitle {
+    font-size: 13px;
+  }
+
   .gauge-svg {
     width: 180px;
     height: 110px;
   }
 
   .gauge-value {
-    font-size: 32px;
+    font-size: 24px;
+  }
+
+  .gauge-label {
+    font-size: 11px;
+  }
+
+  .gauge-container {
+    margin-bottom: 16px;
+  }
+
+  .authorization-stats {
+    gap: 12px;
+  }
+
+  .stat-number {
+    font-size: 16px;
+  }
+
+  .stat-text {
+    font-size: 10px;
+  }
+}
+
+/* Responsive - Small Mobile */
+@media (max-width: 480px) {
+  .gauge-svg {
+    width: 150px;
+    height: 90px;
+  }
+
+  .gauge-value {
+    font-size: 20px;
+  }
+
+  .gauge-icon {
+    display: none;
+  }
+
+  .stat-number {
+    font-size: 14px;
   }
 }

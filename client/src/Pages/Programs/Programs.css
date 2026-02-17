@@ -394,35 +394,62 @@
 }
 
 
-/* Responsive Design */
+/* Responsive Design - Tablet */
 @media (max-width: 1024px) {
+  .programs-container {
+    padding: 20px;
+  }
+
+  .programs-title {
+    font-size: 26px;
+  }
+
+  .programs-header {
+    margin-bottom: 24px;
+  }
+
   .target-info-row {
     gap: 16px;
   }
-  
+
   .target-name-section {
     min-width: 150px;
   }
-  
+
   .target-description-section {
     min-width: 150px;
   }
+
+  .program-description {
+    max-width: 250px;
+  }
 }
 
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
   .programs-container {
     padding: 16px;
   }
 
+  .programs-header {
+    margin-bottom: 20px;
+  }
+
   .programs-title {
-    font-size: 28px;
+    font-size: 22px;
+  }
+
+  .programs-subtitle p {
+    font-size: 14px;
   }
 
   .targets-expanded-content {
-    padding: 12px 16px;
+    padding: 12px;
   }
 
   .target-item-row {
+    flex-direction: column;
+    align-items: flex-start;
     padding: 12px;
   }
 
@@ -430,6 +457,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    width: 100%;
   }
 
   .target-name-section {
@@ -440,6 +468,10 @@
   .target-description-section {
     min-width: 100%;
     max-width: 100%;
+  }
+
+  .target-description-row {
+    white-space: normal;
   }
 
   .target-badge-section {
@@ -458,10 +490,21 @@
     justify-content: center;
   }
 
-  
+  .program-description {
+    max-width: 200px;
+  }
 }
 
+/* Responsive Design - Small Mobile */
 @media (max-width: 480px) {
+  .programs-container {
+    padding: 12px;
+  }
+
+  .programs-title {
+    font-size: 20px;
+  }
+
   .target-name-row {
     font-size: 14px;
   }

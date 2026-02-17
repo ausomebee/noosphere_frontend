@@ -313,8 +313,12 @@
   flex: 1;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
+  .profile-container {
+    padding: 12px;
+  }
+
   .personal-info-grid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -335,16 +339,45 @@
     grid-template-columns: 1fr;
   }
 
+  /* Prevent inputs from overflowing grid cells */
+  .name-row > * {
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .section {
-    padding: 24px;
+    padding: 20px 16px;
   }
 
   .profile-header {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .profile-header h1 {
+    font-size: 20px;
+  }
+
+  .form-fields {
+    margin-top: 24px;
+  }
+
+  /* Stack password field vertically so Change button is accessible */
+  .password-input-wrapper {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .password-input-wrapper button {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  .disabled-password-input {
+    width: 100%;
   }
 
   .action-buttons {
-    padding: 20px;
+    padding: 16px;
     flex-direction: column-reverse;
   }
 
@@ -352,26 +385,50 @@
     width: 100%;
   }
 
+  .notification-item {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .notification-label {
+    font-size: 14px;
+  }
+
   .modal-actions {
     flex-direction: column;
   }
 
   .password-modal {
-    padding: 24px;
+    padding: 20px;
+    max-width: calc(100vw - 32px);
   }
 }
 
+/* Responsive Design - Small Mobile */
 @media (max-width: 480px) {
   .profile-container {
-    padding: 10px;
+    padding: 8px;
   }
 
   .section {
-    padding: 20px;
+    padding: 16px 12px;
+  }
+
+  .profile-header {
+    padding: 14px 12px;
   }
 
   .profile-header h1 {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .profile-section-title {
+    font-size: 16px;
+  }
+
+  .section-description {
+    font-size: 13px;
+    margin-bottom: 16px;
   }
 
   .profile-picture {
@@ -380,7 +437,11 @@
   }
 
   .password-modal {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .password-modal h3 {
+    font-size: 18px;
   }
 }
 

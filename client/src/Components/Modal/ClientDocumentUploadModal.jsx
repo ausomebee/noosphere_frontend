@@ -1,6 +1,6 @@
 // src/components/Modal/ClientDocumentUploadModal/UploadDocumentModal.jsx
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import ReusableModal from "./ReusableModal"; // adjust path as needed
 import FileUploadArea from "../FileUpload/FileUploadArea"; // adjust path
 import { showToast } from "../../Helper/ShowToast"; // adjust path

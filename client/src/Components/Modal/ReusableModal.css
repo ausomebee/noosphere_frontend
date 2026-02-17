@@ -451,3 +451,53 @@
   margin: 0 8px;
 }
 
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .modal-overlay > * {
+    max-width: 95vw;
+    margin: 0 8px;
+  }
+
+  .re-modal-header {
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .ReuseableModal-body {
+    padding: 12px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px 12px;
+  }
+
+  .modal-button {
+    width: 100%;
+  }
+
+  .modal-close-btn {
+    top: 12px;
+    right: 12px;
+  }
+
+  .custom-time-container {
+    flex-wrap: wrap;
+  }
+
+  .custom-time-input,
+  .custom-time-input-two {
+    width: 70px;
+    font-size: 14px;
+  }
+
+  .custom-to-text,
+  .custom-to-text-two {
+    font-size: 14px;
+  }
+}
+

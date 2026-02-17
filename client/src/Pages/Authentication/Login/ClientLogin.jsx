@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -7,7 +6,7 @@ import AuthLayout from "../AuthLayout";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { ClientLogin } from "../../../ReduxStore/features/authentication";
 
 // Validation schema 

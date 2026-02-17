@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import DashboardLayout from "../../layouts/ClientLayout";
 
 import "./Home.css";
@@ -13,12 +13,11 @@ import RescheduleModal from "../../Components/Modal/UpcomingDashboardModal/Resch
 import AppointmentDetailsModal from "../../Components/Modal/UpcomingDashboardModal/AppointmentDetailsModal";
 import SessionFeedbackModal from "../../Components/Modal/UpcomingDashboardModal/ReviewSessionModal";
 import SuccessModal from "../../Components/Modal/SuccessModal";
-import { showToast } from "../../Helper/ShowToast";
 
 // API Functions
 import api from "../../api/homeApis";
 
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 // ============================================================================
 // Loading Spinner Component (Embedded)
@@ -71,6 +70,16 @@ const LoadingSpinner = ({ size = "medium", message = "Loading..." }) => {
   );
 };
 
+// Convert "HH:mm" or "HH:mm:ss" to "h:mm AM/PM"
+const formatTimeTo12h = (time) => {
+  if (!time) return "";
+  const [h, m] = time.split(":");
+  const hour = parseInt(h, 10);
+  const period = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${m.padStart(2, "0")} ${period}`;
+};
+
 // ============================================================================
 // Main Home Component
 // ============================================================================
@@ -101,17 +110,7 @@ const Home = () => {
     cancelled: [],
   });
 
-  const clientId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId
-  );
-  const tenantClientId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id
-  );
-  const tenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.tenantId
-  );
-  const accessToken = useSelector((state) => state.auth?.user?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.user?.refreshToken);
+  const { clientId, tenantClientId, tenantId, accessToken, refreshToken } = useAuth();
 
   // Modal States
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
@@ -220,16 +219,6 @@ const Home = () => {
 
     fetchAuthorizationCodes();
   }, [tenantClientId, accessToken, refreshToken]);
-
-  // Convert "HH:mm" or "HH:mm:ss" to "h:mm AM/PM"
-  const formatTimeTo12h = (time) => {
-    if (!time) return "";
-    const [h, m] = time.split(":");
-    const hour = parseInt(h, 10);
-    const period = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${m.padStart(2, "0")} ${period}`;
-  };
 
   // Fetch Appointments Data based on active tab
   useEffect(() => {
@@ -528,9 +517,8 @@ const Home = () => {
   }, [activeTab, clientId, accessToken, refreshToken, refreshKey]);
 
   // Prepare authorization card data for selected service code
-  const getAuthorizationCardData = () => {
+  const authorizationCardData = useMemo(() => {
     if (!selectedServiceCode) return null;
-
     return {
       totalAuthorized: selectedServiceCode.totalUnits || 0,
       totalCompleted: selectedServiceCode.totalUsed || 0,
@@ -538,19 +526,22 @@ const Home = () => {
       serviceCode: selectedServiceCode.code,
       description: selectedServiceCode.description,
     };
-  };
+  }, [selectedServiceCode]);
 
   // Service code options for dropdown
-  const serviceCodeOptions = authorizationData.map(item => ({
-    value: item.serviceCodeId,
-    label: `${item.code} - ${item.description}`,
-  }));
+  const serviceCodeOptions = useMemo(() =>
+    authorizationData.map(item => ({
+      value: item.serviceCodeId,
+      label: `${item.code} - ${item.description}`,
+    })),
+    [authorizationData]
+  );
 
   // Handle service code change
-  const handleServiceCodeChange = (value) => {
+  const handleServiceCodeChange = useCallback((value) => {
     const selected = authorizationData.find(item => item.serviceCodeId === value);
     setSelectedServiceCode(selected);
-  };
+  }, [authorizationData]);
 
   const ITEMS_PER_PAGE = 10;
 
@@ -558,28 +549,34 @@ const Home = () => {
   const awaitingCount = appointmentsData.awaiting.length;
 
   // Paginate data
-  const currentTabData = appointmentsData[activeTab] || [];
+  const currentTabData = useMemo(() =>
+    appointmentsData[activeTab] || [],
+    [appointmentsData, activeTab]
+  );
   const totalPages = Math.max(1, Math.ceil(currentTabData.length / ITEMS_PER_PAGE));
-  const paginatedData = currentTabData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+  const paginatedData = useMemo(() =>
+    currentTabData.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+    ),
+    [currentTabData, currentPage]
   );
 
   // Reset page when tab changes
-  const handleTabChange = (tab) => {
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { key: "upcoming", label: "Upcoming" },
     { key: "awaiting", label: "Awaiting feedback", count: awaitingCount },
     { key: "reschedule", label: "Reschedule Requests" },
     { key: "completed", label: "Completed" },
     { key: "cancelled", label: "Cancelled" },
-  ];
+  ], [awaitingCount]);
 
-  const columns = [
+  const columns = useMemo(() => [
     { key: "sessionType", title: "Session Type" },
     { key: "serviceType", title: "Service Type(s)" },
     {
@@ -590,7 +587,7 @@ const Home = () => {
       ),
     },
     { key: "clinician", title: "Clinician(s)" },
-  ];
+  ], []);
 
   // Actions per tab
   const getActions = () => {
@@ -740,28 +737,19 @@ const Home = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  // Handle session approval submission
+  // Handle session approval submission - returns promise so modal can await it
   const handleSessionApproval = async (approvalData) => {
-    try {
-      // Call the session approval API endpoint with correct body structure
-      const response = await api.ApproveSession({
-        sessionId: approvalData.sessionId,
-        confirmDelivery: approvalData.confirmDelivery,
-        rateService: approvalData.rateService,
-        rateTherapist: approvalData.rateTherapist,
-        feedback: approvalData.feedback,
-        signature: approvalData.signature,
-        accessToken,
-        refreshToken,
-      });
-
-      console.log("Session approved successfully:", response);
-      handleFeedbackSuccess();
-    } catch (error) {
-      console.error("Failed to approve session:", error);
-      // Show error toast to the user
-      showToast( error.message || "Failed to submit approval. Please try again.","error");
-    }
+    await api.ApproveSession({
+      sessionId: approvalData.sessionId,
+      confirmDelivery: approvalData.confirmDelivery,
+      rateService: approvalData.rateService,
+      rateTherapist: approvalData.rateTherapist,
+      feedback: approvalData.feedback,
+      signature: approvalData.signature,
+      accessToken,
+      refreshToken,
+    });
+    handleFeedbackSuccess();
   };
 
   // Handle period change for chart
@@ -802,7 +790,7 @@ const Home = () => {
             selectedPeriod={chartPeriod}
           />
           <AuthorizationCard 
-            data={getAuthorizationCardData()}
+            data={authorizationCardData}
             serviceCodeOptions={serviceCodeOptions}
             onServiceCodeChange={handleServiceCodeChange}
             selectedServiceCodeId={selectedServiceCode?.serviceCodeId}
@@ -889,10 +877,7 @@ const Home = () => {
             setSelectedAppointment(null);
           }}
           appointment={selectedAppointment}
-          onSave={(data) => {
-            console.log("Feedback & signature submitted:", data);
-            handleSessionApproval(data);
-          }}
+          onSave={handleSessionApproval}
         />
 
         <SuccessModal

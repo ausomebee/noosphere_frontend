@@ -1,15 +1,16 @@
 import axios from "axios";
-
-// Define your API endpoints
+import { setTokens } from "../ReduxStore/features/authentication";
+import { getFingerprint } from "../Helper/fingerprint";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
+const fingerprintHeader = () => ({ "x-fingerprint": getFingerprint() });
 
 const ClientLogin = async ({ email, password }) => {
   try {
     const response = await axios.post(`${PLAIN_API_URL}/client/login`, {
       email,
       password,
-    });
+    }, { headers: fingerprintHeader() });
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Login failed");
@@ -20,6 +21,8 @@ const ClientForgetPassword = async ({ email }) => {
   try {
     const response = await axios.patch(
       `${PLAIN_API_URL}/client/initiate/password-reset/${email}`,
+      null,
+      { headers: fingerprintHeader() },
     );
     return response;
   } catch (error) {
@@ -37,6 +40,7 @@ const ClientSetPassword = async ({ clientTenantId, password }) => {
         clientTenantId,
         password,
       },
+      { headers: fingerprintHeader() },
     );
     return response;
   } catch (error) {
@@ -50,19 +54,15 @@ export const refreshAccessToken = async (refreshToken, dispatch) => {
   try {
     const response = await axios.post(`${PLAIN_API_URL}/refresh-token`, {
       creatorToken: refreshToken,
-    });
+    }, { headers: fingerprintHeader() });
     const { accessToken } = response.data;
 
-    console.log("this is the new access token", accessToken);
-
-    if (accessToken) {
-      console.log("this is here 12");
-      dispatch(updateAccessToken(accessToken));
-      console.log("this is here 13");
+    if (accessToken && dispatch) {
+      dispatch(setTokens({ accessToken, refreshToken }));
       return accessToken;
     }
-  } catch (error) {
-    console.error("Failed to refresh token", error);
+  } catch {
+    // Token refresh failed — caller handles redirect
   }
   return null;
 };
