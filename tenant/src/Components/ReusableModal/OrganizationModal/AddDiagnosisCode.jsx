@@ -8,6 +8,7 @@ import {
   TextareaInput,
   SwitchInput,
 } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const schema = yup.object().shape({
@@ -56,6 +57,11 @@ const AddDiagnosisCode = ({
     });
   }, [initialData, isOpen, reset]);
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const onSubmit = async (data) => {
     setSubmitting(true);
     setSubmitError("");
@@ -81,7 +87,7 @@ const AddDiagnosisCode = ({
       title={mode === "edit" ? "Edit Diagnosis Code" : "Add Diagnosis Code"}
       primaryButtonText={submitting ? "Saving..." : mode === "edit" ? "Save Changes" : "Save"}
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();

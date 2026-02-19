@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
@@ -8,11 +8,8 @@ import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
 const PayrollCycles = () => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
   const [tableData, setTableData] = useState([]);
-  const [compensationTypes, setCompensationTypes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -48,28 +45,6 @@ const PayrollCycles = () => {
     },
   ];
 
-  // Fetch compensation types
-  const fetchCompensationTypes = useCallback(async () => {
-    try {
-      const data = await api.GetCompensationTypeByTenantId({
-        tenantId,
-        accessToken,
-        refreshToken,
-      });
-      console.log("Fetched compensation types:", JSON.stringify(data, null, 2));
-      setCompensationTypes(
-        data.data.map((item) => ({
-          id: item.id,
-          name: item.name || "Unknown",
-        })),
-      );
-    } catch (error) {
-      console.error("Error fetching compensation types:", error);
-      showToast("Failed to load compensation types", "error");
-      setCompensationTypes([]);
-    }
-  }, [tenantId, accessToken, refreshToken]);
-
   // Fetch payroll cycles
   const fetchPayrollCycles = useCallback(async () => {
     setLoading(true);
@@ -83,7 +58,7 @@ const PayrollCycles = () => {
       const transformedData = data.data.map((item) => ({
         id: item.id,
         name: item.name || "Unknown",
-        compensationTypeId: item.compensationTypeId || "",
+        compensationType: item.compensationType || "",
         intervals: item.interval || 1,
         startDate: item.startDate || "",
         autoRun: item.autoRun !== undefined ? item.autoRun : false,
@@ -134,7 +109,7 @@ const PayrollCycles = () => {
       const payload = {
         tenantId,
         name: data.name,
-        compensationTypeId: data.appliesTo,
+        compensationType: data.appliesTo,
         interval: Number(data.intervals),
         startDate: data.startDate,
         autoRun: data.autoRun,
@@ -178,19 +153,12 @@ const PayrollCycles = () => {
     ],
   );
 
-  // Fetch compensation types when tenantId changes
+  // Fetch payroll cycles when tenantId changes
   useEffect(() => {
     if (tenantId) {
-      fetchCompensationTypes();
-    }
-  }, [tenantId, fetchCompensationTypes]);
-
-  // Fetch payroll cycles when tenantId or compensationTypes change
-  useEffect(() => {
-    if (tenantId && compensationTypes.length > 0) {
       fetchPayrollCycles();
     }
-  }, [tenantId, compensationTypes, fetchPayrollCycles]);
+  }, [tenantId, fetchPayrollCycles]);
 
   return (
     <div>
@@ -206,7 +174,7 @@ const PayrollCycles = () => {
           }}
         />
       </div>
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={Columns}
@@ -227,7 +195,6 @@ const PayrollCycles = () => {
         onSave={handleSave}
         mode={mode}
         initialData={selectedRow || {}}
-        compensationTypes={compensationTypes}
       />
     </div>
   );

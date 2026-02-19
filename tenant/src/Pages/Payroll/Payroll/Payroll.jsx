@@ -1,81 +1,59 @@
-import React, { useMemo, useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
+import React, { useState, useEffect, useCallback } from "react";
 import Button from "../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
 import NewPayrollModal from "../../../Components/ReusableModal/PayrollModal/NewPayrollModal";
+import useAuth from "../../../hooks/useAuth";
+import payrollApi from "../../../api/payrollApi";
+import { showToast } from "../../../Helper/ShowToast";
 
 const Payroll = () => {
   const navigate = useNavigate();
+  const { tenantId, accessToken, refreshToken } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [tableData, setTableData] = useState([
-    {
-      id: "1",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "2",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "3",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "4",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "5",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "6",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "7",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-    {
-      id: "8",
-      date: "12/10/2024",
-      payPeriod: "12/10/24 - 11/11/24",
-      noOfStaff: "8",
-      totalPayrollValue: "$18200",
-      hasActions: true,
-    },
-  ]);
+  const [loading, setLoading] = useState(false);
+  const [tableData, setTableData] = useState([]);
+
+  const fetchPayrollStats = useCallback(async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const response = await payrollApi.GetPayrollCycleStats({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || response || [];
+      const rows = Array.isArray(data)
+        ? data.map((item) => ({
+            id: item.id,
+            date: item.payrollDate
+              ? new Date(item.payrollDate).toLocaleDateString("en-US", {
+                  month: "2-digit",
+                  day: "2-digit",
+                  year: "numeric",
+                })
+              : "-",
+            payPeriod: item.payPeriod || "-",
+            noOfStaff: item.numberOfStaffs?.toString() || "0",
+            totalPayrollValue: item.totalPayrollValue != null
+              ? `$${Number(item.totalPayrollValue).toLocaleString()}`
+              : "$0",
+            hasActions: true,
+          }))
+        : [];
+      setTableData(rows);
+    } catch (error) {
+      showToast(error.message || "Failed to fetch payroll stats", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    fetchPayrollStats();
+  }, [fetchPayrollStats]);
 
   const handleActionClick = (row) => {
     navigate(`/payroll/payroll/view-breakdown/${row.id}`);
@@ -88,77 +66,16 @@ const Payroll = () => {
     { header: "Total Payroll Value", key: "totalPayrollValue", type: "text" },
   ];
 
-  const handleNewPayroll = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
+  const handleSavePayroll = () => {
     setIsModalOpen(false);
-  };
-
-  const handleSavePayroll = (payrollData) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const fromDate = new Date(payrollData.from).toLocaleDateString("en-US", {
-        month: "2-digit",
-        day: "2-digit",
-        year: "2-digit",
-      });
-      const toDate = new Date(payrollData.to).toLocaleDateString("en-US", {
-        month: "2-digit",
-        day: "2-digit",
-        year: "2-digit",
-      });
-
-      const totalPayrollValue = payrollData.employees.reduce((sum, emp) => {
-        const baseGross = emp.paymentSchedule === "Hourly"
-          ? emp.hourlyRate * emp.numberOfHours
-          : emp.basicPay;
-        const gross = baseGross + emp.fixedBonus +
-          emp.additionalIncomes.reduce((sum, inc) => {
-            if (inc.unitType === "percentage_based") {
-              return sum + (baseGross * (inc.amount / 100));
-            } else if (inc.unitType === "hourly_rate" || inc.unitType === "hourly_rate_with_overtime") {
-              return sum + (inc.amount * emp.numberOfHours);
-            }
-            return sum + inc.amount;
-          }, 0);
-        const deductions = emp.taxDeduction + emp.pensionDeduction +
-          emp.additionalDeductions.reduce((sum, ded) => {
-            if (ded.unitType === "percentage_based") {
-              return sum + (gross * (ded.amount / 100));
-            }
-            return sum + ded.amount;
-          }, 0);
-        return sum + (gross - deductions);
-      }, 0);
-
-      const newPayroll = {
-        id: (tableData.length + 1).toString(),
-        date: new Date().toLocaleDateString("en-US", {
-          month: "2-digit",
-          day: "2-digit",
-          year: "numeric",
-        }),
-        payPeriod: `${fromDate} - ${toDate}`,
-        noOfStaff: payrollData.employees.length.toString(),
-        totalPayrollValue: `$${totalPayrollValue.toLocaleString()}`,
-        hasActions: true,
-        employees: payrollData.employees,
-      };
-
-      setTableData((prev) => [newPayroll, ...prev]);
-      setIsLoading(false);
-      setIsModalOpen(false);
-      console.log("Payroll created successfully:", newPayroll);
-    }, 2000);
+    fetchPayrollStats();
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div>
-        <h1 className="appointment-sched-title">Payroll</h1>
-        <h3 className="text-xl text-gray-700 font-500">
+        <h1 className="text-2xl text-gray-400 font-semibold">Payroll</h1>
+        <h3 className="text-base text-gray-700 font-500">
           Run your payroll seamlessly
         </h3>
       </div>
@@ -168,12 +85,11 @@ const Payroll = () => {
           label="New Payroll"
           variant="primary"
           icon={<FaPlus />}
-          onClick={handleNewPayroll}
-          loading={isLoading}
+          onClick={() => setIsModalOpen(true)}
         />
       </div>
 
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={columns}
@@ -184,15 +100,16 @@ const Payroll = () => {
           actionText="View Breakdown"
           actionLinkPrefix="/claims/view/"
           onActionClick={handleActionClick}
+          loading={loading}
         />
       </div>
 
       <NewPayrollModal
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={() => setIsModalOpen(false)}
         onSave={handleSavePayroll}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

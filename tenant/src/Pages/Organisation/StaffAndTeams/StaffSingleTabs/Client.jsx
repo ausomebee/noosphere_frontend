@@ -48,7 +48,7 @@ const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
   }));
 
   return (
-    <div className="p-20">
+    <div className="p-6">
       <CustomTable
         data={tableData}
         columns={[

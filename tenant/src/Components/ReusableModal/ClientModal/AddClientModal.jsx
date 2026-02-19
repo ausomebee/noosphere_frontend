@@ -9,7 +9,8 @@ import React, {
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../ReusableModal/ReusableModal";
 import {
   setDraftField,
@@ -19,6 +20,7 @@ import { SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
+import { showToast } from "../../../Helper/ShowToast";
 
 // ==================== SCHEMA ====================
 const schema = yup.object().shape({
@@ -144,9 +146,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const [loadingPayers, setLoadingPayers] = useState(false);
 
   const hasInitialized = useRef(false);
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   // Format DOB from ISO string → YYYY-MM-DD
   const formatDateForInput = (isoString) => {
@@ -536,6 +536,11 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   //   );
   // };
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const onFinalSubmit = async (data) => {
     setSubmitting(true);
     try {
@@ -592,13 +597,19 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const handlePrimaryButtonClick = async () => {
     if (activeTab === "Documents") {
       const valid = await trigger();
-      if (valid) handleSubmit(onFinalSubmit)();
+      if (valid) {
+        handleSubmit(onFinalSubmit, onValidationError)();
+      } else {
+        showToast("Please fill in all required fields before proceeding", "error");
+      }
     } else {
       const isValid = await trigger();
       if (isValid) {
         dispatch(setDraftField(getValues()));
         const idx = tabs.findIndex((t) => t.name === activeTab);
         if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1].name);
+      } else {
+        showToast("Please fill in all required fields before proceeding", "error");
       }
     }
   };

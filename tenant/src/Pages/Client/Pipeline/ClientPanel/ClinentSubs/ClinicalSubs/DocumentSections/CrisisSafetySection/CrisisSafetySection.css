@@ -108,7 +108,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .crisis-plan-card {
     padding: 16px;
   }

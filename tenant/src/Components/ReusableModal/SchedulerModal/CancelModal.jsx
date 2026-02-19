@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 const validationSchema = Yup.object({
   reason: Yup.string().required("Cancellation reason is required"),
 });
 
 const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -20,16 +22,22 @@ const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
     defaultValues: { reason: "" },
   });
 
-  const onSubmit = (data) => {
-    onSave({ appointments, reason: data.reason });
-    reset();
-    onClose();
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      await onSave({ appointments, reason: data.reason });
+      reset();
+      onClose();
+    } catch {
+      showToast("Failed to cancel appointment", "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onError = (errors) => {
-    console.group("CancelModal Validation Errors");
-    console.error("Validation failed with errors:", JSON.stringify(errors, null, 2));
-    console.groupEnd();
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   return (
@@ -38,9 +46,10 @@ const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
       onClose={onClose}
       primaryButtonText="Cancel Appointment"
       secondaryButtonText="Close"
-      onPrimaryButtonClick={handleSubmit(onSubmit, onError)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={onClose}
       size="medium"
+      primaryButtonLoading={isLoading}
     >
       <div>
         <div className="items-center flex justify-center">

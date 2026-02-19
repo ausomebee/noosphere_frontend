@@ -285,8 +285,6 @@ const RescheduleAppointments = async ({
       rescheduled,
     };
 
-    console.log("Sending payload:", payload);
-
     const response = await authFetch.put(
       `${PLAIN_API_URL}/appointments`,
       payload

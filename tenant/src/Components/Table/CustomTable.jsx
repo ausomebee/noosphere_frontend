@@ -248,7 +248,6 @@ if (
 
   const handlePageChange = useCallback(
     (page) => {
-      console.log("Changing page to:", page);
       setCurrentPage(page);
       setSelectedRows([]);
       setSelectedItems([]);
@@ -261,7 +260,6 @@ if (
 
   const handleCheckboxChange = useCallback(
     (rowIndex, row) => {
-      console.log("Checkbox change for row:", rowIndex, row);
       const newSelectedRows = selectedRows.includes(rowIndex)
         ? selectedRows.filter((index) => index !== rowIndex)
         : [...selectedRows, rowIndex];
@@ -270,12 +268,6 @@ if (
         : [...selectedItems, row];
       setSelectedRows(newSelectedRows);
       setSelectedItems(newSelectedItems);
-      console.log(
-        "New selected rows:",
-        newSelectedRows,
-        "New selected items:",
-        newSelectedItems
-      );
       if (onSelectionChange) {
         onSelectionChange(newSelectedRows, newSelectedItems);
       }
@@ -308,7 +300,6 @@ if (
   }, [selectedRows, currentData, onSelectionChange]);
 
   const handleExportCSV = useCallback(() => {
-    console.log("Exporting to CSV");
     exportTableData(
       data,
       columns,
@@ -319,7 +310,6 @@ if (
   }, [data, columns, tableName]);
 
   const handleExportPDF = useCallback(() => {
-    console.log("Exporting to PDF");
     exportTableToPDF(
       data,
       columns,
@@ -330,7 +320,6 @@ if (
   }, [data, columns, tableName]);
 
   const handlePrint = useCallback(() => {
-    console.log("Printing table");
     printTableData(data, columns, tableName);
   }, [data, columns, tableName]);
 
@@ -346,7 +335,6 @@ if (
   );
 
   const toggleExportDropdown = useCallback(() => {
-    console.log("Toggling export dropdown");
     setExportDropdownOpen((prev) => !prev);
     if (!exportDropdownOpen) {
       setTimeout(() => positionExportDropdown(), 0);
@@ -428,7 +416,6 @@ if (
 
   const handleDateRangeSelect = useCallback(
     (range) => {
-      console.log("Date range selected:", range);
       if (!filters) return;
       const updatedValues = {
         ...filterValues,
@@ -445,7 +432,6 @@ if (
   );
 
   const handleResetFilters = useCallback(() => {
-    console.log("Resetting filters");
     if (!filters) return;
     setFilterValues({
       filter_type: "",
@@ -588,4 +574,4 @@ if (
   );
 };
 
-export default CustomTable;
+export default React.memo(CustomTable);

@@ -8,9 +8,9 @@ import ProgramsTab from "./ClinentSubs/Programs";
 import AppointmentsScheduleTab from "./ClinentSubs/AppointmentsAndSchedules";
 import AuthorizationTab from "./ClinentSubs/Authorization";
 import ClinicalReportsTab from "./ClinentSubs/ClinicalReports";
-import DashboardLayout from "../../../../Layout/TenantLayout";
+
 import api from "../../../../api/clientPanelApis"; // adjust path
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 
 const ClientPanel = () => {
@@ -22,8 +22,7 @@ const ClientPanel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
 
   const isViewMode = location.pathname.includes("/view-client/");
 
@@ -96,7 +95,7 @@ const ClientPanel = () => {
     : "Unknown";
 
   return (
-    <DashboardLayout>
+    <>
       <div className="client-panel-container">
         {/* Header */}
         <div className="manage-column-header">
@@ -169,7 +168,7 @@ const ClientPanel = () => {
         {/* Dynamic Content */}
         {renderTabContent()}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema
 const payrollItemSchema = yup.object().shape({
@@ -50,7 +51,6 @@ const payrollItemSchema = yup.object().shape({
 
 // Transform initial data to form data
 const transformInitialData = (initialData, mode) => {
-  console.log("transformInitialData - input:", JSON.stringify(initialData, null, 2));
   const rate = initialData.rate || {};
   const formData = {
     name: initialData.name || "",
@@ -63,7 +63,6 @@ const transformInitialData = (initialData, mode) => {
     },
     status: initialData.status !== undefined ? initialData.status : true,
   };
-  console.log("transformInitialData - output:", JSON.stringify(formData, null, 2));
   return formData;
 };
 
@@ -106,16 +105,19 @@ const PayrollItemModal = ({
   const unitType = watch("unitType");
 
   useEffect(() => {
-    console.log("initialData:", JSON.stringify(initialData, null, 2));
     if (isOpen) {
       reset(mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues);
     }
   }, [isOpen, mode, initialData, reset]);
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
-      console.log("Form data on save:", JSON.stringify(data, null, 2));
       await onSave(data);
       reset(defaultFormValues);
       onClose();
@@ -159,7 +161,7 @@ const PayrollItemModal = ({
       primaryButtonText={isLoading ? "Saving..." : `Save ${isDeduction ? "Deduction" : "Income Item"}`}
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
         onClose();

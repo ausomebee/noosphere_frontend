@@ -1,6 +1,7 @@
 // ClinicalReportTemplateBuilder.jsx
 import React, { useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../../../../../hooks/useAuth";
 import { GrDrag } from "react-icons/gr";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaChevronLeft, FaEllipsisV } from "react-icons/fa";
@@ -21,7 +22,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import "./ClinicalReportBuilder.css";
-import DashboardLayout from "../../../../../../Layout/TenantLayout";
+
 import ClientInformationSection from "./DocumentSections/ClientInformationSection/ClientInformationSection";
 import AssessmentsSection from "./DocumentSections/AssessmentsSections/AssessmentsSection";
 import TargetBehavioursSection from "./DocumentSections/TargetBehavioursSections/TargetBehavioursSection";
@@ -388,9 +389,7 @@ const ClinicalReportTemplateBuilder = () => {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const {
     id: templateId,
@@ -640,7 +639,7 @@ const ClinicalReportTemplateBuilder = () => {
   }, [actionMenuOpen, dispatch]);
 
   return (
-    <DashboardLayout>
+    <>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -659,7 +658,7 @@ const ClinicalReportTemplateBuilder = () => {
             </h1>
           </div>
 
-          <div className="mt-20 items-start justify-start bg-gray-50 rounded-lg p-4">
+          <div className="mt-6 items-start justify-start bg-gray-50 rounded-lg p-4">
             <TextInput
               label="Template Name"
               placeholder="Enter template name"
@@ -823,7 +822,7 @@ const ClinicalReportTemplateBuilder = () => {
           />
         </div>
       </DndContext>
-    </DashboardLayout>
+    </>
   );
 };
 

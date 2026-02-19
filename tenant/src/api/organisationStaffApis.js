@@ -196,8 +196,6 @@ const UpdateTenantStaff = async ({
       payroll: payrollPayload,
     };
 
-    console.log("UpdateTenantStaff Payload:", payload);
-
     const response = await authFetch.put(
       `${PLAIN_API_URL}/organization-staff/staff`,
       payload,
@@ -647,6 +645,24 @@ const GetStaffClients = async ({
   }
 };
 
+const GetStaffPayrollCycleStats = async ({
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/payroll-cycles/staff/${staffId}/stats`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff payroll cycle stats failed",
+    );
+  }
+};
+
 export default {
   CreateTenantStaff,
   UpdateTenantStaff,
@@ -669,4 +685,5 @@ export default {
   UpdateStaffAvailability,
   GetStaffAvailability,
   GetStaffClients,
+  GetStaffPayrollCycleStats,
 };

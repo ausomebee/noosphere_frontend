@@ -47,59 +47,8 @@
     text-align: center; /* Center the text within the h1 */
   }
   
-  .tabs {
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid #e5e7eb;
-    margin-bottom: 1.5rem;
-    position: relative;
-    width: 100%;
-  }
-  
-  .tab {
-    background: none;
-    flex: 1;
-    border: none;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #6b7280;
-    cursor: pointer;
-    position: relative;
-  }
-  
-  .tab.active {
-    color: #004ABA;
-    font-weight: 600;
-  }
-  
-  .tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: #004ABA;
-  }
-  
-  .candidate-count {
-    background: #004ABA;
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 9999px;
-  margin-left: 5px;
-  }
-  
-  .tab-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 0.5rem;
-  }
-  
+  /* candidate-count, tab-content → moved to src/styles/Tabs.css */
+
   .basic-setup {
     display: flex;
     flex-direction: column;
@@ -173,4 +122,62 @@
     color: red;
     font-size: 12px;
     margin-top: 4px;
+  }
+
+  /* Responsive: Mobile */
+  @media (max-width: 640px) {
+    .manage-column-container {
+      padding: 0.75rem;
+    }
+
+    .manage-column-header {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .manage-column-header h1 {
+      font-size: 1.2rem;
+      text-align: left;
+    }
+
+    /* Tab content: full width, no centering */
+    .tab-content {
+      padding: 0;
+    }
+
+    .basic-setup,
+    .tasks-requirements {
+      max-width: 100%;
+    }
+
+    /* Candidates tab: table overflow */
+    .candidates-tab {
+      padding: 0.5rem 0;
+    }
+
+    .candidates-content {
+      overflow-x: auto;
+    }
+
+    /* Add candidate button: full width */
+    .add-candidate-manage {
+      justify-content: stretch;
+    }
+  }
+
+  /* Responsive: Tablet */
+  @media (min-width: 641px) and (max-width: 992px) {
+    .manage-column-container {
+      padding: 1rem;
+    }
+
+    .basic-setup,
+    .tasks-requirements {
+      max-width: 100%;
+    }
+
+    .candidates-content {
+      overflow-x: auto;
+    }
   }

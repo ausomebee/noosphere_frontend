@@ -478,7 +478,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
   };
 
   return (
-    <div className="p-20">
+    <div className="p-6">
       <div className="tabs">
         <button
           className={`tab ${activeTab === "calendar" ? "active" : ""}`}
@@ -576,7 +576,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
                   placeholder="Search"
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  width={300}
+                  width="100%"
                 />
               </div>
             </div>

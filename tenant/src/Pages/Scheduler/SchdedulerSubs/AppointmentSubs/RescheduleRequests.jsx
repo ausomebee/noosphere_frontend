@@ -6,7 +6,7 @@ import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
 import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import api from "../../../../api/AppointmentApi";
 
 // Convert 24-hour time to 12-hour AM/PM
@@ -19,13 +19,8 @@ const convertTo12Hour = (timeStr) => {
 };
 
 const RescheduleRequests = ({ counts, setCounts }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client",
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const role = authRole?.name ?? "Client";
 
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);

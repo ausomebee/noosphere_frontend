@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import DashboardLayout from "../../Layout/TenantLayout";
+
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import "./TargetSingle.css";
@@ -11,7 +11,7 @@ import {
 import Button from "../../Components/Button/Button";
 import Chart from "react-apexcharts";
 import CustomTable from "../../Components/Table/CustomTable";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import api from "../../api/ProgramLibraryApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
@@ -29,8 +29,7 @@ const TargetSingle = () => {
   const [searchParams] = useSearchParams();
   const targetId = searchParams.get("targetId");
   const clientId = searchParams.get("clientId");
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken, tenantId } = useAuth();
 
   // State for dropdowns and data
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -39,11 +38,20 @@ const TargetSingle = () => {
   const [clientTargetId, setClientTargetId] = useState(null);
   const [hasPerformanceData, setHasPerformanceData] = useState(false);
   const [hasSessionData, setHasSessionData] = useState(false);
-  const [showPerformanceGraph, setShowPerformanceGraph] = useState(true);
+  const [showPerformanceGraph] = useState(true);
   const [timeRange, setTimeRange] = useState("All time");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Session data state
+  const [sessionData, setSessionData] = useState([]);
+  const [sessionLoading, setSessionLoading] = useState(false);
+
+  // Performance data state
+  const [performanceData, setPerformanceData] = useState(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState(null);
 
   // Modal states
   const [activeModal, setActiveModal] = useState(null);
@@ -53,49 +61,6 @@ const TargetSingle = () => {
   const exportButtonRef = useRef(null);
   const exportDropdownRef = useRef(null);
   const tableContainerRef = useRef(null);
-
-  // Performance graph data (mock for now)
-  const performanceData = {
-    series: [
-      {
-        name: "Sessions",
-        data: [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 45],
-      },
-    ],
-    options: {
-      chart: {
-        type: "area",
-        height: 200,
-        toolbar: { show: false },
-      },
-      dataLabels: { enabled: false },
-      stroke: { curve: "smooth", width: 2 },
-      fill: {
-        type: "gradient",
-        gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 1 },
-      },
-      xaxis: {
-        categories: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ],
-        labels: { style: { colors: "#6B7280" } },
-      },
-      yaxis: { labels: { show: false } },
-      colors: ["#3B82F6"],
-      tooltip: { x: { format: "MMM" } },
-    },
-  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -220,6 +185,267 @@ const TargetSingle = () => {
     fetchData();
   }, [fetchData]);
 
+  // Fetch session data from API
+  const fetchSessionData = useCallback(async () => {
+    if (!targetId || !clientId || !tenantId) return;
+    setSessionLoading(true);
+    try {
+      const response = await api.GetSessionsByTarget({
+        targetId,
+        clientId,
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data?.data || [];
+      const mapped = data.map((session, index) => ({
+        id: session.id,
+        sessions: `Session ${index + 1}`,
+        clientName: session.clientName || "N/A",
+        sessionType: session.sessionTypeName || "N/A",
+        clinician: session.clinician || "N/A",
+        clientApproval: session.clientApprovalStatus || "PENDING",
+        supervisorApproval: session.supervisorApprovalStatus || "PENDING",
+        totalHours: session.totalHours
+          ? `${session.totalHours.toFixed(2)} hrs`
+          : "0 hrs",
+        dateTime: session.date
+          ? {
+              date: new Date(session.date).toLocaleDateString("en-US"),
+              time: new Date(session.date).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }
+          : { date: "N/A", time: "" },
+        payer:
+          session.authorizationsUsed?.[0]?.payerDetails?.payerName || "N/A",
+        hasActions: true,
+      }));
+      setSessionData(mapped);
+    } catch (err) {
+      console.error("Failed to fetch sessions:", err);
+      setSessionData([]);
+    } finally {
+      setSessionLoading(false);
+    }
+  }, [targetId, clientId, tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (hasSessionData) {
+      fetchSessionData();
+    }
+  }, [hasSessionData, fetchSessionData]);
+
+  // Fetch performance data from API
+  const fetchPerformanceData = useCallback(async () => {
+    if (!targetId || !clientId) return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      const response = await api.GetClientTargetPerformance({
+        clientId,
+        targetId,
+        accessToken,
+        refreshToken,
+      });
+
+      const monthlyData = response.data?.data || [];
+
+      const values = monthlyData.map((item) =>
+        item.average !== null ? Number(item.average) : 0
+      );
+      const labels = monthlyData.map((item) => item.monthName);
+
+      const hasData = monthlyData.some(
+        (item) => item.average !== null && item.average > 0
+      );
+
+      if (!hasData) {
+        setPerformanceData(null);
+        setPerformanceError("No session data available for this target");
+        setPerformanceLoading(false);
+        return;
+      }
+
+      const firstDataMonth = monthlyData.find(
+        (item) => item.rawData?.length > 0
+      );
+      const dataType = firstDataMonth?.dataType || "percentage";
+
+      const chartData = createChartData(values, labels, monthlyData, dataType);
+      setPerformanceData(chartData);
+    } catch (err) {
+      console.error("Performance fetch failed:", err);
+      setPerformanceError(err.message || "Failed to load performance data");
+    } finally {
+      setPerformanceLoading(false);
+    }
+  }, [targetId, clientId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (hasPerformanceData) {
+      fetchPerformanceData();
+    }
+  }, [hasPerformanceData, fetchPerformanceData]);
+
+  const createChartData = (values, labels, monthlyData, dataType) => {
+    const getYAxisConfig = () => {
+      switch (dataType) {
+        case "percentage":
+          return {
+            min: 0,
+            max: 100,
+            tickAmount: 5,
+            title: {
+              text: "Percentage (%)",
+              style: { fontSize: "13px", color: "#64748b" },
+            },
+          };
+        case "task_analysis":
+          return {
+            min: 0,
+            max: 100,
+            tickAmount: 5,
+            title: {
+              text: "Completion Rate (%)",
+              style: { fontSize: "13px", color: "#64748b" },
+            },
+          };
+        case "trials_opportunities":
+          return {
+            min: 0,
+            max: Math.max(...values) + 2,
+            tickAmount: 6,
+            title: {
+              text: "Correct Trials",
+              style: { fontSize: "13px", color: "#64748b" },
+            },
+          };
+        default:
+          return {
+            min: 0,
+            max: Math.max(...values.filter((v) => v > 0), 100) + 10,
+            tickAmount: 6,
+            title: {
+              text: "Performance Score",
+              style: { fontSize: "13px", color: "#64748b" },
+            },
+          };
+      }
+    };
+
+    const yAxisConfig = getYAxisConfig();
+
+    return {
+      series: [
+        {
+          name:
+            dataType === "percentage"
+              ? "Percentage"
+              : dataType === "task_analysis"
+                ? "Completion Rate"
+                : dataType === "trials_opportunities"
+                  ? "Correct Trials"
+                  : "Average Performance",
+          data: values,
+        },
+      ],
+      options: {
+        chart: {
+          id: "target-performance-chart",
+          type: "area",
+          height: 350,
+          toolbar: {
+            show: true,
+            tools: { download: true, selection: true, zoom: true, pan: true },
+          },
+          zoom: { enabled: true },
+          animations: { enabled: true, speed: 800 },
+        },
+        dataLabels: { enabled: false },
+        stroke: { curve: "smooth", width: 2.5, colors: ["#3b82f6"] },
+        fill: {
+          type: "gradient",
+          gradient: {
+            shadeIntensity: 0.9,
+            opacityFrom: 0.5,
+            opacityTo: 0.1,
+            stops: [0, 90, 100],
+          },
+        },
+        markers: {
+          size: 4,
+          colors: ["#3b82f6"],
+          strokeColors: "#fff",
+          strokeWidth: 2,
+          hover: { size: 6 },
+        },
+        xaxis: {
+          categories: labels,
+          labels: {
+            style: { colors: "#64748b", fontSize: "13px" },
+            rotate: 0,
+          },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
+          title: {
+            text: "Month",
+            style: { fontSize: "13px", color: "#64748b" },
+          },
+        },
+        yaxis: {
+          ...yAxisConfig,
+          labels: {
+            style: { colors: "#64748b", fontSize: "13px" },
+            formatter: (val) => {
+              if (
+                dataType === "percentage" ||
+                dataType === "task_analysis"
+              ) {
+                return Math.round(val) + "%";
+              }
+              return Math.round(val);
+            },
+          },
+        },
+        grid: {
+          borderColor: "#e2e8f0",
+          strokeDashArray: 4,
+          yaxis: { lines: { show: true } },
+          xaxis: { lines: { show: false } },
+        },
+        tooltip: {
+          y: {
+            formatter: (val, { dataPointIndex }) => {
+              const monthData = monthlyData[dataPointIndex];
+              if (monthData?.sessionCount === 0) return "No data";
+              const sessions = monthData?.sessionCount || 0;
+              const suffix = sessions !== 1 ? "s" : "";
+              if (
+                dataType === "percentage" ||
+                dataType === "task_analysis"
+              ) {
+                return `${val.toFixed(1)}% (${sessions} session${suffix})`;
+              }
+              if (dataType === "trials_opportunities") {
+                return `${val.toFixed(1)} correct (${sessions} session${suffix})`;
+              }
+              return `${val.toFixed(1)} (${sessions} session${suffix})`;
+            },
+          },
+        },
+        colors: ["#3b82f6"],
+        noData: {
+          text: "No data available",
+          align: "center",
+          verticalAlign: "middle",
+          style: { color: "#64748b", fontSize: "14px" },
+        },
+      },
+    };
+  };
+
   // Helper functions for baseline formatting
   const getHeaders = (type) => {
     switch (type) {
@@ -328,13 +554,14 @@ const TargetSingle = () => {
 
   const getSummary = (type, data) => {
     switch (type) {
-      case "Percentage Correct":
+      case "Percentage Correct": {
         const percentageTrials = (data.trials || []).length;
         const correct = (data.trials || []).filter(
           (t) => t.performance === "correct",
         ).length;
         return `Total Correct: ${correct}/${percentageTrials} | Accuracy: ${data.percentageCorrect || 0}%`;
-      case "Trials/Opportunities":
+      }
+      case "Trials/Opportunities": {
         const trials = data.trials || [];
         const correctCount = trials.filter(
           (t) => t.performance === "correct",
@@ -346,6 +573,7 @@ const TargetSingle = () => {
           (t) => t.promptLevel !== "independent",
         ).length;
         return `Trials: ${trials.length} | Correct: ${correctCount} | Incorrect: ${incorrectCount} | Prompted: ${promptedCount}`;
+      }
       default:
         return null;
     }
@@ -380,7 +608,6 @@ const TargetSingle = () => {
   }, []);
 
   const handleOpenModal = (modalName, data = {}) => {
-    console.log("Opening modal:", modalName, "with data:", data);
     setActiveModal(modalName);
     setModalData(data);
   };
@@ -422,7 +649,6 @@ const TargetSingle = () => {
         "No client selected. Please select a client to collect data.",
         "error",
       );
-      console.error("No clientId provided, cannot open modal");
       return;
     }
     if (
@@ -430,14 +656,8 @@ const TargetSingle = () => {
       targetInfo.dataCollectionType === "N/A"
     ) {
       showToast("No valid data collection type found.", "error");
-      console.error(
-        "No valid dataCollectionType found:",
-        targetInfo?.dataCollectionType,
-      );
       return;
     }
-
-    console.log("Data Collection Type:", targetInfo.dataCollectionType);
 
     let modalName;
     switch (targetInfo.dataCollectionType) {
@@ -467,10 +687,6 @@ const TargetSingle = () => {
           `Unknown data collection type: ${targetInfo.dataCollectionType}`,
           "error",
         );
-        console.error(
-          "Unknown dataCollectionType:",
-          targetInfo.dataCollectionType,
-        );
         return;
     }
 
@@ -484,14 +700,9 @@ const TargetSingle = () => {
         targetInfo.taskSteps && targetInfo.taskSteps !== "N/A"
           ? targetInfo.taskSteps
           : [];
-      console.log("Task Analysis steps:", extra.steps);
     }
 
     handleOpenModal(modalName, extra);
-  };
-
-  const togglePerformanceGraph = () => {
-    setShowPerformanceGraph((prev) => !prev);
   };
 
   const renderEmptyState = (title, buttonLabel) => (
@@ -623,12 +834,26 @@ const TargetSingle = () => {
             </select>
           </div>
         </div>
-        <Chart
-          options={performanceData.options}
-          series={performanceData.series}
-          type="area"
-          height={350}
-        />
+        {performanceLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading performance data...</p>
+          </div>
+        ) : performanceError ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">{performanceError}</p>
+          </div>
+        ) : performanceData ? (
+          <Chart
+            options={performanceData.options}
+            series={performanceData.series}
+            type="area"
+            height={350}
+          />
+        ) : (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">No performance data available</p>
+          </div>
+        )}
       </div>
     );
   };
@@ -643,74 +868,22 @@ const TargetSingle = () => {
       { header: "Session", key: "sessions", type: "text" },
       { header: "Date", key: "dateTime", type: "day_time" },
       { header: "Session Type", key: "sessionType", type: "text" },
-      { header: "Number of Trials", key: "numberOfTrials", type: "text" },
-    ];
-
-    const actions = [
-      {
-        type: "dropdown",
-        label: "More",
-        items: [
-          {
-            label: "View",
-            onClick: (row) => console.log("View row", row),
-          },
-          {
-            label: "Duplicate",
-            onClick: (row) => console.log("Duplicate row", row),
-          },
-          { label: "Delete", className: "remove" },
-        ],
-        className: "more-dropdown",
-      },
-    ];
-
-    const mockSessionData = [
-      {
-        id: 1,
-        sessions: "Session 1",
-        dateTime: { date: "2024-11-11", time: "10:00 pm" },
-        sessionType: "Tele-health Session",
-        numberOfTrials: 4,
-        hasActions: true,
-      },
-      {
-        id: 2,
-        sessions: "Session 2",
-        dateTime: { date: "2024-11-11", time: "10:00 pm" },
-        sessionType: "T1 coaching",
-        numberOfTrials: 8,
-        hasActions: true,
-      },
-      {
-        id: 3,
-        sessions: "Session 3",
-        dateTime: { date: "2024-11-11", time: "10:00 pm" },
-        sessionType: "Group coaching",
-        numberOfTrials: 12,
-        hasActions: true,
-      },
-      {
-        id: 4,
-        sessions: "Session 4",
-        dateTime: { date: "2024-11-11", time: "10:00 pm" },
-        sessionType: "Parent/Caregiver training",
-        numberOfTrials: 2,
-        hasActions: true,
-      },
+      { header: "Clinician", key: "clinician", type: "text" },
+      { header: "Total Hours", key: "totalHours", type: "text" },
+      { header: "Client Approval", key: "clientApproval", type: "text" },
+      { header: "Payer", key: "payer", type: "text" },
     ];
 
     return (
-      <div className="">
+      <div>
         <CustomTable
-          data={mockSessionData}
+          data={sessionData}
           columns={columns}
-          actions={actions}
-          showActions={true}
+          showActions={false}
           showCheckbox={false}
           itemsPerPage={10}
           tableName="Targets Session Data"
-          loading={false}
+          loading={sessionLoading}
           hideSearch={true}
           hideTableActions={true}
         />
@@ -723,7 +896,7 @@ const TargetSingle = () => {
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-6">
         <div className="program-column-header flex gap-4 items-center">
           <button
@@ -737,11 +910,11 @@ const TargetSingle = () => {
             <span className="breadcrumb-segment">
               {decodeURIComponent(domainName)}
             </span>
-            <span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-separator">&rsaquo;</span>
             <span className="breadcrumb-segment">
               {decodeURIComponent(programName)}
             </span>
-            <span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-separator">&rsaquo;</span>
             <span className="breadcrumb-current font-semibold">
               {decodeURIComponent(targetName)}
             </span>
@@ -1092,7 +1265,7 @@ const TargetSingle = () => {
         onSave={handleSaveData}
         submitting={submitting}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

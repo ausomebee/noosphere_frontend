@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -474,7 +475,7 @@ const ImportTemplateModal = ({
               setSearch(e.target.value);
               setPage(1);
             }}
-            width="400"
+            width="full"
           />
         </div>
 
@@ -521,9 +522,7 @@ const NewFormBuilder = () => {
   const { formName, elements, status } = useSelector(
     (state) => state.formBuilder,
   );
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -892,11 +891,11 @@ const NewFormBuilder = () => {
         onDragEnd={handleDragEnd}
       >
         <div className="formbuilder-header">
-          <div>
+          <div style={{ flex: 1, maxWidth: 400 }}>
             <TextInput
               label="Form Name"
               placeholder="Enter form name"
-              width={400}
+              width="full"
               value={formName}
               onChange={(e) => dispatch(setFormName(e.target.value))}
               error={errors.form}

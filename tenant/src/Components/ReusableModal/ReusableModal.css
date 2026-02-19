@@ -96,33 +96,7 @@
   align-items: center;
 }
 
-.modal-tabs {
-  display: flex;
-  border-bottom: 2px solid #e5e7eb;
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.tab-button {
-  padding: 10px 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #6b7280;
-  border-bottom: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.tab-button:hover {
-  color: #374151;
-}
-
-.tab-button.active-tab {
-  color: #1e40af;
-  border-bottom-color: #1e40af;
-}
+/* modal-tabs, tab-button, active-tab → moved to src/styles/Tabs.css */
 
 .ReuseableModal-body {
   margin-bottom: 0.5rem;
@@ -354,8 +328,56 @@
   margin-top: 1rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .modal-sm,
+  .modal-md,
+  .modal-lg,
+  .modal-xl,
+  .modal-2xl {
+    max-width: 95vw;
+  }
+
+  .re-modal-header {
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .ReuseableModal-body {
+    padding: 12px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+    padding: 0 12px 12px 12px;
+  }
+
+  .modal-button {
+    width: 100%;
+  }
+
+  /* Modal tab mobile rules → moved to src/styles/Tabs.css */
+
+  .custom-time-container {
+    flex-wrap: wrap;
+  }
+
+  .custom-time-input,
+  .custom-time-input-two {
+    width: 70px;
+  }
+}
+
+/* Responsive: Tablet */
+@media (max-width: 992px) {
+  .modal-xl,
+  .modal-2xl {
+    max-width: 95vw;
+  }
+
   .performance-cell {
     min-width: 200px;
   }

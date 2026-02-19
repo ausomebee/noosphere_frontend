@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaArrowLeft, FaChevronDown } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import AccordionTable from "../../../Components/Table/AccordionTable";
+import "../BillingPayment.css";
 import api from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
@@ -26,9 +26,8 @@ const SingleClaim = () => {
   const navigate = useNavigate();
   const { claimId } = useParams();
 
-  // Redux state
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  // Auth state
+  const { accessToken, refreshToken } = useAuth();
 
 
   // State
@@ -231,11 +230,11 @@ const SingleClaim = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex justify-center items-center h-64">
          <LoadingSpinner />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -300,7 +299,7 @@ const SingleClaim = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="manage-column-header">
         <button className="manage-back-button" onClick={() => navigate(-1)}>
           <FaArrowLeft />
@@ -352,8 +351,8 @@ const SingleClaim = () => {
           General Information
         </h3>
 
-        <div className="bg-gray-200 rounded-lg w-full p-20 ">
-          <div className="grid grid-cols-3 items-start w-full mb-6">
+        <div className="billing-info-card">
+          <div className="billing-grid-3 mb-6">
             <div className="flex flex-col gap-2">
               <Field
                 label="Client Name"
@@ -419,7 +418,7 @@ const SingleClaim = () => {
         </div> */}
       </div>
 
-      <div className="mt-60">
+      <div className="mt-6">
         <div>
           <h3 className="text-lg font-semibold mb-6 text-gray-400 text-center">
             Service Information
@@ -436,7 +435,7 @@ const SingleClaim = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

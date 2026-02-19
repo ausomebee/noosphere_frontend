@@ -34,7 +34,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         >
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        Previous
+        <span>Previous</span>
       </button>
 
       <div className="pagination-pages">
@@ -76,7 +76,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
       >
-        Next
+        <span>Next</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"

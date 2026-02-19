@@ -33,6 +33,15 @@ const MemoAppointmentModal = memo(AppointmentModal);
 const MemoRescheduleModal = memo(RescheduleModal);
 const MemoAppointmentDetailsModal = memo(AppointmentDetailsModal);
 
+// Returns the appropriate default calendar view based on screen width
+const getDefaultView = () => {
+  if (typeof window === "undefined") return "month";
+  const width = window.innerWidth;
+  if (width <= 640) return "day";
+  if (width <= 992) return "week";
+  return "month";
+};
+
 function CalendarScheduler({
   appointments,
   staff,
@@ -51,7 +60,7 @@ function CalendarScheduler({
   fetchAppointmentsByFilter,
 }) {
   const [currentDate, setCurrentDate] = useState(initialDate);
-  const [view, setView] = useState("month");
+  const [view, setView] = useState(getDefaultView);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -357,12 +366,13 @@ function CalendarScheduler({
             </div>
           )}
 
-          <SearchInput
-            placeholder="Search"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            width={300}
-          />
+          <div className="cal-sched-search-wrapper">
+            <SearchInput
+              placeholder="Search"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
         </div>
 
         <div className="cal-sched-right-controls">

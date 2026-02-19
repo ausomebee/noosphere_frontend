@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import Button from "../../Components/Button/Button";
 import AddProgramModal from "../../Components/ReusableModal/ProgramLibraryModal/AddProgramModal";
 import DeleteLibraryModal from "../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
@@ -25,8 +25,7 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
   const [loading, setLoading] = useState(true);
 
   /* ----------  auth  ---------- */
-    const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-    const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+    const { accessToken, refreshToken } = useAuth();
 
   /* ----------  fetch programs  ---------- */
   const fetchPrograms = async () => {

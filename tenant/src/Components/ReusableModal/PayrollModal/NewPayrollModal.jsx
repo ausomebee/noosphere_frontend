@@ -2,12 +2,21 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
-import { TextInput } from "../../Input/Inputs";
-import Button from "../../Button/Button";
+import { TextInput, SelectInput } from "../../Input/Inputs";
 import { newPayrollSchema } from "../../../Data/schemas";
 import PreviewPayrollModal from "./PreviewPayrollModal";
+import { showToast } from "../../../Helper/ShowToast";
+import useAuth from "../../../hooks/useAuth";
+
+const COMPENSATION_OPTIONS = [
+  { value: "Hourly", label: "Hourly" },
+  { value: "Salaried", label: "Salaried" },
+  { value: "Daily", label: "Daily" },
+];
 
 const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
+  const { tenantId, accessToken, refreshToken } = useAuth();
+
   const {
     control,
     handleSubmit,
@@ -17,6 +26,7 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
   } = useForm({
     resolver: yupResolver(newPayrollSchema),
     defaultValues: {
+      compensationType: "",
       from: "",
       to: "",
     },
@@ -24,27 +34,23 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [payrollData, setPayrollData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const watchedValues = watch();
 
   const onSubmit = (data) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setPayrollData(data);
-      setIsPreviewOpen(true);
-      setIsLoading(false);
-    }, 1000);
+    setPayrollData(data);
+    setIsPreviewOpen(true);
   };
 
-  const onError = (errors) => {
-    console.log("Form errors:", errors);
+  const onValidationError = (errs) => {
+    const firstError = Object.values(errs)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
-  const handlePreviewSave = (data) => {
-    onSave(data);
+  const handlePreviewSave = () => {
     setIsPreviewOpen(false);
-    handleClose();
+    reset();
+    onSave();
   };
 
   const handlePreviewClose = () => {
@@ -64,48 +70,64 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
         title="New Payroll"
         primaryButtonText="Next"
         secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleSubmit(onSubmit, onError)}
+        onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
         onSecondaryButtonClick={handleClose}
-        primaryButtonLoading={isLoading}
         size="medium"
       >
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <Controller
-              name="from"
-              control={control}
-              render={({ field }) => (
-                <TextInput
-                  label="From *"
-                  type="date"
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  className="rounded-20px"
-                  width="full"
-                  error={errors.from?.message}
-                  placeholder="Select a starting date"
-                />
-              )}
-            />
-          </div>
-          <div className="flex-1">
-            <Controller
-              name="to"
-              control={control}
-              render={({ field }) => (
-                <TextInput
-                  label="To *"
-                  type="date"
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  className="rounded-20px"
-                  width="full"
-                  error={errors.to?.message}
-                  placeholder="Select an ending date"
-                  min={watchedValues.from}
-                />
-              )}
-            />
+        <div className="flex flex-col gap-4">
+          <Controller
+            name="compensationType"
+            control={control}
+            render={({ field }) => (
+              <SelectInput
+                label="Compensation Type *"
+                options={COMPENSATION_OPTIONS}
+                value={field.value}
+                onChange={(value) => field.onChange(value)}
+                placeholder="Select compensation type"
+                className="w-full"
+                error={errors.compensationType?.message}
+              />
+            )}
+          />
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Controller
+                name="from"
+                control={control}
+                render={({ field }) => (
+                  <TextInput
+                    label="Start Date *"
+                    type="date"
+                    value={field.value}
+                    onChange={(value) => field.onChange(value)}
+                    className="rounded-20px"
+                    width="full"
+                    error={errors.from?.message}
+                    placeholder="Select a starting date"
+                  />
+                )}
+              />
+            </div>
+            <div className="flex-1">
+              <Controller
+                name="to"
+                control={control}
+                render={({ field }) => (
+                  <TextInput
+                    label="End Date *"
+                    type="date"
+                    value={field.value}
+                    onChange={(value) => field.onChange(value)}
+                    className="rounded-20px"
+                    width="full"
+                    error={errors.to?.message}
+                    placeholder="Select an ending date"
+                    min={watchedValues.from}
+                  />
+                )}
+              />
+            </div>
           </div>
         </div>
       </ReusableModal>
@@ -114,6 +136,9 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
         onClose={handlePreviewClose}
         payrollData={payrollData}
         onSave={handlePreviewSave}
+        tenantId={tenantId}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
       />
     </>
   );

@@ -7,7 +7,7 @@ import Button from "../../../Components/Button/Button";
 import TenantLogo from "../../../assets/Logo.svg";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 const otpSchema = yup.object().shape({
@@ -18,7 +18,7 @@ const otpSchema = yup.object().shape({
 });
 
 const ForgotPasswordAuthenticatorVerifier = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [step, setStep] = useState(1);

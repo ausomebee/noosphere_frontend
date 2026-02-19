@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import DOMPurify from "dompurify";
 import { FiBold, FiItalic, FiUnderline } from "react-icons/fi";
 import { TfiList } from "react-icons/tfi";
 import { GrOrderedList } from "react-icons/gr";
@@ -24,7 +25,7 @@ const RichTextEditor = ({
   // Initialize content only once on mount
   useEffect(() => {
     if (editorRef.current && value && !editorRef.current.innerHTML) {
-      editorRef.current.innerHTML = value;
+      editorRef.current.innerHTML = DOMPurify.sanitize(value);
     }
   }, [value]);
 

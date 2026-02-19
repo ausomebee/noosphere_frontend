@@ -1,6 +1,6 @@
 // src/pages/Client/ClientSubs/AppointmentsAndSchedules/AppointmentsScheduleTab.jsx
 import { useState, memo, useCallback, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import { format, addDays, subDays } from "date-fns";
 import Button from "../../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -20,9 +20,7 @@ import expandForAppointments from "../../../../../utils/expandForAppointments";
 const MemoAppointmentModal = memo(AppointmentModal);
 
 const AppointmentsScheduleTab = ({ fullName }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState("upcomingAppointments");
   const [viewMode, setViewMode] = useState("table");
@@ -514,7 +512,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const handleToday = () => setCurrentDate(new Date());
 
   return (
-    <div className="p-6">
+    <div className="appt-sched-wrapper">
       <div className="documents-tabs w-full">
         {[
           "upcomingAppointments",
@@ -535,7 +533,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         ))}
       </div>
 
-      <div className="flex justify-between items-center mt-6 mb-4">
+      <div className="appt-controls-row">
         <div className="flex items-center gap-4">
           <div className="cal-sched-filter-controls">
             <div className="cal-sched-tab-container">
@@ -586,8 +584,8 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       </div>
 
       {viewMode === "calendar" && (
-        <div className="flex mt-6 items-center">
-          <div className="flex justify-between items-center mb-4 p-4 bg-gray-50 rounded-lg">
+        <div className="appt-calendar-nav">
+          <div className="appt-calendar-nav-controls">
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrevMonth}
@@ -614,7 +612,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
               placeholder="Search appointments..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              width={300}
+              width="full"
             />
           </div>
         </div>
@@ -636,7 +634,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             showActions={true}
           />
         ) : (
-          <div className="bg-white p-4 min-h-[600px]">
+          <div className="appt-calendar-container">
             <MonthView
               date={currentDate}
               appointments={calendarAppointments}

@@ -288,3 +288,65 @@ border-right: 3px solid #d8c7c7;
     gap: 24px;
   }
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .sa-header {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .sa-title {
+    font-size: 16px;
+  }
+
+  .sa-content {
+    padding: 0 12px;
+    margin: 12px auto;
+  }
+
+  .client-card {
+    border-width: 10px;
+    padding: 16px;
+  }
+
+  .client-name {
+    font-size: 20px;
+  }
+
+  .data-card {
+    padding: 16px;
+  }
+
+  .data-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .notes-card {
+    padding: 16px;
+  }
+
+  .bottom-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .sa-client-info {
+    border-right: none;
+    border-bottom: 2px solid #d8c7c7;
+    padding-bottom: 16px;
+  }
+
+  .program-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .target-item {
+    padding: 10px 16px;
+  }
+}

@@ -5,7 +5,7 @@ import { FaPlus } from "react-icons/fa";
 import { FiEdit2 } from "react-icons/fi";
 import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { LuEye } from "react-icons/lu";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { showToast } from "../../../Helper/ShowToast";
@@ -129,9 +129,7 @@ const DeleteConfirmModal = ({ isOpen, templateName, onConfirm, onCancel }) => {
 
 const ClinicalReports = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);

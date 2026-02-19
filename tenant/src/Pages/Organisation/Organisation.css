@@ -1,0 +1,231 @@
+/* ===== Organisation Pages – Shared Responsive Styles ===== */
+
+/* Organisation info card (General + StaffProfile) */
+.org-info-card {
+  display: flex;
+  justify-content: space-between;
+  background-color: #e5e7eb;
+  border-radius: 8px;
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+/* OrgGrid: General page (4-col) */
+.org-detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr 1fr;
+  align-items: start;
+  width: 100%;
+  gap: 16px;
+}
+
+/* Staff profile info: avatar + fields side by side */
+.staff-info-layout {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 24px;
+}
+
+.staff-info-avatar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.staff-info-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+/* License card grid */
+.org-license-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* Section header with actions (licenses/files) */
+.org-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.org-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.org-view-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+/* Section wrapper */
+.org-section {
+  padding: 20px;
+  margin-top: 24px;
+}
+
+/* Payroll settings card */
+.payroll-settings-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 100%;
+  padding: 24px;
+  margin-bottom: 24px;
+  margin-top: 24px;
+}
+
+/* Payroll settings 3-col grid (Basic / Income Items / Deductions) */
+.payroll-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+  width: 100%;
+  gap: 24px;
+}
+
+.payroll-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.payroll-setting-label {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+  min-width: 140px;
+}
+
+.payroll-setting-value {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* ===================== RESPONSIVE: MOBILE ===================== */
+@media (max-width: 640px) {
+  /* Breadcrumb header: wrap on small screens */
+  .program-column-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .breadcrumb-trail {
+    font-size: 0.875rem;
+  }
+
+  .breadcrumb-segment {
+    font-size: 16px;
+  }
+
+  .breadcrumb-separator {
+    font-size: 20px;
+  }
+
+  /* Org info card: stack vertically */
+  .org-info-card {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  /* OrgGrid: single column */
+  .org-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Staff profile: stack avatar on top */
+  .staff-info-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .staff-info-fields {
+    grid-template-columns: 1fr;
+  }
+
+  /* License grid: single column */
+  .org-license-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Section header: stack */
+  .org-section-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .org-section-actions {
+    gap: 12px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Section: reduce padding */
+  .org-section {
+    padding: 12px;
+  }
+
+  /* Payroll settings: stack columns */
+  .payroll-settings-card {
+    padding: 16px;
+  }
+
+  .payroll-settings-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ===================== RESPONSIVE: TABLET ===================== */
+@media (min-width: 641px) and (max-width: 992px) {
+  .breadcrumb-segment {
+    font-size: 18px;
+  }
+
+  .breadcrumb-separator {
+    font-size: 24px;
+  }
+
+  /* OrgGrid: 2 columns (avatar + 2 field columns) */
+  .org-detail-grid {
+    grid-template-columns: auto 1fr 1fr;
+  }
+
+  /* Staff profile: keep horizontal but single-col fields */
+  .staff-info-fields {
+    grid-template-columns: 1fr;
+  }
+
+  /* License grid: 2 columns */
+  .org-license-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .org-section {
+    padding: 16px;
+  }
+
+  /* Payroll settings: 2 columns on tablet */
+  .payroll-settings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

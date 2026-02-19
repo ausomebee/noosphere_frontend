@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema for Basic Information fields
 const schema = yup.object().shape({
@@ -113,8 +114,7 @@ const BasicInfoModal = ({
   initialData,
   tenantStaffId,
 }) => {
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -183,6 +183,11 @@ const BasicInfoModal = ({
     }
   }, [isOpen, initialData, reset]);
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const handleFormSubmit = async (data) => {
     if (!isDirty) {
       onClose(); // No changes, close modal
@@ -233,7 +238,7 @@ const BasicInfoModal = ({
       title="Edit Basic Information"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
       onSecondaryButtonClick={handleClose}
       size="lg"
       primaryButtonLoading={submitting}

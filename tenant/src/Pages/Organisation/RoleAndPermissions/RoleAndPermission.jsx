@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
@@ -155,9 +154,10 @@ const RoleAndPermission = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
+      <div className="p-6">
       <h1 className="appointment-sched-title mb-4">Roles & Permissions</h1>
-      <h3 className="text-xl text-gray-700 font-500">
+      <h3 className="text-base text-gray-700 font-500">
         Manage user roles and permissions securely within your organization
       </h3>
 
@@ -189,7 +189,8 @@ const RoleAndPermission = () => {
         mode={modalMode}
         initialData={selectedRow}
       />
-    </DashboardLayout>
+      </div>
+    </>
   );
 };
 

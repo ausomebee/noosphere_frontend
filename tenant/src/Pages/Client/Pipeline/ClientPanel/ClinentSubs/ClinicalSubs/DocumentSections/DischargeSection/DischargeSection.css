@@ -25,7 +25,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .report-builder-error {
     margin-left: 0;
     margin-top: 8px;

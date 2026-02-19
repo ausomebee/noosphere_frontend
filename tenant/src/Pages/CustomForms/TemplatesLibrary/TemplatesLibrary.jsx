@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaPlus } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import { LuEye } from "react-icons/lu";
@@ -8,14 +7,12 @@ import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { FiEdit2 } from "react-icons/fi";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/customFormsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 const TemplatesLibrary = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,10 +117,10 @@ const TemplatesLibrary = () => {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <div>
-        <h1 className="appointment-sched-title">Template Library</h1>
-        <h3 className="text-xl text-gray-700 font-medium">
+        <h1 className="text-2xl text-gray-400 font-semibold">Template Library</h1>
+        <h3 className="text-base text-gray-700 font-medium">
           Ready-to-use forms and documentation templates for streamlined service
           delivery
         </h3>
@@ -151,7 +148,7 @@ const TemplatesLibrary = () => {
           enableSearch={true}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

@@ -261,28 +261,7 @@
   overflow: hidden;
 }
 
-.signature-tabs {
-  display: flex;
-  background: #f8fafc;
-}
-
-.tab {
-  flex: 1;
-  padding: 16px;
-  border: none;
-  background: transparent;
-  font-weight: 500;
-  color: #64748b;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.tab.active {
-  background: white;
-  color: #2563eb;
-  font-weight: 600;
-  border-bottom: 4px solid #2563eb;
-}
+/* signature-tabs → moved to src/styles/Tabs.css */
 
 .signature-area {
   position: relative;
@@ -413,4 +392,90 @@
 
 .submit-btn:hover {
   background: #1d4ed8;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .form-renderer {
+    padding: 16px 8px;
+  }
+
+  .form-container {
+    max-width: 100%;
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .form-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+  }
+
+  .section-header {
+    font-size: 18px;
+  }
+
+  .form-field {
+    margin-bottom: 24px;
+  }
+
+  .question-block {
+    margin-bottom: 20px;
+  }
+
+  .upload-trigger {
+    padding: 24px 16px;
+  }
+
+  .uploaded-file-card {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* Signature tab mobile rules → moved to src/styles/Tabs.css */
+
+  .type-signature-input {
+    font-size: 20px;
+    padding: 24px 12px;
+  }
+
+  .formRender-pagination {
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 0;
+    margin-top: 24px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 20px;
+    margin-top: 24px;
+  }
+
+  .clear-btn,
+  .submit-btn,
+  .page-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Responsive: Tablet */
+@media (min-width: 641px) and (max-width: 992px) {
+  .form-renderer {
+    padding: 24px 16px;
+  }
+
+  .form-container {
+    max-width: 100%;
+    padding: 36px 32px;
+  }
+
+  .form-title {
+    font-size: 24px;
+    margin-bottom: 32px;
+  }
 }

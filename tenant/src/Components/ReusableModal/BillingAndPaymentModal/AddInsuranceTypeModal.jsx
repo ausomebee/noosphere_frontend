@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const insuranceTypeSchema = yup.object().shape({
@@ -29,12 +30,17 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
     }
   }, [isOpen, initialData, reset]);
 
-  const onSubmit = (data) => {
-    onSave(data);
+  const onSubmit = async (data) => {
+    try {
+      await onSave(data);
+    } catch {
+      showToast("Failed to save insurance type", "error");
+    }
   };
 
-  const onError = (errors) => {
-    console.log("Form errors:", errors);
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handleClose = () => {
@@ -58,7 +64,7 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
       }
       primaryButtonText={mode === "view" ? "Close" : "Save"}
       secondaryButtonText={mode === "view" ? null : "Cancel"}
-      onPrimaryButtonClick={handleSubmit(onSubmit, onError)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={mode === "view" ? undefined : handleClose}
       primaryButtonLoading={isLoading}
       size="medium"

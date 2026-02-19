@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/authApis";
 import "../../Auth.css";
@@ -28,7 +28,7 @@ const schema = yup.object().shape({
 });
 
 const SuperChangePassword = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const {
     register,

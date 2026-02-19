@@ -204,7 +204,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .goal-card {
     padding: 16px;
   }

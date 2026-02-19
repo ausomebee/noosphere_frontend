@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import { AdminLogin } from "../../../../ReduxStore/features/authentication";
 import "../../Auth.css";
@@ -30,7 +31,7 @@ const InitialSuperLogin = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const { loading } = useSelector((state) => state.authentication);
+  const { loading } = useAuth();
 
   const onSubmit = async (data) => {
     try {

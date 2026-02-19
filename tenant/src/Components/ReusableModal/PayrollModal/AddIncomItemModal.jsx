@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
-import { SelectInput, TextInput } from "../../Input/Inputs";
-import Button from "../../Button/Button";
+import { SelectInput } from "../../Input/Inputs";
 import { addIncomeSchema } from "../../../Data/schemas";
+import payrollApi from "../../../api/payrollApi";
+import { showToast } from "../../../Helper/ShowToast";
 
-const AddIncomeItemModal = ({ isOpen, onClose, onSave }) => {
+const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems }) => {
+  const [fetchedItems, setFetchedItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(false);
+
   const {
     control,
     handleSubmit,
@@ -16,30 +20,61 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave }) => {
     resolver: yupResolver(addIncomeSchema),
     defaultValues: {
       incomeItem: "",
-      unitType: "",
-      amount: 0,
     },
   });
 
-  const incomeOptions = [
-    { value: "overwork_commission", label: "Overwork Commission" },
-    { value: "capital_compensation", label: "Capital Compensation" },
-    { value: "extraordinary_work", label: "Extraordinary Work" },
-  ];
+  // Only fetch if no prefetchedItems provided
+  useEffect(() => {
+    if (isOpen && tenantId && (!prefetchedItems || prefetchedItems.length === 0)) {
+      const fetchIncomeItems = async () => {
+        setLoadingItems(true);
+        try {
+          const response = await payrollApi.GetIncomeItemsByTenantId({
+            tenantId,
+            accessToken,
+            refreshToken,
+          });
+          const data = response?.data || response || [];
+          setFetchedItems(Array.isArray(data) ? data : []);
+        } catch (error) {
+          showToast(error.message || "Failed to fetch income items", "error");
+          setFetchedItems([]);
+        } finally {
+          setLoadingItems(false);
+        }
+      };
+      fetchIncomeItems();
+    }
+  }, [isOpen, tenantId, accessToken, refreshToken, prefetchedItems]);
 
-  const unitTypeOptions = [
-    { value: "flat_rate", label: "Flat Rate" },
-    { value: "percentage_based", label: "Percentage based" },
-    { value: "hourly_rate", label: "Hourly Rate" },
-    { value: "hourly_rate_with_overtime", label: "Hourly Rate with Overtime" },
-  ];
+  const items = prefetchedItems && prefetchedItems.length > 0 ? prefetchedItems : fetchedItems;
+
+  const { incomeOptions, incomeItemsMap } = useMemo(() => {
+    const map = {};
+    const options = items
+      .filter((item) => item.isActive !== false)
+      .map((item) => {
+        map[item.id] = item;
+        const rateLabel = item.type === "Flat Rate"
+          ? `$${item.rate?.rate || 0}`
+          : item.type === "Percentage based"
+          ? `${item.rate?.unit || 0}%`
+          : item.type === "Time based"
+          ? `$${item.rate?.unit || 0} per ${item.rate?.duration || "hour"}`
+          : "";
+        return {
+          value: item.id,
+          label: `${item.name} (${rateLabel})`,
+        };
+      });
+    return { incomeOptions: options, incomeItemsMap: map };
+  }, [items]);
 
   const onSubmit = (data) => {
-    onSave({
-      type: data.incomeItem,
-      unitType: data.unitType,
-      amount: Number(data.amount),
-    });
+    const selectedItem = incomeItemsMap[data.incomeItem];
+    if (selectedItem) {
+      onSave(selectedItem);
+    }
     reset();
     onClose();
   };
@@ -61,44 +96,25 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave }) => {
       size="medium"
     >
       <div className="flex flex-col gap-4">
-        <Controller
-          name="incomeItem"
-          control={control}
-          render={({ field }) => (
-            <SelectInput
-              label="Select Income Item"
-              options={incomeOptions}
-              value={field.value}
-              onChange={(value) => field.onChange(value)}
-              placeholder="Select"
-              className="w-full"
-              error={errors.incomeItem?.message}
-            />
-          )}
-        />
-        <Controller
-          name="unitType"
-          control={control}
-          render={({ field }) => (
-            <SelectInput
-              label="Unit Type"
-              options={unitTypeOptions}
-              value={field.value}
-              onChange={(value) => field.onChange(value)}
-              placeholder="Select unit type"
-              className="w-full"
-              error={errors.unitType?.message}
-            />
-          )}
-        />
-        <TextInput
-          label="Amount"
-          type="number"
-          {...control.register("amount")}
-          error={errors.amount?.message}
-          placeholder="Enter amount"
-          className="w-full"
-        />
+        {loadingItems ? (
+          <p className="text-gray-500 text-center py-4">Loading income items...</p>
+        ) : (
+          <Controller
+            name="incomeItem"
+            control={control}
+            render={({ field }) => (
+              <SelectInput
+                label="Select Income Item"
+                options={incomeOptions}
+                value={field.value}
+                onChange={(value) => field.onChange(value)}
+                placeholder="Select income item"
+                className="w-full"
+                error={errors.incomeItem?.message}
+              />
+            )}
+          />
+        )}
       </div>
     </ReusableModal>
   );

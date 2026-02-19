@@ -194,3 +194,31 @@
     flex-direction: column;
   }
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .support-requests-container {
+    padding: 12px;
+  }
+
+  .support-requests-header h1 {
+    font-size: 20px;
+  }
+
+  .support-stat-card {
+    padding: 14px;
+  }
+
+  .support-stat-card .stat-value {
+    font-size: 24px;
+  }
+
+  .support-stat-cards {
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .support-submit-row {
+    justify-content: center;
+  }
+}

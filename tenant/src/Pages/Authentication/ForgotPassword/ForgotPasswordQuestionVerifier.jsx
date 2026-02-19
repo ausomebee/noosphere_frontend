@@ -8,7 +8,7 @@ import TenantLogo from "../../../assets/Logo.svg";
 import { TextInput } from "../../../Components/Input/Inputs";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 const answerSchema = yup.object().shape({
@@ -19,10 +19,7 @@ const answerSchema = yup.object().shape({
 });
 
 const ForgotPasswordQuestionVerifier = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
-  const authQuestion = useSelector(
-    (state) => state.authentication?.user?.authQuestion
-  );
+  const { userId, authQuestion } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

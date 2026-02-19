@@ -8,14 +8,11 @@ import TenantLogo from "../../../../../assets/Logo.svg";
 import "../../../Auth.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import { showToast } from "../../../../../Helper/ShowToast";
 
 const Authenticator2FA = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
-  const superAdmin = useSelector(
-    (state) => state.authentication?.user?.superAdmin
-  );
+  const { userId, superAdmin } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

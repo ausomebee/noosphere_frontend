@@ -1,20 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaPlus } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/customFormsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 const Forms = () => {
   const navigate = useNavigate();
 
   // ---- Redux -------------------------------------------------
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   // ---- Local state -------------------------------------------
   const [forms, setForms] = useState([]);       // raw API data
@@ -155,10 +152,10 @@ const Forms = () => {
 
   // ----------------------------------------------------------------
   return (
-    <DashboardLayout>
+    <>
       <div>
-        <h1 className="appointment-sched-title">Forms</h1>
-        <h3 className="text-xl text-gray-700 font-500">
+        <h1 className="text-2xl text-gray-400 font-semibold">Forms</h1>
+        <h3 className="text-base text-gray-700 font-500">
           Setup and manage forms and documents used in your practice
         </h3>
       </div>
@@ -186,7 +183,7 @@ const Forms = () => {
           enableSearch={true}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

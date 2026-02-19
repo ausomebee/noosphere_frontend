@@ -99,7 +99,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .diagnosis-card-header {
     padding: 12px 16px;
   }

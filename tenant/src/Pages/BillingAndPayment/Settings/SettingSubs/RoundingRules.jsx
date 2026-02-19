@@ -5,7 +5,7 @@ import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import AddRoundingRule from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddRoundingRule";
 import api from "../../../../api/billingAndPaymentsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 
 // Standard rule descriptions
@@ -17,9 +17,7 @@ const standardRuleDescriptions = {
 
 const RoundingRules = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -206,7 +204,7 @@ const RoundingRules = () => {
         />
       </div>
 
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={columns}

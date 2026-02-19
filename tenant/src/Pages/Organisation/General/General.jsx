@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FiEdit3 } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { PiListDashesBold } from "react-icons/pi";
 import Button from "../../../Components/Button/Button";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
@@ -16,6 +15,7 @@ import { CgDanger } from "react-icons/cg";
 import api from "../../../api/organisationApis";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
+import "../Organisation.css";
 
 // Date formatter for MM/DD/YYYY
 const formatDate = (dateString) => {
@@ -34,9 +34,7 @@ const formatDate = (dateString) => {
 };
 
 const General = () => {
-  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   /* -------------------------------------------------------------- */
   /* 1. ORGANISATION ---------------------------------------------- */
@@ -329,7 +327,7 @@ const General = () => {
 
     if (!licenses.length)
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-20 mb-6 mt-6">
+        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -344,7 +342,7 @@ const General = () => {
 
     if (licenseView === "card")
       return (
-        <div className="grid grid-cols-3 gap-10 mt-6">
+        <div className="org-license-grid">
           {licenses.map((l) => (
             <LicenseCard
               key={l.id}
@@ -422,7 +420,7 @@ const General = () => {
 
     if (!files.length)
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-20 mb-6 mt-6">
+        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -455,7 +453,16 @@ const General = () => {
               items: [
                 {
                   label: "View",
-                  onClick: (row) => window.open(row.documentUrl, "_blank"),
+                  onClick: (row) => {
+                    try {
+                      const parsed = new URL(row.documentUrl);
+                      if (["http:", "https:"].includes(parsed.protocol)) {
+                        window.open(row.documentUrl, "_blank", "noopener,noreferrer");
+                      }
+                    } catch {
+                      // Invalid URL
+                    }
+                  },
                 },
                 {
                   label: "Download",
@@ -494,15 +501,15 @@ const General = () => {
   /* UI                                                             */
   /* -------------------------------------------------------------- */
   return (
-    <DashboardLayout>
-      <div className="p-20">
+    <>
+      <div className="p-6">
         <h1 className="appointment-sched-title mb-4">General</h1>
 
         {/* ---------- 1. Organisation ---------- */}
         <h2 className="font-bold text-lg text-gray-700-em mb-4">
           Organisation Information
         </h2>
-        <div className="flex justify-between bg-gray-200 rounded-lg w-full p-20 mb-6">
+        <div className="org-info-card">
           {loadingTenant ? (
             <div className="flex justify-center items-center w-full py-8">
               <LoadingSpinner />
@@ -526,10 +533,10 @@ const General = () => {
 
         {/* ---------- 2. Licenses ---------- */}
         <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="org-section-header">
             <h2 className="font-bold text-lg text-gray-700-em">Licenses</h2>
-            <div className="flex items-center gap-20">
-              <div className="flex gap-10">
+            <div className="org-section-actions">
+              <div className="org-view-toggle">
                 <div className="p-3 bg-gray-200 rounded-md">
                   <RxDashboard
                     className="cursor-pointer"
@@ -614,7 +621,7 @@ const General = () => {
         initialValues={fileToEdit}
       />
       <DeleteModal {...deleteCfg} onClose={closeDelete} />
-    </DashboardLayout>
+    </>
   );
 };
 
@@ -644,7 +651,7 @@ const IconFile = (props) => (
 );
 
 const OrgGrid = ({ data }) => (
-  <div className="grid grid-cols-4 items-start w-full">
+  <div className="org-detail-grid">
     <div className="items-center flex justify-center h-full">
       <div className="organisation-user-avatar ">
         {data.companyName
@@ -696,7 +703,7 @@ const Field = ({ label, value, isLink }) => (
 );
 
 const LicenseCard = ({ data, onEdit, onDelete }) => (
-  <div className="border rounded-md border-gray-200 bg-white p-20">
+  <div className="border rounded-md border-gray-200 bg-white p-6">
     <div className="flex justify-between">
       <div className="flex gap-6">
         <MdOutlineFileOpen size={24} color="#004ABA" />

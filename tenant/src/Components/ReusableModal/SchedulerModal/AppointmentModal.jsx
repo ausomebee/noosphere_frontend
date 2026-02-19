@@ -25,7 +25,7 @@ import DatePicker from "react-multi-date-picker";
 import { showToast } from "../../../Helper/ShowToast";
 import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 const AppointmentModal = ({
   isOpen,
@@ -45,9 +45,7 @@ const AppointmentModal = ({
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const datePickerRef = useRef(null);
   const [forceUpdate, setForceUpdate] = useState(0);

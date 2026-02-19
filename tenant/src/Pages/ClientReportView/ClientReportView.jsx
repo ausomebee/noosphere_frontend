@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import DOMPurify from "dompurify";
 import {
   FiType,
   FiEdit,
@@ -105,7 +106,7 @@ const renderContentValue = (key, value) => {
         <span className="crv-field-label">{label}</span>
         <div
           className="crv-html-content"
-          dangerouslySetInnerHTML={{ __html: value }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }}
         />
       </div>
     );

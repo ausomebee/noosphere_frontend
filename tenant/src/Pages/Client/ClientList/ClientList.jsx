@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
+
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import "./ClientList.css";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast"; // assuming you have this
 import api from "../../../api/TenantApis"; // For Create & Update
 import clientApi from "../../../api/clientPanelApis"; // For GetAll, Activate/Deactivate
@@ -19,10 +19,7 @@ const ClientList = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, userId, accessToken, refreshToken } = useAuth();
 
   // Fetch all clients for this tenant
   const fetchClients = useCallback(async () => {
@@ -189,7 +186,7 @@ const ClientList = () => {
   }, [tableData]);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="client-list-container">
         <div className="client-list-header">
           <h1 className="client-list-title">Clients</h1>
@@ -268,7 +265,7 @@ const ClientList = () => {
           primaryButtonLoading={isUpdating}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

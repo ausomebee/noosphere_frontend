@@ -1,8 +1,8 @@
 // Calendar.jsx — FINAL: REAL COUNTS ON LOAD, APPOINTMENTS ONLY ON FILTER
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { addDays } from "date-fns";
-import DashboardLayout from "../../../Layout/TenantLayout";
+
 import CalendarScheduler from "../../../Components/CalendarScheduler/CalendarScheduler";
 import expand from "../../../utils/expand";
 import { format } from "date-fns";
@@ -121,13 +121,8 @@ const toUICard = (apiAppt, masters = []) => {
 };
 
 const Calendar = () => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const role = authRole?.name ?? "Client";
 
   const [sessionTypes, setSessionTypes] = useState([]);
   const [clients, setClients] = useState([]);
@@ -358,16 +353,16 @@ const Calendar = () => {
 
   if (fetchError) {
     return (
-      <DashboardLayout>
+      <>
         <div style={{ padding: "20px", color: "red" }}>
           Error loading calendar: {fetchError}
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <CalendarScheduler
         staff={staffWithCounts}
         clients={clientsWithCounts}
@@ -385,7 +380,7 @@ const Calendar = () => {
         fetchAppointmentsByFilter={fetchAppointmentsByFilter}
         loading={loading}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

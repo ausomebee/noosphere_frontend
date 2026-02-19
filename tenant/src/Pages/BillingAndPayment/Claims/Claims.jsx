@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/billingAndPaymentsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -23,10 +22,8 @@ const formatDate = (dateString) => {
 const Claims = () => {
   const navigate = useNavigate();
   
-  // Redux state
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  // Auth state
+  const { tenantId, accessToken, refreshToken } = useAuth();
   
   // State
   const [tableData, setTableData] = useState([]);
@@ -108,13 +105,13 @@ const Claims = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div>
         <h1 className="appointment-sched-title">Claims</h1>
-        <h3 className="text-xl text-gray-700 font-500">Manage your claims</h3>
+        <h3 className="text-base text-gray-700 font-500">Manage your claims</h3>
       </div>
 
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={columns}
@@ -129,7 +126,7 @@ const Claims = () => {
           loading={loading}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../Layout/TenantLayout";
+
 import Button from "../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
 import AddDomainModal from "../../Components/ReusableModal/ProgramLibraryModal/AddDomainModal";
 import DeleteLibraryModal from "../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
 import DomainLibrary from "./DomainLibrary";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/ProgramLibraryApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
@@ -23,9 +23,7 @@ const ProgramLibrary = () => {
   const [loading, setLoading] = useState(true);
 
   /* ----------  auth  ---------- */
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   /* ----------  helpers  ---------- */
   const domainType = view === "skillAcquisition" ? "SKILL_ACQUISITION" : "BEHAVIOR_REDUCTION";
@@ -193,7 +191,7 @@ const handleDeleteConfirm = async () => {
 
   /* ----------  render  ---------- */
   return (
-    <DashboardLayout>
+    <>
       <div>
         {currentView === "programLibrary" ? (
           <>
@@ -267,7 +265,7 @@ const handleDeleteConfirm = async () => {
           rowData={selectedRow}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

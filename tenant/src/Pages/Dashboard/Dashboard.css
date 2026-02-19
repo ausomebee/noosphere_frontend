@@ -83,10 +83,13 @@
 /* New CSS for content area */
 .content-area {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .select-input {
   width: 200px;
+  min-width: 0;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -128,6 +131,10 @@
 /* Custom CSS for Authorization card data */
 
 
+.chart-container {
+  max-width: 300px;
+}
+
 .chart-container .apexcharts-canvas {
   width: 100% !important;
   height: 100% !important;
@@ -135,9 +142,9 @@
 
 /* Ensure legend fits without overflow-y */
 .chart-container .apexcharts-legend {
-  width: 300px !important;
+  max-width: 100%;
   justify-content: left !important;
-  overflow-y: none !important;
+  overflow-y: visible !important;
   padding-top: 10px;
 }
 
@@ -193,34 +200,178 @@
   font-weight: 600;
 }
 
+/* ===================== DASHBOARD GRID ===================== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
 
-/* Ensure responsiveness */
+.dashboard-grid .dashboard-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ===================== DASHBOARD CARD HEADER ===================== */
+.dashboard-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dashboard-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboard-card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.dashboard-card-selects {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===================== AUTHORIZATION LAYOUT ===================== */
+.auth-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ===================== PRODUCTIVITY GRID ===================== */
+.productivity-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===================== RESPONSIVE: MOBILE (<=640px) ===================== */
 @media (max-width: 640px) {
-  .flex.items-center.gap-4 {
+  /* Card header: stack vertically */
+  .dashboard-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-card-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .dashboard-card-header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .dashboard-card-selects {
+    width: 100%;
+  }
+
+  .dashboard-card-selects .select-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .select-input {
+    width: 100%;
+  }
+
+  /* Authorization layout: stack chart + details */
+  .auth-layout {
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
   }
 
   .chart-container {
-    width: 200px;
-    height: 200px;
-  }
-
-  .chart-container .apexcharts-legend {
-    width: 200px !important;
+    max-width: 100%;
+    width: 100%;
   }
 
   .auth-details {
     padding-left: 0;
     margin-left: 0;
     border-left: none;
+    width: 100%;
     max-width: 100%;
-    width: 200px;
-    text-align: center;
   }
 
   .auth-details p {
-    justify-content: center; /* Center content on mobile */
+    justify-content: space-between;
+  }
+
+  /* Productivity grid: single column */
+  .productivity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Intake pipeline: stack */
+  .intake-stages {
+    flex-direction: column;
+  }
+
+  .intake-stage {
+    min-width: unset;
+  }
+
+  .w-120 {
+    width: 100%;
+  }
+}
+
+/* ===================== RESPONSIVE: TABLET (641-992px) ===================== */
+@media (min-width: 641px) and (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-card-selects .select-input {
+    width: 160px;
+  }
+
+  .intake-stages {
+    flex-wrap: wrap;
+  }
+
+  .intake-stage {
+    min-width: 140px;
+    flex: 1 1 calc(33% - 10px);
+  }
+
+  .chart-container {
+    max-width: 250px;
+  }
+}
+
+/* ===================== RESPONSIVE: DESKTOP (>=993px) ===================== */
+@media (min-width: 993px) and (max-width: 1399px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

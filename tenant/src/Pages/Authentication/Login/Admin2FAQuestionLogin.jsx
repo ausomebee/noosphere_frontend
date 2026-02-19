@@ -8,7 +8,7 @@ import { TextInput } from "../../../Components/Input/Inputs";
 import TenantLogo from "../../../assets/Logo.svg";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema for security answer
@@ -20,10 +20,7 @@ const answerSchema = yup.object().shape({
 });
 
 const Admin2FAQuestionLogin = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
-  const authQuestion = useSelector(
-    (state) => state.authentication?.user?.authQuestion
-  );
+  const { userId, authQuestion } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 

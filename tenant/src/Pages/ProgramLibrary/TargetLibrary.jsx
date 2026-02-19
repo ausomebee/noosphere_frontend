@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import Button from "../../Components/Button/Button";
 import AddTargetModal from "../../Components/ReusableModal/ProgramLibraryModal/AddTargetModal";
 import DeleteLibraryModal from "../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
@@ -21,8 +21,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
   const [modalMode, setModalMode] = useState("add");
   const [loading, setLoading] = useState(true);
 
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
 
   const fetchTargets = async () => {
     if (!programId) return;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../../Layout/TenantLayout";
+import useAuth from "../../../../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaArrowLeft, FaEdit, FaPlus } from "react-icons/fa";
 import AddPayerModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddPayerModal";
@@ -10,12 +9,11 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import AddSingleServiceCodeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddSingleServiceCode";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
+import "../../BillingPayment.css";
 
 
 const SingleViewPayer = () => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-    const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-    const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const [payerData, setPayerData] = useState(null);
@@ -428,7 +426,7 @@ const SingleViewPayer = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="program-column-header flex gap-4 items-center">
         <div onClick={() => navigate(-1)}>
           <button className="back-button">
@@ -444,10 +442,10 @@ const SingleViewPayer = () => {
           </span>
         </div>
       </div>
-      <h2 className="font-bold text-lg text-gray-700-em mb-4 mt-20">
+      <h2 className="font-bold text-lg text-gray-700-em mb-4 mt-6">
         Payer Information
       </h2>
-      <div className="flex justify-between bg-gray-200 rounded-lg w-full p-20 mb-6">
+      <div className="billing-info-card flex justify-between">
         {loadingPayer ? (
           <div className="flex justify-center items-center w-full py-8">
             <div>Loading...</div>
@@ -467,7 +465,7 @@ const SingleViewPayer = () => {
         )}
       </div>
 
-      <div className="flex justify-between items-center mt-20">
+      <div className="billing-status-row">
         <h2 className="font-bold text-lg text-gray-700-em mb-4">Authorization</h2>
         <div>
           <Button
@@ -483,7 +481,7 @@ const SingleViewPayer = () => {
           />
         </div>
       </div>
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={columns}
@@ -523,7 +521,7 @@ const SingleViewPayer = () => {
           serviceCodes={serviceCodeTableData}
         />
       )}
-    </DashboardLayout>
+    </>
   );
 };
 
@@ -546,7 +544,7 @@ const OrgGrid = ({ data }) => {
     : address || "--";
 
   return (
-    <div className="grid grid-cols-3 items-start w-full">
+    <div className="billing-grid-3">
       <div className="flex flex-col gap-2">
         <Field label="Payer Name" value={payerName || "--"} />
         <Field label="Payer Email" value={email || "--"} />
@@ -559,7 +557,7 @@ const OrgGrid = ({ data }) => {
         <Field label="TPL Code" value={tplCode || "--"} />
         <Field label="Carrier Payer ID" value={carrierPayerId || "--"} />
       </div>
-      <div className="flex flex-col gap-2 col-span-3 border-t pt-4 mt-4">
+      <div className="flex flex-col gap-2 billing-grid-full-span">
         <Field label="Address" value={fullAddress} />
       </div>
     </div>

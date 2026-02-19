@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput, TextInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const frequencySchema = yup.object({
@@ -38,8 +39,17 @@ const FrequencyModal = ({
 
   const numberOfOccurrenceValue = watch("numberOfOccurrence");
 
-  const handleFormSubmit = (data) => {
-    onSave(data);
+  const handleFormSubmit = async (data) => {
+    try {
+      await onSave(data);
+    } catch (error) {
+      showToast("Failed to save frequency data", "error");
+    }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const incrementNumber = () => {
@@ -68,7 +78,7 @@ const FrequencyModal = ({
       title="Frequency"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
       onSecondaryButtonClick={onClose}
       size="medium"
       primaryButtonLoading={submitting}

@@ -5,7 +5,7 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import { BsCloudUpload } from "react-icons/bs";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 // Validation schema
 const documentSchema = yup.object({
@@ -93,7 +93,7 @@ const FileUploadArea = ({
 
 const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const user = useSelector((state) => state.authentication?.user);
+  const { user } = useAuth();
 
   const {
     register,

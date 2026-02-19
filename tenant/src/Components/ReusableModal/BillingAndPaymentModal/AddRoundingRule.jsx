@@ -11,6 +11,7 @@ import {
   RadioInput,
   SwitchInput,
 } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // ----------------- schema -----------------
 const roundingRuleSchema = yup.object().shape({
@@ -142,6 +143,11 @@ const AddRoundingRule = ({
     }
   }, [ruleType, parentRole, setValue]);
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const handleFormSubmit = async (data) => {
     setSubmitting(true);
     try {
@@ -188,7 +194,7 @@ const AddRoundingRule = ({
       size="md"
       primaryButtonLoading={submitting || loading}
       primaryButtonDisabled={mode === "view"}
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
       primaryButtonText={submitting ? "Saving..." : "Save Rule"}
       secondaryButtonText="Cancel"
       onSecondaryButtonClick={handleClose}

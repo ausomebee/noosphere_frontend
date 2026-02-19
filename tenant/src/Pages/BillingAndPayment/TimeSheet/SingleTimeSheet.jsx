@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import {
   FaArrowLeft,
   FaChevronDown,
@@ -9,8 +8,9 @@ import {
   FaTimesCircle,
   FaClock,
 } from "react-icons/fa";
+import "../BillingPayment.css";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import AccordionTable from "../../../Components/Table/AccordionTable";
 import Button from "../../../Components/Button/Button";
 import RejectTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/RejectTimesheetModal";
@@ -554,15 +554,9 @@ const SingleTimeSheet = () => {
   const navigate = useNavigate();
   const { timesheetId } = useParams();
 
-  // Redux state
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
-  const user = useSelector((s) => s.authentication?.user);
+  // Auth state
+  const { tenantId, role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
+  const role = roleObj?.name ?? "Client";
 
   // State
   const [activeTab, setActiveTab] = useState("timeSheetDetails");
@@ -1215,23 +1209,28 @@ const SingleTimeSheet = () => {
           yPos += lineHeight;
         });
 
-        // if (approval.feedback) {
-        //   checkPageBreak(lineHeight + 5);
-        //   doc.setFont("helvetica", "bold");
-        //   doc.text("Feedback:", margin, yPos);
-        //   yPos += 5;
+        // Client Signature
+        if (approval.signature) {
+          checkPageBreak(50);
+          yPos += 5;
+          doc.setFont("helvetica", "bold");
+          doc.text("Client Signature:", margin, yPos);
+          yPos += 5;
 
-        //   doc.setFont("helvetica", "normal");
-        //   const feedbackLines = doc.splitTextToSize(
-        //     approval.feedback,
-        //     pageWidth - 2 * margin
-        //   );
-        //   feedbackLines.forEach((line) => {
-        //     checkPageBreak(lineHeight);
-        //     doc.text(line, margin + 5, yPos);
-        //     yPos += lineHeight;
-        //   });
-        // }
+          try {
+            const sigData = approval.signature.startsWith("data:")
+              ? approval.signature
+              : `data:image/png;base64,${approval.signature}`;
+            const sigWidth = 60;
+            const sigHeight = 25;
+            doc.addImage(sigData, "PNG", margin, yPos, sigWidth, sigHeight);
+            yPos += sigHeight + 5;
+          } catch (e) {
+            doc.setFont("helvetica", "normal");
+            doc.text("(Signature could not be rendered)", margin, yPos);
+            yPos += lineHeight;
+          }
+        }
       } else {
         checkPageBreak(lineHeight);
         doc.setFontSize(10);
@@ -1545,7 +1544,7 @@ const SingleTimeSheet = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <div
           style={{
             display: "flex",
@@ -1556,7 +1555,7 @@ const SingleTimeSheet = () => {
         >
           <LoadingSpinner />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -1632,7 +1631,7 @@ const SingleTimeSheet = () => {
     timesheetData.sessionDatas && timesheetData.sessionDatas.length > 0;
 
   return (
-    <DashboardLayout>
+    <>
       <div>
         <div className="manage-column-header">
           <button className="manage-back-button" onClick={() => navigate(-1)}>
@@ -1674,8 +1673,8 @@ const SingleTimeSheet = () => {
 
         {activeTab === "timeSheetDetails" && (
           <div>
-            <div className="flex justify-between items-center mt-6">
-              <div className="flex border rounded-md items-center p-4 border-gray-200 w-fit">
+            <div className="billing-status-row">
+              <div className="billing-approval-box">
                 <div className="timesheet-approval-container">
                   <span className="timesheet-approval-text">
                     Client Approval
@@ -1822,8 +1821,8 @@ const SingleTimeSheet = () => {
               <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                 Session Information
               </h3>
-              <div className="p-20 border border-gray-200 rounded-lg">
-                <div className="grid grid-cols-2 gap-8">
+              <div className="billing-info-card-bordered">
+                <div className="billing-grid-2">
                   <div className="gap-4 flex flex-col">
                     <div>
                       <span className="text-gray-400 font-bold">Date</span>
@@ -1905,8 +1904,8 @@ const SingleTimeSheet = () => {
               <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                 Travel & Time Information
               </h3>
-              <div className="p-20 border border-gray-200 rounded-lg">
-                <div className="grid grid-cols-3 gap-8">
+              <div className="billing-info-card-bordered">
+                <div className="billing-grid-3">
                   <div className="gap-4 flex flex-col">
                     <div>
                       <span className="text-gray-400 font-bold">
@@ -2005,8 +2004,8 @@ const SingleTimeSheet = () => {
                 </div>
               </div>
             </div>
-            <div className="flex">
-              <div className="flex-1">
+            <div className="billing-docs-layout">
+              <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                   Documents & Data
                 </h3>
@@ -2083,7 +2082,7 @@ const SingleTimeSheet = () => {
                   )}
                 </div>
               </div>
-              <div className="flex-1">
+              <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-400 mt-6">
                   Client Authorization
                 </h3>
@@ -2129,7 +2128,7 @@ const SingleTimeSheet = () => {
                         {clientSignature ? (
                           // Render base64 signature as image
                           <img
-                            src={`data:image/png;base64,${clientSignature}`}
+                            src={clientSignature.startsWith("data:") ? clientSignature : `data:image/png;base64,${clientSignature}`}
                             alt="Client Signature"
                             style={{
                               maxWidth: "100%",
@@ -2172,7 +2171,8 @@ const SingleTimeSheet = () => {
                         style={{
                           marginTop: "24px",
                           display: "flex",
-                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "16px",
                         }}
                       >
                         <div style={{ marginBottom: "12px" }}>
@@ -2356,7 +2356,7 @@ const SingleTimeSheet = () => {
           sessionDatas={timesheetData.sessionDatas || []}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

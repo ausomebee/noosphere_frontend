@@ -7,6 +7,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, CheckboxInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Schema definition for form validation
 const schema = yup.object().shape({
@@ -236,9 +237,18 @@ const AddRoleModal = ({
 
   const handleNext = () => {
     const idx = tabsList.indexOf(activeTab);
-    if (idx < tabsList.length - 1 && validateTab(activeTab)) {
-      setActiveTab(tabsList[idx + 1]);
+    if (idx < tabsList.length - 1) {
+      if (validateTab(activeTab)) {
+        setActiveTab(tabsList[idx + 1]);
+      } else {
+        showToast("Please fill in all required fields before proceeding", "error");
+      }
     }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handleFormSubmit = async (data) => {
@@ -553,7 +563,7 @@ const AddRoleModal = ({
   const getPrimaryButtonAction = () => {
     if (mode === "view") return handleClose;
     if (activeTab === "Team Permission") {
-      return handleSubmit(handleFormSubmit);
+      return handleSubmit(handleFormSubmit, onValidationError);
     }
     return handleNext;
   };

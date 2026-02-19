@@ -5,7 +5,7 @@ import Pagination from "./Pagination";
 import "./AccordionTable.css";
 import Button from "../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import api2 from "../../api/billingAndPaymentsApi";
 
 const AccordionTable = ({
@@ -25,10 +25,8 @@ const AccordionTable = ({
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
 
-  // Get user data from Redux
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  // Get user data from auth hook
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: {
@@ -289,7 +287,7 @@ const AccordionTable = ({
   return (
     <div className="accordion-table-container">
       <div className="accordion-table-wrapper">
-        {loading.LOADING ? (
+        {loading ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
           </div>

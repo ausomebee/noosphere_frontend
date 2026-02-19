@@ -5,7 +5,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 const AddAuthorizationModal = ({
   isOpen,
@@ -40,9 +40,7 @@ const AddAuthorizationModal = ({
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
   const [loadingInsuranceTypes, setLoadingInsuranceTypes] = useState(false);
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const fetchPayers = useCallback(async () => {
     if (!tenantId || !accessToken) return;

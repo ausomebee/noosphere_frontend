@@ -7,6 +7,7 @@ import Button from "../../../../Components/Button/Button";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import { CgDanger } from "react-icons/cg";
 import { MdOutlineFileOpen } from "react-icons/md";
+import "../../Organisation.css";
 
 const Profile = ({
   staff,
@@ -28,7 +29,7 @@ const Profile = ({
   const renderLicenses = () => {
     if (!licenses.length) {
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-20 mb-6">
+        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -44,7 +45,7 @@ const Profile = ({
 
     if (licenseView === "card") {
       return (
-        <div className="grid grid-cols-3 gap-10 mt-6">
+        <div className="org-license-grid">
           {licenses.map((l) => (
             <LicenseCard
               key={l.id}
@@ -115,7 +116,7 @@ const Profile = ({
   const renderFiles = () => {
     if (!files.length) {
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-20 mb-6">
+        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -146,9 +147,14 @@ const Profile = ({
                   label: "View",
                   onClick: (row) => {
                     if (row.documentsUrl?.url) {
-                      window.open(row.documentsUrl.url, "_blank");
-                    } else {
-                      console.error("No URL available for this document");
+                      try {
+                        const parsed = new URL(row.documentsUrl.url);
+                        if (["http:", "https:"].includes(parsed.protocol)) {
+                          window.open(row.documentsUrl.url, "_blank", "noopener,noreferrer");
+                        }
+                      } catch {
+                        // Invalid URL
+                      }
                     }
                   },
                 },
@@ -200,7 +206,7 @@ const Profile = ({
       <h2 className="font-bold text-lg text-gray-700-em mb-4 mt-6">
         Basic Information
       </h2>
-      <div className="flex justify-between bg-gray-200 rounded-lg w-full p-20 mb-6">
+      <div className="org-info-card">
         <OrgGrid data={staff} />
         <div>
           <div 
@@ -211,11 +217,11 @@ const Profile = ({
           </div>
         </div>
       </div>
-      <div className="p-20">
-        <div className="flex justify-between items-center mb-4">
+      <div className="org-section">
+        <div className="org-section-header">
           <h2 className="font-bold text-lg text-gray-700-em">Staff Licenses</h2>
-          <div className="flex items-center gap-20">
-            <div className="flex gap-10">
+          <div className="org-section-actions">
+            <div className="org-view-toggle">
               <RxDashboard
                 className="cursor-pointer"
                 size={24}
@@ -242,8 +248,8 @@ const Profile = ({
         </div>
         {renderLicenses()}
       </div>
-      <div className="p-20">
-        <div className="flex justify-between items-center mb-4">
+      <div className="org-section">
+        <div className="org-section-header">
           <h2 className="font-bold text-lg text-gray-700-em">
             Staff Documents
           </h2>
@@ -263,28 +269,28 @@ const Profile = ({
   );
 };
 const OrgGrid = ({ data }) => (
-  <div className="flex items-center w-full">
-    <div className="flex w-60">
-      <div className="flex items-center justify-center w-full">
-        <div className="flex flex-col items-center text-center">
-          <div className="organisation-user-avatar">{data?.name
-        ? data?.name
-            .split(" ")
-            .map((word) => word.charAt(0))
-            .join("")
-            .slice(0, 2)
-        : "NA"}</div>
-          <h2 className="font-bold text-lg text-gray-700 mb-4">{data?.name || "N/A"}</h2>
-        </div>
+  <div className="staff-info-layout">
+    <div className="staff-info-avatar">
+      <div className="organisation-user-avatar">
+        {data?.name
+          ? data?.name
+              .split(" ")
+              .map((word) => word.charAt(0))
+              .join("")
+              .slice(0, 2)
+          : "NA"}
       </div>
-      <div className="flex flex-col gap-2 w-full">
-        <Field label="Gender" value={data?.gender} />
-        <Field label="Date of Birth" value={data?.DOB} />
-        <Field label="NPI" value={data?.practiceNPI} />
-        <Field label="Email" value={data?.email} />
-        <Field label="Address" value={data?.address} />
-        <Field label="Date joined" value={data?.dateJoined} />
-      </div>
+      <h2 className="font-bold text-lg text-gray-700 mb-4">
+        {data?.name || "N/A"}
+      </h2>
+    </div>
+    <div className="staff-info-fields">
+      <Field label="Gender" value={data?.gender} />
+      <Field label="Date of Birth" value={data?.DOB} />
+      <Field label="NPI" value={data?.practiceNPI} />
+      <Field label="Email" value={data?.email} />
+      <Field label="Address" value={data?.address} />
+      <Field label="Date joined" value={data?.dateJoined} />
     </div>
   </div>
 );
@@ -330,7 +336,7 @@ const IconFile = (props) => (
 );
 
 const LicenseCard = ({ data, onEdit, onDelete }) => (
-  <div className="border rounded-md border-gray-200 bg-white p-20">
+  <div className="border rounded-md border-gray-200 bg-white p-6">
     <div className="flex justify-between">
       <div className="flex gap-6">
         <MdOutlineFileOpen size={24} color="#004ABA" />

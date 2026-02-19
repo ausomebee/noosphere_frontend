@@ -1,6 +1,7 @@
 import * as yup from "yup";
 
 export const newPayrollSchema = yup.object({
+  compensationType: yup.string().required("Compensation type is required"),
   from: yup.string().required("Start date is required"),
   to: yup
     .string()
@@ -13,27 +14,25 @@ export const newPayrollSchema = yup.object({
         if (!from || !value) return true;
         return new Date(value) > new Date(from);
       }
+    )
+    .test(
+      "not-future",
+      "End date cannot be later than today",
+      function (value) {
+        if (!value) return true;
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        return new Date(value) <= today;
+      }
     ),
 });
 
 export const addIncomeSchema = yup.object({
   incomeItem: yup.string().required("Please select an income item"),
-  unitType: yup.string().required("Please select a unit type"),
-  amount: yup
-    .number()
-    .typeError("Amount must be a number")
-    .required("Amount is required")
-    .min(0, "Amount cannot be negative"),
 });
 
 export const addDeductionSchema = yup.object({
   deductionItem: yup.string().required("Please select a deduction item"),
-  unitType: yup.string().required("Please select a unit type"),
-  amount: yup
-    .number()
-    .typeError("Amount must be a number")
-    .required("Amount is required")
-    .min(0, "Amount cannot be negative"),
 });
 
 export const addStaffSchema = yup.object({

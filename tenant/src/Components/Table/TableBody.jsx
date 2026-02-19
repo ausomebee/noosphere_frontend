@@ -490,4 +490,4 @@ const TableBody = ({
   );
 };
 
-export default TableBody;
+export default React.memo(TableBody);

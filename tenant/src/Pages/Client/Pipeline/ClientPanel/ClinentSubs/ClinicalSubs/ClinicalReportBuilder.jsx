@@ -1,6 +1,7 @@
 // ClinicalReportBuilder.jsx
 import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../../../../../hooks/useAuth";
 import { GrDrag } from "react-icons/gr";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaChevronLeft, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
@@ -22,7 +23,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import "./ClinicalReportBuilder.css";
 
-import DashboardLayout from "../../../../../../Layout/TenantLayout";
+
 import ClientInformationSection from "./DocumentSections/ClientInformationSection/ClientInformationSection";
 import AssessmentsSection from "./DocumentSections/AssessmentsSections/AssessmentsSection";
 import TargetBehavioursSection from "./DocumentSections/TargetBehavioursSections/TargetBehavioursSection";
@@ -519,9 +520,7 @@ const ClinicalReportBuilder = () => {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const {
     id: reportId,
@@ -565,6 +564,7 @@ const ClinicalReportBuilder = () => {
   const [isResubmitting, setIsResubmitting] = useState(false);
 
   const [isEditingAfterSigned, setIsEditingAfterSigned] = useState(false);
+  const [isRevertingToDraft, setIsRevertingToDraft] = useState(false);
 
   const isReadOnly =
     mode === "submittedForApproval" ||
@@ -982,8 +982,27 @@ const ClinicalReportBuilder = () => {
       return (
         <Button
           variant="primary"
-          label="Edit Document (New Version)"
-          onClick={() => setIsEditingAfterSigned(true)}
+          label={isRevertingToDraft ? "Reverting..." : "Edit Document (New Version)"}
+          loading={isRevertingToDraft}
+          disabled={isRevertingToDraft}
+          onClick={async () => {
+            setIsRevertingToDraft(true);
+            try {
+              await api.UpdateClinicalReportStatus({
+                reportId: storedReportId,
+                status: "DRAFT",
+                accessToken,
+                refreshToken,
+              });
+              setIsEditingAfterSigned(true);
+              showToast("Document reverted to draft for editing", "success");
+            } catch (err) {
+              console.error("Failed to revert to draft:", err);
+              showToast("Failed to revert document to draft", "error");
+            } finally {
+              setIsRevertingToDraft(false);
+            }
+          }}
         />
       );
     }
@@ -1033,7 +1052,7 @@ const ClinicalReportBuilder = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -1339,7 +1358,7 @@ const ClinicalReportBuilder = () => {
           </ReusableModal>
         </div>
       </DndContext>
-    </DashboardLayout>
+    </>
   );
 };
 
