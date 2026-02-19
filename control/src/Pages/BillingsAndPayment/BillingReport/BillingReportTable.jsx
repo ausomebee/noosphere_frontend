@@ -1,10 +1,8 @@
 import React from "react";
 import CustomTable from "../../../Components/Table/CustomTable";
-import Layout from "../../Layout/ControlLayout";
 
 const BillingReportTable = () => {
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
   };
 
   const filters = [
@@ -21,7 +19,7 @@ const BillingReportTable = () => {
     },
   ];
   return (
-    <Layout>
+    <>
       <div className="tenant-header">
         <div onClick={() => navigate(-1)} className="back-link">
           <FaArrowLeft /> Back
@@ -41,7 +39,7 @@ const BillingReportTable = () => {
         onFilterChange={handleFilterChange}
        
       />
-    </Layout>
+    </>
   );
 };
 

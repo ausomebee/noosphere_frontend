@@ -361,32 +361,7 @@ html {
 }
 
 /* Responsive Adjustments */
-@media (max-width: 1024px) {
-  .column {
-    width: 14rem;
-  }
-
-  .column-insertion-point {
-    width: 1.5rem;
-    min-height: 40rem;
-  }
-
-  .column-insertion-point.before {
-    margin-right: -0.75rem;
-  }
-
-  .column-insertion-point.after {
-    margin-left: -0.75rem;
-  }
-
-  .add-column-button {
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .board {
     flex-direction: column;
     align-items: center;
@@ -434,7 +409,7 @@ html {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .column {
     width: 100%;
     max-width: none;

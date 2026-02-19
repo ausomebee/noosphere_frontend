@@ -5,7 +5,7 @@ import { FiChevronDown } from 'react-icons/fi';
 import { Menu } from '@headlessui/react';
 import './DragAndDrop.css';
 
-const Task = ({
+const Task = React.memo(({
   task,
   id,
   onRemoveTask,
@@ -20,7 +20,6 @@ const Task = ({
   toggleSelection,
 }) => {
   if (!task) {
-    console.warn(`Task with ID ${id} is undefined`);
     return null;
   }
 
@@ -114,6 +113,6 @@ const Task = ({
       </Menu>
     </div>
   );
-};
+});
 
 export default Task;

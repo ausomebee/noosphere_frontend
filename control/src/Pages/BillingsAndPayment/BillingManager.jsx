@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import Layout from "../Layout/ControlLayout";
+
 import CustomTable from "../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../Components/Input/Inputs";
 import api from "../../api/InvoiceApi";
@@ -8,8 +8,6 @@ import api2 from "../../api/TenantApis";
 import { useSelector } from "react-redux";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 const BillingManager = () => {
   const token = useSelector((state) => state.authentication?.user?.token);
@@ -218,7 +216,7 @@ const BillingManager = () => {
           invoicesDue,
         });
       } catch (err) {
-        console.error("Error fetching metrics:", err);
+        if (import.meta.env.DEV) console.error("Error fetching metrics:", err);
         setError("Failed to load metrics. Please try again later.");
       } finally {
         setLoading(false);
@@ -343,7 +341,7 @@ const BillingManager = () => {
           throw new Error("Failed to fetch some data.");
         }
       } catch (err) {
-        console.error(`Error fetching ${activeTab}:`, err);
+        if (import.meta.env.DEV) console.error(`Error fetching ${activeTab}:`, err);
         setError(`Failed to load ${activeTab}. Please try again later.`);
       } finally {
         setLoading(false);
@@ -417,7 +415,7 @@ const BillingManager = () => {
 
           setOverviewData(updatedOverviewData);
         } catch (err) {
-          console.error("Error fetching custom metrics:", err);
+          if (import.meta.env.DEV) console.error("Error fetching custom metrics:", err);
           setError("Failed to load custom metrics.");
         } finally {
           setLoading(false);
@@ -462,7 +460,7 @@ const BillingManager = () => {
       setSelectedInvoice(invoice);
       setShowInvoiceModal(true);
     } catch (err) {
-      console.error("Error fetching invoice:", err);
+      if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
       setError("Failed to load invoice details.");
     }
   };
@@ -497,7 +495,7 @@ const BillingManager = () => {
       setSelectedPayment(payment);
       setShowPaymentView(true);
     } catch (err) {
-      console.error("Error fetching payment:", err);
+      if (import.meta.env.DEV) console.error("Error fetching payment:", err);
       setError("Failed to load payment details.");
     }
   };
@@ -540,6 +538,9 @@ const BillingManager = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
       const canvas = await html2canvas(tempContainer, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
 
@@ -556,7 +557,7 @@ const BillingManager = () => {
       root.unmount();
       document.body.removeChild(tempContainer);
     } catch (err) {
-      console.error("Error generating PDF:", err);
+      if (import.meta.env.DEV) console.error("Error generating PDF:", err);
       alert("Failed to download invoice. Please try again.");
     }
   };
@@ -663,7 +664,7 @@ const BillingManager = () => {
   };
 
   return (
-    <Layout>
+    <>
       {/* Invoice Modal */}
       {showInvoiceModal && selectedInvoice && (
         <div
@@ -908,7 +909,7 @@ const BillingManager = () => {
           </div>
         </>
       )}
-    </Layout>
+    </>
   );
 };
 

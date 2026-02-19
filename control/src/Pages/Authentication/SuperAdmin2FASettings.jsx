@@ -60,13 +60,13 @@ const SuperAdmin2FASettings = () => {
           navigate("/2fa/security-question");
           break;
         default:
-          console.error("Invalid 2FA method selected");
+          if (import.meta.env.DEV) console.error("Invalid 2FA method selected");
       }
     } catch (error) {
       const message =
         error?.response?.data?.message || "Failed to update 2FA settings.";
       showToast(message, "error");
-      console.error("2FA settings error:", error);
+      if (import.meta.env.DEV) console.error("2FA settings error:", error);
     } finally {
       setLoading(false);
     }

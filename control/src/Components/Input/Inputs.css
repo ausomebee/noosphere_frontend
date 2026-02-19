@@ -403,3 +403,99 @@ input:checked + .slider:before {
   margin-top: 0.25rem;
   display: block;
 }
+
+/* ===== Tablet (max-width: 992px) ===== */
+@media (max-width: 992px) {
+  .input-row {
+    gap: 6px;
+  }
+
+  .input-row .input-text {
+    min-width: 120px;
+  }
+
+  .input-row .input-select {
+    min-width: 80px;
+  }
+}
+
+/* ===== Mobile (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  /* Input containers — full width */
+  .input-group {
+    margin-bottom: 14px;
+  }
+
+  .inputs-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Labels — smaller font */
+  .input-label {
+    font-size: 0.8rem;
+  }
+
+  /* Text input — slightly reduced padding */
+  .input-text {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+
+  /* Select input — full width, reduced padding */
+  .input-select {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+
+  /* Input rows — stack vertically */
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .input-row .input-text {
+    flex: unset;
+    width: 100%;
+    min-width: unset;
+  }
+
+  .input-row .input-select {
+    flex: unset;
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Textarea — reduced min-height */
+  .input-textarea {
+    font-size: 0.8rem;
+    min-height: 70px;
+  }
+
+  /* Search input */
+  .input-search {
+    font-size: 0.8rem;
+    padding: 7px 10px 7px 28px;
+  }
+
+  .search-icon {
+    width: 14px;
+    height: 14px;
+    left: 10px;
+  }
+
+  /* Checkbox label */
+  .input-checkbox-label {
+    font-size: 0.8rem;
+  }
+
+  /* Switch label */
+  .input-switch-label {
+    font-size: 0.8rem;
+  }
+
+  /* Radio label */
+  .input-radio-label {
+    font-size: 0.8rem;
+  }
+}

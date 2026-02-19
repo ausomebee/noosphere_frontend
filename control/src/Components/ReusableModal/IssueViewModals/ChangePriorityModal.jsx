@@ -33,7 +33,6 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
   // Determine isEnterprise from selectedTenant
   const isEnterprise = useMemo(() => {
     if (Array.isArray(selectedTenant)) {
-      console.warn("selectedTenant is an array; using first element:", selectedTenant);
       return selectedTenant[0]?.isEnterprise || false;
     }
     return selectedTenant?.isEnterprise || false;
@@ -57,17 +56,12 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
   }, [isEnterprise]);
 
   useEffect(() => {
-    console.log("ChangePriorityModal - initialPriority:", initialPriority);
-    console.log("ChangePriorityModal - selectedTenant:", selectedTenant);
-    console.log("ChangePriorityModal - isEnterprise:", isEnterprise);
-    console.log("ChangePriorityModal - priorityOptions:", priorityOptions);
 
     if (isOpen) {
       const validPriority = priorityOptions.find((opt) => opt.value === initialPriority);
       if (validPriority) {
         setValue("priorityFrom", initialPriority, { shouldValidate: true });
       } else {
-        console.warn(`Invalid initialPriority: ${initialPriority}. Available options:`, priorityOptions);
         setValue("priorityFrom", "", { shouldValidate: true });
       }
       setValue("priorityTo", "", { shouldValidate: true });
@@ -80,7 +74,6 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
       reset({ priorityFrom: initialPriority || "", priorityTo: "" });
       onClose();
     } else {
-      console.warn("Submission blocked: priorityFrom does not match initialPriority or priorityTo is invalid");
     }
   };
 

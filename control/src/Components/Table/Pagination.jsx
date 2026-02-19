@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
   const maxPagesToShow = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
@@ -93,6 +93,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       </button>
     </div>
   );
-};
+});
 
 export default Pagination;

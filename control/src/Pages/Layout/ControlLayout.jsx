@@ -36,13 +36,13 @@ const Layout = ({ children }) => {
   };
 
   const handleNavClickMobile = () => {
-    if (window.innerWidth <= 1024) {
+    if (window.innerWidth <= 992) {
       setIsSidebarOpen(false);
     }
   };
 
   const handleNavClickDesktop = () => {
-    if (window.innerWidth > 1024 && isSidebarCollapsed) {
+    if (window.innerWidth > 992 && isSidebarCollapsed) {
       setIsSidebarCollapsed(false);
     }
   };
@@ -321,7 +321,7 @@ const Layout = ({ children }) => {
       <div
         className="sidebar-overlay"
         onClick={() => {
-          if (window.innerWidth <= 1024) {
+          if (window.innerWidth <= 992) {
             setIsSidebarOpen(false);
           }
         }}

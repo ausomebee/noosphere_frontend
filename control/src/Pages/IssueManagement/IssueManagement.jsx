@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { useSelector } from "react-redux";
-import Layout from "../Layout/ControlLayout";
+
 import { SelectInput } from "../../Components/Input/Inputs";
 import Chart from "react-apexcharts";
 import Button from "../../Components/Button/Button";
@@ -170,7 +170,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load staff list.");
         setStaffList(staffCache.current);
-        console.error("Admins error:", adminsResult.reason);
+        if (import.meta.env.DEV) console.error("Admins error:", adminsResult.reason);
       }
 
       // Process tenants
@@ -184,11 +184,10 @@ const IssueManagement = () => {
           : [];
         tenantCache.current = tenantsData;
         setTenantList(tenantsData);
-        console.log("Tenant List:", tenantsData); // Debugging
       } else {
         errors.push("Failed to load tenant list.");
         setTenantList(tenantCache.current);
-        console.error("Tenants error:", tenantsResult.reason);
+        if (import.meta.env.DEV) console.error("Tenants error:", tenantsResult.reason);
       }
 
       // Process issues
@@ -220,7 +219,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load issues.");
         setIssueData([]);
-        console.error("Issues error:", issuesResult.reason);
+        if (import.meta.env.DEV) console.error("Issues error:", issuesResult.reason);
       }
 
       // Process metrics
@@ -241,7 +240,7 @@ const IssueManagement = () => {
           InProgress: 0,
           Unassigned: 0,
         });
-        console.error("Metrics error:", metricsResult.reason);
+        if (import.meta.env.DEV) console.error("Metrics error:", metricsResult.reason);
       }
 
       // Process resolution time
@@ -250,7 +249,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load resolution time.");
         setResolutionTime("0.00");
-        console.error("Resolution time error:", resolutionTimeResult.reason);
+        if (import.meta.env.DEV) console.error("Resolution time error:", resolutionTimeResult.reason);
       }
 
       // Process percentages
@@ -259,7 +258,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load status percentages.");
         setStatusPercentages([]);
-        console.error(
+        if (import.meta.env.DEV) console.error(
           "Status percentages error:",
           statusPercentagesResult.reason
         );
@@ -270,7 +269,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load category percentages.");
         setCategoryPercentages([]);
-        console.error(
+        if (import.meta.env.DEV) console.error(
           "Category percentages error:",
           categoryPercentagesResult.reason
         );
@@ -283,7 +282,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load date created percentages.");
         setDateCreatedPercentages([]);
-        console.error(
+        if (import.meta.env.DEV) console.error(
           "Date created percentages error:",
           dateCreatedPercentagesResult.reason
         );
@@ -294,7 +293,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load assignee percentages.");
         setAssigneePercentages([]);
-        console.error(
+        if (import.meta.env.DEV) console.error(
           "Assignee percentages error:",
           assigneePercentagesResult.reason
         );
@@ -305,7 +304,7 @@ const IssueManagement = () => {
       } else {
         errors.push("Failed to load priority percentages.");
         setPriorityPercentages([]);
-        console.error(
+        if (import.meta.env.DEV) console.error(
           "Priority percentages error:",
           priorityPercentagesResult.reason
         );
@@ -317,7 +316,7 @@ const IssueManagement = () => {
     } catch (err) {
       if (err.name !== "AbortError") {
         setError("Unexpected error occurred while loading data.");
-        console.error("Fetch error:", err);
+        if (import.meta.env.DEV) console.error("Fetch error:", err);
       }
     } finally {
       setLoading(false);
@@ -392,7 +391,7 @@ const IssueManagement = () => {
       } catch (err) {
         setError("Failed to add issue.");
         showToast("Error adding issue: " + err.message, "error");
-        console.error("Error adding issue:", err);
+        if (import.meta.env.DEV) console.error("Error adding issue:", err);
       } finally {
         setIsAddingIssue(false);
       }
@@ -446,7 +445,7 @@ const IssueManagement = () => {
       } catch (err) {
         setError("Failed to load issue details.");
         showToast("Error loading issue: " + err.message, "error");
-        console.error("Error fetching issue:", err);
+        if (import.meta.env.DEV) console.error("Error fetching issue:", err);
       } finally {
         setIsIssueLoading(false);
       }
@@ -662,7 +661,7 @@ const IssueManagement = () => {
   }
 
   return (
-    <Layout>
+    <>
       {loading && <LoadingSpinner />}
       {(isIssueLoading || isAddingIssue) && (
         <div
@@ -841,7 +840,7 @@ const IssueManagement = () => {
         tenantList={tenantList}
         staffList={staffList}
       />
-    </Layout>
+    </>
   );
 };
 

@@ -66,7 +66,7 @@ const AssignCandidateModal = ({
       await onSave(selectedStaff);
       setSelectedStaff("");
     } catch (err) {
-      console.error("Failed to assign staff:", err);
+      if (import.meta.env.DEV) console.error("Failed to assign staff:", err);
     } finally {
       setIsLoading(false);
     }

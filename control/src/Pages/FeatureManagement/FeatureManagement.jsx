@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import Layout from "../Layout/ControlLayout";
+
 import Button from "../../Components/Button/Button";
 import { FiSettings } from "react-icons/fi";
 import FeatureGroup from "./FeatureSubComps/FeatureGroup";
@@ -201,7 +201,7 @@ const FeatureManagement = () => {
   }, []);
 
   return (
-    <Layout>
+    <>
       {viewMode === "management" ? (
         <>
           <div className="board-header">
@@ -368,7 +368,7 @@ const FeatureManagement = () => {
           onBack={handleBack}
         />
       )}
-    </Layout>
+    </>
   );
 };
 

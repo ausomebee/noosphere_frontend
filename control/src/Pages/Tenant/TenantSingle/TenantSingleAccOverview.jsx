@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiArrowUpRight, FiEdit3 } from "react-icons/fi";
 
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
 import { FaArrowLeft } from "react-icons/fa";
@@ -11,8 +11,7 @@ const TenantSingleAccOverview = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate(); 
   return (
-    <Layout>
-      <div className="tenant-list-container">
+    <div className="tenant-list-container">
         <div className="tenant-header">
           <div onClick={() => navigate(-1)} className="back-link">
             <FaArrowLeft /> Back
@@ -129,7 +128,6 @@ const TenantSingleAccOverview = () => {
           </div>
         </div>
       </div>
-    </Layout>
   );
 };
 

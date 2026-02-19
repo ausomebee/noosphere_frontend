@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Layout from "../../../Layout/ControlLayout";
+
 import CustomTable from "../../../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
@@ -19,8 +19,6 @@ import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvo
 import api from "../../../../api/SubcriptionApis";
 import apiInvoice from "../../../../api/InvoiceApi";
 import { createRoot } from "react-dom/client";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import { showToast } from "../../../../Helper/ShowToast";
 import { debounce } from "lodash";
@@ -224,7 +222,7 @@ const SubscriptionManager = () => {
         setShowPaymentView(true);
       } catch (err) {
         setError("Failed to load payment details.");
-        console.error("Error fetching payment:", err);
+        if (import.meta.env.DEV) console.error("Error fetching payment:", err);
       } finally {
         setIsPaymentLoading(false);
       }
@@ -274,7 +272,7 @@ const SubscriptionManager = () => {
         setShowInvoiceModal(true);
       } catch (err) {
         setError("Failed to load invoice details.");
-        console.error("Error fetching invoice:", err);
+        if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
       } finally {
         setIsInvoiceLoading(false);
       }
@@ -322,6 +320,9 @@ const SubscriptionManager = () => {
 
         await new Promise((resolve) => setTimeout(resolve, 100));
 
+        const html2canvas = (await import("html2canvas")).default;
+        const { jsPDF } = await import("jspdf");
+
         const canvas = await html2canvas(tempContainer, { scale: 1 }); // Reduced scale for performance
         const imgData = canvas.toDataURL("image/png");
 
@@ -339,7 +340,7 @@ const SubscriptionManager = () => {
         document.body.removeChild(tempContainer);
         showToast("Invoice downloaded successfully", "success");
       } catch (err) {
-        console.error("Error generating PDF:", err);
+        if (import.meta.env.DEV) console.error("Error generating PDF:", err);
         showToast("Failed to download invoice. Please try again.", "error");
       } finally {
         setIsDownloadingInvoice(false);
@@ -368,7 +369,7 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => console.log("Change Plan", row),
+        onClick: (row) => {} // TODO: implement handler,
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -394,7 +395,7 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => console.log("Change Plan", row),
+        onClick: (row) => {} // TODO: implement handler,
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -406,7 +407,7 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Assign a New Plan",
-        onClick: (row) => console.log("Assign Plan", row),
+        onClick: (row) => {} // TODO: implement handler,
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -439,7 +440,7 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => console.log("Change Plan", row),
+        onClick: (row) => {} // TODO: implement handler,
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -520,7 +521,7 @@ const SubscriptionManager = () => {
       }
     } catch (err) {
       setError("Failed to load subscriptions. Please try again later.");
-      console.error("Error fetching subscriptions:", err);
+      if (import.meta.env.DEV) console.error("Error fetching subscriptions:", err);
     } finally {
       setLoading(false);
     }
@@ -746,7 +747,7 @@ const SubscriptionManager = () => {
       } catch (err) {
         setError("Failed to perform subscription action.");
         showToast("Error updating subscription: " + err.message, "error");
-        console.error("Error saving subscription action:", err);
+        if (import.meta.env.DEV) console.error("Error saving subscription action:", err);
       } finally {
         setLoading(false);
       }
@@ -764,7 +765,7 @@ const SubscriptionManager = () => {
   );
 
   return (
-    <Layout>
+    <>
       {loading && <LoadingSpinner />}
       {(isPaymentLoading || isInvoiceLoading || isDownloadingInvoice) && (
         <div
@@ -904,7 +905,7 @@ const SubscriptionManager = () => {
         onSave={handleSave}
         selectedItems={selectedItems}
       />
-    </Layout>
+    </>
   );
 };
 

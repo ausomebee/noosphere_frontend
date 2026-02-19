@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import "./Button.css";
 
-const Button = ({
+const Button = React.memo(({
   label,
   variant = "primary",
   icon,
@@ -62,7 +62,7 @@ const Button = ({
       )}
     </button>
   );
-};
+});
 
 Button.propTypes = {
   label: PropTypes.string.isRequired,

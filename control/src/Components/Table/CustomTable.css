@@ -792,4 +792,216 @@ margin-bottom: 1rem;
   margin-bottom: 1rem;
 }
 
+/* ===== Tablet (max-width: 992px) ===== */
+@media (max-width: 992px) {
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .search-filters-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .filters-container {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .table-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .table-filter-select {
+    width: 130px;
+  }
+
+  .date-filter-input-container {
+    flex-wrap: wrap;
+  }
+
+  .date-filter-input-start,
+  .date-filter-input-end {
+    width: 120px;
+  }
+
+  .filter-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .filter-select-container {
+    flex-wrap: wrap;
+  }
+
+  .selected-items-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* ===== Mobile (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  .custom-table-container {
+    padding: 10px;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .search-filters-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .filters-container {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .table-filter-select {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .filter-label {
+    width: 100%;
+  }
+
+  .table-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .custom-table th,
+  .custom-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .custom-table th {
+    font-size: 12px;
+  }
+
+  /* Pagination */
+  .pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .pagination-pages {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pagination-button {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .pagination-page {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+
+  /* Date filter */
+  .date-filter-input-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .date-filter-input-start,
+  .date-filter-input-end {
+    width: 100%;
+  }
+
+  .date-filter-demarcator {
+    text-align: center;
+    margin-bottom: 0;
+  }
+
+  .date-filter-dropdown {
+    width: calc(100vw - 40px);
+    max-width: 300px;
+    margin: 10px 0;
+  }
+
+  /* Filter wrappers */
+  .filter-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-select-container {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-value-select {
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* Status & label badges — slightly smaller */
+  .status-label,
+  .severity-label,
+  .priority-label,
+  .plan-label {
+    font-size: 11px;
+    padding: 1px 5px;
+  }
+
+  /* Action dropdown */
+  .action-dropdown {
+    min-width: 150px;
+    right: 0;
+  }
+
+  .selected-items-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Empty state */
+  .table-empty-state-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .table-empty-state-content span {
+    font-size: 0.875rem;
+  }
+}
 

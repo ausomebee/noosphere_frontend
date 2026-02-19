@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantSingle.css";
 import { Link } from "react-router-dom";
 import Button from "../../../Components/Button/Button";
@@ -144,7 +144,6 @@ const TenantSingleIssueManagement = () => {
       label: "Delete Issue",
       className: "remove",
       onClick: (row) => {
-        console.log(`Deleting issue: ${row.id}`);
       },
     },
   ];
@@ -256,7 +255,7 @@ const TenantSingleIssueManagement = () => {
   };
 
   return (
-    <Layout>
+    <>
       {viewIssueId ? (
         <TenantListViewIssues
           issueId={viewIssueId}
@@ -359,7 +358,7 @@ const TenantSingleIssueManagement = () => {
           </div>
         </>
       )}
-    </Layout>
+    </>
   );
 };
 

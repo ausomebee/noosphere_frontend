@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantList.css";
 import CustomTable from "../../../Components/Table/CustomTable";
 
@@ -187,8 +187,7 @@ const TenantList = () => {
   };
 
   return (
-    <Layout>
-      <div className="tenant-page-container">
+    <div className="tenant-page-container">
         <div className="tenant-page-header">
           <h1 className="tenant-page-title">Tenants</h1>
           <p className="tenant-page-subtitle">
@@ -218,7 +217,6 @@ const TenantList = () => {
           hasStatusDot={true}
         />
       </div>
-    </Layout>
   );
 };
 

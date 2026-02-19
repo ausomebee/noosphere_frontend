@@ -52,7 +52,7 @@ const SuperAdmin2FAQuestionLogin = () => {
         throw new Error("Verification failed.");
       }
     } catch (error) {
-      console.error("2FA verification failed:", error);
+      if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       const message = error?.response?.data?.message || "Verification failed.";
       showToast(message, "error");
     } finally {

@@ -43,7 +43,6 @@ const SetNewPassword = () => {
   });
 
   const onSubmit = async (data) => {
-    console.log(data)
     navigate("/SA/2fa-question/login")
   }
 //   // Handle form submission

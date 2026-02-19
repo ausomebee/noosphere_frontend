@@ -204,7 +204,7 @@ const SuperAdmin2FAQuestion = () => {
         setStep(step + 1);
       }
     } catch (error) {
-      console.error("Error:", error);
+      if (import.meta.env.DEV) console.error("Error:", error);
       setErrorMessage("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -229,7 +229,7 @@ const SuperAdmin2FAQuestion = () => {
         throw new Error("Failed to set security question.");
       }
     } catch (error) {
-      console.error("2FA verification failed:", error);
+      if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       const message =
         error?.response?.data?.message || "Failed to set security question.";
       setErrorMessage(message);
@@ -252,7 +252,7 @@ const SuperAdmin2FAQuestion = () => {
       showToast("Password updated successfully!", "success");
       setStep(4);
     } catch (error) {
-      console.error("Could not set password:", error);
+      if (import.meta.env.DEV) console.error("Could not set password:", error);
       const message =
         error?.response?.data?.message || "Failed to set password.";
       setErrorMessage(message);

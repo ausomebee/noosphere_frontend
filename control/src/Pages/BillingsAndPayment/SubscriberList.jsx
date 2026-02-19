@@ -10,7 +10,7 @@ import {
 } from "../../Components/Input/Inputs";
 import DateFilterDropdown from "../../Components/Table/DateFilterModal";
 import { parse, format, isWithinInterval, isSameDay } from "date-fns";
-import Layout from "../Layout/ControlLayout";
+
 import { FaArrowLeft } from "react-icons/fa";
 import "./BillingAndPayments.css";
 import { FiMoreVertical } from "react-icons/fi";
@@ -269,8 +269,7 @@ const SubscriberList = () => {
   );
 
   return (
-    <Layout>
-      <div className="subscriber-list-container">
+    <div className="subscriber-list-container">
         <div className="nav-header">
           <button
             onClick={() => navigate("/billing-payments/plans-pricing")}
@@ -537,7 +536,6 @@ const SubscriberList = () => {
           plans={plans}
         />
       </div>
-    </Layout>
   );
 };
 

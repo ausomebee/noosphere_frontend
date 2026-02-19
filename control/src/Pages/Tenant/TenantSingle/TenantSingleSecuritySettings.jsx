@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantSingle.css";
 import { Link } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
@@ -53,17 +53,14 @@ const TenantSingleSecuritySettings = () => {
 
   const handleChangeAdminEmail = () => {
     toggleEditability("adminEmail");
-    console.log("Change Admin Email:", formData.adminEmail);
   };
 
   const handleChangeTenantAdminMobile = () => {
     toggleEditability("tenantAdminMobile");
-    console.log("Change Tenant Admin Mobile:", formData.tenantAdminMobile);
   };
 
   const handleChangeDefaultPassword = () => {
     toggleEditability("defaultPassword");
-    console.log("Change Default Password:", formData.defaultPassword);
   };
 
   const handleCopyTenantPortalUrl = () => {
@@ -72,19 +69,16 @@ const TenantSingleSecuritySettings = () => {
   };
 
   const handleResetPassword = () => {
-    console.log("Reset Password clicked");
   };
 
   const handleManageSessions = () => {
-    console.log("Manage Sessions clicked");
   };
 
   const handleDeactivateAccount = () => {
-    console.log("Deactivate Account clicked");
   };
 
   return (
-    <Layout>
+    <>
       <div className="tenant-header">
         <Link to="/tenants/tenant-list" className="back-link">
           <FaArrowLeft /> Back
@@ -268,7 +262,7 @@ const TenantSingleSecuritySettings = () => {
           width="auto"
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

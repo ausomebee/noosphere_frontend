@@ -25,3 +25,40 @@
   padding-right: 1rem;
   margin-bottom: 1rem;
 }
+
+/* Tablet */
+@media (max-width: 992px) {
+  .error-types-chart-container {
+    max-width: 100%;
+  }
+
+  .error-types-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .error-types-chart-title {
+    justify-self: start;
+    padding-right: 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .error-types-chart-container {
+    padding: 0.75rem;
+    max-width: 100%;
+  }
+
+  .error-types-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .error-types-chart-title {
+    font-size: 0.875rem;
+    justify-self: start;
+    padding-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}

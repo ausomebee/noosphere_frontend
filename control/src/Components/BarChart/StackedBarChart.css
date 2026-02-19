@@ -37,3 +37,35 @@
 .apexcharts-bar-area[seriesName="Success"] {
   clip-path: inset(0 0 0 0 round 8px 8px 0 0) !important;
 }
+
+/* Tablet */
+@media (max-width: 992px) {
+  .stacked-bar-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .stacked-bar-chart-title {
+    justify-self: start;
+    padding-right: 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .stacked-bar-container {
+    padding: 0.75rem;
+  }
+
+  .stacked-bar-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .stacked-bar-chart-title {
+    font-size: 0.875rem;
+    justify-self: start;
+    padding-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}

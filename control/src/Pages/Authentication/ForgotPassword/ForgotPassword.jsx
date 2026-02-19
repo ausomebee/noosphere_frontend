@@ -50,7 +50,7 @@ const ForgetPassword = () => {
         throw new Error("Failed to initiate password reset.");
       }
     } catch (error) {
-      console.error("Password reset failed:", error);
+      if (import.meta.env.DEV) console.error("Password reset failed:", error);
       const message = error?.response?.data?.message || "Failed to send password reset email.";
       setErrorMessage(message);
       showToast(message, "error");

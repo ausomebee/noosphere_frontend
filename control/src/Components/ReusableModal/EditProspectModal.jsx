@@ -148,7 +148,7 @@ const EditProspectModal = ({
         throw new Error("Failed to update candidate.");
       }
     } catch (error) {
-      console.error("Failed to update candidate:", error);
+      if (import.meta.env.DEV) console.error("Failed to update candidate:", error);
       showToast(
         error?.response?.data?.message || "Failed to update candidate.",
         "error"

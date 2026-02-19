@@ -66,7 +66,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
       });
       setQrCodeValue(response.data.data.qrcode);
     } catch (error) {
-      console.error("Could not get QR code:", error);
+      if (import.meta.env.DEV) console.error("Could not get QR code:", error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
       showToast("Invalid OTP. Please try again.", "error");
       return false;
     } catch (error) {
-      console.error("2FA verification failed:", error);
+      if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       showToast(
         error?.response?.data?.message || "Verification failed.",
         "error"
@@ -103,7 +103,6 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const handleAdministrativePassword = async (data) => {
     setLoading(true);
 
-    console.log(data);
     try {
       await api.SuperAdministrativePassword({
         id: userId,
@@ -114,7 +113,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
       showToast("Password updated successfully!", "success");
       setStep(5);
     } catch (error) {
-      console.error("Could not set password:", error);
+      if (import.meta.env.DEV) console.error("Could not set password:", error);
       showToast(
         error?.response?.data?.message || "Failed to set password.",
         "error"
@@ -202,7 +201,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
         setSecondCode(["", "", "", "", "", ""]);
       }
     } catch (error) {
-      console.error("Error during OTP submission:", error);
+      if (import.meta.env.DEV) console.error("Error during OTP submission:", error);
       showToast("An error occurred. Please try again.", "error");
     } finally {
       setLoading(false);
@@ -223,7 +222,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
         setStep(step + 1);
       }
     } catch (error) {
-      console.error("Error:", error);
+      if (import.meta.env.DEV) console.error("Error:", error);
       showToast("An error occurred. Please try again.", "error");
     } finally {
       setLoading(false);

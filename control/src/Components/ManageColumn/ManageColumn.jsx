@@ -5,7 +5,7 @@ import { FaArrowLeft, FaPlus, FaSave } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { SwitchInput, TextareaInput, TextInput } from "../Input/Inputs";
 import ColorPicker from "../ColorPicker";
-import Layout from "../../Pages/Layout/ControlLayout";
+
 import Button from "../Button/Button";
 import CustomDocumentModal from "../ReusableModal/CustomDocumentModal";
 import CustomTaskModal from "../ReusableModal/CustomTaskModal";
@@ -98,7 +98,7 @@ const ManageColumn = () => {
         setTableDataState(mappedData);
       })
       .catch((err) => {
-        console.error("Failed to fetch pipeline items:", err);
+        if (import.meta.env.DEV) console.error("Failed to fetch pipeline items:", err);
         showToast("Failed to load candidates.", "error");
         setTableDataState([]);
       });
@@ -131,7 +131,7 @@ const ManageColumn = () => {
         })) || []
       );
     } catch (err) {
-      console.error("Failed to fetch staff or stages:", err);
+      if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
       showToast("Failed to load staff or stages.", "error");
     }
   }, [authTokens, pipeline?.id]);
@@ -166,7 +166,7 @@ const ManageColumn = () => {
           }
         })
         .catch((err) => {
-          console.error("Failed to fetch stage data:", err);
+          if (import.meta.env.DEV) console.error("Failed to fetch stage data:", err);
           showToast("Failed to load stage data.", "error");
         });
 
@@ -202,7 +202,7 @@ const ManageColumn = () => {
 
       showToast("Stage information updated successfully!", "success");
     } catch (err) {
-      console.error("Failed to update stage:", err);
+      if (import.meta.env.DEV) console.error("Failed to update stage:", err);
       showToast(
         err.response?.data?.message || "Failed to update stage information",
         "error"
@@ -230,7 +230,7 @@ const ManageColumn = () => {
         "success"
       );
     } catch (err) {
-      console.error(`Failed to update ${type}:`, err);
+      if (import.meta.env.DEV) console.error(`Failed to update ${type}:`, err);
       showToast(
         err.response?.data?.message || `Failed to update ${type}`,
         "error"
@@ -268,7 +268,7 @@ const ManageColumn = () => {
         throw new Error("Failed to assign staff.");
       }
     } catch (err) {
-      console.error("Staff assignment failed:", err);
+      if (import.meta.env.DEV) console.error("Staff assignment failed:", err);
       showToast(
         err.response?.data?.message || "Failed to assign candidate(s).",
         "error"
@@ -311,7 +311,7 @@ const ManageColumn = () => {
         throw new Error("Failed to move candidates.");
       }
     } catch (err) {
-      console.error("Candidate move failed:", err);
+      if (import.meta.env.DEV) console.error("Candidate move failed:", err);
       showToast(
         err.response?.data?.message || "Failed to move candidate(s).",
         "error"
@@ -351,7 +351,7 @@ const ManageColumn = () => {
         throw new Error("Failed to delete candidates.");
       }
     } catch (err) {
-      console.error("Candidate deletion failed:", err);
+      if (import.meta.env.DEV) console.error("Candidate deletion failed:", err);
       showToast(
         err.response?.data?.message || "Failed to delete candidate(s).",
         "error"
@@ -365,7 +365,6 @@ const ManageColumn = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
   };
 
   const filters = [
@@ -399,8 +398,7 @@ const ManageColumn = () => {
   }), {});
 
   return (
-    <Layout>
-      <div className="manage-column-container">
+    <div className="manage-column-container">
         {/* Header */}
         <div className="manage-column-header" onClick={() => navigate(-1)}>
           <button className="back-button">
@@ -455,33 +453,24 @@ const ManageColumn = () => {
               />
               <div className="color-picker-container">
                 <div
-                  className="color-picker-row"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginTop: "20px",
-                  }}
+                  className="color-picker-row flex items-center"
+                  style={{ marginTop: "20px" }}
                 >
                   <label style={{ marginRight: "10px" }}>Colour code</label>
                   <div
-                    className="color-preview"
+                    className="color-preview inline-block rounded-full"
                     style={{
                       backgroundColor: draft.colorCode || "#000000",
                       width: "24px",
                       height: "24px",
-                      borderRadius: "50%",
-                      display: "inline-block",
                     }}
                   />
                   <button
-                    className="change-button"
+                    className="change-button ml-auto border-0 cursor-pointer"
                     onClick={() => setShowColorPicker(true)}
                     style={{
-                      marginLeft: "auto",
                       color: "#0000EE",
                       background: "none",
-                      border: "none",
-                      cursor: "pointer",
                     }}
                   >
                     Change
@@ -500,13 +489,10 @@ const ManageColumn = () => {
               )}
 
               <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "space-between",
-                }}
+                className="flex justify-between"
+                style={{ gap: "10px" }}
               >
-                
+
 
                 <Button
                   variant="secondary-danger"
@@ -537,12 +523,7 @@ const ManageColumn = () => {
               {/* Tasks Section */}
               <div className="tasks-section">
                 <div
-                  className="tasks-header"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "16px",
-                  }}
+                  className="tasks-header flex justify-between mb-4"
                 >
                   <span className="tasks-title">Tasks</span>
                   <span className="required-title">Required</span>
@@ -552,31 +533,18 @@ const ManageColumn = () => {
                     draft.requiredTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="task-item"
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "16px",
-                        }}
+                        className="task-item flex justify-between items-center mb-4"
                       >
                         <div
-                          className="task-name-container"
-                          style={{ display: "flex", alignItems: "center" }}
+                          className="task-name-container flex items-center"
                         >
                           <span>{task.name}</span>
                           <button
-                            className="delete-btn"
+                            className="delete-btn ml-2 border-0 cursor-pointer p-0"
                             onClick={() =>
                               dispatch(removeTaskFromDraft(task.id))
                             }
-                            style={{
-                              marginLeft: "8px",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0",
-                            }}
+                            style={{ background: "none" }}
                           >
                             <AiOutlineDelete color="red" size={20} />
                           </button>
@@ -593,21 +561,18 @@ const ManageColumn = () => {
                     ))
                   ) : (
                     <div
-                      className="no-items-message"
-                      style={{ textAlign: "center", margin: "20px 0" }}
+                      className="no-items-message text-center"
+                      style={{ margin: "20px 0" }}
                     >
                       No tasks added yet
                     </div>
                   )}
                 </div>
                 <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "space-between",
-                  }}
+                  className="flex justify-between"
+                  style={{ gap: "10px" }}
                 >
-                  
+
                   <div className="add-button-container">
                     <Button
                       label="Add a new task"
@@ -637,12 +602,7 @@ const ManageColumn = () => {
               {/* Documents Section */}
               <div className="documents-section">
                 <div
-                  className="documents-header"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "16px",
-                  }}
+                  className="documents-header flex justify-between mb-4"
                 >
                   <span className="documents-title">Documents</span>
                   <span className="required-title">Required</span>
@@ -652,31 +612,18 @@ const ManageColumn = () => {
                     draft.requiredDocuments.map((doc) => (
                       <div
                         key={doc.id}
-                        className="document-items"
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "16px",
-                        }}
+                        className="document-items flex justify-between items-center mb-4"
                       >
                         <div
-                          className="document-name-container"
-                          style={{ display: "flex", alignItems: "center" }}
+                          className="document-name-container flex items-center"
                         >
                           <span>{doc.name}</span>
                           <button
-                            className="delete-btn"
+                            className="delete-btn ml-2 border-0 cursor-pointer p-0"
                             onClick={() =>
                               dispatch(removeDocumentFromDraft(doc.id))
                             }
-                            style={{
-                              marginLeft: "8px",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0",
-                            }}
+                            style={{ background: "none" }}
                           >
                             <AiOutlineDelete color="red" size={20} />
                           </button>
@@ -693,8 +640,8 @@ const ManageColumn = () => {
                     ))
                   ) : (
                     <div
-                      className="no-items-message"
-                      style={{ textAlign: "center", margin: "20px 0" }}
+                      className="no-items-message text-center"
+                      style={{ margin: "20px 0" }}
                     >
                       No documents added yet
                     </div>
@@ -702,13 +649,10 @@ const ManageColumn = () => {
                 </div>
 
                 <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "space-between",
-                  }}
+                  className="flex justify-between"
+                  style={{ gap: "10px" }}
                 >
-                  
+
                   <div className="add-button-container">
                     <Button
                       label="Request a new document"
@@ -870,7 +814,6 @@ const ManageColumn = () => {
 
         {status === "loading" || isSaving ? <LoadingSpinner /> : null}
       </div>
-    </Layout>
   );
 };
 

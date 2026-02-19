@@ -265,7 +265,7 @@
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .qr-code-container {
     gap: 30px;
     /* Reduce gap slightly for tablets */
@@ -310,7 +310,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .step-instruction p {
     white-space: normal;
     /* Allow wrapping on smaller screens */

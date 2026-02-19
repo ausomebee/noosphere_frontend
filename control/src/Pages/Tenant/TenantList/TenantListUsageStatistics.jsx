@@ -135,7 +135,6 @@ const TenantListUsageStatistics = ({ onBack }) => {
   ];
 
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
     setFilters((prevFilters) =>
       prevFilters.map((filter) =>
         filter.key === key ? { ...filter, value } : filter
@@ -241,14 +240,12 @@ const TenantListUsageStatistics = ({ onBack }) => {
     {
       label: "View Details",
       onClick: (row) => {
-        console.log(`Viewing details for request: ${row.request_id}`);
       },
     },
     {
       label: "Delete Request",
       className: "remove",
       onClick: (row) => {
-        console.log(`Deleting request: ${row.request_id}`);
       },
     },
   ];
