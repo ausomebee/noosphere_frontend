@@ -12,7 +12,7 @@ import {
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
@@ -94,9 +94,7 @@ const AddServiceType = ({
   const [submitting, setSubmitting] = useState(false);
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const {
     register,

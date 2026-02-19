@@ -22,26 +22,6 @@ export const CreateNewFolder = async ({
   }
 };
 
-const UpdateFolderName = async ({
-  folderId,
-  name,
-  accessToken,
-  refreshToken,
-}) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client-folders`, {
-      id: folderId,
-      name,
-    });
-    return response;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Update folder name failed",
-    );
-  }
-};
-
 export const CreateNewFile = async ({
   clientTenantId,
   name,
@@ -69,47 +49,6 @@ export const CreateNewFile = async ({
   }
 };
 
-const UpdateFileDetails = async ({
-  fileId,
-  name,
-  url,
-  size,
-  fileType,
-  folderId,
-  uploadedBy,
-  accessToken,
-  refreshToken,
-}) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client-files`, {
-      id: fileId,
-      name,
-      url,
-      size,
-      fileType,
-      folderId,
-      uploadedBy,
-    });
-    return response;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Update file details failed",
-    );
-  }
-};
-
-const GetASingleFile = async ({ fileId, accessToken, refreshToken }) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  try {
-    const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-files/${fileId}`,
-    );
-    return response;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Get single file failed");
-  }
-};
 const GetAllFiles = async ({ clientTenantId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -165,20 +104,6 @@ export const GetAllFolders = async ({
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Get folders failed");
-  }
-};
-
-const GetSingleFolderById = async ({ folderId, accessToken, refreshToken }) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  try {
-    const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-folders/${folderId}`,
-    );
-    return response;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Get single folder by id failed",
-    );
   }
 };
 
@@ -385,15 +310,11 @@ const PrepareResponsePayload = async (responses, files, signatures) => {
 
 export default {
   CreateNewFolder,
-  UpdateFolderName,
   CreateNewFile,
-  UpdateFileDetails,
-  GetASingleFile,
   GetRecentFiles,
   GetAllFilesInFolder,
   GetAllFiles,
   GetAllFolders,
-  GetSingleFolderById,
   GetAllRequestDocuments,
   GetCountsForDocumentRequests,
   GetAllClientForms,

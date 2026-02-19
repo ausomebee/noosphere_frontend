@@ -43,4 +43,19 @@
     background-color: #ffe6e6;
     border-color: #ffb3b3;
   }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .alert {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 0.5rem 0.8rem;
+    }
+
+    .alert-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
   

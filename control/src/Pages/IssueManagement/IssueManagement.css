@@ -129,6 +129,123 @@ button {
 }
 .issues-management-view{
   width: 1000px;
- 
+
+}
+
+/* ===== Tablet (max-width: 992px) ===== */
+@media (max-width: 992px) {
+  .issues-management-view {
+    width: 100%;
+  }
+
+  .issue-mgmt-overview-cards {
+    flex-wrap: wrap;
+  }
+
+  .issue-mgmt-overview-card-one,
+  .issue-mgmt-overview-card-two {
+    flex-wrap: wrap;
+  }
+
+  .issue-mgmt-overview-card {
+    min-width: calc(50% - 10px);
+  }
+
+  .issue-mgmt-overview-value {
+    font-size: 28px;
+  }
+
+  .issue-mgmt-top-issue-select {
+    width: 140px;
+  }
+}
+
+/* ===== Mobile (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  .issue-mgmt-overview-section {
+    padding: 12px;
+  }
+
+  .issue-mgmt-issue-log-section {
+    padding: 12px;
+  }
+
+  .issues-management-view {
+    width: 100%;
+  }
+
+  .issue-management-container {
+    flex-direction: column;
+  }
+
+  /* Stack overview cards vertically */
+  .issue-mgmt-overview-cards {
+    flex-direction: column;
+  }
+
+  .issue-mgmt-overview-card-container {
+    width: 100%;
+  }
+
+  .issue-mgmt-overview-card-one,
+  .issue-mgmt-overview-card-two {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .issue-mgmt-overview-card {
+    min-width: unset;
+    width: 100%;
+    padding: 14px;
+  }
+
+  .issue-mgmt-overview-value {
+    font-size: 24px;
+    margin: 8px 0 4px;
+  }
+
+  .issue-mgmt-overview-value-container {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .issue-mgmt-view-link {
+    font-size: 13px;
+  }
+
+  .issue-mgmt-top-issue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .issue-mgmt-top-issue-select {
+    width: 100%;
+  }
+
+  .issue-mgmt-overview-card h4 {
+    font-size: 14px;
+  }
+
+  /* Modal item adjustments */
+  .modal-item {
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+  }
+
+  .issue-mgt-modal-content {
+    padding: 16px;
+  }
+
+  /* Buttons */
+  .add-issue-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
 }
 

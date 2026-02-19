@@ -59,7 +59,7 @@ const AdminOnboarding = () => {
       const { setForAll, Authenticator2FA, securityQuestion  } = response.data.data;
       return { setForAll, Authenticator2FA, securityQuestion  };
     } catch (error) {
-      console.error("Error fetching SuperAdmin choices:", error);
+      if (import.meta.env.DEV) console.error("Error fetching SuperAdmin choices:", error);
       return { setForAll: false, Authenticator2FA: false, securityQuestion: false };
     }
   };
@@ -87,7 +87,7 @@ const AdminOnboarding = () => {
           } else if (authType === "SECRETMESSAGE") {
             navigate("/2fa/security-question");
           } else {
-            console.error("Unknown authType:", authType);
+            if (import.meta.env.DEV) console.error("Unknown authType:", authType);
             showToast("Unknown authentication type", "error");
           }
         } else if ((setForAll || !setForAll) && user.auth2FADone) {
@@ -100,7 +100,7 @@ const AdminOnboarding = () => {
         showToast(errorMessage, "error");
       }
     } catch (error) {
-      console.error("Onboarding error:", error);
+      if (import.meta.env.DEV) console.error("Onboarding error:", error);
       showToast("An unexpected error occurred. Please try again.", "error");
     }
   };

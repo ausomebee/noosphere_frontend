@@ -56,7 +56,7 @@ const SuperAdminChangePassword = () => {
       const message =
         error?.response?.data?.message || "Failed to update password.";
       showToast(message, "error");
-      console.error("Could not set password:", error);
+      if (import.meta.env.DEV) console.error("Could not set password:", error);
     } finally {
       setLoading(false);
     }

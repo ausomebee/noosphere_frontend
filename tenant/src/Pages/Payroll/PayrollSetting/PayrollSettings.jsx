@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import EmployeePaymentSchedules from "./PayrollSettingsSubs/EmployeePaymentSchedules";
 import IncomeItems from "./PayrollSettingsSubs/IncomeItems";
 import Deductions from "./PayrollSettingsSubs/Deductions";
 import PayrollCycles from "./PayrollSettingsSubs/PayrollCycles";
 
 const PayrollSettings = () => {
-  const [activeTab, setActiveTab] = useState("paymentSchedules");
+  const [activeTab, setActiveTab] = useState("incomeItems");
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -24,24 +23,24 @@ const PayrollSettings = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div>
-        <h1 className="appointment-sched-title">Payroll Settings</h1>
-        <h3 className="text-xl text-gray-700 font-500">
+        <h1 className="text-2xl text-gray-400 font-semibold">Payroll Settings</h1>
+        <h3 className="text-base text-gray-700 font-500">
           Manage the settings for your Staff Payroll
         </h3>
       </div>
 
       {/* Tabs */}
-      <div className="tabs mt-20">
-        <button
+      <div className="tabs mt-6">
+        {/* <button
           className={`tab flex items-center justify-center ${
             activeTab === "paymentSchedules" ? "active" : ""
           }`}
           onClick={() => setActiveTab("paymentSchedules")}
         >
           Compensation Types
-        </button>
+        </button> */}
         <button
           className={`tab flex items-center justify-center ${
             activeTab === "incomeItems" ? "active" : ""
@@ -69,7 +68,7 @@ const PayrollSettings = () => {
       </div>
 
       <div className="mt-6">{renderActiveTab()}</div>
-    </DashboardLayout>
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { FaArrowLeft } from "react-icons/fa";
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantSingle.css";
 import { Link } from "react-router-dom";
 import CustomTable from '../../../Components/Table/CustomTable';
@@ -154,7 +154,6 @@ const TenantSingleUserLogs = () => {
       label: "Delete Issue",
       className: "remove",
       onClick: (row) => {
-        console.log(`Deleting issue: ${row.activityId}`);
       },
     },
   ];
@@ -232,7 +231,7 @@ const TenantSingleUserLogs = () => {
   };
 
   return (
-    <Layout>
+    <>
       <div className="tenant-header">
         <Link to="/tenants/tenant-list" className="back-link">
           <FaArrowLeft /> Back
@@ -272,7 +271,7 @@ const TenantSingleUserLogs = () => {
           tableName="Activity History"
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -43,4 +43,30 @@
     background-color: #ffe6e6;
     border-color: #ffb3b3;
   }
-  
+
+  /* Tablet */
+  @media (max-width: 992px) {
+    .alert {
+      padding: 0.3rem 0.6rem;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .alert {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 13px;
+    }
+
+    .alert-message {
+      width: 100%;
+    }
+
+    .alert-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }

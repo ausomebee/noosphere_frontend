@@ -9,8 +9,8 @@ import DeleteLibraryModal from "../../../../../../Components/ReusableModal/Progr
 import TargetLibraryModal from "../../../../../../Components/ReusableModal/ClientModal/TargetLibraryModal";
 import { showToast } from "../../../../../../Helper/ShowToast";
 import api from "../../../../../../api/clientPanelApis";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../../../../Layout/TenantLayout";
+import useAuth from "../../../../../../hooks/useAuth";
+
 
 const ViewPrograms = () => {
   const navigate = useNavigate();
@@ -22,9 +22,7 @@ const ViewPrograms = () => {
   const programName = searchParams.get("name") || "Program";
   const triggerRef = useRef(null);
 
-  const { tenantId } = useSelector((s) => s.authentication?.user || {});
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -212,7 +210,7 @@ const ViewPrograms = () => {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       {/* Header */}
       <div className="program-column-header flex items-center gap-4 mb-6">
         <button
@@ -385,7 +383,7 @@ const ViewPrograms = () => {
         title="Remove Target"
         message={`Are you sure you want to remove "${selectedTargetRow?.targetName}"?`}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

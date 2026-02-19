@@ -142,55 +142,23 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
     <div
       className="week-view-container"
       ref={calendarRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        fontFamily: "Arial, sans-serif",
-        overflow: "auto",
-      }}
     >
-      <div
-        className="week-view-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "80px repeat(7, 1fr)",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            gridColumn: "1",
-            gridRow: "1",
-            padding: "10px",
-            borderRight: "1px solid #e0e0e0",
-            borderBottom: "1px solid #e0e0e0",
-            backgroundColor: "#f8f9fa",
-            fontWeight: "bold",
-          }}
-        >
-          All day
-        </div>
+      <div className="week-view-grid">
+        <div className="week-view-allday-label">All day</div>
         {days.map((day, index) => {
           const isTodayDate = isToday(day);
           return (
             <div
               key={day.toString()}
+              className={`week-view-day-col-header ${isTodayDate ? "week-view-day-col-today" : ""}`}
               style={{
                 gridColumn: `${index + 2}`,
-                gridRow: "1",
-                padding: "10px",
                 borderRight: index < 6 ? "1px solid #e0e0e0" : "none",
-                borderBottom: "1px solid #e0e0e0",
-                backgroundColor: isTodayDate ? "#e3f2fd" : "#f8f9fa",
-                fontWeight: "bold",
-                textAlign: "center",
-                color: isTodayDate ? "#1976d2" : "inherit",
               }}
             >
               {format(day, "d EEE")}
               {isTodayDate && (
-                <div style={{ fontSize: "10px", marginTop: "2px" }}>Today</div>
+                <div className="week-view-today-badge">Today</div>
               )}
             </div>
           );
@@ -199,15 +167,8 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
         {hours.map((hour) => (
           <React.Fragment key={hour}>
             <div
-              style={{
-                gridColumn: "1",
-                gridRow: `${hour + 2}`,
-                padding: "5px 10px",
-                borderRight: "1px solid #e0e0e0",
-                borderBottom: "1px solid #e0e0e0",
-                fontSize: "12px",
-                color: "#666",
-              }}
+              className="week-view-hour-label"
+              style={{ gridRow: `${hour + 2}` }}
             >
               {formatHour(hour)}
             </div>
@@ -216,11 +177,11 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
               return (
                 <div
                   key={`${day.toString()}-${hour}`}
+                  className="week-view-hour-slot"
                   style={{
                     gridColumn: `${dayIndex + 2}`,
                     gridRow: `${hour + 2}`,
                     borderRight: dayIndex < 6 ? "1px solid #e0e0e0" : "none",
-                    borderBottom: "1px solid #e0e0e0",
                     height: `${rowHeightPx}px`,
                     backgroundColor: isTodayDate ? "#f5f9ff" : "transparent",
                   }}
@@ -262,63 +223,18 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
             return (
               <div
                 key={`${appt.id}-${appt.date}-${gIdx}-${aIdx}`}
+                className="week-view-appt-card"
                 onClick={(e) => handleAppointmentClick(appt, e)}
                 style={{
-                  position: "absolute",
                   backgroundColor: appt.colorCode || "#ffcccb",
                   top,
                   height,
                   left: `${left}px`,
                   width: `${apptWidth - 4}px`,
-                  borderRadius: "6px",
-                  padding: "4px",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  overflow: "hidden",
-                  transition: "all 0.2s ease",
-                  margin: "0 2px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 8px rgba(0,0,0,0.15)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow =
-                    "0 2px 4px rgba(0,0,0,0.1)";
-                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#333",
-                    lineHeight: "1.2",
-                    paddingBottom: "4px",
-                    borderBottom: "1px solid rgba(0,0,0,0.1)",
-                  }}
-                >
-                  {timeRange}
-                </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: "#222",
-                    textAlign: "left",
-                    display: "flex",
-                    marginTop: "auto",
-                    justifyContent: "space-between",
-                    paddingTop: "4px",
-                    borderTop: "1px solid rgba(0,0,0,0.1)",
-                    lineHeight: "1.2",
-                  }}
-                >
+                <div className="week-view-appt-time">{timeRange}</div>
+                <div className="week-view-appt-client">
                   {appt.clientName || "Unknown Client"} <CgChevronRight />
                 </div>
               </div>

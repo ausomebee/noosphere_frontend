@@ -29,3 +29,39 @@
 .system-speed-chart-select{
   border-radius: 20px;
 }
+
+/* Tablet */
+@media (max-width: 992px) {
+  .system-speed-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .system-speed-chart-title {
+    justify-self: start;
+    padding-right: 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .system-speed-chart-container {
+    padding: 0.75rem;
+  }
+
+  .system-speed-chart-header {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .system-speed-chart-title {
+    font-size: 0.875rem;
+    justify-self: start;
+    padding-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .system-speed-chart-select {
+    width: 100%;
+  }
+}

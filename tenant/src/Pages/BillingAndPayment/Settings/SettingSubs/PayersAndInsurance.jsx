@@ -5,15 +5,13 @@ import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import AddPayerModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddPayerModal";
 import AddInsuranceTypeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddInsuranceTypeModal";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 
 const PayersAndInsurance = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState("payers");
   const [payerModalOpen, setPayerModalOpen] = useState(false);
@@ -441,7 +439,7 @@ const PayersAndInsurance = () => {
         Manage the Payers & Insurance your organization works with
       </h2>
 
-      <div className="tabs mt-20">
+      <div className="tabs mt-6">
         <button
           className={`tab flex items-center justify-center ${
             activeTab === "payers" ? "active" : ""
@@ -475,7 +473,7 @@ const PayersAndInsurance = () => {
             />
           </div>
 
-          <div className="mt-32">
+          <div className="mt-6">
             <CustomTable
               data={payerTableData}
               columns={payerTypeColumns}
@@ -505,7 +503,7 @@ const PayersAndInsurance = () => {
               disabled={insuranceTypeSaving}
             />
           </div>
-          <div className="mt-32">
+          <div className="mt-6">
             <CustomTable
               data={insuranceTypeTableData}
               columns={insuranceTypeColumns}

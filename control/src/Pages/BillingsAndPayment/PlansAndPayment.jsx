@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import Layout from "../Layout/ControlLayout";
+
 import Button from "../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import PlanCard from "./PlanCard";
@@ -106,7 +106,6 @@ const PlansAndPayment = () => {
           const { type, response } = result.value;
           switch (type) {
             case "plans":
-              console.log("Plans API response:", response.data);
               if (!Array.isArray(response?.data)) {
                 setStandardPlans([]);
                 setEnterprisePlans([]);
@@ -249,7 +248,7 @@ const PlansAndPayment = () => {
             result.reason.message || `Failed to fetch ${promiseType}`;
           newErrors[promiseType] = errorMsg;
           showToast(`Failed to load ${promiseType}: ${errorMsg}`, "error");
-          console.error(`Error in ${promiseType}:`, result.reason);
+          if (import.meta.env.DEV) console.error(`Error in ${promiseType}:`, result.reason);
         }
       });
 
@@ -264,7 +263,7 @@ const PlansAndPayment = () => {
         general: errorMsg,
       }));
       showToast(errorMsg, "error");
-      console.error("Unexpected error:", err);
+      if (import.meta.env.DEV) console.error("Unexpected error:", err);
     } finally {
       setLoading(false);
     }
@@ -367,7 +366,7 @@ const handleSavePlan = async (planData) => {
   } catch (err) {
     const errorMsg = err.message || "Failed to create plan";
     showToast(errorMsg, "error");
-    console.error("Create plan error:", err);
+    if (import.meta.env.DEV) console.error("Create plan error:", err);
   } finally {
     setLoading(false);
   }
@@ -451,7 +450,7 @@ const handleSavePlan = async (planData) => {
   } catch (err) {
     const errorMsg = err.message || "Failed to update plan";
     showToast(errorMsg, "error");
-    console.error("Update plan error:", err);
+    if (import.meta.env.DEV) console.error("Update plan error:", err);
   } finally {
     setLoading(false);
     setIsEditModalOpen(false);
@@ -502,7 +501,7 @@ const handleSavePlan = async (planData) => {
     } catch (err) {
       const errorMsg = err.message || "Failed to duplicate plan";
       showToast(errorMsg, "error");
-      console.error("Duplicate plan error:", err);
+      if (import.meta.env.DEV) console.error("Duplicate plan error:", err);
     } finally {
       setLoading(false);
     }
@@ -559,7 +558,7 @@ const handleSavePlan = async (planData) => {
     } catch (err) {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
-      console.error("Status change error:", err);
+      if (import.meta.env.DEV) console.error("Status change error:", err);
     } finally {
       setLoading(false);
       setIsStatusModalOpen(false);
@@ -610,7 +609,7 @@ const handleSavePlan = async (planData) => {
     } catch (err) {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
-      console.error("Delete plan error:", err);
+      if (import.meta.env.DEV) console.error("Delete plan error:", err);
     } finally {
       setLoading(false);
       setIsDeleteModalOpen(false);
@@ -650,16 +649,8 @@ const handleSavePlan = async (planData) => {
 
   const FallbackUI = () => (
     <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-        width: "100%",
-        textAlign: "center",
-        color: "#666",
-      }}
+      className="flex flex-col items-center justify-center h-full w-full text-center"
+      style={{ color: "#666" }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -679,10 +670,10 @@ const handleSavePlan = async (planData) => {
         <line x1="16" y1="17" x2="8" y2="17" />
         <polyline points="10 9 9 9 8 9" />
       </svg>
-      <div style={{ fontSize: "18px", marginBottom: "10px" }}>
+      <div className="text-lg" style={{ marginBottom: "10px" }}>
         No {activeTab} plans have been created yet.
       </div>
-      <div style={{ fontSize: "14px", marginBottom: "20px" }}>
+      <div className="text-sm" style={{ marginBottom: "20px" }}>
         You haven't configured any plans. Create your first plan to begin.
       </div>
       <Button
@@ -698,7 +689,7 @@ const handleSavePlan = async (planData) => {
   );
 
   return (
-    <Layout>
+    <>
       <div className="billing-board-header">
         <div className="billing-board-title">
           <h1>Billing & Payment</h1>
@@ -734,15 +725,13 @@ const handleSavePlan = async (planData) => {
       </div>
 
       <div
+        className="flex justify-start gap-5"
         style={{
-          display: "flex",
-          justifyContent: "flex-start",
           margin: "20px 0",
           width: "60%",
-          gap: "20px",
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div className="flex-1">
           <SearchInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -754,8 +743,8 @@ const handleSavePlan = async (planData) => {
             disabled={loading}
           />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="flex-1">
+          <div className="flex items-center" style={{ gap: "10px" }}>
             <h2 className="filter-text">Filters:</h2>
             <div className="plan-filter-select">
               <SelectInput
@@ -772,18 +761,13 @@ const handleSavePlan = async (planData) => {
 
       {loading ? (
         <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "50vh",
-            width: "100%",
-          }}
+          className="flex justify-center items-center w-full"
+          style={{ height: "50vh" }}
         >
           <LoadingSpinner />
         </div>
       ) : Object.keys(errors).length > 0 ? (
-        <div style={{ color: "red", textAlign: "center" }}>
+        <div className="text-center" style={{ color: "red" }}>
           {errors.general && <p>{errors.general}</p>}
           {errors.plans && <p>{errors.plans}</p>}
           {errors.features && <p>{errors.features}</p>}
@@ -880,7 +864,7 @@ const handleSavePlan = async (planData) => {
         onConfirm={handleConfirmDelete}
         plan={selectedPlan}
       />
-    </Layout>
+    </>
   );
 };
 

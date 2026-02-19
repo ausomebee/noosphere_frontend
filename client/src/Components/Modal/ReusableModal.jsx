@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
@@ -65,8 +65,14 @@ const ReusableModal = ({
     };
   }, [isOpen]);
 
+  const handleClose = () => {
+    if (primaryButtonLoading) return;
+    onClose?.();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (primaryButtonLoading) return;
     onPrimaryButtonClick?.(e);
   };
 
@@ -109,7 +115,7 @@ const ReusableModal = ({
             <button
               type="button"
               className="modal-close-btn"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Close modal"
             >
               <RxCross2 size={24} />
@@ -150,11 +156,14 @@ const ReusableModal = ({
             {secondaryButtonText && (
               <button
                 type="button"
-                onClick={onSecondaryButtonClick || onClose}
+                onClick={primaryButtonLoading ? undefined : (onSecondaryButtonClick || handleClose)}
                 className="modal-btn modal-btn-secondary"
+                disabled={primaryButtonLoading}
                 style={{
                   backgroundColor: secondaryButtonColor || "#ffffff",
                   color: "#333333",
+                  opacity: primaryButtonLoading ? 0.5 : 1,
+                  cursor: primaryButtonLoading ? "not-allowed" : "pointer",
                 }}
               >
                 {secondaryButtonText}

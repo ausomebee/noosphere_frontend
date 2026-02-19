@@ -4,6 +4,7 @@ import { TextareaInput, CheckboxInput, SelectInput } from "../../Input/Inputs";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const createValidationSchema = (trialCount) => {
@@ -96,7 +97,7 @@ const PercentageCorrect = ({
   }, [isOpen, trialCount, reset]);
 
   // Handle save
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     // Calculate final percentage before saving
     const correctCount = data.trials.filter(
       (trial) => trial.performance === "correct"
@@ -104,12 +105,21 @@ const PercentageCorrect = ({
     const finalPercentage = Math.round(
       (correctCount / data.trials.length) * 100
     );
-    
-    onSave({
-      trials: data.trials,
-      notes: data.overallNotes,
-      percentageCorrect: finalPercentage,
-    });
+
+    try {
+      await onSave({
+        trials: data.trials,
+        notes: data.overallNotes,
+        percentageCorrect: finalPercentage,
+      });
+    } catch {
+      showToast("Failed to save data", "error");
+    }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   // Prompt level options
@@ -131,7 +141,7 @@ const PercentageCorrect = ({
       title="Percentage Correct"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={onClose}
       size="xl"
       primaryButtonLoading={submitting}

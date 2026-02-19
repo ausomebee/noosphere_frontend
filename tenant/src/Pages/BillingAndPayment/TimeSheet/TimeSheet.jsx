@@ -1,15 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../Layout/TenantLayout";
+import useAuth from "../../../hooks/useAuth";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/billingAndPaymentsApi"; // assuming this exports the function
 
 const TimeSheet = () => {
-  const { tenantId } = useSelector((s) => s.authentication?.user || {});
+  const { tenantId, accessToken, refreshToken } = useAuth();
   const navigate = useNavigate();
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,15 +139,15 @@ const TimeSheet = () => {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div>
         <h1 className="appointment-sched-title">Timesheets</h1>
-        <h3 className="text-xl text-gray-700 font-500">
+        <h3 className="text-base text-gray-700 font-500">
           Manage and track your hours and service delivery
         </h3>
       </div>
 
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={columns}
@@ -163,7 +160,7 @@ const TimeSheet = () => {
           loading={loading}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

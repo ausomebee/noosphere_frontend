@@ -1,12 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import AddSessionTypeModal from "../../../Components/ReusableModal/OrganizationModal/AddSessionTypeModal";
 import AddDiagnosisCode from "../../../Components/ReusableModal/OrganizationModal/AddDiagnosisCode";
 import api from "../../../api/organisationApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 const PracticeSettings = () => {
@@ -19,9 +18,7 @@ const PracticeSettings = () => {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   useEffect(() => {
     if (tenantId) {
@@ -350,7 +347,7 @@ const PracticeSettings = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-6">
         <h1 className="appointment-sched-title mb-4">Practice Settings</h1>
 
@@ -427,7 +424,7 @@ const PracticeSettings = () => {
           />
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

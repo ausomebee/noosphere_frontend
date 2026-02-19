@@ -9,7 +9,7 @@ import Button from "../../../../Components/Button/Button";
 import "../../Auth.css";
 import api from "../../../../api/authApis";
 import { showToast } from "../../../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 // Yup validation schema
 const schema = yup.object().shape({
   enable2FA: yup.boolean().required(),
@@ -32,7 +32,7 @@ const SuperAdmin2FAChoice = () => {
       default2FAMethod: "qrCode",
     },
   });
-  const userId = useSelector((state) => state.authentication?.user?.tenantId);
+  const { tenantId: userId } = useAuth();
 
   const [loading, setLoading] = useState(false);
 

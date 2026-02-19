@@ -234,35 +234,30 @@ export const actions = [
   {
     label: "Move Prospect",
     onClick: (row) => {
-      console.log(`Moving prospect: ${row.name}`);
       // Add logic to move prospect
     },
   },
   {
     label: "Reassign Prospect to staff",
     onClick: (row) => {
-      console.log(`Reassigning prospect: ${row.name} to staff`);
       // Add logic to reassign prospect
     },
   },
   {
     label: "View Prospect Information",
     onClick: (row) => {
-      console.log(`Viewing prospect information for: ${row.name}`);
       // Add logic to view prospect information
     },
   },
   {
     label: "Edit Prospect Information",
     onClick: (row) => {
-      console.log(`Editing prospect information for: ${row.name}`);
       // Add logic to edit prospect information
     },
   },
   {
     label: "Contact prospect",
     onClick: (row) => {
-      console.log(`Contacting prospect: ${row.name}`);
       // Add logic to contact prospect
     },
   },
@@ -270,7 +265,6 @@ export const actions = [
     label: "Remove prospect",
     className: "remove",
     onClick: (row) => {
-      console.log(`Removing prospect: ${row.name}`);
       // Add logic to remove prospect
     },
   },

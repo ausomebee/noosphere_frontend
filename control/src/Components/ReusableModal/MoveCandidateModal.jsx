@@ -46,7 +46,6 @@ const MoveCandidateModal = ({
         })
       ).unwrap();
 
-      console.log(response)
 
       if (response.data.status === "ok") {
         onSave(targetColumnId);
@@ -58,7 +57,7 @@ const MoveCandidateModal = ({
         throw new Error(response.message || "Failed to move candidates");
       }
     } catch (error) {
-      console.error("Move candidate(s) failed:", error);
+      if (import.meta.env.DEV) console.error("Move candidate(s) failed:", error);
       showToast(
         error?.message || "Failed to move candidate(s).",
         "error"

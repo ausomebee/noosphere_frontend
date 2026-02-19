@@ -3,13 +3,11 @@ import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [chartData, setChartData] = useState({
     series: [{ name: "Sessions", data: [] }],

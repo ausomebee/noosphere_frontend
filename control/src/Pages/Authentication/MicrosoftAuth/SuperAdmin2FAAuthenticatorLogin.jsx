@@ -84,7 +84,7 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
         throw new Error("Verification failed.");
       }
     } catch (error) {
-      console.error("2FA verification failed:", error);
+      if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       showToast(error?.response?.data?.message || "Verification failed.", "error");
     } finally {
       setLoading(false);

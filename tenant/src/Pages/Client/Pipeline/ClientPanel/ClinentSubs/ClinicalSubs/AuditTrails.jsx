@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import DashboardLayout from "../../../../../../Layout/TenantLayout";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../../hooks/useAuth";
 import "./AuditTrails.css";
 import "../../../../../../Components/ManageColumn/ManageColumn.css";
 import api from "../../../../../../api/TemplateAndReportApi";
@@ -12,8 +12,7 @@ const AuditTrails = () => {
   const navigate = useNavigate();
   const { reportId } = location.state || {};
   
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
 
 
   const [auditTrails, setAuditTrails] = useState([]);
@@ -216,7 +215,7 @@ const AuditTrails = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="audit-trails-container">
         <div className="manage-column-header">
           <button className="manage-back-button" onClick={() => navigate(-1)}>
@@ -280,7 +279,7 @@ const AuditTrails = () => {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

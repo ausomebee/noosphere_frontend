@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { FiUpload, FiTrash2, FiFile } from "react-icons/fi";
 import SignatureCanvas from "react-signature-canvas";
 import "./FormRenderer.css";
@@ -26,14 +27,7 @@ const FormRenderer = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const formId = id;
-  const tenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.tenantId,
-  );
-  const tenantClientId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id || "anonymous",
-  );
-  const accessToken = useSelector((state) => state.auth?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.refreshToken);
+  const { tenantId, tenantClientId, accessToken, refreshToken } = useAuth();
   const { formName, elements } = useSelector((s) => s.formBuilder);
   const {
     responses,

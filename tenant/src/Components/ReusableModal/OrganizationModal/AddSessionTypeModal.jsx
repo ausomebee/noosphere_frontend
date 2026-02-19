@@ -12,7 +12,7 @@ import {
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi"; // For fetching service codes
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Updated validation schema
@@ -124,9 +124,7 @@ const AddSessionTypeModal = ({
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const defaultFormValues = {
     name: "",
@@ -288,8 +286,8 @@ const AddSessionTypeModal = ({
         </p>
 
         {fields.map((item, index) => (
-          <div key={item.id} className="flex gap-4 items-end mb-4">
-            <div className="flex-1">
+          <div key={item.id} className="flex flex-wrap gap-4 items-end mb-4">
+            <div className="flex-1" style={{ minWidth: "200px" }}>
               <Controller
                 name={`services.${index}.serviceCodeId`}
                 control={control}
@@ -306,7 +304,7 @@ const AddSessionTypeModal = ({
               />
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1" style={{ minWidth: "200px" }}>
               <Controller
                 name={`services.${index}.modifier`}
                 control={control}

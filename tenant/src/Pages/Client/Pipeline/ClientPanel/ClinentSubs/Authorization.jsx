@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import Button from "../../../../../Components/Button/Button";
 import AccordionTableRobust from "../../../../../Components/Table/AccordionTableRobust";
 import AddAuthorizationModal from "../../../../../Components/ReusableModal/ClientModal/ClientAuthorizationModal";
@@ -27,9 +27,7 @@ const AuthorizationTab = () => {
     useState(false);
 
   const { tenantClientId } = useParams();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   // Fetch tenant service codes (for dropdown)
   const fetchTenantServiceCodes = async () => {

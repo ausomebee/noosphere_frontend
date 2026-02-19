@@ -1,17 +1,12 @@
 // src/Pages/Scheduler/SchdedulerSubs/AppointmentSubs/CancelledAppointments.jsx
 import React, { useMemo, useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
 
 const CancelledAppointments = () => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const role = authRole?.name ?? "Client";
 
   const [localAppointments, setLocalAppointments] = useState([]);
   const [loading, setLoading] = useState(true);

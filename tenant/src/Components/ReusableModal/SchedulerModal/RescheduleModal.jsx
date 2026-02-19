@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { GoCalendar } from "react-icons/go";
 import { TextInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Utility function to convert 12-hour time (e.g., "1:30pm") to 24-hour format (e.g., "13:30")
 const convertTo24Hour = (timeStr) => {
@@ -114,7 +115,9 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
     setShowConfirmation(true);
   };
 
-  const handleConfirmSave = (scope) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleConfirmSave = async (scope) => {
     if (!formData) return;
 
     const rescheduleData = {
@@ -122,32 +125,27 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
       scope: scope,
     };
 
-    console.log(rescheduleData)
-
-    onSave(rescheduleData);
-    reset({
-      date: new Date().toISOString().split("T")[0],
-      startTime: "",
-      endTime: "",
-    });
-    setFormData(null);
-    setShowConfirmation(false);
-    onClose();
+    setIsSaving(true);
+    try {
+      await onSave(rescheduleData);
+      reset({
+        date: new Date().toISOString().split("T")[0],
+        startTime: "",
+        endTime: "",
+      });
+      setFormData(null);
+      setShowConfirmation(false);
+      onClose();
+    } catch {
+      showToast("Failed to reschedule appointment", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const onError = (errors) => {
-    console.group("Form Validation Errors");
-    const simplifiedErrors = Object.keys(errors).reduce((acc, key) => {
-      const error = errors[key];
-      if (error.message)
-        acc[key] = { message: error.message, type: error.type };
-      return acc;
-    }, {});
-    console.error(
-      "Validation failed with errors:",
-      JSON.stringify(simplifiedErrors, null, 2)
-    );
-    console.groupEnd();
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const renderMainForm = () => (
@@ -218,7 +216,8 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
       titleIcon={<GoCalendar />}
       primaryButtonText={showConfirmation ? null : "Save"}
       secondaryButtonText={showConfirmation ? null : "Cancel"}
-      onPrimaryButtonClick={showConfirmation ? undefined : handleSubmit(handleSubmitForm, onError)}
+      primaryButtonLoading={isSaving}
+      onPrimaryButtonClick={showConfirmation ? undefined : handleSubmit(handleSubmitForm, onValidationError)}
       onSecondaryButtonClick={showConfirmation ? undefined : onClose}
       size="medium"
     >

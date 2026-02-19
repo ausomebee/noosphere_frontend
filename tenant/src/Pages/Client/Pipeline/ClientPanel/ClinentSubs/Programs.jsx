@@ -11,7 +11,7 @@ import { showToast } from "../../../../../Helper/ShowToast";
 import api2 from "../../../../../api/clientPanelApis";
 import api from "../../../../../api/ProgramLibraryApis";
 import ProgramLibraryModal from "../../../../../Components/ReusableModal/ClientModal/ProgramLibraryModal";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 
 const ProgramsTab = ({ fullName }) => {
   const navigate = useNavigate();
@@ -19,9 +19,7 @@ const ProgramsTab = ({ fullName }) => {
   const menuRef = useRef(null);
   const triggerRef = useRef(null);
 
-  const { tenantId } = useSelector((s) => s.authentication?.user || {});
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [isProgramOpen, setIsProgramOpen] = useState(false);
   const [programs, setPrograms] = useState([]);

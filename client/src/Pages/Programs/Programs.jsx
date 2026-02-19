@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableTable from "../../Components/Table/ReuseableTable";
 import { FiEye } from "react-icons/fi";
 import Chart from "react-apexcharts";
 import "./Programs.css";
 import DashboardLayout from "../../layouts/ClientLayout";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import api from "../../api/programsApis";
 import Button from "../../Components/Button/Button";
 
 const Programs = () => {
-  const clientId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId,
-  );
-  const accessToken = useSelector((state) => state.auth?.user?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.user?.refreshToken);
+  const { clientId, accessToken, refreshToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");

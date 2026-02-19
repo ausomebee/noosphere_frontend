@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableModal from "../ReusableModal";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
 import { showToast } from "../../../Helper/ShowToast";

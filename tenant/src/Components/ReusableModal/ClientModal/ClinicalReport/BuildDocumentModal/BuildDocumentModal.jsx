@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import ReusableModal from "../../../ReusableModal";
 import { TextInput, SelectInput } from "../../../../Input/Inputs";
 import "./BuildDocumentModal.css";
@@ -28,10 +28,7 @@ const BuildDocumentModal = ({
   onStartCreating,
   clientData,
 }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, userId, accessToken, refreshToken } = useAuth();
     const { tenantClientId } = useParams();
 
   const [formData, setFormData] = useState({

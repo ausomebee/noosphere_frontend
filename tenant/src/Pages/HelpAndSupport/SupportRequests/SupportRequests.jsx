@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../Layout/TenantLayout";
+import useAuth from "../../../hooks/useAuth";
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
@@ -44,9 +43,7 @@ const STATUS_CLASS_MAP = {
 
 const SupportRequests = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -267,7 +264,7 @@ const SupportRequests = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="support-requests-container">
         {/* Header */}
         <div className="support-requests-header">
@@ -453,7 +450,7 @@ const SupportRequests = () => {
           </div>
         </ReusableModal>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

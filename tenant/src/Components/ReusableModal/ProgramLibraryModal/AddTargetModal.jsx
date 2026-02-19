@@ -16,6 +16,7 @@ import {
   TextareaInput,
   TextInput,
 } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 /* ---------- Validation Schema ---------- */
 const schema = yup.object().shape({
@@ -58,6 +59,19 @@ const schema = yup.object().shape({
   note: yup.string().optional(),
   attachment: yup.mixed(),
 });
+
+/* ---------- Mastery Option → Slot Mapping ---------- */
+const MASTERY_OPTION_SLOTS = {
+  "Percentage Accuracy": { percentage: "optionOne", percentageOf: "optionTwo", average: "optionThree" },
+  "Trials Correct": { consecutive: "optionOne", percentageOf: "optionTwo" },
+  "Independent Responses": { consecutive: "optionOne", percentageOf: "optionTwo" },
+  "Frequency Count": { greaterThan: "optionOne" },
+  "Rate": { greaterThan: "optionOne" },
+  "Duration": { duration: "optionOne" },
+  "Latency": { latency: "optionOne" },
+  "Percentage of Steps Independent": { percentageSteps: "optionOne", allSteps: "optionTwo" },
+  "Full Task Completion": { completion: "optionOne" },
+};
 
 /* ---------- FileUploadArea Component ---------- */
 const FileUploadArea = ({
@@ -170,9 +184,7 @@ const AddTargetModal = ({
   const dataCollectionType = watch("dataCollectionType");
   const masteryMetric = watch("masteryMetric");
   const trialOrOpportunitiesSession = watch("trialOrOpportunitiesSession");
-  const masteryCriteriaOptionOne = watch("masteryCriteriaOptionOne");
-  const masteryCriteriaOptionTwo = watch("masteryCriteriaOptionTwo");
-  const masteryCriteriaOptionThree = watch("masteryCriteriaOptionThree");
+  const masteryCriteriaOption = watch("masteryCriteriaOption");
   const customRecurrenceDay = watch("customRecurrenceDay");
   const consecutiveSessions = watch("consecutiveSessions");
   const totalSessions = watch("totalSessions");
@@ -233,9 +245,7 @@ const AddTargetModal = ({
       if (source.masteryCriteria) {
         const mc = source.masteryCriteria;
         setValue("masteryMetric", mc.metric || "");
-        setValue("masteryCriteriaOptionOne", mc.optionOne || "");
-        setValue("masteryCriteriaOptionTwo", mc.optionTwo || "");
-        setValue("masteryCriteriaOptionThree", mc.optionThree || "");
+        setValue("masteryCriteriaOption", mc.optionOne || mc.optionTwo || mc.optionThree || "");
         setValue("customRecurrenceDay", mc.value || "");
         setValue("consecutiveSessions", mc.sessions || "");
         setValue("totalSessions", mc.totalSessions || "");
@@ -255,35 +265,26 @@ const AddTargetModal = ({
 
   /* ---------- Mastery Criteria Logic ---------- */
   useEffect(() => {
-    const opts = {
-      metric: masteryMetric,
-      optionOne: masteryCriteriaOptionOne,
-      optionTwo: masteryCriteriaOptionTwo,
-      optionThree: masteryCriteriaOptionThree,
-      value: customRecurrenceDay,
-      sessions: consecutiveSessions,
-      totalSessions: totalSessions,
-      sessionCount: sessionCount,
-      unit: customRecurrencePosition,
-    };
-
     const criteria = {};
-    if (opts.metric) criteria.metric = opts.metric;
-    if (opts.value) criteria.value = Number(opts.value);
-    if (opts.sessions) criteria.sessions = Number(opts.sessions);
-    if (opts.totalSessions) criteria.totalSessions = Number(opts.totalSessions);
-    if (opts.sessionCount) criteria.sessionCount = Number(opts.sessionCount);
-    if (opts.unit) criteria.unit = opts.unit;
-    if (opts.optionOne) criteria.optionOne = opts.optionOne;
-    if (opts.optionTwo) criteria.optionTwo = opts.optionTwo;
-    if (opts.optionThree) criteria.optionThree = opts.optionThree;
+    if (masteryMetric) criteria.metric = masteryMetric;
+
+    // Map selected radio option to the correct slot (optionOne/optionTwo/optionThree)
+    if (masteryCriteriaOption) {
+      const slots = MASTERY_OPTION_SLOTS[masteryMetric] || {};
+      const slot = slots[masteryCriteriaOption];
+      if (slot) criteria[slot] = masteryCriteriaOption;
+    }
+
+    if (customRecurrenceDay) criteria.value = Number(customRecurrenceDay);
+    if (consecutiveSessions) criteria.sessions = Number(consecutiveSessions);
+    if (totalSessions) criteria.totalSessions = Number(totalSessions);
+    if (sessionCount) criteria.sessionCount = Number(sessionCount);
+    if (customRecurrencePosition) criteria.unit = customRecurrencePosition;
 
     setValue("masteryCriteria", criteria);
   }, [
     masteryMetric,
-    masteryCriteriaOptionOne,
-    masteryCriteriaOptionTwo,
-    masteryCriteriaOptionThree,
+    masteryCriteriaOption,
     customRecurrenceDay,
     consecutiveSessions,
     totalSessions,
@@ -370,9 +371,18 @@ const AddTargetModal = ({
 
   const handleNext = () => {
     const idx = tabsList.indexOf(activeTab);
-    if (idx < tabsList.length - 1 && validateTab(activeTab)) {
-      setActiveTab(tabsList[idx + 1]);
+    if (idx < tabsList.length - 1) {
+      if (validateTab(activeTab)) {
+        setActiveTab(tabsList[idx + 1]);
+      } else {
+        showToast("Please fill in all required fields before proceeding", "error");
+      }
     }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handlePrevious = () => {
@@ -740,7 +750,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="percentage"
                   />
                 </div>
@@ -772,7 +782,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionTwo")}
+                    {...register("masteryCriteriaOption")}
                     value="percentageOf"
                   />
                 </div>
@@ -813,7 +823,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionThree")}
+                    {...register("masteryCriteriaOption")}
                     value="average"
                   />
                 </div>
@@ -853,7 +863,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="consecutive"
                   />
                 </div>
@@ -887,7 +897,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionTwo")}
+                    {...register("masteryCriteriaOption")}
                     value="percentageOf"
                   />
                 </div>
@@ -937,7 +947,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="consecutive"
                   />
                 </div>
@@ -961,7 +971,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionTwo")}
+                    {...register("masteryCriteriaOption")}
                     value="percentageOf"
                   />
                 </div>
@@ -1001,7 +1011,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="greaterThan"
                   />
                 </div>
@@ -1043,7 +1053,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="greaterThan"
                   />
                 </div>
@@ -1085,7 +1095,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="duration"
                   />
                 </div>
@@ -1143,7 +1153,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="latency"
                   />
                 </div>
@@ -1201,7 +1211,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="percentageSteps"
                   />
                 </div>
@@ -1233,7 +1243,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionTwo")}
+                    {...register("masteryCriteriaOption")}
                     value="allSteps"
                   />
                 </div>
@@ -1251,7 +1261,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ marginBottom: "-14px" }}>
                   <RadioInput
-                    {...register("masteryCriteriaOptionOne")}
+                    {...register("masteryCriteriaOption")}
                     value="completion"
                   />
                 </div>
@@ -1281,15 +1291,6 @@ const AddTargetModal = ({
       name: "Status & Admin",
       content: (
         <div>
-          <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
-            <pre>
-              {JSON.stringify(
-                errors,
-                (k, v) => (v instanceof HTMLElement ? "[DOM]" : v),
-                2
-              )}
-            </pre>
-          </div>
           <Controller
             name="statusAndAdmin"
             control={control}
@@ -1347,9 +1348,9 @@ const AddTargetModal = ({
 
   const getPrimaryButtonAction = () => {
     if (mode === "edit") {
-      return hasChanges ? handleSubmit(handleFormSubmit) : handleNext;
+      return hasChanges ? handleSubmit(handleFormSubmit, onValidationError) : handleNext;
     }
-    return activeTab === "Status & Admin" ? handleSubmit(handleFormSubmit) : handleNext;
+    return activeTab === "Status & Admin" ? handleSubmit(handleFormSubmit, onValidationError) : handleNext;
   };
 
   return (

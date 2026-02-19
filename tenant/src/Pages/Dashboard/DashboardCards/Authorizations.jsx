@@ -4,7 +4,7 @@ import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import "../Dashboard.css";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis";
 
 const Authorizations = ({
@@ -13,9 +13,7 @@ const Authorizations = ({
   isModalOpen,
   setIsModalOpen,
 }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [authorizationData, setAuthorizationData] = useState([
     { label: "Expired", value: 0, color: "#3B82F6" },
@@ -169,13 +167,13 @@ const Authorizations = ({
     <>
       {hasData ? (
         <div className="">
-          <div className="flex items-center gap-4 mx-auto w-100p">
+          <div className="auth-layout">
             <div className="chart-container">
               <Chart
                 options={chartOptions}
                 series={authorizationData.map((item) => item.value)}
                 type="donut"
-                width={300}
+                width="100%"
               />
             </div>
             <div className="auth-details">

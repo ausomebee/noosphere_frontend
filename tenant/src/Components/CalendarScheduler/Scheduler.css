@@ -295,36 +295,7 @@
   color: #4b5563; /* gray-700 */
 }
 
-/* View Switcher */
-.cal-sched-view-switcher {
-  display: flex;
-  gap: 0.75rem; /* 12px, like space-x-3 */
-  padding: 0.5rem; /* 8px */
-  background-color: #ececec; /* bg-[#ECECEC] */
-  width: 25%; /* w-3/12 */
-  border-radius: 0.675rem; /* 6px */
-}
-
-.cal-sched-view-button {
-  width: 33.33%; /* w-4/12 */
-  padding: 0.25rem 0.75rem; /* 4px 12px */
-  font-size: 0.875rem; /* 14px */
-  font-weight: 500;
-  border-radius: 0.45rem; /* 4px */
-  display: flex;
-  justify-content: center;
-}
-
-.cal-sched-view-button-active {
-  background-color: #ffffff;
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-.cal-sched-view-button-inactive {
-  color: #475467; /* gray-700 */
-  font-weight: 600;
-}
+/* View switcher → moved to src/styles/Tabs.css */
 
 /* Filter Section */
 .cal-sched-filter-section {
@@ -347,33 +318,7 @@
   color: #9097a1; /* gray-700 */
 }
 
-.cal-sched-tab-container {
-  display: flex;
-  border: 1px solid #d1d5db; /* gray-300 */
-  border-radius: 0.45rem; /* 4px */
-  background-color: #f3f4f6; /* gray-100 */
-}
-
-.cal-sched-tab-button {
-  padding: 0.25rem 0.75rem; /* 4px 12px */
-  font-size: 0.875rem; /* 14px */
-  font-weight: 500;
-  border-radius: 0.45rem; /* 4px */
-}
-
-.cal-sched-tab-button-active {
-  background-color: #ffffff;
-  color: #5c6167; /* gray-700 */
-}
-
-.cal-sched-tab-button-inactive {
-  background-color: transparent;
-  color: #6b7280; /* gray-500 */
-}
-
-.cal-sched-tab-divider {
-  border-left: 1px solid #d1d5db; /* gray-300 */
-}
+/* cal-sched-tab-container, tab-button, tab-divider → moved to src/styles/Tabs.css */
 
 /* Right Controls */
 .cal-sched-right-controls {
@@ -880,83 +825,102 @@
   background-color: #2563eb; /* blue-600 */
 }
 
-/* DayView*/
-/* Container */
+/* ===================== DAY VIEW ===================== */
+
+/* CSS variable for hour column width (responsive) */
+:root {
+  --day-hour-col-width: 80px;
+}
+
 .day-view-container {
   position: relative;
-}
-
-/* Table */
-.day-view-table {
   width: 100%;
-  border: 1px solid #e5e7eb; /* gray-200 */
-  border-radius: 1rem; /* 16px, like rounded-2xl */
+  height: 840px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
-
-
-.day-view-header-time {
-  width: 20%; /* w-[20%] */
-  padding: 0.5rem; /* 8px */
-  font-weight: 600;
-  font-size: 0.875rem; /* 14px */
-  color: #6b7280; /* gray-500 */
-  text-transform: uppercase;
-  background-color: #f3f4f6; /* gray-100 */
-  border-top-left-radius: 1rem; /* 16px, like rounded-tl-2xl */
+.day-view-grid {
+  display: grid;
+  grid-template-columns: var(--day-hour-col-width) 1fr;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.day-view-header-date {
-  width: 80%; /* w-[80%] */
-  padding: 0.5rem; /* 8px */
-  font-weight: 600;
-  font-size: 0.875rem; /* 14px */
-  color: #5c6167; /* gray-700 */
+.day-view-date-header {
+  grid-column: 1 / span 2;
+  grid-row: 1;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
   text-align: center;
-  background-color: #f3f4f6; /* gray-100 */
-  border-top-right-radius: 1rem; /* 16px, like rounded-tr-2xl */
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+  box-sizing: border-box;
 }
 
-
-.day-view-hour-cell {
-  width: 20%; /* w-[20%] */
-  border-right: 1px solid #e5e7eb; /* gray-200 */
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
-  padding: 0.5rem; /* 8px */
-  text-align: right;
-  font-size: 0.875rem; /* 14px */
-  color: #6b7280; /* gray-500 */
+.day-view-hour-label {
+  grid-column: 1;
+  padding: 0 10px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #666;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 
-.day-view-appointment-cell {
-  width: 80%; /* w-[80%] */
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+.day-view-hour-slot {
+  grid-column: 2;
+  border-bottom: 1px solid #e0e0e0;
+  box-sizing: border-box;
   position: relative;
 }
 
-/* Appointment Block */
-.day-view-appointment {
+/* Day view appointment card */
+.day-view-appt-card {
   position: absolute;
-  padding: 0.25rem; /* 4px */
-  font-size: 0.75rem; /* 12px */
-  color: #ffffff;
-  border-radius: 1rem; /* 16px, like rounded-2xl */
-  gap: 0.75rem; /* 12px */
+  border-radius: 6px;
+  padding: 4px;
+  margin: 1px 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.day-view-appointment-time {
+.day-view-appt-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.day-view-appt-time {
+  font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #333;
+  line-height: 1.2;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.day-view-appointment-client {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.day-view-appt-client {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  text-align: left;
+  display: flex;
+  margin-top: auto;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
 }
 
 /* MonthView */
@@ -1069,90 +1033,113 @@
   color: #000000; /* black */
 }
 
-/*WeekView*/
+/* ===================== WEEK VIEW ===================== */
 
-/* Container */
 .week-view-container {
   position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
 }
 
-/* Grid */
 .week-view-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 0;
-  border: 1px solid #e5e7eb; /* gray-200 */
-  border-radius: 1rem; /* 16px, like rounded-2xl */
+  grid-template-columns: 80px repeat(7, 1fr);
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
 }
 
-/* Header */
-.week-view-header-time {
-  padding: 0.5rem; /* 8px */
-  font-weight: 600;
-  font-size: 0.875rem; /* 14px */
-  color: #004aba; /* gray-500 */
-  background-color: #f3f4f6; /* gray-100 */
-  border-top-left-radius: 1rem;
-  align-items: center;
+.week-view-allday-label {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 10px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  font-weight: bold;
+  font-size: 0.875rem;
+  color: #004aba;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.week-view-header-day {
+.week-view-day-col-header {
+  grid-row: 1;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  font-weight: bold;
   text-align: center;
-  font-size: 0.875rem; /* 14px */
-  font-weight: 600;
-  color: #5c6167; /* gray-700 */
-  padding: 0.5rem; /* 8px */
-  background-color: #f3f4f6; /* gray-100 */
+  font-size: 0.875rem;
+  color: #5c6167;
 }
 
-.week-view-header-day-last {
-  border-top-right-radius: 1rem; /* 16px, like rounded-tr-2xl */
+.week-view-day-col-today {
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
-/* Body */
-.week-view-hour-cell {
-  border-right: 1px solid #e5e7eb; /* gray-200 */
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
-  padding: 0.5rem; /* 8px */
-  text-align: right;
-  font-size: 0.875rem; /* 14px */
-  color: #6b7280; /* gray-500 */
+.week-view-today-badge {
+  font-size: 10px;
+  margin-top: 2px;
 }
 
-.week-view-day-cell {
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
-  position: relative;
+.week-view-hour-label {
+  grid-column: 1;
+  padding: 5px 10px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #666;
 }
 
-.week-view-day-cell-bordered {
-  border-right: 1px solid #e5e7eb; /* gray-200 */
+.week-view-hour-slot {
+  border-bottom: 1px solid #e0e0e0;
 }
 
-/* Appointment */
-.week-view-appointment {
+/* Week view appointment card */
+.week-view-appt-card {
   position: absolute;
-  padding: 0.25rem; /* 4px */
-  font-size: 0.75rem; /* 12px */
-  color: #ffffff;
-  border-radius: 1rem; /* 16px, like rounded-2xl */
+  border-radius: 6px;
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  gap: 0.5rem; /* 8px, like gap-2 */
+  transition: all 0.2s ease;
+  margin: 0 2px;
 }
 
-.week-view-appointment-time {
+.week-view-appt-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.week-view-appt-time {
+  font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #333;
+  line-height: 1.2;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.week-view-appointment-client {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.week-view-appt-client {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  text-align: left;
+  display: flex;
+  margin-top: auto;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
 }
 
 /* StaffClientFilter */
@@ -1301,35 +1288,206 @@ Appointments Css
   color: #a1a8b3; /* text-[#A1A8B3] */
   font-weight: 600;
 }
-/* View Switcher */
-.appointment-sched-view-switcher {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  background-color: #ececec;
-  width: 100%;
-  border-radius: 0.675rem;
-  margin-top: 20px;
+/* appointment-sched-view-switcher → moved to src/styles/Tabs.css */
+
+/* Search wrapper */
+.cal-sched-search-wrapper {
+  width: 300px;
+  max-width: 100%;
 }
 
-.appointment-sched-view-button {
-  width: 100%;
-  padding: 0.25rem 0.75rem; /* 4px 12px */
-  font-size: 0.875rem; /* 14px */
-  font-weight: 500;
-  border-radius: 0.45rem; /* 4px */
-  display: flex;
-  justify-content: center;
+.cal-sched-search-wrapper .input-group {
+  margin-bottom: 0;
 }
 
-.appointment-sched-view-button-active {
-  background-color: #ffffff;
-  color: #004aba;
-  font-weight: 600;
+/* ===================== RESPONSIVE: MOBILE ===================== */
+@media (max-width: 640px) {
+  /* Main container */
+  .cal-sched-container {
+    padding: 0.75rem;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .cal-sched-title,
+  .appointment-sched-title {
+    font-size: 1.4rem;
+  }
+
+  /* Header: stack controls vertically */
+  .cal-sched-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .cal-sched-left-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .cal-sched-date-text {
+    font-size: 1rem;
+  }
+
+  /* View switcher + tab button mobile rules → moved to src/styles/Tabs.css */
+
+  /* Filter section: stack */
+  .cal-sched-filter-section {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .cal-sched-filter-controls {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .cal-sched-right-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Search: full width on mobile */
+  .cal-sched-search-wrapper {
+    width: 100%;
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  /* Calendar content: stack sidebar + calendar */
+  .cal-sched-content {
+    flex-direction: column;
+  }
+
+  /* Staff/Client sidebar: full width on mobile */
+  .staff-client-container {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    margin: 0 0 1rem 0;
+  }
+
+  .cal-sched-calendar-container {
+    padding: 0.5rem;
+  }
+
+  /* Day view: compact hour column */
+  :root {
+    --day-hour-col-width: 60px;
+  }
+
+  .day-view-container {
+    height: 600px;
+  }
+
+  .day-view-grid {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .day-view-date-header {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .day-view-hour-label {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+
+  .day-view-appt-time {
+    font-size: 10px;
+  }
+
+  .day-view-appt-client {
+    font-size: 11px;
+  }
+
+  /* Week view: keep normal layout, overflow horizontally */
+  .week-view-grid {
+    min-width: 700px;
+  }
+
+  .week-view-container {
+    overflow-x: auto;
+  }
+
+  /* Month view: keep normal layout, overflow horizontally */
+  .month-view-container {
+    overflow-x: auto;
+  }
+
+  .month-view-header {
+    min-width: 600px;
+  }
+
+  .month-view-grid {
+    min-width: 600px;
+  }
+
+  /* Appointment view-switcher mobile rules → moved to src/styles/Tabs.css */
+
+  /* Appointment modal footer */
+  .appointment-modal-footer {
+    flex-direction: column;
+  }
 }
 
-.appointment-sched-view-button-inactive {
-  color: #475467; /* gray-700 */
-  font-weight: 600;
+/* ===================== RESPONSIVE: TABLET ===================== */
+@media (min-width: 641px) and (max-width: 992px) {
+  .cal-sched-container {
+    padding: 1rem;
+  }
+
+  .cal-sched-title,
+  .appointment-sched-title {
+    font-size: 1.7rem;
+  }
+
+  /* cal-sched-view-switcher tablet rule → moved to src/styles/Tabs.css */
+
+  .cal-sched-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Search: slightly narrower on tablet */
+  .cal-sched-search-wrapper {
+    width: 220px;
+  }
+
+  /* Staff sidebar narrower on tablet */
+  .staff-client-container {
+    width: 12rem;
+    height: 600px;
+  }
+
+  /* Day view: slightly smaller hour column */
+  .day-view-grid {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .day-view-hour-label {
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  /* Week view: smaller text */
+  .week-view-day-col-header {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  .week-view-allday-label {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  /* Month view: keep normal, overflow if needed */
+  .month-view-container {
+    overflow-x: auto;
+  }
 }
 

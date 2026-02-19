@@ -11,7 +11,7 @@ import { Menu } from '@headlessui/react';
 import './DragAndDrop.css';
 import { useNavigate } from 'react-router-dom';
 
-const Column = ({
+const Column = React.memo(({
   column,
   tasks,
   onAddTask,
@@ -29,7 +29,6 @@ const Column = ({
 }) => {
   // Early return if column is invalid
   if (!column || !column.id) {
-    console.warn('Invalid column prop received:', column);
     return null; 
   }
 
@@ -215,7 +214,7 @@ const Column = ({
       />
     </div>
   );
-};
+});
 
 Column.propTypes = {
   column: PropTypes.shape({

@@ -1,6 +1,6 @@
 // src/pages/client/DocumentRequests.jsx
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
 import {
@@ -11,7 +11,7 @@ import {
 import "./DocumentRequests.css";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 import UploadDocumentModal from "../../../Components/Modal/ClientDocumentUploadModal";
 import SelectFromMyDocumentsModal from "../../../Components/Modal/SelectFromMyDocumentsModal";
@@ -20,12 +20,7 @@ import api from "../../../api/documentsAndFormsApis";
 
 const DocumentRequests = () => {
   const navigate = useNavigate();
-
-  const clientTenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id,
-  );
-  const accessToken = useSelector((state) => state.auth?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.refreshToken);
+  const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
 
   const [documentRequests, setDocumentRequests] = useState([]);
   const [counts, setCounts] = useState({ request: {}, overdue: 0 });

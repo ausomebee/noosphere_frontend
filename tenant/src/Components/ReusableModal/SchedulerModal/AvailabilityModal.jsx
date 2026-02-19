@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { SwitchInput, TextInput } from "../../Input/Inputs";
 import ReusableModal from "../../ReusableModal/ReusableModal";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Reusable Time Range Input Component
 const TimeRangeInput = React.memo(
@@ -155,11 +156,20 @@ const AvailabilityModal = ({
 
   // Handle save
   const handleSave = useCallback(
-    (data) => {
-      onSave(data.availability);
+    async (data) => {
+      try {
+        await onSave(data.availability);
+      } catch {
+        showToast("Failed to save availability", "error");
+      }
     },
     [onSave]
   );
+
+  const onValidationError = useCallback((errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  }, []);
 
   // Handle close
   const handleClose = useCallback(() => {
@@ -215,7 +225,7 @@ const AvailabilityModal = ({
       primaryButtonText={isLoading ? "Saving..." : "Save"}
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading || !isDirty}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={handleClose}
       size="lg"
       primaryButtonLoading={isLoading}

@@ -34,37 +34,6 @@ export const CreateNotificationSettings = async ({
   }
 };
 
-const UpdateNotificationSettings = async ({
-  id,
-  reschedule,
-  starts,
-  completed,
-  awaitingReview,
-  approvedReschedule,
-  accessToken,
-  refreshToken,
-}) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
-  try {
-    const response = await authFetch.put(
-      `${PLAIN_API_URL}/notification-settings`,
-      {
-        id,
-        reschedule,
-        starts,
-        completed,
-        awaitingReview,
-        approvedReschedule,
-      },
-    );
-    return response;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Update notification settings failed",
-    );
-  }
-};
-
 export const GetNotificationSettings = async ({
   tenantClientId,
   accessToken,
@@ -186,10 +155,9 @@ export const UpdatePassword = async ({
 };
 export default {
   CreateNotificationSettings,
-  UpdateNotificationSettings,
   GetNotificationSettings,
-  GetClientDetails,
   UpdateClientDetails,
   UpdatePassword,
   UploadProfileImage,
+  GetClientDetails,
 };

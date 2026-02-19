@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaArrowLeft } from "react-icons/fa";
 import UploadTenantStaffDocumentModal from "../../../Components/ReusableModal/OrganizationModal/UploadTenantStaffDocumentModal";
 import DeleteModal from "../../../Components/ReusableModal/OrganizationModal/DeleteModal";
@@ -13,12 +12,11 @@ import Client from "./StaffSingleTabs/Client";
 import Payroll from "./StaffSingleTabs/Payroll";
 import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
+import "../Organisation.css";
 
 const SingleStaffByAdmin = () => {
   const navigate = useNavigate();
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
-  const user = useSelector((s) => s.authentication?.user);
+  const { accessToken, refreshToken, user } = useAuth();
   const { tenantStaffId } = useParams();
   const [searchParams] = useSearchParams();
   const staffName = searchParams.get("name");
@@ -378,7 +376,7 @@ const SingleStaffByAdmin = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="program-column-header flex gap-4 items-center">
         <button className="back-button" onClick={onBack}>
           <FaArrowLeft />
@@ -462,7 +460,7 @@ const SingleStaffByAdmin = () => {
         tenantStaffId={tenantStaffId}
       />
       <DeleteModal {...deleteCfg} onClose={closeDelete} />
-    </DashboardLayout>
+    </>
   );
 };
 

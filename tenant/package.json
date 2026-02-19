@@ -26,6 +26,7 @@
     "apexcharts": "^4.5.0",
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.3.1",
     "dotenv": "^16.4.7",
     "html2canvas": "^1.4.1",
     "jest": "^29.7.0",

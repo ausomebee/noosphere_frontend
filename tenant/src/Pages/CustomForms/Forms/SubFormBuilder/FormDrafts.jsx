@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { FiEdit2 } from "react-icons/fi";
 import api from "../../../../api/customFormsApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 
 // FORMAT: DD-MM-YYYY
@@ -19,9 +19,7 @@ const formatDate = (isoString) => {
 
 const FormDrafts = ({ onCountChange }) => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);

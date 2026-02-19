@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import ServiceCodes from "./SettingSubs/ServiceCodes";
 import RoundingRules from "./SettingSubs/RoundingRules";
 import PayersAndInsurance from "./SettingSubs/PayersAndInsurance";
@@ -21,9 +20,9 @@ const BillingSettings = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div>
-        <h1 className="appointment-sched-title">Settings</h1>
+        <h1 className="text-2xl text-gray-400 font-semibold">Settings</h1>
       </div>
 
       <div className="appointment-sched-view-switcher">
@@ -60,7 +59,7 @@ const BillingSettings = () => {
       </div>
 
       {renderContent()}
-    </DashboardLayout>
+    </>
   );
 };
 

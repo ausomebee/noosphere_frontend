@@ -36,7 +36,7 @@ const ChangePlanModal = ({ isOpen, onClose, onSave, currentPlanId, plans = [] })
       setSelectedToPlan("");
       onClose();
     } catch (err) {
-      console.error("Failed to change plan:", err);
+      if (import.meta.env.DEV) console.error("Failed to change plan:", err);
     } finally {
       setIsLoading(false);
     }

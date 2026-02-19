@@ -182,16 +182,13 @@ export const refreshAccessToken = async (refreshToken, dispatch) => {
     });
     const { accessToken } = response.data;
 
-    console.log("this is the new access token", accessToken);
 
     if (accessToken) {
-      console.log("this is here 12");
       dispatch(updateAccessToken(accessToken));
-      console.log("this is here 13");
       return accessToken;
     }
   } catch (error) {
-    console.error("Failed to refresh token", error);
+    if (import.meta.env.DEV) console.error("Failed to refresh token", error);
   }
   return null;
 };

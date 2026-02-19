@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import {
   TextInput,
@@ -34,10 +34,7 @@ const CURRENCY_OPTIONS = [
 ];
 
 const GeneralSettings = () => {
-  const user = useSelector((s) => s.authentication?.user);
-  const tenantId = user?.tenantId;
-  const accessToken = user?.accessToken;
-  const refreshToken = user?.refreshToken;
+  const { user, tenantId, accessToken, refreshToken } = useAuth();
 
   // General settings state
   const [dateFormat, setDateFormat] = useState("MM/DD/YYYY");

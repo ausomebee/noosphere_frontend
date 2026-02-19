@@ -225,3 +225,43 @@
   text-decoration: underline;
   background: transparent !important;
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .settings-section {
+    padding: 16px;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .settings-row-description {
+    max-width: 100%;
+  }
+
+  .settings-2fa-method-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .security-question-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Responsive: Tablet */
+@media (min-width: 641px) and (max-width: 992px) {
+  .settings-section {
+    padding: 20px;
+  }
+
+  .settings-row-description {
+    max-width: 300px;
+  }
+}

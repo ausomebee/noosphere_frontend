@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import DashboardLayout from "../../Layout/TenantLayout";
 import GeneralSettings from "./SettingsSubs/GeneralSettings";
 import NotificationSettings from "./SettingsSubs/NotificationSettings";
 import ClinicalReports from "./SettingsSubs/ClinicalReports";
@@ -21,7 +20,7 @@ const Settings = () => {
     }
   };
   return (
-    <DashboardLayout>
+    <>
       <div>
         <h1 className="appointment-sched-title">Settings</h1>
         <h3 className="text-xl text-gray-700 font-500">
@@ -57,7 +56,7 @@ const Settings = () => {
       </div>
 
             <div className="mt-6">{renderActiveTab()}</div>
-    </DashboardLayout>
+    </>
   );
 };
 

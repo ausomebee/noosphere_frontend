@@ -328,7 +328,6 @@ const UpdateStageTasksToDone = async ({ pipelineItemId, doneTasks, accessToken, 
     });
     return response;
   } catch (error) {
-    console.error("API ERROR:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Update Stage Tasks to Done failed");
   }
 };

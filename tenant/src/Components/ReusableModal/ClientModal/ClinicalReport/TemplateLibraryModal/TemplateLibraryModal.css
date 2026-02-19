@@ -216,3 +216,47 @@
 .pagination-ellipsis:hover {
   background: white;
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .template-library-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .template-library-header {
+    padding: 14px 16px;
+  }
+
+  .template-library-title {
+    font-size: 16px;
+  }
+
+  .template-library-content {
+    padding: 16px;
+  }
+
+  .template-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px;
+  }
+
+  .template-pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pagination-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pagination-number {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}

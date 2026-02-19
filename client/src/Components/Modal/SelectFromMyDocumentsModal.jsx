@@ -1,11 +1,11 @@
 // src/components/ReusableModal/ClientModal/SelectFromMyDocumentsModal.jsx
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableModal from "./ReusableModal";
 import { showToast } from "../../Helper/ShowToast";
 import { IoDocumentText, IoSearch } from "react-icons/io5";
 import { BsCheckCircleFill } from "react-icons/bs";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import api from "../../api/documentsAndFormsApis";
 
 const SelectFromMyDocumentsModal = ({
@@ -15,12 +15,7 @@ const SelectFromMyDocumentsModal = ({
   allowMultiple = false,
   loading = false,
 }) => {
-  const clientTenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id
-  );
-
-  const accessToken = useSelector((state) => state.auth?.user?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.user?.refreshToken);
+  const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
 
   const [documents, setDocuments] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());

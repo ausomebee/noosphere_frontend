@@ -1,9 +1,17 @@
 // src/Components/Allroutes.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import ClinicalReportBuilder from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/ClinicalReportBuilder";
-import TemplateBuilder from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/TemplateBuilder";
-import AuditTrails from "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/AuditTrails";
+import ProtectedRoute from "./ProtectedRoute";
+import { LayoutRoute } from "../Layout/TenantLayout";
+const ClinicalReportBuilder = React.lazy(() =>
+  import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/ClinicalReportBuilder")
+);
+const TemplateBuilder = React.lazy(() =>
+  import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/TemplateBuilder")
+);
+const AuditTrails = React.lazy(() =>
+  import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/AuditTrails")
+);
 
 // Lazy load all your pages
 const AdminLogin = React.lazy(() =>
@@ -211,124 +219,59 @@ const AllRoutes = () => {
         element={<ForgotPasswordQuestionVerifier />}
       />
 
-      {/* Tenant-Only Routes - Will still render, but you can protect them with auth guards later */}
-      <Route path="/dashboard" element={<Dashboard />} />
+      {/* Tenant-Only Routes — wrapped in persistent layout */}
+      <Route element={<ProtectedRoute><LayoutRoute /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
 
-      <Route path="/scheduler/calendar" element={<Calendar />} />
-      <Route path="/scheduler/appointments" element={<Appointments />} />
-      <Route
-        path="/appointments/start/:appointmentId/:clientId"
-        element={<StartAppointment />}
-      />
+        <Route path="/scheduler/calendar" element={<Calendar />} />
+        <Route path="/scheduler/appointments" element={<Appointments />} />
+        <Route path="/appointments/start/:appointmentId/:clientId" element={<StartAppointment />} />
 
-      <Route path="/clients/pipeline" element={<Pipeline />} />
-      <Route
-        path="/pipeline/column-single/:pipelineStageId"
-        element={<ManageColumn />}
-      />
-      <Route
-        path="/client/client-single/:clientId/:tenantClientId"
-        element={<ClientPanel />}
-      />
-      <Route
-        path="/client/view-client/:clientId/:tenantClientId"
-        element={<ClientPanel />}
-      />
-      <Route
-        path="/clinical-report/report-builder"
-        element={<ClinicalReportBuilder />}
-      />
-      <Route
-        path="/clinical-report/template-builder"
-        element={<TemplateBuilder />}
-      />
-       <Route
-        path="/clinical-report/audit-trails"
-        element={<AuditTrails />}
-      />
-      <Route path="/clients/client-list" element={<ClientList />} />
-      <Route
-        path="/client/view-program/:clientId/target/:programId"
-        element={<ViewPrograms />}
-      />
-      <Route
-        path="/client/view-program/:clientId/target/:programId"
-        element={<ViewPrograms />}
-      />
+        <Route path="/clients/pipeline" element={<Pipeline />} />
+        <Route path="/pipeline/column-single/:pipelineStageId" element={<ManageColumn />} />
+        <Route path="/client/client-single/:clientId/:tenantClientId" element={<ClientPanel />} />
+        <Route path="/client/view-client/:clientId/:tenantClientId" element={<ClientPanel />} />
+        <Route path="/clinical-report/report-builder" element={<ClinicalReportBuilder />} />
+        <Route path="/clinical-report/template-builder" element={<TemplateBuilder />} />
+        <Route path="/clinical-report/audit-trails" element={<AuditTrails />} />
+        <Route path="/clients/client-list" element={<ClientList />} />
+        <Route path="/client/view-program/:clientId/target/:programId" element={<ViewPrograms />} />
 
-      <Route path="/program-library" element={<ProgramLibrary />} />
-      <Route
-        path="/target-single/:domainName/:programName/:targetName"
-        element={<TargetSingle />}
-      />
-      <Route
-        path="/target-single/:programName/:targetName"
-        element={<TargetSingle />}
-      />
+        <Route path="/program-library" element={<ProgramLibrary />} />
+        <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} />
+        <Route path="/target-single/:programName/:targetName" element={<TargetSingle />} />
 
-      <Route path="/organization/general" element={<General />} />
-      <Route
-        path="/organization/staff-and-teams"
-        element={<StaffsAndTeams />}
-      />
-      <Route
-        path="/organization/staff-and-teams/single-staff/:tenantStaffId"
-        element={<SingleStaffByAdmin />}
-      />
-      <Route
-        path="/organization/practice-settings"
-        element={<PracticeSettings />}
-      />
-      <Route
-        path="/organization/role-and-permissions"
-        element={<RoleAndPermission />}
-      />
+        <Route path="/organization/general" element={<General />} />
+        <Route path="/organization/staff-and-teams" element={<StaffsAndTeams />} />
+        <Route path="/organization/staff-and-teams/single-staff/:tenantStaffId" element={<SingleStaffByAdmin />} />
+        <Route path="/organization/practice-settings" element={<PracticeSettings />} />
+        <Route path="/organization/role-and-permissions" element={<RoleAndPermission />} />
 
-      <Route path="/billing/timesheets" element={<TimeSheet />} />
-      <Route
-        path="/billing/timesheets/:timesheetId"
-        element={<SingleTimeSheet />}
-      />
-      <Route path="/billing/claims" element={<Claims />} />
-      <Route path="/billing/claims/view/:claimId" element={<SingleClaim />} />
-      <Route path="/billing/settings" element={<BillingSettings />} />
-      <Route
-        path="/billing/settings/view-payer/:id/:payerName"
-        element={<SingleViewPayer />}
-      />
+        <Route path="/billing/timesheets" element={<TimeSheet />} />
+        <Route path="/billing/timesheets/:timesheetId" element={<SingleTimeSheet />} />
+        <Route path="/billing/claims" element={<Claims />} />
+        <Route path="/billing/claims/view/:claimId" element={<SingleClaim />} />
+        <Route path="/billing/settings" element={<BillingSettings />} />
+        <Route path="/billing/settings/view-payer/:id/:payerName" element={<SingleViewPayer />} />
 
-      <Route path="/payroll/payroll-setup" element={<Payroll />} />
-      <Route
-        path="/payroll/payroll/view-breakdown/:id"
-        element={<ViewBreakDown />}
-      />
-      <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
+        <Route path="/payroll/payroll-setup" element={<Payroll />} />
+        <Route path="/payroll/payroll/view-breakdown/:id" element={<ViewBreakDown />} />
+        <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
 
-      <Route path="/custom-forms/forms" element={<Forms />} />
-      <Route path="/custom-forms/forms/create" element={<FormBuilder />} />
-      <Route
-        path="/custom-forms/forms/create/:formId"
-        element={<FormBuilder />}
-      />
-      <Route
-        path="/custom-forms/forms/renderer/:id"
-        element={<FormRenderer />}
-      />
-      <Route
-        path="/custom-forms/templates-library"
-        element={<TemplatesLibrary />}
-      />
+        <Route path="/custom-forms/forms" element={<Forms />} />
+        <Route path="/custom-forms/forms/create" element={<FormBuilder />} />
+        <Route path="/custom-forms/forms/create/:formId" element={<FormBuilder />} />
+        <Route path="/custom-forms/forms/renderer/:id" element={<FormRenderer />} />
+        <Route path="/custom-forms/templates-library" element={<TemplatesLibrary />} />
 
-      <Route path="/reports" element={<Reports />} />
+        <Route path="/reports" element={<Reports />} />
 
-      <Route path="/help/support-requests" element={<SupportRequests />} />
-      <Route
-        path="/help/support-requests/:requestId"
-        element={<ViewRequestDetails />}
-      />
-      <Route path="/help/knowledge-base" element={<KnowledgeBase />} />
+        <Route path="/help/support-requests" element={<SupportRequests />} />
+        <Route path="/help/support-requests/:requestId" element={<ViewRequestDetails />} />
+        <Route path="/help/knowledge-base" element={<KnowledgeBase />} />
 
-      <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
 
       {/* Optional: Redirect any unknown route to home */}
       <Route path="*" element={<Navigate to="/" replace />} />

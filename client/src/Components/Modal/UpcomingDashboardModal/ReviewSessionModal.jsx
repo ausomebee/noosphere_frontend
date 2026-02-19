@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../../Components/Input/Inputs";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import api from "../../../api/homeApis";
-import { useSelector } from "react-redux";
+import { showToast } from "../../../Helper/ShowToast";
+import useAuth from "../../../hooks/useAuth";
 import SignatureCanvas from "react-signature-canvas";
 import { RxCross2 } from "react-icons/rx";
 import { FiUpload } from "react-icons/fi";
@@ -637,7 +638,6 @@ const SessionFeedbackModal = ({
   onClose,
   appointment,
   onSave,
-  isLoading = false,
 }) => {
   const [serviceRating, setServiceRating] = useState(0);
   const [therapistRating, setTherapistRating] = useState(0);
@@ -645,6 +645,7 @@ const SessionFeedbackModal = ({
   const [confirmed, setConfirmed] = useState(false);
   const [sessionDetails, setSessionDetails] = useState(null);
   const [loadingSession, setLoadingSession] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Signature states
   const [signatureMode, setSignatureMode] = useState("draw");
@@ -656,8 +657,7 @@ const SessionFeedbackModal = ({
   const [showSOAPModal, setShowSOAPModal] = useState(false);
   const [showSessionDataModal, setShowSessionDataModal] = useState(false);
 
-  const accessToken = useSelector((state) => state.auth?.user?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
 
   // Fetch full session details when modal opens
   useEffect(() => {
@@ -717,21 +717,39 @@ const SessionFeedbackModal = ({
     return null;
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
 
+    if (!confirmed) {
+      showToast("Please confirm that the session was delivered", "error");
+      return;
+    }
+
     const signatureData = getSignatureData();
-    onSave({
-      sessionId: appointment.id,
-      confirmDelivery: confirmed,
-      rateService: serviceRating,
-      rateTherapist: therapistRating,
-      feedback: feedback,
-      signature: signatureData,
-    });
+    if (!signatureData || (signatureMode === "type" && !typedSignature.trim()) ||
+        (signatureMode === "draw" && sigCanvas.current?.isEmpty())) {
+      showToast("Please provide your signature", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onSave({
+        sessionId: appointment.id,
+        confirmDelivery: confirmed,
+        rateService: serviceRating,
+        rateTherapist: therapistRating,
+        feedback: feedback,
+        signature: signatureData,
+      });
+    } catch (error) {
+      showToast(error.message || "Failed to submit. Please try again.", "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle button clicks without triggering form submission

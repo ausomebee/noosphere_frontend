@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis";
 
 const ProductivityInformation = ({ hasData }) => {
-  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
 
@@ -141,7 +139,7 @@ const ProductivityInformation = ({ hasData }) => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="productivity-grid">
       {/* LEFT */}
       <div className="flex flex-col gap-4">
         {/* Availability */}
@@ -202,7 +200,7 @@ const ProductivityInformation = ({ hasData }) => {
             options={productivityChartData.options}
             series={productivityChartData.series}
             type="radialBar"
-            width={350}
+            width="100%"
           />
         </div>
       </div>

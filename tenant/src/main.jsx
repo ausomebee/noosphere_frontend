@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
+import "./styles/Tabs.css";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../src/ReduxStore/store.js";
 import { ToastContainer } from "react-toastify";

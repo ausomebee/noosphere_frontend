@@ -2,16 +2,14 @@ import React from "react";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
 import api from "../../../api/DashboardApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 const IntakePipeline = ({ hasData }) => {
   const [stages, setStages] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
 
-  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   React.useEffect(() => {
     if (!hasData) {

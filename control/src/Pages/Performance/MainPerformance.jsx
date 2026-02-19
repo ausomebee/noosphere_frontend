@@ -1,5 +1,5 @@
 import React from "react";
-import Layout from "../Layout/ControlLayout";
+
 import "./Performance.css";
 import Gauge from "../../Components/Guages/Gauge";
 import SystemSpeedChart from "../../Components/SpeedChart/SpeedChart";
@@ -10,7 +10,7 @@ import data from "../../Data/resourceData";
 import ResourceUtilizationChart from "../../Components/ResourceUtilizationUsage/ResourceUtilizationUsage";
 const MainPerformance = () => {
   return (
-    <Layout>
+    <>
       <div className="billing-board-header">
         <div className="billing-board-title">
           <h1>General Performance</h1>
@@ -138,7 +138,7 @@ const MainPerformance = () => {
        
         </div>
       </div> */}
-    </Layout>
+    </>
   );
 };
 

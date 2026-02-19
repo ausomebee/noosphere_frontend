@@ -97,7 +97,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .audit-trails-container {
     padding: 15px;
   }

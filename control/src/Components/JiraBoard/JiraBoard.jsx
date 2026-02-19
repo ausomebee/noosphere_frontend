@@ -160,7 +160,7 @@ const JiraBoard = () => {
         }))
       );
     } catch (err) {
-      console.error("Failed to fetch staff or stages:", err);
+      if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
     } finally {
       stopLoading();
     }
@@ -217,7 +217,6 @@ const JiraBoard = () => {
           };
           newColumnOrder.push(stage.id);
         } else {
-          console.warn("Skipping stage with missing ID:", stage);
         }
       });
 
@@ -236,7 +235,7 @@ const JiraBoard = () => {
               };
             })
             .catch((err) => {
-              console.error(`Failed to fetch items for stage ${stageId}:`, err);
+              if (import.meta.env.DEV) console.error(`Failed to fetch items for stage ${stageId}:`, err);
               throw err;
             }),
         3
@@ -256,10 +255,6 @@ const JiraBoard = () => {
 
             for (const item of items) {
               if (!item.id || typeof item.id !== "string") {
-                console.warn(
-                  `Item in stage ${stageId} missing or invalid id:`,
-                  item
-                );
                 continue;
               }
               taskCount++;
@@ -283,7 +278,7 @@ const JiraBoard = () => {
                 const sentDocuments = pipelineItem?.sentDocuments || {};
                 sentDocumentsCount = Object.values(sentDocuments).filter((value) => value === true).length;
               } catch (err) {
-                console.error(`Failed to fetch pipeline item ${item.id}:`, err);
+                if (import.meta.env.DEV) console.error(`Failed to fetch pipeline item ${item.id}:`, err);
               }
 
               const doneCount = doneTasksCount + sentDocumentsCount;
@@ -314,7 +309,7 @@ const JiraBoard = () => {
 
      
     } catch (err) {
-      console.error("Fetch error:", err);
+      if (import.meta.env.DEV) console.error("Fetch error:", err);
     } finally {
       stopLoading();
     }
@@ -442,7 +437,7 @@ const JiraBoard = () => {
             refreshToken,
           });
         } catch (err) {
-          console.error("Failed to reorder column:", err);
+          if (import.meta.env.DEV) console.error("Failed to reorder column:", err);
           showToast("Failed to update column order.", "error");
         }
       }
@@ -485,7 +480,7 @@ const JiraBoard = () => {
           refreshToken,
         });
       } catch (err) {
-        console.error("Failed to update task order:", err);
+        if (import.meta.env.DEV) console.error("Failed to update task order:", err);
         showToast("Failed to update task order.", "error");
       }
     } else {
@@ -535,7 +530,7 @@ const JiraBoard = () => {
           refreshToken,
         });
       } catch (err) {
-        console.error("Failed to move task:", err);
+        if (import.meta.env.DEV) console.error("Failed to move task:", err);
         showToast("Failed to move task.", "error");
       }
     }
@@ -544,13 +539,13 @@ const JiraBoard = () => {
   const handleAddTask = (columnId, prospectData) => {
     if (!columns[columnId]) {
       showToast("Invalid column selected.", "error");
-      console.error("Invalid columnId:", columnId);
+      if (import.meta.env.DEV) console.error("Invalid columnId:", columnId);
       return;
     }
 
     if (!prospectData.id || typeof prospectData.id !== "string") {
       showToast("Invalid prospect ID.", "error");
-      console.error("Invalid prospectData.id:", prospectData.id);
+      if (import.meta.env.DEV) console.error("Invalid prospectData.id:", prospectData.id);
       return;
     }
 
@@ -584,7 +579,7 @@ const JiraBoard = () => {
       setIsDataLoaded(false);
       showToast("Candidate added successfully!", "success");
     } catch (error) {
-      console.error("Failed to add candidate:", error);
+      if (import.meta.env.DEV) console.error("Failed to add candidate:", error);
       showToast("Failed to add candidate.", "error");
     } finally {
       stopLoading();
@@ -633,7 +628,7 @@ const JiraBoard = () => {
         throw new Error("Failed to delete candidates.");
       }
     } catch (error) {
-      console.error("Candidate deletion failed:", error);
+      if (import.meta.env.DEV) console.error("Candidate deletion failed:", error);
       showToast(error?.message || "Failed to delete candidate(s).", "error");
       setShowErrorModal(true);
     } finally {
@@ -717,7 +712,7 @@ const JiraBoard = () => {
         throw new Error("Failed to delete column.");
       }
     } catch (error) {
-      console.error("Column deletion failed:", error);
+      if (import.meta.env.DEV) console.error("Column deletion failed:", error);
       showToast(error?.message || "Failed to delete column.", "error");
       setShowErrorModal(true);
     } finally {
@@ -749,7 +744,7 @@ const JiraBoard = () => {
         throw new Error("Failed to update candidate.");
       }
     } catch (error) {
-      console.error("Candidate update failed:", error);
+      if (import.meta.env.DEV) console.error("Candidate update failed:", error);
       showToast(error?.message || "Failed to update candidate.", "error");
       setShowErrorModal(true);
     } finally {
@@ -796,7 +791,7 @@ const JiraBoard = () => {
 
         doneCount = doneTasksCount + sentDocumentsCount;
       } catch (err) {
-        console.error(`Failed to fetch pipeline item ${taskId}:`, err);
+        if (import.meta.env.DEV) console.error(`Failed to fetch pipeline item ${taskId}:`, err);
       }
 
       updatedTasks[taskId] = {
@@ -849,7 +844,7 @@ const JiraBoard = () => {
         throw new Error("Failed to move candidates.");
       }
     } catch (error) {
-      console.error("Task move failed:", error);
+      if (import.meta.env.DEV) console.error("Task move failed:", error);
       showToast(error?.message || "Failed to move candidate(s).", "error");
       setShowErrorModal(true);
     } finally {
@@ -888,7 +883,7 @@ const JiraBoard = () => {
         throw new Error("Failed to assign staff.");
       }
     } catch (error) {
-      console.error("Staff assignment failed:", error);
+      if (import.meta.env.DEV) console.error("Staff assignment failed:", error);
       showToast(
         error?.message || "Failed to assign staff to candidate(s).",
         "error"
@@ -948,7 +943,7 @@ const JiraBoard = () => {
       setShowAddColumnModal(false);
       setAddColumnIndex(null);
     } catch (error) {
-      console.error("Failed to create pipeline stage:", error);
+      if (import.meta.env.DEV) console.error("Failed to create pipeline stage:", error);
       showToast(error?.message || "Failed to create pipeline stage.", "error");
       setShowErrorModal(true);
     } finally {
@@ -963,7 +958,7 @@ const JiraBoard = () => {
   }
 
   if (status === "failed") {
-    console.error("Pipeline error:", error);
+    if (import.meta.env.DEV) console.error("Pipeline error:", error);
     return <div>Error: {error}</div>;
   }
 

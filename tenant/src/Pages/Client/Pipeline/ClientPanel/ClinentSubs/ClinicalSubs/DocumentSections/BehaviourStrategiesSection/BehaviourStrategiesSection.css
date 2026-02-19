@@ -117,7 +117,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .strategy-card-header {
     padding: 12px 16px;
     flex-direction: column;

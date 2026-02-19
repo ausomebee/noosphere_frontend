@@ -573,5 +573,188 @@
   font-size: 16px;
   color: #333539;
   margin-top: 2rem;
- 
+
+}
+
+/* ===== Tablet (max-width: 992px) ===== */
+@media (max-width: 992px) {
+  .modal-content {
+    max-width: 90%;
+  }
+
+  .modal-tabs {
+    overflow-x: auto;
+  }
+
+  .tab-button {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .pricing-plan-input-group {
+    flex-wrap: wrap;
+  }
+
+  .pricing-plan-feature-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pricing-plan-feature-select {
+    min-width: 120px;
+  }
+
+  .resolution-time .resolution-inputs {
+    flex-wrap: wrap;
+  }
+}
+
+/* ===== Mobile (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  /* Modal container — full width with small margin */
+  .modal-content {
+    max-width: 100%;
+    margin: 0.5rem;
+    border-radius: 6px;
+    max-height: 95vh;
+  }
+
+  /* Modal title — smaller text */
+  .modal-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Modal body — reduce padding */
+  .ReuseableModal-body {
+    padding: 12px;
+  }
+
+  /* Modal tabs — scroll horizontally if needed */
+  .modal-tabs {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-width: max-content;
+  }
+
+  .tab-content {
+    padding: 12px;
+  }
+
+  /* Modal buttons — stack vertically */
+  .modal-buttons {
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px 12px 12px;
+  }
+
+  .modal-button {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  /* Form groups — full width */
+  .form-group {
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .form-row .input-select {
+    max-width: 100%;
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* Upload area */
+  .upload-area {
+    padding: 1.25rem;
+  }
+
+  .upload-icon {
+    width: 44px;
+    height: 44px;
+    padding: 0.75rem;
+  }
+
+  .file-item {
+    padding: 0.75rem;
+  }
+
+  /* Delete confirmation */
+  .delete-confirmation-content {
+    padding: 0.5rem;
+  }
+
+  /* Pricing plan sections */
+  .pricing-plan-features-list {
+    padding: 12px;
+  }
+
+  .pricing-plan-extras-container {
+    padding: 12px;
+  }
+
+  .pricing-plan-input-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .pricing-plan-feature-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .pricing-plan-feature-select {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .pricing-plan-custom-input,
+  .pricing-plan-custom-select {
+    width: 100%;
+  }
+
+  .pricing-plan-extra-pricing-section {
+    padding: 8px;
+  }
+
+  /* SLA / Resolution time */
+  .resolution-time .resolution-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .resolution-selects {
+    width: 100% !important;
+  }
+
+  .resolution-selects-one {
+    width: 100% !important;
+  }
+
+  .sla-select {
+    width: 100%;
+  }
+
+  .sla-select-one {
+    width: 100%;
+  }
 }

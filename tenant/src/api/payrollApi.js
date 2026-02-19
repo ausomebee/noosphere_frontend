@@ -285,7 +285,7 @@ const UpdateDeductionsActiveness = async ({
 const CreatePayrollCycles = async ({
   tenantId,
   name,
-  compensationTypeId,
+  compensationType,
   interval,
   startDate,
   autoRun,
@@ -297,7 +297,7 @@ const CreatePayrollCycles = async ({
     const payload = {
       tenantId,
       name,
-      compensationTypeId,
+      compensationType,
       interval,
       startDate,
       autoRun,
@@ -384,6 +384,146 @@ const UpdatePayrollCycleActiveness = async ({
   }
 };
 
+const GetPayrollCycleStats = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/payroll-cycles/tenant/${tenantId}/stats`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get payroll cycle stats failed");
+  }
+};
+
+const GetPayrollCycleStaffs = async ({
+  payrollCycleId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/payroll-cycle-staffs/cycle/${payrollCycleId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get payroll cycle staffs failed");
+  }
+};
+
+const GetStaffByPaymentSchedule = async ({
+  tenantId,
+  paymentSchedule,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/getstaffbypaymentschedule/${tenantId}/${paymentSchedule}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get staff by payment schedule failed");
+  }
+};
+
+const AddStaffToPayrollCycle = async ({
+  payrollCycleId,
+  staffId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/payroll-cycle-staffs`,
+      { payrollCycleId, staffId }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Add staff to payroll cycle failed");
+  }
+};
+
+const RemoveStaffFromPayrollCycle = async ({
+  id,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(
+      `${PLAIN_API_URL}/payroll-cycle-staffs/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Remove staff from payroll cycle failed");
+  }
+};
+
+const GetStaffWithPayrollByDate = async ({
+  tenantId,
+  startDate,
+  endDate,
+  paymentSchedule,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/getstaffwithpayrollbydate/${tenantId}?startDate=${startDate}&endDate=${endDate}&paymentSchedule=${paymentSchedule}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Get staff with payroll by date failed");
+  }
+};
+
+const EditPayrollBreakdown = async ({
+  staffs,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/payroll-cycle-staffs/edit-breakdown`,
+      { staffs }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Edit payroll breakdown failed");
+  }
+};
+
+const CreateManualPayrollCycle = async ({
+  tenantId,
+  compensationType,
+  startDate,
+  endDate,
+  staffs,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/payroll-cycles/manual`,
+      { tenantId, compensationType, startDate, endDate, staffs }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Create manual payroll cycle failed");
+  }
+};
+
 export default {
   GetCompensationTypeByTenantId,
   UpdateCompensationTypeActiveness,
@@ -399,4 +539,12 @@ export default {
   UpdatePayrollCycles,
   GetPayrollCycleByTenantId,
   UpdatePayrollCycleActiveness,
+  GetPayrollCycleStats,
+  GetPayrollCycleStaffs,
+  GetStaffByPaymentSchedule,
+  AddStaffToPayrollCycle,
+  RemoveStaffFromPayrollCycle,
+  EditPayrollBreakdown,
+  GetStaffWithPayrollByDate,
+  CreateManualPayrollCycle,
 };

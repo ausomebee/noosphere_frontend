@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
+
 import UpcomingAppointments from "./AppointmentSubs/UpcomingAppointments";
 import RescheduleRequests from "./AppointmentSubs/RescheduleRequests";
 import PastAppointments from "./AppointmentSubs/PastAppointments";
@@ -15,7 +15,7 @@ const Appointments = () => {
   });
 
   return (
-    <DashboardLayout>
+    <>
       <div>
         <h1 className="appointment-sched-title">Appointments</h1>
         <div>
@@ -110,7 +110,7 @@ const Appointments = () => {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

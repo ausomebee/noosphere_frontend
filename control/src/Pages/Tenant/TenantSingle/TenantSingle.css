@@ -259,8 +259,8 @@
   text-align: center;
 }
 
-/* Tablet (768px and below) */
-@media (max-width: 768px) {
+/* Tablet (992px and below) */
+@media (max-width: 992px) {
   .tenant-list-container {
     padding: 2rem;
   }
@@ -301,8 +301,8 @@
   }
 }
 
-/* Mobile (480px and below) */
-@media (max-width: 480px) {
+/* Mobile (640px and below) */
+@media (max-width: 640px) {
   .tenant-list-container {
     padding: 1rem;
   }
@@ -830,7 +830,7 @@
 }
 
 /* Ensure the layout is responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .tenant-settings-row {
     flex-direction: column;
     align-items: flex-start;

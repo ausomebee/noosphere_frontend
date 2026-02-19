@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../Layout/TenantLayout";
+import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
@@ -20,9 +19,7 @@ const StaffsAndTeams = () => {
   const [loading, setLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const { accessToken, refreshToken, tenantId } = useAuth();
   const navigate = useNavigate();
 
   const fetchStaffData = async () => {
@@ -410,7 +407,7 @@ const StaffsAndTeams = () => {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-6">
         <h1 className="appointment-sched-title mb-4">Staff & Teams</h1>
         <div className="appointment-sched-view-switcher">
@@ -477,7 +474,7 @@ const StaffsAndTeams = () => {
           />
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

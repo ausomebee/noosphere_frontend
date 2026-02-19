@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, CheckboxInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema
 const payrollCycleSchema = yup.object().shape({
@@ -19,23 +20,27 @@ const payrollCycleSchema = yup.object().shape({
     .required("Start Date is required")
     .matches(
       /^\d{4}-\d{2}-\d{2}$/,
-      "Start Date must be a valid date (YYYY-MM-DD)"
+      "Start Date must be a valid date (YYYY-MM-DD)",
     ),
   autoRun: yup.boolean().required("Auto Run is required"),
 });
 
+const COMPENSATION_TYPE_OPTIONS = [
+  { value: "Hourly", label: "Hourly" },
+  { value: "Daily", label: "Daily" },
+  { value: "Salaried", label: "Salaried" },
+];
+
 // Transform initial data to form data
-const transformInitialData = (initialData, mode, compensationTypes) => {
-  console.log("transformInitialData - input:", JSON.stringify(initialData, null, 2));
-  const formData = {
+const transformInitialData = (initialData) => {
+  return {
     name: initialData.name || "",
     appliesTo: initialData.compensationTypeId || initialData.appliesTo || "",
-    intervals: initialData.intervals != null ? Number(initialData.intervals) : 1,
+    intervals:
+      initialData.intervals != null ? Number(initialData.intervals) : 1,
     startDate: initialData.startDate || "",
     autoRun: initialData.autoRun !== undefined ? initialData.autoRun : false,
   };
-  console.log("transformInitialData - output:", JSON.stringify(formData, null, 2));
-  return formData;
 };
 
 const PayrollCycleModal = ({
@@ -44,7 +49,6 @@ const PayrollCycleModal = ({
   onSave,
   mode = "add",
   initialData = {},
-  compensationTypes = [],
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,35 +68,34 @@ const PayrollCycleModal = ({
     formState: { errors },
   } = useForm({
     resolver: yupResolver(payrollCycleSchema),
-    defaultValues: mode === "edit" ? transformInitialData(initialData, mode, compensationTypes) : defaultFormValues,
+    defaultValues:
+      mode === "edit" ? transformInitialData(initialData) : defaultFormValues,
   });
 
   useEffect(() => {
-
     if (isOpen) {
-      reset(mode === "edit" ? transformInitialData(initialData, mode, compensationTypes) : defaultFormValues);
+      reset(
+        mode === "edit" ? transformInitialData(initialData) : defaultFormValues,
+      );
     }
-  }, [isOpen, mode, initialData, compensationTypes, reset]);
+  }, [isOpen, mode, initialData, reset]);
 
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
-      console.log("Form data on save:", JSON.stringify(data, null, 2));
       await onSave(data);
       reset(defaultFormValues);
       onClose();
-    } catch (error) {
-      console.error("Error saving payroll cycle:", error);
+    } catch {
+      showToast("Failed to save payroll cycle", "error");
       setIsLoading(false);
     }
   };
 
-  const appliesToOptions = compensationTypes.length > 0
-    ? compensationTypes.map((ct) => ({
-        value: ct.id,
-        label: ct.name,
-      }))
-    : [{ value: "", label: "No compensation types available" }];
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
 
   return (
     <ReusableModal
@@ -105,7 +108,7 @@ const PayrollCycleModal = ({
       primaryButtonText={isLoading ? "Saving..." : "Save Payroll Cycle"}
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
         onClose();
@@ -130,7 +133,7 @@ const PayrollCycleModal = ({
               render={({ field }) => (
                 <SelectInput
                   label="Applies To"
-                  options={appliesToOptions}
+                  options={COMPENSATION_TYPE_OPTIONS}
                   error={errors.appliesTo?.message}
                   placeholder="Select Compensation Type"
                   disabled={mode === "view"}

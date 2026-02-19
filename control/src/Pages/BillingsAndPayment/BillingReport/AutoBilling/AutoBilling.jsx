@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy } from "react";
-import Layout from "../../../Layout/ControlLayout";
+
 import "../../BillingAndPayments.css";
 
 const InvoiceManagement = lazy(() => import("./InvoiceManagement"));
@@ -14,7 +14,7 @@ const AutoBilling = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <div className="billing-board-header">
         <div className="billing-board-title">
           <h1>Billing & Payment</h1>
@@ -38,7 +38,7 @@ const AutoBilling = () => {
           {activeTab === "payment" && <PaymentManagement />}
         </Suspense>
       </div>
-    </Layout>
+    </>
   );
 };
 

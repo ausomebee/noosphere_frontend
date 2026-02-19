@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
 import {
@@ -19,17 +19,10 @@ import api from "../../../api/documentsAndFormsApis";
 import NewFolderModal from "../../../Components/Modal/DocumentModal/NewFolderModal";
 import NewFileModal from "../../../Components/Modal/DocumentModal/NewFileModal";
 import FolderFilesModal from "../../../Components/Modal/DocumentModal/FolderFileModal";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 
 const MyDocuments = () => {
-  const clientTenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id,
-  );
-  const userId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId,
-  );
-  const accessToken = useSelector((state) => state.auth?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.refreshToken);
+  const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
 
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);

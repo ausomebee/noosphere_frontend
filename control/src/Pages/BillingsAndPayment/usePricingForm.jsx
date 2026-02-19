@@ -301,7 +301,6 @@ const usePricingForm = ({
         newErrors.extraPricing = "All extra features must have a valid feature, monthly price, and yearly price.";
     }
     setErrors(newErrors);
-    console.log("Validation errors:", newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -446,7 +445,6 @@ const usePricingForm = ({
       })),
     };
 
-    console.log("Saving planData:", planData);
     onSave(planData);
   };
 

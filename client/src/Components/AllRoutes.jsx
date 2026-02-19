@@ -1,7 +1,8 @@
 // src/Components/AllRoutes.jsx (or wherever your file is)
 import React, { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
-import LoadingSpinner from "../Components/LoadingSpinner"; // Adjust path if needed
+import { Routes, Route, Navigate } from "react-router-dom";
+import LoadingSpinner from "../Components/LoadingSpinner";
+import ProtectedRoute from "./ProtectedRoute";
 import FormRenderer from "./FormRender/FormRenderer";
 
 // Lazy load all page components
@@ -51,20 +52,18 @@ const AllRoutes = () => {
         element={<InitialResetSuccessful />}
       />
 
-      {/* Dashboard / App Routes */}
-      <Route path="/dashboard" element={<Home />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/programs" element={<Programs />} />
-      <Route path="/documents" element={<DocumentsAndForms />} />
-      <Route
-        path="/forms/renderer/:id"
-        element={<FormRenderer />}
-      />
+      {/* Dashboard / App Routes (Protected) */}
+      <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+      <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+      <Route path="/documents" element={<ProtectedRoute><DocumentsAndForms /></ProtectedRoute>} />
+      <Route path="/forms/renderer/:id" element={<ProtectedRoute><FormRenderer /></ProtectedRoute>} />
 
       <Route path="/changePassword/:clientTenantId" element={<ChangePassword />} />
-      {/* Optional: Catch-all redirect (uncomment if needed) */}
-      {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+
+      {/* Catch-all: redirect unknown routes to login */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

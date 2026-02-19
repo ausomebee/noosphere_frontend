@@ -56,15 +56,6 @@ const CreatePipelineStage = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
 
-  console.log("TenantApis.CreatePipelineStage input:", {
-    pipelineId,
-    name,
-    description,
-    colourCode,
-    tasks,
-    documents,
-  });
-
   try {
     const payload = {
       pipelineId,
@@ -75,18 +66,16 @@ const CreatePipelineStage = async ({
       documents: Array.isArray(documents) ? documents : [],
     };
 
-    console.log("TenantApis.CreatePipelineStage payload:", payload);
 
     const response = await authFetch.post(
       `${PLAIN_API_URL}/pipeline/stage`,
       payload
     );
 
-    console.log("TenantApis.CreatePipelineStage response:", response.data);
 
     return response;
   } catch (error) {
-    console.error("TenantApis.CreatePipelineStage error:", error);
+    if (import.meta.env.DEV) console.error("TenantApis.CreatePipelineStage error:", error);
     throw new Error(
       error.response?.data?.message || "Create Pipeline Stage failed"
     );
@@ -440,7 +429,7 @@ const UpdateStageTasksToDone = async ({
     );
     return response;
   } catch (error) {
-    console.error("API ERROR:", error.response?.data || error.message);
+    if (import.meta.env.DEV) console.error("API ERROR:", error.response?.data || error.message);
     throw new Error(
       error.response?.data?.message || "Update Stage Tasks to Done failed"
     );

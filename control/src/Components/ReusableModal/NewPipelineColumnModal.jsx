@@ -46,7 +46,6 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       }
     }
     // No validation for Tasks or Documents tabs, as they are optional
-    console.log("Validation errors for tab", tabName, ":", newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -80,7 +79,6 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
   const handleSave = () => {
     if (!validateForm(activeTab)) {
       showToast("Please fix the errors before saving.", "error");
-      console.log("Save blocked due to validation errors:", errors);
       return;
     }
 
@@ -91,14 +89,12 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       requiredTasks: draft.requiredTasks,
       requiredDocuments: draft.requiredDocuments,
     };
-    console.log("Saving pipeline data:", pipelineData);
     dispatch(resetDraft());
     onSave(pipelineData);
     handleClose(); // Close modal and reset state
   };
 
   const handleClose = () => {
-    console.log("Closing modal, resetting state");
     dispatch(resetDraft());
     setActiveTab("Basic Setup");
     setErrors({});
@@ -109,11 +105,9 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleNextClick = () => {
-    console.log("Next button clicked, current tab:", activeTab);
     // Validate current tab
     if (!validateForm(activeTab)) {
       showToast("Please fill in all required fields.", "error");
-      console.log("Validation failed, errors:", errors);
       return;
     }
 
@@ -121,20 +115,16 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
     if (currentIndex < tabs.length - 1) {
       const nextTab = tabs[currentIndex + 1].name;
       setActiveTab(nextTab);
-      console.log("Moving to tab:", nextTab);
     } else {
-      console.log("On last tab, triggering save");
       handleSave();
     }
   };
 
   const handlePreviousClick = () => {
-    console.log("Previous button clicked, current tab:", activeTab);
     const currentIndex = tabs.findIndex((tab) => tab.name === activeTab);
     if (currentIndex > 0) {
       const prevTab = tabs[currentIndex - 1].name;
       setActiveTab(prevTab);
-      console.log("Moving to previous tab:", prevTab);
       setErrors({}); // Clear errors when moving back
     }
   };
@@ -154,8 +144,8 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
           />
           {errors.name && (
             <div
-              className="error-message"
-              style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
+              className="error-message text-xs mt-1"
+              style={{ color: "red" }}
             >
               {errors.name}
             </div>
@@ -172,41 +162,32 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
           />
           {errors.description && (
             <div
-              className="error-message"
-              style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
+              className="error-message text-xs mt-1"
+              style={{ color: "red" }}
             >
               {errors.description}
             </div>
           )}
           <div className="color-picker-container">
             <div
-              className="color-picker-row"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginTop: "20px",
-              }}
+              className="color-picker-row flex items-center"
+              style={{ marginTop: "20px" }}
             >
               <label style={{ marginRight: "10px" }}>Colour code</label>
               <div
-                className="color-preview"
+                className="color-preview inline-block rounded-full"
                 style={{
                   backgroundColor: draft.colorCode || "#000000",
                   width: "24px",
                   height: "24px",
-                  borderRadius: "50%",
-                  display: "inline-block",
                 }}
               ></div>
               <button
-                className="change-button"
+                className="change-button ml-auto border-0 cursor-pointer"
                 onClick={handleOpenColorPicker}
                 style={{
-                  marginLeft: "auto",
                   color: "#0000EE",
                   background: "none",
-                  border: "none",
-                  cursor: "pointer",
                 }}
               >
                 Change
@@ -214,8 +195,8 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
             </div>
             {errors.colorCode && (
               <div
-                className="error-message"
-                style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
+                className="error-message text-xs mt-1"
+                style={{ color: "red" }}
               >
                 {errors.colorCode}
               </div>
@@ -236,12 +217,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       content: (
         <div className="modal-content-wrapper">
           <div
-            className="tasks-header"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "16px",
-            }}
+            className="tasks-header flex justify-between mb-4"
           >
             <span className="tasks-title">Tasks</span>
             <span className="required-title">Required</span>
@@ -251,29 +227,16 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               draft.requiredTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="task-item"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "16px",
-                  }}
+                  className="task-item flex justify-between items-center mb-4"
                 >
                   <div
-                    className="task-name-container"
-                    style={{ display: "flex", alignItems: "center" }}
+                    className="task-name-container flex items-center"
                   >
                     <span>{task.name}</span>
                     <button
-                      className="delete-btn"
+                      className="delete-btn ml-2 border-0 cursor-pointer p-0"
                       onClick={() => handleDeleteTask(task.id)}
-                      style={{
-                        marginLeft: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0",
-                      }}
+                      style={{ background: "none" }}
                     >
                       <AiOutlineDelete color="red" size={16} />
                     </button>
@@ -290,14 +253,14 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               ))
             ) : (
               <div
-                className="no-items-message"
-                style={{ textAlign: "center", margin: "20px 0" }}
+                className="no-items-message text-center"
+                style={{ margin: "20px 0" }}
               >
                 No tasks added yet
               </div>
             )}
           </div>
-          <div className="add-button-container" style={{ marginTop: "24px" }}>
+          <div className="add-button-container mt-6">
             <Button
               label="Add a new task"
               variant="outline"
@@ -319,12 +282,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       content: (
         <div className="modal-content-wrapper">
           <div
-            className="documents-header"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "16px",
-            }}
+            className="documents-header flex justify-between mb-4"
           >
             <span className="documents-title">Documents</span>
             <span className="required-title">Required</span>
@@ -334,29 +292,16 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               draft.requiredDocuments.map((doc) => (
                 <div
                   key={doc.id}
-                  className="document-item"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "16px",
-                  }}
+                  className="document-item flex justify-between items-center mb-4"
                 >
                   <div
-                    className="document-name-container"
-                    style={{ display: "flex", alignItems: "center" }}
+                    className="document-name-container flex items-center"
                   >
                     <span>{doc.name}</span>
                     <button
-                      className="delete-btn"
+                      className="delete-btn ml-2 border-0 cursor-pointer p-0"
                       onClick={() => handleDeleteDocument(doc.id)}
-                      style={{
-                        marginLeft: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0",
-                      }}
+                      style={{ background: "none" }}
                     >
                       <AiOutlineDelete color="red" size={16} />
                     </button>
@@ -373,14 +318,14 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               ))
             ) : (
               <div
-                className="no-items-message"
-                style={{ textAlign: "center", margin: "20px 0" }}
+                className="no-items-message text-center"
+                style={{ margin: "20px 0" }}
               >
                 No documents added yet
               </div>
             )}
           </div>
-          <div className="add-button-container" style={{ marginTop: "24px" }}>
+          <div className="add-button-container mt-6">
             <Button
               label="Request a new document"
               variant="outline"

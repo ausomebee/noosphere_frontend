@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoHome } from "react-icons/go";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
@@ -7,8 +7,9 @@ import { LuUser } from "react-icons/lu";
 import { MdOutlineNotificationsNone } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { VscClose } from "react-icons/vsc";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { logout } from "../ReduxStore/features/authentication";
+import useAuth from "../hooks/useAuth";
 import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
 
@@ -17,9 +18,7 @@ const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const firstName = useSelector((state) => state.auth?.user?.firstName || "");
-  const lastName = useSelector((state) => state.auth?.user?.lastName || "");
-  const avatarUrl = useSelector((state) => state.auth?.user?.avatarUrl);
+  const { firstName, lastName, avatarUrl } = useAuth();
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
   const navItems = [
@@ -32,7 +31,7 @@ const DashboardLayout = ({ children }) => {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/login");
+    navigate("/");
   };
 
   const closeSidebar = () => {

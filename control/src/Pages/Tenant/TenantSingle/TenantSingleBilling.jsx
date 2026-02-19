@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Layout from "../../Layout/ControlLayout";
+
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -165,7 +165,6 @@ const TenantSingleBilling = () => {
   ]);
 
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
     setFilters((prevFilters) =>
       prevFilters.map((filter) =>
         filter.key === key ? { ...filter, value } : filter
@@ -174,8 +173,7 @@ const TenantSingleBilling = () => {
   };
 
   return (
-    <Layout>
-      <div className="tenant-list-container">
+    <div className="tenant-list-container">
         {viewPaymentId ? (
           <TenantListViewPayment
             paymentId={viewPaymentId}
@@ -290,7 +288,6 @@ const TenantSingleBilling = () => {
           </>
         )}
       </div>
-    </Layout>
   );
 };
 

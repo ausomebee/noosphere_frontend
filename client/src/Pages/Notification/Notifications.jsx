@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
 

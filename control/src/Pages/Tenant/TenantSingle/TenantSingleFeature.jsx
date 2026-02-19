@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Layout from '../../Layout/ControlLayout';
+
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -49,8 +49,7 @@ const TenantSingleFeature = () => {
   };
 
   return (
-    <Layout>
-      <div className="tenant-list-container">
+    <div className="tenant-list-container">
         {viewUsageStatisticsId ? (
           <TenantListUsageStatistics
             paymentId={viewUsageStatisticsId}
@@ -142,7 +141,6 @@ const TenantSingleFeature = () => {
           </>
         )}
       </div>
-    </Layout>
   );
 };
 

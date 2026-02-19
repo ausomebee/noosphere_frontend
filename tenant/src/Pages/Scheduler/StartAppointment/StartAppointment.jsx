@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
 import "./StartAppointment.css";
 import api from "../../../api/AppointmentApi";
@@ -24,9 +24,7 @@ const StartAppointment = () => {
   const { clientId, appointmentId } = useParams();
   const navigate = useNavigate();
 
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
-  const userId = useSelector((s) => s.authentication?.user?.id);
+  const { accessToken, refreshToken, userId } = useAuth();
 
   // States
   const [appointment, setAppointment] = useState(null);

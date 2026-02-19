@@ -72,3 +72,19 @@
   display: flex;
   gap: 16px;
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .document-options {
+    flex-direction: column;
+  }
+
+  .document-option-card {
+    padding: 20px 16px;
+    min-height: auto;
+  }
+
+  .build-document-options {
+    flex-direction: column;
+  }
+}

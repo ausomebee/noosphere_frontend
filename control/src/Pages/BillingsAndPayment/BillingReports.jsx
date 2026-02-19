@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Layout from "../Layout/ControlLayout";
+
 import { FaChevronRight, FaArrowLeft } from "react-icons/fa";
 import { FiCreditCard } from "react-icons/fi";
 import CustomTable from "../../Components/Table/CustomTable";
@@ -300,12 +300,11 @@ const BillingReports = () => {
   const filters = filterOptions[selectedReport] || [];
 
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
     // Add logic to filter table data if needed
   };
 
   return (
-    <Layout>
+    <>
       <div className="billing-board-header">
         <div className="billing-board-title">
           {selectedReport ? (
@@ -391,7 +390,7 @@ const BillingReports = () => {
           />
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

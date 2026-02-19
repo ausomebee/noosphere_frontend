@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
@@ -8,9 +8,7 @@ import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
 const IncomeItems = () => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");
@@ -185,7 +183,7 @@ const IncomeItems = () => {
           }}
         />
       </div>
-      <div className="mt-32">
+      <div className="mt-6">
         <CustomTable
           data={tableData}
           columns={Columns}

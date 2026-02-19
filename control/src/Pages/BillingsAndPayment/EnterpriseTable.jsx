@@ -23,7 +23,6 @@ const Table = ({ plans, onDuplicate, onStatusChange, onEdit, onDelete, onViewPro
   };
 
   const handleViewPlanDetails = (plan) => {
-    console.log("View Plan details for:", plan.organization);
     // You can implement this functionality later
   };
 

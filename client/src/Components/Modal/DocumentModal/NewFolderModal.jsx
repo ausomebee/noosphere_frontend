@@ -1,5 +1,5 @@
 // src/components/Modal/DocumentModal/NewFolderModal.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReusableModal from "../ReusableModal";
 import { showToast } from "../../../Helper/ShowToast";
 import { TextInput } from "../../Input/Inputs";

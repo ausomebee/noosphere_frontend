@@ -8,6 +8,7 @@ import {
   parseISO,
 } from "date-fns";
 import { CgChevronRight } from "react-icons/cg";
+import "./Scheduler.css";
 
 // Parse time (e.g., "01:30") with date (e.g., "2025-09-27") to create a Date object
 const parseTime = (time, date) => {
@@ -132,61 +133,25 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
     <div
       className="day-view-container"
       ref={containerRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "840px", // ~14 hours (11 PM to 1 PM) at 60px/hour
-        fontFamily: "Arial, sans-serif",
-        overflowX: "hidden",
-        overflowY: "auto",
-        boxSizing: "border-box",
-      }}
     >
       {/* Grid for hours and appointments */}
       <div
         className="day-view-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "80px 1fr",
-          width: "100%",
-          minHeight: `${24 * rowHeightPx}px`, // Ensure full 24-hour grid
-          boxSizing: "border-box",
-        }}
+        style={{ minHeight: `${24 * rowHeightPx}px` }}
       >
         {/* Header */}
-        <div
-          style={{
-            gridColumn: "1 / span 2",
-            gridRow: "1",
-            padding: "10px",
-            backgroundColor: "#f5f5f5",
-            borderBottom: "1px solid #e0e0e0",
-            textAlign: "center",
-            fontWeight: "600",
-            fontSize: "16px",
-            color: "#333",
-            boxSizing: "border-box",
-          }}
-        >
+        <div className="day-view-date-header">
           {format(viewDate, "EEEE, MMMM d, yyyy")}
         </div>
         {/* Hour labels */}
         {hours.map((hour) => (
           <div
             key={hour}
+            className="day-view-hour-label"
             style={{
-              gridColumn: "1",
               gridRow: `${hour + 2}`,
-              padding: "0 10px",
-              borderRight: "1px solid #e0e0e0",
-              borderBottom: "1px solid #e0e0e0",
-              fontSize: "12px",
-              color: "#666",
               height: `${rowHeightPx}px`,
               lineHeight: `${rowHeightPx}px`,
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
             }}
           >
             {formatHour(hour)}
@@ -196,28 +161,14 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
         {hours.map((hour) => (
           <div
             key={`slot-${hour}`}
+            className="day-view-hour-slot"
             style={{
-              gridColumn: "2",
               gridRow: `${hour + 2}`,
-              borderBottom: "1px solid #e0e0e0",
               height: `${rowHeightPx}px`,
               minHeight: `${rowHeightPx}px`,
               backgroundColor: isToday(viewDate) ? "#f5f9ff" : "transparent",
-              boxSizing: "border-box",
-              position: "relative",
             }}
-          >
-            {/* Optional half-hour line for debugging alignment */}
-            {/* <div
-              style={{
-                position: "absolute",
-                top: `${rowHeightPx / 2}px`,
-                left: 0,
-                right: 0,
-                borderBottom: "1px dashed #e0e0e0",
-              }}
-            /> */}
-          </div>
+          />
         ))}
       </div>
       {/* Appointment cards */}
@@ -238,69 +189,26 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
             "h:mma"
           ).toLowerCase();
           const timeRange = `${startTime} - ${endTime}`;
-          const groupLength = group.length || 1; // Avoid division by zero
+          const groupLength = group.length || 1;
           const apptWidth = 100 / groupLength;
           const left = aIdx * apptWidth;
 
           return (
             <div
               key={`${appt.id}-${appt.date}-${gIdx}-${aIdx}`}
+              className="day-view-appt-card"
               onClick={(e) => onAppointmentClick(appt, e)}
               style={{
-                position: "absolute",
                 backgroundColor: appt.colorCode || "#ffcccb",
                 top: `${top}px`,
                 height: `${height}px`,
-                left: `calc(${left}% + 80px + 2px)`,
+                left: `calc(${left}% + var(--day-hour-col-width, 80px) + 2px)`,
                 width: `calc(${apptWidth}% - 6px)`,
-                borderRadius: "6px",
-                padding: "4px",
-                margin: "1px 2px",
-                boxSizing: "border-box",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                overflow: "hidden",
-                transition: "all 0.2s ease",
                 zIndex: 10 + aIdx,
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
             >
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#333",
-                  lineHeight: "1.2",
-                  paddingBottom: "4px",
-                  borderBottom: "1px solid rgba(0,0,0,0.1)",
-                }}
-              >
-                {timeRange}
-              </div>
-              <div
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#222",
-                  textAlign: "left",
-                  display: "flex",
-                  marginTop: "auto",
-                  justifyContent: "space-between",
-                  paddingTop: "4px",
-                  borderTop: "1px solid rgba(0,0,0,0.1)",
-                  lineHeight: "1.2",
-                }}
-              >
+              <div className="day-view-appt-time">{timeRange}</div>
+              <div className="day-view-appt-client">
                 {appt.clientName || "Unknown Client"} <CgChevronRight />
               </div>
             </div>

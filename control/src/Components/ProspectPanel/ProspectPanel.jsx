@@ -12,7 +12,7 @@ import { CheckboxInput } from "../Input/Inputs";
 import Button from "../Button/Button";
 import "./ProspectPanel.css";
 import "../ReusableModal/ReusableModal.css";
-import Layout from "../../Pages/Layout/ControlLayout";
+
 import { useNavigate, useParams } from "react-router-dom";
 import EditProspectModal from "../ReusableModal/EditProspectModal";
 import CustomTaskModal from "../ReusableModal/CustomTaskModal";
@@ -252,7 +252,7 @@ const ProspectPanel = () => {
         }))
       );
     } catch (err) {
-      console.error("Failed to fetch staff or stages:", err);
+      if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
       setFetchError("Failed to load staff or stages.");
       showToast("Failed to load staff or stages.", "error");
     }
@@ -300,7 +300,7 @@ const ProspectPanel = () => {
           fetchStaffAndStages(),
         ]);
       } catch (err) {
-        console.error("Failed to fetch pipeline data:", err);
+        if (import.meta.env.DEV) console.error("Failed to fetch pipeline data:", err);
         setFetchError("Failed to load pipeline data.");
         showToast("Failed to load pipeline data.", "error");
       } finally {
@@ -388,7 +388,7 @@ const ProspectPanel = () => {
       setTasks(requiredTasks);
       setDocuments(requiredDocuments);
     } catch (err) {
-      console.error("Error updating candidate state:", err);
+      if (import.meta.env.DEV) console.error("Error updating candidate state:", err);
       setFetchError("Failed to process candidate data.");
       showToast("Failed to process candidate data.", "error");
     }
@@ -437,7 +437,6 @@ const ProspectPanel = () => {
 
   const handleAddTask = async (newTask) => {
     try {
-      console.log("Adding task:", newTask);
       dispatch(
         addTaskToDraft({ name: newTask.name, required: newTask.required })
       );
@@ -467,7 +466,7 @@ const ProspectPanel = () => {
       setIsCustomTaskModalOpen(false);
       showToast("Task added successfully!", "success");
     } catch (err) {
-      console.error("Error adding task:", err);
+      if (import.meta.env.DEV) console.error("Error adding task:", err);
       showToast("Failed to add task", "error");
     }
   };
@@ -673,7 +672,7 @@ const ProspectPanel = () => {
         dispatch({ type: "pipeline/refreshBoard" });
       }
     } catch (error) {
-      console.error("Failed to move candidate:", error);
+      if (import.meta.env.DEV) console.error("Failed to move candidate:", error);
       showToast(error?.message || "Failed to move candidate", "error");
     } finally {
       setIsLoading(false);
@@ -702,7 +701,7 @@ const ProspectPanel = () => {
         showToast("Staff assigned successfully!", "success");
       }
     } catch (error) {
-      console.error("Failed to assign staff:", error);
+      if (import.meta.env.DEV) console.error("Failed to assign staff:", error);
       showToast(error?.message || "Failed to assign staff", "error");
     } finally {
       setIsLoading(false);
@@ -726,7 +725,7 @@ const ProspectPanel = () => {
         navigate("/tenants/pipeline");
       }
     } catch (error) {
-      console.error("Failed to delete prospect:", error);
+      if (import.meta.env.DEV) console.error("Failed to delete prospect:", error);
       showToast(error?.message || "Failed to delete prospect", "error");
     } finally {
       setIsLoading(false);
@@ -749,8 +748,7 @@ const ProspectPanel = () => {
 
 
   return (
-    <Layout>
-      <div className="prospect-panel">
+    <div className="prospect-panel">
         <div className="top-bar-container">
           <div className="top-bar">
             <button
@@ -1111,7 +1109,6 @@ const ProspectPanel = () => {
           staffList={staffList}
         />
       </div>
-    </Layout>
   );
 };
 

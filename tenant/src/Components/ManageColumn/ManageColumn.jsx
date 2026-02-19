@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
 import { FaArrowLeft, FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { TextareaInput, TextInput } from "../Input/Inputs";
 import ColorPicker from "../ColorPicker";
@@ -32,14 +33,7 @@ const ManageColumn = () => {
   const { pipeline, draft, status, error } = useSelector(
     (state) => state.pipeline,
   );
-  const tenantId = useSelector((state) => state.authentication?.user?.tenantId);
-  const accessToken = useSelector(
-    (state) => state.authentication?.user?.accessToken,
-  );
-  const refreshToken = useSelector(
-    (state) => state.authentication?.user?.refreshToken,
-  );
-  const userId = useSelector((state) => state.authentication?.user?.id);
+  const { tenantId, accessToken, refreshToken, userId } = useAuth();
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");

@@ -12,7 +12,7 @@ import AddClientModal from "../../../../../Components/ReusableModal/ClientModal/
 import NewDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/NewDocumentRequestModal";
 import api from "../../../../../api/TenantApis";
 import { showToast } from "../../../../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import api2 from "../../../../../api/clientPanelApis";
 import api3 from "../../../../../api/customFormsApi";
 import FormLibraryModal from "../../../../../Components/ReusableModal/ClientModal/FormLibraryModal";
@@ -227,11 +227,7 @@ const BasicInformation = ({ clientData }) => {
 const DocumentsForms = () => {
   const navigate = useNavigate();
   const { tenantClientId } = useParams();
-  const { accessToken, refreshToken } = useSelector(
-    (s) => s.authentication?.user || {}
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
+  const { accessToken, refreshToken, userId, tenantId } = useAuth();
 
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
@@ -1008,9 +1004,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { clientId, tenantClientId } = useParams();
-  const { token: accessToken, refreshToken } = useSelector(
-    (s) => s.authentication?.user || {}
-  );
+  const { accessToken, refreshToken } = useAuth();
 
   // WITH THIS REAL ONE:
   const assignees = useMemo(() => {

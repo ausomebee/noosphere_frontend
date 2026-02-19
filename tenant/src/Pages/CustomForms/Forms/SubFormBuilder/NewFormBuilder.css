@@ -522,3 +522,111 @@
   border-top: 1px solid #eee;
   justify-content: center;
 }
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .formbuilder-header {
+    padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .formbuilder-header > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .formbuilder-body {
+    flex-direction: column;
+    padding: 12px;
+    gap: 16px;
+    overflow: visible;
+  }
+
+  .formbuilder-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 250px;
+    padding: 16px;
+  }
+
+  .preview {
+    height: auto;
+    min-height: 400px;
+    padding: 16px;
+  }
+
+  .preview-field {
+    padding: 0 40px 0 12px;
+    margin-bottom: 40px;
+    margin-top: 20px;
+  }
+
+  .field-tag {
+    padding: 8px 14px;
+    font-size: 12px;
+    top: -34px;
+  }
+
+  .delete-btn {
+    width: 36px;
+    height: 36px;
+    right: 4px;
+  }
+
+  .file-setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .file-setting-row > span {
+    min-width: unset;
+  }
+
+  .formbuilder-footer {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .formbuilder-footer button {
+    width: 100%;
+  }
+
+  .custom-form-modal-content {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .drag-overlay {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+}
+
+/* Responsive: Tablet */
+@media (min-width: 641px) and (max-width: 992px) {
+  .formbuilder-header {
+    padding: 24px;
+  }
+
+  .formbuilder-body {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .formbuilder-sidebar {
+    width: 240px;
+    padding: 20px;
+  }
+
+  .preview {
+    padding: 20px;
+  }
+
+  .formbuilder-footer {
+    padding: 16px 24px;
+  }
+}

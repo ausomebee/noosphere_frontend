@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import DashboardLayout from "../../../Layout/TenantLayout";
+import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import api from "../../../api/helpAndSupportApi";
 import { showToast } from "../../../Helper/ShowToast";
@@ -15,8 +14,7 @@ import "./SupportRequests.css";
 const ViewRequestDetails = () => {
   const navigate = useNavigate();
   const { requestId } = useParams();
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { accessToken, refreshToken } = useAuth();
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,25 +57,25 @@ const ViewRequestDetails = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="view-request-container">
           <div className="loading-spinner">
             <div className="spinner"></div>
           </div>
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
   if (!request) {
     return (
-      <DashboardLayout>
+      <>
         <div className="view-request-container">
           <p style={{ textAlign: "center", color: "#666", padding: "40px 0" }}>
             Request not found.
           </p>
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -85,7 +83,7 @@ const ViewRequestDetails = () => {
   const logs = request.Logs || [];
 
   return (
-    <DashboardLayout>
+    <>
       <div className="view-request-container">
         {/* Top Bar */}
         <div className="view-request-topbar">
@@ -280,7 +278,7 @@ const ViewRequestDetails = () => {
           </div>
         </ReusableModal>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

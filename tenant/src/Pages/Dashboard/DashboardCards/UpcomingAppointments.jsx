@@ -3,16 +3,14 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import expandForAppointments from "../../../utils/expandForAppointments";
 import "../Dashboard.css";
 
 const ITEMS_PER_PAGE = 5;
 
 const UpcomingAppointments = ({ hasData, setCount }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-   const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-   const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);

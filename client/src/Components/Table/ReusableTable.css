@@ -482,6 +482,19 @@
     border-radius: 12px;
   }
 
+  .table-title {
+    font-size: 18px;
+  }
+
+  .table-tabs {
+    gap: 0;
+  }
+
+  .table-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
   .table-controls {
     flex-direction: column;
     align-items: stretch;
@@ -495,50 +508,28 @@
     justify-content: space-between;
   }
 
-  /* Mobile table cards */
-  .data-table thead {
-    display: none;
+  /* Keep table as table — horizontal scroll on mobile */
+  .data-table {
+    min-width: 600px;
   }
 
-  .data-table tbody tr {
-    display: block;
-    padding: 16px;
-    margin-bottom: 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+  .data-table thead th {
+    padding: 10px 12px;
+    font-size: 11px;
   }
 
   .data-table tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 12px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
-  .data-table tbody td:last-child {
-    border-bottom: none;
-  }
-
-  .data-table tbody td::before {
-    content: attr(data-label);
-    font-size: 12px;
-    font-weight: 500;
-    color: #718096;
-    text-transform: uppercase;
-  }
-
-  .expand-col,
   .actions-col {
-    width: auto;
+    width: 120px;
   }
 
-  .actions-col::before {
-    display: none;
-  }
-
-  .row-actions {
-    justify-content: flex-start;
+  .action-menu {
+    min-width: 220px;
   }
 
   .pagination-btn span {

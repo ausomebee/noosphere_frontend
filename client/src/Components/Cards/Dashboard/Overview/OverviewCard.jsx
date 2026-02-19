@@ -1,6 +1,4 @@
-import React from "react";
 import "./OverviewCard.css";
-import { SelectInput } from "../../../Input/Inputs";
 
 const OverviewCard = ({ data, onPeriodChange, selectedPeriod }) => {
   const isEmpty = !data || !data.chartData || data.chartData.length === 0;

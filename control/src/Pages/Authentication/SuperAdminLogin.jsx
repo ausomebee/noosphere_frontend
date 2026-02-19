@@ -40,7 +40,7 @@ const AdminsLogin = () => {
       const { setForAll, Authenticator2FA, securityQuestion } = response.data.data;
       return { setForAll, Authenticator2FA, securityQuestion };
     } catch (error) {
-      console.error("Error fetching SuperAdmin choices:", error);
+      if (import.meta.env.DEV) console.error("Error fetching SuperAdmin choices:", error);
       return { setForAll: false, Authenticator2FA: false, securityQuestion: false };
     }
   };
@@ -62,7 +62,7 @@ const AdminsLogin = () => {
             } else if (user.authType === "SECRETMESSAGE") {
               navigate("/SA/2fa-question/login");
             } else {
-              console.error("Unknown authType:", user.authType);
+              if (import.meta.env.DEV) console.error("Unknown authType:", user.authType);
               showToast("Unknown authentication type", "error");
             }
           }
@@ -81,7 +81,7 @@ const AdminsLogin = () => {
             } else if (authType === "SECRETMESSAGE") {
               navigate("/2fa/security-question");
             } else {
-              console.error("Unknown authType:", authType);
+              if (import.meta.env.DEV) console.error("Unknown authType:", authType);
               showToast("Unknown authentication type", "error");
             }
           } else if (!setForAll && !user.auth2FADone) {
@@ -92,7 +92,7 @@ const AdminsLogin = () => {
             } else if (user.authType === "SECRETMESSAGE") {
               navigate("/SA/2fa-question/login");
             } else {
-              console.error("Unknown authType:", user.authType);
+              if (import.meta.env.DEV) console.error("Unknown authType:", user.authType);
               showToast("Unknown authentication type", "error");
             }
           }
@@ -102,7 +102,7 @@ const AdminsLogin = () => {
         showToast(errorMessage, "error");
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      if (import.meta.env.DEV) console.error("Unexpected error:", error);
       showToast("An unexpected error occurred. Please try again.", "error");
     }
   };

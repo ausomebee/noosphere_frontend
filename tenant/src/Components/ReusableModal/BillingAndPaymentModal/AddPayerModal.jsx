@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { showToast } from "../../../Helper/ShowToast";
 
 
 const payerSchema = yup.object().shape({
@@ -253,7 +254,6 @@ const AddPayerModal = ({
           billable: sc.billable,
         })),
       };
-      console.log(cleanedData)
       await onSave(cleanedData);
       reset(transformPayerToFormData(initialData, mode));
       onClose();
@@ -262,6 +262,11 @@ const AddPayerModal = ({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   // ✅ Other handlers
@@ -639,7 +644,7 @@ const AddPayerModal = ({
 
   const getPrimaryButtonAction = () => {
     if (mode === "view") return handleClose;
-    if (activeTab === "Service Code") return handleSubmit(handleFormSubmit);
+    if (activeTab === "Service Code") return handleSubmit(handleFormSubmit, onValidationError);
     return handleNext;
   };
 

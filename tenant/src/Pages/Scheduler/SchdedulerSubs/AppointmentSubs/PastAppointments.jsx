@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../../../Helper/ShowToast";
 import { format } from "date-fns";
@@ -10,13 +10,8 @@ import expandForAppointments from "../../../../utils/expandForAppointments";
 
 const PastAppointments = () => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client"
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const role = authRole?.name ?? "Client";
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);

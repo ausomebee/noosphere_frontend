@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput } from "../../Input/Inputs";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const licenseSchema = yup.object({
@@ -107,6 +108,11 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
     }
   }, [initialValues, reset]);
 
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
+
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
@@ -143,7 +149,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
       primaryButtonText={isLoading ? "Saving..." : "Save License"}
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();

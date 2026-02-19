@@ -1,14 +1,26 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
-import Button from "../../Button/Button";
 import { addStaffSchema } from "../../../Data/schemas";
-import { mockEmployees } from "../../../Data/mockData";
+import { showToast } from "../../../Helper/ShowToast";
+import payrollApi from "../../../api/payrollApi";
 
+const AddStaffModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  isMultiple = true,
+  compensationType,
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [staffOptions, setStaffOptions] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
 
-const AddStaffModal = ({ isOpen, onClose, onSave, isMultiple = true }) => {
   const {
     control,
     handleSubmit,
@@ -21,10 +33,51 @@ const AddStaffModal = ({ isOpen, onClose, onSave, isMultiple = true }) => {
     },
   });
 
-  const onSubmit = (data) => {
-    onSave(data.selectedStaff);
-    reset();
-    onClose();
+  useEffect(() => {
+    if (isOpen && compensationType && tenantId) {
+      const fetchStaff = async () => {
+        setLoadingStaff(true);
+        try {
+          const response = await payrollApi.GetStaffByPaymentSchedule({
+            tenantId,
+            paymentSchedule: compensationType,
+            accessToken,
+            refreshToken,
+          });
+          const data = response?.data || response || [];
+          const options = Array.isArray(data)
+            ? data.map((staff) => ({
+                value: staff.id,
+                label: staff.fullName || `${staff.firstName || ""} ${staff.lastName || ""}`.trim() || "Unknown",
+              }))
+            : [];
+          setStaffOptions(options);
+        } catch (error) {
+          showToast(error.message || "Failed to fetch staff", "error");
+          setStaffOptions([]);
+        } finally {
+          setLoadingStaff(false);
+        }
+      };
+      fetchStaff();
+    }
+  }, [isOpen, compensationType, tenantId, accessToken, refreshToken]);
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      await onSave(data.selectedStaff);
+      reset();
+    } catch (error) {
+      showToast("Failed to add staff", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handleClose = () => {
@@ -39,30 +92,32 @@ const AddStaffModal = ({ isOpen, onClose, onSave, isMultiple = true }) => {
       title="Add Staff to Payroll"
       primaryButtonText="Add Selected"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={handleClose}
       size="medium"
+      primaryButtonLoading={isLoading}
     >
       <div className="flex flex-col gap-4">
-        <Controller
-          name="selectedStaff"
-          control={control}
-          render={({ field }) => (
-            <SelectInput
-              label="Select Employees"
-              options={mockEmployees.map((emp) => ({
-                value: emp.id,
-                label: emp.name,
-              }))}
-              value={field.value}
-              onChange={(value) => field.onChange(value)}
-              placeholder="Select employees"
-              className="w-full"
-              error={errors.selectedStaff?.message}
-              isMulti={isMultiple}
-            />
-          )}
-        />
+        {loadingStaff ? (
+          <p className="text-gray-500 text-center py-4">Loading staff...</p>
+        ) : (
+          <Controller
+            name="selectedStaff"
+            control={control}
+            render={({ field }) => (
+              <SelectInput
+                label="Select Employees"
+                options={staffOptions}
+                value={field.value}
+                onChange={(value) => field.onChange(value)}
+                placeholder="Select employees"
+                className="w-full"
+                error={errors.selectedStaff?.message}
+                isMulti={isMultiple}
+              />
+            )}
+          />
+        )}
       </div>
     </ReusableModal>
   );

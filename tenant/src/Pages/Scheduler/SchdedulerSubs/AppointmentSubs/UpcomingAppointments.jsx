@@ -8,7 +8,7 @@ import { RxCross2 } from "react-icons/rx";
 import AppointmentModal from "../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
 import CancelModal from "../../../../Components/ReusableModal/SchedulerModal/CancelModal";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
@@ -16,13 +16,8 @@ import expandForAppointments from "../../../../utils/expandForAppointments";
 
 const UpcomingAppointments = ({ counts, setCounts }) => {
   const navigate = useNavigate();
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const role = useSelector(
-    (s) => s.authentication?.user?.role?.name ?? "Client",
-  );
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const role = authRole?.name ?? "Client";
 
   // State
   const [masters, setMasters] = useState([]);

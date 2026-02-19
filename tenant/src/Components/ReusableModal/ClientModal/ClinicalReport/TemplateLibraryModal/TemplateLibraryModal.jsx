@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import { FiX, FiFileText } from "react-icons/fi";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
 import "./TemplateLibraryModal.css";
 import api from "../../../../../api/TemplateAndReportApi";
 
 const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [templates, setTemplates] = useState([]);

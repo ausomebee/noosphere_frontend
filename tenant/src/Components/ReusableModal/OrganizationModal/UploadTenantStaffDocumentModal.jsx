@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../ReusableModal";
 import {
   BsCloudUpload,
@@ -19,6 +19,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoMdRefresh } from "react-icons/io";
 import { TextInput } from "../../Input/Inputs";
 import uploadApi from "../../../api/ImageUpload";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema
 const schema = yup.object().shape({
@@ -245,9 +246,7 @@ const UploadTenantStaffDocumentModal = ({
   const [submitError, setSubmitError] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [fileResult, setFileResult] = useState(null);
-  const user = useSelector((s) => s.authentication?.user);
-  const accessToken = user?.accessToken;
-  const refreshToken = user?.refreshToken;
+  const { user, accessToken, refreshToken } = useAuth();
 
   const {
     register,
@@ -263,6 +262,11 @@ const UploadTenantStaffDocumentModal = ({
       document: [],
     },
   });
+
+  const onValidationError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    showToast(firstError?.message || "Please fill in all required fields", "error");
+  };
 
   const handleFileUpload = useCallback(
     async (fileObj) => {
@@ -464,7 +468,7 @@ const UploadTenantStaffDocumentModal = ({
       secondaryButtonText="Cancel"
       primaryButtonDisabled={submitting || uploadingFile || fileResult?.error}
       primaryButtonLoading={submitting || uploadingFile}
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
       onSecondaryButtonClick={handleClose}
       size="lg"
     >

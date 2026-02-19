@@ -43,6 +43,12 @@ const authenticationSlice = createSlice({
       state.token = null;
       state.error = null;
     },
+    updateAccessToken(state, action) {
+      if (state.user) {
+        state.user.accessToken = action.payload;
+      }
+      state.token = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -81,5 +87,5 @@ const authenticationSlice = createSlice({
   },
 });
 
-export const { logout } = authenticationSlice.actions;
+export const { logout, updateAccessToken } = authenticationSlice.actions;
 export default authenticationSlice.reducer;

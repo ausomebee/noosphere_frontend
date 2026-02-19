@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PasswordInput, TextInput } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import "./Profile.css";
 import DashboardLayout from "../../layouts/ClientLayout";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import api from "../../api/ImageUpload";
 import api2 from "../../api/profileAndSettingsApi";
 import { showToast } from "../../Helper/ShowToast";
@@ -32,14 +32,7 @@ const getAvatarUrl = (url, firstName, lastName) => {
 };
 
 const Profile = () => {
-  const clientTenantId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.id,
-  );
-  const clientId = useSelector(
-    (state) => state.auth?.user?.tenantLinks?.[0]?.clientId,
-  );
-  const accessToken = useSelector((state) => state.auth?.accessToken);
-  const refreshToken = useSelector((state) => state.auth?.refreshToken);
+  const { tenantClientId: clientTenantId, clientId, accessToken, refreshToken } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);

@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 // Export table data as CSV
 export const exportTableData = (data, columns = [], filename = 'export.csv', tableName = '') => {
   let headers = 'S/N';
@@ -27,7 +24,10 @@ export const exportTableData = (data, columns = [], filename = 'export.csv', tab
 };
 
 // Export table data as PDF
-export const exportTableToPDF = (data, columns = [], filename = 'export.pdf', tableName = '') => {
+export const exportTableToPDF = async (data, columns = [], filename = 'export.pdf', tableName = '') => {
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
+
   const doc = new jsPDF({ orientation: 'landscape' });
 
   const margin = 20;

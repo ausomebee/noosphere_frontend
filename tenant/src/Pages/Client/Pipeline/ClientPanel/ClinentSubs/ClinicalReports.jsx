@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../../../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import Button from "../../../../../Components/Button/Button";
@@ -110,6 +110,194 @@ const DeleteReportConfirmModal = ({
   );
 };
 
+// Signed PDFs Modal - lists all signed PDF versions
+const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
+  if (!isOpen) return null;
+
+  const sortedVersions = [...(versions || [])].sort(
+    (a, b) => a.versionNumber - b.versionNumber,
+  );
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1050,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "8px",
+          padding: "24px",
+          maxWidth: "520px",
+          width: "90%",
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "16px",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              color: "#1f2937",
+              margin: 0,
+            }}
+          >
+            Signed Documents
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1.5rem",
+              color: "#6b7280",
+              lineHeight: 1,
+            }}
+          >
+            &times;
+          </button>
+        </div>
+
+        {reportTitle && (
+          <p
+            style={{
+              color: "#6b7280",
+              marginBottom: "16px",
+              fontSize: "0.9rem",
+            }}
+          >
+            {reportTitle}
+          </p>
+        )}
+
+        <div style={{ overflowY: "auto", flex: 1 }}>
+          {sortedVersions.length > 0 ? (
+            sortedVersions.map((version) => (
+              <div
+                key={version.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid #e5e7eb",
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      fontWeight: 500,
+                      color: "#1f2937",
+                      margin: 0,
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Version {version.versionNumber}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#6b7280",
+                      margin: 0,
+                    }}
+                  >
+                    {new Date(version.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <a
+                  href={version.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: "6px 14px",
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#2563eb")
+                  }
+                >
+                  View PDF
+                </a>
+              </div>
+            ))
+          ) : (
+            <p
+              style={{
+                textAlign: "center",
+                color: "#6b7280",
+                padding: "24px 0",
+              }}
+            >
+              No signed versions available.
+            </p>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: "16px",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "8px 16px",
+              color: "#4b5563",
+              background: "transparent",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+            }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = "#f3f4f6")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ClinicalReportsTab = ({ clientData }) => {
   const { tenantClientId, clientId } = useParams();
   const navigate = useNavigate();
@@ -123,10 +311,11 @@ const ClinicalReportsTab = ({ clientData }) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
 
-  const tenantId = useSelector((s) => s.authentication?.user?.tenantId);
-  const userId = useSelector((s) => s.authentication?.user?.id);
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector((s) => s.authentication?.user?.refreshToken);
+  // Signed PDFs modal state
+  const [signedPdfModalOpen, setSignedPdfModalOpen] = useState(false);
+  const [signedPdfReport, setSignedPdfReport] = useState(null);
+
+  const { tenantId, userId, accessToken, refreshToken } = useAuth();
 
   const client = clientData?.client;
 
@@ -219,7 +408,12 @@ const ClinicalReportsTab = ({ clientData }) => {
             report.status === "CHANGES_REQUESTED"
               ? "Changes requested by supervisor"
               : "",
-          version: "v1",
+          version: report.clinicalReportVersions?.length
+            ? `v${report.clinicalReportVersions.length}`
+            : "v1",
+          clinicalReportVersions: report.clinicalReportVersions || [],
+          clinicalReportChangeRequests:
+            report.clinicalReportChangeRequests || [],
           hasActions: true,
         }));
 
@@ -427,13 +621,16 @@ const ClinicalReportsTab = ({ clientData }) => {
             {
               label: "View Signed Document (PDF)",
               onClick: (row) => {
-                showToast("Opening signed PDF...", "info");
+                setSignedPdfReport(row);
+                setSignedPdfModalOpen(true);
               },
             },
             {
               label: "View Audit Trail",
               onClick: (row) => {
-                navigate("/audit-trail", { state: { documentId: row.id } });
+                navigate("/clinical-report/audit-trails", {
+                  state: { reportId: row.id },
+                });
               },
             },
             {
@@ -534,6 +731,17 @@ const ClinicalReportsTab = ({ clientData }) => {
         reportTitle={reportToDelete?.documentTitle || ""}
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
+      />
+
+      {/* Signed PDFs Modal */}
+      <SignedPdfsModal
+        isOpen={signedPdfModalOpen}
+        onClose={() => {
+          setSignedPdfModalOpen(false);
+          setSignedPdfReport(null);
+        }}
+        versions={signedPdfReport?.clinicalReportVersions || []}
+        reportTitle={signedPdfReport?.documentTitle}
       />
     </div>
   );

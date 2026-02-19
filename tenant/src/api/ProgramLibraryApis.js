@@ -295,6 +295,44 @@ const CreateClientDataCollectionData = async ({
   }
 };
 
+const GetSessionsByTarget = async ({
+  targetId,
+  clientId,
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/target/${targetId}/${clientId}/${tenantId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get sessions by target failed"
+    );
+  }
+};
+
+const GetClientTargetPerformance = async ({
+  clientId,
+  targetId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/sessions/performance/${targetId}/${clientId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get client target performance failed"
+    );
+  }
+};
 
 export default {
     DuplicateProgramsTarget,
@@ -313,5 +351,7 @@ export default {
   deleteProgramsTarget,
   GetBaselineDataByClientTargetId,
   GetTargetInfoByTargetIdAndClientId,
-  CreateClientDataCollectionData
+  CreateClientDataCollectionData,
+  GetSessionsByTarget,
+  GetClientTargetPerformance,
 };

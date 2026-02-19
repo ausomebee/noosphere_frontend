@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
@@ -40,7 +40,11 @@ const RescheduleModal = ({
       newErrors.endTime = "End time must be after start time";
     }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      showToast("Please fill in all required fields", "error");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {

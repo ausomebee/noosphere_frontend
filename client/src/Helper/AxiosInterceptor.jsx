@@ -1,7 +1,6 @@
 import axios from "axios";
 import api from "../api/authApis";
-
-
+import { getFingerprint } from "./fingerprint";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
 let refreshSubscribers = []; // Queue to store pending requests while token is refreshing
@@ -28,6 +27,7 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
       if (accessToken) {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
       }
+      config.headers["x-fingerprint"] = getFingerprint();
       return config;
     },
     (error) => Promise.reject(error)

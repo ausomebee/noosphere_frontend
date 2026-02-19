@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Menu } from "@headlessui/react";
 import Button from "../../Components/Button/Button";
-import DashboardLayout from "../../Layout/TenantLayout";
+
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import IntakePipeline from "../Dashboard/DashboardCards/IntakePipeline";
 import SessionInformation from "../Dashboard/DashboardCards/SessionInformation";
@@ -58,20 +58,20 @@ const DashboardCard = ({
         onRearrange(fromIndex, index);
       }}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
+      <div className="dashboard-card-inner">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-header-left">
             <h3 className="text-base font-semibold text-color-sec">
               <span>{title}</span>
               {count !== undefined && count !== null && count > 0 && (
-                <span className="ml-2 bg-blue-600 text-white px-2 py-2 rounded-full text-base  font-bold">
+                <span className="ml-2 bg-blue-600 text-white px-2 py-2 rounded-full text-base font-bold">
                   {count}
                 </span>
               )}
             </h3>
 
             {selectInputs.length > 0 && (
-              <div className="flex items-center gap-4 mt-4">
+              <div className="dashboard-card-selects">
                 {selectInputs.map((input, idx) => (
                   <SelectInput
                     key={idx}
@@ -85,7 +85,7 @@ const DashboardCard = ({
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="dashboard-card-header-right">
             <Menu as="div" className="relative">
               <Menu.Button
                 className={`button-base ${
@@ -309,9 +309,9 @@ const Dashboard = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="dashboard-grid">
           {cards.map((card, index) => (
             <DashboardCard
               key={card.title}
@@ -335,7 +335,7 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

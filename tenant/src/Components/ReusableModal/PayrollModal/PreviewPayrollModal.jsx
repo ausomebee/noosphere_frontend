@@ -1,58 +1,127 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReusableModal from "../ReusableModal";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
 import Pagination from "../../Table/Pagination";
 import EmployeeRow from "./EmployeeRow";
-import AddStaffModal from "./AddStaffModal";
 import AddIncomeItemModal from "./AddIncomItemModal";
 import AddDeductionModal from "./AddDeductionModal";
-import { mockEmployees } from "../../../Data/mockData";
 import { RxCross2 } from "react-icons/rx";
 import { CheckboxInput } from "../../Input/Inputs";
+import payrollApi from "../../../api/payrollApi";
+import { showToast } from "../../../Helper/ShowToast";
 
-const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
+const PreviewPayrollModal = ({
+  isOpen,
+  onClose,
+  payrollData,
+  onSave,
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [expandedEmployee, setExpandedEmployee] = useState(null);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isDeductionModalOpen, setIsDeductionModalOpen] = useState(false);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [currentEmployeeId, setCurrentEmployeeId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [employees, setEmployees] = useState(mockEmployees);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [incomeItems, setIncomeItems] = useState([]);
+  const [deductionItems, setDeductionItems] = useState([]);
   const itemsPerPage = 8;
 
-  const totalPages = Math.ceil(employees.length / itemsPerPage);
+  // Fetch staff and prefetch income/deduction items when modal opens
+  const fetchData = useCallback(async () => {
+    if (!isOpen || !payrollData || !tenantId) return;
+    setLoading(true);
+    try {
+      const [staffRes, incomeRes, deductionRes] = await Promise.all([
+        payrollApi.GetStaffWithPayrollByDate({
+          tenantId,
+          startDate: payrollData.from,
+          endDate: payrollData.to,
+          paymentSchedule: payrollData.compensationType,
+          accessToken,
+          refreshToken,
+        }),
+        payrollApi.GetIncomeItemsByTenantId({ tenantId, accessToken, refreshToken }),
+        payrollApi.GetDeductionsByTenantId({ tenantId, accessToken, refreshToken }),
+      ]);
+
+      // Map staff data
+      const staffData = staffRes?.data || staffRes || [];
+      const mapped = (Array.isArray(staffData) ? staffData : []).map((item) => {
+        const staff = item.staff || {};
+        const payroll = staff.TenantStaffPayroll?.[0] || {};
+        return {
+          id: staff.id,
+          name: item.staffName || staff.fullName || "Unknown",
+          grossPay: item.grossPay || 0,
+          netPay: item.netPay || 0,
+          paymentSchedule: item.paymentSchedule || payroll.paymentSchedule || "",
+          hourlyRate: Number(payroll.ratePerHour) || 0,
+          monthlyRate: Number(payroll.monthlyRate) || 0,
+          minHoursPerMonth: Number(payroll.minimumHours) || 0,
+          basicPay: Number(payroll.monthlyRate) || 0,
+          numberOfHours: Number(payroll.minimumHours) || 0,
+          payrollId: payroll.id || "",
+          additionalIncomes: payroll.incomeItems || [],
+          additionalDeductions: payroll.deductions || [],
+        };
+      });
+      setEmployees(mapped);
+
+      // Prefetch income/deduction items
+      const incData = incomeRes?.data || incomeRes || [];
+      const dedData = deductionRes?.data || deductionRes || [];
+      setIncomeItems(Array.isArray(incData) ? incData : []);
+      setDeductionItems(Array.isArray(dedData) ? dedData : []);
+    } catch (error) {
+      showToast(error.message || "Failed to fetch payroll data", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [isOpen, payrollData, tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData();
+      setSelectedEmployees([]);
+      setExpandedEmployee(null);
+      setCurrentPage(1);
+    } else {
+      setEmployees([]);
+    }
+  }, [isOpen, fetchData]);
+
+  const filteredEmployees = employees;
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentEmployees = employees.slice(startIndex, startIndex + itemsPerPage);
+  const currentEmployees = filteredEmployees.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSelectEmployee = (employeeId) => {
-    setSelectedEmployees((prev) => {
-      const newSelection = prev.includes(employeeId)
+    setSelectedEmployees((prev) =>
+      prev.includes(employeeId)
         ? prev.filter((id) => id !== employeeId)
-        : [...prev, employeeId];
-      console.log("Selected Employees for Removal:", newSelection);
-      return newSelection;
-    });
+        : [...prev, employeeId]
+    );
   };
 
   const handleSelectAll = () => {
     if (selectedEmployees.length === currentEmployees.length && currentEmployees.length > 0) {
       setSelectedEmployees([]);
-      console.log("Deselected all employees for removal");
     } else {
-      const newSelection = currentEmployees.map((emp) => emp.id);
-      setSelectedEmployees(newSelection);
-      console.log("Selected all employees for removal:", newSelection);
+      setSelectedEmployees(currentEmployees.map((emp) => emp.id));
     }
   };
 
   const handleRemoveSelected = () => {
-    if (selectedEmployees.length > 0) {
-      setEmployees((prev) => prev.filter((emp) => !selectedEmployees.includes(emp.id)));
-      setSelectedEmployees([]);
-      console.log("Removed selected employees");
-    }
+    if (selectedEmployees.length === 0) return;
+    setEmployees((prev) => prev.filter((emp) => !selectedEmployees.includes(emp.id)));
+    setSelectedEmployees([]);
   };
 
   const handleToggleExpand = (employeeId) => {
@@ -69,23 +138,13 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
     setIsDeductionModalOpen(true);
   };
 
-  const handleAddIncomeItem = (data) => {
+  const handleAddIncomeItem = (incomeItem) => {
     setEmployees((prev) =>
       prev.map((emp) => {
         if (emp.id === currentEmployeeId) {
-          const baseGross = emp.paymentSchedule === "Hourly"
-            ? emp.hourlyRate * emp.numberOfHours
-            : emp.basicPay;
-          const additionalAmount = data.unitType === "percentage_based"
-            ? baseGross * (data.amount / 100)
-            : data.unitType === "hourly_rate" || data.unitType === "hourly_rate_with_overtime"
-            ? data.amount * emp.numberOfHours
-            : data.amount;
           return {
             ...emp,
-            additionalIncomes: [...emp.additionalIncomes, data],
-            grossPay: emp.grossPay + additionalAmount,
-            netPay: emp.netPay + additionalAmount,
+            additionalIncomes: [...emp.additionalIncomes, incomeItem],
           };
         }
         return emp;
@@ -95,18 +154,13 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
     setIsIncomeModalOpen(false);
   };
 
-  const handleAddDeductionItem = (data) => {
+  const handleAddDeductionItem = (deductionItem) => {
     setEmployees((prev) =>
       prev.map((emp) => {
         if (emp.id === currentEmployeeId) {
-          const gross = emp.grossPay;
-          const additionalAmount = data.unitType === "percentage_based"
-            ? gross * (data.amount / 100)
-            : data.amount;
           return {
             ...emp,
-            additionalDeductions: [...emp.additionalDeductions, data],
-            netPay: emp.netPay - additionalAmount,
+            additionalDeductions: [...emp.additionalDeductions, deductionItem],
           };
         }
         return emp;
@@ -114,21 +168,6 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
     );
     setCurrentEmployeeId(null);
     setIsDeductionModalOpen(false);
-  };
-
-  const handleAddStaff = (staffIds) => {
-    const newEmployees = mockEmployees.filter(
-      (emp) => staffIds.includes(emp.id) && !employees.some((e) => e.id === emp.id)
-    );
-    setEmployees((prev) => [...prev, ...newEmployees]);
-    setIsStaffModalOpen(false);
-    console.log("Added staff IDs:", staffIds);
-  };
-
-  const handleUpdateEmployee = (updatedEmployee) => {
-    setEmployees((prev) =>
-      prev.map((emp) => (emp.id === updatedEmployee.id ? updatedEmployee : emp))
-    );
   };
 
   const handlePageChange = (page) => {
@@ -143,14 +182,37 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
     return `${fromDate} - ${toDate}`;
   };
 
-  const handleSave = () => {
-    console.log("Saving payroll with employees:", employees);
-    const payroll = {
-      ...payrollData,
-      employees: employees,
-    };
-    console.log("Submitted payroll:", payroll);
-    onSave(payroll);
+  const handleSave = async () => {
+    if (employees.length === 0) {
+      showToast("No staff in payroll to save", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      const staffs = employees.map((emp) => ({
+        id: emp.id,
+        payrollId: emp.payrollId,
+        deductions: emp.additionalDeductions.map((d) => ({ id: d.id })),
+        incomeItems: emp.additionalIncomes.map((i) => ({ id: i.id })),
+      }));
+
+      await payrollApi.CreateManualPayrollCycle({
+        tenantId,
+        compensationType: payrollData.compensationType.toUpperCase(),
+        startDate: payrollData.from,
+        endDate: payrollData.to,
+        staffs,
+        accessToken,
+        refreshToken,
+      });
+
+      showToast("Payroll cycle created successfully", "success");
+      onSave();
+    } catch (error) {
+      showToast(error.message || "Failed to create payroll cycle", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -166,15 +228,10 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
         onSecondaryButtonClick={onClose}
         size="xl"
         className="max-h-screen overflow-y-auto"
+        primaryButtonLoading={saving}
       >
         <div className="flex flex-col h-full">
           <div className="flex justify-end items-center mb-6">
-            <Button
-              variant="secondary"
-              label="Add Staff to Payroll"
-              icon={<FaPlus />}
-              onClick={() => setIsStaffModalOpen(true)}
-            />
             {selectedEmployees.length > 0 && (
               <Button
                 variant="secondary-danger"
@@ -184,48 +241,61 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
               />
             )}
           </div>
-          <div className="flex-1 overflow-auto">
-            <table className="custom-table">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="py-3 px-4 text-left">
-                    <CheckboxInput
-                      checked={selectedEmployees.length === currentEmployees.length && currentEmployees.length > 0}
-                      onChange={handleSelectAll}
-                    />
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
-                    Employee
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
-                    Payment Schedule
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
-                    Gross Pay
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
-                    Net Pay
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium text-gray-700"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentEmployees.map((employee) => (
-                  <EmployeeRow
-                    key={employee.id}
-                    employee={employee}
-                    isSelected={selectedEmployees.includes(employee.id)}
-                    onSelect={handleSelectEmployee}
-                    expandedEmployee={expandedEmployee}
-                    onToggleExpand={handleToggleExpand}
-                    onAddIncome={handleAddIncome}
-                    onAddDeduction={handleAddDeduction}
-                    onUpdateEmployee={handleUpdateEmployee}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <p className="text-gray-500">Loading staff...</p>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto">
+              <table className="custom-table">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="py-3 px-4 text-left">
+                      <CheckboxInput
+                        checked={selectedEmployees.length === currentEmployees.length && currentEmployees.length > 0}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
+                      Employee
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
+                      Payment Schedule
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
+                      Gross Pay
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">
+                      Net Pay
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEmployees.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="py-8 text-center text-gray-500">
+                        No staff found for this payroll period
+                      </td>
+                    </tr>
+                  ) : (
+                    currentEmployees.map((employee) => (
+                      <EmployeeRow
+                        key={employee.id}
+                        employee={employee}
+                        isSelected={selectedEmployees.includes(employee.id)}
+                        onSelect={handleSelectEmployee}
+                        expandedEmployee={expandedEmployee}
+                        onToggleExpand={handleToggleExpand}
+                        onAddIncome={handleAddIncome}
+                        onAddDeduction={handleAddDeduction}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -233,21 +303,23 @@ const PreviewPayrollModal = ({ isOpen, onClose, payrollData, onSave }) => {
           />
         </div>
       </ReusableModal>
-      <AddStaffModal
-        isOpen={isStaffModalOpen}
-        onClose={() => setIsStaffModalOpen(false)}
-        onSave={handleAddStaff}
-        isMultiple={true}
-      />
       <AddIncomeItemModal
         isOpen={isIncomeModalOpen}
         onClose={() => setIsIncomeModalOpen(false)}
         onSave={handleAddIncomeItem}
+        tenantId={tenantId}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
+        prefetchedItems={incomeItems}
       />
       <AddDeductionModal
         isOpen={isDeductionModalOpen}
         onClose={() => setIsDeductionModalOpen(false)}
         onSave={handleAddDeductionItem}
+        tenantId={tenantId}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
+        prefetchedItems={deductionItems}
       />
     </>
   );

@@ -16,7 +16,7 @@ import {
   FaReceipt,
 } from "react-icons/fa";
 import { MdMessage } from "react-icons/md";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import TenantLogo from "../assets/Logo.svg";
 import "./DashboardLayout.css";
 import { FiChevronDown } from "react-icons/fi";
@@ -170,6 +170,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                                     ? "active"
                                     : ""
                                 }`}
+                                onClick={() => isMobile && toggleSidebar()}
                               >
                                 {child.name}
                               </Link>
@@ -184,6 +185,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                       className={`nav-link ${
                         location.pathname === item.path ? "active" : ""
                       }`}
+                      onClick={() => isMobile && toggleSidebar()}
                     >
                       <item.icon className="nav-icon" />
                       {isOpen && item.name}
@@ -196,22 +198,13 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
         </div>
       </div>
 
-      {isMobile && (
-        <button
-          className={`hamburger-menu ${isOpen ? "open" : ""}`}
-          onClick={toggleSidebar}
-          aria-label="Toggle menu"
-        >
-          <FaBars />
-        </button>
-      )}
     </>
   );
 };
 
 const DashboardLayout = ({ children }) => {
-  const [messageCount] = useState(1225);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [messageCount] = useState(5);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
 
   useEffect(() => {
@@ -260,7 +253,9 @@ const DashboardLayout = ({ children }) => {
                 <button className="message-icon">
                   <MdMessage size={28} color="#fff" />
                   {messageCount > 0 && (
-                    <span className="notification-badge">{messageCount}</span>
+                    <span className="notification-badge">
+                      {messageCount > 99 ? "99+" : messageCount}
+                    </span>
                   )}
                 </button>
               </div>
@@ -292,10 +287,17 @@ const DashboardLayout = ({ children }) => {
           tabIndex={0}
           aria-label="Close menu"
           onKeyDown={(e) => e.key === "Enter" && toggleSidebar()}
-        ></div>
+        />
       )}
     </div>
   );
 };
+
+/** Wrap all protected routes with this so the layout persists across navigations */
+export const LayoutRoute = () => (
+  <DashboardLayout>
+    <Outlet />
+  </DashboardLayout>
+);
 
 export default DashboardLayout;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
-import Layout from "../Layout/ControlLayout";
+
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import Button from "../../Components/Button/Button";
 import "./IssueManagement.css";
@@ -170,9 +170,9 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   ];
 
   // Placeholder export functions
-  const onExportCSV = (data) => console.log("Exporting CSV:", data);
-  const onExportPDF = (data) => console.log("Exporting PDF:", data);
-  const onPrint = (data) => console.log("Printing:", data);
+  const onExportCSV = (data) => {} // TODO: implement handler;
+  const onExportPDF = (data) => {} // TODO: implement handler;
+  const onPrint = (data) => {} // TODO: implement handler;
 
   // Extract table data
   const issueInfoTableData = issueData
@@ -429,7 +429,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   if (!issueData) return <div>Loading...</div>;
 
   return (
-    <Layout>
+    <>
       <div className="tenant-header">
         <button className="back-button" onClick={onBack}>
           <FaArrowLeft /> Back
@@ -1029,7 +1029,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
           />
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

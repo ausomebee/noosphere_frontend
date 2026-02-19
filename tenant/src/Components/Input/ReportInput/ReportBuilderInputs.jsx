@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
 import uploadApi from "../../../api/ImageUpload";
 import "./ReportInput.css";
@@ -219,10 +219,7 @@ const ReportFileUpload = ({
   multiple = false,
   readOnly = false,
 }) => {
-  const accessToken = useSelector((s) => s.authentication?.user?.accessToken);
-  const refreshToken = useSelector(
-    (s) => s.authentication?.user?.refreshToken,
-  );
+  const { accessToken, refreshToken } = useAuth();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 

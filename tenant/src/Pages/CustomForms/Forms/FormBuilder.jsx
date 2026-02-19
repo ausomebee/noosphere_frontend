@@ -1,6 +1,5 @@
 // FormBuilder.jsx
 import React, { useState } from "react";
-import DashboardLayout from "../../../Layout/TenantLayout";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NewFormBuilder from "./SubFormBuilder/NewFormBuilder";
@@ -12,7 +11,7 @@ const FormBuilder = () => {
   const [draftCount, setDraftCount] = useState(0); // REAL COUNT FROM CHILD
 
   return (
-    <DashboardLayout>
+    <>
       {/* Header with Back Button */}
       <div className="manage-column-header">
         <button className="manage-back-button" onClick={() => navigate(-1)}>
@@ -24,7 +23,7 @@ const FormBuilder = () => {
       </div>
 
       {/* Tabs */}
-      <div className="tabs mt-20">
+      <div className="tabs mt-6">
         <button
           className={`tab flex items-center justify-center ${
             activeTab === "newForm" ? "active" : ""
@@ -56,7 +55,7 @@ const FormBuilder = () => {
           <FormDrafts onCountChange={setDraftCount} />
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 
