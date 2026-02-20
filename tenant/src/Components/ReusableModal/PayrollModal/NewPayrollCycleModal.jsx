@@ -26,9 +26,9 @@ const payrollCycleSchema = yup.object().shape({
 });
 
 const COMPENSATION_TYPE_OPTIONS = [
-  { value: "Hourly", label: "Hourly" },
-  { value: "Daily", label: "Daily" },
-  { value: "Salaried", label: "Salaried" },
+  { value: "HOURLY", label: "Hourly" },
+  { value: "DAILY", label: "Daily" },
+  { value: "SALARIED", label: "Salaried" },
 ];
 
 // Transform initial data to form data

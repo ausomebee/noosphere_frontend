@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Select, { components } from "react-select";
 import { GoCalendar } from "react-icons/go";
@@ -133,39 +133,7 @@ const SelectInput = ({
   ...props
 }) => {
   const selectRef = useRef(null);
-  const [menuPlacement, setMenuPlacement] = useState("bottom");
-  const [menuMaxHeight, setMenuMaxHeight] = useState(200);
 
-  /* ---------- 1.  Stable callback ---------- */
-  const updateMenuPlacement = useCallback(() => {
-    if (!selectRef.current) return;
-
-    const rect           = selectRef.current.getBoundingClientRect();
-    const windowHeight   = window.innerHeight;
-    const spaceBelow     = windowHeight - rect.bottom;
-    const spaceAbove     = rect.top;
-    const menuHeight     = Math.min(300, windowHeight * 0.5);
-
-    setMenuPlacement(
-      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
-    );
-    setMenuMaxHeight(menuHeight);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ---------- 2.  Stable effect ---------- */
-  useEffect(() => {
-    updateMenuPlacement(); // initial measure
-
-    window.addEventListener("resize",  updateMenuPlacement);
-    window.addEventListener("scroll",  updateMenuPlacement, true);
-
-    return () => {
-      window.removeEventListener("resize", updateMenuPlacement);
-      window.removeEventListener("scroll", updateMenuPlacement, true);
-    };
-  }, [updateMenuPlacement]);
-
-  /* ---------- 3.  Rest of your logic ---------- */
   const selected = isMulti
     ? (value || []).map((v) => options.find((o) => o.value === v))
     : options.find((o) => o.value === value) || null;
@@ -197,7 +165,6 @@ const SelectInput = ({
       )
     : components.Option;
 
-  /* ---------- 4.  JSX identical to yours ---------- */
   return (
     <div className={`input-group ${widthClass}`} ref={selectRef}>
       {label && <label className="input-group-label">{label}</label>}
@@ -209,8 +176,8 @@ const SelectInput = ({
           value={selected}
           onChange={handleChange}
           isMulti={isMulti}
-          menuPosition="absolute"
-          menuPlacement={menuPlacement}
+          menuPosition="fixed"
+          menuPlacement="auto"
           placeholder={placeholder}
           components={{
             Option,
@@ -234,9 +201,8 @@ const SelectInput = ({
               ...base,
               margin: 0,
               width: selectRef.current?.offsetWidth || "auto",
-              maxHeight: `${menuMaxHeight}px`,
             }),
-            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            menuPortal: (base) => ({ ...base, zIndex: 99999 }),
             valueContainer: (base) => ({
               ...base,
               padding: 0,
@@ -249,7 +215,6 @@ const SelectInput = ({
           menuPortalTarget={document.body}
           closeMenuOnSelect={!isMulti}
           hideSelectedOptions={false}
-          onMenuOpen={updateMenuPlacement}
           {...props}
         />
       </div>
@@ -296,8 +261,6 @@ const SearchableSelectInput = ({
   ...props
 }) => {
   const selectRef = useRef(null);
-  const [menuPlacement, setMenuPlacement] = useState("bottom");
-  const [menuMaxHeight, setMenuMaxHeight] = useState(200); // Default max height
 
   const selected = options.find((o) => o.value === value) || null;
 
@@ -306,33 +269,6 @@ const SearchableSelectInput = ({
   };
 
   const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
-
-  // Calculate menu placement and max height
-  const updateMenuPlacement = () => {
-    if (!selectRef.current) return;
-
-    const rect = selectRef.current.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    const spaceBelow = windowHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const menuHeight = Math.min(300, windowHeight * 0.5); // Max 300px or 50% of viewport height
-
-    // Set placement: prefer bottom if enough space, otherwise top
-    setMenuPlacement(
-      spaceBelow >= menuHeight || spaceBelow >= spaceAbove ? "bottom" : "top"
-    );
-    setMenuMaxHeight(menuHeight);
-  };
-
-  useEffect(() => {
-    updateMenuPlacement();
-    window.addEventListener("resize", updateMenuPlacement);
-    window.addEventListener("scroll", updateMenuPlacement);
-    return () => {
-      window.removeEventListener("resize", updateMenuPlacement);
-      window.removeEventListener("scroll", updateMenuPlacement);
-    };
-  }, []);
 
   return (
     <div className={`input-group ${widthClass}`} ref={selectRef}>
@@ -346,9 +282,9 @@ const SearchableSelectInput = ({
           onChange={handleChange}
           placeholder={placeholder}
           isSearchable
-          isDisabled={disabled} // ✅ ADDED
-          menuPosition="absolute"
-          menuPlacement={menuPlacement}
+          isDisabled={disabled}
+          menuPosition="fixed"
+          menuPlacement="auto"
           components={{
             IndicatorSeparator: () => null,
             ClearIndicator: () => null,
@@ -363,16 +299,15 @@ const SearchableSelectInput = ({
               minHeight: 36,
               borderRadius: 12,
               padding: "0 8px",
-              cursor: state.isDisabled ? "not-allowed" : "pointer", // ✅ ADDED
-              opacity: state.isDisabled ? 0.5 : 1, // Optional: visual feedback
+              cursor: state.isDisabled ? "not-allowed" : "pointer",
+              opacity: state.isDisabled ? 0.5 : 1,
             }),
             menu: (base) => ({
               ...base,
               margin: 0,
-              width: selectRef.current?.offsetWidth || "auto", // Match input width
-              maxHeight: `${menuMaxHeight}px`,
+              width: selectRef.current?.offsetWidth || "auto",
             }),
-            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            menuPortal: (base) => ({ ...base, zIndex: 99999 }),
             valueContainer: (base) => ({
               ...base,
               padding: 0,
@@ -381,7 +316,6 @@ const SearchableSelectInput = ({
             placeholder: (base) => ({ ...base, color: "#999" }),
           }}
           menuPortalTarget={document.body}
-          onMenuOpen={updateMenuPlacement}
           {...props}
         />
       </div>

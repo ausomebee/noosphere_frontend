@@ -120,6 +120,7 @@ const PayrollItemModal = ({
     try {
       await onSave(data);
       reset(defaultFormValues);
+      setIsLoading(false);
       onClose();
     } catch (error) {
       console.error(`Error saving ${isDeduction ? "deduction" : "income item"}:`, error);
@@ -145,9 +146,10 @@ const PayrollItemModal = ({
         value: item.id,
         label: item.name,
       }));
-    return options.length > 0
-      ? [{ value: "", label: "Select" }, ...options]
-      : [{ value: "", label: "No items available" }];
+    return [
+      { value: "basic_pay", label: "Basic Pay" },
+      ...options,
+    ];
   }, [existingItems, mode, initialData.id]);
 
   return (

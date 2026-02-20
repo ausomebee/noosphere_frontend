@@ -1,0 +1,253 @@
+/* ===== Notifications Page ===== */
+
+.notifications-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Header */
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.notifications-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notifications-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.notifications-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: #1e3a8a;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notifications-close {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notifications-close:hover {
+  background: #f3f4f6;
+}
+
+/* Body */
+.notifications-body {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Date group */
+.notifications-group-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  text-transform: capitalize;
+}
+
+/* List */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card */
+.notification-card {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.notification-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.notification-card-unread {
+  border-left: 3px solid #1e3a8a;
+}
+
+/* Icon */
+.notification-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-icon-appointment {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.notification-icon-document {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.notification-icon-client {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.notification-icon-system {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.notification-icon-success {
+  background: #d1fae5;
+  color: #16a34a;
+}
+
+.notification-icon-alert {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* Content */
+.notification-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e3a8a;
+  margin: 0 0 4px 0;
+}
+
+.notification-card-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  line-height: 1.45;
+}
+
+/* Footer */
+.notification-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-card-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.notification-card-link {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e3a8a;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.notification-card-link:hover {
+  color: #1e40af;
+}
+
+/* Empty state */
+.notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  gap: 12px;
+}
+
+.notifications-empty p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ===== RESPONSIVE: MOBILE ===== */
+@media (max-width: 640px) {
+  .notifications-header {
+    margin-bottom: 20px;
+  }
+
+  .notifications-title {
+    font-size: 18px;
+  }
+
+  .notifications-close span {
+    display: none;
+  }
+
+  .notification-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .notification-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification-card-title {
+    font-size: 14px;
+  }
+
+  .notification-card-desc {
+    font-size: 13px;
+  }
+
+  .notification-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* ===== RESPONSIVE: TABLET ===== */
+@media (min-width: 641px) and (max-width: 992px) {
+  .notifications-page {
+    max-width: 700px;
+  }
+}

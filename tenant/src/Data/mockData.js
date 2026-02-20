@@ -2,7 +2,7 @@ export const mockEmployees = [
   {
     id: 1,
     name: "Austin Akpabio",
-    paymentSchedule: "Weekly",
+    paymentSchedule: "HOURLY",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -17,7 +17,7 @@ export const mockEmployees = [
   {
     id: 2,
     name: "Phil Landerer",
-    paymentSchedule: "Monthly",
+    paymentSchedule: "SALARIED",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -32,7 +32,7 @@ export const mockEmployees = [
   {
     id: 3,
     name: "Philip Landor",
-    paymentSchedule: "Hourly",
+    paymentSchedule: "HOURLY",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -47,7 +47,7 @@ export const mockEmployees = [
   {
     id: 4,
     name: "Acary Bagner",
-    paymentSchedule: "Monthly",
+    paymentSchedule: "SALARIED",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -62,7 +62,7 @@ export const mockEmployees = [
   {
     id: 5,
     name: "Van Nessa",
-    paymentSchedule: "Hourly",
+    paymentSchedule: "HOURLY",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -77,7 +77,7 @@ export const mockEmployees = [
   {
     id: 6,
     name: "Tom Sinn",
-    paymentSchedule: "Hourly",
+    paymentSchedule: "HOURLY",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -92,7 +92,7 @@ export const mockEmployees = [
   {
     id: 7,
     name: "Ann Drew",
-    paymentSchedule: "Monthly",
+    paymentSchedule: "SALARIED",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,
@@ -107,7 +107,7 @@ export const mockEmployees = [
   {
     id: 8,
     name: "Phil Leap",
-    paymentSchedule: "Monthly",
+    paymentSchedule: "SALARIED",
     grossPay: 2725,
     netPay: 2275,
     basicPay: 2500,

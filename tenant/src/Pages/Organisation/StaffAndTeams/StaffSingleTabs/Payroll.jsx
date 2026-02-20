@@ -136,8 +136,8 @@ const Payroll = () => {
     }
   };
 
-  const showMinHours = payrollSettings.paymentSchedule !== "Hourly" &&
-    payrollSettings.paymentSchedule !== "Daily";
+  const showMinHours = payrollSettings.paymentSchedule !== "HOURLY" &&
+    payrollSettings.paymentSchedule !== "DAILY";
 
   return (
     <div className="p-6">

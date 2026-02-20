@@ -46,8 +46,8 @@ const PayrollModal = ({
       return;
     }
 
-    const showMinHours = formData.paymentSchedule !== "Hourly" &&
-      formData.paymentSchedule !== "Daily";
+    const showMinHours = formData.paymentSchedule !== "HOURLY" &&
+      formData.paymentSchedule !== "DAILY";
 
     if (showMinHours && formData.minimumHours && isNaN(parseFloat(formData.minimumHours))) {
       setSubmitError("Minimum hours must be a valid number");
@@ -77,8 +77,8 @@ const PayrollModal = ({
     onClose();
   };
 
-  const showMinHours = formData.paymentSchedule !== "Hourly" &&
-    formData.paymentSchedule !== "Daily";
+  const showMinHours = formData.paymentSchedule !== "HOURLY" &&
+    formData.paymentSchedule !== "DAILY";
 
   const isEdit = modalMode === "edit";
 
