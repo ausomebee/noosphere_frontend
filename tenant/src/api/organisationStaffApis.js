@@ -31,7 +31,7 @@ const CreateTenantStaff = async ({
       paymentSchedule: payroll?.paymentSchedule || "",
       ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
       // minimumHours conditional
-      ...(payroll?.paymentSchedule === "Salaried" &&
+      ...(payroll?.paymentSchedule === "SALARIED" &&
       payroll?.minimumHours &&
       !isNaN(Number(payroll.minimumHours))
         ? { minimumHours: String(payroll.minimumHours) }
@@ -49,7 +49,7 @@ const CreateTenantStaff = async ({
 
     // Only add minimumHours if it's Salaried and has a real value
     if (
-      payroll?.paymentSchedule === "Salaried" &&
+      payroll?.paymentSchedule === "SALARIED" &&
       payroll?.minimumHours &&
       !isNaN(Number(payroll.minimumHours))
     ) {
@@ -131,9 +131,8 @@ const UpdateTenantStaff = async ({
       id: payroll?.id || undefined,
       paymentSchedule: payroll?.paymentSchedule || "",
       ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
-      tenantStaffId: payroll?.tenantStaffId || id,
       // minimumHours conditional
-      ...(payroll?.paymentSchedule === "Salaried" &&
+      ...(payroll?.paymentSchedule === "SALARIED" &&
       payroll?.minimumHours &&
       !isNaN(Number(payroll.minimumHours))
         ? { minimumHours: String(payroll.minimumHours) }
@@ -150,7 +149,7 @@ const UpdateTenantStaff = async ({
 
     // Only add minimumHours if it's Salaried and has a real value
     if (
-      payroll?.paymentSchedule === "Salaried" &&
+      payroll?.paymentSchedule === "SALARIED" &&
       payroll?.minimumHours &&
       !isNaN(Number(payroll.minimumHours))
     ) {
@@ -496,7 +495,6 @@ const UpdateTenantStaffPayroll = async ({
       id: payroll?.id || undefined,
       paymentSchedule: payroll?.paymentSchedule || "",
       ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",
-      tenantStaffId: payroll?.tenantStaffId || id,
       minimumHours: payroll?.minimumHours ? String(payroll.minimumHours) : "",
       otherPays:
         payroll?.otherPays
@@ -663,6 +661,111 @@ const GetStaffPayrollCycleStats = async ({
   }
 };
 
+const GetStaffWithTeamAccess = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/staff/team/${tenantId}`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get staff with team access failed",
+    );
+  }
+};
+
+// ─── Teams ───
+
+const CreateTeam = async ({
+  name,
+  tenantId,
+  teamLeadId,
+  members,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/organization/teams`,
+      { name, tenantId, teamLeadId, members },
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Create team failed");
+  }
+};
+
+const UpdateTeam = async ({
+  id,
+  name,
+  teamLeadId,
+  members,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/organization/teams`,
+      { id, name, teamLeadId, members },
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Update team failed");
+  }
+};
+
+const GetAllTeamsByTenantId = async ({
+  tenantId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/organization/teams`,
+      { params: { tenantId } },
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get teams by tenant id failed",
+    );
+  }
+};
+
+const DeleteTeam = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(
+      `${PLAIN_API_URL}/organization/teams/${id}/delete`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Delete team failed");
+  }
+};
+
+const ToggleTeamActive = async ({ id, active, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/organization/teams/${id}/active/${active}`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Update team active status failed",
+    );
+  }
+};
+
 export default {
   CreateTenantStaff,
   UpdateTenantStaff,
@@ -686,4 +789,10 @@ export default {
   GetStaffAvailability,
   GetStaffClients,
   GetStaffPayrollCycleStats,
+  GetStaffWithTeamAccess,
+  CreateTeam,
+  UpdateTeam,
+  GetAllTeamsByTenantId,
+  DeleteTeam,
+  ToggleTeamActive,
 };

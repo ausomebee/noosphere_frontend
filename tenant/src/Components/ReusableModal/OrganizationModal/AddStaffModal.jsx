@@ -34,6 +34,7 @@ import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import uploadApi from "../../../api/ImageUpload";
 import api from "../../../api/payrollApi";
+import roleApi from "../../../api/roleApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { RxCross2 } from "react-icons/rx";
 
@@ -70,7 +71,7 @@ const schema = yup.object().shape({
   ),
   paymentSchedule: yup
     .string()
-    .oneOf(["Hourly", "Daily", "Salaried"])
+    .oneOf(["HOURLY", "DAILY", "SALARIED"])
     .required("Compensation type is required"),
   ratePerHour: yup
     .number()
@@ -87,7 +88,7 @@ const schema = yup.object().shape({
       originalValue === "" || originalValue == null ? null : value,
     )
     .when("paymentSchedule", {
-      is: "Salaried",
+      is: "SALARIED",
       then: (schema) =>
         schema.required(
           "Minimum hours per month is required for Salaried staff",
@@ -409,19 +410,38 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     }
   }, [tenantId, accessToken, refreshToken]);
 
+  // ─── Fetch roles ───
+  const [staffRoleOptions, setStaffRoleOptions] = useState([]);
+  const fetchRoles = useCallback(async () => {
+    try {
+      const res = await roleApi.GetAllRolesByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const roles = res.data?.data || res.data || [];
+      setStaffRoleOptions(
+        roles.map((role) => ({ value: role.id, label: role.name })),
+      );
+    } catch {
+      setStaffRoleOptions([]);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
   // Fetch once when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchIncomeItems();
       fetchDeductions();
+      fetchRoles();
     }
-  }, [isOpen, fetchIncomeItems, fetchDeductions]);
+  }, [isOpen, fetchIncomeItems, fetchDeductions, fetchRoles]);
 
   const compensationTypeOptions = useMemo(
     () => [
-      { value: "Hourly", label: "Hourly" },
-      { value: "Daily", label: "Daily" },
-      { value: "Salaried", label: "Salaried" },
+      { value: "HOURLY", label: "Hourly" },
+      { value: "DAILY", label: "Daily" },
+      { value: "SALARIED", label: "Salaried" },
     ],
     [],
   );
@@ -430,16 +450,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     () => [
       { value: "male", label: "Male" },
       { value: "female", label: "Female" },
-    ],
-    [],
-  );
-
-  const staffRoleOptions = useMemo(
-    () => [
-      { value: "8285a9a5-0455-447d-9dbe-00ad68d6a0e5", label: "Admin" },
-      { value: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", label: "Therapist" },
-      { value: "b2c3d4e5-f6a7-8901-bcde-f23456789012", label: "Supervisor" },
-      { value: "d4e5f6a7-b8c9-0123-def0-456789012345", label: "Assistant" },
     ],
     [],
   );
@@ -773,6 +783,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       active: true,
       phoneNumber: "",
       DOB: "",
+      dataAccessLevel: "",
       paymentSchedule: "",
       ratePerHour: "",
       minimumHours: "",
@@ -853,8 +864,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       const payroll = {
         paymentSchedule: data.paymentSchedule,
         ratePerHour: Number(data.ratePerHour),
-        // Only include minimumHours if it's Salaried
-        ...(data.paymentSchedule === "Salaried" && data.minimumHours != null
+        // Only include minimumHours if it's Monthly
+        ...(data.paymentSchedule === "SALARIED" && data.minimumHours != null
           ? { minimumHours: Number(data.minimumHours) }
           : {}),
         otherPays: (data.otherPays || [])
@@ -871,7 +882,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           paymentSchedule: data.paymentSchedule,
           ratePerHour: Number(data.ratePerHour),
           // minimumHours conditional (your previous logic)
-          ...(data.paymentSchedule === "Salaried" && data.minimumHours != null
+          ...(data.paymentSchedule === "SALARIED" && data.minimumHours != null
             ? { minimumHours: Number(data.minimumHours) }
             : {}),
           otherPays: (data.otherPays || [])
@@ -1172,9 +1183,9 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         {paymentSchedule && (
           <TextInput
             label={
-              paymentSchedule === "Hourly"
+              paymentSchedule === "HOURLY"
                 ? "Pay Rate (per hour)"
-                : paymentSchedule === "Daily"
+                : paymentSchedule === "DAILY"
                   ? "Pay Rate (per day)"
                   : "Pay Rate (Salary)"
             }
@@ -1183,16 +1194,16 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
             {...register("ratePerHour")}
             error={errors.ratePerHour?.message}
             placeholder={
-              paymentSchedule === "Hourly"
+              paymentSchedule === "HOURLY"
                 ? "e.g. 45.50"
-                : paymentSchedule === "Daily"
+                : paymentSchedule === "DAILY"
                   ? "e.g. 320.00"
                   : "e.g. 5200.00"
             }
           />
         )}
 
-        {paymentSchedule === "Salaried" && (
+        {paymentSchedule === "SALARIED" && (
           <TextInput
             label="Minimum Number of Hours per Month"
             type="number"

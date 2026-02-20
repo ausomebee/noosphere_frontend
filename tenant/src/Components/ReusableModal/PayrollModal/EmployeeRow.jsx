@@ -112,7 +112,7 @@ const EmployeeRow = ({
                     </h2>
                   </div>
                   <div className="flex">
-                    {(employee.paymentSchedule === "Hourly" || employee.paymentSchedule === "Daily") && (
+                    {(employee.paymentSchedule === "HOURLY" || employee.paymentSchedule === "DAILY") && (
                       <div className="flex-col flex">
                         <label>Hourly Rate</label>
                         <div className="custom-time-container">
@@ -128,7 +128,7 @@ const EmployeeRow = ({
                         </div>
                       </div>
                     )}
-                    {employee.paymentSchedule === "Monthly" && (
+                    {employee.paymentSchedule === "SALARIED" && (
                       <>
                         <div className="flex-col flex">
                           <label>Monthly Rate</label>

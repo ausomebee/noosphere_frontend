@@ -9,9 +9,9 @@ import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 
 const COMPENSATION_OPTIONS = [
-  { value: "Hourly", label: "Hourly" },
-  { value: "Salaried", label: "Salaried" },
-  { value: "Daily", label: "Daily" },
+  { value: "HOURLY", label: "Hourly" },
+  { value: "SALARIED", label: "Salaried" },
+  { value: "DAILY", label: "Daily" },
 ];
 
 const NewPayrollModal = ({ isOpen, onClose, onSave }) => {

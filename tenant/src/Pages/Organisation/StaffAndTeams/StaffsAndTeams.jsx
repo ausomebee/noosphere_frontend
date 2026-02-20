@@ -19,8 +19,53 @@ const StaffsAndTeams = () => {
   const [loading, setLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Teams state
+  const [rawTeams, setRawTeams] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+  const [teamAccessStaff, setTeamAccessStaff] = useState([]);
+  const [allTenantStaff, setAllTenantStaff] = useState([]);
+
   const { accessToken, refreshToken, tenantId } = useAuth();
   const navigate = useNavigate();
+
+  // Team Lead options – only staff with team-level access
+  const teamLeadOptions = useMemo(
+    () => teamAccessStaff.map((s) => ({ value: s.id, label: s.fullName })),
+    [teamAccessStaff],
+  );
+
+  // Team Member options – all tenant staff
+  const memberOptions = useMemo(
+    () => allTenantStaff.map((s) => ({ value: s.id, label: s.fullName })),
+    [allTenantStaff],
+  );
+
+  // Lookup map: staffId → fullName (for resolving teamLeadId in table)
+  const staffLookup = useMemo(() => {
+    const map = {};
+    allTenantStaff.forEach((s) => { map[s.id] = s.fullName; });
+    teamAccessStaff.forEach((s) => { map[s.id] = s.fullName; });
+    return map;
+  }, [allTenantStaff, teamAccessStaff]);
+
+  // Fetch staff with team access (for team lead dropdown + name resolution)
+  // and all tenant staff (for team members dropdown)
+  useEffect(() => {
+    const fetchStaffForTeams = async () => {
+      if (!tenantId) return;
+      try {
+        const [teamAccessRes, allStaffRes] = await Promise.all([
+          api.GetStaffWithTeamAccess({ tenantId, accessToken, refreshToken }),
+          api.GetAllStaffByTenantId({ tenantId, accessToken, refreshToken }),
+        ]);
+        setTeamAccessStaff(teamAccessRes.data?.data || []);
+        setAllTenantStaff(allStaffRes.data?.data || []);
+      } catch (err) {
+        console.error("Failed to load staff lists:", err);
+      }
+    };
+    fetchStaffForTeams();
+  }, [tenantId, accessToken]);
 
   const fetchStaffData = async () => {
     if (view !== "staff" || !tenantId) return;
@@ -47,9 +92,46 @@ const StaffsAndTeams = () => {
     }
   };
 
+  // Fetch teams data
+  const fetchTeamsData = async () => {
+    if (!tenantId) return;
+    setTeamsLoading(true);
+    try {
+      const res = await api.GetAllTeamsByTenantId({ tenantId, accessToken, refreshToken });
+      setRawTeams(res.data?.data || []);
+    } catch (err) {
+      showToast({ message: err.message || "Failed to load teams", type: "error" });
+    } finally {
+      setTeamsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchStaffData();
+    if (view === "staff") fetchStaffData();
+    if (view === "teams") fetchTeamsData();
   }, [view, tenantId, accessToken, refreshTrigger]);
+
+  // Derive teams table rows from raw data
+  const teamsData = useMemo(
+    () =>
+      rawTeams.map((t) => ({
+        id: t.id,
+        name: t.name,
+        noMembers: t._count?.teamMembers ?? t.teamMembers?.length ?? "—",
+        dateCreated: new Date(t.createdAt).toLocaleDateString(),
+        teamLead: t.teamLead?.fullName || staffLookup[t.teamLeadId] || "—",
+        teamLeadId: t.teamLeadId,
+        teamMemberNames: (t.teamMembers || [])
+          .map((m) => m.staff?.fullName)
+          .filter(Boolean)
+          .join(", ") || "—",
+        teamMembers: t.teamMembers || [],
+        isActive: t.isActive,
+        raw: t,
+        hasActions: true,
+      })),
+    [rawTeams, staffLookup],
+  );
 
   const staffColumns = [
     { header: "Staff Name", key: "name", type: "text" },
@@ -60,21 +142,10 @@ const StaffsAndTeams = () => {
 
   const teamColumns = [
     { header: "Team Name", key: "name", type: "text" },
+    { header: "Team Members", key: "teamMemberNames", type: "text" },
     { header: "Number of Members", key: "noMembers", type: "text" },
     { header: "Date Created", key: "dateCreated", type: "text" },
     { header: "Team Lead", key: "teamLead", type: "text" },
-  ];
-
-  const teamsData = [
-    {
-      id: "1",
-      name: "Georgia Team",
-      noMembers: "14",
-      dateCreated: "12/10/2024",
-      teamLead: "Peter Matson",
-      hasCheckbox: true,
-      hasActions: true,
-    },
   ];
 
   const staffActions = [
@@ -131,18 +202,16 @@ const StaffsAndTeams = () => {
                   paymentSchedule: staffData.payroll?.paymentSchedule || "",
                   ratePerHour: staffData.payroll?.ratePerHour || "",
                   minimumHours: staffData.payroll?.minimumHours || "",
-                  otherPays: staffData.payroll?.otherPays?.length
-                    ? staffData.payroll.otherPays.map((p) => ({
-                        type: p.type,
-                        rate: p.rate,
+                  otherPays: staffData.payroll?.incomeItems?.length
+                    ? staffData.payroll.incomeItems.map((p) => ({
+                        type: p.id,
                       }))
-                    : [{ type: "", rate: "" }],
+                    : [{ type: "" }],
                   deductions: staffData.payroll?.deductions?.length
                     ? staffData.payroll.deductions.map((d) => ({
-                        type: d.type,
-                        rate: d.rate,
+                        type: d.id,
                       }))
-                    : [{ type: "", rate: "" }],
+                    : [{ type: "" }],
                   tenantStaffId: staffData.payroll?.tenantStaffId,
                 },
                 documents: staffData.document.map((d) => ({
@@ -211,38 +280,34 @@ const StaffsAndTeams = () => {
       className: "more-dropdown",
       items: [
         {
-          label: "View Team Details",
-          onClick: (row) => {
-            setSelectedRow(row);
-            showToast({
-              message: `Viewing details for team ${row.name}`,
-              type: "info",
-            });
-          },
-        },
-        {
           label: "Edit Team",
           onClick: (row) => {
-            setSelectedRow(row);
+            // Extract staffIds from teamMembers for the multi-select
+            const memberIds = (row.teamMembers || []).map((m) => m.staff?.id);
+            setSelectedRow({
+              id: row.id,
+              teamName: row.name,
+              teamMember: memberIds,
+              teamLead: row.teamLeadId || "",
+            });
             setModalMode("edit");
             setModalType("teams");
             setIsAddModalOpen(true);
-            showToast({ message: `Editing team ${row.name}`, type: "info" });
           },
         },
         {
-          label: "Deactivate Team",
+          label: (row) => row.isActive ? "Deactivate Team" : "Activate Team",
           onClick: async (row) => {
             try {
-              // Placeholder: Replace with actual API call
-              await api.DeactivateTeam({ id: row.id, accessToken });
+              await api.ToggleTeamActive({ id: row.id, active: !row.isActive, accessToken, refreshToken });
               showToast({
-                message: `Team ${row.name} deactivated successfully`,
+                message: `Team ${row.name} ${row.isActive ? "deactivated" : "activated"} successfully`,
                 type: "success",
               });
+              setRefreshTrigger((prev) => prev + 1);
             } catch (err) {
               showToast({
-                message: err.message || "Failed to deactivate team",
+                message: err.message || "Failed to update team status",
                 type: "error",
               });
             }
@@ -252,12 +317,12 @@ const StaffsAndTeams = () => {
           label: "Delete Team",
           onClick: async (row) => {
             try {
-              // Placeholder: Replace with actual API call
-              await api.DeleteTeam({ id: row.id, accessToken });
+              await api.DeleteTeam({ id: row.id, accessToken, refreshToken });
               showToast({
                 message: `Team ${row.name} deleted successfully`,
                 type: "success",
               });
+              setRefreshTrigger((prev) => prev + 1);
             } catch (err) {
               showToast({
                 message: err.message || "Failed to delete team",
@@ -286,9 +351,8 @@ const StaffsAndTeams = () => {
         id: selectedRow?.payroll?.id,
         paymentSchedule: data.paymentSchedule || "",
         ratePerHour: data.ratePerHour ? String(data.ratePerHour) : "",
-        tenantStaffId: selectedRow?.id,
         // Only include minimumHours if it's Salaried AND has a value
-        ...(data.paymentSchedule === "Salaried" &&
+        ...(data.paymentSchedule === "SALARIED" &&
         data.minimumHours &&
         !isNaN(Number(data.minimumHours))
           ? { minimumHours: String(data.minimumHours) }
@@ -357,17 +421,34 @@ const StaffsAndTeams = () => {
         message: err.message || "Failed to save staff",
         type: "error",
       });
+      throw err; // Re-throw so modal stays open
     } finally {
       setLoading(false);
     }
   };
   const handleTeamSubmit = async (data) => {
     try {
-      // Placeholder: Replace with actual API call
-      modalMode === "edit"
-        ? await api.UpdateTeam({ id: selectedRow?.id, ...data, accessToken })
-        : await api.CreateTeam({ ...data, tenantId, accessToken });
+      if (modalMode === "edit") {
+        await api.UpdateTeam({
+          id: data.id,
+          name: data.teamName,
+          teamLeadId: data.teamLead,
+          members: data.teamMember,
+          accessToken,
+          refreshToken,
+        });
+      } else {
+        await api.CreateTeam({
+          name: data.teamName,
+          tenantId,
+          teamLeadId: data.teamLead,
+          members: data.teamMember,
+          accessToken,
+          refreshToken,
+        });
+      }
       setIsAddModalOpen(false);
+      setRefreshTrigger((prev) => prev + 1);
       showToast({
         message: `Team ${modalMode === "edit" ? "updated" : "created"} successfully`,
         type: "success",
@@ -377,6 +458,7 @@ const StaffsAndTeams = () => {
         message: err.message || "Failed to save team",
         type: "error",
       });
+      throw err;
     }
   };
 
@@ -450,7 +532,7 @@ const StaffsAndTeams = () => {
           showActions
           showCheckbox={false}
           itemsPerPage={10}
-          loading={loading}
+          loading={view === "staff" ? loading : teamsLoading}
           tableName={tableConfig[view].tableName}
         />
 
@@ -466,11 +548,14 @@ const StaffsAndTeams = () => {
 
         {modalType === "teams" && (
           <AddTeamsModal
+            key={`${modalMode}-${selectedRow?.id || "new"}`}
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
             onSubmit={handleTeamSubmit}
             mode={modalMode}
             initialData={selectedRow}
+            memberOptions={memberOptions}
+            teamLeadOptions={teamLeadOptions}
           />
         )}
       </div>

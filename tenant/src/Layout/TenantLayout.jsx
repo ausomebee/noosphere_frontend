@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FaTachometerAlt,
   FaCalendarAlt,
@@ -16,10 +16,14 @@ import {
   FaReceipt,
 } from "react-icons/fa";
 import { MdMessage } from "react-icons/md";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { IoNotificationsOutline, IoLogOutOutline } from "react-icons/io5";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import TenantLogo from "../assets/Logo.svg";
 import "./DashboardLayout.css";
 import { FiChevronDown } from "react-icons/fi";
+import useAuth from "../hooks/useAuth";
+import MessageModal from "../Components/MessageModal/MessageModal";
+import NotificationAlert from "../Components/NotificationAlert/NotificationAlert";
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   const location = useLocation();
@@ -203,15 +207,30 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 };
 
 const DashboardLayout = ({ children }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [messageCount] = useState(5);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const profileDropdownRef = useRef(null);
+
+  // Derive display name & initials from auth
+  const fullName = user?.fullName || user?.firstName || user?.email || "User";
+  const displayName = typeof fullName === "string" ? fullName : "User";
+  const roleName = typeof user?.role === "object" ? user.role?.name : user?.role;
+  const userInitials = typeof displayName === "string" && displayName.includes(" ")
+    ? displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : typeof displayName === "string"
+    ? displayName[0].toUpperCase()
+    : "U";
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 992;
       setIsMobile(mobile);
-      // Auto-close sidebar when switching to mobile view
       if (mobile) {
         setIsSidebarOpen(false);
       } else {
@@ -220,12 +239,27 @@ const DashboardLayout = ({ children }) => {
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial check
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleDismissAlert = (id) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
   };
 
   return (
@@ -250,7 +284,10 @@ const DashboardLayout = ({ children }) => {
             )}
             <div className="flex gap-4 items-center justify-end">
               <div className="header-left">
-                <button className="message-icon">
+                <button
+                  className="message-icon"
+                  onClick={() => setIsMessageModalOpen(true)}
+                >
                   <MdMessage size={28} color="#fff" />
                   {messageCount > 0 && (
                     <span className="notification-badge">
@@ -259,24 +296,79 @@ const DashboardLayout = ({ children }) => {
                   )}
                 </button>
               </div>
-              <div className="header-right">
-                <div className="user-profile">
-                  <div className="user-avatar">OR</div>
+              <div className="header-right" ref={profileDropdownRef}>
+                <div
+                  className="user-profile"
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                >
+                  <div className="user-avatar">{userInitials}</div>
                   {!isMobile && (
                     <div className="user-info">
-                      <span className="user-name">Company Name</span>
-                      <span className="user-role">Location</span>
+                      <span className="user-name">{displayName}</span>
+                      <span className="user-role">{roleName || "Staff"}</span>
                     </div>
                   )}
                   {!isMobile && (
                     <FiChevronDown size={16} className="dropdown-arrow" />
                   )}
                 </div>
+                {showProfileDropdown && (
+                  <div className="profile-dropdown">
+                    <button
+                      className="profile-dropdown-item"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        navigate("/notifications");
+                      }}
+                    >
+                      <IoNotificationsOutline size={18} />
+                      <span>Notifications</span>
+                    </button>
+                    <button
+                      className="profile-dropdown-item"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        navigate("/settings");
+                      }}
+                    >
+                      <FaCog size={16} />
+                      <span>Settings</span>
+                    </button>
+                    <button
+                      className="profile-dropdown-item profile-dropdown-danger"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        // TODO: dispatch logout
+                      }}
+                    >
+                      <IoLogOutOutline size={18} />
+                      <span>Log out</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </header>
-        <main className="main-content">{children}</main>
+
+        <main className="main-content">
+          {/* Notification alert banners */}
+          {alerts.length > 0 && (
+            <div className="layout-alerts">
+              {alerts.map((alert) => (
+                <NotificationAlert
+                  key={alert.id}
+                  variant={alert.variant}
+                  message={alert.message}
+                  primaryAction={alert.primaryAction}
+                  secondaryAction={alert.secondaryAction}
+                  onClose={() => handleDismissAlert(alert.id)}
+                />
+              ))}
+            </div>
+          )}
+          {children}
+        </main>
       </div>
 
       {isMobile && isSidebarOpen && (
@@ -289,6 +381,12 @@ const DashboardLayout = ({ children }) => {
           onKeyDown={(e) => e.key === "Enter" && toggleSidebar()}
         />
       )}
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+      />
     </div>
   );
 };

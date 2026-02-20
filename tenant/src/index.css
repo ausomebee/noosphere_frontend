@@ -2104,6 +2104,9 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+.Toastify__toast-container {
+  z-index: 99999 !important;
+}
 .Toastify__close-button {
   color: #ffffff !important;
   opacity: 1 !important;

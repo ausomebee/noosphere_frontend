@@ -162,13 +162,12 @@ const TargetSingle = () => {
             data: getDataRows(type, latest.data),
             summary: getSummary(type, latest.data),
           });
-          setHasPerformanceData(true);
-          setHasSessionData(true);
         } else {
           setBaselineData(null);
-          setHasPerformanceData(false);
-          setHasSessionData(false);
         }
+        // Always fetch performance and session data when client context exists
+        setHasPerformanceData(true);
+        setHasSessionData(true);
       } else {
         setBaselineData(null);
         setHasPerformanceData(false);

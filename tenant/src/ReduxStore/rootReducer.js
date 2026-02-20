@@ -8,6 +8,7 @@ import clientDraftReducer from "./features/clientDraftSlice";
 import tenantSubdomainReducer from "./features/tenantSlice";
 import clinicalReportBuilderReducer from "./features/clinicalReportSlice";
 import clinicalTemplateBuilderReducer from "./features/clinicalReportTemplateSlice";
+import roleDraftReducer from "./features/roleDraftSlice";
 
 const rootReducer = combineReducers({
   authentication: authReducer,
@@ -17,8 +18,9 @@ const rootReducer = combineReducers({
   formBuilder: formBuilderReducer,
   addClient: clientDraftReducer,
   subDomain: tenantSubdomainReducer,
-clinicalReportTemplate: clinicalTemplateBuilderReducer,  // matches selector
-clinicalReport: clinicalReportBuilderReducer,                   
+clinicalReportTemplate: clinicalTemplateBuilderReducer,
+clinicalReport: clinicalReportBuilderReducer,
+roleDraft: roleDraftReducer,
 });
 
 export default rootReducer;

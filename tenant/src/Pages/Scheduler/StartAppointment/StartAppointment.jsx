@@ -372,7 +372,7 @@ const StartAppointment = () => {
         "success",
       );
       sessionStorage.removeItem(`sessionStartTime_${appointmentId}`);
-      navigate(-1);
+      navigate("/billing/timesheets");
     } catch (err) {
       console.error("Failed to submit session:", err);
       showToast(
@@ -658,14 +658,19 @@ const StartAppointment = () => {
             <div className="info-section">
               <h3>Service Type</h3>
               <ul>
-                {appointmentServices?.map((s, i) => (
-                  <li key={i}>
-                    {s.modifiers?.modifiers}{" "}
-                    {s.modifiers?.modifiers
-                      ? `+ ${s.modifiers?.modifiers}`
-                      : ""}
-                  </li>
-                ))}
+                {appointmentServices?.map((s, i) => {
+                  const code = s.serviceCode || {};
+                  const serviceLabel = code.code
+                    ? `${code.code}${code.description ? ` - ${code.description}` : ""}`
+                    : "Not specified";
+                  const modifier = code.modifiers?.modifier1;
+                  return (
+                    <li key={i}>
+                      {serviceLabel}
+                      {modifier ? ` + ${modifier}` : ""}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 

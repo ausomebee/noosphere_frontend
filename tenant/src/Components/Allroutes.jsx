@@ -170,6 +170,10 @@ const ViewRequestDetails = React.lazy(() =>
 
 const Settings = React.lazy(() => import("../Pages/Settings/settings"));
 
+const Notifications = React.lazy(() =>
+  import("../Pages/Notifications/Notifications")
+);
+
 const ClientReportView = React.lazy(() =>
   import("../Pages/ClientReportView/ClientReportView")
 );
@@ -270,6 +274,7 @@ const AllRoutes = () => {
         <Route path="/help/support-requests/:requestId" element={<ViewRequestDetails />} />
         <Route path="/help/knowledge-base" element={<KnowledgeBase />} />
 
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
 
