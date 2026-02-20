@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { createPortal } from "react-dom";
 import { SwitchInput, CheckboxInput } from "../../../Components/Input/Inputs";
 import { FiMoreVertical } from "react-icons/fi";
@@ -22,6 +23,7 @@ import "../FeatureManagement.css";
 
 const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const dispatch = useDispatch();
+  const { accessToken, refreshToken } = useAuth();
   const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
   const [modalState, setModalState] = useState({
@@ -38,10 +40,6 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const rowDropdownRef = useRef(null);
-
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
 
   const handleSelectFeature = () => {
     dispatch(toggleSelectFeature({ groupTitle, featureId: feature.id }));

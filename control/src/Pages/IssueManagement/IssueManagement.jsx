@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 import { SelectInput } from "../../Components/Input/Inputs";
 import Chart from "react-apexcharts";
@@ -23,9 +23,7 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
 
 const IssueManagement = () => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   const [selectedFilter, setSelectedFilter] = useState("by category");
   const [isModalOpen, setIsModalOpen] = useState(false);

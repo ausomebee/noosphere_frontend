@@ -7,7 +7,8 @@ import Button from "../../../Components/Button/Button";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import { useNavigate, useParams } from "react-router-dom";
 import "../SuperAdmin.css";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { OnboardAdmin } from "../../../ReduxStore/features/authentication";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
@@ -33,7 +34,7 @@ const AdminOnboarding = () => {
   const { userId, email } = useParams(); // Extract userId and email from route params
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.authentication);
+  const { loading } = useAuth();
 
   const {
     register,

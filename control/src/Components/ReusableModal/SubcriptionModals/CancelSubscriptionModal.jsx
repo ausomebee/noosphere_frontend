@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput, SelectInput, RadioInput, CheckboxInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
+  const [loading, setLoading] = useState(false);
+
   const schema = yup.object().shape({
     cancellationType: yup.string().required("Cancellation type is required"),
     reason: yup.string().required("Reason is required"),
@@ -28,9 +30,10 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
     },
   });
 
-  const onSubmit = (data) => {
-    if (data.cancellationType && data.reason && data.understandIrreversible) {
-      onSave({
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      await onSave({
         items: selectedItems,
         cancellationType: data.cancellationType,
         reason: data.reason,
@@ -39,6 +42,10 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       });
       reset();
       onClose();
+    } catch {
+      // Parent already shows error toast — modal stays open
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +59,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       title="Cancel Subscription"
       primaryButtonText="Cancel"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       primaryButtonColor="#D92D20"
       onSecondaryButtonClick={() => {

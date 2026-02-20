@@ -7,7 +7,7 @@ import Button from "../../../Components/Button/Button";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
 import api from "../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema for OTP
@@ -19,7 +19,7 @@ const otpSchema = yup.object().shape({
 });
 
 const SuperAdmin2FAAuthenticatorLogin = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);

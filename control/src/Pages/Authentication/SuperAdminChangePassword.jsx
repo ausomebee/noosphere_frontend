@@ -8,7 +8,7 @@ import Logo from "../../assets/NoosphereLogo-white.png";
 import { useNavigate } from "react-router-dom";
 import "./SuperAdmin.css";
 import api from "../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 
 // Validation schema
@@ -28,7 +28,7 @@ const schema = yup.object().shape({
 });
 
 const SuperAdminChangePassword = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
+  const { userId } = useAuth();
   const navigate = useNavigate();
 
   const {

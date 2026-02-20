@@ -8,7 +8,6 @@
 
 .issue-mgmt-overview-cards {
   display: flex;
-  grid-template-columns: repeat(auto-fit, minmax(2, 1fr));
   gap: 20px;
 }
 
@@ -87,10 +86,6 @@
   margin-top: 30px;
 }
 
-button {
-  cursor: pointer;
-}
-
 .issue-mgt-modal-content {
   padding: 30px;
 }
@@ -128,8 +123,8 @@ button {
   display: flex;
 }
 .issues-management-view{
-  width: 1000px;
-
+  width: 100%;
+  max-width: 1000px;
 }
 
 /* ===== Tablet (max-width: 992px) ===== */

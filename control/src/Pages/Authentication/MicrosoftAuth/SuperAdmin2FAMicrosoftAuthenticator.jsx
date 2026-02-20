@@ -11,7 +11,7 @@ import shieldLogo from "../../../assets/shield.svg";
 import "../SuperAdmin.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/authApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Yup validation schema for password setup
@@ -36,10 +36,8 @@ const passwordSchema = yup.object().shape({
 });
 
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
-  const userId = useSelector((state) => state.authentication?.user?.id);
-  const superAdmin = useSelector(
-    (state) => state.authentication?.user?.superAdmin
-  );
+  const { userId, user } = useAuth();
+  const superAdmin = user?.superAdmin;
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

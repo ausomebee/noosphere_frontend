@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 import Button from "../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -37,9 +37,7 @@ const PlansAndPayment = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   useEffect(() => {
     if (accessToken && refreshToken) {
@@ -367,6 +365,7 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to create plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Create plan error:", err);
+    throw err;
   } finally {
     setLoading(false);
   }
@@ -451,10 +450,9 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to update plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Update plan error:", err);
+    throw err;
   } finally {
     setLoading(false);
-    setIsEditModalOpen(false);
-    setSelectedPlan(null);
   }
 };
 
@@ -554,16 +552,17 @@ const handleSavePlan = async (planData) => {
         );
       }
       showToast(`Plan ${action}d successfully`, "success");
+      setIsStatusModalOpen(false);
+      setSelectedPlan(null);
+      setStatusAction("");
       await fetchData();
     } catch (err) {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
       if (import.meta.env.DEV) console.error("Status change error:", err);
+      throw err;
     } finally {
       setLoading(false);
-      setIsStatusModalOpen(false);
-      setSelectedPlan(null);
-      setStatusAction("");
     }
   };
 
@@ -605,15 +604,16 @@ const handleSavePlan = async (planData) => {
         setEnterprisePlans((prev) => prev.filter((p) => p.id !== plan.id));
       }
       showToast("Plan deleted successfully", "success");
+      setIsDeleteModalOpen(false);
+      setSelectedPlan(null);
       await fetchData();
     } catch (err) {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
       if (import.meta.env.DEV) console.error("Delete plan error:", err);
+      throw err;
     } finally {
       setLoading(false);
-      setIsDeleteModalOpen(false);
-      setSelectedPlan(null);
     }
   };
 
@@ -838,6 +838,7 @@ const handleSavePlan = async (planData) => {
         features={Array.isArray(features) ? features : []}
         admins={Array.isArray(admins) ? admins : []}
         tenants={Array.isArray(tenants) ? tenants : []}
+        primaryButtonLoading={loading}
       />
 
       <StatusChangeModal
@@ -846,6 +847,7 @@ const handleSavePlan = async (planData) => {
         onConfirm={handleConfirmStatusChange}
         plan={selectedPlan}
         action={statusAction}
+        primaryButtonLoading={loading}
       />
 
       <EditPricingModal
@@ -856,6 +858,7 @@ const handleSavePlan = async (planData) => {
         features={Array.isArray(features) ? features : []}
         admins={Array.isArray(admins) ? admins : []}
         tenants={Array.isArray(tenants) ? tenants : []}
+        primaryButtonLoading={loading}
       />
 
       <DeletePlanModal
@@ -863,6 +866,7 @@ const handleSavePlan = async (planData) => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         plan={selectedPlan}
+        primaryButtonLoading={loading}
       />
     </>
   );

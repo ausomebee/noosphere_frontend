@@ -16,6 +16,7 @@ const ReusableModal = ({
   onTabChange,
   onPrimaryButtonClick,
   onSecondaryButtonClick,
+  primaryButtonLoading = false,
   children,
 }) => {
   const [scrollPosition, setScrollPosition] = React.useState(0);
@@ -91,8 +92,13 @@ const ReusableModal = ({
             onClick={onPrimaryButtonClick || onClose}
             className="modal-button primary-button"
             style={{ backgroundColor: primaryButtonColor || '#000000', color: '#ffffff' }}
+            disabled={primaryButtonLoading}
           >
-            {primaryButtonText || 'Save'}
+            {primaryButtonLoading ? (
+              <span className="modal-button-spinner" />
+            ) : (
+              primaryButtonText || 'Save'
+            )}
           </button>
         </div>
       </div>
@@ -119,6 +125,7 @@ ReusableModal.propTypes = {
   onTabChange: PropTypes.func,
   onPrimaryButtonClick: PropTypes.func,
   onSecondaryButtonClick: PropTypes.func,
+  primaryButtonLoading: PropTypes.bool,
   children: PropTypes.node,
 };
 

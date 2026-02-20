@@ -5,14 +5,12 @@ import CustomTable from "../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../Components/Input/Inputs";
 import api from "../../api/InvoiceApi";
 import api2 from "../../api/TenantApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
 
 const BillingManager = () => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState("invoices");
   const [activeSubTab, setActiveSubTab] = useState("all");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -19,10 +19,7 @@ import api from "../../api/IssueApi";
 import { showToast } from "../../Helper/ShowToast";
 
 const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken, userId: adminId } = useAuth();
 
   const [issueData, setIssueData] = useState(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
@@ -273,6 +270,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to add comment: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -291,6 +289,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to edit issue: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -311,6 +310,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to add attachment: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -328,6 +328,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change category: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -345,6 +346,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change priority: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -362,6 +364,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to reassign issue: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -379,6 +382,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change status: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -401,6 +405,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to send email: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -423,6 +428,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to mark as resolved: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -787,7 +793,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
-                      viewBox="0 0 24  beyond 24"
+                      viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"

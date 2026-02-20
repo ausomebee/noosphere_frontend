@@ -8,7 +8,8 @@ import Logo from "../../assets/NoosphereLogo-white.png";
 import { useNavigate } from "react-router-dom";
 import "./SuperAdmin.css";
 import { AdminLogin } from "../../ReduxStore/features/authentication";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/authApis";
 
@@ -32,7 +33,7 @@ const AdminsLogin = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const { loading } = useSelector((state) => state.authentication);
+  const { loading } = useAuth();
 
   const handleGetSuperAdminChoice = async () => {
     try {

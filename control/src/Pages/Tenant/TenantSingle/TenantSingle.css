@@ -4,9 +4,8 @@
   margin: 0 auto;
 }
 
-.tenant-header {
-  display: flex;
-  align-items: center;
+/* Override central .tenant-header for TenantSingle pages */
+.tenant-list-container .tenant-header {
   gap: 10px;
   border-bottom: 3px solid #eee;
   padding-bottom: 2rem;

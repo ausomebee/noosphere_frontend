@@ -10,6 +10,7 @@ import Button from "../../../../Components/Button/Button";
 import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvoice";
 import api from "../../../../api/AutoBillingInvoiceAPIs";
 import { showToast } from "../../../../Helper/ShowToast";
+import useAuth from "../../../../hooks/useAuth";
 
 const InvoiceManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -43,8 +44,7 @@ const InvoiceManagement = () => {
     dueInvoices: false,
   });
 
-  const accessToken = "your-access-token";
-  const refreshToken = "your-refresh-token";
+  const { accessToken, refreshToken } = useAuth();
 
   const fetchInvoiceSettings = useCallback(async () => {
     setIsLoading(true);

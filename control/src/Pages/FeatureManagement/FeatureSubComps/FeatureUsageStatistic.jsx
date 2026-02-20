@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Chart from "react-apexcharts";
-import '../../Tenant/TenantList/TenantList.css';
 import { SelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { IoIosArrowForward } from "react-icons/io";

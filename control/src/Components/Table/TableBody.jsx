@@ -1,0 +1,311 @@
+import React from "react";
+import {
+  CheckboxInput,
+  SwitchInput,
+} from "../Input/Inputs";
+
+const TableBody = ({
+  columns,
+  currentData,
+  showCheckbox,
+  showActions,
+  actions,
+  selectedRows,
+  handleCheckboxChange,
+  handleSelectAllChange,
+  handleToggleActive,
+  toggleDropdown,
+  openDropdown,
+  setOpenDropdown,
+  menuRefs,
+  tableContainerRef,
+  tableName,
+  hasStatusDot,
+  startIndex,
+}) => {
+  return (
+    <div
+      className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar"
+      ref={tableContainerRef}
+    >
+      <table className="custom-table">
+        <thead>
+          <tr>
+            {showCheckbox && (
+              <th className="checkbox-column">
+                <CheckboxInput
+                  checked={
+                    selectedRows.length > 0 &&
+                    selectedRows.length ===
+                      currentData.filter((row) => row.hasCheckbox).length
+                  }
+                  onChange={handleSelectAllChange}
+                />
+              </th>
+            )}
+            {columns.map((col, index) => (
+              <th key={index}>{col.header}</th>
+            ))}
+            {showActions && <th>Action</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {currentData.length === 0 ? (
+            <tr>
+              <td
+                colSpan={
+                  columns.length + (showActions ? 2 : showCheckbox ? 1 : 0)
+                }
+                className="table-empty-state"
+              >
+                <div className="table-empty-state-content">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="table-empty-state-icon"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  <span>Nothing to show here for {tableName} Table</span>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            currentData.map((row, rowIndex) => (
+              <tr key={row.item_id || rowIndex}>
+                {showCheckbox && row.hasCheckbox && (
+                  <td className="checkbox-column">
+                    <CheckboxInput
+                      checked={selectedRows.includes(rowIndex)}
+                      onChange={() => handleCheckboxChange(rowIndex, row)}
+                    />
+                  </td>
+                )}
+                {columns.map((col, colIndex) => (
+                  <td key={colIndex} className="table-cell">
+                    {col.hasColumnActions ? (
+                      <div className="action-menu">
+                        <button
+                          className="action-button"
+                          onClick={() => toggleDropdown(rowIndex, colIndex)}
+                          ref={(el) => {
+                            const key = `${rowIndex}-${colIndex}`;
+                            if (!menuRefs.current[key]) {
+                              menuRefs.current[key] = {};
+                            }
+                            menuRefs.current[key].button = el;
+                          }}
+                        >
+                          {row[col.key]}
+                        </button>
+                        {openDropdown === `${rowIndex}-${colIndex}` && (
+                          <div
+                            className="action-dropdown"
+                            ref={(el) => {
+                              const key = `${rowIndex}-${colIndex}`;
+                              if (!menuRefs.current[key]) {
+                                menuRefs.current[key] = {};
+                              }
+                              menuRefs.current[key].dropdown = el;
+                            }}
+                            style={{ zIndex: 1000 }}
+                          >
+                            {col.columnActions.map((action, index) => (
+                              <button
+                                key={index}
+                                className={`dropdown-item ${
+                                  action.className || ""
+                                }`}
+                                onClick={() => {
+                                  action.onClick(row);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : col.type === "stage_completion" ? (
+                      <div className="progress-bars">
+                        <div
+                          className="progress-fills"
+                          style={{ width: `${row[col.key]}%` }}
+                        ></div>
+                        <span className="progress-texts">{`${row[col.key]}%`}</span>
+                      </div>
+                    ) : col.type === "plan" ? (
+                      <span
+                        className={`plan-label plan-${row[col.key].toLowerCase()}`}
+                      >
+                        {row[col.key]}
+                      </span>
+                    ) : col.type === "subscription_status" ? (
+                      <span
+                        className={`subscription_status-label subscription_status-${row[
+                          col.key
+                        ].toLowerCase()}`}
+                      >
+                        <span className="status-dot" />
+                        {row[col.key]}
+                      </span>
+                    ) : col.type === "payment_status" ? (
+                      <span
+                        className={`payment_status-label payment_status-${row[
+                          col.key
+                        ].toLowerCase()}`}
+                      >
+                        {row[col.key]}
+                      </span>
+                    ) : col.type === "status" ? (
+                      <span
+                        className={`status-label status-${row[
+                          col.key
+                        ].toLowerCase()}`}
+                      >
+                        {hasStatusDot && <span className="status-dot" />}
+                        {row[col.key]}
+                      </span>
+                    ) : col.type === "document" ? (
+                      <div className="document-cell">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="table-document-icon"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        {row[col.key]}
+                      </div>
+                    ) : col.type === "severity" ? (
+                      <span
+                        className={`severity-label severity-${row[
+                          col.key
+                        ].toLowerCase()}`}
+                      >
+                        {row[col.key]}
+                      </span>
+                    ) : col.type === "active" ? (
+                      <SwitchInput
+                        checked={row[col.key]}
+                        onChange={() => handleToggleActive(rowIndex)}
+                      />
+                    ) : col.type === "day_time" ? (
+                      <div className="day-time-cell">
+                        {row[col.key] ? (
+                          <>
+                            <span>{row[col.key].date || "N/A"}</span>
+                            <span>{row[col.key].time || "N/A"}</span>
+                          </>
+                        ) : (
+                          <span>N/A</span>
+                        )}
+                      </div>
+                    ) : col.type === "priority" ? (
+                      <span
+                        className={`priority-label priority-${row[col.key]
+                          .toLowerCase()
+                          .replace(/[\s-]/g, "-")}`}
+                      >
+                        {row[col.key]}
+                      </span>
+                    ) : (
+                      row[col.key]
+                    )}
+                  </td>
+                ))}
+                {showActions && (
+                  <td className="action-cell">
+                    {row.hasActions && (
+                      <div className="action-menu">
+                        <button
+                          className="action-button"
+                          onClick={() => toggleDropdown(rowIndex, "action")}
+                          ref={(el) => {
+                            const key = `${rowIndex}-action`;
+                            if (!menuRefs.current[key]) {
+                              menuRefs.current[key] = {};
+                            }
+                            menuRefs.current[key].button = el;
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="12" cy="5" r="1" />
+                            <circle cx="12" cy="19" r="1" />
+                          </svg>
+                        </button>
+                        {openDropdown === `${rowIndex}-action` && (
+                          <div
+                            className="action-dropdown"
+                            ref={(el) => {
+                              const key = `${rowIndex}-action`;
+                              if (!menuRefs.current[key]) {
+                                menuRefs.current[key] = {};
+                              }
+                              menuRefs.current[key].dropdown = el;
+                            }}
+                          >
+                            {actions.map((action, index) => (
+                              <button
+                                key={index}
+                                className={`dropdown-item ${
+                                  action.className || ""
+                                }`}
+                                onClick={() => {
+                                  action.onClick(row);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default TableBody;

@@ -4,7 +4,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput } from "../Input/Inputs";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { updateCandidate } from "../../ReduxStore/features/PipelineSlice";
 import { showToast } from "../../Helper/ShowToast";
 import { useNavigate } from "react-router-dom";
@@ -40,8 +41,7 @@ const EditProspectModal = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const { accessToken, refreshToken, userId: adminId } = useAuth();
 
   const {
     register,
@@ -133,8 +133,8 @@ const EditProspectModal = ({
         updateCandidate({
           id: initialFormData.id,
           ...updatedData,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -161,13 +161,13 @@ const EditProspectModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Edit information"
-      primaryButtonText={isSubmitting ? "Saving..." : "Save candidate"}
+      primaryButtonText="Save candidate"
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={onClose}
-      primaryButtonDisabled={isSubmitting}
+      primaryButtonLoading={isSubmitting}
     >
       <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
         <TextInput

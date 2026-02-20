@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
@@ -55,6 +55,8 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
     return baseOptions;
   }, [isEnterprise]);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
 
     if (isOpen) {
@@ -70,10 +72,16 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
 
   const onSubmit = async (data) => {
     if (data.priorityTo && data.priorityFrom === initialPriority) {
-      await onSave(data.priorityTo);
-      reset({ priorityFrom: initialPriority || "", priorityTo: "" });
-      onClose();
-    } else {
+      setLoading(true);
+      try {
+        await onSave(data.priorityTo);
+        reset({ priorityFrom: initialPriority || "", priorityTo: "" });
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -87,6 +95,7 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
       title="Change Priority"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset({ priorityFrom: initialPriority || "", priorityTo: "" });

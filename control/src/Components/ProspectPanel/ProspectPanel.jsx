@@ -23,6 +23,7 @@ import AssignCandidateModal from "../ReusableModal/AssignCandidateModal";
 import { FaArrowLeft, FaDollarSign } from "react-icons/fa";
 import Alert from "../Alert/Alert";
 import { useDispatch, useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import {
   fetchSinglePipelineItem,
   fetchSinglePipelineStages,
@@ -150,7 +151,7 @@ const ProspectPanel = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { pipelineStageId, pipelineItemId } = useParams();
-  const token = useSelector((state) => state.authentication?.user?.token);
+  const { accessToken, refreshToken } = useAuth();
 
   const pipelineItem = useSelector(selectPipelineItem);
   const pipelineId = useSelector((state) => state.pipeline.pipeline?.id);
@@ -215,7 +216,7 @@ const ProspectPanel = () => {
   }, [columns, stages, pipelineStageId]);
 
   const fetchStaffAndStages = useCallback(async () => {
-    if (!token) {
+    if (!accessToken) {
       setFetchError("Authentication token not available.");
       showToast("Authentication token not available.", "error");
       return;
@@ -224,14 +225,14 @@ const ProspectPanel = () => {
     try {
       const [adminsResponse, stagesResponse] = await Promise.all([
         api.getAllAdmins({
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         }),
         pipelineId
           ? api.GetPipelineStage({
               pipelineId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           : Promise.resolve({ data: { data: [] } }),
       ]);
@@ -256,7 +257,7 @@ const ProspectPanel = () => {
       setFetchError("Failed to load staff or stages.");
       showToast("Failed to load staff or stages.", "error");
     }
-  }, [token, pipelineId]);
+  }, [accessToken, refreshToken, pipelineId]);
 
   useEffect(() => {
     const hasGenerated = localStorage.getItem(
@@ -267,7 +268,7 @@ const ProspectPanel = () => {
     }
 
     const fetchData = async () => {
-      if (!pipelineItemId || !pipelineStageId || !token) {
+      if (!pipelineItemId || !pipelineStageId || !accessToken) {
         setFetchError("Missing required parameters or authentication token.");
         setIsLoading(false);
         return;
@@ -279,22 +280,22 @@ const ProspectPanel = () => {
           dispatch(
             fetchSinglePipelineItem({
               itemId: pipelineItemId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           dispatch(
             fetchSinglePipelineStages({
               pipelineStageId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           dispatch(
             fetchPipelineStages({
               pipelineId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           fetchStaffAndStages(),
@@ -313,7 +314,8 @@ const ProspectPanel = () => {
     dispatch,
     pipelineItemId,
     pipelineStageId,
-    token,
+    accessToken,
+    refreshToken,
     pipelineId,
     fetchStaffAndStages,
   ]);
@@ -450,8 +452,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredTasks[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -489,8 +491,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredDocuments[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -525,8 +527,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredDocuments[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -539,8 +541,8 @@ const ProspectPanel = () => {
         updatePipelineItemDocumentToDone({
           pipelineItemId,
           documents: updatedSentDocuments,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -571,8 +573,8 @@ const ProspectPanel = () => {
         updatePipelineItemTaskToDone({
           pipelineItemId,
           doneTasks: updatedDoneTasks,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -600,8 +602,8 @@ const ProspectPanel = () => {
         updatePipelineItemDocumentToDone({
           pipelineItemId,
           documents: updatedSentDocuments,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -632,8 +634,8 @@ const ProspectPanel = () => {
         updatePipelineItemActivity({
           ids: [pipelineItemId],
           pipelineStageId: targetStageId,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -688,8 +690,8 @@ const ProspectPanel = () => {
         reassignCandidateToStaff({
           ids: [pipelineItemId],
           assignToAdmin: staffId,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -715,8 +717,8 @@ const ProspectPanel = () => {
       const response = await dispatch(
         deletePipelineItem({
           ids: [pipelineItemId],
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -732,7 +734,7 @@ const ProspectPanel = () => {
     }
   };
 
-  if (!token) {
+  if (!accessToken) {
     return <div>Please log in to view this page.</div>;
   }
 
@@ -1096,8 +1098,8 @@ const ProspectPanel = () => {
           }))}
           currentColumnId={pipelineStageId}
           taskIds={[pipelineItemId]}
-          accessToken={token}
-          refreshToken={token}
+          accessToken={accessToken}
+          refreshToken={refreshToken}
           dispatch={dispatch}
         />
         <AssignCandidateModal

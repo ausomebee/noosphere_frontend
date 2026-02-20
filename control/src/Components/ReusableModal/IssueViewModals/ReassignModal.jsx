@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
@@ -34,6 +34,8 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     })),
   ];
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (isOpen && initialAssignee) {
       const staff = staffList.find((s) => s.name === initialAssignee);
@@ -45,9 +47,16 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
 
   const onSubmit = async (data) => {
     if (data.currentAssignee && data.newAssignee) {
-      await onSave(data.newAssignee);
-      reset();
-      onClose();
+      setLoading(true);
+      try {
+        await onSave(data.newAssignee);
+        reset();
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -61,6 +70,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
       title="Reassign to Staff"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

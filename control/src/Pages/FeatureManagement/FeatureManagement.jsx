@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 import Button from "../../Components/Button/Button";
 import { FiSettings } from "react-icons/fi";
@@ -44,9 +45,7 @@ const FeatureManagement = () => {
 
   const headerDropdownRef = useRef(null);
 
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   useEffect(() => {
     if (accessToken && refreshToken) {

@@ -7,7 +7,7 @@ import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput } from "../Input/Inputs";
 import api from "../../api/TenantApis";
 import { showToast } from "../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 const schema = yup.object().shape({
   companyName: yup.string().required("Company Name is required").trim(),
@@ -60,7 +60,7 @@ const AddProspectModal = ({
   pipelineStageId, // Added to preselect the current stage
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const { userId: adminId } = useAuth();
   const {
     register,
     handleSubmit,
@@ -185,9 +185,9 @@ const AddProspectModal = ({
         onClose();
       }}
       title="Add a new candidate"
-      primaryButtonText={isLoading ? "Saving..." : "Save candidate"}
+      primaryButtonText="Save candidate"
       secondaryButtonText="Cancel"
-      primaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);

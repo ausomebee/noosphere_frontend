@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
@@ -49,6 +49,8 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
     []
   );
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (isOpen && initialCategory) {
       setValue("categoryFrom", initialCategory, { shouldValidate: true });
@@ -59,9 +61,16 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
 
   const onSubmit = async (data) => {
     if (data.categoryFrom && data.categoryTo) {
-      await onSave(data.categoryTo);
-      reset();
-      onClose();
+      setLoading(true);
+      try {
+        await onSave(data.categoryTo);
+        reset();
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -75,6 +84,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
       title="Change category"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

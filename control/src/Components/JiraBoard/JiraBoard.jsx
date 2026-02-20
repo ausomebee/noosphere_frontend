@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import {
   DndContext,
   rectIntersection,
@@ -66,9 +67,7 @@ const JiraBoard = () => {
   const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } = useSelector(
     (state) => state.pipeline
   );
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
   const [loadingCount, setLoadingCount] = useState(0);
   const isLoading = loadingCount > 0;
   const [localTasks, setLocalTasks] = useState({});

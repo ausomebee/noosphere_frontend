@@ -6,6 +6,7 @@ import { BsCloudUpload } from "react-icons/bs";
 const AddAttachmentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files).map((file) => {
@@ -70,10 +71,17 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessT
   const handleSave = async () => {
     const validFile = files.find((f) => !f.error && f.progress === 100);
     if (validFile) {
-      await onSave(validFile.file);
-      setFiles([]);
-      setUploading(false);
-      onClose();
+      setLoading(true);
+      try {
+        await onSave(validFile.file);
+        setFiles([]);
+        setUploading(false);
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -89,6 +97,7 @@ const AddAttachmentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessT
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={uploading || !files.some((f) => !f.error && f.progress === 100)}
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={() => {
         setFiles([]);

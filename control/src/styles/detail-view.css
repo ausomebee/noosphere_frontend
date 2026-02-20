@@ -1,0 +1,464 @@
+/* ===== Shared Detail View Styles ===== */
+/* Central CSS for all detail/tab pages (ViewIssue, TenantList, Billing, Features, etc.) */
+
+/* Header */
+.tenant-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 20px;
+  color: #333;
+}
+
+.back-button svg {
+  margin-right: 5px;
+}
+
+.header-info {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.header-info h1 {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-info p {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+/* Dropdown */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  width: 200px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  position: absolute;
+  top: 50px;
+  right: 15px;
+}
+
+.dropdown-menu-header {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  margin-right: 16px;
+}
+
+.dropdown-menu-row {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  margin-right: 16px;
+}
+
+.dropdown-items {
+  padding: 8px 0;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+.dropdown-item-danger {
+  color: #dc2626;
+}
+
+.dropdown-item-danger:hover {
+  background-color: #f3f4f6;
+}
+
+/* Section Headers */
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header-actions h2 {
+  font-size: 16px;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Payment / Issue Info Section */
+.payment-info {
+  margin-top: 24px;
+}
+
+.payment-info h2 {
+  font-size: 18px;
+  color: #A1A8B3;
+}
+
+/* Table Actions */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-menu {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.action-dropdown {
+  position: absolute;
+  margin-top: 8px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Details Table */
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.details-table th,
+.details-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.details-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  border: 1px solid #e0e0e0;
+}
+
+.details-table thead tr:first-child th:first-child {
+  border-top-left-radius: 20px;
+}
+
+.details-table thead tr:first-child th:last-child {
+  border-top-right-radius: 20px;
+}
+
+.details-table td {
+  font-size: 14px;
+  color: #444;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.details-table th:first-child,
+.details-table td:first-child {
+  width: 25%;
+  max-width: 180px;
+}
+
+/* Priority Labels */
+.priority-label {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.priority-enterprise-critical {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+.priority-enterprise-high {
+  background-color: #F79009;
+  color: #fff;
+}
+
+.priority-critical {
+  background-color: #FEF3F2;
+  color: #B42318;
+}
+
+.priority-high {
+  background-color: #FFFAEB;
+  color: #B54708;
+}
+
+.priority-medium {
+  background-color: #F8F9FC;
+  color: #363F72;
+}
+
+.priority-low {
+  background-color: #F7F7F7;
+  color: #4B4E54;
+}
+
+/* Attachment Links */
+.attachment-link {
+  display: inline-flex;
+  align-items: center;
+  color: #0066cc;
+  text-decoration: none;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.attachment-link svg {
+  margin-right: 5px;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+/* Section Containers */
+.description,
+.activity-history,
+.documents-section {
+  margin-bottom: 30px;
+}
+
+/* Documents List */
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background-color: #f9fafc;
+  transition: all 0.2s;
+}
+
+.document-item:hover {
+  background-color: #f5f7fa;
+}
+
+.document-icon {
+  margin-right: 10px;
+  color: #0066cc;
+}
+
+.document-link {
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.document-link:hover {
+  text-decoration: underline;
+}
+
+/* Comments Section */
+.issues-comments-section {
+  margin-top: 20px;
+}
+
+.issues-comments-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.issues-comments-list {
+  padding: 10px 0;
+}
+
+.issues-comment-item {
+  margin-bottom: 20px;
+}
+
+.issues-comment-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.issues-comment-date {
+  font-weight: 600;
+  font-size: 12px;
+  color: #5C6167;
+}
+
+.issues-comment-user {
+  font-weight: 500;
+  font-size: 14px;
+  color: #A1A8B3;
+}
+
+.issues-comment-action {
+  font-weight: 400;
+}
+
+.issues-comment-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Tabs */
+.subscription-tabs-container {
+  width: 100%;
+  display: flex;
+  padding: 10px 10px;
+}
+
+.subscription-tab {
+  flex: 1;
+  padding: 5px 15px;
+  border: none;
+  background: none;
+  border-bottom: 1px solid #ececec;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.subscription-tab.active {
+  border-bottom: 2px solid #242528;
+  font-weight: bold;
+}
+
+/* Tab Count Badge */
+.candidate-count,
+.tab-count {
+  background: #F7F7F7;
+  color: #4B4E54;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+
+/* ===== Tablet (max-width: 992px) ===== */
+@media (max-width: 992px) {
+  .tenant-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .back-button {
+    margin-bottom: 10px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-actions {
+    margin-top: 10px;
+  }
+}
+
+/* ===== Mobile (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .details-table th,
+  .details-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .tenant-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .header-info {
+    text-align: left;
+  }
+
+  .header-info h1 {
+    font-size: 18px;
+  }
+
+  .dropdown-menu {
+    width: 180px;
+  }
+
+  .issues-comment-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .subscription-tabs-container {
+    padding: 8px 4px;
+  }
+
+  .subscription-tab {
+    font-size: 13px;
+    padding: 5px 8px;
+  }
+
+  .candidate-count,
+  .tab-count {
+    font-size: 11px;
+  }
+}

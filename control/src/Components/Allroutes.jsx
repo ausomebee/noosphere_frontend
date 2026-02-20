@@ -45,6 +45,7 @@ const AutoBilling = lazy(() => import("../Pages/BillingsAndPayment/BillingReport
 const MainPerformance = lazy(() => import("../Pages/Performance/MainPerformance"));
 const IssueManagement = lazy(() => import("../Pages/IssueManagement/IssueManagement"));
 const ControlSettings = lazy(() => import("../Pages/Settings/ControlSettings"));
+const SecuritySettings = lazy(() => import("../Pages/Settings/SecuritySettings"));
 
 const AllRoutes = () => {
   return (
@@ -98,7 +99,7 @@ const AllRoutes = () => {
           {/* Settings */}
           <Route path="/settings/roles-permissions" element={<ControlSettings />} />
           <Route path="/settings/notification-alerts" element={<div>Notification & Alerts Page</div>} />
-          <Route path="/settings/securitySettings" element={<div>Security Settings Page</div>} />
+          <Route path="/settings/securitySettings" element={<SecuritySettings />} />
         </Route>
       </Routes>
     </Suspense>

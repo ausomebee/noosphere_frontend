@@ -1,10 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import api from '../../api/authApis'; 
+import api from '../../api/authApis';
 
 const initialState = {
   isAuthenticated: false,
-  user: null,         
-  token: null,        
+  user: null,
+  accessToken: null,
+  refreshToken: null,
   loading: false,
   error: null,
 };
@@ -14,7 +15,7 @@ export const AdminLogin = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await api.AdminLogin({ email, password });
-      return response.data; 
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -26,7 +27,7 @@ export const OnboardAdmin = createAsyncThunk(
   async ({ id, password }, { rejectWithValue }) => {
     try {
       const response = await api.AdminOnboarding({ id, password });
-      return response.data; 
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -40,8 +41,12 @@ const authenticationSlice = createSlice({
     logout(state) {
       state.isAuthenticated = false;
       state.user = null;
-      state.token = null;
+      state.accessToken = null;
+      state.refreshToken = null;
       state.error = null;
+    },
+    updateAccessToken(state, action) {
+      state.accessToken = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -56,7 +61,8 @@ const authenticationSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = userData;
-        state.token = userData.token;
+        state.accessToken = userData.accessToken;
+        state.refreshToken = userData.refreshToken;
       })
       .addCase(AdminLogin.rejected, (state, action) => {
         state.loading = false;
@@ -72,7 +78,8 @@ const authenticationSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = userData;
-        state.token = userData.token;
+        state.accessToken = userData.accessToken;
+        state.refreshToken = userData.refreshToken;
       })
       .addCase(OnboardAdmin.rejected, (state, action) => {
         state.loading = false;
@@ -81,5 +88,5 @@ const authenticationSlice = createSlice({
   },
 });
 
-export const { logout } = authenticationSlice.actions;
+export const { logout, updateAccessToken } = authenticationSlice.actions;
 export default authenticationSlice.reducer;

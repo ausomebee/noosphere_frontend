@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput, SelectInput, RadioInput, CheckboxInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
+  const [loading, setLoading] = useState(false);
+
   const schema = yup.object().shape({
     resumptionType: yup.string().required("Resumption type is required"),
     reason: yup.string().required("Reason is required"),
@@ -36,9 +38,10 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
 
   const resumptionType = watch("resumptionType");
 
-  const onSubmit = (data) => {
-    if (data.resumptionType && data.reason) {
-      onSave({
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      await onSave({
         items: selectedItems,
         resumptionType: data.resumptionType,
         reason: data.reason,
@@ -48,6 +51,10 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       });
       reset();
       onClose();
+    } catch {
+      // Parent already shows error toast — modal stays open
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,6 +68,7 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       title="Resume Subscription"
       primaryButtonText="Resume"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

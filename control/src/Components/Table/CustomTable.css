@@ -13,18 +13,17 @@
 }
 
 .table-filter-select{
-  margin-bottom: -40px;
-  margin-top: 10px;
   border-radius: 20px !important;
-  width: 150px;
+  width: 180px;
 }
 .filter-label{
-  width: 200px;
-   border-radius: 20px;
+  width: 180px;
+  border-radius: 20px;
 }
 
 .filter-value-select-container{
-  margin-bottom: -10px !important;
+  display: flex;
+  align-items: center;
 }
 
 .table-header {
@@ -37,10 +36,25 @@
 .search-filters-container {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 12px;
 }
 .search-container {
-  flex: 1;
+  width: 200px;
+}
+
+/* Remove input-group bottom margin inside the table header */
+.table-header .input-group {
+  margin-bottom: 0 !important;
+}
+
+/* Match search input height to select input height */
+.table-header .input-search {
+  padding: 12px 12px 12px 36px;
+}
+
+.table-header .search-icon {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .filters-container {
@@ -51,13 +65,14 @@
 
 .filter-text {
   font-size: 0.9rem;
-
+  white-space: nowrap;
+  margin: 0;
 }
 
 .table-actions {
   display: flex;
   gap: 20px;
-  margin-bottom: 0.7rem;
+  align-items: center;
 }
 
 .action-button {
@@ -548,30 +563,6 @@
 /* Style for the filter value select input */
 .filter-value-select {
   min-width: 150px;
-  margin-bottom: -20px; /* Adjusted to match the original design */
-}
-
-
-
-
-/* Filter wrapper to position the select inputs inline */
-.filter-wrapper {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-
-}
-
-/* Filter select container */
-.filter-select-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Style for the filter value select input */
-.filter-value-select {
-  min-width: 150px;
 }
 
 /* Date filter input container */
@@ -580,7 +571,6 @@
   align-items: center;
   position: relative;
   gap: 8px;
-   margin-bottom: -20px;
   justify-content: end;
   border-radius: 16px;
 }

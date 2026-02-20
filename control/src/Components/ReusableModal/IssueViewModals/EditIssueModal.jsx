@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../Input/Inputs";
@@ -25,11 +25,20 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
     },
   });
 
+  const [loading, setLoading] = useState(false);
+
   const onSubmit = async (data) => {
     if (data.issueTitle.trim() && data.description.trim()) {
-      await onSave({ title: data.issueTitle, description: data.description });
-      reset();
-      onClose();
+      setLoading(true);
+      try {
+        await onSave({ title: data.issueTitle, description: data.description });
+        reset();
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -43,6 +52,7 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
       title="Edit issue"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();
