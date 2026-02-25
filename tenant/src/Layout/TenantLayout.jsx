@@ -22,11 +22,14 @@ import TenantLogo from "../assets/Logo.svg";
 import "./DashboardLayout.css";
 import { FiChevronDown } from "react-icons/fi";
 import useAuth from "../hooks/useAuth";
+import usePermissions from "../hooks/usePermissions";
 import MessageModal from "../Components/MessageModal/MessageModal";
 import NotificationAlert from "../Components/NotificationAlert/NotificationAlert";
+import useSocket from "../hooks/useSocket";
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   const location = useLocation();
+  const { hasModule, hasPermission } = usePermissions();
   const [expandedItems, setExpandedItems] = useState({});
 
   useEffect(() => {
@@ -35,82 +38,97 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
     }
   }, [isOpen]);
 
-  const navItems = [
-    { name: "Dashboard", icon: FaTachometerAlt, path: "/dashboard" },
+  const allNavItems = [
+    { name: "Dashboard", icon: FaTachometerAlt, path: "/dashboard", moduleKey: "DASHBOARD" },
     {
       name: "Scheduler",
       icon: FaCalendarAlt,
       path: "/scheduler",
+      moduleKey: "SCHEDULER",
       children: [
-        { name: "Calendar", path: "/scheduler/calendar" },
-        { name: "Appointments", path: "/scheduler/appointments" },
+        { name: "Calendar", path: "/scheduler/calendar", permissionKey: "view_calendar" },
+        { name: "Appointments", path: "/scheduler/appointments", permissionKey: "view_upcoming_appointments" },
       ],
     },
     {
       name: "Clients",
       icon: FaUsers,
       path: "/clients",
+      moduleKey: "CLIENTS",
       children: [
-        { name: "Pipeline", path: "/clients/pipeline" },
-        { name: "Client List", path: "/clients/client-list" },
+        { name: "Pipeline", path: "/clients/pipeline", permissionKey: "view_onboarding_pipeline" },
+        { name: "Client List", path: "/clients/client-list", permissionKey: "view_client_list" },
       ],
     },
     {
       name: "My Organization",
       icon: FaBuilding,
       path: "/organization",
+      moduleKey: "MY_ORGANIZATION",
       children: [
-        { name: "General", path: "/organization/general" },
-        { name: "Staff & Teams", path: "/organization/staff-and-teams" },
-        { name: "Practice Settings", path: "/organization/practice-settings" },
-        {
-          name: "Role & Permissions",
-          path: "/organization/role-and-permissions",
-        },
+        { name: "General", path: "/organization/general", permissionKey: "view_organization_information" },
+        { name: "Staff & Teams", path: "/organization/staff-and-teams", permissionKey: "view_staff_list" },
+        { name: "Practice Settings", path: "/organization/practice-settings", permissionKey: "view_diagnosis_codes" },
+        { name: "Role & Permissions", path: "/organization/role-and-permissions", permissionKey: "view_roles_list" },
       ],
     },
     {
       name: "Billing & Payments",
       icon: FaMoneyBillWave,
       path: "/billing",
+      moduleKey: "BILLINGS_PAYMENTS",
       children: [
-        { name: "Timesheets", path: "/billing/timesheets" },
-        { name: "Claims", path: "/billing/claims" },
-        { name: "Settings", path: "/billing/settings" },
+        { name: "Timesheets", path: "/billing/timesheets", permissionKey: "view_timesheets_list" },
+        { name: "Claims", path: "/billing/claims", permissionKey: "can_view_claims" },
+        { name: "Settings", path: "/billing/settings", permissionKey: "view_service_codes_list" },
       ],
     },
     {
       name: "Payroll",
       icon: FaReceipt,
       path: "/payroll",
+      moduleKey: "PAYROLL",
       children: [
-        { name: "Payroll", path: "/payroll/payroll-setup" },
-        { name: "Payroll Settings", path: "/payroll/payroll-settings" },
-        
+        { name: "Payroll", path: "/payroll/payroll-setup", permissionKey: "view_payroll_list" },
+        { name: "Payroll Settings", path: "/payroll/payroll-settings", permissionKey: "view_income_items_list" },
       ],
     },
-    { name: "Program Library", icon: FaBook, path: "/program-library" },
-    { name: "Reports", icon: FaChartBar, path: "/reports" },
+    { name: "Program Library", icon: FaBook, path: "/program-library", moduleKey: "PROGRAM_LIBRARY" },
+    { name: "Reports", icon: FaChartBar, path: "/reports", moduleKey: "REPORTS" },
     {
       name: "Custom Forms",
       icon: FaFileAlt,
       path: "/custom-forms",
+      moduleKey: "CUSTOM_FORMS",
       children: [
-        { name: "Forms", path: "/custom-forms/forms" },
-        { name: "Templates Library", path: "/custom-forms/templates-library" },
+        { name: "Forms", path: "/custom-forms/forms", permissionKey: "view_form_list" },
+        { name: "Templates Library", path: "/custom-forms/templates-library", permissionKey: "view_template_list" },
       ],
     },
     {
       name: "Help & Support",
       icon: FaQuestionCircle,
       path: "/help",
+      moduleKey: "HELP_SUPPORT",
       children: [
-        { name: "Support Requests", path: "/help/support-requests" },
-        { name: "Knowledge Base", path: "/help/knowledge-base" },
+        { name: "Support Requests", path: "/help/support-requests", permissionKey: "view_support_request_list" },
+        { name: "Knowledge Base", path: "/help/knowledge-base", permissionKey: "view_knowledge_base" },
       ],
     },
-    { name: "Settings", icon: FaCog, path: "/settings" },
+    { name: "Settings", icon: FaCog, path: "/settings", moduleKey: "SETTINGS" },
   ];
+
+  // Filter nav items based on module access, then filter children by permission
+  const navItems = allNavItems
+    .filter((item) => !item.moduleKey || hasModule(item.moduleKey))
+    .map((item) => {
+      if (!item.children) return item;
+      const filteredChildren = item.children.filter(
+        (child) => !child.permissionKey || hasPermission(child.permissionKey)
+      );
+      return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
+    })
+    .filter(Boolean);
 
   const toggleExpand = (name) => {
     setExpandedItems((prev) => ({
@@ -208,6 +226,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 
 const DashboardLayout = ({ children }) => {
   const { user } = useAuth();
+  const { isConnected } = useSocket();
   const navigate = useNavigate();
   const [messageCount] = useState(5);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 992);

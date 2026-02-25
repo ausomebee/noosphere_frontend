@@ -9,6 +9,7 @@ import AddDeductionModal from "../../../Components/ReusableModal/PayrollModal/Ad
 import EmployeeRow from "../../../Components/ReusableModal/PayrollModal/EmployeeRow";
 import AddStaffModal from "../../../Components/ReusableModal/PayrollModal/AddStaffModal";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
 
@@ -16,6 +17,7 @@ const ViewBreakDown = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportButtonRef = useRef(null);
   const exportDropdownRef = useRef(null);
@@ -367,7 +369,7 @@ const ViewBreakDown = () => {
       </div>
 
       <div className="flex justify-end items-center mb-6 gap-2">
-        {hasChanges && (
+        {hasChanges && hasPermission("edit_payroll_breakdown") && (
           <Button
             variant="primary"
             label="Submit"
@@ -375,14 +377,16 @@ const ViewBreakDown = () => {
             loading={submitting}
           />
         )}
-        <Button
-          variant="secondary"
-          label="Add Staff to Payroll"
-          icon={<FaPlus />}
-          onClick={() => setIsStaffModalOpen(true)}
-          aria-label="Add staff to payroll"
-        />
-        {selectedEmployees.length > 0 && (
+        {hasPermission("add_staff_to_payroll") && (
+          <Button
+            variant="secondary"
+            label="Add Staff to Payroll"
+            icon={<FaPlus />}
+            onClick={() => setIsStaffModalOpen(true)}
+            aria-label="Add staff to payroll"
+          />
+        )}
+        {selectedEmployees.length > 0 && hasPermission("remove_staff_from_payroll") && (
           <Button
             variant="secondary-danger"
             label="Remove from Payroll"

@@ -9,7 +9,17 @@ let socket = null;
  * Call once after login (e.g. in App or DashboardLayout).
  */
 export const connectSocket = ({ accessToken, userId, tenantId }) => {
-  if (socket?.connected) return socket;
+  if (socket?.connected) {
+    console.log("[Socket] Already connected, reusing socket:", socket.id);
+    return socket;
+  }
+
+  console.log("[Socket] Attempting connection...", {
+    url: SOCKET_URL,
+    userId,
+    tenantId,
+    hasToken: !!accessToken,
+  });
 
   socket = io(SOCKET_URL, {
     auth: { token: accessToken },
@@ -21,15 +31,27 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
   });
 
   socket.on("connect", () => {
-    console.log("Socket connected:", socket.id);
+    console.log("[Socket] Connected successfully! ID:", socket.id);
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("Socket disconnected:", reason);
+    console.warn("[Socket] Disconnected. Reason:", reason);
   });
 
   socket.on("connect_error", (err) => {
-    console.error("Socket connection error:", err.message);
+    console.error("[Socket] Connection error:", err.message);
+  });
+
+  socket.on("reconnect_attempt", (attempt) => {
+    console.log("[Socket] Reconnect attempt #" + attempt);
+  });
+
+  socket.on("reconnect", (attempt) => {
+    console.log("[Socket] Reconnected after", attempt, "attempts");
+  });
+
+  socket.on("reconnect_failed", () => {
+    console.error("[Socket] Reconnection failed after max attempts");
   });
 
   return socket;

@@ -7,6 +7,7 @@ import { RxCross2 } from "react-icons/rx";
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
 import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import api from "../../../../api/AppointmentApi";
 
 // Convert 24-hour time to 12-hour AM/PM
@@ -20,6 +21,7 @@ const convertTo12Hour = (timeStr) => {
 
 const RescheduleRequests = ({ counts, setCounts }) => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const role = authRole?.name ?? "Client";
 
   const [appointments, setAppointments] = useState([]);
@@ -338,26 +340,26 @@ const RescheduleRequests = ({ counts, setCounts }) => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("reschedule_appointments") && {
           label: "Approve",
           onClick: (item) =>
             handleApprove([item], () => handleSelectionChange([], [], true)),
         },
-        {
+        hasPermission("reschedule_appointments") && {
           label: "Reject",
           onClick: (item) => handleReject([item]),
         },
-        {
+        hasPermission("reschedule_appointments") && {
           label: "Modify",
           onClick: (item) => handleModify([item]),
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
   return (
     <div className="appointment-tab-content mt-20">
-      {selectedItems.length > 0 && (
+      {selectedItems.length > 0 && hasPermission("reschedule_appointments") && (
         <div className="flex justify-end mb-4 gap-4">
           <Button
             label="Approve"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import { PiListDashesBold } from "react-icons/pi";
 import Button from "../../../Components/Button/Button";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
@@ -35,6 +36,7 @@ const formatDate = (dateString) => {
 
 const General = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   /* -------------------------------------------------------------- */
   /* 1. ORGANISATION ---------------------------------------------- */
@@ -347,18 +349,17 @@ const General = () => {
             <LicenseCard
               key={l.id}
               data={l}
-              onEdit={() => {
+              onEdit={hasPermission("edit_license") ? () => {
                 setLicenseToEdit(l);
                 setShowLicenseModal(true);
-              }}
-              onDelete={() =>
+              } : null}
+              onDelete={hasPermission("delete_license") ? () =>
                 openDelete({
                   title: "Delete License",
                   message: "Are you sure you want to delete this license?",
                   icon: <CgDanger size={32} color="#D92D20" />,
                   onConfirm: () => deleteLicense(l.id),
-                })
-              }
+                }) : null}
             />
           ))}
         </div>
@@ -383,14 +384,14 @@ const General = () => {
               type: "dropdown",
               label: "More",
               items: [
-                {
+                hasPermission("edit_license") && {
                   label: "Edit",
                   onClick: (row) => {
                     setLicenseToEdit(row);
                     setShowLicenseModal(true);
                   },
                 },
-                {
+                hasPermission("delete_license") && {
                   label: "Delete",
                   className: "remove",
                   onClick: (row) =>
@@ -401,7 +402,7 @@ const General = () => {
                       onConfirm: () => deleteLicense(row.id),
                     }),
                 },
-              ],
+              ].filter(Boolean),
             },
           ]}
           showActions
@@ -451,7 +452,7 @@ const General = () => {
               type: "dropdown",
               label: "More",
               items: [
-                {
+                hasPermission("view_document") && {
                   label: "View",
                   onClick: (row) => {
                     try {
@@ -464,7 +465,7 @@ const General = () => {
                     }
                   },
                 },
-                {
+                hasPermission("download_document") && {
                   label: "Download",
                   onClick: (row) => {
                     const a = document.createElement("a");
@@ -473,7 +474,7 @@ const General = () => {
                     a.click();
                   },
                 },
-                {
+                hasPermission("delete_document") && {
                   label: "Delete",
                   className: "remove",
                   onClick: (row) =>
@@ -484,7 +485,7 @@ const General = () => {
                       onConfirm: () => deleteFile(row.id),
                     }),
                 },
-              ],
+              ].filter(Boolean),
             },
           ]}
           showActions
@@ -506,6 +507,7 @@ const General = () => {
         <h1 className="appointment-sched-title mb-4">General</h1>
 
         {/* ---------- 1. Organisation ---------- */}
+        {hasPermission("view_organization_information") && (<>
         <h2 className="font-bold text-lg text-gray-700-em mb-4">
           Organisation Information
         </h2>
@@ -517,21 +519,25 @@ const General = () => {
           ) : (
             <>
               <OrgGrid data={tenantData || {}} />
-              <div>
-                <div
-                  className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
-                  onClick={() => {
-                    setShowOrgModal(true);
-                  }}
-                >
-                  <FiEdit3 size={32} />
+              {hasPermission("edit_organization_information") && (
+                <div>
+                  <div
+                    className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
+                    onClick={() => {
+                      setShowOrgModal(true);
+                    }}
+                  >
+                    <FiEdit3 size={32} />
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
+        </>)}
 
         {/* ---------- 2. Licenses ---------- */}
+        {hasPermission("view_licenses") && (
         <div className="mt-6">
           <div className="org-section-header">
             <h2 className="font-bold text-lg text-gray-700-em">Licenses</h2>
@@ -554,38 +560,45 @@ const General = () => {
                   />
                 </div>
               </div>
-              <Button
-                label="New"
-                variant="secondary"
-                icon={<FaPlus />}
-                onClick={() => {
-                  setLicenseToEdit(null);
-                  setShowLicenseModal(true);
-                }}
-              />
+              {hasPermission("add_license") && (
+                <Button
+                  label="New"
+                  variant="secondary"
+                  icon={<FaPlus />}
+                  onClick={() => {
+                    setLicenseToEdit(null);
+                    setShowLicenseModal(true);
+                  }}
+                />
+              )}
             </div>
           </div>
           {renderLicenses()}
         </div>
+        )}
 
         {/* ---------- 3. Files ---------- */}
+        {hasPermission("view_files_documents_list") && (
         <div className="mt-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-lg text-gray-700-em">
               Business files and documents
             </h2>
-            <Button
-              label="New upload"
-              variant="secondary"
-              icon={<FaPlus />}
-              onClick={() => {
-                setFileToEdit(null);
-                setShowFileModal(true);
-              }}
-            />
+            {hasPermission("upload_document") && (
+              <Button
+                label="New upload"
+                variant="secondary"
+                icon={<FaPlus />}
+                onClick={() => {
+                  setFileToEdit(null);
+                  setShowFileModal(true);
+                }}
+              />
+            )}
           </div>
           {renderFiles()}
         </div>
+        )}
       </div>
 
       {/* ---------- Modals ---------- */}
@@ -714,12 +727,16 @@ const LicenseCard = ({ data, onEdit, onDelete }) => (
         </p>
       </div>
       <div className="flex gap-6">
-        <div onClick={onEdit} className="cursor-pointer">
-          <FiEdit3 size={24} color="#5C6167" />
-        </div>
-        <div onClick={onDelete} className="cursor-pointer">
-          <FaRegTrashAlt size={20} color="#5C6167" />
-        </div>
+        {onEdit && (
+          <div onClick={onEdit} className="cursor-pointer">
+            <FiEdit3 size={24} color="#5C6167" />
+          </div>
+        )}
+        {onDelete && (
+          <div onClick={onDelete} className="cursor-pointer">
+            <FaRegTrashAlt size={20} color="#5C6167" />
+          </div>
+        )}
       </div>
     </div>
     <div className="flex flex-col gap-3 mt-4">

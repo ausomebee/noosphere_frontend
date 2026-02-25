@@ -6,10 +6,24 @@ import AddSessionTypeModal from "../../../Components/ReusableModal/OrganizationM
 import AddDiagnosisCode from "../../../Components/ReusableModal/OrganizationModal/AddDiagnosisCode";
 import api from "../../../api/organisationApis";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import { showToast } from "../../../Helper/ShowToast";
 
+const ALL_TABS = [
+  { key: "diagnosisCodes", label: "Diagnosis Codes", permissionKey: "view_diagnosis_codes" },
+  { key: "sessionTypes", label: "Session Types", permissionKey: "view_session_types" },
+];
+
 const PracticeSettings = () => {
-  const [view, setView] = useState("diagnosisCodes");
+  const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  const visibleTabs = useMemo(
+    () => ALL_TABS.filter((t) => hasPermission(t.permissionKey)),
+    [hasPermission]
+  );
+
+  const [view, setView] = useState(visibleTabs[0]?.key || "");
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -17,8 +31,6 @@ const PracticeSettings = () => {
   const [diagnosisCodes, setDiagnosisCodes] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const { tenantId, accessToken, refreshToken } = useAuth();
 
   useEffect(() => {
     if (tenantId) {
@@ -254,7 +266,7 @@ const PracticeSettings = () => {
       type: "dropdown",
       label: "Actions",
       items: (row) => [
-        {
+        hasPermission("edit_diagnosis_codes") && {
           label: "Edit",
           onClick: () => {
             setSelectedRow(row);
@@ -263,22 +275,24 @@ const PracticeSettings = () => {
             setIsAddModalOpen(true);
           },
         },
-        ...(row.isActive
-          ? [
-              {
-                label: "Deactivate",
-                onClick: () => handleToggleDiagnosisCodeStatus(row.id, false),
-                className: "remove",
-              },
-            ]
-          : [
-              {
-                label: "Activate",
-                onClick: () => handleToggleDiagnosisCodeStatus(row.id, true),
-                className: "activate",
-              },
-            ]),
-      ],
+        ...(hasPermission("deactivate_diagnosis_codes")
+          ? row.isActive
+            ? [
+                {
+                  label: "Deactivate",
+                  onClick: () => handleToggleDiagnosisCodeStatus(row.id, false),
+                  className: "remove",
+                },
+              ]
+            : [
+                {
+                  label: "Activate",
+                  onClick: () => handleToggleDiagnosisCodeStatus(row.id, true),
+                  className: "activate",
+                },
+              ]
+          : []),
+      ].filter(Boolean),
     },
   ];
 
@@ -287,7 +301,7 @@ const PracticeSettings = () => {
       type: "dropdown",
       label: "Actions",
       items: (row) => [
-        {
+        hasPermission("edit_session_types") && {
           label: "Edit",
           onClick: () => {
             setSelectedRow(row);
@@ -296,22 +310,24 @@ const PracticeSettings = () => {
             setIsAddModalOpen(true);
           },
         },
-        ...(row.isActive
-          ? [
-              {
-                label: "Deactivate",
-                onClick: () => handleToggleSessionTypeStatus(row.id, false),
-                className: "remove",
-              },
-            ]
-          : [
-              {
-                label: "Activate",
-                onClick: () => handleToggleSessionTypeStatus(row.id, true),
-                className: "activate",
-              },
-            ]),
-      ],
+        ...(hasPermission("deactivate_session_types")
+          ? row.isActive
+            ? [
+                {
+                  label: "Deactivate",
+                  onClick: () => handleToggleSessionTypeStatus(row.id, false),
+                  className: "remove",
+                },
+              ]
+            : [
+                {
+                  label: "Activate",
+                  onClick: () => handleToggleSessionTypeStatus(row.id, true),
+                  className: "activate",
+                },
+              ]
+          : []),
+      ].filter(Boolean),
     },
   ];
 
@@ -346,45 +362,43 @@ const PracticeSettings = () => {
     setIsAddModalOpen(true);
   };
 
+  if (!visibleTabs.length) return null;
+
   return (
     <>
       <div className="p-6">
         <h1 className="appointment-sched-title mb-4">Practice Settings</h1>
 
         <div className="appointment-sched-view-switcher">
-          <button
-            onClick={() => setView("diagnosisCodes")}
-            className={`appointment-sched-view-button ${
-              view === "diagnosisCodes"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            <span>Diagnosis Codes</span>
-          </button>
-          <button
-            onClick={() => setView("sessionTypes")}
-            className={`appointment-sched-view-button ${
-              view === "sessionTypes"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            <span>Session Types</span>
-          </button>
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              className={`appointment-sched-view-button ${
+                view === tab.key
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="justify-end flex mt-6">
-          <Button
-            label={`Add ${
-              view === "diagnosisCodes" ? "Diagnosis Code" : "Session Type"
-            }`}
-            variant="secondary"
-            icon={<FaPlus />}
-            onClick={handleAdd}
-            disabled={loading}
-          />
-        </div>
+        {((view === "diagnosisCodes" && hasPermission("add_diagnosis_codes")) ||
+          (view === "sessionTypes" && hasPermission("add_session_types"))) && (
+          <div className="justify-end flex mt-6">
+            <Button
+              label={`Add ${
+                view === "diagnosisCodes" ? "Diagnosis Code" : "Session Type"
+              }`}
+              variant="secondary"
+              icon={<FaPlus />}
+              onClick={handleAdd}
+              disabled={loading}
+            />
+          </div>
+        )}
 
         <CustomTable
           data={tableConfig[view].data}

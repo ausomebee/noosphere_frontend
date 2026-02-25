@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
@@ -9,6 +10,7 @@ import { showToast } from "../../../../Helper/ShowToast";
 
 const Deductions = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState("add");
@@ -35,7 +37,7 @@ const Deductions = () => {
             setIsModalOpen(true);
           },
         },
-        {
+        hasPermission("edit_deductions") && {
           label: "Edit",
           onClick: (row) => {
             setSelectedRow(row);
@@ -43,7 +45,7 @@ const Deductions = () => {
             setIsModalOpen(true);
           },
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -176,18 +178,20 @@ const Deductions = () => {
 
   return (
     <div>
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Add New Deduction"
-          variant="secondary"
-          icon={<FaPlus />}
-          onClick={() => {
-            setSelectedRow(null);
-            setMode("add");
-            setIsModalOpen(true);
-          }}
-        />
-      </div>
+      {hasPermission("add_deductions") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="Add New Deduction"
+            variant="secondary"
+            icon={<FaPlus />}
+            onClick={() => {
+              setSelectedRow(null);
+              setMode("add");
+              setIsModalOpen(true);
+            }}
+          />
+        </div>
+      )}
       <div className="mt-6">
         <CustomTable
           data={tableData}

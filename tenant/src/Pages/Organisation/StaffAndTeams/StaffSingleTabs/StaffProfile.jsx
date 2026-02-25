@@ -1,4 +1,5 @@
 import React from "react";
+import usePermissions from "../../../../hooks/usePermissions";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
 import { FiEdit3 } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
@@ -26,6 +27,7 @@ const Profile = ({
   deleteFile,
   openBasicInfoModal, // New prop for opening Basic Info modal
 }) => {
+  const { hasPermission } = usePermissions();
   const renderLicenses = () => {
     if (!licenses.length) {
       return (
@@ -50,18 +52,17 @@ const Profile = ({
             <LicenseCard
               key={l.id}
               data={l}
-              onEdit={() => {
+              onEdit={hasPermission("add_staff_license") ? () => {
                 setLicenseToEdit(l);
                 setShowLicenseModal(true);
-              }}
-              onDelete={() =>
+              } : null}
+              onDelete={hasPermission("delete_staff_license") ? () =>
                 openDelete({
                   title: "Delete License",
                   message: "Are you sure you want to delete this license?",
                   icon: <CgDanger size={32} color="#D92D20" />,
                   onConfirm: () => deleteLicense(l.id),
-                })
-              }
+                }) : null}
             />
           ))}
         </div>
@@ -83,14 +84,14 @@ const Profile = ({
               type: "dropdown",
               label: "More",
               items: [
-                {
+                hasPermission("add_staff_license") && {
                   label: "Edit",
                   onClick: (row) => {
                     setLicenseToEdit(row);
                     setShowLicenseModal(true);
                   },
                 },
-                {
+                hasPermission("delete_staff_license") && {
                   label: "Delete",
                   className: "remove",
                   onClick: (row) =>
@@ -101,7 +102,7 @@ const Profile = ({
                       onConfirm: () => deleteLicense(row.id),
                     }),
                 },
-              ],
+              ].filter(Boolean),
             },
           ]}
           showActions
@@ -143,7 +144,7 @@ const Profile = ({
               type: "dropdown",
               label: "More",
               items: [
-                {
+                hasPermission("view_staff_document") && {
                   label: "View",
                   onClick: (row) => {
                     if (row.documentsUrl?.url) {
@@ -158,7 +159,7 @@ const Profile = ({
                     }
                   },
                 },
-                {
+                hasPermission("view_staff_document") && {
                   label: "Download",
                   onClick: (row) => {
                     if (row.documentsUrl?.url) {
@@ -171,14 +172,14 @@ const Profile = ({
                     }
                   },
                 },
-                {
+                hasPermission("upload_staff_document") && {
                   label: "Edit",
                   onClick: (row) => {
                     setFileToEdit(row);
                     setShowFileModal(true);
                   },
                 },
-                {
+                hasPermission("delete_staff_document") && {
                   label: "Delete",
                   className: "remove",
                   onClick: (row) =>
@@ -189,7 +190,7 @@ const Profile = ({
                       onConfirm: () => deleteFile(row.id),
                     }),
                 },
-              ],
+              ].filter(Boolean),
             },
           ]}
           showActions
@@ -208,14 +209,16 @@ const Profile = ({
       </h2>
       <div className="org-info-card">
         <OrgGrid data={staff} />
-        <div>
-          <div 
-            className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
-            onClick={openBasicInfoModal} // Add onClick to open Basic Info modal
-          >
-            <FiEdit3 size={32} />
+        {hasPermission("edit_staff_basic_information") && (
+          <div>
+            <div
+              className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
+              onClick={openBasicInfoModal}
+            >
+              <FiEdit3 size={32} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div className="org-section">
         <div className="org-section-header">
@@ -235,15 +238,17 @@ const Profile = ({
                 color={licenseView === "list" ? "#004ABA" : "#000"}
               />
             </div>
-            <Button
-              label="New"
-              variant="secondary"
-              icon={<FaPlus />}
-              onClick={() => {
-                setLicenseToEdit(null);
-                setShowLicenseModal(true);
-              }}
-            />
+            {hasPermission("add_staff_license") && (
+              <Button
+                label="New"
+                variant="secondary"
+                icon={<FaPlus />}
+                onClick={() => {
+                  setLicenseToEdit(null);
+                  setShowLicenseModal(true);
+                }}
+              />
+            )}
           </div>
         </div>
         {renderLicenses()}
@@ -253,15 +258,17 @@ const Profile = ({
           <h2 className="font-bold text-lg text-gray-700-em">
             Staff Documents
           </h2>
-          <Button
-            label="New upload"
-            variant="secondary"
-            icon={<FaPlus />}
-            onClick={() => {
-              setFileToEdit(null);
-              setShowFileModal(true);
-            }}
-          />
+          {hasPermission("upload_staff_document") && (
+            <Button
+              label="New upload"
+              variant="secondary"
+              icon={<FaPlus />}
+              onClick={() => {
+                setFileToEdit(null);
+                setShowFileModal(true);
+              }}
+            />
+          )}
         </div>
         {renderFiles()}
       </div>
@@ -347,12 +354,16 @@ const LicenseCard = ({ data, onEdit, onDelete }) => (
         </p>
       </div>
       <div className="flex gap-6">
-        <div onClick={onEdit} className="cursor-pointer">
-          <FiEdit3 size={24} color="#5C6167" />
-        </div>
-        <div onClick={onDelete} className="cursor-pointer">
-          <FaRegTrashAlt size={20} color="#5C6167" />
-        </div>
+        {onEdit && (
+          <div onClick={onEdit} className="cursor-pointer">
+            <FiEdit3 size={24} color="#5C6167" />
+          </div>
+        )}
+        {onDelete && (
+          <div onClick={onDelete} className="cursor-pointer">
+            <FaRegTrashAlt size={20} color="#5C6167" />
+          </div>
+        )}
       </div>
     </div>
     <div className="flex flex-col gap-3 mt-4">

@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/billingAndPaymentsApi"; // assuming this exports the function
+import api from "../../../api/billingAndPaymentsApi";
 
 const TimeSheet = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState([]);
@@ -106,24 +108,23 @@ const TimeSheet = () => {
         type: "dropdown",
         label: "More",
         items: [
-          {
+          hasPermission("view_timesheet_details") && {
             label: "View",
             onClick: (row) => {
               navigate(`/billing/timesheets/${row.id}`);
             },
           },
-          {
+          hasPermission("nudge_client_for_approval") && {
             label: "Nudge client for approval",
             onClick: (row) => {
-              // You can trigger a nudge API here
               alert(`Nudge sent for session with ${row.clientName}`);
             },
           },
-        ],
+        ].filter(Boolean),
         className: "more-dropdown",
       },
     ],
-    [navigate],
+    [navigate, hasPermission],
   );
 
   const filters = useMemo(

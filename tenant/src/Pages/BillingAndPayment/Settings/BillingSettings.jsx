@@ -1,10 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import ServiceCodes from "./SettingSubs/ServiceCodes";
 import RoundingRules from "./SettingSubs/RoundingRules";
 import PayersAndInsurance from "./SettingSubs/PayersAndInsurance";
+import usePermissions from "../../../hooks/usePermissions";
+
+const ALL_TABS = [
+  { key: "serviceCodes", label: "Service Codes", permissionKey: "view_service_codes_list" },
+  { key: "roundingRules", label: "Rounding Rules", permissionKey: "view_rounding_rules_list" },
+  { key: "payersInsurance", label: "Payers & Insurance", permissionKey: "view_payers_list" },
+];
 
 const BillingSettings = () => {
-  const [view, setView] = useState("serviceCodes");
+  const { hasPermission } = usePermissions();
+
+  const visibleTabs = useMemo(
+    () => ALL_TABS.filter((t) => hasPermission(t.permissionKey)),
+    [hasPermission]
+  );
+
+  const [view, setView] = useState(visibleTabs[0]?.key || "");
 
   const renderContent = () => {
     switch (view) {
@@ -19,6 +33,8 @@ const BillingSettings = () => {
     }
   };
 
+  if (!visibleTabs.length) return null;
+
   return (
     <>
       <div>
@@ -26,36 +42,19 @@ const BillingSettings = () => {
       </div>
 
       <div className="appointment-sched-view-switcher">
-        <button
-          onClick={() => setView("serviceCodes")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "serviceCodes"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Service Codes</span>
-        </button>
-        <button
-          onClick={() => setView("roundingRules")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "roundingRules"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Rounding Rules</span>
-        </button>
-        <button
-          onClick={() => setView("payersInsurance")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "payersInsurance"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Payers & Insurance</span>
-        </button>
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setView(tab.key)}
+            className={`appointment-sched-view-button flex items-center ${
+              view === tab.key
+                ? "appointment-sched-view-button-active"
+                : "appointment-sched-view-button-inactive"
+            }`}
+          >
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       {renderContent()}

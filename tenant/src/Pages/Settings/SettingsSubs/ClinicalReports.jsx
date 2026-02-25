@@ -10,6 +10,7 @@ import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { showToast } from "../../../Helper/ShowToast";
 import CreateNewTemplateModal from "../../../Components/ReusableModal/SettingsModal/CreateNewTemplateModal";
+import usePermissions from "../../../hooks/usePermissions";
 import api from "../../../api/TemplateAndReportApi";
 
 // ────────────────────────────────────────────────
@@ -130,6 +131,7 @@ const DeleteConfirmModal = ({ isOpen, templateName, onConfirm, onCancel }) => {
 const ClinicalReports = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ const ClinicalReports = () => {
           },
         }),
     },
-    {
+    hasPermission("edit_clinical_report_templates") && {
       type: "icon",
       label: "Edit",
       icon: <FiEdit2 className="w-5 h-5" />,
@@ -258,7 +260,7 @@ const ClinicalReports = () => {
           },
         }),
     },
-    {
+    hasPermission("duplicate_clinical_report_template") && {
       type: "icon",
       label: "Duplicate",
       icon: <HiOutlineDuplicate className="w-5 h-5 text-green-600" />,
@@ -293,13 +295,13 @@ const ClinicalReports = () => {
         }
       },
     },
-    {
+    hasPermission("delete_clinical_report_template") && {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
       onClick: handleDeleteClick,
     },
-  ];
+  ].filter(Boolean);
 
   const columns = [{ header: "Template Name", key: "name", type: "text" }];
 
@@ -312,12 +314,14 @@ const ClinicalReports = () => {
           marginBottom: "24px",
         }}
       >
-        <Button
-          label="Create New Template"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={() => setIsNewTemplateModalOpen(true)}
-        />
+        {hasPermission("create_clinical_report_template") && (
+          <Button
+            label="Create New Template"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={() => setIsNewTemplateModalOpen(true)}
+          />
+        )}
       </div>
 
       <CustomTable

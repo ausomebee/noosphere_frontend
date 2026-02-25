@@ -19,6 +19,7 @@ import api from "../../../api/billingAndPaymentsApi";
 import Modal from "../../../Components/ReusableModal/ReusableModal";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
+import usePermissions from "../../../hooks/usePermissions";
 
 // Helper functions
 const formatTimeFromString = (timeString) => {
@@ -556,6 +557,7 @@ const SingleTimeSheet = () => {
 
   // Auth state
   const { tenantId, role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
+  const { hasPermission } = usePermissions();
   const role = roleObj?.name ?? "Client";
 
   // State
@@ -1767,42 +1769,45 @@ const SingleTimeSheet = () => {
                 </button>
                 {isOpen && (
                   <div className="timesheet-dropdown">
-                    <div
-                      className="timesheet-dropdown-item"
-                      onClick={() => {
-                        setIsOpen(false);
-                        handleExportPDF();
-                      }}
-                      style={
-                        exportingPDF
-                          ? { opacity: 0.5, cursor: "not-allowed" }
-                          : {}
-                      }
-                    >
-                      {exportingPDF ? "Exporting..." : "Export as PDF"}
-                    </div>
-                    {isAdminOrSupervisor ? (
-                      <>
-                        <div
-                          className="timesheet-dropdown-item"
-                          onClick={() => {
-                            setIsOpen(false);
-                            setIsApproveModalOpen(true);
-                          }}
-                        >
-                          Approve and Convert to Claim
-                        </div>
-                        <div
-                          className="timesheet-dropdown-item timesheet-delete"
-                          onClick={() => {
-                            setIsOpen(false);
-                            setIsRejectModalOpen(true);
-                          }}
-                        >
-                          Reject
-                        </div>
-                      </>
-                    ) : (
+                    {hasPermission("export_timesheet_as_pdf") && (
+                      <div
+                        className="timesheet-dropdown-item"
+                        onClick={() => {
+                          setIsOpen(false);
+                          handleExportPDF();
+                        }}
+                        style={
+                          exportingPDF
+                            ? { opacity: 0.5, cursor: "not-allowed" }
+                            : {}
+                        }
+                      >
+                        {exportingPDF ? "Exporting..." : "Export as PDF"}
+                      </div>
+                    )}
+                    {hasPermission("approve_timesheet_convert_to_claim") && (
+                      <div
+                        className="timesheet-dropdown-item"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setIsApproveModalOpen(true);
+                        }}
+                      >
+                        Approve and Convert to Claim
+                      </div>
+                    )}
+                    {hasPermission("reject_timesheet") && (
+                      <div
+                        className="timesheet-dropdown-item timesheet-delete"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setIsRejectModalOpen(true);
+                        }}
+                      >
+                        Reject
+                      </div>
+                    )}
+                    {hasPermission("nudge_client_for_approval") && (
                       <div
                         className="timesheet-dropdown-item"
                         onClick={() => {
@@ -2269,7 +2274,7 @@ const SingleTimeSheet = () => {
                       <p style={{ color: "#6b7280", marginBottom: "16px" }}>
                         Awaiting client signature and approval for this session.
                       </p>
-                      {!isAdminOrSupervisor && (
+                      {hasPermission("nudge_client_for_approval") && (
                         <Button
                           label="Send Reminder"
                           variant="primary"

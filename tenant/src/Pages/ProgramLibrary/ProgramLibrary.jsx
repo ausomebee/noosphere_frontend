@@ -10,6 +10,7 @@ import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/ProgramLibraryApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import usePermissions from "../../hooks/usePermissions";
 
 const ProgramLibrary = () => {
   /* ----------  state  ---------- */
@@ -24,6 +25,7 @@ const ProgramLibrary = () => {
 
   /* ----------  auth  ---------- */
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   /* ----------  helpers  ---------- */
   const domainType = view === "skillAcquisition" ? "SKILL_ACQUISITION" : "BEHAVIOR_REDUCTION";
@@ -77,7 +79,7 @@ const fetchDomains = async () => {
             setCurrentView("domainLibrary");
           },
         },
-        {
+        hasPermission("edit_domain") && {
           label: "Edit",
           onClick: (row) => {
             setSelectedRow(row);
@@ -85,7 +87,7 @@ const fetchDomains = async () => {
             setIsAddModalOpen(true);
           },
         },
-        {
+        hasPermission("create_domain") && {
           label: "Duplicate",
           onClick: async (row) => {
             try {
@@ -104,7 +106,7 @@ const fetchDomains = async () => {
             }
           },
         },
-        {
+        hasPermission("delete_domain") && {
           label: "Delete",
           onClick: (row) => {
             setSelectedRow(row);
@@ -112,7 +114,7 @@ const fetchDomains = async () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -217,14 +219,16 @@ const handleDeleteConfirm = async () => {
               </button>
             </div>
 
-            <div className="justify-end flex mt-6">
-              <Button
-                label="Add a new Domain"
-                variant="primary"
-                icon={<FaPlus />}
-                onClick={handleAddDomain}
-              />
-            </div>
+            {hasPermission("create_domain") && (
+              <div className="justify-end flex mt-6">
+                <Button
+                  label="Add a new Domain"
+                  variant="primary"
+                  icon={<FaPlus />}
+                  onClick={handleAddDomain}
+                />
+              </div>
+            )}
 
 
             <div className="mt-6">
