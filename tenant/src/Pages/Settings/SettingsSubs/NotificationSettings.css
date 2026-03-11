@@ -1,0 +1,90 @@
+.notif-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.notif-settings-description {
+  font-size: 13px;
+  color: #344054;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+
+/* Accordion Section */
+.notif-settings-section {
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  background: #fff;
+}
+
+.notif-settings-section:first-of-type {
+  border-radius: 8px 8px 0 0;
+}
+
+.notif-settings-section:last-of-type {
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+}
+
+.notif-settings-section:only-of-type {
+  border-radius: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.notif-settings-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.notif-settings-section-header:hover {
+  background: #f9fafb;
+}
+
+/* Section Body */
+.notif-settings-section-body {
+  padding: 4px 20px 20px;
+  border-top: 1px solid #f2f4f7;
+}
+
+.notif-settings-enable-all {
+  padding: 12px 0 12px;
+}
+
+/* 2-column grid for notification items */
+.notif-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+  padding-left: 4px;
+}
+
+.notif-settings-item {
+  display: flex;
+  align-items: center;
+}
+
+/* Footer buttons */
+.notif-settings-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+@media (max-width: 640px) {
+  .notif-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}

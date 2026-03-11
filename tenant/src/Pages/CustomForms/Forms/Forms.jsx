@@ -6,9 +6,11 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 
 const Forms = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
 
   // ---- Redux -------------------------------------------------
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -98,15 +100,13 @@ const Forms = () => {
       type: "dropdown",
       label: "More",
       items: [
-       
-        {
+        hasPermission("edit_form") && {
           label: "Edit Form",
           onClick: (row) => navigate(`/custom-forms/forms/create/${row.id}`),
         },
-        {
+        hasPermission("duplicate_form") && {
           label: "Duplicate",
           onClick: async (row) => {
-            
             try {
               await api.DuplicateFormByFormId({
                 formId: row.id,
@@ -119,12 +119,10 @@ const Forms = () => {
             }
           },
         },
-        {
+        hasPermission("delete_form") && {
           label: (row) => (row._raw?.isDraft ? "Delete" : "Delete"),
           onClick: async (row) => {
-            // For now both draft & published use "delete"
             const action = "delete";
-          
             try {
               await api.DeleteFormsByFormId({
                 formId: row.id,
@@ -140,7 +138,7 @@ const Forms = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -160,14 +158,16 @@ const Forms = () => {
         </h3>
       </div>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Create a new form"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={handleAddForm}
-        />
-      </div>
+      {hasPermission("create_form") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="Create a new form"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={handleAddForm}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

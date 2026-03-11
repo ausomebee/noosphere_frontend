@@ -8,9 +8,25 @@ import AddStaffModal from "../../../Components/ReusableModal/OrganizationModal/A
 import AddTeamsModal from "../../../Components/ReusableModal/OrganizationModal/AddTeamsModal";
 import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 import "../../../Components/CalendarScheduler/Scheduler.css";
+
+const ALL_TABS = [
+  { key: "staff", label: "Staff", permissionKey: "view_staff_list" },
+  { key: "teams", label: "Teams", permissionKey: "view_teams_list" },
+];
+
 const StaffsAndTeams = () => {
-  const [view, setView] = useState("staff");
+  const { accessToken, refreshToken, tenantId } = useAuth();
+  const { hasPermission } = usePermissions();
+  const navigate = useNavigate();
+
+  const visibleTabs = useMemo(
+    () => ALL_TABS.filter((t) => hasPermission(t.permissionKey)),
+    [hasPermission]
+  );
+
+  const [view, setView] = useState(visibleTabs[0]?.key || "");
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -24,9 +40,6 @@ const StaffsAndTeams = () => {
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [teamAccessStaff, setTeamAccessStaff] = useState([]);
   const [allTenantStaff, setAllTenantStaff] = useState([]);
-
-  const { accessToken, refreshToken, tenantId } = useAuth();
-  const navigate = useNavigate();
 
   // Team Lead options – only staff with team-level access
   const teamLeadOptions = useMemo(
@@ -154,14 +167,14 @@ const StaffsAndTeams = () => {
       label: "More",
       className: "more-dropdown",
       items: [
-        {
+        hasPermission("view_staff_profile") && {
           label: "View Staff Information",
           onClick: (row) =>
             navigate(
               `/organization/staff-and-teams/single-staff/${row.id}?name=${encodeURIComponent(row.name)}`,
             ),
         },
-        {
+        hasPermission("edit_staff_basic_information") && {
           label: "Edit Staff Information",
           onClick: async (row) => {
             try {
@@ -235,7 +248,7 @@ const StaffsAndTeams = () => {
             }
           },
         },
-        {
+        hasPermission("deactivate_staff") && {
           label: (row) =>
             row.status === "Active" ? "Deactivate Staff" : "Activate Staff",
           onClick: async (row) => {
@@ -269,7 +282,7 @@ const StaffsAndTeams = () => {
           },
           className: (row) => (row.status === "Active" ? "remove" : ""),
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
@@ -279,7 +292,7 @@ const StaffsAndTeams = () => {
       label: "More",
       className: "more-dropdown",
       items: [
-        {
+        hasPermission("edit_a_team") && {
           label: "Edit Team",
           onClick: (row) => {
             // Extract staffIds from teamMembers for the multi-select
@@ -295,7 +308,7 @@ const StaffsAndTeams = () => {
             setIsAddModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_a_team") && {
           label: (row) => row.isActive ? "Deactivate Team" : "Activate Team",
           onClick: async (row) => {
             try {
@@ -313,7 +326,7 @@ const StaffsAndTeams = () => {
             }
           },
         },
-        {
+        hasPermission("edit_a_team") && {
           label: "Delete Team",
           onClick: async (row) => {
             try {
@@ -332,7 +345,7 @@ const StaffsAndTeams = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
@@ -488,40 +501,38 @@ const StaffsAndTeams = () => {
     [view],
   );
 
+  if (!visibleTabs.length) return null;
+
   return (
     <>
       <div className="p-6">
         <h1 className="appointment-sched-title mb-4">Staff & Teams</h1>
         <div className="appointment-sched-view-switcher">
-          <button
-            onClick={() => setView("staff")}
-            className={`appointment-sched-view-button flex items-center ${
-              view === "staff"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Staff
-          </button>
-          <button
-            onClick={() => setView("teams")}
-            className={`appointment-sched-view-button flex items-center ${
-              view === "teams"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Teams
-          </button>
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              className={`appointment-sched-view-button flex items-center ${
+                view === tab.key
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="flex justify-end mt-6 gap-4">
-          <Button
-            label={`Create ${view === "staff" ? "a new Staff" : "a new Team"}`}
-            variant="primary"
-            icon={<FaPlus />}
-            onClick={handleAdd}
-          />
+          {((view === "staff" && hasPermission("create_new_staff")) ||
+            (view === "teams" && hasPermission("create_new_team"))) && (
+            <Button
+              label={`Create ${view === "staff" ? "a new Staff" : "a new Team"}`}
+              variant="primary"
+              icon={<FaPlus />}
+              onClick={handleAdd}
+            />
+          )}
         </div>
 
         <CustomTable

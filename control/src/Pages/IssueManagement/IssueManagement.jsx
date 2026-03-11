@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 import { SelectInput } from "../../Components/Input/Inputs";
 import Chart from "react-apexcharts";
@@ -23,9 +23,7 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
 
 const IssueManagement = () => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   const [selectedFilter, setSelectedFilter] = useState("by category");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -162,7 +160,7 @@ const IssueManagement = () => {
         const adminsData = Array.isArray(adminsResult.value.data?.data)
           ? adminsResult.value.data.data.map((a) => ({
               staffId: a.id || "",
-              name: a.fullName || a.id || "Unnamed Admin",
+              name: `${a.firstName || ""} ${a.lastName || ""}`.trim() || a.id || "Unnamed Admin",
             }))
           : [];
         staffCache.current = adminsData;
@@ -200,12 +198,16 @@ const IssueManagement = () => {
               status: formatStatus(issue.status),
               priority: formatPriority(issue.priority),
               logged_by:
-                issue.loggedBy?.fullName ||
+                (issue.loggedBy
+                  ? `${issue.loggedBy.firstName || ""} ${issue.loggedBy.lastName || ""}`.trim()
+                  : "") ||
                 issue.tenant?.companyName ||
                 "Unknown",
               date_reported: formatDate(issue.createdAt),
               date_updated: formatDate(issue.updatedAt),
-              assigned_to: issue.assignedTo?.fullName || "Unassigned",
+              assigned_to: issue.assignedTo
+                ? `${issue.assignedTo.firstName || ""} ${issue.assignedTo.lastName || ""}`.trim() || "Unassigned"
+                : "Unassigned",
               hasActions: true,
               title: issue.title || "N/A",
               description: issue.description || "No description provided",
@@ -421,7 +423,7 @@ const IssueManagement = () => {
           category: response.data?.category || row.category,
           priority: response.data?.priority || row.priority,
           logged_by:
-            response.data?.loggedBy?.fullName ||
+            `${response.data?.loggedBy?.firstName || ""} ${response.data?.loggedBy?.lastName || ""}`.trim() ||
             response.data?.tenant?.companyName ||
             row.logged_by,
           date_reported: formatDate(
@@ -430,7 +432,7 @@ const IssueManagement = () => {
           date_updated: formatDate(
             response.data?.updatedAt || row.date_updated
           ),
-          assigned_to: response.data?.assignedTo?.fullName || "Unassigned",
+          assigned_to: response.data?.assignedTo ? `${response.data.assignedTo.firstName || ""} ${response.data.assignedTo.lastName || ""}`.trim() || "Unassigned" : "Unassigned",
           status: response.data?.status?.replace(/\s/g, "") || row.status,
           title: response.data?.title || "N/A",
           description: response.data?.description || "No description provided",
@@ -509,7 +511,7 @@ const IssueManagement = () => {
       if (item.createdAt) return formatDate(item.createdAt);
       if (item.assignedTo) {
         return typeof item.assignedTo === "object"
-          ? item.assignedTo.fullName || "Unassigned"
+          ? `${item.assignedTo.firstName || ""} ${item.assignedTo.lastName || ""}`.trim() || "Unassigned"
           : item.assignedTo || "Unassigned";
       }
       if (item.priority) return item.priority;
@@ -555,11 +557,11 @@ const IssueManagement = () => {
       category:
         item.category ||
         formatDate(item.createdAt) ||
-        item.assignedTo
-  ? typeof item.assignedTo === "object"
-    ? item.assignedTo.fullName || "Unassigned"
-    : item.assignedTo || "Unassigned"
-  : "Unassigned" ||
+        (item.assignedTo
+          ? typeof item.assignedTo === "object"
+            ? `${item.assignedTo.firstName || ""} ${item.assignedTo.lastName || ""}`.trim() || "Unassigned"
+            : item.assignedTo
+          : null) ||
         item.priority ||
         "Unknown",
       count: item.count || 0,

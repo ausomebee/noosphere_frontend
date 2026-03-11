@@ -5,11 +5,19 @@ import api2 from "../api/profileAndSettingsApi";
 
 export const useNotificationSettings = (clientTenantId, accessToken, refreshToken) => {
   const [notifications, setNotifications] = useState({
-    reschedule: false,
-    starts: false,
-    completed: false,
-    awaitingReview: false,
-    approvedReschedule: false,
+    appointmentScheduled: false,
+    appointmentRescheduled: false,
+    appointmentAboutToStart: false,
+    appointmentStarted: false,
+    appointmentCancelled: false,
+    appointmentCompletedAwaitingFeedback: false,
+    documentRequested: false,
+    formShared: false,
+    authorizationAboutToExpire: false,
+    authorizationExpired: false,
+    authorizationUnitsAlmostExhausted: false,
+    authorizationUnitsExhausted: false,
+    signatureRequested: false,
   });
   const [notificationSettingsId, setNotificationSettingsId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,11 +41,19 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
         const settings = response.data.data;
         setNotificationSettingsId(settings.id);
         setNotifications({
-          reschedule: settings.reschedule || false,
-          starts: settings.starts || false,
-          completed: settings.completed || false,
-          awaitingReview: settings.awaitingReview || false,
-          approvedReschedule: settings.approvedReschedule || false,
+          appointmentScheduled: settings.appointmentScheduled || false,
+          appointmentRescheduled: settings.appointmentRescheduled || false,
+          appointmentAboutToStart: settings.appointmentAboutToStart || false,
+          appointmentStarted: settings.appointmentStarted || false,
+          appointmentCancelled: settings.appointmentCancelled || false,
+          appointmentCompletedAwaitingFeedback: settings.appointmentCompletedAwaitingFeedback || false,
+          documentRequested: settings.documentRequested || false,
+          formShared: settings.formShared || false,
+          authorizationAboutToExpire: settings.authorizationAboutToExpire || false,
+          authorizationExpired: settings.authorizationExpired || false,
+          authorizationUnitsAlmostExhausted: settings.authorizationUnitsAlmostExhausted || false,
+          authorizationUnitsExhausted: settings.authorizationUnitsExhausted || false,
+          signatureRequested: settings.signatureRequested || false,
         });
       }
     } catch (error) {
@@ -59,11 +75,19 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
     try {
       await api2.CreateNotificationSettings({
         tenantClientId: clientTenantId,
-        reschedule: true,
-        starts: true,
-        completed: true,
-        awaitingReview: true,
-        approvedReschedule: true,
+        appointmentScheduled: true,
+        appointmentRescheduled: true,
+        appointmentAboutToStart: true,
+        appointmentStarted: true,
+        appointmentCancelled: true,
+        appointmentCompletedAwaitingFeedback: true,
+        documentRequested: true,
+        formShared: true,
+        authorizationAboutToExpire: true,
+        authorizationExpired: true,
+        authorizationUnitsAlmostExhausted: true,
+        authorizationUnitsExhausted: true,
+        signatureRequested: true,
         accessToken,
         refreshToken,
       });

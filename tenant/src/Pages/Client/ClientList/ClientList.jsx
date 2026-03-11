@@ -9,10 +9,12 @@ import { showToast } from "../../../Helper/ShowToast"; // assuming you have this
 import api from "../../../api/TenantApis"; // For Create & Update
 import clientApi from "../../../api/clientPanelApis"; // For GetAll, Activate/Deactivate
 import AddClientModal from "../../../Components/ReusableModal/ClientModal/AddClientModal";
+import usePermissions from "../../../hooks/usePermissions";
 
 
 const ClientList = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
@@ -124,23 +126,23 @@ const ClientList = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_client_profile") && {
           label: "View Client",
           onClick: (row) =>
             navigate(`/client/view-client/${row.clientId}/${row.id}`),
         },
-        {
+        hasPermission("edit_client_basic_information") && {
           label: "Edit Client Information",
           onClick: (row) => openEditClientModal(row.raw),
         },
-        {
+        hasPermission("deactivate_client") && {
           label: (row) =>
             row.ToggleActive ? "Deactivate Client" : "Activate Client",
-          onClick: (row) => handleToggleActive(row), // Reuse same handler!
+          onClick: (row) => handleToggleActive(row),
           className: (row) =>
             row.ToggleActive ? "text-red-600" : "text-green-600",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -191,7 +193,7 @@ const ClientList = () => {
         <div className="client-list-header">
           <h1 className="client-list-title">Clients</h1>
 
-          <Button
+          {hasPermission("add_client") && <Button
             label="Add a New Client"
             variant="primary"
             icon={
@@ -239,7 +241,7 @@ const ClientList = () => {
               </svg>
             }
             onClick={openAddClientModal}
-          />
+          />}
         </div>
 
         <div className="table-wrapper">

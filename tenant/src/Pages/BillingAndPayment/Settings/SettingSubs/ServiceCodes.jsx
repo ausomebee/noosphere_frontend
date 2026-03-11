@@ -7,10 +7,12 @@ import AddServiceCodeModal from "../../../../Components/ReusableModal/BillingAnd
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
+import usePermissions from "../../../../hooks/usePermissions";
 
 const ServiceCodes = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -122,14 +124,14 @@ const ServiceCodes = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("edit_service_code") && {
           label: "Edit",
           onClick: () => {
             setSelectedService(row);
             setIsModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_service_code") && {
           label: row.isActive ? "Deactivate" : "Activate",
           onClick: async () => {
             try {
@@ -139,7 +141,6 @@ const ServiceCodes = () => {
                 accessToken,
                 refreshToken,
               });
-              // Refetch data after toggle
               await fetchServiceCodes();
               showToast(`Service code ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
             } catch (error) {
@@ -147,7 +148,7 @@ const ServiceCodes = () => {
             }
           },
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -158,18 +159,20 @@ const ServiceCodes = () => {
         Setup and manage Service (CPT) codes for the services your organization offers
       </h2>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Add a Service Code"
-          variant="secondary"
-          icon={<FaPlus />}
-          onClick={() => {
-            setSelectedService(null);
-            setIsModalOpen(true);
-          }}
-          disabled={saving}
-        />
-      </div>
+      {hasPermission("add_service_code") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="Add a Service Code"
+            variant="secondary"
+            icon={<FaPlus />}
+            onClick={() => {
+              setSelectedService(null);
+              setIsModalOpen(true);
+            }}
+            disabled={saving}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -19,7 +19,10 @@ const answerSchema = yup.object().shape({
 });
 
 const ForgotPasswordQuestionVerifier = () => {
-  const { userId, authQuestion } = useAuth();
+  const { userId: authUserId, authQuestion: authQuestionFromStore } = useAuth();
+  const location = useLocation();
+  const userId = location.state?.userId || authUserId;
+  const authQuestion = location.state?.authQuestion || authQuestionFromStore;
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

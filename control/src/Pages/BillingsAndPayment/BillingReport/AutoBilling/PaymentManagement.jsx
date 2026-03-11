@@ -7,8 +7,9 @@ import {
   SelectInput,
 } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
-import api from "../../../../api/AutoBillingPandAApis"; // Adjust path to your API file
+import api from "../../../../api/AutoBillingPandAApis";
 import { showToast } from "../../../../Helper/ShowToast";
+import useAuth from "../../../../hooks/useAuth";
 
 const PaymentManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,8 +43,7 @@ const PaymentManagement = () => {
     cancelEmail: false,
   });
 
-  const accessToken = "your-access-token";
-  const refreshToken = "your-refresh-token";
+  const { accessToken, refreshToken } = useAuth();
 
   const fetchPaymentSettings = useCallback(async () => {
     setIsLoading(true);

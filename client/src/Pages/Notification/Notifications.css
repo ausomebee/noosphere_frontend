@@ -1,6 +1,5 @@
 /* Notifications.css */
 
-/* Container */
 .notifications-container {
   min-height: 100vh;
   background-color: #f8f9fa;
@@ -12,7 +11,6 @@
   margin: 0 auto;
 }
 
-/* Header */
 .notifications-header {
   padding: 20px 0 30px 0;
 }
@@ -23,14 +21,12 @@
   color: #202124;
 }
 
-/* Content */
 .notifications-content {
   display: flex;
   flex-direction: column;
   gap: 32px;
 }
 
-/* Section */
 .notifications-section {
   display: flex;
   flex-direction: column;
@@ -66,7 +62,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Icon */
+.notification-card--unread {
+  border-left: 3px solid #4d7cfe;
+  background-color: #f0f4ff;
+}
+
 .notification-icon {
   flex-shrink: 0;
   width: 40px;
@@ -78,7 +78,6 @@
   border-radius: 8px;
 }
 
-/* Notification Body */
 .notification-body {
   flex: 1;
   min-width: 0;
@@ -102,6 +101,8 @@
 .notification-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .notification-time {
@@ -109,7 +110,6 @@
   color: #80868b;
 }
 
-/* Action Button */
 .notification-action {
   flex-shrink: 0;
   padding: 8px 16px;
@@ -133,63 +133,21 @@
   background-color: #e8eaed;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .notifications-container {
-    padding: 16px;
-  }
-
-  .notifications-header {
-    padding: 16px 0 24px 0;
-  }
-
-  .page-title {
-    font-size: 24px;
-  }
-
-  .notifications-content {
-    gap: 24px;
-  }
-
-  .notification-card {
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .notification-action {
-    align-self: flex-start;
-    width: 100%;
-  }
-
-  .section-title {
-    font-size: 15px;
-  }
+  .notifications-container { padding: 16px; }
+  .notifications-header { padding: 16px 0 24px 0; }
+  .page-title { font-size: 24px; }
+  .notifications-content { gap: 24px; }
+  .notification-card { flex-direction: column; gap: 12px; padding: 16px; }
+  .notification-action { align-self: flex-start; width: 100%; }
+  .section-title { font-size: 15px; }
 }
 
 @media (max-width: 480px) {
-  .notifications-container {
-    padding: 12px;
-  }
-
-  .page-title {
-    font-size: 22px;
-  }
-
-  .notification-card {
-    padding: 14px;
-  }
-
-  .notification-title {
-    font-size: 14px;
-  }
-
-  .notification-message {
-    font-size: 13px;
-  }
-
-  .notification-action {
-    font-size: 13px;
-    padding: 7px 14px;
-  }
+  .notifications-container { padding: 12px; }
+  .page-title { font-size: 22px; }
+  .notification-card { padding: 14px; }
+  .notification-title { font-size: 14px; }
+  .notification-message { font-size: 13px; }
+  .notification-action { font-size: 13px; padding: 7px 14px; }
 }

@@ -4,9 +4,8 @@
   margin: 0 auto;
 }
 
-.tenant-header {
-  display: flex;
-  align-items: center;
+/* Override central .tenant-header for TenantSingle pages */
+.tenant-list-container .tenant-header {
   gap: 10px;
   border-bottom: 3px solid #eee;
   padding-bottom: 2rem;
@@ -55,6 +54,81 @@
   flex: 1;
 }
 
+/* Account Status Badge Section */
+.tenant-status-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin: 1.5rem 0 0;
+  width: fit-content;
+}
+
+.tenant-avatar {
+  width: 56px;
+  height: 56px;
+  background-color: #004aba;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tenant-status-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.tenant-status-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.tenant-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.tenant-status-badge.active {
+  color: #fff;
+  background-color: #004aba;
+}
+
+.tenant-status-badge.inactive {
+  color: #fff;
+  background-color: #dc2626;
+}
+
+.tenant-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.tenant-status-badge.active .tenant-status-dot {
+  background-color: #fff;
+}
+
+.tenant-status-badge.inactive .tenant-status-dot {
+  background-color: #fff;
+}
+
 .account-officer {
   display: flex;
   align-items: center;
@@ -63,7 +137,7 @@
   background-color: #f8f9fa;
   padding: 10px 15px;
   border-radius: 8px;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .officer-avatar {
@@ -551,23 +625,31 @@
 /* Tabs */
 .tenants-tabs {
   display: flex;
-  gap: 20px;
+  gap: 0;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 20px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.tenants-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tenants-tab {
   background: none;
   flex: 1;
+  min-width: max-content;
   border: none;
-  padding: 10px 0;
+  padding: 10px 16px;
   font-size: 0.8rem;
   font-weight: 500;
   color: #666;
   cursor: pointer;
   position: relative;
   transition: color 0.3s ease;
-  white-space: nowrap; /* Prevent text wrapping */
+  white-space: nowrap;
+  text-align: center;
 }
 
 .tenants-tab:hover {
@@ -683,6 +765,40 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+}
+
+/* Breakdown Modal */
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+}
+
+.breakdown-category {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.breakdown-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #004aba;
+  background-color: #e8ebf9;
+  padding: 2px 10px;
+  border-radius: 12px;
 }
 
 /* Container for the settings sections */

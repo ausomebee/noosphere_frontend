@@ -11,6 +11,7 @@ import Button from "../../../Components/Button/Button";
 import api from "../../../api/generalSettingsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { FiSettings, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import usePermissions from "../../../hooks/usePermissions";
 import "./GeneralSettings.css";
 
 const DATE_FORMAT_OPTIONS = [
@@ -35,6 +36,7 @@ const CURRENCY_OPTIONS = [
 
 const GeneralSettings = () => {
   const { user, tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // General settings state
   const [dateFormat, setDateFormat] = useState("MM/DD/YYYY");
@@ -412,17 +414,19 @@ const GeneralSettings = () => {
               <span className="settings-row-label">Date Format</span>
               <span className="settings-row-value">{dateFormat}</span>
             </div>
-            <Button
-              label="Change"
-              variant="ghost"
-              size="small"
-              width="auto"
-              className="settings-change-link"
-              onClick={() => {
-                setTempDateFormat(dateFormat);
-                setIsDateFormatModalOpen(true);
-              }}
-            />
+            {hasPermission("edit_general_settings") && (
+              <Button
+                label="Change"
+                variant="ghost"
+                size="small"
+                width="auto"
+                className="settings-change-link"
+                onClick={() => {
+                  setTempDateFormat(dateFormat);
+                  setIsDateFormatModalOpen(true);
+                }}
+              />
+            )}
           </div>
 
           <div className="settings-row">
@@ -433,17 +437,19 @@ const GeneralSettings = () => {
                   timeFormat}
               </span>
             </div>
-            <Button
-              label="Change"
-              variant="ghost"
-              size="small"
-              width="auto"
-              className="settings-change-link"
-              onClick={() => {
-                setTempTimeFormat(timeFormat);
-                setIsTimeFormatModalOpen(true);
-              }}
-            />
+            {hasPermission("edit_general_settings") && (
+              <Button
+                label="Change"
+                variant="ghost"
+                size="small"
+                width="auto"
+                className="settings-change-link"
+                onClick={() => {
+                  setTempTimeFormat(timeFormat);
+                  setIsTimeFormatModalOpen(true);
+                }}
+              />
+            )}
           </div>
 
           <div className="settings-row">
@@ -454,17 +460,19 @@ const GeneralSettings = () => {
                   currency}
               </span>
             </div>
-            <Button
-              label="Change"
-              variant="ghost"
-              size="small"
-              width="auto"
-              className="settings-change-link"
-              onClick={() => {
-                setTempCurrency(currency);
-                setIsCurrencyModalOpen(true);
-              }}
-            />
+            {hasPermission("edit_general_settings") && (
+              <Button
+                label="Change"
+                variant="ghost"
+                size="small"
+                width="auto"
+                className="settings-change-link"
+                onClick={() => {
+                  setTempCurrency(currency);
+                  setIsCurrencyModalOpen(true);
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -491,19 +499,21 @@ const GeneralSettings = () => {
               <span className="settings-row-label">Password</span>
               <span className="settings-row-value">••••••••••</span>
             </div>
-            <Button
-              label="Change"
-              variant="ghost"
-              size="small"
-              width="auto"
-              className="settings-change-link"
-              onClick={() => {
-                setCurrentPassword("");
-                setNewPassword("");
-                setConfirmPassword("");
-                setIsPasswordModalOpen(true);
-              }}
-            />
+            {hasPermission("edit_security_settings") && (
+              <Button
+                label="Change"
+                variant="ghost"
+                size="small"
+                width="auto"
+                className="settings-change-link"
+                onClick={() => {
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setIsPasswordModalOpen(true);
+                }}
+              />
+            )}
           </div>
 
           <div className="settings-row">
@@ -515,10 +525,17 @@ const GeneralSettings = () => {
                 Add an additional layer of security to your account during login
               </span>
             </div>
-            <SwitchInput
-              checked={twoFactorEnabled}
-              onChange={(e) => setTwoFactorEnabled(e.target.checked)}
-            />
+            {hasPermission("edit_security_settings") ? (
+              <SwitchInput
+                checked={twoFactorEnabled}
+                onChange={(e) => setTwoFactorEnabled(e.target.checked)}
+              />
+            ) : (
+              <SwitchInput
+                checked={twoFactorEnabled}
+                disabled
+              />
+            )}
           </div>
         </div>
 

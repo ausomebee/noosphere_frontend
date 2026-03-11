@@ -56,6 +56,16 @@
     height: 80px;
     color: #777C85;
   }
+
+  .secondary-sidebar-header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   
   .secondary-sidebar-nav ul {
     list-style: none;

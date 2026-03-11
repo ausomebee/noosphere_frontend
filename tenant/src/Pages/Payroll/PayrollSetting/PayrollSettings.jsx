@@ -1,16 +1,27 @@
-import React, { useState } from "react";
-import EmployeePaymentSchedules from "./PayrollSettingsSubs/EmployeePaymentSchedules";
+import React, { useState, useMemo } from "react";
 import IncomeItems from "./PayrollSettingsSubs/IncomeItems";
 import Deductions from "./PayrollSettingsSubs/Deductions";
 import PayrollCycles from "./PayrollSettingsSubs/PayrollCycles";
+import usePermissions from "../../../hooks/usePermissions";
+
+const ALL_TABS = [
+  { key: "incomeItems", label: "Income Items", permissionKey: "view_income_items_list" },
+  { key: "deductions", label: "Deductions", permissionKey: "view_deductions_list" },
+  { key: "payrollCycles", label: "Payroll Cycles", permissionKey: "view_payroll_cycles_list" },
+];
 
 const PayrollSettings = () => {
-  const [activeTab, setActiveTab] = useState("incomeItems");
+  const { hasPermission } = usePermissions();
+
+  const visibleTabs = useMemo(
+    () => ALL_TABS.filter((t) => hasPermission(t.permissionKey)),
+    [hasPermission]
+  );
+
+  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case "paymentSchedules":
-        return <EmployeePaymentSchedules />;
       case "incomeItems":
         return <IncomeItems />;
       case "deductions":
@@ -22,6 +33,8 @@ const PayrollSettings = () => {
     }
   };
 
+  if (!visibleTabs.length) return null;
+
   return (
     <>
       <div>
@@ -31,40 +44,18 @@ const PayrollSettings = () => {
         </h3>
       </div>
 
-      {/* Tabs */}
       <div className="tabs mt-6">
-        {/* <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "paymentSchedules" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("paymentSchedules")}
-        >
-          Compensation Types
-        </button> */}
-        <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "incomeItems" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("incomeItems")}
-        >
-          Income Items
-        </button>
-        <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "deductions" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("deductions")}
-        >
-          Deductions
-        </button>
-        <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "payrollCycles" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("payrollCycles")}
-        >
-          Payroll Cycles
-        </button>
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.key}
+            className={`tab flex items-center justify-center ${
+              activeTab === tab.key ? "active" : ""
+            }`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="mt-6">{renderActiveTab()}</div>

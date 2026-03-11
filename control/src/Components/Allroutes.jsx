@@ -21,6 +21,7 @@ const PasswordResetSuccess = lazy(() => import("../Pages/Authentication/ForgotPa
 const PasswordResetFailure = lazy(() => import("../Pages/Authentication/ForgotPassword/PasswordResetFailed"));
 const ForgotPasswordResetPassword = lazy(() => import("../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword"));
 const AdminOnboarding = lazy(() => import("../Pages/Authentication/AdminAuth/AdminOnboarding"));
+const PaymentPage = lazy(() => import("../Pages/Payment/PaymentPage"));
 
 /* ============================
    Dashboard (protected, with layout)
@@ -45,6 +46,8 @@ const AutoBilling = lazy(() => import("../Pages/BillingsAndPayment/BillingReport
 const MainPerformance = lazy(() => import("../Pages/Performance/MainPerformance"));
 const IssueManagement = lazy(() => import("../Pages/IssueManagement/IssueManagement"));
 const ControlSettings = lazy(() => import("../Pages/Settings/ControlSettings"));
+const SecuritySettings = lazy(() => import("../Pages/Settings/SecuritySettings"));
+const RoleConfiguration = lazy(() => import("../Pages/Settings/SettingsSubs/RoleConfiguration"));
 
 const AllRoutes = () => {
   return (
@@ -64,6 +67,7 @@ const AllRoutes = () => {
         <Route path="/password-reset-failed" element={<PasswordResetFailure />} />
         <Route path="/SA/reset-password/:userId" element={<ForgotPasswordResetPassword />} />
         <Route path="/admin/onboarding/:email/:userId" element={<AdminOnboarding />} />
+        <Route path="/payment/:token" element={<PaymentPage />} />
 
         {/* Dashboard routes (protected, with layout) */}
         <Route element={<ProtectedRoute><LayoutRoute /></ProtectedRoute>}>
@@ -74,11 +78,11 @@ const AllRoutes = () => {
           <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId" element={<ProspectPanel />} />
           <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit" element={<ProspectPanel />} />
           <Route path="/tenants/column-single/:pipelineStageId" element={<ManageColumn />} />
-          <Route path="/tenants/tenant-lists/features" element={<TenantSingleFeature />} />
-          <Route path="/tenants/tenant-lists/billing" element={<TenantSingleBilling />} />
-          <Route path="/tenants/tenant-lists/issues" element={<TenantSingleIssueManagement />} />
-          <Route path="/tenants/tenant-lists/logs" element={<TenantSingleUserLogs />} />
-          <Route path="/tenants/tenant-lists/security" element={<TenantSingleSecuritySettings />} />
+          <Route path="/tenants/tenant-lists/features/:tenantId" element={<TenantSingleFeature />} />
+          <Route path="/tenants/tenant-lists/billing/:tenantId" element={<TenantSingleBilling />} />
+          <Route path="/tenants/tenant-lists/issues/:tenantId" element={<TenantSingleIssueManagement />} />
+          <Route path="/tenants/tenant-lists/logs/:tenantId" element={<TenantSingleUserLogs />} />
+          <Route path="/tenants/tenant-lists/security/:tenantId" element={<TenantSingleSecuritySettings />} />
           <Route path="/plans/subscribers/:planId" element={<SubscriberList />} />
 
           {/* Performance */}
@@ -97,8 +101,9 @@ const AllRoutes = () => {
 
           {/* Settings */}
           <Route path="/settings/roles-permissions" element={<ControlSettings />} />
-          <Route path="/settings/notification-alerts" element={<div>Notification & Alerts Page</div>} />
-          <Route path="/settings/securitySettings" element={<div>Security Settings Page</div>} />
+          <Route path="/settings/roles-permissions/configure" element={<RoleConfiguration />} />
+          <Route path="/settings/roles-permissions/configure/:roleId" element={<RoleConfiguration />} />
+          <Route path="/settings/securitySettings" element={<SecuritySettings />} />
         </Route>
       </Routes>
     </Suspense>

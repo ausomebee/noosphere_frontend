@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -8,12 +8,24 @@ import AddInsuranceTypeModal from "../../../../Components/ReusableModal/BillingA
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
+import usePermissions from "../../../../hooks/usePermissions";
+
+const SUB_TABS = [
+  { key: "payers", label: "Payers", permissionKey: "view_payers_list" },
+  { key: "insuranceTypes", label: "Insurance Types", permissionKey: "view_insurance_list" },
+];
 
 const PayersAndInsurance = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
-  const [activeTab, setActiveTab] = useState("payers");
+  const visibleTabs = useMemo(
+    () => SUB_TABS.filter((t) => hasPermission(t.permissionKey)),
+    [hasPermission]
+  );
+
+  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
   const [payerModalOpen, setPayerModalOpen] = useState(false);
   const [insuranceTypeModalOpen, setInsuranceTypeModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -194,7 +206,7 @@ const PayersAndInsurance = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_insurance_type_information") && {
           label: "View",
           onClick: () => {
             setSelectedRow(row);
@@ -202,7 +214,7 @@ const PayersAndInsurance = () => {
             setInsuranceTypeModalOpen(true);
           },
         },
-        {
+        hasPermission("edit_insurance_type") && {
           label: "Edit",
           onClick: () => {
             setSelectedRow(row);
@@ -210,7 +222,7 @@ const PayersAndInsurance = () => {
             setInsuranceTypeModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_insurance_type") && {
           label: row.isActive ? "Deactivate" : "Activate",
           onClick: async () => {
             try {
@@ -228,7 +240,7 @@ const PayersAndInsurance = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -239,13 +251,13 @@ const PayersAndInsurance = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_payer_information") && {
           label: "View",
           onClick: () => {
             navigate(`/billing/settings/view-payer/${row.id}/${row.payerName}`);
           },
         },
-        {
+        hasPermission("edit_payer") && {
           label: "Edit",
           onClick: () => {
             setSelectedRow(row);
@@ -253,7 +265,7 @@ const PayersAndInsurance = () => {
             setPayerModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_payer") && {
           label: row.isActive ? "Deactivate" : "Activate",
           onClick: async () => {
             try {
@@ -263,7 +275,6 @@ const PayersAndInsurance = () => {
                 accessToken,
                 refreshToken,
               });
-              // Refetch data after toggle
               await fetchPayers();
               showToast(`Payer ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
             } catch (error) {
@@ -272,7 +283,7 @@ const PayersAndInsurance = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -433,6 +444,8 @@ const PayersAndInsurance = () => {
     }
   };
 
+  if (!visibleTabs.length) return null;
+
   return (
     <div>
       <h2 className="text-20px mt-6 text-gray-400">
@@ -440,38 +453,35 @@ const PayersAndInsurance = () => {
       </h2>
 
       <div className="tabs mt-6">
-        <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "payers" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("payers")}
-        >
-          <span>Payers</span>
-        </button>
-        <button
-          className={`tab flex items-center justify-center ${
-            activeTab === "insuranceTypes" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("insuranceTypes")}
-        >
-          <span>Insurance Types</span>
-        </button>
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.key}
+            className={`tab flex items-center justify-center ${
+              activeTab === tab.key ? "active" : ""
+            }`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
       {activeTab === "payers" && (
         <div>
-          <div className="justify-end flex mt-6">
-            <Button
-              label="Add a Payer"
-              variant="secondary"
-              icon={<FaPlus />}
-              onClick={() => {
-                setSelectedRow(null);
-                setMode("add");
-                setPayerModalOpen(true);
-              }}
-              disabled={payerSaving || serviceCodeLoading || roundingRuleLoading} // Disable if saving or loading dependencies
-            />
-          </div>
+          {hasPermission("add_payer") && (
+            <div className="justify-end flex mt-6">
+              <Button
+                label="Add a Payer"
+                variant="secondary"
+                icon={<FaPlus />}
+                onClick={() => {
+                  setSelectedRow(null);
+                  setMode("add");
+                  setPayerModalOpen(true);
+                }}
+                disabled={payerSaving || serviceCodeLoading || roundingRuleLoading}
+              />
+            </div>
+          )}
 
           <div className="mt-6">
             <CustomTable
@@ -490,19 +500,21 @@ const PayersAndInsurance = () => {
 
       {activeTab === "insuranceTypes" && (
         <div>
-          <div className="justify-end flex mt-6">
-            <Button
-              label="Add an Insurance Type"
-              variant="secondary"
-              icon={<FaPlus />}
-              onClick={() => {
-                setSelectedRow(null);
-                setMode("add");
-                setInsuranceTypeModalOpen(true);
-              }}
-              disabled={insuranceTypeSaving}
-            />
-          </div>
+          {hasPermission("add_insurance_type") && (
+            <div className="justify-end flex mt-6">
+              <Button
+                label="Add an Insurance Type"
+                variant="secondary"
+                icon={<FaPlus />}
+                onClick={() => {
+                  setSelectedRow(null);
+                  setMode("add");
+                  setInsuranceTypeModalOpen(true);
+                }}
+                disabled={insuranceTypeSaving}
+              />
+            </div>
+          )}
           <div className="mt-6">
             <CustomTable
               data={insuranceTypeTableData}

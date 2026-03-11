@@ -10,6 +10,7 @@ import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { connectSocket } from "../../../api/socketService";
 
 // Yup validation schema for security answer
 const answerSchema = yup.object().shape({
@@ -20,7 +21,7 @@ const answerSchema = yup.object().shape({
 });
 
 const Admin2FAQuestionLogin = () => {
-  const { userId, authQuestion } = useAuth();
+  const { userId, accessToken, tenantId, authQuestion } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -44,6 +45,7 @@ const Admin2FAQuestionLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("Security question verified successfully!", "success");
+        connectSocket({ accessToken, userId, tenantId });
         navigate("/dashboard");
       } else {
         throw new Error("Verification failed.");

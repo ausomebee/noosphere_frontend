@@ -7,6 +7,7 @@ import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { SelectInput, TextInput, TextareaInput } from "../../../Components/Input/Inputs";
 import api from "../../../api/helpAndSupportApi";
 import { showToast } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 import { FiPlus } from "react-icons/fi";
 import { BsCloudUpload } from "react-icons/bs";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -44,6 +45,7 @@ const STATUS_CLASS_MAP = {
 const SupportRequests = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -200,21 +202,21 @@ const SupportRequests = () => {
         type: "dropdown",
         label: "More",
         items: [
-          {
+          hasPermission("view_support_request") && {
             label: "View request details",
             onClick: (row) => navigate(`/help/support-requests/${row.id}`),
           },
-          {
+          hasPermission("withdraw_support_request") && {
             label: "Withdraw Request",
             onClick: (row) => {
               setRequests((prev) => prev.filter((r) => r.id !== row.id));
             },
             className: "remove",
           },
-        ],
+        ].filter(Boolean),
       },
     ],
-    [navigate]
+    [navigate, hasPermission]
   );
 
   // File handlers
@@ -289,14 +291,16 @@ const SupportRequests = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="support-submit-row">
-          <Button
-            label="Submit a new request"
-            variant="primary"
-            icon={<FiPlus />}
-            onClick={() => setIsSubmitModalOpen(true)}
-          />
-        </div>
+        {hasPermission("create_support_request") && (
+          <div className="support-submit-row">
+            <Button
+              label="Submit a new request"
+              variant="primary"
+              icon={<FiPlus />}
+              onClick={() => setIsSubmitModalOpen(true)}
+            />
+          </div>
+        )}
 
         {/* Table */}
         <CustomTable

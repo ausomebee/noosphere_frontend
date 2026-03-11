@@ -10,6 +10,7 @@ import ProductivityInformation from "../Dashboard/DashboardCards/ProductivityInf
 import UpcomingAppointments from "../Dashboard/DashboardCards/UpcomingAppointments";
 import { SelectInput } from "../../Components/Input/Inputs";
 import { useNavigate } from "react-router-dom";
+import usePermissions from "../../hooks/usePermissions";
 
 const DashboardCard = ({
   title,
@@ -163,6 +164,7 @@ const DashboardCard = ({
 };
 
 const Dashboard = () => {
+  const { hasPermission } = usePermissions();
   // State for all controlled inputs
   const [upcomingAppointmentsCount, setUpcomingAppointmentsCount] = useState(0);
   const [authorizationStatus, setAuthorizationStatus] = useState("expired");
@@ -170,31 +172,40 @@ const Dashboard = () => {
   const [sessionType, setSessionType] = useState("completedSessions");
   const [sessionPeriod, setSessionPeriod] = useState("period");
 
-  const [cards, setCards] = useState([
+  const allCards = [
     {
       title: "Intake Pipeline",
       hasData: true,
       viewMoreRoute: "/clients/pipeline",
+      permissionKey: "view_intake_pipeline_info",
     },
     {
       title: "Session Information",
       hasData: true,
       viewMoreRoute: "/billing/timesheets",
+      permissionKey: "view_session_information",
     },
     {
       title: "Authorizations",
       hasData: true,
+      permissionKey: "view_authorization_information",
     },
     {
       title: "Productivity Information",
       hasData: true,
+      permissionKey: "view_productivity_information",
     },
     {
       title: "Upcoming Appointments",
       hasData: true,
       viewMoreRoute: "/scheduler/appointments",
+      permissionKey: "view_upcoming_appointments",
     },
-  ]);
+  ];
+
+  const [cards, setCards] = useState(
+    allCards.filter((c) => !c.permissionKey || hasPermission(c.permissionKey))
+  );
 
   const [hiddenCards, setHiddenCards] = useState([]);
 

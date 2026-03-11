@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
+import usePermissions from "../../hooks/usePermissions";
 import Button from "../../Components/Button/Button";
 import AddProgramModal from "../../Components/ReusableModal/ProgramLibraryModal/AddProgramModal";
 import DeleteLibraryModal from "../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
@@ -26,6 +27,7 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
 
   /* ----------  auth  ---------- */
     const { accessToken, refreshToken } = useAuth();
+    const { hasPermission } = usePermissions();
 
   /* ----------  fetch programs  ---------- */
   const fetchPrograms = async () => {
@@ -152,11 +154,11 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
             setCurrentView("targetLibrary");
           },
         },
-        {
+        hasPermission("edit_program") && {
           label: "Edit",
           onClick: handleEditProgram,
         },
-        {
+        hasPermission("create_program") && {
           label: "Duplicate",
           onClick: async (row) => {
             try {
@@ -174,12 +176,12 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
             }
           },
         },
-        {
+        hasPermission("delete_program") && {
           label: "Delete",
           onClick: handleDeleteProgram,
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -202,14 +204,16 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
             </div>
           </div>
 
-          <div className="flex justify-end mt-6">
-            <Button
-              label="Add a new Program"
-              variant="primary"
-              icon={<FaPlus />}
-              onClick={handleAddProgram}
-            />
-          </div>
+          {hasPermission("create_program") && (
+            <div className="flex justify-end mt-6">
+              <Button
+                label="Add a new Program"
+                variant="primary"
+                icon={<FaPlus />}
+                onClick={handleAddProgram}
+              />
+            </div>
+          )}
 
           <div className="mt-6">
             <CustomTable

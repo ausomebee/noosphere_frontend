@@ -9,6 +9,11 @@
   padding: 1.25rem;
 }
 
+.billing-board-header .billing-board-title {
+  flex: 1;
+  min-width: 0;
+}
+
 .billing-board-buttons {
   display: flex;
   justify-content: end;
@@ -20,7 +25,7 @@
 .billing-board-title h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #000000;
+  color: #333;
   margin: 0;
 }
 
@@ -34,13 +39,22 @@
   display: flex;
   margin: 20px 0;
   border-bottom: 1px solid #777c85;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
+  flex: 1;
+  min-width: max-content;
   padding: 10px 20px;
   cursor: pointer;
   font-weight: bold;
   color: #777c85;
+  text-align: center;
 }
 
 .tab.active {
@@ -287,70 +301,6 @@
   position: relative;
 }
 
-/* Dropdown Container */
-.dropdown-container {
-  position: relative;
-  display: inline-block;
-}
-
-/* Dropdown Menu Base Styles */
-.dropdown-menu {
-  width: 200px;
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  position: absolute;
-  top: 50px;
-  right: 15px;
-}
-
-.dropdown-menu-header {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  margin-right: 16px;
-}
-
-.dropdown-menu-row {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  margin-right: 16px;
-}
-
-.dropdown-items {
-  padding: 8px 0;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #333;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.dropdown-item:hover {
-  background-color: #f3f4f6;
-}
-
-.dropdown-item-danger {
-  color: #dc2626;
-}
-
-.dropdown-item-danger:hover {
-  background-color: #f3f4f6;
-}
-
 .plan-header-left {
   display: flex;
   align-items: center;
@@ -421,18 +371,6 @@
   color: #004aba;
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-
-  cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
 .subscriber-list-header h1 {
   font-size: 24px;
   margin: 0;
@@ -448,7 +386,6 @@
   display: flex;
   gap: 20px;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .filter-group {
@@ -553,6 +490,49 @@
 
 .subcriber-dropdown-menu button:hover {
   background-color: #f0f0f0; /* Highlight on hover */
+}
+
+/* Report page title (scoped to billing reports only) */
+.report-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.report-page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.report-page-breadcrumbs {
+  font-size: 13px;
+  font-weight: 500;
+  color: #a1a8b3;
+  margin: 0;
+}
+
+.report-page-breadcrumbs-active {
+  font-size: 13px;
+  font-weight: 600;
+  color: #002d7d;
+}
+
+/* Report header — back button left, title centered */
+.report-header-centered {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.report-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Activity Reports Styles */
@@ -699,10 +679,17 @@
   background-color: #ececec;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.invoice-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 .invoice-tab {
   flex: 1;
+  min-width: max-content;
   padding: 8px 16px;
   border: none;
   background: #ececec;
@@ -727,10 +714,17 @@
   width: 100%;
   display: flex;
   padding: 10px 20px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.sub-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 .sub-tab {
   flex: 1;
+  min-width: max-content;
   padding: 5px 15px;
   border: none;
   background: none;
@@ -788,25 +782,6 @@
   margin-bottom: -40px;
 }
 
-.subscription-tabs-container {
-  width: 100%;
-  display: flex;
-  padding: 10px 10px;
-}
-
-.subscription-tab {
-  flex: 1;
-  padding: 5px 15px;
-  border: none;
-  background: none;
-  border-bottom: 1px solid #ececec;
-  cursor: pointer;
-}
-
-.subscription-tab.active {
-  border-bottom: 2px solid #242528;
-  font-weight: bold;
-}
 
 .subscription-table-container {
   width: 100%;

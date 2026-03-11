@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import {
   DndContext,
   rectIntersection,
@@ -66,9 +67,7 @@ const JiraBoard = () => {
   const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } = useSelector(
     (state) => state.pipeline
   );
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
   const [loadingCount, setLoadingCount] = useState(0);
   const isLoading = loadingCount > 0;
   const [localTasks, setLocalTasks] = useState({});
@@ -84,7 +83,6 @@ const JiraBoard = () => {
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
   const [selectedColumnId, setSelectedColumnId] = useState(null);
   const [addColumnIndex, setAddColumnIndex] = useState(null);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [stages, setStages] = useState([]);
 
@@ -122,59 +120,13 @@ const JiraBoard = () => {
     [accessToken, refreshToken]
   );
 
-  const fetchStaffAndStages = useCallback(async () => {
-    if (!authTokens.accessToken || !authTokens.refreshToken) {
-      showToast("Authentication tokens not available.", "error");
-      return;
-    }
-
-    startLoading();
-    try {
-      const [adminsResponse, stagesResponse] = await Promise.all([
-        api.getAllAdmins({
-          accessToken: authTokens.accessToken,
-          refreshToken: authTokens.refreshToken,
-        }),
-        pipeline?.id
-          ? api.GetPipelineStage({
-              pipelineId: pipeline.id,
-              accessToken: authTokens.accessToken,
-              refreshToken: authTokens.refreshToken,
-            })
-          : Promise.resolve({ data: { data: [] } }),
-      ]);
-
-      const admins = adminsResponse.data?.data || [];
-      setStaffList(
-        admins.map((admin) => ({
-          staffId: admin.id || `admin-${uuidv4()}`,
-          name: admin.fullName || "Unknown Admin",
-        }))
-      );
-
-      const stagesData = stagesResponse.data?.data || [];
-      setStages(
-        stagesData.map((stage) => ({
-          stageId: stage.id || `stage-${uuidv4()}`,
-          name: stage.name || "Unnamed Stage",
-        }))
-      );
-    } catch (err) {
-      if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
-    } finally {
-      stopLoading();
-    }
-  }, [authTokens, pipeline?.id]);
-
   const fetchPipelineData = useCallback(async () => {
-    if (!authTokens.accessToken || !authTokens.refreshToken) {
-      showToast("Authentication tokens not available.", "error");
-      return;
-    }
+    if (!authTokens.accessToken || !authTokens.refreshToken) return;
 
-    if (isDataLoaded) {
-      return;
-    }
+    // Clear stale Redux and local state before every fresh fetch
+    setLocalTasks({});
+    dispatch(setColumns({}));
+    dispatch(updateColumnOrder([]));
 
     startLoading();
     try {
@@ -188,20 +140,31 @@ const JiraBoard = () => {
         return;
       }
 
-      await fetchStaffAndStages();
+      // Fetch admins and stages in parallel
+      const [adminsResponse, stagesResponse] = await Promise.all([
+        api.getAllAdmins(authTokens),
+        api.GetPipelineStage({ pipelineId, ...authTokens }),
+      ]);
 
-      const stagesResponse = await api.GetPipelineStage({
-        pipelineId,
-        accessToken: authTokens.accessToken,
-        refreshToken: authTokens.refreshToken,
-      });
+      const admins = adminsResponse.data?.data || [];
+      setStaffList(
+        admins.map((admin) => ({
+          staffId: admin.id || `admin-${uuidv4()}`,
+          name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
+        }))
+      );
+
       const stagesData = stagesResponse.data?.data || [];
+      setStages(
+        stagesData.map((stage) => ({
+          stageId: stage.id || `stage-${uuidv4()}`,
+          name: stage.name || "Unnamed Stage",
+        }))
+      );
 
-      if (!stagesData.length) {
-        showToast("No stages found for pipeline.", "warning");
-        return;
-      }
+      if (!stagesData.length) return;
 
+      // Build fresh columns from API response — no stale data
       const newColumns = {};
       const newColumnOrder = [];
       stagesData.forEach((stage) => {
@@ -216,7 +179,6 @@ const JiraBoard = () => {
             colorCode: stage.colourCode || "#000000",
           };
           newColumnOrder.push(stage.id);
-        } else {
         }
       });
 
@@ -228,22 +190,12 @@ const JiraBoard = () => {
         (stageId) =>
           dispatch(fetchPipelineItems({ stageId, ...authTokens }))
             .unwrap()
-            .then((response) => {
-              return {
-                stageId,
-                items: response.items || [],
-              };
-            })
-            .catch((err) => {
-              if (import.meta.env.DEV) console.error(`Failed to fetch items for stage ${stageId}:`, err);
-              throw err;
-            }),
+            .then((response) => ({ stageId, items: response.items || [] }))
+            .catch(() => ({ stageId, items: [] })),
         3
       );
 
       const newTasks = {};
-      let taskCount = 0;
-      const fetchErrors = [];
 
       for (const result of results) {
         if (result.status === "fulfilled") {
@@ -254,40 +206,27 @@ const JiraBoard = () => {
               (stage?.tasks?.length || 0) + (stage?.documents?.length || 0);
 
             for (const item of items) {
-              if (!item.id || typeof item.id !== "string") {
-                continue;
-              }
-              taskCount++;
+              if (!item.id || typeof item.id !== "string") continue;
 
-              let doneTasksCount = 0;
-              let sentDocumentsCount = 0;
+              let doneCount = 0;
               try {
-                const pipelineItemResult = await dispatch(
-                  fetchSinglePipelineItem({
-                    itemId: item.id,
-                    ...authTokens,
-                  })
+                const piResult = await dispatch(
+                  fetchSinglePipelineItem({ itemId: item.id, ...authTokens })
                 ).unwrap();
-                const pipelineItem = pipelineItemResult.data;
-
-                // Handle doneTasks as an object
-                const doneTasks = pipelineItem?.doneTasks || {};
-                doneTasksCount = Object.values(doneTasks).filter((value) => value === true).length;
-
-                // Handle sentDocuments as an object
-                const sentDocuments = pipelineItem?.sentDocuments || {};
-                sentDocumentsCount = Object.values(sentDocuments).filter((value) => value === true).length;
-              } catch (err) {
-                if (import.meta.env.DEV) console.error(`Failed to fetch pipeline item ${item.id}:`, err);
+                const pi = piResult.data;
+                const doneTasks = pi?.doneTasks || {};
+                const sentDocuments = pi?.sentDocuments || {};
+                doneCount =
+                  Object.values(doneTasks).filter((v) => v === true).length +
+                  Object.values(sentDocuments).filter((v) => v === true).length;
+              } catch {
+                // item detail fetch failed — show 0 progress, still add card
               }
-
-              const doneCount = doneTasksCount + sentDocumentsCount;
-              const progress = `${doneCount}/${totalRequiredItems}`;
 
               newTasks[item.id] = {
                 id: item.id,
                 company: item.companyName || `Candidate ${item.id.slice(0, 8)}`,
-                progress,
+                progress: `${doneCount}/${totalRequiredItems}`,
                 staff: item.assignToAdmin || null,
                 contactPerson: item.contactPerson || "",
                 email: item.email || "",
@@ -299,32 +238,19 @@ const JiraBoard = () => {
               };
             }
           }
-        } else {
-          fetchErrors.push(result.reason);
         }
       }
 
       setLocalTasks(newTasks);
-      setIsDataLoaded(true);
-
-     
     } catch (err) {
       if (import.meta.env.DEV) console.error("Fetch error:", err);
     } finally {
       stopLoading();
     }
-  }, [dispatch, authTokens, isDataLoaded, fetchStaffAndStages]);
+  }, [dispatch, authTokens]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    fetchPipelineData().then(() => {
-      if (isMounted) setIsDataLoaded(true);
-    });
-
-    return () => {
-      isMounted = false;
-    };
+    fetchPipelineData();
   }, [fetchPipelineData]);
 
   useEffect(() => {
@@ -576,8 +502,8 @@ const JiraBoard = () => {
         };
         return updatedTasks;
       });
-      setIsDataLoaded(false);
       showToast("Candidate added successfully!", "success");
+      fetchPipelineData();
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to add candidate:", error);
       showToast("Failed to add candidate.", "error");
@@ -619,7 +545,6 @@ const JiraBoard = () => {
         });
         setShowDeleteCandidateModal(false);
         setSelectedTaskIds([]);
-        setIsDataLoaded(false);
         showToast(
           `Deleted ${selectedTaskIds.length} candidate(s) successfully!`,
           "success"
@@ -931,7 +856,6 @@ const JiraBoard = () => {
         ).unwrap();
         if (response.status === "ok") {
           showToast("Pipeline stage created successfully!", "success");
-          setIsDataLoaded(false);
           fetchPipelineData();
         } else {
           throw new Error("Failed to create pipeline stage.");

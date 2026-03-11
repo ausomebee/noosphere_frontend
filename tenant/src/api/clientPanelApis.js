@@ -496,6 +496,32 @@ const GetSingleClientAuthorizationById = async ({
   }
 };
 
+// PATCH /client-authorization/{id}/{active}  — true to activate, false to deactivate
+const SetClientAuthorizationActive = async ({ id, active, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const res = await authFetch.patch(
+      `${PLAIN_API_URL}/client-authorization/${id}/${active}`
+    );
+    return res;
+  } catch (e) {
+    throw new Error(e.response?.data?.message || "Set authorization active failed");
+  }
+};
+
+// PATCH /client-authorization/delete/{id}/{delete}  — true to soft-delete
+const SoftDeleteClientAuthorization = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const res = await authFetch.patch(
+      `${PLAIN_API_URL}/client-authorization/delete/${id}/true`
+    );
+    return res;
+  } catch (e) {
+    throw new Error(e.response?.data?.message || "Delete authorization failed");
+  }
+};
+
 const GetClientUpcomingAppointments = async ({
   id,
   accessToken,
@@ -626,6 +652,8 @@ export default {
   GetAllClientAuthorizationByTenantClientId,
   UpdateClientAuthorization,
   GetSingleClientAuthorizationById,
+  SetClientAuthorizationActive,
+  SoftDeleteClientAuthorization,
   GetClientUpcomingAppointments,
   GetClientPastAppointments,
   GetClientCancelAppointments,

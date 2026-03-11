@@ -26,10 +26,12 @@ const AccordionTableRobust = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const initialDataRef = useRef(initialServiceData);
+  const actionButtonRefs = useRef({});
 
   const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: { services: initialServiceData },
@@ -95,7 +97,22 @@ const AccordionTableRobust = ({
   const toggleRow = (idx) => setExpandedRow(expandedRow === idx ? null : idx);
   const toggleDropdown = (idx, e) => {
     e.stopPropagation();
-    setDropdownOpen(dropdownOpen === idx ? null : idx);
+    if (dropdownOpen === idx) {
+      setDropdownOpen(null);
+      return;
+    }
+    const button = actionButtonRefs.current[idx];
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      const dropdownWidth = 220;
+      const spaceBelow = window.innerHeight - rect.bottom - 8;
+      const dropdownHeight = 130;
+      let top = spaceBelow >= dropdownHeight ? rect.bottom + 4 : rect.top - dropdownHeight - 4;
+      let left = rect.right - dropdownWidth;
+      if (left < 4) left = 4;
+      setDropdownPosition({ top, left });
+    }
+    setDropdownOpen(idx);
   };
 
   const addServiceRow = (authId, e) => {
@@ -279,13 +296,17 @@ const AccordionTableRobust = ({
                     >
                       <button
                         className="robust-action-dots"
+                        ref={(el) => { actionButtonRefs.current[idx] = el; }}
                         onClick={(e) => toggleDropdown(idx, e)}
                       >
                         <FaEllipsisV />
                       </button>
 
                       {isDropdownOpen && (
-                        <div className="robust-dropdown">
+                        <div
+                          className="robust-dropdown"
+                          style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+                        >
                           <button
                             onClick={() => {
                               onEdit?.(row);
@@ -300,23 +321,21 @@ const AccordionTableRobust = ({
                               onDeactivate?.(row);
                               setDropdownOpen(null);
                             }}
-                            disabled={used}
                           >
-                            Deactivate Authorization
+                            {row.isActive === false ? "Activate" : "Deactivate"} Authorization
                           </button>
                           <button
                             onClick={() => {
                               onDelete?.(row);
                               setDropdownOpen(null);
                             }}
-                            disabled={used}
                             className="robust-danger"
                           >
                             Delete Authorization
                           </button>
                           {used && (
                             <div className="robust-note">
-                              Cannot modify — services already utilized
+                              Edit disabled — services already utilized
                             </div>
                           )}
                         </div>

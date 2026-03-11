@@ -24,6 +24,36 @@
   padding-right: 1rem;
   margin-bottom: 1.0rem;
 }
+.resource-utilization-period-tabs {
+  display: flex;
+  gap: 0.25rem;
+  grid-column: 3;
+  justify-self: end;
+}
+
+.period-tab {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.period-tab:hover {
+  background: #f0f4ff;
+  color: #1E90FF;
+  border-color: #1E90FF;
+}
+
+.period-tab.active {
+  background: #1E90FF;
+  color: #fff;
+  border-color: #1E90FF;
+}
+
 .resource-utilization-chart-legend {
   display: flex;
   justify-content: center;

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
@@ -34,6 +34,8 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
     { value: "Resolved", label: "Resolved" },
   ];
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (isOpen && initialStatus) {
       setValue("statusFrom", initialStatus, { shouldValidate: true });
@@ -44,9 +46,16 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
 
   const onSubmit = async (data) => {
     if (data.statusFrom && data.statusTo) {
-      await onSave(data.statusTo);
-      reset();
-      onClose();
+      setLoading(true);
+      try {
+        await onSave(data.statusTo);
+        reset();
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -60,6 +69,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
       title="Change Status"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

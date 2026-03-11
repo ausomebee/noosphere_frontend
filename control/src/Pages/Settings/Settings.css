@@ -1,0 +1,152 @@
+/* Settings Page */
+.settings-page {
+  padding: 0;
+}
+
+.settings-header {
+  margin-bottom: 24px;
+}
+
+.settings-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.settings-header p {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Tab Navigation */
+.settings-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 24px;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-tab {
+  flex: 1;
+  min-width: max-content;
+  padding: 12px 32px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  text-align: center;
+  margin-bottom: -2px;
+}
+
+.settings-tab:hover {
+  color: #374151;
+}
+
+.settings-tab.active {
+  color: #00215D;
+  border-bottom-color: #00215D;
+  font-weight: 600;
+}
+
+/* Tab Content */
+.settings-tab-content {
+  min-height: 400px;
+}
+
+/* Action Bar (above table) */
+.settings-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-action-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.settings-action-bar-left .input-group {
+  margin-bottom: 0;
+}
+
+.settings-action-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Permissions Placeholder */
+.settings-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #9ca3af;
+  gap: 12px;
+}
+
+.settings-placeholder h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0;
+}
+
+.settings-placeholder p {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .settings-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .settings-tab {
+    padding: 10px 20px;
+    font-size: 0.8rem;
+  }
+
+  .settings-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-action-bar-left {
+    flex-direction: column;
+  }
+
+  .settings-action-bar-right {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+  .settings-tab {
+    padding: 10px 24px;
+    font-size: 0.85rem;
+  }
+}

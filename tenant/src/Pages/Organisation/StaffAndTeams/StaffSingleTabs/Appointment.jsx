@@ -12,6 +12,7 @@ import { FaPlus } from "react-icons/fa";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import Button from "../../../../Components/Button/Button";
+import usePermissions from "../../../../hooks/usePermissions";
 import { SearchInput } from "../../../../Components/Input/Inputs";
 import DatePickerModal from "../../../../Components/ReusableModal/SchedulerModal/DatePickerModal";
 import api from "../../../../api/organisationStaffApis";
@@ -248,6 +249,7 @@ const transformAppointment = (appt) => {
 };
 
 const Appointment = ({ staffId, accessToken, refreshToken }) => {
+  const { hasPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState("calendar");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("month");
@@ -560,12 +562,14 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
             </div>
 
             <div className="cal-sched-left-controls">
-              <Button
-                label="Set availability"
-                variant="primary"
-                onClick={() => setIsAvailabilityModalOpen(true)}
-                icon={<FaPlus />}
-              />
+              {hasPermission("set_staff_availability") && (
+                <Button
+                  label="Set availability"
+                  variant="primary"
+                  onClick={() => setIsAvailabilityModalOpen(true)}
+                  icon={<FaPlus />}
+                />
+              )}
             </div>
           </div>
 

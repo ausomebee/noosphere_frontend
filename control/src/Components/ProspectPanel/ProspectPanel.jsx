@@ -8,7 +8,7 @@ import {
 import { IoMdMove } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { LuCloudUpload } from "react-icons/lu";
-import { CheckboxInput } from "../Input/Inputs";
+import { CheckboxInput, RadioInput, SelectInput } from "../Input/Inputs";
 import Button from "../Button/Button";
 import "./ProspectPanel.css";
 import "../ReusableModal/ReusableModal.css";
@@ -20,9 +20,11 @@ import CustomDocumentModal from "../ReusableModal/CustomDocumentModal";
 import UploadDocumentModal from "../ReusableModal/UploadDocumentModal";
 import MoveCandidateModal from "../ReusableModal/MoveCandidateModal";
 import AssignCandidateModal from "../ReusableModal/AssignCandidateModal";
+import ReusableModal from "../ReusableModal/ReusableModal";
 import { FaArrowLeft, FaDollarSign } from "react-icons/fa";
 import Alert from "../Alert/Alert";
 import { useDispatch, useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import {
   fetchSinglePipelineItem,
   fetchSinglePipelineStages,
@@ -42,115 +44,44 @@ import {
   addTaskToDraft,
   addDocumentToDraft,
 } from "../../ReduxStore/features/PipelineSlice";
-import { FaCircleCheck } from "react-icons/fa6";
 import api from "../../api/TenantApis";
+import billingApi from "../../api/BillingApis";
+import invoiceApi from "../../api/InvoiceApi";
 import { showToast } from "../../Helper/ShowToast";
 import { v4 as uuidv4 } from "uuid";
 
-const PaymentLinkGeneratedModal = ({ isOpen, onClose, link }) => {
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast("Link copied to clipboard!", "success");
-    } catch (err) {
-      showToast("Failed to copy link", "error");
-    }
-  };
-
-  return (
-    <div className={`prospect-modal ${isOpen ? "open" : ""}`}>
-      <div className="prospect-modal-content payment-link-modal">
-        <div className="prospect-modal-icon">
-          <FaCircleCheck size={48} color="#22c55e" />
-        </div>
-        <h3>Payment link generated</h3>
-        <p>
-          This link directs the recipient to the payment page to purchase a plan
-        </p>
-        <div className="payment-link-container">
-          <span className="payment-link">{link}</span>
-          <button className="copy-link-button" onClick={copyToClipboard}>
-            Copy link
-          </button>
-        </div>
-        <p className="expiry-note">
-          This link expires in <strong>24 hours</strong>. You'll need to create
-          a new one afterward.
-        </p>
-        <div className="prospect-modal-actions">
-          <Button
-            label="Send Payment Link"
-            variant="primary"
-            onClick={onClose}
-            width="100%"
-          />
-        </div>
-      </div>
-    </div>
-  );
+const getFrequencyPayload = (freq) => {
+  if (freq === "monthly") return { billingFrequency: "Monthly", quantity: 1 };
+  const match = freq.match(/^(\d+)_years?$/);
+  if (match) return { billingFrequency: "Yearly", quantity: parseInt(match[1], 10) };
+  return { billingFrequency: "Monthly", quantity: 1 };
 };
 
-const PaymentActionsModal = ({
-  isOpen,
-  onClose,
-  onRegenerate,
-  generatedDate,
-  paymentDate,
-  expiryDate,
-}) => {
-  const paymentHistoryItems = [
-    {
-      text: `Payment link generated ${generatedDate || "N/A"}`,
-      showButton: false,
-    },
-    {
-      text: `Plan purchase payment made on ${paymentDate || "Not yet paid"}`,
-      showButton: false,
-    },
-    {
-      text: `Payment link expired ${expiryDate || "N/A"}`,
-      showButton: true,
-    },
-  ];
+const formatEventLabel = (event) => {
+  switch (event) {
+    case "PAYMENT_LINK_GENERATED": return "Payment link generated";
+    case "PAYMENT_LINK_REGENERATED": return "Payment link regenerated";
+    case "PAYMENT_LINK_EXPIRED": return "Payment link expired";
+    case "PAYMENT_LINK_PAID": return "Plan purchase payment made on";
+    default: return event;
+  }
+};
 
-  return (
-    <div className={`prospect-modal ${isOpen ? "open" : ""}`}>
-      <div className="prospect-modal-content payment-actions-modal">
-        <h3>Payment Actions</h3>
-        <div className="payment-history">
-          {paymentHistoryItems.map((item, index) => (
-            <div key={index} className="payment-history-item">
-              <p>{item.text}</p>
-              {item.showButton && (
-                <Button
-                  label="Regenerate link"
-                  variant="primary"
-                  onClick={onRegenerate}
-                  width="auto"
-                  className="history-button"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="payment-modal-actions">
-          <Button
-            label="Close"
-            variant="outline"
-            onClick={onClose}
-            width="300px"
-          />
-        </div>
-      </div>
-    </div>
-  );
+const formatHistoryDate = (isoString) => {
+  const d = new Date(isoString);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}.${mm}.${yy}, ${hh}:${min}`;
 };
 
 const ProspectPanel = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { pipelineStageId, pipelineItemId } = useParams();
-  const token = useSelector((state) => state.authentication?.user?.token);
+  const { accessToken, refreshToken } = useAuth();
 
   const pipelineItem = useSelector(selectPipelineItem);
   const pipelineId = useSelector((state) => state.pipeline.pipeline?.id);
@@ -187,18 +118,24 @@ const ProspectPanel = () => {
   const [isCustomTaskModalOpen, setIsCustomTaskModalOpen] = useState(false);
   const [isCustomDocModalOpen, setIsCustomDocModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isPaymentLinkGeneratedModalOpen, setIsPaymentLinkGeneratedModalOpen] =
-    useState(false);
-  const [isManagePaymentModalOpen, setIsManagePaymentModalOpen] =
-    useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentModalTab, setPaymentModalTab] = useState("Plan Settings");
   const [isMoveCandidateModalOpen, setIsMoveCandidateModalOpen] =
     useState(false);
   const [isAssignCandidateModalOpen, setIsAssignCandidateModalOpen] =
     useState(false);
-  const [paymentLink, setPaymentLink] = useState("");
-  const [paymentLinkExpiry, setPaymentLinkExpiry] = useState(null);
   const [hasGeneratedPaymentBefore, setHasGeneratedPaymentBefore] =
     useState(false);
+  const [selectedPlanType, setSelectedPlanType] = useState("STANDARD");
+  const [plans, setPlans] = useState([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [renewalFrequency, setRenewalFrequency] = useState("");
+  const [generatedLink, setGeneratedLink] = useState(null);
+  const [invoiceHistory, setInvoiceHistory] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [loadingPlans, setLoadingPlans] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [localStages, setLocalStages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -215,7 +152,7 @@ const ProspectPanel = () => {
   }, [columns, stages, pipelineStageId]);
 
   const fetchStaffAndStages = useCallback(async () => {
-    if (!token) {
+    if (!accessToken) {
       setFetchError("Authentication token not available.");
       showToast("Authentication token not available.", "error");
       return;
@@ -224,14 +161,14 @@ const ProspectPanel = () => {
     try {
       const [adminsResponse, stagesResponse] = await Promise.all([
         api.getAllAdmins({
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         }),
         pipelineId
           ? api.GetPipelineStage({
               pipelineId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           : Promise.resolve({ data: { data: [] } }),
       ]);
@@ -240,7 +177,7 @@ const ProspectPanel = () => {
       setStaffList(
         admins.map((admin) => ({
           staffId: admin.id || `admin-${uuidv4()}`,
-          name: admin.fullName || "Unknown Admin",
+          name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
         }))
       );
 
@@ -256,7 +193,33 @@ const ProspectPanel = () => {
       setFetchError("Failed to load staff or stages.");
       showToast("Failed to load staff or stages.", "error");
     }
-  }, [token, pipelineId]);
+  }, [accessToken, refreshToken, pipelineId]);
+
+  const fetchPlans = useCallback(async (planType) => {
+    try {
+      setLoadingPlans(true);
+      const response = await billingApi.GetPlanByPlanType({
+        planType,
+        accessToken,
+        refreshToken,
+      });
+      const activePlans = (response.data || []).filter((p) => p.active);
+      setPlans(activePlans);
+      setSelectedPlanId("");
+      setSelectedPlan(null);
+    } catch (err) {
+      showToast(err.message || "Failed to load plans", "error");
+      setPlans([]);
+    } finally {
+      setLoadingPlans(false);
+    }
+  }, [accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      fetchPlans(selectedPlanType);
+    }
+  }, [selectedPlanType, isPaymentModalOpen, fetchPlans]);
 
   useEffect(() => {
     const hasGenerated = localStorage.getItem(
@@ -267,7 +230,7 @@ const ProspectPanel = () => {
     }
 
     const fetchData = async () => {
-      if (!pipelineItemId || !pipelineStageId || !token) {
+      if (!pipelineItemId || !pipelineStageId || !accessToken) {
         setFetchError("Missing required parameters or authentication token.");
         setIsLoading(false);
         return;
@@ -279,22 +242,22 @@ const ProspectPanel = () => {
           dispatch(
             fetchSinglePipelineItem({
               itemId: pipelineItemId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           dispatch(
             fetchSinglePipelineStages({
               pipelineStageId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           dispatch(
             fetchPipelineStages({
               pipelineId,
-              accessToken: token,
-              refreshToken: token,
+              accessToken,
+              refreshToken,
             })
           ).unwrap(),
           fetchStaffAndStages(),
@@ -313,7 +276,8 @@ const ProspectPanel = () => {
     dispatch,
     pipelineItemId,
     pipelineStageId,
-    token,
+    accessToken,
+    refreshToken,
     pipelineId,
     fetchStaffAndStages,
   ]);
@@ -376,7 +340,7 @@ const ProspectPanel = () => {
         staff: pipelineItem?.admin
           ? {
               staffId: pipelineItem.admin.id,
-              name: pipelineItem.admin.fullName,
+              name: `${pipelineItem.admin.firstName || ""} ${pipelineItem.admin.lastName || ""}`.trim(),
             }
           : null,
         progress,
@@ -394,21 +358,108 @@ const ProspectPanel = () => {
     }
   }, [pipelineItem, status, pipelineStageId, columns, pipelineItemId]);
 
-  const handleGeneratePaymentLink = () => {
-    const newLink = `https://pay.noosphere.com/subscriptionplans_${uuidv4()}`;
-    const expiryDate = new Date();
-    expiryDate.setHours(expiryDate.getHours() + 24);
-
-    setPaymentLink(newLink);
-    setPaymentLinkExpiry(expiryDate);
-    setHasGeneratedPaymentBefore(true);
-    localStorage.setItem(`hasGeneratedPayment_${pipelineItemId}`, "true");
-    setIsPaymentLinkGeneratedModalOpen(true);
+  // --- Payment Modal Logic ---
+  const handleOpenPaymentModal = (tab = "Plan Settings") => {
+    setPaymentModalTab(tab);
+    if (!hasGeneratedPaymentBefore) {
+      setSelectedPlanType("STANDARD");
+      setSelectedPlanId("");
+      setSelectedPlan(null);
+    }
+    setIsPaymentModalOpen(true);
   };
 
-  const handleRegenerateLink = () => {
-    handleGeneratePaymentLink();
-    setIsManagePaymentModalOpen(false);
+  const handleClosePaymentModal = () => {
+    setIsPaymentModalOpen(false);
+  };
+
+  const handlePlanSelect = (planId) => {
+    setSelectedPlanId(planId);
+    const plan = plans.find((p) => p.id === planId);
+    setSelectedPlan(plan || null);
+  };
+
+  const handleGenerateLinks = async () => {
+    if (!selectedPlanId) {
+      showToast("Please select a plan", "error");
+      return;
+    }
+    if (!renewalFrequency) {
+      showToast("Please select a renewal frequency", "error");
+      return;
+    }
+    setIsGeneratingLink(true);
+    try {
+      const { billingFrequency, quantity } = getFrequencyPayload(renewalFrequency);
+      const res = await invoiceApi.GeneratePaymentLink({
+        tenantId: candidate.id,
+        planId: selectedPlanId,
+        billingFrequency,
+        quantity,
+        accessToken,
+        refreshToken,
+      });
+      setGeneratedLink(res.data || null);
+      setHasGeneratedPaymentBefore(true);
+      localStorage.setItem(`hasGeneratedPayment_${pipelineItemId}`, "true");
+      setPaymentModalTab("Payment Link");
+      showToast("Payment link generated successfully!", "success");
+    } catch (err) {
+      showToast(err.message || "Failed to generate payment link", "error");
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyLink = async (url) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Link copied to clipboard!", "success");
+    } catch (err) {
+      showToast("Failed to copy link", "error");
+    }
+  };
+
+  const fetchInvoiceHistory = useCallback(async () => {
+    if (!candidate?.id) return;
+    try {
+      setIsLoadingHistory(true);
+      const res = await invoiceApi.GetInvoiceHistory({
+        tenantId: candidate.id,
+        accessToken,
+        refreshToken,
+      });
+      setInvoiceHistory(res.data || []);
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("Failed to fetch invoice history:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [candidate?.id, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (isPaymentModalOpen && paymentModalTab === "Payment Link") {
+      fetchInvoiceHistory();
+    }
+  }, [isPaymentModalOpen, paymentModalTab, fetchInvoiceHistory]);
+
+  const handleRegenerateLink = async () => {
+    if (!candidate?.id) return;
+    try {
+      setIsGeneratingLink(true);
+      const res = await invoiceApi.RegeneratePaymentLink({
+        tenantId: candidate.id,
+        accessToken,
+        refreshToken,
+      });
+      setGeneratedLink(res.data || null);
+      showToast("Payment link regenerated!", "success");
+      fetchInvoiceHistory();
+    } catch (err) {
+      showToast(err.message || "Failed to regenerate payment link", "error");
+    } finally {
+      setIsGeneratingLink(false);
+    }
   };
 
   const handleBackButtonClick = () => {
@@ -450,8 +501,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredTasks[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -489,8 +540,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredDocuments[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -525,8 +576,8 @@ const ProspectPanel = () => {
             name,
             required: draft.requiredDocuments[i]?.required || false,
           })),
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -539,8 +590,8 @@ const ProspectPanel = () => {
         updatePipelineItemDocumentToDone({
           pipelineItemId,
           documents: updatedSentDocuments,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -571,8 +622,8 @@ const ProspectPanel = () => {
         updatePipelineItemTaskToDone({
           pipelineItemId,
           doneTasks: updatedDoneTasks,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -600,8 +651,8 @@ const ProspectPanel = () => {
         updatePipelineItemDocumentToDone({
           pipelineItemId,
           documents: updatedSentDocuments,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -632,8 +683,8 @@ const ProspectPanel = () => {
         updatePipelineItemActivity({
           ids: [pipelineItemId],
           pipelineStageId: targetStageId,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -688,8 +739,8 @@ const ProspectPanel = () => {
         reassignCandidateToStaff({
           ids: [pipelineItemId],
           assignToAdmin: staffId,
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -715,8 +766,8 @@ const ProspectPanel = () => {
       const response = await dispatch(
         deletePipelineItem({
           ids: [pipelineItemId],
-          accessToken: token,
-          refreshToken: token,
+          accessToken,
+          refreshToken,
         })
       ).unwrap();
 
@@ -732,7 +783,7 @@ const ProspectPanel = () => {
     }
   };
 
-  if (!token) {
+  if (!accessToken) {
     return <div>Please log in to view this page.</div>;
   }
 
@@ -778,7 +829,7 @@ const ProspectPanel = () => {
             primaryAction={{
               label: "See More",
               icon: <FiEye size={16} />,
-              onClick: () => setIsManagePaymentModalOpen(true),
+              onClick: () => handleOpenPaymentModal("Payment Link"),
             }}
           />
         ) : (
@@ -787,7 +838,7 @@ const ProspectPanel = () => {
             variant="warning"
             primaryAction={{
               label: "Generate payment link",
-              onClick: handleGeneratePaymentLink,
+              onClick: () => handleOpenPaymentModal("Plan Settings"),
             }}
           />
         )}
@@ -886,10 +937,10 @@ const ProspectPanel = () => {
                   icon={<FaDollarSign size={20} />}
                   variant="important"
                   iconPosition="left"
-                  onClick={
-                    hasGeneratedPaymentBefore
-                      ? () => setIsManagePaymentModalOpen(true)
-                      : handleGeneratePaymentLink
+                  onClick={() =>
+                    handleOpenPaymentModal(
+                      hasGeneratedPaymentBefore ? "Payment Link" : "Plan Settings"
+                    )
                   }
                   disabled={isLoading}
                 />
@@ -1065,26 +1116,190 @@ const ProspectPanel = () => {
           onClose={() => setIsUploadModalOpen(false)}
           onUpload={handleUploadFiles}
         />
-        <PaymentLinkGeneratedModal
-          isOpen={isPaymentLinkGeneratedModalOpen}
-          onClose={() => setIsPaymentLinkGeneratedModalOpen(false)}
-          link={paymentLink}
-        />
-        <PaymentActionsModal
-          isOpen={isManagePaymentModalOpen}
-          onClose={() => setIsManagePaymentModalOpen(false)}
-          onRegenerate={handleRegenerateLink}
-          generatedDate={
-            paymentLinkExpiry
-              ? new Date(
-                  paymentLinkExpiry.getTime() - 24 * 60 * 60 * 1000
-                ).toLocaleString()
-              : "N/A"
+        <ReusableModal
+          isOpen={isPaymentModalOpen}
+          onClose={handleClosePaymentModal}
+          title="Generate Payment Link"
+          tabs={[
+            {
+              name: "Plan Settings",
+              content: (
+                <div className="plan-settings-tab">
+                  <div className="plan-type-section">
+                    <label className="plan-type-section-label">Select Plan Type</label>
+                    <div className="plan-type-radios">
+                      <label className="plan-type-radio-label">
+                        <RadioInput
+                          name="planType"
+                          value="STANDARD"
+                          checked={selectedPlanType === "STANDARD"}
+                          onChange={(e) => setSelectedPlanType(e.target.value)}
+                        />
+                        Standard
+                      </label>
+                      <label className="plan-type-radio-label">
+                        <RadioInput
+                          name="planType"
+                          value="ENTERPRISE"
+                          checked={selectedPlanType === "ENTERPRISE"}
+                          onChange={(e) => setSelectedPlanType(e.target.value)}
+                        />
+                        Enterprise
+                      </label>
+                    </div>
+                  </div>
+
+                  <SelectInput
+                    label="Renewal Frequency"
+                    value={renewalFrequency}
+                    onChange={(e) => setRenewalFrequency(e.target.value)}
+                    options={[
+                      { value: "", label: "Select frequency" },
+                      { value: "monthly", label: "Monthly" },
+                      { value: "1_year", label: "1 Year" },
+                      { value: "2_years", label: "2 Years" },
+                      { value: "3_years", label: "3 Years" },
+                      { value: "4_years", label: "4 Years" },
+                      { value: "5_years", label: "5 Years" },
+                      { value: "6_years", label: "6 Years" },
+                      { value: "7_years", label: "7 Years" },
+                      { value: "8_years", label: "8 Years" },
+                      { value: "9_years", label: "9 Years" },
+                      { value: "10_years", label: "10 Years" },
+                    ]}
+                  />
+
+                  <SelectInput
+                    label="Select Plan"
+                    value={selectedPlanId}
+                    onChange={(e) => handlePlanSelect(e.target.value)}
+                    options={[
+                      {
+                        value: "",
+                        label: loadingPlans
+                          ? "Loading plans..."
+                          : "Select a plan",
+                      },
+                      ...plans.map((p) => ({ value: p.id, label: p.name })),
+                    ]}
+                    disabled={loadingPlans}
+                  />
+
+                  {selectedPlan && (
+                    <div className="modal-plan-card">
+                      <div
+                        className="modal-plan-header"
+                        style={{ backgroundColor: selectedPlan.colourCode || "#003A9B" }}
+                      >
+                        <h3 className="modal-plan-title">{selectedPlan.name}</h3>
+                      </div>
+                      <div className="modal-plan-pricing">
+                        <h4>Pricing</h4>
+                        <p>
+                          {selectedPlan.pricePerMonth?.currency || "$"}
+                          {selectedPlan.pricePerMonth?.price || 0} PER MONTH
+                        </p>
+                        <p>
+                          {selectedPlan.forStorage
+                            ? `${selectedPlan.forStorage} DATA STORAGE`
+                            : "Unlimited DATA STORAGE"}
+                        </p>
+                        {selectedPlan.extraFeaturesWithPrice?.length > 0 && (
+                          <p>
+                            ${selectedPlan.extraFeaturesWithPrice[0]?.pricePerMonth?.price || 0}{" "}
+                            FOR EVERY EXTRA CLIENT
+                          </p>
+                        )}
+                      </div>
+                      <div className="modal-plan-features">
+                        <h4>PLAN FEATURES</h4>
+                        <ul>
+                          {selectedPlan.features?.map((f, i) => (
+                            <li key={f.id || i}>{f.name || f}</li>
+                          ))}
+                          {(!selectedPlan.features || selectedPlan.features.length === 0) && (
+                            <li>No features available</li>
+                          )}
+                        </ul>
+                      </div>
+                      {selectedPlanType === "ENTERPRISE" &&
+                        selectedPlan.extraFeatures?.length > 0 && (
+                          <div className="modal-plan-extras">
+                            <h4>PLAN EXTRAS</h4>
+                            <ul>
+                              {selectedPlan.extraFeatures.map((f, i) => (
+                                <li key={f.id || i}>{f.name}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            {
+              name: "Payment Link",
+              content: (
+                <div className="payment-link-tab">
+                  {generatedLink && (
+                    <div className="payment-link-row active">
+                      <div className="payment-link-url-container">
+                        <span className="payment-link-url">{generatedLink}</span>
+                        <button
+                          className="copy-link-btn"
+                          onClick={() => handleCopyLink(generatedLink)}
+                        >
+                          Copy link
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {isLoadingHistory ? (
+                    <p className="no-links-message">Loading history...</p>
+                  ) : invoiceHistory.length === 0 && !generatedLink ? (
+                    <p className="no-links-message">
+                      No payment link generated yet. Go to Plan Settings to generate a link.
+                    </p>
+                  ) : (
+                    <div className="payment-links-list">
+                      {invoiceHistory.map((entry, idx) => (
+                        <div key={entry.tokenId || idx} className="history-entry">
+                          <span className="history-entry-text">
+                            {formatEventLabel(entry.event)} {formatHistoryDate(entry.time)}
+                          </span>
+                          {entry.event === "PAYMENT_LINK_EXPIRED" && (
+                            <Button
+                              label="Regenerate link"
+                              variant="primary"
+                              onClick={handleRegenerateLink}
+                              width="auto"
+                              loading={isGeneratingLink}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          activeTab={paymentModalTab}
+          onTabChange={setPaymentModalTab}
+          primaryButtonText={
+            paymentModalTab === "Plan Settings"
+              ? "Generate payment link"
+              : "Close"
           }
-          paymentDate="Not yet paid"
-          expiryDate={
-            paymentLinkExpiry ? paymentLinkExpiry.toLocaleString() : "N/A"
+          secondaryButtonText={paymentModalTab === "Plan Settings" ? "Cancel" : null}
+          onPrimaryButtonClick={
+            paymentModalTab === "Plan Settings"
+              ? handleGenerateLinks
+              : handleClosePaymentModal
           }
+          onSecondaryButtonClick={paymentModalTab === "Plan Settings" ? handleClosePaymentModal : null}
+          primaryButtonLoading={isGeneratingLink}
         />
         <MoveCandidateModal
           isOpen={isMoveCandidateModalOpen}
@@ -1096,8 +1311,8 @@ const ProspectPanel = () => {
           }))}
           currentColumnId={pipelineStageId}
           taskIds={[pipelineItemId]}
-          accessToken={token}
-          refreshToken={token}
+          accessToken={accessToken}
+          refreshToken={refreshToken}
           dispatch={dispatch}
         />
         <AssignCandidateModal

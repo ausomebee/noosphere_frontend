@@ -13,7 +13,7 @@ import storage from 'redux-persist/lib/storage';
 import rootReducer from './rootReducer';
 
 // Define your app version
-const APP_VERSION = '0.0.0';
+const APP_VERSION = '0.1.0';
 
 const persistConfig = {
   key: 'root',

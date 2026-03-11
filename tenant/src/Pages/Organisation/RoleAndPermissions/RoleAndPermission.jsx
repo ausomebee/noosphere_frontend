@@ -5,6 +5,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import RoleConfiguration from "./RoleConfiguration";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import roleApi from "../../../api/roleApi";
 import { showToast } from "../../../Helper/ShowToast";
 import {
@@ -20,6 +21,7 @@ import "../Organisation.css";
 const RoleAndPermission = () => {
   const dispatch = useDispatch();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [view, setView] = useState("list"); // "list" | "config"
   const [configMode, setConfigMode] = useState("add"); // "add" | "edit" | "view"
@@ -75,21 +77,21 @@ const RoleAndPermission = () => {
       label: "More",
       className: "more-dropdown",
       items: [
-        {
+        hasPermission("edit_a_role") && {
           label: "Edit Role",
           onClick: (row) => handleEditRole(row),
         },
-        {
+        hasPermission("view_roles_permissions") && {
           label: "View Permissions",
           onClick: (row) => handleViewPermissions(row),
         },
-        {
+        hasPermission("deactivate_a_role") && {
           label: (row) =>
             row.toggleActive ? "Deactivate Role" : "Activate Role",
           onClick: (row) => handleDeactivateRole(row),
           className: (row) => (row.toggleActive ? "remove" : ""),
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
@@ -308,14 +310,16 @@ const RoleAndPermission = () => {
         Manage user roles and permissions securely within your organization
       </h3>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Create a new role"
-          variant="secondary"
-          icon={<FaPlus />}
-          onClick={handleCreateRole}
-        />
-      </div>
+      {hasPermission("create_new_role") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="Create a new role"
+            variant="secondary"
+            icon={<FaPlus />}
+            onClick={handleCreateRole}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

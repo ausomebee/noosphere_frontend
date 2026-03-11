@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
+import usePermissions from "../../hooks/usePermissions";
 import Button from "../../Components/Button/Button";
 import AddTargetModal from "../../Components/ReusableModal/ProgramLibraryModal/AddTargetModal";
 import DeleteLibraryModal from "../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
@@ -22,6 +23,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
   const [loading, setLoading] = useState(true);
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const fetchTargets = async () => {
     if (!programId) return;
@@ -159,8 +161,8 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
           onClick: (row) =>
             (window.location.href = `/tenant/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`),
         },
-        { label: "Edit", onClick: handleEditTarget },
-        {
+        hasPermission("edit_target") && { label: "Edit", onClick: handleEditTarget },
+        hasPermission("create_target") && {
           label: "Duplicate",
           onClick: async (row) => {
             try {
@@ -178,8 +180,8 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
             }
           },
         },
-        { label: "Delete", onClick: handleDeleteTarget, className: "remove" },
-      ],
+        hasPermission("delete_target") && { label: "Delete", onClick: handleDeleteTarget, className: "remove" },
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -200,14 +202,16 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
         </div>
       </div>
 
-      <div className="flex justify-end mt-6">
-        <Button
-          label="Add a new Target"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={handleAddTarget}
-        />
-      </div>
+      {hasPermission("create_target") && (
+        <div className="flex justify-end mt-6">
+          <Button
+            label="Add a new Target"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={handleAddTarget}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

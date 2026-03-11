@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
+import "./styles/detail-view.css";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../src/ReduxStore/store.js";
 import { ToastContainer } from "react-toastify";
@@ -16,7 +17,7 @@ createRoot(document.getElementById("root")).render(
       <PersistGate loading={null} persistor={persistor}>
         <Router basename={import.meta.env.BASE_URL}>
           <App />
-          <ToastContainer />
+          <ToastContainer style={{ zIndex: 99999 }} />
         </Router>
       </PersistGate>
     </Provider>

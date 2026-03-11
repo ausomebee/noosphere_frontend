@@ -1,8 +1,25 @@
 // src/Components/Allroutes.jsx
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import { LayoutRoute } from "../Layout/TenantLayout";
+import usePermissions from "../hooks/usePermissions";
+import { showToast } from "../Helper/ShowToast";
+
+/** Blocks child routes if user lacks the given module. Shows a toast, renders nothing. */
+const ModuleGuard = ({ moduleKey }) => {
+  const { hasModule } = usePermissions();
+  const allowed = hasModule(moduleKey);
+
+  useEffect(() => {
+    if (!allowed) {
+      showToast("You don't have access to this module", "error");
+    }
+  }, [allowed]);
+
+  if (!allowed) return null;
+  return <Outlet />;
+};
 const ClinicalReportBuilder = React.lazy(() =>
   import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/ClinicalReportBuilder")
 );
@@ -157,6 +174,12 @@ const TemplatesLibrary = React.lazy(() =>
 );
 
 const Reports = React.lazy(() => import("../Pages/Reports/Reports"));
+const CancelledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/CancelledAppointmentsReport"));
+const RescheduledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/RescheduledAppointmentsReport"));
+const AttendanceByServiceTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceByServiceTypeReport"));
+const AttendanceBySessionTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceBySessionTypeReport"));
+const AuditLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AuditLogsReport"));
+const LoginLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/LoginLogsReport"));
 
 const SupportRequests = React.lazy(() =>
   import("../Pages/HelpAndSupport/SupportRequests/SupportRequests")
@@ -225,57 +248,98 @@ const AllRoutes = () => {
 
       {/* Tenant-Only Routes — wrapped in persistent layout */}
       <Route element={<ProtectedRoute><LayoutRoute /></ProtectedRoute>}>
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* Dashboard */}
+        <Route element={<ModuleGuard moduleKey="DASHBOARD" />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
 
-        <Route path="/scheduler/calendar" element={<Calendar />} />
-        <Route path="/scheduler/appointments" element={<Appointments />} />
-        <Route path="/appointments/start/:appointmentId/:clientId" element={<StartAppointment />} />
+        {/* Scheduler */}
+        <Route element={<ModuleGuard moduleKey="SCHEDULER" />}>
+          <Route path="/scheduler/calendar" element={<Calendar />} />
+          <Route path="/scheduler/appointments" element={<Appointments />} />
+          <Route path="/appointments/start/:appointmentId/:clientId" element={<StartAppointment />} />
+        </Route>
 
-        <Route path="/clients/pipeline" element={<Pipeline />} />
-        <Route path="/pipeline/column-single/:pipelineStageId" element={<ManageColumn />} />
-        <Route path="/client/client-single/:clientId/:tenantClientId" element={<ClientPanel />} />
-        <Route path="/client/view-client/:clientId/:tenantClientId" element={<ClientPanel />} />
-        <Route path="/clinical-report/report-builder" element={<ClinicalReportBuilder />} />
-        <Route path="/clinical-report/template-builder" element={<TemplateBuilder />} />
-        <Route path="/clinical-report/audit-trails" element={<AuditTrails />} />
-        <Route path="/clients/client-list" element={<ClientList />} />
-        <Route path="/client/view-program/:clientId/target/:programId" element={<ViewPrograms />} />
+        {/* Clients */}
+        <Route element={<ModuleGuard moduleKey="CLIENTS" />}>
+          <Route path="/clients/pipeline" element={<Pipeline />} />
+          <Route path="/pipeline/column-single/:pipelineStageId" element={<ManageColumn />} />
+          <Route path="/client/client-single/:clientId/:tenantClientId" element={<ClientPanel />} />
+          <Route path="/client/view-client/:clientId/:tenantClientId" element={<ClientPanel />} />
+          <Route path="/clinical-report/report-builder" element={<ClinicalReportBuilder />} />
+          <Route path="/clinical-report/template-builder" element={<TemplateBuilder />} />
+          <Route path="/clinical-report/audit-trails" element={<AuditTrails />} />
+          <Route path="/clients/client-list" element={<ClientList />} />
+          <Route path="/client/view-program/:clientId/target/:programId" element={<ViewPrograms />} />
+        </Route>
 
-        <Route path="/program-library" element={<ProgramLibrary />} />
-        <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} />
-        <Route path="/target-single/:programName/:targetName" element={<TargetSingle />} />
+        {/* Program Library */}
+        <Route element={<ModuleGuard moduleKey="PROGRAM_LIBRARY" />}>
+          <Route path="/program-library" element={<ProgramLibrary />} />
+          <Route path="/target-single/:domainName/:programName/:targetName" element={<TargetSingle />} />
+          <Route path="/target-single/:programName/:targetName" element={<TargetSingle />} />
+        </Route>
 
-        <Route path="/organization/general" element={<General />} />
-        <Route path="/organization/staff-and-teams" element={<StaffsAndTeams />} />
-        <Route path="/organization/staff-and-teams/single-staff/:tenantStaffId" element={<SingleStaffByAdmin />} />
-        <Route path="/organization/practice-settings" element={<PracticeSettings />} />
-        <Route path="/organization/role-and-permissions" element={<RoleAndPermission />} />
+        {/* My Organization */}
+        <Route element={<ModuleGuard moduleKey="MY_ORGANIZATION" />}>
+          <Route path="/organization/general" element={<General />} />
+          <Route path="/organization/staff-and-teams" element={<StaffsAndTeams />} />
+          <Route path="/organization/staff-and-teams/single-staff/:tenantStaffId" element={<SingleStaffByAdmin />} />
+          <Route path="/organization/practice-settings" element={<PracticeSettings />} />
+          <Route path="/organization/role-and-permissions" element={<RoleAndPermission />} />
+        </Route>
 
-        <Route path="/billing/timesheets" element={<TimeSheet />} />
-        <Route path="/billing/timesheets/:timesheetId" element={<SingleTimeSheet />} />
-        <Route path="/billing/claims" element={<Claims />} />
-        <Route path="/billing/claims/view/:claimId" element={<SingleClaim />} />
-        <Route path="/billing/settings" element={<BillingSettings />} />
-        <Route path="/billing/settings/view-payer/:id/:payerName" element={<SingleViewPayer />} />
+        {/* Billing & Payments */}
+        <Route element={<ModuleGuard moduleKey="BILLINGS_PAYMENTS" />}>
+          <Route path="/billing/timesheets" element={<TimeSheet />} />
+          <Route path="/billing/timesheets/:timesheetId" element={<SingleTimeSheet />} />
+          <Route path="/billing/claims" element={<Claims />} />
+          <Route path="/billing/claims/view/:claimId" element={<SingleClaim />} />
+          <Route path="/billing/settings" element={<BillingSettings />} />
+          <Route path="/billing/settings/view-payer/:id/:payerName" element={<SingleViewPayer />} />
+        </Route>
 
-        <Route path="/payroll/payroll-setup" element={<Payroll />} />
-        <Route path="/payroll/payroll/view-breakdown/:id" element={<ViewBreakDown />} />
-        <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
+        {/* Payroll */}
+        <Route element={<ModuleGuard moduleKey="PAYROLL" />}>
+          <Route path="/payroll/payroll-setup" element={<Payroll />} />
+          <Route path="/payroll/payroll/view-breakdown/:id" element={<ViewBreakDown />} />
+          <Route path="/payroll/payroll-settings" element={<PayrollSettings />} />
+        </Route>
 
-        <Route path="/custom-forms/forms" element={<Forms />} />
-        <Route path="/custom-forms/forms/create" element={<FormBuilder />} />
-        <Route path="/custom-forms/forms/create/:formId" element={<FormBuilder />} />
-        <Route path="/custom-forms/forms/renderer/:id" element={<FormRenderer />} />
-        <Route path="/custom-forms/templates-library" element={<TemplatesLibrary />} />
+        {/* Custom Forms */}
+        <Route element={<ModuleGuard moduleKey="CUSTOM_FORMS" />}>
+          <Route path="/custom-forms/forms" element={<Forms />} />
+          <Route path="/custom-forms/forms/create" element={<FormBuilder />} />
+          <Route path="/custom-forms/forms/create/:formId" element={<FormBuilder />} />
+          <Route path="/custom-forms/forms/renderer/:id" element={<FormRenderer />} />
+          <Route path="/custom-forms/templates-library" element={<TemplatesLibrary />} />
+        </Route>
 
-        <Route path="/reports" element={<Reports />} />
+        {/* Reports */}
+        <Route element={<ModuleGuard moduleKey="REPORTS" />}>
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/reports/cancelled-appointments" element={<CancelledAppointmentsReport />} />
+          <Route path="/reports/rescheduled-appointments" element={<RescheduledAppointmentsReport />} />
+          <Route path="/reports/attendance-service-type" element={<AttendanceByServiceTypeReport />} />
+          <Route path="/reports/attendance-session-type" element={<AttendanceBySessionTypeReport />} />
+          <Route path="/reports/audit-logs" element={<AuditLogsReport />} />
+          <Route path="/reports/login-logs" element={<LoginLogsReport />} />
+        </Route>
 
-        <Route path="/help/support-requests" element={<SupportRequests />} />
-        <Route path="/help/support-requests/:requestId" element={<ViewRequestDetails />} />
-        <Route path="/help/knowledge-base" element={<KnowledgeBase />} />
+        {/* Help & Support */}
+        <Route element={<ModuleGuard moduleKey="HELP_SUPPORT" />}>
+          <Route path="/help/support-requests" element={<SupportRequests />} />
+          <Route path="/help/support-requests/:requestId" element={<ViewRequestDetails />} />
+          <Route path="/help/knowledge-base" element={<KnowledgeBase />} />
+        </Route>
 
+        {/* Settings */}
+        <Route element={<ModuleGuard moduleKey="SETTINGS" />}>
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+
+        {/* Notifications — always accessible (no module guard) */}
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/settings" element={<Settings />} />
       </Route>
 
       {/* Optional: Redirect any unknown route to home */}

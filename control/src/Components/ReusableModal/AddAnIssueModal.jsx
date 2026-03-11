@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput, TextareaInput } from "../Input/Inputs";
 import { showToast } from "../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { BsCloudUpload } from "react-icons/bs";
 
 
@@ -47,7 +47,7 @@ const AddIssueModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState([]);
   const [selectedTenant, setSelectedTenant] = useState(null);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const { userId: adminId } = useAuth();
 
   const {
     register,
@@ -276,9 +276,9 @@ const AddIssueModal = ({
         onClose();
       }}
       title="Log an Issue"
-      primaryButtonText={isLoading ? "Saving..." : "Save Issue"}
+      primaryButtonText="Save Issue"
       secondaryButtonText="Cancel"
-      primaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);

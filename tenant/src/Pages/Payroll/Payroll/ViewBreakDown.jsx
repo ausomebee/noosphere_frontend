@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { SearchInput } from "../../../Components/Input/Inputs";
+import { exportTableData, exportTableToPDF, printTableData } from "../../../utils/TableUtils";
 import Button from "../../../Components/Button/Button";
 import Pagination from "../../../Components/Table/Pagination";
 import AddIncomeItemModal from "../../../Components/ReusableModal/PayrollModal/AddIncomItemModal";
@@ -9,6 +10,7 @@ import AddDeductionModal from "../../../Components/ReusableModal/PayrollModal/Ad
 import EmployeeRow from "../../../Components/ReusableModal/PayrollModal/EmployeeRow";
 import AddStaffModal from "../../../Components/ReusableModal/PayrollModal/AddStaffModal";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
 
@@ -16,6 +18,7 @@ const ViewBreakDown = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportButtonRef = useRef(null);
   const exportDropdownRef = useRef(null);
@@ -239,8 +242,43 @@ const ViewBreakDown = () => {
     setExpandedEmployee(null);
   };
 
-  const toggleExportDropdown = () => {
-    setExportDropdownOpen((prev) => !prev);
+  const exportColumns = [
+    { header: "Name", key: "name" },
+    { header: "Payment Schedule", key: "paymentSchedule" },
+    { header: "Gross Pay", key: "grossPay" },
+    { header: "Net Pay", key: "netPay" },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        exportButtonRef.current && !exportButtonRef.current.contains(e.target) &&
+        exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)
+      ) {
+        setExportDropdownOpen(false);
+      }
+    };
+    if (exportDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [exportDropdownOpen]);
+
+  const toggleExportDropdown = () => setExportDropdownOpen((prev) => !prev);
+
+  const handleExportCSV = () => {
+    if (filteredEmployees.length === 0) { showToast("No data to export", "warning"); return; }
+    exportTableData(filteredEmployees, exportColumns, `payroll-breakdown-${payrollDate || "export"}.csv`, "Payroll Breakdown");
+    setExportDropdownOpen(false);
+  };
+
+  const handleExportPDF = () => {
+    if (filteredEmployees.length === 0) { showToast("No data to export", "warning"); return; }
+    exportTableToPDF(filteredEmployees, exportColumns, `payroll-breakdown-${payrollDate || "export"}.pdf`, "Payroll Breakdown");
+    setExportDropdownOpen(false);
+  };
+
+  const handlePrint = () => {
+    if (filteredEmployees.length === 0) { showToast("No data to print", "warning"); return; }
+    printTableData(filteredEmployees, exportColumns, "Payroll Breakdown");
   };
 
   const handleSearchChange = (value) => {
@@ -301,63 +339,24 @@ const ViewBreakDown = () => {
           onChange={handleSearchChange}
           aria-label="Search employees"
         />
-        <div className="flex gap-2">
-          <div className="relative">
-            <button
-              onClick={toggleExportDropdown}
-              ref={exportButtonRef}
-              aria-label="Toggle export options"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+        <div className="table-actions">
+          <div className="action-menu">
+            <button className="action-button" onClick={toggleExportDropdown} ref={exportButtonRef}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </button>
             {exportDropdownOpen && (
-              <div
-                className="action-dropdown export-dropdown absolute right-0 mt-1 bg-white rounded-md shadow-lg py-1 z-10"
-                ref={exportDropdownRef}
-              >
-                <button
-                  className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  onClick={() => setExportDropdownOpen(false)}
-                  aria-label="Export as CSV"
-                >
-                  Export as CSV
-                </button>
-                <button
-                  className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  onClick={() => setExportDropdownOpen(false)}
-                  aria-label="Export as PDF"
-                >
-                  Export as PDF
-                </button>
+              <div className="action-dropdown export-dropdown" ref={exportDropdownRef}>
+                <button className="dropdown-item" onClick={handleExportCSV}>Export as CSV</button>
+                <button className="dropdown-item" onClick={handleExportPDF}>Export as PDF</button>
               </div>
             )}
           </div>
-          <button onClick={() => {}} aria-label="Print table">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+          <button className="action-button" onClick={handlePrint}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 6 2 18 2 18 9" />
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
               <rect x="6" y="14" width="12" height="8" />
@@ -367,7 +366,7 @@ const ViewBreakDown = () => {
       </div>
 
       <div className="flex justify-end items-center mb-6 gap-2">
-        {hasChanges && (
+        {hasChanges && hasPermission("edit_payroll_breakdown") && (
           <Button
             variant="primary"
             label="Submit"
@@ -375,14 +374,16 @@ const ViewBreakDown = () => {
             loading={submitting}
           />
         )}
-        <Button
-          variant="secondary"
-          label="Add Staff to Payroll"
-          icon={<FaPlus />}
-          onClick={() => setIsStaffModalOpen(true)}
-          aria-label="Add staff to payroll"
-        />
-        {selectedEmployees.length > 0 && (
+        {hasPermission("add_staff_to_payroll") && (
+          <Button
+            variant="secondary"
+            label="Add Staff to Payroll"
+            icon={<FaPlus />}
+            onClick={() => setIsStaffModalOpen(true)}
+            aria-label="Add staff to payroll"
+          />
+        )}
+        {selectedEmployees.length > 0 && hasPermission("remove_staff_from_payroll") && (
           <Button
             variant="secondary-danger"
             label="Remove from Payroll"
@@ -426,28 +427,38 @@ const ViewBreakDown = () => {
               </tr>
             </thead>
             <tbody>
-              {currentEmployees.map((employee) => (
-                <EmployeeRow
-                  key={employee.id}
-                  employee={employee}
-                  isSelected={selectedEmployees.includes(employee.id)}
-                  onSelect={handleSelectEmployee}
-                  expandedEmployee={expandedEmployee}
-                  onToggleExpand={handleToggleExpand}
-                  onAddIncome={handleAddIncome}
-                  onAddDeduction={handleAddDeduction}
-                />
-              ))}
+              {currentEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "#6b7280" }}>
+                    No employees found.
+                  </td>
+                </tr>
+              ) : (
+                currentEmployees.map((employee) => (
+                  <EmployeeRow
+                    key={employee.id}
+                    employee={employee}
+                    isSelected={selectedEmployees.includes(employee.id)}
+                    onSelect={handleSelectEmployee}
+                    expandedEmployee={expandedEmployee}
+                    onToggleExpand={handleToggleExpand}
+                    onAddIncome={handleAddIncome}
+                    onAddDeduction={handleAddDeduction}
+                  />
+                ))
+              )}
             </tbody>
           </table>
         </div>
       )}
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       <AddIncomeItemModal
         isOpen={isIncomeModalOpen}

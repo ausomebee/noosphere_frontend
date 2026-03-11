@@ -9,6 +9,7 @@ import AppointmentModal from "../../../../Components/ReusableModal/SchedulerModa
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
 import CancelModal from "../../../../Components/ReusableModal/SchedulerModal/CancelModal";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
@@ -17,6 +18,7 @@ import expandForAppointments from "../../../../utils/expandForAppointments";
 const UpcomingAppointments = ({ counts, setCounts }) => {
   const navigate = useNavigate();
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const role = authRole?.name ?? "Client";
 
   // State
@@ -382,20 +384,20 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       type: "dropdown",
       label: "Actions",
       items: [
-        { label: "Edit", icon: <FiEdit />, onClick: handleEdit },
-        {
+        hasPermission("edit_appointments") && { label: "Edit", icon: <FiEdit />, onClick: handleEdit },
+        hasPermission("reschedule_appointments") && {
           label: "Reschedule",
           icon: <FiRefreshCw />,
           onClick: handleReschedule,
         },
-        { label: "Cancel", icon: <RxCross2 />, onClick: handleCancel },
-        {
+        hasPermission("cancel_appointments") && { label: "Cancel", icon: <RxCross2 />, onClick: handleCancel },
+        hasPermission("start_appointments") && {
           label: "Start Appointment",
           icon: <IoCheckmarkCircleOutline />,
           onClick: handleStartAppointment,
           className: "text-primary font-bold bg-brand-50",
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 

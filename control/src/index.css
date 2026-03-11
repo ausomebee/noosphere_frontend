@@ -64,8 +64,8 @@ a:hover { color: var(--color-primary); }
   --font-mono: 'Fira Code', monospace;
 
   /* Colors - Brand */
-  --color-primary: #4f46e5;
-  --color-secondary: #6366f1;
+  --color-primary: #000000;
+  --color-secondary: #1a1a1a;
   --color-accent: #10b981;
   --color-muted: #6b7280;
   --color-danger: #ef4444;
@@ -91,10 +91,10 @@ a:hover { color: var(--color-primary); }
   --color-gray-700: #374151;
 
   /* Colors - Buttons & Inputs */
-  --button-primary-color: #004aba;
-  --button-primary-hover: #003a94;
+  --button-primary-color: #000000;
+  --button-primary-hover: #222222;
   --input-border: #d1d5db;
-  --input-focus-border: #1e40af;
+  --input-focus-border: #000000;
 
   /* Spacing Scale */
   --space-0: 0;
@@ -583,3 +583,4 @@ a:hover { color: var(--color-primary); }
   }
   a:hover { color: #747bff; }
 }
+

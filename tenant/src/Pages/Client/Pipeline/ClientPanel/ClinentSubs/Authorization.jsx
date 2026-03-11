@@ -102,6 +102,7 @@ const AuthorizationTab = () => {
           endDate: auth.endDate ? formatDate(auth.endDate) : "—",
           status: getStatus(auth.startDate, auth.endDate),
           utilization,
+          isActive: auth.isActive !== false,
           rawData: auth,
         };
       });
@@ -293,6 +294,44 @@ const AuthorizationTab = () => {
     }
   };
 
+  // DEACTIVATE / ACTIVATE
+  const handleDeactivate = async (row) => {
+    const newActive = row.isActive === false; // toggle: if currently inactive → activate
+    try {
+      await api.SetClientAuthorizationActive({
+        id: row.id,
+        active: newActive,
+        accessToken,
+        refreshToken,
+      });
+      showToast(
+        `Authorization ${newActive ? "activated" : "deactivated"} successfully`,
+        "success"
+      );
+      fetchAuthorizations();
+    } catch (error) {
+      console.error(error);
+      showToast(error?.message || "Failed to update authorization status", "error");
+    }
+  };
+
+  // DELETE (soft)
+  const handleDelete = async (row) => {
+    if (!window.confirm("Are you sure you want to delete this authorization?")) return;
+    try {
+      await api.SoftDeleteClientAuthorization({
+        id: row.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Authorization deleted successfully", "success");
+      fetchAuthorizations();
+    } catch (error) {
+      console.error(error);
+      showToast(error?.message || "Failed to delete authorization", "error");
+    }
+  };
+
   // Prepare data for full edit modal
   const getEditingAuthData = () => {
     if (!editingAuthData) return {};
@@ -347,6 +386,8 @@ const AuthorizationTab = () => {
           onServiceDataChange={setServiceData}
           isEditMode={true}
           onEdit={handleEdit}
+          onDeactivate={handleDeactivate}
+          onDelete={handleDelete}
           onSave={handleInlineSave}
           serviceCodes={tenantServiceCodes}
           loadingServiceCodes={loadingTenantServiceCodes}

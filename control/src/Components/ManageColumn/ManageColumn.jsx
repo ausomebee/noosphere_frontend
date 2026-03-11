@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
 import { FaArrowLeft, FaPlus, FaSave } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { SwitchInput, TextareaInput, TextInput } from "../Input/Inputs";
@@ -41,7 +42,7 @@ const ManageColumn = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pipeline, draft, status, error } = useSelector((state) => state.pipeline);
-  const token = useSelector((state) => state.authentication?.user?.token);
+  const { accessToken, refreshToken } = useAuth();
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");
@@ -61,10 +62,10 @@ const ManageColumn = () => {
 
   const authTokens = useMemo(
     () => ({
-      accessToken: token,
-      refreshToken: token,
+      accessToken,
+      refreshToken,
     }),
-    [token]
+    [accessToken, refreshToken]
   );
 
   // Date formatting function
@@ -120,7 +121,7 @@ const ManageColumn = () => {
       setStaffList(
         adminsResponse.data?.data?.map((admin) => ({
           staffId: admin.id,
-          name: admin.fullName || "Unknown Admin",
+          name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
         })) || []
       );
 

@@ -5,8 +5,8 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../../../../hooks/useAuth";
 
 import CustomTable from "../../../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../../../Components/Input/Inputs";
@@ -25,10 +25,7 @@ import { debounce } from "lodash";
 
 const SubscriptionManager = () => {
   const navigate = useNavigate();
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
-  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const { accessToken, refreshToken, userId: adminId } = useAuth();
 
   const [activeTab, setActiveTab] = useState("all");
   const [filterValue, setFilterValue] = useState("");
@@ -748,6 +745,7 @@ const SubscriptionManager = () => {
         setError("Failed to perform subscription action.");
         showToast("Error updating subscription: " + err.message, "error");
         if (import.meta.env.DEV) console.error("Error saving subscription action:", err);
+        throw err;
       } finally {
         setLoading(false);
       }

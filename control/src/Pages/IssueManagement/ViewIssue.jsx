@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -17,12 +17,10 @@ import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/C
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
 import api from "../../api/IssueApi";
 import { showToast } from "../../Helper/ShowToast";
+import { SectionSpinner } from "../../Components/LoadingSpinner";
 
 const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken, userId: adminId } = useAuth();
 
   const [issueData, setIssueData] = useState(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
@@ -83,8 +81,12 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         category: data.category || "N/A",
         priority: data.priority || "N/A",
         status: data.status || "Not Started",
-        loggedBy: data.loggedBy?.fullName || "Unknown",
-        assignedTo: data.assignedTo?.fullName || "Unassigned",
+        loggedBy: data.loggedBy
+          ? `${data.loggedBy.firstName || ""} ${data.loggedBy.lastName || ""}`.trim() || "Unknown"
+          : "Unknown",
+        assignedTo: data.assignedTo
+          ? `${data.assignedTo.firstName || ""} ${data.assignedTo.lastName || ""}`.trim() || "Unassigned"
+          : "Unassigned",
         dateReported: formatDateTime(data.createdAt),
         lastUpdate: formatDateTime(data.updatedAt),
         attachments: data.attachments?.map((att) => ({
@@ -96,7 +98,9 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         activityHistory: data.Logs?.map((log, index) => ({
           date: formatDateTime(log.createdAt),
           action: log.action || "Unknown",
-          user: log.admin?.fullName || "Unknown",
+          user: log.admin
+            ? `${log.admin.firstName || ""} ${log.admin.lastName || ""}`.trim() || "Unknown"
+            : "Unknown",
           details: log.details || "No details",
           id: log.logId || index + 1,
         })) || [],
@@ -107,7 +111,9 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         })) || [],
         comments: data.comments?.map((comment, index) => ({
           date: formatDateTime(comment.createdAt),
-          user: comment.commentBy.fullName || "Unknown",
+          user: comment.commentBy
+            ? `${comment.commentBy.firstName || ""} ${comment.commentBy.lastName || ""}`.trim() || "Unknown"
+            : "Unknown",
           action: "commented",
           text: comment.comment || "No text",
           id: comment.id || index + 1,
@@ -273,6 +279,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to add comment: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -291,6 +298,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to edit issue: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -311,6 +319,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to add attachment: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -328,6 +337,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change category: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -345,6 +355,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change priority: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -362,6 +373,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to reassign issue: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -379,6 +391,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to change status: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -401,6 +414,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to send email: ${err.message}`, "error");
+      throw err;
     }
   };
 
@@ -423,10 +437,11 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showToast(`Failed to mark as resolved: ${err.message}`, "error");
+      throw err;
     }
   };
 
-  if (!issueData) return <div>Loading...</div>;
+  if (!issueData) return <SectionSpinner />;
 
   return (
     <>
@@ -787,7 +802,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
-                      viewBox="0 0 24  beyond 24"
+                      viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"

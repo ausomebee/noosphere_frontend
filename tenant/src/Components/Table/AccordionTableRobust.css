@@ -175,25 +175,27 @@
 .robust-dropdown {
   position: fixed;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   min-width: 220px;
- right: 40px;
+  max-width: 280px;
   padding: 4px 0;
-  top:320px;
+  overflow: hidden;
 }
 
 .robust-dropdown button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  padding: 10px 16px;
+  padding: 10px 15px;
   text-align: left;
   background: none;
   border: none;
   font-size: 14px;
-  color: #374151;
+  color: #333;
   cursor: pointer;
   transition: background-color 0.15s ease;
   white-space: nowrap;

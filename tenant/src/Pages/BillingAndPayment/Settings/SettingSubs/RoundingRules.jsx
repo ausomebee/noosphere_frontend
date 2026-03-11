@@ -6,6 +6,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import AddRoundingRule from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddRoundingRule";
 import api from "../../../../api/billingAndPaymentsApi";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import { showToast } from "../../../../Helper/ShowToast";
 
 // Standard rule descriptions
@@ -18,6 +19,7 @@ const standardRuleDescriptions = {
 const RoundingRules = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [tableData, setTableData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,7 +81,7 @@ const RoundingRules = () => {
             setIsModalOpen(true);
           },
         },
-        {
+        hasPermission("edit_rounding_rule") && {
           label: "Edit",
           onClick: () => {
             setSelectedRow(row);
@@ -87,7 +89,7 @@ const RoundingRules = () => {
             setIsModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_rounding_rule") && {
           label: row.isActive ? "Deactivate" : "Activate",
           onClick: async () => {
             try {
@@ -108,7 +110,7 @@ const RoundingRules = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -190,19 +192,21 @@ const RoundingRules = () => {
         Setup and manage how time is rounded for your sessions
       </h2>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="Add a New Rounding Rule"
-          variant="secondary"
-          icon={<FaPlus />}
-          onClick={() => {
-            setSelectedRow(null);
-            setMode("add");
-            setIsModalOpen(true);
-          }}
-          disabled={saving}
-        />
-      </div>
+      {hasPermission("add_rounding_rule") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="Add a New Rounding Rule"
+            variant="secondary"
+            icon={<FaPlus />}
+            onClick={() => {
+              setSelectedRow(null);
+              setMode("add");
+              setIsModalOpen(true);
+            }}
+            disabled={saving}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

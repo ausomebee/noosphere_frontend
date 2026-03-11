@@ -9,10 +9,12 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 
 const TemplatesLibrary = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +58,13 @@ const TemplatesLibrary = () => {
   const columns = [{ header: "Name", key: "name", type: "text" }];
 
   const actions = [
-    {
+    hasPermission("edit_template") && {
       type: "icon",
       label: "Edit",
       icon: <FiEdit2 className="w-5 h-5" />,
       onClick: (row) => navigate(`/custom-forms/forms/create/${row.id}`),
     },
-    {
+    hasPermission("duplicate_template") && {
       type: "icon",
       label: "Duplicate",
       icon: <HiOutlineDuplicate className="w-5 h-5 text-green-600" />,
@@ -74,7 +76,6 @@ const TemplatesLibrary = () => {
             refreshToken,
           });
 
-          // Optionally add the new copy to table
           if (res?.data?.id) {
             const newCopy = {
               id: res.data.id,
@@ -91,7 +92,7 @@ const TemplatesLibrary = () => {
         }
       },
     },
-    {
+    hasPermission("delete_template") && {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
@@ -114,7 +115,7 @@ const TemplatesLibrary = () => {
       },
       className: "remove",
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <>
@@ -126,14 +127,16 @@ const TemplatesLibrary = () => {
         </h3>
       </div>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="New Template"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={() => navigate("/custom-forms/forms/create")}
-        />
-      </div>
+      {hasPermission("create_template") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="New Template"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={() => navigate("/custom-forms/forms/create")}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

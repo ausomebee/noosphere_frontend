@@ -5,14 +5,12 @@ import CustomTable from "../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../Components/Input/Inputs";
 import api from "../../api/InvoiceApi";
 import api2 from "../../api/TenantApis";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
 
 const BillingManager = () => {
-  const token = useSelector((state) => state.authentication?.user?.token);
-  const accessToken = token;
-  const refreshToken = token;
+  const { accessToken, refreshToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState("invoices");
   const [activeSubTab, setActiveSubTab] = useState("all");
@@ -62,6 +60,34 @@ const BillingManager = () => {
     InProgress: 0,
     Failed: 0,
   });
+
+  const buildInvoiceItems = (items, billingFrequency) => {
+    const rows = [];
+    let rowNum = 1;
+    (items || []).forEach((item) => {
+      rows.push({
+        id: `${rowNum++}`,
+        description: item.description,
+        rate: formatNumber(item.rate?.price || 0, true),
+        quantity: item.quantity,
+        price: formatNumber(item.price || 0, true),
+      });
+      (item.extraFeaturesWithPrice || []).forEach((feature) => {
+        const isYearly = billingFrequency?.toLowerCase() === "yearly";
+        const featurePrice = isYearly
+          ? feature.pricePerYear?.price || 0
+          : feature.pricePerMonth?.price || 0;
+        rows.push({
+          id: `${rowNum++}`,
+          description: "Add-on Feature",
+          rate: formatNumber(featurePrice, true),
+          quantity: 1,
+          price: formatNumber(featurePrice, true),
+        });
+      });
+    });
+    return rows;
+  };
 
   const extractIdNumber = (id) => {
     if (!id || typeof id !== "string") return id;
@@ -448,13 +474,7 @@ const BillingManager = () => {
         dueDate: formatDate(invoiceData.dueDate),
         billingFrequency: invoiceData.billingFrequency,
         customerInfo: invoiceData.customerInfo,
-        items: (invoiceData.items || []).map((item, index) => ({
-          id: `${index + 1}`,
-          description: item.description,
-          rate: formatNumber(item.rate?.price || 0, true),
-          quantity: item.quantity,
-          price: formatNumber(item.price || 0, true),
-        })),
+        items: buildInvoiceItems(invoiceData.items, invoiceData.billingFrequency),
         total: formatNumber(invoiceData.total || 0, true),
       };
       setSelectedInvoice(invoice);
@@ -517,13 +537,7 @@ const BillingManager = () => {
         dueDate: formatDate(invoiceData.dueDate),
         billingFrequency: invoiceData.billingFrequency,
         customerInfo: invoiceData.customerInfo,
-        items: (invoiceData.items || []).map((item, index) => ({
-          id: `${index + 1}`,
-          description: item.description,
-          rate: formatNumber(item.rate?.price || 0, true),
-          quantity: item.quantity,
-          price: formatNumber(item.price || 0, true),
-        })),
+        items: buildInvoiceItems(invoiceData.items, invoiceData.billingFrequency),
         total: formatNumber(invoiceData.total || 0, true),
       };
 

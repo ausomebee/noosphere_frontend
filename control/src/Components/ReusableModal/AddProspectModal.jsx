@@ -7,7 +7,7 @@ import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput } from "../Input/Inputs";
 import api from "../../api/TenantApis";
 import { showToast } from "../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 const schema = yup.object().shape({
   companyName: yup.string().required("Company Name is required").trim(),
@@ -28,6 +28,7 @@ const schema = yup.object().shape({
     country: yup.string().optional(),
   }),
   leadSource: yup.string().optional(),
+  subdomain: yup.string().optional(),
   assignToStaff: yup.string().required("Assign to Staff is required"),
   pipelineStageId: yup.string().required("Onboarding Stage is required"),
 });
@@ -47,6 +48,7 @@ const defaultFormValues = {
     country: "",
   },
   leadSource: "",
+  subdomain: "",
   assignToStaff: "",
   pipelineStageId: "",
 };
@@ -60,7 +62,7 @@ const AddProspectModal = ({
   pipelineStageId, // Added to preselect the current stage
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const adminId = useSelector((state) => state.authentication?.user?.id);
+  const { userId: adminId } = useAuth();
   const {
     register,
     handleSubmit,
@@ -146,6 +148,7 @@ const AddProspectModal = ({
       organizationType: formData.organizationType,
       location: formData.location,
       leadSource: formData.leadSource,
+      subdomain: formData.subdomain,
       assignToAdmin: formData.assignToStaff,
       createdBy: adminId,
     };
@@ -185,9 +188,9 @@ const AddProspectModal = ({
         onClose();
       }}
       title="Add a new candidate"
-      primaryButtonText={isLoading ? "Saving..." : "Save candidate"}
+      primaryButtonText="Save candidate"
       secondaryButtonText="Cancel"
-      primaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
@@ -269,6 +272,12 @@ const AddProspectModal = ({
           {...register("leadSource")}
           error={errors.leadSource?.message}
           placeholder="Type something"
+        />
+        <TextInput
+          label="Subdomain"
+          {...register("subdomain")}
+          error={errors.subdomain?.message}
+          placeholder="e.g. mycompany"
         />
         <SelectInput
           label="Assign to Staff"

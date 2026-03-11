@@ -1,246 +1,239 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-
 import "./TenantSingle.css";
-import { Link } from "react-router-dom";
-import CustomTable from '../../../Components/Table/CustomTable';
+import CustomTable from "../../../Components/Table/CustomTable";
+import TableFilterModal from "../../../Components/ReusableModal/TableFilterModal";
+import tenantApi from "../../../api/TenantApis";
+import useAuth from "../../../hooks/useAuth";
+import { showToast } from "../../../Helper/ShowToast";
+import { SectionSpinner } from "../../../Components/LoadingSpinner";
+
+const LIMIT = 20;
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 
 const TenantSingleUserLogs = () => {
-  const [tableDataState, setTableDataState] = useState([
-    {
-      activityId: "ACT5739",
-      description: "Adding a new appointment",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Failed",
-      category: "Appointment & Scheduling",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Editing Staff profile",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Staff Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Editing Staff schedule",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Staff Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Editing Staff permissions",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Staff Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Editing Staff role",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Staff Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Editing Staff details",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Failed",
-      category: "Staff Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Uploading client data",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Failed",
-      category: "Client Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Deactivating client account",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Client Management",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Generating report",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Reporting",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      activityId: "ACT5739",
-      description: "Adding a new schedule",
-      dateTime: "12/10/2023 11:34 PM",
-      user: "Admin",
-      status: "Success",
-      category: "Appointment & Scheduling",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-  ]);
+  const { tenantId } = useParams();
+  const navigate = useNavigate();
+  const { accessToken, refreshToken } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("All");
-  const [viewIssueId, setViewIssueId] = useState(null);
+  const [activeTab, setActiveTab] = useState("activity");
+  const [loading, setLoading] = useState(true);
+  const [tenantName, setTenantName] = useState("");
+  const [openFilterModal, setOpenFilterModal] = useState(null);
+  const [activityFiltersActive, setActivityFiltersActive] = useState({ action: "", module: "" });
+  const [serverFiltersActive, setServerFiltersActive] = useState({ method: "", statusCode: "" });
 
-  // Define tabs based on categories
-  const tabs = [
-    { name: "All", count: tableDataState.length },
-    {
-      name: "Appointment & Scheduling",
-      count: tableDataState.filter((item) => item.category === "Appointment & Scheduling").length,
-    },
-    {
-      name: "Client Management",
-      count: tableDataState.filter((item) => item.category === "Client Management").length,
-    },
-    {
-      name: "Staff Management",
-      count: tableDataState.filter((item) => item.category === "Staff Management").length,
-    },
-    {
-      name: "Reporting",
-      count: tableDataState.filter((item) => item.category === "Reporting").length,
-    },
-    // Add more categories here if needed
-  ];
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [activityMeta, setActivityMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [activityPage, setActivityPage] = useState(1);
 
-  // Define columns (same for all tabs)
-  const columns = [
-    { key: "activityId", header: "ACTIVITY ID" },
-    { key: "description", header: "DESCRIPTION" },
-    { key: "dateTime", header: "DATE & TIME" },
-    { key: "user", header: "USER" },
-    { key: "status", header: "STATUS", type: "status" },
-  ];
+  const [serverRequests, setServerRequests] = useState([]);
+  const [serverMeta, setServerMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [serverPage, setServerPage] = useState(1);
 
-  const actions = [
-    {
-      label: "View Issue",
-      onClick: (row) => {
-        setViewIssueId(row.activityId);
-      },
+  const fetchActivityLogs = useCallback(
+    async (page) => {
+      try {
+        setLoading(true);
+        const res = await tenantApi.GetTenantActivityLog({
+          accessToken,
+          refreshToken,
+          tenantId,
+          page,
+          limit: LIMIT,
+        });
+        setActivityLogs(res.data?.data || []);
+        setActivityMeta(res.data?.meta || { total: 0, page: 1, totalPages: 1 });
+      } catch (err) {
+        showToast(err.message || "Failed to load activity logs", "error");
+      } finally {
+        setLoading(false);
+      }
     },
-    {
-      label: "Delete Issue",
-      className: "remove",
-      onClick: (row) => {
-      },
-    },
-  ];
+    [accessToken, refreshToken, tenantId]
+  );
 
-  // Filter data based on the active tab
-  const filteredData =
-    activeTab === "All"
-      ? tableDataState
-      : tableDataState.filter((item) => item.category === activeTab);
-
-  // Define all possible filters
-  const allFilters = [
-    {
-      key: "category",
-      value: "",
-      options: [
-        { value: "", label: "Category" },
-        { value: "Appointment & Scheduling", label: "Appointment & Scheduling" },
-        { value: "Client Management", label: "Client Management" },
-        { value: "Staff Management", label: "Staff Management" },
-        { value: "Reporting", label: "Reporting" },
-      ],
+  const fetchServerRequests = useCallback(
+    async (page) => {
+      try {
+        setLoading(true);
+        const res = await tenantApi.GetTenantServerRequest({
+          accessToken,
+          refreshToken,
+          tenantId,
+          page,
+          limit: LIMIT,
+        });
+        setServerRequests(res.data?.data || []);
+        setServerMeta(res.data?.meta || { total: 0, page: 1, totalPages: 1 });
+      } catch (err) {
+        showToast(err.message || "Failed to load server requests", "error");
+      } finally {
+        setLoading(false);
+      }
     },
-    {
-      key: "user",
-      value: "",
-      options: [
-        { value: "", label: "User" },
-        { value: "Admin", label: "Admin" },
-        // Add more users if needed
-      ],
-    },
-    {
-      key: "status",
-      value: "",
-      options: [
-        { value: "", label: "Status" },
-        { value: "Success", label: "Success" },
-        { value: "Failed", label: "Failed" },
-      ],
-    },
-  ];
+    [accessToken, refreshToken, tenantId]
+  );
 
-  // State to manage filter values
-  const [filterValues, setFilterValues] = useState({
-    category: "",
-    user: "",
-    status: "",
-  });
+  useEffect(() => {
+    tenantApi
+      .GetSingleTenant({ tenantId, accessToken, refreshToken })
+      .then((res) => {
+        const d = res.data || res;
+        setTenantName(d.companyName || d.contactPerson || "Tenant");
+      })
+      .catch(() => {});
+    fetchActivityLogs(1);
+  }, []);
 
-  // Compute filters based on activeTab
-  const filters = useMemo(() => {
-    if (activeTab === "All") {
-      return allFilters.map((filter) => ({
-        ...filter,
-        value: filterValues[filter.key],
-      }));
-    } else {
-      // When a specific tab is active, remove the category filter since the tab already filters by category
-      return allFilters
-        .filter((filter) => filter.key !== "category")
-        .map((filter) => ({
-          ...filter,
-          value: filterValues[filter.key],
-        }));
+  useEffect(() => {
+    if (activityPage !== 1) fetchActivityLogs(activityPage);
+  }, [activityPage]);
+
+  useEffect(() => {
+    if (activeTab === "server") fetchServerRequests(serverPage);
+  }, [serverPage]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === "server" && serverRequests.length === 0) {
+      fetchServerRequests(serverPage);
     }
-  }, [activeTab, filterValues]);
-
-  // Handle filter changes
-  const handleFilterChange = (key, value) => {
-    setFilterValues((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
   };
+
+  const activityColumns = [
+    { key: "action", header: "ACTION" },
+    { key: "details", header: "DETAILS" },
+    { key: "user", header: "USER" },
+    { key: "module", header: "MODULE" },
+    { key: "dateTime", header: "DATE & TIME" },
+  ];
+
+  const serverColumns = [
+    { key: "method", header: "METHOD" },
+    { key: "statusCode", header: "STATUS CODE" },
+    { key: "durationMs", header: "DURATION (ms)" },
+    { key: "ipAddress", header: "IP ADDRESS" },
+    { key: "errorMessage", header: "ERROR" },
+    { key: "dateTime", header: "DATE & TIME" },
+  ];
+
+  const activityFilters = [
+    {
+      key: "filter_type",
+      options: [
+        { value: "", label: "Filter by..." },
+        { value: "action", label: "Action" },
+        { value: "module", label: "Module" },
+        { value: "clear_filters", label: "Clear Filters" },
+      ],
+    },
+  ];
+
+  const serverFilters = [
+    {
+      key: "filter_type",
+      options: [
+        { value: "", label: "Filter by..." },
+        { value: "method", label: "Method" },
+        { value: "statusCode", label: "Status Code" },
+        { value: "clear_filters", label: "Clear Filters" },
+      ],
+    },
+  ];
+
+  const activityData = activityLogs.map((log) => ({
+    id: log.logId,
+    action: log.action || "—",
+    details: log.details || log.reason || "—",
+    user: log.admin
+      ? `${log.admin.firstName || ""} ${log.admin.lastName || ""}`.trim() || log.admin.email
+      : log.client
+      ? "Client"
+      : "—",
+    module: log.module || "—",
+    dateTime: formatDate(log.createdAt),
+  }));
+
+  const serverData = serverRequests.map((req) => ({
+    id: req.id,
+    method: req.method || "—",
+    statusCode: req.statusCode ?? "—",
+    durationMs: req.durationMs != null ? `${req.durationMs}ms` : "—",
+    ipAddress: req.ipAddress || "—",
+    errorMessage: req.errorMessage || "—",
+    dateTime: formatDate(req.createdAt),
+  }));
+
+  const filteredActivityData = useMemo(() => activityData.filter((row) => {
+    if (activityFiltersActive.action && row.action !== activityFiltersActive.action) return false;
+    if (activityFiltersActive.module && row.module !== activityFiltersActive.module) return false;
+    return true;
+  }), [activityData, activityFiltersActive]);
+
+  const filteredServerData = useMemo(() => serverData.filter((row) => {
+    if (serverFiltersActive.method && row.method !== serverFiltersActive.method) return false;
+    if (serverFiltersActive.statusCode && String(row.statusCode) !== String(serverFiltersActive.statusCode)) return false;
+    return true;
+  }), [serverData, serverFiltersActive]);
+
+  const actionOptions = useMemo(() => [
+    { value: "", label: "All Actions" },
+    ...[...new Set(activityData.map((r) => r.action).filter((v) => v && v !== "—"))].map((v) => ({ value: v, label: v })),
+  ], [activityData]);
+
+  const moduleOptions = useMemo(() => [
+    { value: "", label: "All Modules" },
+    ...[...new Set(activityData.map((r) => r.module).filter((v) => v && v !== "—"))].map((v) => ({ value: v, label: v })),
+  ], [activityData]);
+
+  const methodOptions = useMemo(() => [
+    { value: "", label: "All Methods" },
+    ...[...new Set(serverData.map((r) => r.method).filter((v) => v && v !== "—"))].map((v) => ({ value: v, label: v })),
+  ], [serverData]);
+
+  const statusCodeOptions = useMemo(() => [
+    { value: "", label: "All Status Codes" },
+    ...[...new Set(serverData.map((r) => String(r.statusCode)).filter((v) => v && v !== "—"))].map((v) => ({ value: v, label: v })),
+  ], [serverData]);
+
+  const handleActivityFilterTypeSelect = (type) => setOpenFilterModal(`activity-${type}`);
+  const handleServerFilterTypeSelect = (type) => setOpenFilterModal(`server-${type}`);
+
+  const tabs = [
+    { key: "activity", label: "Activity Logs", count: activityMeta.total },
+    { key: "server", label: "Server Requests", count: serverMeta.total },
+  ];
+
+  const currentMeta = activeTab === "activity" ? activityMeta : serverMeta;
+  const currentPage = activeTab === "activity" ? activityPage : serverPage;
+  const setCurrentPage = activeTab === "activity" ? setActivityPage : setServerPage;
 
   return (
     <>
       <div className="tenant-header">
-        <Link to="/tenants/tenant-list" className="back-link">
+        <div onClick={() => navigate(-1)} className="back-link">
           <FaArrowLeft /> Back
-        </Link>
+        </div>
         <div className="tenant-title-container">
           <h1 className="tenant-title">Tenant</h1>
           <h2 className="tenant-title-breadcrumbs">
             Tenants /{" "}
-            <span className="tenant-title-breadcrumbs-org">ACME Corp</span>
+            <span className="tenant-title-breadcrumbs-org">
+              {tenantName || "..."}
+            </span>
           </h2>
         </div>
       </div>
@@ -249,27 +242,106 @@ const TenantSingleUserLogs = () => {
         <div className="tenants-tabs">
           {tabs.map((tab) => (
             <button
-              key={tab.name}
-              className={`tenants-tab ${
-                activeTab === tab.name ? "active" : ""
-              }`}
-              onClick={() => setActiveTab(tab.name)}
+              key={tab.key}
+              className={`tenants-tab ${activeTab === tab.key ? "active" : ""}`}
+              onClick={() => handleTabChange(tab.key)}
             >
-              <span>{tab.name.toUpperCase()}</span>
+              <span>{tab.label.toUpperCase()}</span>
+              {tab.count > 0 && (
+                <span className="tab-count">{tab.count}</span>
+              )}
             </button>
           ))}
         </div>
 
-        <CustomTable
-          data={filteredData}
-          columns={columns}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          actions={actions}
-          showActions={true}
-          itemsPerPage={10}
-          tableName="Activity History"
+        {loading ? (
+          <SectionSpinner />
+        ) : activeTab === "activity" ? (
+          <CustomTable
+            data={filteredActivityData}
+            columns={activityColumns}
+            filters={activityFilters}
+            onFilterTypeSelect={handleActivityFilterTypeSelect}
+            showActions={false}
+            showCheckbox={false}
+            itemsPerPage={LIMIT}
+            tableName="Activity Logs"
+          />
+        ) : (
+          <CustomTable
+            data={filteredServerData}
+            columns={serverColumns}
+            filters={serverFilters}
+            onFilterTypeSelect={handleServerFilterTypeSelect}
+            showActions={false}
+            showCheckbox={false}
+            itemsPerPage={LIMIT}
+            tableName="Server Requests"
+          />
+        )}
+
+        <TableFilterModal
+          isOpen={openFilterModal === "activity-action"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Action"
+          label="Select action"
+          options={actionOptions}
+          onApply={(val) => setActivityFiltersActive((p) => ({ ...p, action: val }))}
         />
+        <TableFilterModal
+          isOpen={openFilterModal === "activity-module"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Module"
+          label="Select module"
+          options={moduleOptions}
+          onApply={(val) => setActivityFiltersActive((p) => ({ ...p, module: val }))}
+        />
+        <TableFilterModal
+          isOpen={openFilterModal === "server-method"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Method"
+          label="Select method"
+          options={methodOptions}
+          onApply={(val) => setServerFiltersActive((p) => ({ ...p, method: val }))}
+        />
+        <TableFilterModal
+          isOpen={openFilterModal === "server-statusCode"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Status Code"
+          label="Select status code"
+          options={statusCodeOptions}
+          onApply={(val) => setServerFiltersActive((p) => ({ ...p, statusCode: val }))}
+        />
+
+        {!loading && currentMeta.totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              marginTop: 16,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <button
+              className="btn btn-outline"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              Previous
+            </button>
+            <span style={{ fontSize: 14, color: "#6b7280" }}>
+              Page {currentMeta.page} of {currentMeta.totalPages}
+            </span>
+            <button
+              className="btn btn-outline"
+              disabled={currentPage >= currentMeta.totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

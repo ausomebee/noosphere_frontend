@@ -6,6 +6,7 @@ import Button from "../../../../../Components/Button/Button";
 import CustomTable from "../../../../../Components/Table/CustomTable";
 import CreateAReportDocumentModal from "../../../../../Components/ReusableModal/ClientModal/ClinicalReport/CreateAReportDocumentModal";
 import api from "../../../../../api/TemplateAndReportApi";
+import usePermissions from "../../../../../hooks/usePermissions";
 import { showToast } from "../../../../../Helper/ShowToast";
 
 // Delete Confirmation Modal
@@ -316,6 +317,7 @@ const ClinicalReportsTab = ({ clientData }) => {
   const [signedPdfReport, setSignedPdfReport] = useState(null);
 
   const { tenantId, userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const client = clientData?.client;
 
@@ -544,7 +546,7 @@ const ClinicalReportsTab = ({ clientData }) => {
               label: "Edit",
               onClick: (row) => navigateToBuilder(row, "edit"),
             },
-            {
+            hasPermission("duplicate_clinical_report") && {
               label: "Duplicate",
               onClick: (row) => handleDuplicateReport(row),
             },
@@ -553,7 +555,7 @@ const ClinicalReportsTab = ({ clientData }) => {
               onClick: (row) => handleDeleteClick(row),
               danger: true,
             },
-          ],
+          ].filter(Boolean),
         },
       ],
     },
@@ -563,11 +565,11 @@ const ClinicalReportsTab = ({ clientData }) => {
         {
           type: "dropdown",
           items: [
-            {
+            hasPermission("approve_clinical_report") && {
               label: "View Document",
               onClick: (row) => navigateToBuilder(row, "submittedForApproval"),
             },
-          ],
+          ].filter(Boolean),
         },
       ],
     },
@@ -581,11 +583,11 @@ const ClinicalReportsTab = ({ clientData }) => {
         {
           type: "dropdown",
           items: [
-            {
+            hasPermission("view_clinical_report") && {
               label: "View",
               onClick: (row) => navigateToBuilder(row, "awaitingSignature"),
             },
-            {
+            hasPermission("nudge_client") && {
               label: "Nudge Client",
               onClick: (row) => handleNudgeClient(row),
             },
@@ -594,7 +596,7 @@ const ClinicalReportsTab = ({ clientData }) => {
               onClick: (row) => handleWithdrawReport(row),
               danger: true,
             },
-          ],
+          ].filter(Boolean),
         },
       ],
     },
@@ -633,11 +635,11 @@ const ClinicalReportsTab = ({ clientData }) => {
                 });
               },
             },
-            {
+            hasPermission("view_clinical_report") && {
               label: "View",
               onClick: (row) => navigateToBuilder(row, "clientSigned"),
             },
-          ],
+          ].filter(Boolean),
         },
       ],
     },

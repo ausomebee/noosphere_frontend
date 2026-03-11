@@ -305,6 +305,107 @@ PasswordInput.propTypes = {
   error: PropTypes.string,
 };
 
+// Multi-Select Input Component
+const MultiSelectInput = ({
+  label,
+  options = [],
+  value = [],
+  onChange,
+  placeholder = "Select...",
+  error = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleToggle = (optionValue) => {
+    const next = value.includes(optionValue)
+      ? value.filter((v) => v !== optionValue)
+      : [...value, optionValue];
+    onChange(next);
+  };
+
+  const handleRemove = (optionValue) => {
+    onChange(value.filter((v) => v !== optionValue));
+  };
+
+  const selectedLabels = options.filter((o) => value.includes(o.value));
+
+  return (
+    <div className="input-group" ref={containerRef}>
+      {label && <label className="input-label">{label}</label>}
+      <div
+        className={`multi-select-trigger ${error ? "input-error" : ""}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        {selectedLabels.length > 0 ? (
+          <div className="multi-select-tags">
+            {selectedLabels.map((item) => (
+              <span key={item.value} className="multi-select-tag">
+                {item.label}
+                <button
+                  type="button"
+                  className="multi-select-tag-remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(item.value);
+                  }}
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="multi-select-placeholder">{placeholder}</span>
+        )}
+      </div>
+      {isOpen && (
+        <div className="multi-select-dropdown">
+          {options.length === 0 ? (
+            <div className="multi-select-option multi-select-empty">No options available</div>
+          ) : (
+            options.map((option) => (
+              <label key={option.value} className="multi-select-option">
+                <input
+                  type="checkbox"
+                  checked={value.includes(option.value)}
+                  onChange={() => handleToggle(option.value)}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))
+          )}
+        </div>
+      )}
+      {error && <span className="input-error-message">{error}</span>}
+    </div>
+  );
+};
+
+MultiSelectInput.propTypes = {
+  label: PropTypes.string,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  value: PropTypes.arrayOf(PropTypes.string),
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  error: PropTypes.string,
+};
+
 // Exports
 export {
   TextInput,
@@ -315,4 +416,5 @@ export {
   SearchInput,
   RadioInput,
   PasswordInput,
+  MultiSelectInput,
 };

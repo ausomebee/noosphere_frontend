@@ -11,26 +11,20 @@ import {
   exportTableToPDF,
 } from "../../utils/TableUtils";
 import Pagination from "./Pagination";
-import DateFilterDropdown from "./DateFilterModal";
+import TableHeader from "./TableHeader";
+import TableBody from "./TableBody";
 import "./CustomTable.css";
-import {
-  CheckboxInput,
-  SearchInput,
-  SelectInput,
-  SwitchInput,
-  TextInput,
-} from "../Input/Inputs";
 import { FaExchangeAlt } from "react-icons/fa";
 import { FiRefreshCw } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import Button from "../Button/Button";
-import { parse, isSameDay, isWithinInterval, format, isValid } from "date-fns";
+import { parse, isSameDay, isWithinInterval, isValid } from "date-fns";
 
 const CustomTable = ({
   data,
   columns,
-  filters,
-  onFilterChange,
+  filters = [],
+  onFilterChange = () => {},
   actions,
   showActions = true,
   showCheckbox = true,
@@ -41,6 +35,7 @@ const CustomTable = ({
   onDelete,
   onSelectionChange,
   hasStatusDot = false,
+  onFilterTypeSelect,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,24 +43,7 @@ const CustomTable = ({
   const [selectedItems, setSelectedItems] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [filterValues, setFilterValues] = useState({
-    category: "",
-    priority: "",
-    date_reported: null,
-    date_updated: null,
-    assigned_to: "",
-    stage_completion: "",
-    date_created: null,
-    due_date: null,
-    plan: "",
-    account_status: "",
-    account_officer: "",
-    status: "",
-    nextBillingDate: null,
-    billingCycle: "",
-    lastPaymentStatus: "",
-    filter_type: "", // Added to match the filters structure
-  });
+  const [filterValues, setFilterValues] = useState({ filter_type: "" });
   const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
     useState(false);
   const [currentDateFilterKey, setCurrentDateFilterKey] = useState(null);
@@ -77,63 +55,27 @@ const CustomTable = ({
   const dateFilterEndInputRef = useRef(null);
   const dateFilterDropdownRef = useRef(null);
 
-  // Extract unique values for filters
-  const uniqueCategories = useMemo(() => {
-    const categories = new Set(data.map((row) => row.category).filter(Boolean));
-    return Array.from(categories);
-  }, [data]);
+  // Date filter keys that use date range picker instead of value select
+  const dateFilterKeys = useMemo(
+    () => ["date_reported", "date_updated", "date_created", "due_date", "nextBillingDate"],
+    []
+  );
 
-  const uniquePriorities = useMemo(() => {
-    const priorities = new Set(data.map((row) => row.priority).filter(Boolean));
-    return Array.from(priorities);
-  }, [data]);
-
-  const uniqueAssignedTo = useMemo(() => {
-    const assignToSet = new Set(
-      data.map((row) => row.assigned_to).filter(Boolean)
+  // Build a map of unique values for each filterable column from the data
+  const uniqueFilterValues = useMemo(() => {
+    const valuesMap = {};
+    // Get all filter option values (excluding empty, clear_filters, and date keys)
+    const filterKeys = filters.flatMap((f) =>
+      f.options
+        .map((opt) => opt.value)
+        .filter((v) => v && v !== "clear_filters" && !dateFilterKeys.includes(v))
     );
-    return Array.from(assignToSet);
-  }, [data]);
-
-  const uniqueStatuses = useMemo(() => {
-    const statuses = new Set(data.map((row) => row.status).filter(Boolean));
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniqueBillingCycles = useMemo(() => {
-    const cycles = new Set(data.map((row) => row.billingCycle).filter(Boolean));
-    return Array.from(cycles);
-  }, [data]);
-
-  const uniquePaymentStatuses = useMemo(() => {
-    const statuses = new Set(
-      data.map((row) => row.lastPaymentStatus).filter(Boolean)
-    );
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniquePlans = useMemo(() => {
-    const plans = new Set(data.map((row) => row.plan).filter(Boolean));
-    return Array.from(plans);
-  }, [data]);
-
-  const uniqueAccountStatuses = useMemo(() => {
-    const statuses = new Set(
-      data.map((row) => row.account_status).filter(Boolean)
-    );
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniqueAccountOfficers = useMemo(() => {
-    const officers = new Set(
-      data.map((row) => row.account_officer).filter(Boolean)
-    );
-    return Array.from(officers);
-  }, [data]);
-
-  const stageCompletionOptions = useMemo(() => {
-    return Array.from({ length: 11 }, (_, i) => `${i * 10}%`);
-  }, []);
+    filterKeys.forEach((key) => {
+      const values = new Set(data.map((row) => row[key]).filter(Boolean));
+      valuesMap[key] = Array.from(values);
+    });
+    return valuesMap;
+  }, [data, filters, dateFilterKeys]);
 
   // Filtered and sorted data
   const filteredData = useMemo(() => {
@@ -150,64 +92,36 @@ const CustomTable = ({
 
     // Apply filters
     Object.entries(filterValues).forEach(([key, value]) => {
-      if (value && (value.start || value.end)) {
-        if (
-          key === "date_reported" ||
-          key === "date_updated" ||
-          key === "date_created" ||
-          key === "due_date" ||
-          key === "nextBillingDate"
-        ) {
-          filtered = filtered.filter((row) => {
-            const rowDate = row[key]
-              ? parse(row[key], "MM/dd/yyyy", new Date())
-              : null;
-            if (!isValid(rowDate)) return false;
-            const startDate = value.start ? new Date(value.start) : null;
-            const endDate = value.end ? new Date(value.end) : null;
+      if (!value || key === "filter_type") return;
 
-            if (startDate && endDate && !isSameDay(startDate, endDate)) {
-              return isWithinInterval(rowDate, {
-                start: startDate,
-                end: endDate,
-              });
-            } else if (startDate) {
-              return isSameDay(rowDate, startDate);
-            }
-            return true;
-          });
-        }
-      } else if (value && key !== "filter_type") {
-        if (key === "category") {
-          filtered = filtered.filter((row) => row.category === value);
-        } else if (key === "priority") {
-          filtered = filtered.filter((row) => row.priority === value);
-        } else if (key === "assigned_to") {
-          filtered = filtered.filter((row) => row.assigned_to === value);
-        } else if (key === "stage_completion") {
-          const percentage = parseInt(value.replace("%", ""), 10);
-          filtered = filtered.filter((row) => {
-            const rowPercentage = parseInt(row.stage_completion || "0", 10);
-            return rowPercentage === percentage;
-          });
-        } else if (key === "plan") {
-          filtered = filtered.filter((row) => row.plan === value);
-        } else if (key === "account_status") {
-          filtered = filtered.filter((row) => row.account_status === value);
-        } else if (key === "account_officer") {
-          filtered = filtered.filter((row) => row.account_officer === value);
-        } else if (key === "status") {
-          filtered = filtered.filter((row) => row.status === value);
-        } else if (key === "billingCycle") {
-          filtered = filtered.filter((row) => row.billingCycle === value);
-        } else if (key === "lastPaymentStatus") {
-          filtered = filtered.filter((row) => row.lastPaymentStatus === value);
-        }
+      // Date range filters
+      if (dateFilterKeys.includes(key) && (value.start || value.end)) {
+        filtered = filtered.filter((row) => {
+          const rowDate = row[key]
+            ? parse(row[key], "MM/dd/yyyy", new Date())
+            : null;
+          if (!isValid(rowDate)) return false;
+          const startDate = value.start ? new Date(value.start) : null;
+          const endDate = value.end ? new Date(value.end) : null;
+
+          if (startDate && endDate && !isSameDay(startDate, endDate)) {
+            return isWithinInterval(rowDate, {
+              start: startDate,
+              end: endDate,
+            });
+          } else if (startDate) {
+            return isSameDay(rowDate, startDate);
+          }
+          return true;
+        });
+      } else if (typeof value === "string" && value) {
+        // String value filters — match row[key] to value
+        filtered = filtered.filter((row) => row[key] === value);
       }
     });
 
     return filtered;
-  }, [data, searchTerm, filterValues]);
+  }, [data, searchTerm, filterValues, dateFilterKeys]);
 
   const pagination = useMemo(() => {
     const totalItems = filteredData.length;
@@ -225,7 +139,7 @@ const CustomTable = ({
     };
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const { totalItems, totalPages, startIndex, currentData } = pagination;
+  const { totalPages, startIndex, currentData } = pagination;
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
@@ -281,34 +195,33 @@ const CustomTable = ({
       const updatedData = [...data];
       updatedData[startIndex + rowIndex].active =
         !updatedData[startIndex + rowIndex].active;
-      
     },
     [data, startIndex]
   );
 
   const handleExportCSV = useCallback(() => {
     exportTableData(
-      data,
+      filteredData,
       columns,
       `${tableName.toLowerCase().replace(/\s+/g, "-")}.csv`,
       tableName
     );
     setExportDropdownOpen(false);
-  }, [data, columns, tableName]);
+  }, [filteredData, columns, tableName]);
 
   const handleExportPDF = useCallback(() => {
     exportTableToPDF(
-      data,
+      filteredData,
       columns,
       `${tableName.toLowerCase().replace(/\s+/g, "-")}.pdf`,
       tableName
     );
     setExportDropdownOpen(false);
-  }, [data, columns, tableName]);
+  }, [filteredData, columns, tableName]);
 
   const handlePrint = useCallback(() => {
-    printTableData(data, columns, tableName);
-  }, [data, columns, tableName]);
+    printTableData(filteredData, columns, tableName);
+  }, [filteredData, columns, tableName]);
 
   const toggleDropdown = useCallback(
     (rowIndex, colIndex) => {
@@ -321,118 +234,53 @@ const CustomTable = ({
     [openDropdown]
   );
 
+  const positionDropdown = (rowIndex, colIndex) => {
+    const key = `${rowIndex}-${colIndex}`;
+    const button = menuRefs.current[key]?.button;
+    const dropdown = menuRefs.current[key]?.dropdown;
+    if (!button || !dropdown) return;
+    const buttonRect = button.getBoundingClientRect();
+    const dropdownHeight = dropdown.scrollHeight || 150;
+    const dropdownWidth = dropdown.offsetWidth || 180;
+    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
+    const spaceAbove = buttonRect.top - 10;
+
+    dropdown.style.position = "fixed";
+    dropdown.style.zIndex = "9999";
+    dropdown.style.overflowY = "auto";
+
+    // Align left edge of dropdown to left of button
+    const leftPos = buttonRect.left - dropdownWidth - 4;
+    dropdown.style.left = `${Math.max(leftPos, 4)}px`;
+    dropdown.style.right = "auto";
+
+    if (spaceBelow >= dropdownHeight) {
+      dropdown.style.top = `${buttonRect.bottom + 2}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceBelow}px`;
+    } else if (spaceAbove >= dropdownHeight) {
+      dropdown.style.top = `${buttonRect.top - dropdownHeight - 2}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceAbove}px`;
+    } else {
+      if (spaceBelow >= spaceAbove) {
+        dropdown.style.top = `${buttonRect.bottom + 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceBelow}px`;
+      } else {
+        dropdown.style.top = `${buttonRect.top - Math.min(dropdownHeight, spaceAbove) - 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceAbove}px`;
+      }
+    }
+  };
+
   const toggleExportDropdown = useCallback(() => {
     setExportDropdownOpen((prev) => !prev);
     if (!exportDropdownOpen) {
       setTimeout(() => positionExportDropdown(), 0);
     }
   }, [exportDropdownOpen]);
-
-  // const positionDropdown = (rowIndex, colIndex) => {
-  //   const key = `${rowIndex}-${colIndex}`;
-  //   const button = menuRefs.current[key]?.button;
-  //   const dropdown = menuRefs.current[key]?.dropdown;
-
-  //   if (!button || !dropdown) return;
-
-  //   const buttonRect = button.getBoundingClientRect();
-  //   const tableRect = tableContainerRef.current.getBoundingClientRect();
-  //   const dropdownRect = dropdown.getBoundingClientRect();
-
-  //   const dropdownHeight = dropdownRect.height;
-  //   const dropdownWidth = dropdownRect.width;
-  //   const spaceBelow = tableRect.bottom - buttonRect.bottom - 10;
-  //   const spaceAbove = buttonRect.top - tableRect.top - 10;
-
-  //   let top;
-
-  //   if (spaceBelow >= dropdownHeight) {
-  //     top = button.offsetHeight + 2;
-  //     dropdown.style.top = `${top}px`;
-  //     dropdown.style.bottom = "auto";
-  //     dropdown.style.maxHeight = `${spaceBelow}px`;
-  //   } else if (spaceAbove >= dropdownHeight) {
-  //     top = -dropdownHeight - 2;
-  //     dropdown.style.top = `${top}px`;
-  //     dropdown.style.bottom = "auto";
-  //     dropdown.style.maxHeight = `${spaceAbove}px`;
-  //   } else {
-  //     top = button.offsetHeight + 2;
-  //     dropdown.style.top = `${top}px`;
-  //     dropdown.style.bottom = "auto";
-  //     dropdown.style.maxHeight = `${Math.min(spaceBelow, dropdownHeight)}px`;
-  //   }
-
-  //   const additionalOffset = 4;
-  //   const left = -dropdownWidth - additionalOffset;
-
-  //   dropdown.style.left = `${left}px`;
-  //   dropdown.style.right = "auto";
-  //   dropdown.style.position = "absolute";
-  //   dropdown.style.zIndex = "1000";
-  //   dropdown.style.overflowY = "auto";
-  // };
-
-const positionDropdown = (rowIndex, colIndex) => {
-  const key = `${rowIndex}-${colIndex}`;
-  const button = menuRefs.current[key]?.button;
-  const dropdown = menuRefs.current[key]?.dropdown;
-
-  if (!button || !dropdown) return;
-
-  const buttonRect = button.getBoundingClientRect();
-  const tableRect = tableContainerRef.current.getBoundingClientRect();
-  const headerRect = tableContainerRef.current.querySelector("thead")?.getBoundingClientRect();
-  const dropdownRect = dropdown.getBoundingClientRect();
-
-  // Ensure headerRect is valid
-  if (!headerRect) return;
-
-  const dropdownHeight = dropdownRect.height || 150; // Default height if not yet measured
-  const spaceBelow = window.innerHeight - buttonRect.bottom - 10; // Use window height for consistency
-  const spaceAbove = buttonRect.top - headerRect.bottom - 10; // Space from header bottom to button top
-
-  let top;
-
-  // Prioritize showing below if enough space, otherwise show above below the header
-  if (spaceBelow >= dropdownHeight) {
-    top = button.offsetHeight + 2;
-    dropdown.style.top = `${top}px`;
-    dropdown.style.bottom = "auto";
-    dropdown.style.maxHeight = `${spaceBelow}px`;
-  } else if (spaceAbove >= dropdownHeight) {
-    top = -(dropdownHeight + 2);
-    dropdown.style.top = `${top}px`;
-    dropdown.style.bottom = "auto";
-    dropdown.style.maxHeight = `${spaceAbove}px`;
-  } else {
-    // Fallback: Show above with max available space, ensuring it starts below header
-    top = -(Math.min(dropdownHeight, spaceAbove) + 2);
-    dropdown.style.top = `${top}px`;
-    dropdown.style.bottom = "auto";
-    dropdown.style.maxHeight = `${spaceAbove}px`;
-  }
-
-  // Adjust horizontal positioning
-  const additionalOffset = 4;
-  const left = -dropdownRect.width - additionalOffset;
-
-  dropdown.style.left = `${left}px`;
-  dropdown.style.right = "auto";
-  dropdown.style.position = "absolute";
-  dropdown.style.zIndex = "1000";
-  dropdown.style.overflowY = "auto";
-
-  // Ensure dropdown stays within viewport vertically
-  const viewportBottom = window.innerHeight;
-  const dropdownBottom = buttonRect.top + top;
-  if (dropdownBottom < 0) {
-    dropdown.style.top = "0";
-    dropdown.style.maxHeight = `${buttonRect.top - 10}px`; // Limit to space above button
-  } else if (buttonRect.bottom + (dropdownHeight - top) > viewportBottom) {
-    dropdown.style.maxHeight = `${viewportBottom - buttonRect.bottom - 10}px`;
-  }
-};
 
   const positionExportDropdown = () => {
     const button = exportButtonRef.current;
@@ -502,16 +350,7 @@ const positionDropdown = (rowIndex, colIndex) => {
 
   const handleDateRangeSelect = (range) => {
     const selectedFilterType = filterValues.filter_type;
-    if (
-      selectedFilterType &&
-      [
-        "date_reported",
-        "date_updated",
-        "date_created",
-        "due_date",
-        "nextBillingDate",
-      ].includes(selectedFilterType)
-    ) {
+    if (selectedFilterType && dateFilterKeys.includes(selectedFilterType)) {
       const updatedValues = {
         ...filterValues,
         [selectedFilterType]: {
@@ -519,12 +358,10 @@ const positionDropdown = (rowIndex, colIndex) => {
           end: range.end ? new Date(range.end) : null,
         },
       };
-    
+
       setFilterValues(updatedValues);
       onFilterChange(selectedFilterType, updatedValues[selectedFilterType]);
     } else {
-
-      // Fallback to a default key if needed (optional)
       const defaultKey = "date_reported";
       const updatedValues = {
         ...filterValues,
@@ -533,7 +370,7 @@ const positionDropdown = (rowIndex, colIndex) => {
           end: range.end ? new Date(range.end) : null,
         },
       };
-      
+
       setFilterValues(updatedValues);
       onFilterChange(defaultKey, updatedValues[defaultKey]);
     }
@@ -541,44 +378,10 @@ const positionDropdown = (rowIndex, colIndex) => {
   };
 
   const resetFilters = () => {
-    setFilterValues({
-      category: "",
-      priority: "",
-      date_reported: null,
-      date_updated: null,
-      assigned_to: "",
-      stage_completion: "",
-      date_created: null,
-      due_date: null,
-      plan: "",
-      account_status: "",
-      account_officer: "",
-      status: "",
-      nextBillingDate: null,
-      billingCycle: "",
-      lastPaymentStatus: "",
-      filter_type: "",
-    });
+    setFilterValues({ filter_type: "" });
     setCurrentDateFilterKey(null);
-    onFilterChange("category", "");
-    onFilterChange("priority", "");
-    onFilterChange("date_reported", null);
-    onFilterChange("date_updated", null);
-    onFilterChange("assigned_to", "");
-    onFilterChange("stage_completion", "");
-    onFilterChange("date_created", null);
-    onFilterChange("due_date", null);
-    onFilterChange("plan", "");
-    onFilterChange("account_status", "");
-    onFilterChange("account_officer", "");
-    onFilterChange("status", "");
-    onFilterChange("nextBillingDate", null);
-    onFilterChange("billingCycle", "");
-    onFilterChange("lastPaymentStatus", "");
     onFilterChange("filter_type", "");
   };
-
-  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -656,640 +459,53 @@ const positionDropdown = (rowIndex, colIndex) => {
           />
         </div>
       )}
-      <div className="table-header">
-        <div className="search-filters-container">
-          <div className="search-container">
-            <SearchInput
-              type="text"
-              placeholder="Select Filter"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="filters-container">
-            <h2 className="filter-text">Filters:</h2>
-            {filters.map((filter, index) => (
-              <div key={index} className="filter-wrapper">
-                <div className="filter-select-container">
-                  <div className="filter-label">
-                    <SelectInput
-                      value={filterValues[filter.key] || ""}
-                      onChange={(e) => {
-                        const newFilterValue = e.target.value;
-                        handleFilterValueChange(filter.key, newFilterValue);
-                        if (newFilterValue === "") {
-                          resetFilters();
-                        } else if (
-                          ["date_reported", "date_updated"].includes(
-                            newFilterValue
-                          )
-                        ) {
-                          setCurrentDateFilterKey(newFilterValue); // Set the actual date key
-                        }
-                      }}
-                      options={filter.options}
-                      className="table-filter-select"
-                    />
-                  </div>
-                  {(filterValues[filter.key] === "date_reported" ||
-                    filterValues[filter.key] === "date_updated" ||
-                    filterValues[filter.key] === "date_created" ||
-                    filterValues[filter.key] === "due_date" ||
-                    filterValues[filter.key] === "nextBillingDate") && (
-                    <div className="date-filter-input-container">
-                      <TextInput
-                        type="text"
-                        value={
-                          filterValues[filterValues[filter.key]]?.start
-                            ? format(
-                                filterValues[filterValues[filter.key]].start,
-                                "MMM d, yyyy"
-                              )
-                            : "Select start date"
-                        }
-                        readOnly
-                        onClick={() => {
-                         
-                          setCurrentDateFilterKey(filterValues[filter.key]);
-                          setIsDateFilterDropdownOpen(true);
-                        }}
-                        className="date-filter-input date-filter-input-start"
-                        ref={dateFilterStartInputRef}
-                      />
-                      <span className="date-filter-demarcator"> - </span>
-                      <TextInput
-                        type="text"
-                        value={
-                          filterValues[filterValues[filter.key]]?.end
-                            ? format(
-                                filterValues[filterValues[filter.key]].end,
-                                "MMM d, yyyy"
-                              )
-                            : "Select end date"
-                        }
-                        readOnly
-                        onClick={() => {
-                          
-                          setCurrentDateFilterKey(filterValues[filter.key]);
-                          setIsDateFilterDropdownOpen(true);
-                        }}
-                        className="date-filter-input date-filter-input-end"
-                        ref={dateFilterEndInputRef}
-                      />
-                      {isDateFilterDropdownOpen &&
-                        currentDateFilterKey === filterValues[filter.key] && (
-                          <div
-                            className="date-filter-dropdown-wrapper no-scrollbar::-webkit-scrollbar no-scrollbar"
-                            ref={dateFilterDropdownRef}
-                          >
-                            <DateFilterDropdown
-                              isOpen={isDateFilterDropdownOpen}
-                              onClose={() => setIsDateFilterDropdownOpen(false)}
-                              onDateRangeSelect={handleDateRangeSelect}
-                            />
-                          </div>
-                        )}
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "category" && (
-                    <div className="filter-value-select-container">
-                      <SelectInput
-                        value={filterValues.category || ""}
-                        onChange={(e) =>
-                          handleFilterValueChange("category", e.target.value)
-                        }
-                        options={[
-                          { value: "", label: "Select Category" },
-                          ...uniqueCategories.map((category) => ({
-                            value: category,
-                            label: category,
-                          })),
-                        ]}
-                        className="filter-value-select"
-                      />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "priority" && (
-                    <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.priority || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("priority", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Priority" },
-                        {
-                          value: "Enterprise Critical",
-                          label: "Enterprise Critical",
-                        },
-                        { value: "Enterprise High", label: "Enterprise High" },
-                        { value: "Critical", label: "Critical" },
-                        { value: "High", label: "High" },
-                        { value: "Medium", label: "Medium" },
-                        { value: "Low", label: "Low" },
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "assigned_to" && (
-                    <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.assigned_to || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("assigned_to", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Assigned To" },
-                        ...uniqueAssignedTo.map((name) => ({
-                          value: name,
-                          label: name,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "stage_completion" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.stage_completion || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("stage_completion", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Stage Completion" },
-                        ...stageCompletionOptions.map((percentage) => ({
-                          value: percentage,
-                          label: percentage,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "plan" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.plan || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("plan", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Plan" },
-                        ...uniquePlans.map((plan) => ({
-                          value: plan,
-                          label: plan,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "account_status" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.account_status || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("account_status", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Account Status" },
-                        ...uniqueAccountStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "account_officer" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.account_officer || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("account_officer", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Account Officer" },
-                        ...uniqueAccountOfficers.map((officer) => ({
-                          value: officer,
-                          label: officer,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "status" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.status || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("status", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Status" },
-                        ...uniqueStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "billingCycle" && (
-                     <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.billingCycle || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("billingCycle", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Billing Cycle" },
-                        { value: "Monthly", label: "Monthly" },
-                        { value: "Yearly", label: "Yearly" },
-                        { value: "Custom", label: "Custom" },
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "lastPaymentStatus" && (
-                    <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.lastPaymentStatus || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("lastPaymentStatus", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Payment Status" },
-                        ...uniquePaymentStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                    </div>
-                  )}
-                  {filterValues[filter.key] === "clear_filters" && (
-                    <Button
-                      label="Clear All Filters"
-                      variant="outline"
-                      onClick={resetFilters}
-                      className="clear-filters-button"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="table-actions">
-          <div className="action-menu">
-            <button
-              onClick={toggleExportDropdown}
-              className="action-button"
-              ref={exportButtonRef}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </button>
-            {exportDropdownOpen && (
-              <div
-                className="action-dropdown export-dropdown"
-                ref={exportDropdownRef}
-              >
-                <button className="dropdown-item" onClick={handleExportCSV}>
-                  Export as CSV
-                </button>
-                <button className="dropdown-item" onClick={handleExportPDF}>
-                  Export as PDF
-                </button>
-              </div>
-            )}
-          </div>
-          <button onClick={handlePrint} className="action-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      <div
-        className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar"
-        ref={tableContainerRef}
-      >
-        <table className="custom-table">
-          <thead>
-            <tr>
-              {showCheckbox && (
-                <th className="checkbox-column">
-                  <CheckboxInput
-                    checked={
-                      selectedRows.length > 0 &&
-                      selectedRows.length ===
-                        currentData.filter((row) => row.hasCheckbox).length
-                    }
-                    onChange={handleSelectAllChange}
-                  />
-                </th>
-              )}
-              {columns.map((col, index) => (
-                <th key={index}>{col.header}</th>
-              ))}
-              {showActions && <th>Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={
-                    columns.length + (showActions ? 2 : showCheckbox ? 1 : 0)
-                  }
-                  className="table-empty-state"
-                >
-                  <div className="table-empty-state-content">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="table-empty-state-icon"
-                    >
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                    <span>Nothing to show here for {tableName} Table</span>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              currentData.map((row, rowIndex) => (
-                <tr key={row.item_id || rowIndex}>
-                  {showCheckbox && row.hasCheckbox && (
-                    <td className="checkbox-column">
-                      <CheckboxInput
-                        checked={selectedRows.includes(rowIndex)}
-                        onChange={() => handleCheckboxChange(rowIndex, row)}
-                      />
-                    </td>
-                  )}
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className="table-cell">
-                      {col.hasColumnActions ? (
-                        <div className="action-menu">
-                          <button
-                            className="action-button"
-                            onClick={() => toggleDropdown(rowIndex, colIndex)}
-                            ref={(el) => {
-                              const key = `${rowIndex}-${colIndex}`;
-                              if (!menuRefs.current[key]) {
-                                menuRefs.current[key] = {};
-                              }
-                              menuRefs.current[key].button = el;
-                            }}
-                          >
-                            {row[col.key]}
-                          </button>
-                          {openDropdown === `${rowIndex}-${colIndex}` && (
-                            <div
-                              className="action-dropdown"
-                              ref={(el) => {
-                                const key = `${rowIndex}-${colIndex}`;
-                                if (!menuRefs.current[key]) {
-                                  menuRefs.current[key] = {};
-                                }
-                                menuRefs.current[key].dropdown = el;
-                              }}
-                              style={{ zIndex: 1000 }}
-                            >
-                              {col.columnActions.map((action, index) => (
-                                <button
-                                  key={index}
-                                  className={`dropdown-item ${
-                                    action.className || ""
-                                  }`}
-                                  onClick={() => {
-                                    action.onClick(row);
-                                    setOpenDropdown(null);
-                                  }}
-                                >
-                                  {action.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : col.type === "stage_completion" ? (
-                        <div className="progress-bars">
-                          <div
-                            className="progress-fills"
-                            style={{ width: `${row[col.key]}%` }}
-                          ></div>
-                          <span className="progress-texts">{`${
-                            row[col.key]
-                          }%`}</span>
-                        </div>
-                      ) : col.type === "plan" ? (
-                        <span
-                          className={`plan-label plan-${row[
-                            col.key
-                          ].toLowerCase()}`}
-                        >
-                          {row[col.key]}
-                        </span>
-                      ) : col.type === "subscription_status" ? (
-                        <span
-                          className={`subscription_status-label subscription_status-${row[
-                            col.key
-                          ].toLowerCase()}`}
-                        >
-                          <span className="status-dot" />
-                          {row[col.key]}
-                        </span>
-                      ) : col.type === "payment_status" ? (
-                        <span
-                          className={`payment_status-label payment_status-${row[
-                            col.key
-                          ].toLowerCase()}`}
-                        >
-                          {row[col.key]}
-                        </span>
-                      ) : col.type === "status" ? (
-                        <span
-                          className={`status-label status-${row[
-                            col.key
-                          ].toLowerCase()}`}
-                        >
-                          {hasStatusDot && <span className="status-dot" />}
-                          {row[col.key]}
-                        </span>
-                      ) : col.type === "document" ? (
-                        <div className="document-cell">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="table-document-icon"
-                          >
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" y1="13" x2="8" y2="13" />
-                            <line x1="16" y1="17" x2="8" y2="17" />
-                            <polyline points="10 9 9 9 8 9" />
-                          </svg>
-                          {row[col.key]}
-                        </div>
-                      ) : col.type === "severity" ? (
-                        <span
-                          className={`severity-label severity-${row[
-                            col.key
-                          ].toLowerCase()}`}
-                        >
-                          {row[col.key]}
-                        </span>
-                      ) : col.type === "active" ? (
-                        <SwitchInput
-                          checked={row[col.key]}
-                          onChange={() => handleToggleActive(rowIndex)}
-                        />
-                      ) : col.type === "day_time" ? (
-                        <div className="day-time-cell">
-                          {row[col.key] ? (
-                            <>
-                              <span>{row[col.key].date || "N/A"}</span>
-                              <span>{row[col.key].time || "N/A"}</span>
-                            </>
-                          ) : (
-                            <span>N/A</span>
-                          )}
-                        </div>
-                      ) : col.type === "priority" ? (
-                        <span
-                          className={`priority-label priority-${row[col.key]
-                            .toLowerCase()
-                            .replace(/[\s-]/g, "-")}`}
-                        >
-                          {row[col.key]}
-                        </span>
-                      ) : (
-                        row[col.key]
-                      )}
-                    </td>
-                  ))}
-                  {showActions && (
-                    <td className="action-cell">
-                      {row.hasActions && (
-                        <div className="action-menu">
-                          <button
-                            className="action-button"
-                            onClick={() => toggleDropdown(rowIndex, "action")}
-                            ref={(el) => {
-                              const key = `${rowIndex}-action`;
-                              if (!menuRefs.current[key]) {
-                                menuRefs.current[key] = {};
-                              }
-                              menuRefs.current[key].button = el;
-                            }}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="12" cy="5" r="1" />
-                              <circle cx="12" cy="19" r="1" />
-                            </svg>
-                          </button>
-                          {openDropdown === `${rowIndex}-action` && (
-                            <div
-                              className="action-dropdown"
-                              ref={(el) => {
-                                const key = `${rowIndex}-action`;
-                                if (!menuRefs.current[key]) {
-                                  menuRefs.current[key] = {};
-                                }
-                                menuRefs.current[key].dropdown = el;
-                              }}
-                            >
-                              {actions.map((action, index) => (
-                                <button
-                                  key={index}
-                                  className={`dropdown-item ${
-                                    action.className || ""
-                                  }`}
-                                  onClick={() => {
-                                    action.onClick(row);
-                                    setOpenDropdown(null);
-                                  }}
-                                >
-                                  {action.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TableHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filters={filters}
+        filterValues={filterValues}
+        handleFilterValueChange={handleFilterValueChange}
+        resetFilters={resetFilters}
+        currentDateFilterKey={currentDateFilterKey}
+        setCurrentDateFilterKey={setCurrentDateFilterKey}
+        isDateFilterDropdownOpen={isDateFilterDropdownOpen}
+        setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
+        handleDateRangeSelect={handleDateRangeSelect}
+        dateFilterKeys={dateFilterKeys}
+        uniqueFilterValues={uniqueFilterValues}
+        toggleExportDropdown={toggleExportDropdown}
+        exportDropdownOpen={exportDropdownOpen}
+        handleExportCSV={handleExportCSV}
+        handleExportPDF={handleExportPDF}
+        handlePrint={handlePrint}
+        exportButtonRef={exportButtonRef}
+        exportDropdownRef={exportDropdownRef}
+        dateFilterStartInputRef={dateFilterStartInputRef}
+        dateFilterEndInputRef={dateFilterEndInputRef}
+        dateFilterDropdownRef={dateFilterDropdownRef}
+        onFilterTypeSelect={onFilterTypeSelect}
+      />
+
+      <TableBody
+        columns={columns}
+        currentData={currentData}
+        showCheckbox={showCheckbox}
+        showActions={showActions}
+        actions={actions}
+        selectedRows={selectedRows}
+        handleCheckboxChange={handleCheckboxChange}
+        handleSelectAllChange={handleSelectAllChange}
+        handleToggleActive={handleToggleActive}
+        toggleDropdown={toggleDropdown}
+        openDropdown={openDropdown}
+        setOpenDropdown={setOpenDropdown}
+        menuRefs={menuRefs}
+        tableContainerRef={tableContainerRef}
+        tableName={tableName}
+        hasStatusDot={hasStatusDot}
+        startIndex={startIndex}
+      />
 
       <Pagination
         currentPage={currentPage}

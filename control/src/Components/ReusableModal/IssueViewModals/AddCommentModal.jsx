@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../Input/Inputs";
@@ -21,11 +21,20 @@ const AddCommentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToke
     defaultValues: { comment: "" },
   });
 
+  const [loading, setLoading] = useState(false);
+
   const onSubmit = async (data) => {
     if (data.comment.trim()) {
-      await onSave(data.comment);
-      reset();
-      onClose();
+      setLoading(true);
+      try {
+        await onSave(data.comment);
+        reset();
+        onClose();
+      } catch {
+        // Error handled by parent - modal stays open
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -39,6 +48,7 @@ const AddCommentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToke
       title="Add a comment"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
+      primaryButtonLoading={loading}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

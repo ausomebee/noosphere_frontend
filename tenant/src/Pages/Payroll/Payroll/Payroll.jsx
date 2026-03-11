@@ -5,12 +5,14 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
 import NewPayrollModal from "../../../Components/ReusableModal/PayrollModal/NewPayrollModal";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
 
 const Payroll = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState([]);
@@ -80,14 +82,16 @@ const Payroll = () => {
         </h3>
       </div>
 
-      <div className="justify-end flex mt-6">
-        <Button
-          label="New Payroll"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={() => setIsModalOpen(true)}
-        />
-      </div>
+      {hasPermission("create_new_payroll") && (
+        <div className="justify-end flex mt-6">
+          <Button
+            label="New Payroll"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={() => setIsModalOpen(true)}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <CustomTable

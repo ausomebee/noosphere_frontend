@@ -53,6 +53,7 @@ export const PERMISSIONS_CONFIG = {
         label: "Calendar",
         permissions: [
           { key: "view_calendar", label: "View calendar" },
+          { key: "view_calendar_filter", label: "View staff/client filter on calendar" },
           { key: "view_appointment_details_on_calendar", label: "View appointment details on calendar" },
           { key: "create_a_new_appointment", label: "Create a new appointment" },
           { key: "edit_appointments", label: "Edit appointments" },
