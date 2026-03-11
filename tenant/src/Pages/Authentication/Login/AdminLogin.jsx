@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
 import { AdminLogin } from "../../../ReduxStore/features/authentication";
+import { connectSocket } from "../../../api/socketService";
 import "../Auth.css";
 import TenantLogo from "../../../assets/Logo.svg";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
@@ -90,6 +91,7 @@ const AdminCLogin = () => {
               showToast("Unknown authentication type", "error");
             }
           } else if (!setForAll && !user.auth2FADone) {
+            connectSocket({ accessToken: user.accessToken, userId: user.id, tenantId: user.tenantId });
             navigate("/dashboard");
           } else {
             if (user.authType === "AUTHENTICATOR") {

@@ -32,6 +32,18 @@ const CreateConversation = async ({ participants, tenantId, accessToken, refresh
 
 // ─── Messages ───
 
+const GetUserMessages = async ({ userId, userType = "TENANT_STAFF", accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/messages/user/${userId}/${userType}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Get user messages failed");
+  }
+};
+
 const GetMessages = async ({ conversationId, page, limit, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -54,6 +66,18 @@ const MarkMessagesAsRead = async ({ conversationId, userId, accessToken, refresh
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Mark messages as read failed");
+  }
+};
+
+// Mark a single message as read by its ID
+// PATCH /messages/read/:messageId
+const MarkMessageAsRead = async ({ messageId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/messages/read/${messageId}`);
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Mark message as read failed");
   }
 };
 
@@ -100,8 +124,10 @@ const GetUnreadNotificationCount = async ({ userId, tenantId, accessToken, refre
 export default {
   GetConversations,
   CreateConversation,
+  GetUserMessages,
   GetMessages,
   MarkMessagesAsRead,
+  MarkMessageAsRead,
   GetNotifications,
   MarkNotificationAsRead,
   GetUnreadNotificationCount,

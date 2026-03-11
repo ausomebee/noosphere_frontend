@@ -21,8 +21,11 @@ import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import TenantLogo from "../assets/Logo.svg";
 import "./DashboardLayout.css";
 import { FiChevronDown } from "react-icons/fi";
+import { useDispatch } from "react-redux";
 import useAuth from "../hooks/useAuth";
 import usePermissions from "../hooks/usePermissions";
+import { logout } from "../ReduxStore/features/authentication";
+import { disconnectSocket } from "../api/socketService";
 import MessageModal from "../Components/MessageModal/MessageModal";
 import NotificationAlert from "../Components/NotificationAlert/NotificationAlert";
 import useSocket from "../hooks/useSocket";
@@ -225,16 +228,31 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 };
 
 const DashboardLayout = ({ children }) => {
-  const { user } = useAuth();
-  const { isConnected } = useSocket();
+  const { user, userId, accessToken, refreshToken } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [messageCount] = useState(5);
+  const [messageCount, setMessageCount] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const profileDropdownRef = useRef(null);
+
+  // Wire socket: register + listen for notifications and new messages
+  const { isConnected } = useSocket({
+    onMessage: () => setMessageCount((c) => c + 1),
+    onNotification: (notif) => {
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          variant: "primary",
+          message: notif?.title || notif?.message || "New notification",
+        },
+      ]);
+    },
+  });
 
   // Derive display name & initials from auth
   const fullName = user?.fullName || user?.firstName || user?.email || "User";
@@ -303,11 +321,15 @@ const DashboardLayout = ({ children }) => {
             )}
             <div className="flex gap-4 items-center justify-end">
               <div className="header-left">
+                {/* Message icon */}
                 <button
                   className="message-icon"
-                  onClick={() => setIsMessageModalOpen(true)}
+                  onClick={() => {
+                    setMessageCount(0);
+                    setIsMessageModalOpen(true);
+                  }}
                 >
-                  <MdMessage size={28} color="#fff" />
+                  <MdMessage size={26} color="#fff" />
                   {messageCount > 0 && (
                     <span className="notification-badge">
                       {messageCount > 99 ? "99+" : messageCount}
@@ -357,7 +379,9 @@ const DashboardLayout = ({ children }) => {
                       className="profile-dropdown-item profile-dropdown-danger"
                       onClick={() => {
                         setShowProfileDropdown(false);
-                        // TODO: dispatch logout
+                        disconnectSocket();
+                        dispatch(logout());
+                        navigate("/");
                       }}
                     >
                       <IoLogOutOutline size={18} />

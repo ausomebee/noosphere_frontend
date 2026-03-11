@@ -1,0 +1,137 @@
+.reports-page {
+  padding: 8px 0;
+}
+
+.reports-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Report Card */
+.report-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.report-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.report-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: #eff6ff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.report-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #004ABA;
+  margin-bottom: 4px;
+}
+
+.report-card-desc {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+/* Report Card List */
+.report-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.report-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.report-card-item:last-child {
+  border-bottom: none;
+}
+
+.report-card-item:hover {
+  background: #f9fafb;
+}
+
+/* Report sub-page layout */
+.report-subpage {
+  padding: 0;
+}
+
+.report-subpage-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.report-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+}
+
+.report-back-btn:hover {
+  color: #004ABA;
+}
+
+.report-subpage-titles {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.report-subpage-parent {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.report-subpage-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+

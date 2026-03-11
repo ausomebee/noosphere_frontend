@@ -9,6 +9,7 @@ import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { connectSocket } from "../../../api/socketService";
 
 // Yup validation schema for OTP
 const otpSchema = yup.object().shape({
@@ -19,7 +20,7 @@ const otpSchema = yup.object().shape({
 });
 
 const Admin2FAAuthenticatorLogin = () => {
-  const { userId } = useAuth();
+  const { userId, accessToken, tenantId } = useAuth();
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -82,6 +83,7 @@ const Admin2FAAuthenticatorLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("OTP verification successful!", "success");
+        connectSocket({ accessToken, userId, tenantId });
         navigate("/dashboard");
       } else {
         throw new Error("Verification failed.");

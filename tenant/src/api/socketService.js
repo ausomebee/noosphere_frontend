@@ -1,8 +1,19 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+// Strip REST path (/api/v1) — Socket.IO connects to the server origin only
+const SOCKET_URL = new URL(import.meta.env.VITE_API_URL).origin;
 
 let socket = null;
+
+// Preserve socket reference across Vite HMR reloads (development only)
+if (import.meta.hot) {
+  if (import.meta.hot.data?.socket) {
+    socket = import.meta.hot.data.socket;
+  }
+  import.meta.hot.dispose((data) => {
+    data.socket = socket;
+  });
+}
 
 /**
  * Connect to the WebSocket server.
@@ -58,6 +69,17 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
 };
 
 /**
+ * Register the current user with the socket server.
+ * Must be called after socket connects.
+ * userType: "TENANT_STAFF" | "CLIENT" | "ADMIN"
+ */
+export const registerUser = ({ userId, userType }) => {
+  if (!socket) return;
+  socket.emit("register", { userId, userType });
+  console.log("[Socket] Registered as:", userType, userId);
+};
+
+/**
  * Disconnect from the WebSocket server.
  * Call on logout.
  */
@@ -76,21 +98,39 @@ export const getSocket = () => socket;
 // ─── Chat Events ───
 
 /**
- * Send a chat message.
+ * Create or retrieve an existing conversation between two participants.
+ * callback({ success, conversation }) — server's acknowledgement.
+ * conversation: { id, participants, messages: [] }
  */
-export const sendChatMessage = ({ conversationId, senderId, receiverId, message, tenantId }) => {
+export const createConversation = ({ participants, tenantId }, callback) => {
   if (!socket?.connected) {
-    console.error("Socket not connected");
+    console.error("[Socket] Cannot create conversation: not connected");
+    callback?.({ success: false, error: "Not connected" });
     return;
   }
-  socket.emit("chatMessage", {
-    conversationId,
-    senderId,
-    receiverId,
-    message,
-    tenantId,
-    timestamp: new Date().toISOString(),
-  });
+  console.log("[Socket] Creating conversation:", { participants, tenantId });
+  socket.emit("createConversation", { participants, tenantId }, callback);
+};
+
+/**
+ * Send a chat message.
+ * callback({ success, message }) — server's acknowledgement.
+ */
+export const sendChatMessage = (
+  { senderId, senderType = "TENANT_STAFF", receiverId, receiverType = "CLIENT", content },
+  callback
+) => {
+  if (!socket?.connected) {
+    console.error("[Socket] Cannot send message: not connected");
+    callback?.({ success: false, error: "Not connected" });
+    return;
+  }
+  // Backend schema: senderId, senderType, receiverId, receiverType, content, isRead
+  socket.emit(
+    "chatMessage",
+    { senderId, senderType, receiverId, receiverType, content, isRead: false },
+    callback
+  );
 };
 
 /**
@@ -99,8 +139,9 @@ export const sendChatMessage = ({ conversationId, senderId, receiverId, message,
  */
 export const onChatMessage = (callback) => {
   if (!socket) return () => {};
-  socket.on("chatMessage", callback);
-  return () => socket.off("chatMessage", callback);
+  const _socket = socket;
+  _socket.on("chatMessage", callback);
+  return () => _socket.off("chatMessage", callback);
 };
 
 /**
@@ -116,19 +157,22 @@ export const emitTyping = ({ conversationId, userId, isTyping }) => {
  */
 export const onTyping = (callback) => {
   if (!socket) return () => {};
-  socket.on("typing", callback);
-  return () => socket.off("typing", callback);
+  const _socket = socket;
+  _socket.on("typing", callback);
+  return () => _socket.off("typing", callback);
 };
 
 // ─── Notification Events ───
 
 /**
  * Listen for real-time notifications.
+ * Backend emits "newNotification" (confirmed from backend test console).
  */
 export const onNotification = (callback) => {
   if (!socket) return () => {};
-  socket.on("notification", callback);
-  return () => socket.off("notification", callback);
+  const _socket = socket;
+  _socket.on("newNotification", callback);
+  return () => _socket.off("newNotification", callback);
 };
 
 /**
@@ -139,18 +183,42 @@ export const emitNotificationRead = (notificationId) => {
   socket.emit("notificationRead", { notificationId });
 };
 
+// ─── Read Receipts ───
+
+/**
+ * Notify partner that their messages to us have been read.
+ * payload: { readerId: userId, partnerId }
+ */
+export const emitMessagesRead = ({ readerId, partnerId }) => {
+  if (!socket?.connected) return;
+  socket.emit("messagesRead", { readerId, partnerId });
+};
+
+/**
+ * Listen for read receipts — fires when partner reads our messages.
+ * callback({ readerId, partnerId })
+ */
+export const onMessagesRead = (callback) => {
+  if (!socket) return () => {};
+  const _socket = socket;
+  _socket.on("messagesRead", callback);
+  return () => _socket.off("messagesRead", callback);
+};
+
 // ─── Online / Presence ───
 
 export const onUserOnline = (callback) => {
   if (!socket) return () => {};
-  socket.on("userOnline", callback);
-  return () => socket.off("userOnline", callback);
+  const _socket = socket;
+  _socket.on("userOnline", callback);
+  return () => _socket.off("userOnline", callback);
 };
 
 export const onUserOffline = (callback) => {
   if (!socket) return () => {};
-  socket.on("userOffline", callback);
-  return () => socket.off("userOffline", callback);
+  const _socket = socket;
+  _socket.on("userOffline", callback);
+  return () => _socket.off("userOffline", callback);
 };
 
 export default {
@@ -165,4 +233,6 @@ export default {
   emitNotificationRead,
   onUserOnline,
   onUserOffline,
+  emitMessagesRead,
+  onMessagesRead,
 };

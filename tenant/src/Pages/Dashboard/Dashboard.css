@@ -250,6 +250,17 @@
   flex-wrap: wrap;
 }
 
+/* Fix SelectInput width inside card headers */
+.dashboard-card-selects .input-group {
+  width: 180px !important;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.dashboard-card-selects .input-group > label {
+  display: none;
+}
+
 /* ===================== AUTHORIZATION LAYOUT ===================== */
 .auth-layout {
   display: flex;
@@ -288,9 +299,10 @@
     width: 100%;
   }
 
-  .dashboard-card-selects .select-input {
+  .dashboard-card-selects .input-group {
+    width: 100% !important;
     flex: 1;
-    min-width: 0;
+    min-width: 120px;
   }
 
   .select-input {
@@ -345,8 +357,8 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .dashboard-card-selects .select-input {
-    width: 160px;
+  .dashboard-card-selects .input-group {
+    width: 160px !important;
   }
 
   .intake-stages {
@@ -364,14 +376,8 @@
 }
 
 /* ===================== RESPONSIVE: DESKTOP (>=993px) ===================== */
-@media (min-width: 993px) and (max-width: 1399px) {
+@media (min-width: 993px) {
   .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1400px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
 }

@@ -174,6 +174,12 @@ const TemplatesLibrary = React.lazy(() =>
 );
 
 const Reports = React.lazy(() => import("../Pages/Reports/Reports"));
+const CancelledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/CancelledAppointmentsReport"));
+const RescheduledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/RescheduledAppointmentsReport"));
+const AttendanceByServiceTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceByServiceTypeReport"));
+const AttendanceBySessionTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceBySessionTypeReport"));
+const AuditLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AuditLogsReport"));
+const LoginLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/LoginLogsReport"));
 
 const SupportRequests = React.lazy(() =>
   import("../Pages/HelpAndSupport/SupportRequests/SupportRequests")
@@ -312,6 +318,12 @@ const AllRoutes = () => {
         {/* Reports */}
         <Route element={<ModuleGuard moduleKey="REPORTS" />}>
           <Route path="/reports" element={<Reports />} />
+          <Route path="/reports/cancelled-appointments" element={<CancelledAppointmentsReport />} />
+          <Route path="/reports/rescheduled-appointments" element={<RescheduledAppointmentsReport />} />
+          <Route path="/reports/attendance-service-type" element={<AttendanceByServiceTypeReport />} />
+          <Route path="/reports/attendance-session-type" element={<AttendanceBySessionTypeReport />} />
+          <Route path="/reports/audit-logs" element={<AuditLogsReport />} />
+          <Route path="/reports/login-logs" element={<LoginLogsReport />} />
         </Route>
 
         {/* Help & Support */}

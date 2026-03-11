@@ -27,6 +27,7 @@ import { CgExport } from "react-icons/cg";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import api from "../../api/AppointmentApi";
 import { showToast } from "../../Helper/ShowToast";
+import usePermissions from "../../hooks/usePermissions";
 
 // Memoized modals to prevent unnecessary re-renders
 const MemoAppointmentModal = memo(AppointmentModal);
@@ -51,7 +52,6 @@ function CalendarScheduler({
   accessToken,
   refreshToken,
   tenantId,
-  role,
   loading,
   selectedClients,
   selectedStaff,
@@ -74,14 +74,19 @@ function CalendarScheduler({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelAppointment, setCancelAppointment] = useState(null);
 
-  // Auto-show sidebar for Staff/Admin
+  const { hasPermission } = usePermissions();
+  const canViewFilter = hasPermission("view_calendar_filter");
+  const canViewStaff = hasPermission("view_staff_list");
+  const canViewClients = hasPermission("view_client_list");
+
+  // Auto-show sidebar if user has filter permission
   useEffect(() => {
-    if (role === "Staff" || role === "Admin") {
+    if (canViewFilter) {
       setIsSidebarVisible(true);
     }
-  }, [role]);
+  }, [canViewFilter]);
 
-  const effectiveActiveTab = role === "Staff" ? "client" : activeTab;
+  const effectiveActiveTab = canViewStaff && !canViewClients ? "staff" : activeTab;
 
   // Client-side search (instant, no API call)
   const filteredAppointments = useMemo(() => {
@@ -148,10 +153,8 @@ function CalendarScheduler({
     );
 
   const handleTabClick = (tab) => {
-    if (role !== "Staff") {
-      setActiveTab(tab);
-      setIsSidebarVisible(true);
-    }
+    setActiveTab(tab);
+    setIsSidebarVisible(true);
   };
 
   const handleHideSidebar = () => setIsSidebarVisible(false);
@@ -258,7 +261,7 @@ function CalendarScheduler({
     }
   };
 
-  const showFilterTabs = role === "Admin";
+  const showFilterTabs = canViewStaff && canViewClients;
 
   // Prevent unnecessary re-renders of modals
   const memoizedSelectedAppointment = useMemo(
@@ -389,7 +392,7 @@ function CalendarScheduler({
       </div>
 
       <div className="cal-sched-content">
-        {(isSidebarVisible || role === "Staff") && (
+        {isSidebarVisible && canViewFilter && (
           <StaffClientFilter
             staff={staff} // staffWithCounts
             clients={clients} // clientsWithCounts
@@ -413,7 +416,7 @@ function CalendarScheduler({
 
         <div
           className={`cal-sched-calendar-container ${
-            isSidebarVisible || role === "Staff" ? "with-sidebar" : "full"
+            isSidebarVisible && canViewFilter ? "with-sidebar" : "full"
           }`}
         >
           {loading ? (

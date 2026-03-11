@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -18,7 +18,9 @@ const otpSchema = yup.object().shape({
 });
 
 const ForgotPasswordAuthenticatorVerifier = () => {
-  const { userId } = useAuth();
+  const { userId: authUserId } = useAuth();
+  const location = useLocation();
+  const userId = location.state?.userId || authUserId;
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [step, setStep] = useState(1);

@@ -7,6 +7,7 @@ import CalendarScheduler from "../../../Components/CalendarScheduler/CalendarSch
 import expand from "../../../utils/expand";
 import { format } from "date-fns";
 import api from "../../../api/AppointmentApi";
+import usePermissions from "../../../hooks/usePermissions";
 
 const toUICard = (apiAppt, masters = []) => {
   if (!apiAppt || typeof apiAppt !== "object") {
@@ -121,11 +122,13 @@ const toUICard = (apiAppt, masters = []) => {
 };
 
 const Calendar = () => {
-  const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
-  const role = authRole?.name ?? "Client";
+  const { tenantId, userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canViewStaff = hasPermission("view_staff_list");
+  const canViewClients = hasPermission("view_client_list");
+  const canFilter = canViewStaff || canViewClients;
 
   const [sessionTypes, setSessionTypes] = useState([]);
-  const [clients, setClients] = useState([]);
   const [staff, setStaff] = useState([]);
   const [allAppointments, setAllAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
@@ -181,8 +184,6 @@ const Calendar = () => {
       } catch (err) {
         console.error("Failed to fetch clients:", err);
       }
-      setClients(clis);
-
       // Get staff
       let stf = [];
       try {
@@ -197,24 +198,15 @@ const Calendar = () => {
       }
       setStaff(stf);
 
-      // Get appointments based on role
+      // All roles fetch all appointments; filter visibility is controlled by permissions
       let allAppts = [];
       try {
-        if (role === "Admin") {
-          const apptsResponse = await api.GetAllAppointments({
-            tenantId,
-            accessToken,
-            refreshToken,
-          });
-          allAppts = apptsResponse?.data?.data || [];
-        } else {
-          const apptsResponse = await api.GetAppointmentByClientId({
-            clientId: userId,
-            accessToken,
-            refreshToken,
-          });
-          allAppts = apptsResponse?.data?.data || [];
-        }
+        const apptsResponse = await api.GetAllAppointments({
+          tenantId,
+          accessToken,
+          refreshToken,
+        });
+        allAppts = apptsResponse?.data?.data || [];
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
       }
@@ -277,7 +269,7 @@ const Calendar = () => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, accessToken, refreshToken, role, userId]);
+  }, [tenantId, accessToken, refreshToken]);
 
   useEffect(() => {
     fetchInitialData();
@@ -321,12 +313,15 @@ const Calendar = () => {
   );
 
   useEffect(() => {
-    if (role === "Client" && userId && clients.length > 0 && allAppointments.length > 0) {
-      const clientIdStr = userId.toString();
-      setSelectedClients([clientIdStr]);
-      fetchAppointmentsByFilter({ clientIds: [clientIdStr] });
+    if (!userId || allAppointments.length === 0) return;
+
+    // Users without filter access are auto-filtered to their own appointments as staff.
+    if (!canFilter) {
+      const idStr = userId.toString();
+      setSelectedStaff([idStr]);
+      fetchAppointmentsByFilter({ staffIds: [idStr] });
     }
-  }, [role, userId, clients.length, allAppointments.length, fetchAppointmentsByFilter]);
+  }, [canFilter, userId, allAppointments.length, fetchAppointmentsByFilter]);
 
   const viewWindow = useMemo(
     () => ({
@@ -372,7 +367,6 @@ const Calendar = () => {
         accessToken={accessToken}
         refreshToken={refreshToken}
         tenantId={tenantId}
-        role={role}
         selectedClients={selectedClients}
         selectedStaff={selectedStaff}
         setSelectedClients={setSelectedClients}
