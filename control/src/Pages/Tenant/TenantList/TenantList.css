@@ -65,6 +65,31 @@
     margin: 0;
   }
 
+  /* Deactivation modal steps */
+  .deactivate-confirmation {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .deactivate-confirmation p {
+    font-size: 0.95rem;
+    color: #374151;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+  }
+
+  .deactivate-warning {
+    color: #dc2626 !important;
+    font-weight: 600;
+  }
+
+  .deactivate-password-prompt {
+    font-size: 0.9rem;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
   /* Responsive */
   @media (max-width: 992px) {
     .overview-card-wrapper {

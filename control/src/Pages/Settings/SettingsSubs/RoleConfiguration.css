@@ -1,0 +1,260 @@
+/* ===== Role Configuration — matches tenant Organisation design ===== */
+
+.role-config-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 0 48px;
+}
+
+/* Back row */
+.role-config-back-row {
+  margin-bottom: 24px;
+}
+
+.role-back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.role-back-button:hover {
+  color: #111827;
+}
+
+/* ── Tab switcher ── */
+.role-config-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 32px;
+}
+
+.role-config-tab {
+  background: none;
+  border: none;
+  padding: 12px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.role-config-tab:hover {
+  color: #374151;
+}
+
+.role-config-tab-active {
+  color: #111827;
+  border-bottom-color: #111827;
+  font-weight: 600;
+}
+
+/* ── Content ── */
+.role-config-content {
+  padding-bottom: 24px;
+}
+
+/* Field groups */
+.role-field-group {
+  margin-bottom: 24px;
+}
+
+.role-field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+/* Module checkbox list */
+.role-module-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.role-module-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.role-module-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #111827;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Actions bar ── */
+.role-config-actions {
+  display: flex;
+  justify-content: stretch;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.role-config-actions > * {
+  flex: 1;
+}
+
+/* ── Permissions subtitle ── */
+.role-permissions-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 24px;
+}
+
+/* ── Permissions accordion list ── */
+.role-permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.role-accordion {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.role-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.role-accordion-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 0.02em;
+}
+
+.role-accordion-icon {
+  color: #374151;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Accordion body */
+.role-accordion-body {
+  padding: 0 0 20px 0;
+}
+
+/* Subcategory block */
+.role-subcategory {
+  margin-bottom: 20px;
+}
+
+.role-subcategory:last-child {
+  margin-bottom: 0;
+}
+
+/* Subcategory header */
+.role-subcat-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.role-subcat-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  white-space: nowrap;
+}
+
+/* Grant all label */
+.role-grant-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.role-grant-all input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #111827;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 2-column permission grid */
+.role-perm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+
+.role-perm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.role-perm-item input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  accent-color: #111827;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .role-config-container {
+    padding: 0 0 32px;
+  }
+
+  .role-config-tabs {
+    gap: 24px;
+  }
+
+  .role-perm-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-subcat-header {
+    flex-wrap: wrap;
+  }
+
+  .role-config-actions {
+    flex-direction: column;
+  }
+}

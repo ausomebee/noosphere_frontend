@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import tenantApi from "../../api/TenantApis";
+import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import {
   FiMenu,
   FiChevronDown,
@@ -18,7 +21,10 @@ const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [openNavs, setOpenNavs] = useState({});
+  const [tenantName, setTenantName] = useState("");
   const location = useLocation();
+  const { accessToken, refreshToken, user } = useAuth();
+  const { hasModuleAccess, hasPermission } = usePermission();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -47,17 +53,19 @@ const Layout = ({ children }) => {
     }
   };
 
-  const navItems = [
+  const allNavItems = [
     {
       name: "Performance",
       path: "/performance",
       icon: <GrDocumentPerformance size={20} />,
+      moduleKey: "performanceMonitoring",
       children: null,
     },
     {
       name: "Tenants",
       path: "/tenants/pipeline",
       icon: <PiUserList size={28} />,
+      moduleKey: "tenant",
       children: [
         { name: "Pipeline", path: "/tenants/pipeline" },
         { name: "Tenant List", path: "/tenants/tenant-list" },
@@ -76,6 +84,7 @@ const Layout = ({ children }) => {
       name: "Billing & Payments",
       path: "/billing-payments/plans-pricing",
       icon: <FiCreditCard size={20} />,
+      moduleKey: "billing",
       children: [
         { name: "Plans & Pricing", path: "/billing-payments/plans-pricing" },
         {
@@ -97,41 +106,62 @@ const Layout = ({ children }) => {
       name: "Issues",
       path: "/issues",
       icon: <FiAlertCircle size={20} />,
+      moduleKey: "issueManagement",
       children: null,
     },
     {
       name: "Features",
       path: "/features",
       icon: <PiUserList size={28} />,
+      moduleKey: "featureManagement",
       children: null,
     },
     {
       name: "Settings",
       path: "/settings/roles-permissions",
       icon: <FiSettings size={20} />,
+      moduleKey: "settings",
       children: [
         { name: "Roles & Permissions", path: "/settings/roles-permissions" },
-        {
-          name: "Notification & Alerts",
-          path: "/settings/notification-alerts",
-        },
         { name: "Security Settings", path: "/settings/securitySettings" },
+        { name: "", path: "/settings/roles-permissions/configure" },
+        { name: "", path: "/settings/roles-permissions/configure/:roleId" },
       ],
     },
   ];
 
-  const secondaryNavItems = [
-    { name: "Account Overview", path: "/tenants/tenant-lists/overview" },
-    { name: "Feature Management", path: "/tenants/tenant-lists/features" },
-    { name: "Billing & Payments", path: "/tenants/tenant-lists/billing" },
-    { name: "Issues & Support", path: "/tenants/tenant-lists/issues" },
-    { name: "User Activity & Logs", path: "/tenants/tenant-lists/logs" },
-    { name: "Security Settings", path: "/tenants/tenant-lists/security" },
-  ];
-
-  const showSecondarySidebar = secondaryNavItems.some((item) =>
-    location.pathname.startsWith(item.path)
+  const navItems = allNavItems.filter(
+    (item) => !item.moduleKey || hasModuleAccess(item.moduleKey)
   );
+
+  // Extract tenantId from current path for secondary nav links
+  const tenantIdMatch = location.pathname.match(/\/tenants\/tenant-lists\/\w+\/([^/]+)/);
+  const currentTenantId = tenantIdMatch ? tenantIdMatch[1] : "";
+
+  useEffect(() => {
+    if (!currentTenantId) {
+      setTenantName("");
+      return;
+    }
+    tenantApi
+      .GetSingleTenant({ tenantId: currentTenantId, accessToken, refreshToken })
+      .then((res) => {
+        const d = res.data || res;
+        setTenantName(d.companyName || d.contactPerson || "Tenant");
+      })
+      .catch(() => setTenantName("Tenant"));
+  }, [currentTenantId, accessToken, refreshToken]);
+
+  const secondaryNavItems = [
+    { name: "Account Overview", path: `/tenants/tenant-lists/overview/${currentTenantId}`, permissionKey: "view_tenant_details" },
+    { name: "Feature Management", path: `/tenants/tenant-lists/features/${currentTenantId}`, permissionKey: "view_tenant_features" },
+    { name: "Billing & Payments", path: `/tenants/tenant-lists/billing/${currentTenantId}`, permissionKey: "view_tenant_billing" },
+    { name: "Issues & Support", path: `/tenants/tenant-lists/issues/${currentTenantId}`, permissionKey: "view_tenant_issues" },
+    { name: "User Activity & Logs", path: `/tenants/tenant-lists/logs/${currentTenantId}`, permissionKey: "view_tenant_logs" },
+    { name: "Security Settings", path: `/tenants/tenant-lists/security/${currentTenantId}`, permissionKey: "view_tenant_security" },
+  ].filter((item) => !item.permissionKey || hasPermission(item.permissionKey));
+
+  const showSecondarySidebar = location.pathname.startsWith("/tenants/tenant-lists/");
 
   const isPathActive = (path) => {
     const pathRegex = new RegExp(`^${path.replace(/:[^\s/]+/g, "[^/]+")}$`);
@@ -297,7 +327,7 @@ const Layout = ({ children }) => {
       {showSecondarySidebar && (
         <aside className="secondary-sidebar no-scrollbar::-webkit-scrollbar no-scrollbar">
           <div className="secondary-sidebar-header">
-            <h1>ACME org</h1>
+            <h1>{tenantName || "..."}</h1>
           </div>
           <nav className="sidebar-nav">
             <ul>
@@ -340,10 +370,14 @@ const Layout = ({ children }) => {
           </div>
           <div className="header-right">
             <div className="user-profile">
-              <div className="user-avatar">OR</div>
+              <div className="user-avatar">
+                {((user?.firstName?.[0] || "") + (user?.lastName?.[0] || "")).toUpperCase() || "?"}
+              </div>
               <div className="user-info">
-                <span className="user-name">Olivia Rhye</span>
-                <span className="user-role">Administrator</span>
+                <span className="user-name">
+                  {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.email || "User"}
+                </span>
+                <span className="user-role">{user?.roles?.name || "Administrator"}</span>
               </div>
               <FiChevronDown size={16} className="dropdown-arrow" />
             </div>

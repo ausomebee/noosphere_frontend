@@ -36,7 +36,13 @@
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: 1rem;
-  width: 100%; /* Ensure the container takes up the full width */
+  width: 100%;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.modal-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 /* Styles for each tab button */
@@ -320,9 +326,10 @@
 }
 
 .warning-icon {
-  font-size: 2rem;
+  display: block;
+  margin: 0 auto 0.75rem;
+  font-size: 2.5rem;
   color: #000;
-  margin-bottom: 0.5rem;
 }
 
 .center-footer {
@@ -596,6 +603,152 @@
   color: #333539;
   margin-top: 2rem;
 
+}
+
+/* ===== Table Filter Date Modal ===== */
+.tfdm-date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tfdm-date-input-box {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #374151;
+  background: #f9fafb;
+  min-height: 36px;
+}
+.tfdm-range-sep {
+  color: #9ca3af;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.tfdm-calendars {
+  display: flex;
+  gap: 16px;
+}
+.tfdm-cal-col {
+  flex: 1;
+  min-width: 0;
+}
+.tfdm-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.tfdm-month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+.tfdm-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.tfdm-nav-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+.tfdm-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.tfdm-day-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-align: center;
+  padding: 4px 0;
+}
+.tfdm-day {
+  text-align: center;
+  padding: 5px 2px;
+  font-size: 12px;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.tfdm-clickable {
+  cursor: pointer;
+  color: #374151;
+}
+.tfdm-clickable:hover {
+  background: #e5e7eb;
+}
+.tfdm-empty {
+  visibility: hidden;
+}
+.tfdm-outside {
+  color: #d1d5db;
+}
+.tfdm-endpoint {
+  background: #004aba !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
+.tfdm-in-range {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 0;
+}
+
+/* ===== Table Filter Bar (used in TenantSingle pages) ===== */
+.table-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.filter-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.filter-bar-btn:hover {
+  border-color: #004aba;
+  color: #004aba;
+}
+.filter-bar-btn.active {
+  border-color: #004aba;
+  background: #004aba;
+  color: #fff;
+}
+.filter-bar-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: #dc2626;
+  cursor: pointer;
+  font-weight: 500;
+}
+.filter-bar-clear:hover {
+  text-decoration: underline;
 }
 
 /* ===== Tablet (max-width: 992px) ===== */

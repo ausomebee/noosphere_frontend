@@ -359,10 +359,18 @@
   width: 100%;
   display: flex;
   padding: 10px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.subscription-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 .subscription-tab {
   flex: 1;
+  min-width: max-content;
   padding: 5px 15px;
   border: none;
   background: none;

@@ -10,6 +10,7 @@ import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import departmentApi from "../../../api/departmentApis";
+import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const schema = yup.object().shape({
   name: yup.string().required("Department name is required").trim(),
@@ -77,7 +78,7 @@ const Departments = () => {
   const adminMap = useMemo(() => {
     const map = {};
     admins.forEach((a) => {
-      map[a.id] = a.fullName;
+      map[a.id] = `${a.firstName} ${a.lastName}`.trim();
     });
     return map;
   }, [admins]);
@@ -85,13 +86,13 @@ const Departments = () => {
   const adminOptions = useMemo(
     () => [
       { value: "", label: "Select a lead" },
-      ...admins.map((a) => ({ value: a.id, label: a.fullName })),
+      ...admins.map((a) => ({ value: a.id, label: `${a.firstName} ${a.lastName}`.trim() })),
     ],
     [admins]
   );
 
   const memberOptions = useMemo(
-    () => admins.map((a) => ({ value: a.id, label: a.fullName })),
+    () => admins.map((a) => ({ value: a.id, label: `${a.firstName} ${a.lastName}`.trim() })),
     [admins]
   );
 
@@ -100,7 +101,10 @@ const Departments = () => {
       departments.map((dept) => ({
         id: dept.id,
         department: dept.name,
-        teamLead: adminMap[dept.teamLeadId] || dept.teamLeadId,
+        teamLead: dept.teamLead
+          ? `${dept.teamLead.firstName} ${dept.teamLead.lastName}`.trim()
+          : adminMap[dept.teamLeadId] || "—",
+        members: dept._count?.departmentMembers ?? 0,
         active: dept.isActive,
         hasActions: true,
         _raw: dept,
@@ -110,7 +114,8 @@ const Departments = () => {
 
   const columns = [
     { key: "department", header: "Department" },
-    { key: "teamLead", header: "Department Lead" },
+    { key: "teamLead", header: "Team Lead" },
+    { key: "members", header: "Members" },
     { key: "active", header: "Active", type: "active" },
   ];
 
@@ -207,7 +212,7 @@ const Departments = () => {
   };
 
   if (loading) {
-    return <div className="settings-placeholder">Loading departments...</div>;
+    return <SectionSpinner />;
   }
 
   return (

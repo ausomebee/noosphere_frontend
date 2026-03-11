@@ -1,6 +1,7 @@
 import React, { useState, Suspense, lazy } from "react";
 
 import "../../BillingAndPayments.css";
+import { SectionSpinner } from "../../../../Components/LoadingSpinner";
 
 const InvoiceManagement = lazy(() => import("./InvoiceManagement"));
 const PaymentManagement = lazy(() => import("./PaymentManagement"));
@@ -33,7 +34,7 @@ const AutoBilling = () => {
         ))}
       </div>
       <div className="auto-tab-content">
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SectionSpinner />}>
           {activeTab === "invoice" && <InvoiceManagement />}
           {activeTab === "payment" && <PaymentManagement />}
         </Suspense>

@@ -576,7 +576,7 @@ export const fetchPipelineItems = createAsyncThunk(
             id: item.id,
             companyName: item.tenant?.companyName || "",
             contactPerson: item.tenant?.contactPerson || "",
-            createdBy: item.tenant?.admin?.fullName || "",
+            createdBy: `${item.tenant?.admin?.firstName || ""} ${item.tenant?.admin?.lastName || ""}`.trim(),
             createdAt: item.createdAt || "",
             email: item.tenant?.email || "",
             phoneNumber: item.tenant?.phoneNumber || "",
@@ -586,7 +586,7 @@ export const fetchPipelineItems = createAsyncThunk(
             leadSource: item.tenant?.leadSource || "",
             assignToAdmin: item.assignToAdmin || null,
             pipelineStageId: item.pipelineStageId || stageId,
-            assignedTo: item.admin?.fullName || null,
+            assignedTo: item.admin ? `${item.admin.firstName || ""} ${item.admin.lastName || ""}`.trim() || null : null,
             completionPercentage: item.completionPercentage || 0,
             status: item.status || "pending",
           }))

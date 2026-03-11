@@ -121,7 +121,7 @@ const ManageColumn = () => {
       setStaffList(
         adminsResponse.data?.data?.map((admin) => ({
           staffId: admin.id,
-          name: admin.fullName || "Unknown Admin",
+          name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
         })) || []
       );
 

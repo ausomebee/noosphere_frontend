@@ -1,62 +1,47 @@
-import React, { useState, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
-import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
-import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
-
-const schema = yup.object().shape({
-  roleName: yup.string().required("Role name is required").trim(),
-  department: yup.string().required("Department is required"),
-});
-
-const defaultValues = {
-  roleName: "",
-  department: "",
-};
-
-const initialRoles = [
-  { id: "1", role: "Super Admin", department: "All", active: true, status: "Active", hasActions: true },
-  { id: "2", role: "Admin", department: "All", active: true, status: "Active", hasActions: true },
-  { id: "3", role: "Account Officer", department: "Business Development", active: true, status: "Active", hasActions: true },
-  { id: "4", role: "Support Officer", department: "Customer Service", active: true, status: "Active", hasActions: true },
-  { id: "5", role: "Billing Officer", department: "Finance", active: true, status: "Active", hasActions: true },
-  { id: "6", role: "Sales Officer", department: "Finance", active: true, status: "Active", hasActions: true },
-];
-
-const departmentOptions = [
-  { value: "", label: "Select" },
-  { value: "All", label: "All" },
-  { value: "Admin", label: "Admin" },
-  { value: "Business Development", label: "Business Development" },
-  { value: "Customer Service", label: "Customer Service" },
-  { value: "Finance", label: "Finance" },
-];
+import useAuth from "../../../hooks/useAuth";
+import roleApi from "../../../api/roleApis";
+import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const Roles = () => {
-  const [roles, setRoles] = useState(initialRoles);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState(null);
+  const navigate = useNavigate();
+  const { accessToken, refreshToken } = useAuth();
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filterValue, setFilterValue] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues,
-  });
+  const fetchRoles = async () => {
+    try {
+      setLoading(true);
+      const res = await roleApi.GetRolesByModule({ accessToken, refreshToken });
+      const mapped = (res.data || []).map((role) => ({
+        id: role.id,
+        role: role.name,
+        dataAccessLevel: role.dataAccessLevel,
+        active: role.isActive,
+        status: role.isActive ? "Active" : "Inactive",
+        hasActions: true,
+      }));
+      setRoles(mapped);
+    } catch (err) {
+      showToast(err.message || "Failed to load roles", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   const columns = [
     { key: "role", header: "Role" },
-    { key: "department", header: "Department" },
+    { key: "dataAccessLevel", header: "Data Access" },
     { key: "status", header: "Status", type: "status" },
   ];
 
@@ -67,7 +52,7 @@ const Roles = () => {
         value: filterValue,
         options: [
           { value: "", label: "Filters" },
-          { value: "department", label: "Department" },
+          { value: "dataAccessLevel", label: "Data Access" },
           { value: "active", label: "Status" },
           { value: "clear_filters", label: "Clear Filters" },
         ],
@@ -80,66 +65,44 @@ const Roles = () => {
     {
       label: "Edit Role",
       onClick: (row) => {
-        setEditingRole(row);
-        setValue("roleName", row.role);
-        setValue("department", row.department);
-        setIsModalOpen(true);
-      },
-    },
-    {
-      label: "Remove Role",
-      className: "remove",
-      onClick: (row) => {
-        setRoles((prev) => prev.filter((r) => r.id !== row.id));
-        showToast("Role removed", "success");
+        navigate(`/settings/roles-permissions/configure/${row.id}`);
       },
     },
   ];
 
-  const handleToggleActive = (rowIndex) => {
-    setRoles((prev) =>
-      prev.map((role, i) =>
-        i === rowIndex
-          ? { ...role, active: !role.active, status: !role.active ? "Active" : "Inactive" }
-          : role
-      )
-    );
+  const handleToggleActive = async (rowIndex) => {
+    const role = roles[rowIndex];
+    if (!role) return;
+
+    try {
+      await roleApi.DeactivateRole({
+        id: role.id,
+        accessToken,
+        refreshToken,
+      });
+      setRoles((prev) =>
+        prev.map((r, i) =>
+          i === rowIndex
+            ? { ...r, active: !r.active, status: !r.active ? "Active" : "Inactive" }
+            : r
+        )
+      );
+      showToast(
+        role.active ? "Role deactivated" : "Role activated",
+        "success"
+      );
+    } catch (err) {
+      showToast(err.message || "Failed to update role status", "error");
+    }
   };
 
   const handleFilterChange = (key, value) => {
     setFilterValue(value);
   };
 
-  const handleSave = (formData) => {
-    if (editingRole) {
-      setRoles((prev) =>
-        prev.map((r) =>
-          r.id === editingRole.id
-            ? { ...r, role: formData.roleName, department: formData.department }
-            : r
-        )
-      );
-      showToast("Role updated successfully", "success");
-    } else {
-      const newRole = {
-        id: String(Date.now()),
-        role: formData.roleName,
-        department: formData.department,
-        active: true,
-        status: "Active",
-        hasActions: true,
-      };
-      setRoles((prev) => [...prev, newRole]);
-      showToast("Role added successfully", "success");
-    }
-    handleCloseModal();
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingRole(null);
-    reset(defaultValues);
-  };
+  if (loading) {
+    return <SectionSpinner />;
+  }
 
   return (
     <div>
@@ -152,7 +115,7 @@ const Roles = () => {
             icon={<FaPlus />}
             iconPosition="left"
             width="auto"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/settings/roles-permissions/configure")}
           />
         </div>
       </div>
@@ -168,31 +131,6 @@ const Roles = () => {
         tableName="Roles"
         onToggleActive={handleToggleActive}
       />
-
-      <ReusableModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingRole ? "Edit role" : "Add a new role"}
-        primaryButtonText="Save"
-        secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleSubmit(handleSave)}
-        onSecondaryButtonClick={handleCloseModal}
-      >
-        <form>
-          <TextInput
-            label="Role Name"
-            placeholder="Type something"
-            error={errors.roleName?.message}
-            {...register("roleName")}
-          />
-          <SelectInput
-            label="Department"
-            options={departmentOptions}
-            error={errors.department?.message}
-            {...register("department")}
-          />
-        </form>
-      </ReusableModal>
     </div>
   );
 };

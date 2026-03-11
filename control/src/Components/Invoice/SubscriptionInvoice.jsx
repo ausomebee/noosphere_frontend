@@ -240,7 +240,7 @@ const SubscriptionInvoice = ({
                 <td
                   style={{
                     ...styles.invoiceTableTd,
-                    ...(item.rate.startsWith("(") ? styles.placeholder : {}),
+                    ...(String(item.rate).startsWith("(") ? styles.placeholder : {}),
                   }}
                 >
                   {item.rate}
@@ -250,7 +250,7 @@ const SubscriptionInvoice = ({
                   style={{
                     ...styles.invoiceTableTd,
                     ...styles.invoiceTableTdLast,
-                    ...(item.price.startsWith("(") ? styles.placeholder : {}),
+                    ...(String(item.price).startsWith("(") ? styles.placeholder : {}),
                   }}
                 >
                   {item.price}
@@ -265,7 +265,7 @@ const SubscriptionInvoice = ({
                 style={{
                   ...styles.totalRowTd,
                   ...styles.invoiceTableTdLast,
-                  ...(total.startsWith("(") ? styles.placeholder : {}),
+                  ...(String(total).startsWith("(") ? styles.placeholder : {}),
                 }}
               >
                 {total}

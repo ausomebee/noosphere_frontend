@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   SearchInput,
   SelectInput,
@@ -20,17 +20,9 @@ const TableHeader = ({
   isDateFilterDropdownOpen,
   setIsDateFilterDropdownOpen,
   handleDateRangeSelect,
-  // Unique filter options
-  uniqueCategories,
-  uniquePriorities,
-  uniqueAssignedTo,
-  stageCompletionOptions,
-  uniquePlans,
-  uniqueAccountStatuses,
-  uniqueAccountOfficers,
-  uniqueStatuses,
-  uniqueBillingCycles,
-  uniquePaymentStatuses,
+  dateFilterKeys,
+  uniqueFilterValues,
+  onFilterTypeSelect,
   // Export/Print
   toggleExportDropdown,
   exportDropdownOpen,
@@ -44,13 +36,31 @@ const TableHeader = ({
   dateFilterEndInputRef,
   dateFilterDropdownRef,
 }) => {
+  // Get the currently selected filter type
+  const selectedFilterType = filterValues.filter_type || "";
+  const isDateFilter = dateFilterKeys.includes(selectedFilterType);
+  const isClearFilter = selectedFilterType === "clear_filters";
+  const isValueFilter = selectedFilterType && !isDateFilter && !isClearFilter;
+
+  // Build value options for the selected filter type
+  const valueOptions = useMemo(() => {
+    if (!isValueFilter) return [];
+    const values = uniqueFilterValues[selectedFilterType] || [];
+    // Capitalize label for display
+    const label = selectedFilterType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return [
+      { value: "", label: `Select ${label}` },
+      ...values.map((v) => ({ value: v, label: v })),
+    ];
+  }, [isValueFilter, selectedFilterType, uniqueFilterValues]);
+
   return (
     <div className="table-header">
       <div className="search-filters-container">
         <div className="search-container">
           <SearchInput
             type="text"
-            placeholder="Select Filter"
+            placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -60,45 +70,45 @@ const TableHeader = ({
           {filters.map((filter, index) => (
             <div key={index} className="filter-wrapper">
               <div className="filter-select-container">
+                {/* First select: pick which column to filter */}
                 <div className="filter-label">
                   <SelectInput
-                    value={filterValues[filter.key] || ""}
+                    value={selectedFilterType}
                     onChange={(e) => {
-                      const newFilterValue = e.target.value;
-                      handleFilterValueChange(filter.key, newFilterValue);
-                      if (newFilterValue === "") {
+                      const newValue = e.target.value;
+                      if (newValue === "" || newValue === "clear_filters") {
                         resetFilters();
-                      } else if (
-                        ["date_reported", "date_updated"].includes(
-                          newFilterValue
-                        )
-                      ) {
-                        setCurrentDateFilterKey(newFilterValue);
+                        return;
+                      }
+                      // If parent handles via modal, delegate and reset
+                      if (onFilterTypeSelect && !dateFilterKeys.includes(newValue)) {
+                        onFilterTypeSelect(newValue);
+                        resetFilters();
+                        return;
+                      }
+                      handleFilterValueChange(filter.key, newValue);
+                      if (dateFilterKeys.includes(newValue)) {
+                        setCurrentDateFilterKey(newValue);
                       }
                     }}
                     options={filter.options}
                     className="table-filter-select"
                   />
                 </div>
-                {(filterValues[filter.key] === "date_reported" ||
-                  filterValues[filter.key] === "date_updated" ||
-                  filterValues[filter.key] === "date_created" ||
-                  filterValues[filter.key] === "due_date" ||
-                  filterValues[filter.key] === "nextBillingDate") && (
+
+                {/* Date filter inputs */}
+                {isDateFilter && (
                   <div className="date-filter-input-container">
                     <TextInput
                       type="text"
                       value={
-                        filterValues[filterValues[filter.key]]?.start
-                          ? format(
-                              filterValues[filterValues[filter.key]].start,
-                              "MMM d, yyyy"
-                            )
+                        filterValues[selectedFilterType]?.start
+                          ? format(filterValues[selectedFilterType].start, "MMM d, yyyy")
                           : "Select start date"
                       }
                       readOnly
                       onClick={() => {
-                        setCurrentDateFilterKey(filterValues[filter.key]);
+                        setCurrentDateFilterKey(selectedFilterType);
                         setIsDateFilterDropdownOpen(true);
                       }}
                       className="date-filter-input date-filter-input-start"
@@ -108,233 +118,49 @@ const TableHeader = ({
                     <TextInput
                       type="text"
                       value={
-                        filterValues[filterValues[filter.key]]?.end
-                          ? format(
-                              filterValues[filterValues[filter.key]].end,
-                              "MMM d, yyyy"
-                            )
+                        filterValues[selectedFilterType]?.end
+                          ? format(filterValues[selectedFilterType].end, "MMM d, yyyy")
                           : "Select end date"
                       }
                       readOnly
                       onClick={() => {
-                        setCurrentDateFilterKey(filterValues[filter.key]);
+                        setCurrentDateFilterKey(selectedFilterType);
                         setIsDateFilterDropdownOpen(true);
                       }}
                       className="date-filter-input date-filter-input-end"
                       ref={dateFilterEndInputRef}
                     />
-                    {isDateFilterDropdownOpen &&
-                      currentDateFilterKey === filterValues[filter.key] && (
-                        <div
-                          className="date-filter-dropdown-wrapper no-scrollbar::-webkit-scrollbar no-scrollbar"
-                          ref={dateFilterDropdownRef}
-                        >
-                          <DateFilterDropdown
-                            isOpen={isDateFilterDropdownOpen}
-                            onClose={() => setIsDateFilterDropdownOpen(false)}
-                            onDateRangeSelect={handleDateRangeSelect}
-                          />
-                        </div>
-                      )}
+                    {isDateFilterDropdownOpen && currentDateFilterKey === selectedFilterType && (
+                      <div
+                        className="date-filter-dropdown-wrapper no-scrollbar::-webkit-scrollbar no-scrollbar"
+                        ref={dateFilterDropdownRef}
+                      >
+                        <DateFilterDropdown
+                          isOpen={isDateFilterDropdownOpen}
+                          onClose={() => setIsDateFilterDropdownOpen(false)}
+                          onDateRangeSelect={handleDateRangeSelect}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
-                {filterValues[filter.key] === "category" && (
+
+                {/* Second select: only shown when NOT using modal-based filters */}
+                {isValueFilter && !onFilterTypeSelect && (
                   <div className="filter-value-select-container">
                     <SelectInput
-                      value={filterValues.category || ""}
+                      value={filterValues[selectedFilterType] || ""}
                       onChange={(e) =>
-                        handleFilterValueChange("category", e.target.value)
+                        handleFilterValueChange(selectedFilterType, e.target.value)
                       }
-                      options={[
-                        { value: "", label: "Select Category" },
-                        ...uniqueCategories.map((category) => ({
-                          value: category,
-                          label: category,
-                        })),
-                      ]}
+                      options={valueOptions}
                       className="filter-value-select"
                     />
                   </div>
                 )}
-                {filterValues[filter.key] === "priority" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.priority || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("priority", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Priority" },
-                        {
-                          value: "Enterprise Critical",
-                          label: "Enterprise Critical",
-                        },
-                        { value: "Enterprise High", label: "Enterprise High" },
-                        { value: "Critical", label: "Critical" },
-                        { value: "High", label: "High" },
-                        { value: "Medium", label: "Medium" },
-                        { value: "Low", label: "Low" },
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "assigned_to" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.assigned_to || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("assigned_to", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Assigned To" },
-                        ...uniqueAssignedTo.map((name) => ({
-                          value: name,
-                          label: name,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "stage_completion" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.stage_completion || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange(
-                          "stage_completion",
-                          e.target.value
-                        )
-                      }
-                      options={[
-                        { value: "", label: "Select Stage Completion" },
-                        ...stageCompletionOptions.map((percentage) => ({
-                          value: percentage,
-                          label: percentage,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "plan" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.plan || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("plan", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Plan" },
-                        ...uniquePlans.map((plan) => ({
-                          value: plan,
-                          label: plan,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "account_status" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.account_status || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange(
-                          "account_status",
-                          e.target.value
-                        )
-                      }
-                      options={[
-                        { value: "", label: "Select Account Status" },
-                        ...uniqueAccountStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "account_officer" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.account_officer || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange(
-                          "account_officer",
-                          e.target.value
-                        )
-                      }
-                      options={[
-                        { value: "", label: "Select Account Officer" },
-                        ...uniqueAccountOfficers.map((officer) => ({
-                          value: officer,
-                          label: officer,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "status" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.status || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("status", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Status" },
-                        ...uniqueStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "billingCycle" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.billingCycle || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange("billingCycle", e.target.value)
-                      }
-                      options={[
-                        { value: "", label: "Select Billing Cycle" },
-                        { value: "Monthly", label: "Monthly" },
-                        { value: "Yearly", label: "Yearly" },
-                        { value: "Custom", label: "Custom" },
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "lastPaymentStatus" && (
-                  <div className="filter-value-select-container">
-                    <SelectInput
-                      value={filterValues.lastPaymentStatus || ""}
-                      onChange={(e) =>
-                        handleFilterValueChange(
-                          "lastPaymentStatus",
-                          e.target.value
-                        )
-                      }
-                      options={[
-                        { value: "", label: "Select Payment Status" },
-                        ...uniquePaymentStatuses.map((status) => ({
-                          value: status,
-                          label: status,
-                        })),
-                      ]}
-                      className="filter-value-select"
-                    />
-                  </div>
-                )}
-                {filterValues[filter.key] === "clear_filters" && (
+
+                {/* Clear filters button */}
+                {isClearFilter && (
                   <Button
                     label="Clear All Filters"
                     variant="outline"

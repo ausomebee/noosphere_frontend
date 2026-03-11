@@ -35,6 +35,7 @@ const CustomTable = ({
   onDelete,
   onSelectionChange,
   hasStatusDot = false,
+  onFilterTypeSelect,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,24 +43,7 @@ const CustomTable = ({
   const [selectedItems, setSelectedItems] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [filterValues, setFilterValues] = useState({
-    category: "",
-    priority: "",
-    date_reported: null,
-    date_updated: null,
-    assigned_to: "",
-    stage_completion: "",
-    date_created: null,
-    due_date: null,
-    plan: "",
-    account_status: "",
-    account_officer: "",
-    status: "",
-    nextBillingDate: null,
-    billingCycle: "",
-    lastPaymentStatus: "",
-    filter_type: "",
-  });
+  const [filterValues, setFilterValues] = useState({ filter_type: "" });
   const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
     useState(false);
   const [currentDateFilterKey, setCurrentDateFilterKey] = useState(null);
@@ -71,63 +55,27 @@ const CustomTable = ({
   const dateFilterEndInputRef = useRef(null);
   const dateFilterDropdownRef = useRef(null);
 
-  // Extract unique values for filters
-  const uniqueCategories = useMemo(() => {
-    const categories = new Set(data.map((row) => row.category).filter(Boolean));
-    return Array.from(categories);
-  }, [data]);
+  // Date filter keys that use date range picker instead of value select
+  const dateFilterKeys = useMemo(
+    () => ["date_reported", "date_updated", "date_created", "due_date", "nextBillingDate"],
+    []
+  );
 
-  const uniquePriorities = useMemo(() => {
-    const priorities = new Set(data.map((row) => row.priority).filter(Boolean));
-    return Array.from(priorities);
-  }, [data]);
-
-  const uniqueAssignedTo = useMemo(() => {
-    const assignToSet = new Set(
-      data.map((row) => row.assigned_to).filter(Boolean)
+  // Build a map of unique values for each filterable column from the data
+  const uniqueFilterValues = useMemo(() => {
+    const valuesMap = {};
+    // Get all filter option values (excluding empty, clear_filters, and date keys)
+    const filterKeys = filters.flatMap((f) =>
+      f.options
+        .map((opt) => opt.value)
+        .filter((v) => v && v !== "clear_filters" && !dateFilterKeys.includes(v))
     );
-    return Array.from(assignToSet);
-  }, [data]);
-
-  const uniqueStatuses = useMemo(() => {
-    const statuses = new Set(data.map((row) => row.status).filter(Boolean));
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniqueBillingCycles = useMemo(() => {
-    const cycles = new Set(data.map((row) => row.billingCycle).filter(Boolean));
-    return Array.from(cycles);
-  }, [data]);
-
-  const uniquePaymentStatuses = useMemo(() => {
-    const statuses = new Set(
-      data.map((row) => row.lastPaymentStatus).filter(Boolean)
-    );
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniquePlans = useMemo(() => {
-    const plans = new Set(data.map((row) => row.plan).filter(Boolean));
-    return Array.from(plans);
-  }, [data]);
-
-  const uniqueAccountStatuses = useMemo(() => {
-    const statuses = new Set(
-      data.map((row) => row.account_status).filter(Boolean)
-    );
-    return Array.from(statuses);
-  }, [data]);
-
-  const uniqueAccountOfficers = useMemo(() => {
-    const officers = new Set(
-      data.map((row) => row.account_officer).filter(Boolean)
-    );
-    return Array.from(officers);
-  }, [data]);
-
-  const stageCompletionOptions = useMemo(() => {
-    return Array.from({ length: 11 }, (_, i) => `${i * 10}%`);
-  }, []);
+    filterKeys.forEach((key) => {
+      const values = new Set(data.map((row) => row[key]).filter(Boolean));
+      valuesMap[key] = Array.from(values);
+    });
+    return valuesMap;
+  }, [data, filters, dateFilterKeys]);
 
   // Filtered and sorted data
   const filteredData = useMemo(() => {
@@ -144,64 +92,36 @@ const CustomTable = ({
 
     // Apply filters
     Object.entries(filterValues).forEach(([key, value]) => {
-      if (value && (value.start || value.end)) {
-        if (
-          key === "date_reported" ||
-          key === "date_updated" ||
-          key === "date_created" ||
-          key === "due_date" ||
-          key === "nextBillingDate"
-        ) {
-          filtered = filtered.filter((row) => {
-            const rowDate = row[key]
-              ? parse(row[key], "MM/dd/yyyy", new Date())
-              : null;
-            if (!isValid(rowDate)) return false;
-            const startDate = value.start ? new Date(value.start) : null;
-            const endDate = value.end ? new Date(value.end) : null;
+      if (!value || key === "filter_type") return;
 
-            if (startDate && endDate && !isSameDay(startDate, endDate)) {
-              return isWithinInterval(rowDate, {
-                start: startDate,
-                end: endDate,
-              });
-            } else if (startDate) {
-              return isSameDay(rowDate, startDate);
-            }
-            return true;
-          });
-        }
-      } else if (value && key !== "filter_type") {
-        if (key === "category") {
-          filtered = filtered.filter((row) => row.category === value);
-        } else if (key === "priority") {
-          filtered = filtered.filter((row) => row.priority === value);
-        } else if (key === "assigned_to") {
-          filtered = filtered.filter((row) => row.assigned_to === value);
-        } else if (key === "stage_completion") {
-          const percentage = parseInt(value.replace("%", ""), 10);
-          filtered = filtered.filter((row) => {
-            const rowPercentage = parseInt(row.stage_completion || "0", 10);
-            return rowPercentage === percentage;
-          });
-        } else if (key === "plan") {
-          filtered = filtered.filter((row) => row.plan === value);
-        } else if (key === "account_status") {
-          filtered = filtered.filter((row) => row.account_status === value);
-        } else if (key === "account_officer") {
-          filtered = filtered.filter((row) => row.account_officer === value);
-        } else if (key === "status") {
-          filtered = filtered.filter((row) => row.status === value);
-        } else if (key === "billingCycle") {
-          filtered = filtered.filter((row) => row.billingCycle === value);
-        } else if (key === "lastPaymentStatus") {
-          filtered = filtered.filter((row) => row.lastPaymentStatus === value);
-        }
+      // Date range filters
+      if (dateFilterKeys.includes(key) && (value.start || value.end)) {
+        filtered = filtered.filter((row) => {
+          const rowDate = row[key]
+            ? parse(row[key], "MM/dd/yyyy", new Date())
+            : null;
+          if (!isValid(rowDate)) return false;
+          const startDate = value.start ? new Date(value.start) : null;
+          const endDate = value.end ? new Date(value.end) : null;
+
+          if (startDate && endDate && !isSameDay(startDate, endDate)) {
+            return isWithinInterval(rowDate, {
+              start: startDate,
+              end: endDate,
+            });
+          } else if (startDate) {
+            return isSameDay(rowDate, startDate);
+          }
+          return true;
+        });
+      } else if (typeof value === "string" && value) {
+        // String value filters — match row[key] to value
+        filtered = filtered.filter((row) => row[key] === value);
       }
     });
 
     return filtered;
-  }, [data, searchTerm, filterValues]);
+  }, [data, searchTerm, filterValues, dateFilterKeys]);
 
   const pagination = useMemo(() => {
     const totalItems = filteredData.length;
@@ -281,27 +201,27 @@ const CustomTable = ({
 
   const handleExportCSV = useCallback(() => {
     exportTableData(
-      data,
+      filteredData,
       columns,
       `${tableName.toLowerCase().replace(/\s+/g, "-")}.csv`,
       tableName
     );
     setExportDropdownOpen(false);
-  }, [data, columns, tableName]);
+  }, [filteredData, columns, tableName]);
 
   const handleExportPDF = useCallback(() => {
     exportTableToPDF(
-      data,
+      filteredData,
       columns,
       `${tableName.toLowerCase().replace(/\s+/g, "-")}.pdf`,
       tableName
     );
     setExportDropdownOpen(false);
-  }, [data, columns, tableName]);
+  }, [filteredData, columns, tableName]);
 
   const handlePrint = useCallback(() => {
-    printTableData(data, columns, tableName);
-  }, [data, columns, tableName]);
+    printTableData(filteredData, columns, tableName);
+  }, [filteredData, columns, tableName]);
 
   const toggleDropdown = useCallback(
     (rowIndex, colIndex) => {
@@ -314,67 +234,53 @@ const CustomTable = ({
     [openDropdown]
   );
 
+  const positionDropdown = (rowIndex, colIndex) => {
+    const key = `${rowIndex}-${colIndex}`;
+    const button = menuRefs.current[key]?.button;
+    const dropdown = menuRefs.current[key]?.dropdown;
+    if (!button || !dropdown) return;
+    const buttonRect = button.getBoundingClientRect();
+    const dropdownHeight = dropdown.scrollHeight || 150;
+    const dropdownWidth = dropdown.offsetWidth || 180;
+    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
+    const spaceAbove = buttonRect.top - 10;
+
+    dropdown.style.position = "fixed";
+    dropdown.style.zIndex = "9999";
+    dropdown.style.overflowY = "auto";
+
+    // Align left edge of dropdown to left of button
+    const leftPos = buttonRect.left - dropdownWidth - 4;
+    dropdown.style.left = `${Math.max(leftPos, 4)}px`;
+    dropdown.style.right = "auto";
+
+    if (spaceBelow >= dropdownHeight) {
+      dropdown.style.top = `${buttonRect.bottom + 2}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceBelow}px`;
+    } else if (spaceAbove >= dropdownHeight) {
+      dropdown.style.top = `${buttonRect.top - dropdownHeight - 2}px`;
+      dropdown.style.bottom = "auto";
+      dropdown.style.maxHeight = `${spaceAbove}px`;
+    } else {
+      if (spaceBelow >= spaceAbove) {
+        dropdown.style.top = `${buttonRect.bottom + 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceBelow}px`;
+      } else {
+        dropdown.style.top = `${buttonRect.top - Math.min(dropdownHeight, spaceAbove) - 2}px`;
+        dropdown.style.bottom = "auto";
+        dropdown.style.maxHeight = `${spaceAbove}px`;
+      }
+    }
+  };
+
   const toggleExportDropdown = useCallback(() => {
     setExportDropdownOpen((prev) => !prev);
     if (!exportDropdownOpen) {
       setTimeout(() => positionExportDropdown(), 0);
     }
   }, [exportDropdownOpen]);
-
-  const positionDropdown = (rowIndex, colIndex) => {
-    const key = `${rowIndex}-${colIndex}`;
-    const button = menuRefs.current[key]?.button;
-    const dropdown = menuRefs.current[key]?.dropdown;
-
-    if (!button || !dropdown) return;
-
-    const buttonRect = button.getBoundingClientRect();
-    const headerRect = tableContainerRef.current.querySelector("thead")?.getBoundingClientRect();
-    const dropdownRect = dropdown.getBoundingClientRect();
-
-    if (!headerRect) return;
-
-    const dropdownHeight = dropdownRect.height || 150;
-    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
-    const spaceAbove = buttonRect.top - headerRect.bottom - 10;
-
-    let top;
-
-    if (spaceBelow >= dropdownHeight) {
-      top = button.offsetHeight + 2;
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceBelow}px`;
-    } else if (spaceAbove >= dropdownHeight) {
-      top = -(dropdownHeight + 2);
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceAbove}px`;
-    } else {
-      top = -(Math.min(dropdownHeight, spaceAbove) + 2);
-      dropdown.style.top = `${top}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceAbove}px`;
-    }
-
-    const additionalOffset = 4;
-    const left = -dropdownRect.width - additionalOffset;
-
-    dropdown.style.left = `${left}px`;
-    dropdown.style.right = "auto";
-    dropdown.style.position = "absolute";
-    dropdown.style.zIndex = "1000";
-    dropdown.style.overflowY = "auto";
-
-    const viewportBottom = window.innerHeight;
-    const dropdownBottom = buttonRect.top + top;
-    if (dropdownBottom < 0) {
-      dropdown.style.top = "0";
-      dropdown.style.maxHeight = `${buttonRect.top - 10}px`;
-    } else if (buttonRect.bottom + (dropdownHeight - top) > viewportBottom) {
-      dropdown.style.maxHeight = `${viewportBottom - buttonRect.bottom - 10}px`;
-    }
-  };
 
   const positionExportDropdown = () => {
     const button = exportButtonRef.current;
@@ -444,16 +350,7 @@ const CustomTable = ({
 
   const handleDateRangeSelect = (range) => {
     const selectedFilterType = filterValues.filter_type;
-    if (
-      selectedFilterType &&
-      [
-        "date_reported",
-        "date_updated",
-        "date_created",
-        "due_date",
-        "nextBillingDate",
-      ].includes(selectedFilterType)
-    ) {
+    if (selectedFilterType && dateFilterKeys.includes(selectedFilterType)) {
       const updatedValues = {
         ...filterValues,
         [selectedFilterType]: {
@@ -481,40 +378,8 @@ const CustomTable = ({
   };
 
   const resetFilters = () => {
-    setFilterValues({
-      category: "",
-      priority: "",
-      date_reported: null,
-      date_updated: null,
-      assigned_to: "",
-      stage_completion: "",
-      date_created: null,
-      due_date: null,
-      plan: "",
-      account_status: "",
-      account_officer: "",
-      status: "",
-      nextBillingDate: null,
-      billingCycle: "",
-      lastPaymentStatus: "",
-      filter_type: "",
-    });
+    setFilterValues({ filter_type: "" });
     setCurrentDateFilterKey(null);
-    onFilterChange("category", "");
-    onFilterChange("priority", "");
-    onFilterChange("date_reported", null);
-    onFilterChange("date_updated", null);
-    onFilterChange("assigned_to", "");
-    onFilterChange("stage_completion", "");
-    onFilterChange("date_created", null);
-    onFilterChange("due_date", null);
-    onFilterChange("plan", "");
-    onFilterChange("account_status", "");
-    onFilterChange("account_officer", "");
-    onFilterChange("status", "");
-    onFilterChange("nextBillingDate", null);
-    onFilterChange("billingCycle", "");
-    onFilterChange("lastPaymentStatus", "");
     onFilterChange("filter_type", "");
   };
 
@@ -607,16 +472,8 @@ const CustomTable = ({
         isDateFilterDropdownOpen={isDateFilterDropdownOpen}
         setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
         handleDateRangeSelect={handleDateRangeSelect}
-        uniqueCategories={uniqueCategories}
-        uniquePriorities={uniquePriorities}
-        uniqueAssignedTo={uniqueAssignedTo}
-        stageCompletionOptions={stageCompletionOptions}
-        uniquePlans={uniquePlans}
-        uniqueAccountStatuses={uniqueAccountStatuses}
-        uniqueAccountOfficers={uniqueAccountOfficers}
-        uniqueStatuses={uniqueStatuses}
-        uniqueBillingCycles={uniqueBillingCycles}
-        uniquePaymentStatuses={uniquePaymentStatuses}
+        dateFilterKeys={dateFilterKeys}
+        uniqueFilterValues={uniqueFilterValues}
         toggleExportDropdown={toggleExportDropdown}
         exportDropdownOpen={exportDropdownOpen}
         handleExportCSV={handleExportCSV}
@@ -627,6 +484,7 @@ const CustomTable = ({
         dateFilterStartInputRef={dateFilterStartInputRef}
         dateFilterEndInputRef={dateFilterEndInputRef}
         dateFilterDropdownRef={dateFilterDropdownRef}
+        onFilterTypeSelect={onFilterTypeSelect}
       />
 
       <TableBody

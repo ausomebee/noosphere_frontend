@@ -17,6 +17,7 @@ import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/C
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
 import api from "../../api/IssueApi";
 import { showToast } from "../../Helper/ShowToast";
+import { SectionSpinner } from "../../Components/LoadingSpinner";
 
 const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   const { accessToken, refreshToken, userId: adminId } = useAuth();
@@ -80,8 +81,12 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         category: data.category || "N/A",
         priority: data.priority || "N/A",
         status: data.status || "Not Started",
-        loggedBy: data.loggedBy?.fullName || "Unknown",
-        assignedTo: data.assignedTo?.fullName || "Unassigned",
+        loggedBy: data.loggedBy
+          ? `${data.loggedBy.firstName || ""} ${data.loggedBy.lastName || ""}`.trim() || "Unknown"
+          : "Unknown",
+        assignedTo: data.assignedTo
+          ? `${data.assignedTo.firstName || ""} ${data.assignedTo.lastName || ""}`.trim() || "Unassigned"
+          : "Unassigned",
         dateReported: formatDateTime(data.createdAt),
         lastUpdate: formatDateTime(data.updatedAt),
         attachments: data.attachments?.map((att) => ({
@@ -93,7 +98,9 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         activityHistory: data.Logs?.map((log, index) => ({
           date: formatDateTime(log.createdAt),
           action: log.action || "Unknown",
-          user: log.admin?.fullName || "Unknown",
+          user: log.admin
+            ? `${log.admin.firstName || ""} ${log.admin.lastName || ""}`.trim() || "Unknown"
+            : "Unknown",
           details: log.details || "No details",
           id: log.logId || index + 1,
         })) || [],
@@ -104,7 +111,9 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         })) || [],
         comments: data.comments?.map((comment, index) => ({
           date: formatDateTime(comment.createdAt),
-          user: comment.commentBy.fullName || "Unknown",
+          user: comment.commentBy
+            ? `${comment.commentBy.firstName || ""} ${comment.commentBy.lastName || ""}`.trim() || "Unknown"
+            : "Unknown",
           action: "commented",
           text: comment.comment || "No text",
           id: comment.id || index + 1,
@@ -432,7 +441,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
     }
   };
 
-  if (!issueData) return <div>Loading...</div>;
+  if (!issueData) return <SectionSpinner />;
 
   return (
     <>

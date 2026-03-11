@@ -316,6 +316,34 @@ const MarkAsResolved = async ({ payload, accessToken, refreshToken }) => {
     throw new Error(error.response?.data?.message || "Failed to add attachment");
   }
 };
+const GetTenantManagementOverview = async ({ tenantId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/issue/tenant-management-overview/${tenantId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch tenant management overview"
+    );
+  }
+};
+
+const GetTenantIssuesByStatus = async ({ tenantId, status, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/issue/tenant/${tenantId}/status/${status}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch tenant issues by status"
+    );
+  }
+};
+
 const ContactTenantByMail = async ({ payload, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -353,6 +381,7 @@ export default {
   ChangeIssueStatus,
   ContactTenantByMail,
   AddAttachment,
-  MarkAsResolved
-
+  MarkAsResolved,
+  GetTenantManagementOverview,
+  GetTenantIssuesByStatus,
 };

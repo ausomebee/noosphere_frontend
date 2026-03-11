@@ -371,13 +371,291 @@
   margin: 0 auto;
 }
 
-/* For the Payment Actions modal where buttons are side by side */
-.payment-actions-modal .modal-actions {
-  justify-content: space-between;
+/* ===== Generate Payment Link Modal - Plan Settings Tab ===== */
+.plan-settings-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Ensure buttons in Payment Actions modal are styled correctly */
-.payment-actions-modal .modal-actions button {
-  flex: 1; /* Make buttons equal width */
-  max-width: 150px; /* Limit button width to match the image */
+.plan-type-radios {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.plan-type-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.selected-plan-details {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plan-pricing-section h4,
+.plan-features-section h4,
+.plan-extras-section h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.plan-pricing-section p {
+  font-size: 0.875rem;
+  color: #333;
+  margin: 0.25rem 0;
+  font-weight: 500;
+}
+
+.plan-features-section ul,
+.plan-extras-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.plan-features-section li,
+.plan-extras-section li {
+  font-size: 0.875rem;
+  color: #333;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.plan-features-section li::before,
+.plan-extras-section li::before {
+  content: "\2022";
+  color: #003A9B;
+  font-weight: bold;
+}
+
+/* ===== Plan Type Section ===== */
+.plan-type-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plan-type-section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ===== Modal Plan Card ===== */
+.modal-plan-card {
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.modal-plan-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.modal-plan-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modal-plan-pricing {
+  padding: 12px 16px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.modal-plan-pricing h4,
+.modal-plan-features h4,
+.modal-plan-extras h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+  margin: 0 0 6px;
+}
+
+.modal-plan-pricing p {
+  font-size: 0.875rem;
+  color: #333;
+  margin: 0.25rem 0;
+  font-weight: 500;
+}
+
+.modal-plan-features,
+.modal-plan-extras {
+  padding: 12px 16px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.modal-plan-extras {
+  border-bottom: none;
+}
+
+.modal-plan-features ul,
+.modal-plan-extras ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.modal-plan-features li,
+.modal-plan-extras li {
+  font-size: 0.875rem;
+  color: #333;
+  padding: 0.2rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-plan-features li::before,
+.modal-plan-extras li::before {
+  content: "\2022";
+  color: #003A9B;
+  font-weight: bold;
+}
+
+/* ===== Generate Payment Link Modal - Payment Link Tab ===== */
+.payment-link-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.no-links-message {
+  text-align: center;
+  color: #666;
+  font-size: 0.875rem;
+  padding: 2rem 0;
+}
+
+.payment-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.payment-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f9f9f9;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  gap: 1rem;
+}
+
+.payment-link-row.expired {
+  opacity: 0.7;
+}
+
+.payment-link-row.purchased {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.payment-link-platform {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+}
+
+.platform-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+.link-status {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.link-status.expired {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.link-status.purchased {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.payment-link-url-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-link-url {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-link-btn {
+  background: #1a1a1a;
+  border: none;
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.copy-link-btn:hover {
+  background: #333;
+}
+
+.history-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 1rem;
+}
+
+.history-entry:last-child {
+  border-bottom: none;
+}
+
+.history-entry-text {
+  font-size: 0.875rem;
+  color: #444;
 }

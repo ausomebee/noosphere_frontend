@@ -61,23 +61,23 @@ const TableBody = ({
                 <div className="table-empty-state-content">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
+                    width="64"
+                    height="64"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
+                    strokeWidth="1.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className="table-empty-state-icon"
                   >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
+                    <path d="M22 12h-6l-2 3H10l-2-3H2" />
+                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
                   </svg>
-                  <span>Nothing to show here for {tableName} Table</span>
+                  <span className="table-empty-state-title">No records found</span>
+                  <span className="table-empty-state-sub">
+                    There are no {tableName.toLowerCase()} entries to display right now.
+                  </span>
                 </div>
               </td>
             </tr>
@@ -101,9 +101,7 @@ const TableBody = ({
                           onClick={() => toggleDropdown(rowIndex, colIndex)}
                           ref={(el) => {
                             const key = `${rowIndex}-${colIndex}`;
-                            if (!menuRefs.current[key]) {
-                              menuRefs.current[key] = {};
-                            }
+                            if (!menuRefs.current[key]) menuRefs.current[key] = {};
                             menuRefs.current[key].button = el;
                           }}
                         >
@@ -114,19 +112,14 @@ const TableBody = ({
                             className="action-dropdown"
                             ref={(el) => {
                               const key = `${rowIndex}-${colIndex}`;
-                              if (!menuRefs.current[key]) {
-                                menuRefs.current[key] = {};
-                              }
+                              if (!menuRefs.current[key]) menuRefs.current[key] = {};
                               menuRefs.current[key].dropdown = el;
                             }}
-                            style={{ zIndex: 1000 }}
                           >
                             {col.columnActions.map((action, index) => (
                               <button
                                 key={index}
-                                className={`dropdown-item ${
-                                  action.className || ""
-                                }`}
+                                className={`dropdown-item ${action.className || ""}`}
                                 onClick={() => {
                                   action.onClick(row);
                                   setOpenDropdown(null);
@@ -147,33 +140,25 @@ const TableBody = ({
                         <span className="progress-texts">{`${row[col.key]}%`}</span>
                       </div>
                     ) : col.type === "plan" ? (
-                      <span
-                        className={`plan-label plan-${row[col.key].toLowerCase()}`}
-                      >
+                      <span className={`plan-label plan-${row[col.key].toLowerCase()}`}>
                         {row[col.key]}
                       </span>
                     ) : col.type === "subscription_status" ? (
                       <span
-                        className={`subscription_status-label subscription_status-${row[
-                          col.key
-                        ].toLowerCase()}`}
+                        className={`subscription_status-label subscription_status-${row[col.key].toLowerCase()}`}
                       >
                         <span className="status-dot" />
                         {row[col.key]}
                       </span>
                     ) : col.type === "payment_status" ? (
                       <span
-                        className={`payment_status-label payment_status-${row[
-                          col.key
-                        ].toLowerCase()}`}
+                        className={`payment_status-label payment_status-${row[col.key].toLowerCase()}`}
                       >
                         {row[col.key]}
                       </span>
                     ) : col.type === "status" ? (
                       <span
-                        className={`status-label status-${row[
-                          col.key
-                        ].toLowerCase()}`}
+                        className={`status-label status-${row[col.key].toLowerCase()}`}
                       >
                         {hasStatusDot && <span className="status-dot" />}
                         {row[col.key]}
@@ -202,9 +187,7 @@ const TableBody = ({
                       </div>
                     ) : col.type === "severity" ? (
                       <span
-                        className={`severity-label severity-${row[
-                          col.key
-                        ].toLowerCase()}`}
+                        className={`severity-label severity-${row[col.key].toLowerCase()}`}
                       >
                         {row[col.key]}
                       </span>
@@ -246,9 +229,7 @@ const TableBody = ({
                           onClick={() => toggleDropdown(rowIndex, "action")}
                           ref={(el) => {
                             const key = `${rowIndex}-action`;
-                            if (!menuRefs.current[key]) {
-                              menuRefs.current[key] = {};
-                            }
+                            if (!menuRefs.current[key]) menuRefs.current[key] = {};
                             menuRefs.current[key].button = el;
                           }}
                         >
@@ -273,18 +254,14 @@ const TableBody = ({
                             className="action-dropdown"
                             ref={(el) => {
                               const key = `${rowIndex}-action`;
-                              if (!menuRefs.current[key]) {
-                                menuRefs.current[key] = {};
-                              }
+                              if (!menuRefs.current[key]) menuRefs.current[key] = {};
                               menuRefs.current[key].dropdown = el;
                             }}
                           >
                             {actions.map((action, index) => (
                               <button
                                 key={index}
-                                className={`dropdown-item ${
-                                  action.className || ""
-                                }`}
+                                className={`dropdown-item ${action.className || ""}`}
                                 onClick={() => {
                                   action.onClick(row);
                                   setOpenDropdown(null);

@@ -2,14 +2,12 @@ import React, { useState } from "react";
 import Staff from "./SettingsSubs/Staff";
 import Departments from "./SettingsSubs/Departments";
 import Roles from "./SettingsSubs/Roles";
-import Permissions from "./SettingsSubs/Permissions";
 import "./Settings.css";
 
 const tabs = [
   { key: "staff", label: "STAFF" },
   { key: "departments", label: "DEPARTMENTS" },
   { key: "roles", label: "ROLES" },
-  { key: "permissions", label: "PERMISSIONS" },
 ];
 
 const ControlSettings = () => {
@@ -38,7 +36,6 @@ const ControlSettings = () => {
         {activeTab === "staff" && <Staff />}
         {activeTab === "departments" && <Departments />}
         {activeTab === "roles" && <Roles />}
-        {activeTab === "permissions" && <Permissions />}
       </div>
     </div>
   );

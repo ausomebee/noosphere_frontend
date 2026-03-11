@@ -218,7 +218,7 @@ const PlansAndPayment = () => {
               }
               const adminsData = response.data.data.map((a) => ({
                 id: a.id || "",
-                name: a.fullName || a.id || "Unnamed Admin",
+                name: `${a.firstName || ""} ${a.lastName || ""}`.trim() || a.id || "Unnamed Admin",
               }));
               setAdmins(adminsData);
               break;

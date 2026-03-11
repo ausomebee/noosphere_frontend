@@ -1,363 +1,446 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-
 import "./TenantSingle.css";
-import { Link } from "react-router-dom";
 import Button from "../../../Components/Button/Button";
 import Chart from "react-apexcharts";
-import { SelectInput } from "../../../Components/Input/Inputs";
 import CustomTable from "../../../Components/Table/CustomTable";
-import TenantListViewIssues from "../TenantList/TenantListViewIssues";
+import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
+import TableFilterModal from "../../../Components/ReusableModal/TableFilterModal";
+import TableFilterDateModal from "../../../Components/ReusableModal/TableFilterDateModal";
+import ViewIssue from "../../IssueManagement/ViewIssue";
+import useAuth from "../../../hooks/useAuth";
+import issueApi from "../../../api/IssueApi";
+import tenantApi from "../../../api/TenantApis";
+import { showToast } from "../../../Helper/ShowToast";
+import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const TenantSingleIssueManagement = () => {
-  // Table data
-  const [tableDataState, setTableDataState] = useState([
-    {
-      id: "1",
-      name: "Error logging in",
-      time: "12/10/2024",
-      category: "Login Issues",
-      severity: "Critical",
-      logged_by: "James Smith",
-      assigned_to: "James Smith",
-      status: "Pending",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "2",
-      name: "Can't find appointment",
-      time: "12/13/2024",
-      category: "Appointment Creation",
-      severity: "Critical",
-      logged_by: "Thomas Brown",
-      assigned_to: "Thomas Brown",
-      status: "Resolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "3",
-      name: "Can't Login",
-      time: "1/10/2024",
-      category: "Billing",
-      severity: "Critical",
-      logged_by: "Matthew Johnson",
-      assigned_to: "Matthew Johnson",
-      status: "Resolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "4",
-      name: "Unable to create invoice",
-      time: "2/1/2024",
-      category: "Invoicing",
-      severity: "Low",
-      logged_by: "James Smith",
-      assigned_to: "James Smith",
-      status: "Resolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "5",
-      name: "Unable to create form",
-      time: "2/1/2024",
-      category: "Creating a Form",
-      severity: "Medium",
-      logged_by: "James Smith",
-      assigned_to: "James Smith",
-      status: "Resolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "6",
-      name: "Unable to create appointment",
-      time: "2/1/2024",
-      category: "Appointment Creation",
-      severity: "High",
-      logged_by: "Tom Perez",
-      assigned_to: "Tom Perez",
-      status: "Resolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-    {
-      id: "7",
-      name: "Error logging in",
-      time: "2/1/2024",
-      category: "Reporting",
-      severity: "Medium",
-      logged_by: "James Smith",
-      assigned_to: "James Smith",
-      status: "Unresolved",
-      hasActions: true,
-      hasCheckbox: true,
-    },
-  ]);
+  const { tenantId } = useParams();
+  const { accessToken, refreshToken } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("All");
-  const [viewIssueId, setViewIssueId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [overview, setOverview] = useState(null);
+  const [issues, setIssues] = useState([]);
+  const [tenant, setTenant] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
+  const [viewIssue, setViewIssue] = useState(null);
+  const [breakdownModal, setBreakdownModal] = useState(false);
 
-  // Define tabs
-  const tabs = [
-    { name: "All", count: tableDataState.length },
-    {
-      name: "Resolved",
-      count: tableDataState.filter((item) => item.status === "Resolved").length,
-    },
-    {
-      name: "Pending",
-      count: tableDataState.filter((item) => item.status === "Pending").length,
-    },
-  ];
+  // Modal-based filters
+  const [openFilterModal, setOpenFilterModal] = useState(null); // "category"|"severity"|"status"|"date"
+  const [activeFilters, setActiveFilters] = useState({ category: "", severity: "", status: "", dateRange: null });
 
-  // Define columns based on the active tab
-  const columns =
-    activeTab === "All"
-      ? [
-          { key: "name", header: "NAME" },
-          { key: "time", header: "TIME" },
-          { key: "category", header: "CATEGORY" },
-          { key: "severity", header: "SEVERITY", type: "severity" },
-          { key: "status", header: "STATUS", type: "status" },
-        ]
-      : [
-          { key: "name", header: "NAME" },
-          { key: "time", header: "TIME" },
-          { key: "category", header: "CATEGORY" },
-          { key: "severity", header: "SEVERITY", type: "severity" },
-          { key: "logged_by", header: "LOGGED BY" },
-          { key: "assigned_to", header: "ASSIGNED TO" },
-        ];
+  const fetchOverview = useCallback(async () => {
+    try {
+      const res = await issueApi.GetTenantManagementOverview({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      setOverview(res.data || res);
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("Overview error:", err.message);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchIssues = useCallback(async (status) => {
+    try {
+      const res = await issueApi.GetTenantIssuesByStatus({
+        tenantId,
+        status,
+        accessToken,
+        refreshToken,
+      });
+      setIssues(res.data || []);
+    } catch (err) {
+      showToast(err.message || "Failed to load issues", "error");
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  const fetchTenant = useCallback(async () => {
+    try {
+      const res = await tenantApi.GetSingleTenant({ tenantId, accessToken, refreshToken });
+      setTenant(res.data || res || null);
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("Tenant fetch error:", err.message);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    const loadAll = async () => {
+      setLoading(true);
+      await Promise.allSettled([
+        fetchOverview(),
+        fetchIssues(activeTab),
+        fetchTenant(),
+      ]);
+      setLoading(false);
+    };
+    loadAll();
+  }, []);
+
+  useEffect(() => {
+    fetchIssues(activeTab);
+  }, [activeTab, fetchIssues]);
+
+  const tenantName = tenant?.companyName || tenant?.contactPerson || "Tenant";
+
+  // Overview stats — API returns { "_count": { "_all": N } } for count fields
+  const totalIssues = overview?.totalIssues?._count?._all ?? overview?.totalIssues ?? 0;
+  const activeIssues = overview?.activeIssues?._count?._all ?? overview?.activeIssues ?? 0;
+  const resolvedIssues = overview?.resolvedIssues?._count?._all ?? overview?.resolvedIssues ?? 0;
+  const avgResolutionTime = overview?.averageResolutionTime ?? overview?.avgResolutionTime ?? "—";
+  const countByCategory = overview?.countByCategory || [];
+
+  // API returns count as _count.category — normalise to a flat list
+  const normalisedCategories = useMemo(
+    () =>
+      countByCategory.map((c) => ({
+        category: c.category || c.name || "Unknown",
+        count: c._count?.category ?? c.count ?? 0,
+      })),
+    [countByCategory]
+  );
+
+  // Donut chart — top 5 categories
+  const top5Categories = useMemo(() => {
+    return [...normalisedCategories]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [normalisedCategories]);
+
+  const chartData = useMemo(() => {
+    const baseChart = { type: "donut", height: 180, animations: { enabled: false } };
+    if (top5Categories.length === 0) {
+      return {
+        series: [1],
+        options: {
+          chart: baseChart,
+          labels: ["No data"],
+          colors: ["#E5E7EB"],
+          dataLabels: { enabled: false },
+          legend: { show: false },
+          plotOptions: { pie: { donut: { size: "50%" } } },
+        },
+      };
+    }
+    return {
+      series: top5Categories.map((c) => c.count),
+      options: {
+        chart: baseChart,
+        labels: top5Categories.map((c) => c.category),
+        colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
+        dataLabels: { enabled: false },
+        legend: { show: false },
+        plotOptions: { pie: { donut: { size: "50%" } } },
+        tooltip: { y: { formatter: (val) => `${val}` } },
+      },
+    };
+  }, [top5Categories]);
+
+  const issueLogFilters = useMemo(() => [
+    {
+      key: "filter_type",
+      options: [
+        { value: "", label: "Filter by..." },
+        { value: "category", label: "Category" },
+        { value: "severity", label: "Severity" },
+        ...(activeTab === "all" ? [{ value: "status", label: "Status" }] : []),
+        { value: "date", label: "Date" },
+        { value: "clear_filters", label: "Clear Filters" },
+      ],
+    },
+  ], [activeTab]);
+
+  const handleIssueFilterTypeSelect = (type) => {
+    setOpenFilterModal(type);
+  };
+
+  // Tab counts — status values match backend enum exactly
+  const tabs = useMemo(() => [
+    { name: "all", label: "All", count: totalIssues },
+    { name: "Not Started", label: "Not Started", count: null },
+    { name: "In Progress", label: "In Progress", count: null },
+    { name: "Unassigned", label: "Unassigned", count: null },
+    { name: "Resolved", label: "Resolved", count: resolvedIssues },
+  ], [totalIssues, resolvedIssues]);
+
+  // Table columns
+  const columns = useMemo(() => {
+    if (activeTab === "all") {
+      return [
+        { key: "issue_id", header: "ISSUE ID" },
+        { key: "name", header: "NAME" },
+        { key: "time", header: "TIME" },
+        { key: "category", header: "CATEGORY" },
+        { key: "severity", header: "SEVERITY", type: "severity" },
+        { key: "status", header: "STATUS", type: "status" },
+      ];
+    }
+    return [
+      { key: "issue_id", header: "ISSUE ID" },
+      { key: "name", header: "NAME" },
+      { key: "time", header: "TIME" },
+      { key: "category", header: "CATEGORY" },
+      { key: "severity", header: "SEVERITY", type: "severity" },
+      { key: "logged_by", header: "LOGGED BY" },
+      { key: "assigned_to", header: "ASSIGNED TO" },
+    ];
+  }, [activeTab]);
+
+  // Map API data to table rows
+  const tableData = useMemo(
+    () =>
+      issues.map((issue, index) => ({
+        id: issue.id,
+        issue_id: `ISS-${String(index + 1).padStart(3, "0")}`,
+        name: issue.title || "—",
+        time: issue.createdAt
+          ? new Date(issue.createdAt).toLocaleDateString("en-US")
+          : "—",
+        category: issue.category || "—",
+        severity: issue.priority || "—",
+        status: issue.status || "—",
+        logged_by: issue.loggedBy
+          ? `${issue.loggedBy.firstName || ""} ${issue.loggedBy.lastName || ""}`.trim() || "—"
+          : "—",
+        assigned_to: issue.assignedTo
+          ? `${issue.assignedTo.firstName || ""} ${issue.assignedTo.lastName || ""}`.trim() || "—"
+          : "—",
+        hasActions: true,
+        hasCheckbox: true,
+        _raw: issue,
+        _date: issue.createdAt ? new Date(issue.createdAt) : null,
+      })),
+    [issues]
+  );
+
+  // Derive unique option values for filter modals
+  const categoryOptions = useMemo(() => [
+    { value: "", label: "All Categories" },
+    ...[...new Set(tableData.map((r) => r.category).filter((c) => c && c !== "—"))].map((c) => ({ value: c, label: c })),
+  ], [tableData]);
+
+  const severityOptions = useMemo(() => [
+    { value: "", label: "All Severities" },
+    ...[...new Set(tableData.map((r) => r.severity).filter((s) => s && s !== "—"))].map((s) => ({ value: s, label: s })),
+  ], [tableData]);
+
+  const statusOptions = useMemo(() => [
+    { value: "", label: "All Statuses" },
+    ...[...new Set(tableData.map((r) => r.status).filter((s) => s && s !== "—"))].map((s) => ({ value: s, label: s })),
+  ], [tableData]);
+
+  // Apply modal filters client-side
+  const filteredTableData = useMemo(() => {
+    return tableData.filter((row) => {
+      if (activeFilters.category && row.category !== activeFilters.category) return false;
+      if (activeFilters.severity && row.severity !== activeFilters.severity) return false;
+      if (activeFilters.status && row.status !== activeFilters.status) return false;
+      if (activeFilters.dateRange?.start && row._date) {
+        const { start, end } = activeFilters.dateRange;
+        if (end) {
+          const endOfDay = new Date(end);
+          endOfDay.setHours(23, 59, 59, 999);
+          if (row._date < start || row._date > endOfDay) return false;
+        } else {
+          if (row._date < start) return false;
+        }
+      }
+      return true;
+    });
+  }, [tableData, activeFilters]);
+
 
   const actions = [
     {
       label: "View Issue",
       onClick: (row) => {
-        setViewIssueId(row.id);
-      },
-    },
-    {
-      label: "Delete Issue",
-      className: "remove",
-      onClick: (row) => {
+        setViewIssue(row._raw);
       },
     },
   ];
 
-  const filteredData =
-    activeTab === "All"
-      ? tableDataState
-      : tableDataState.filter((item) => item.status === activeTab);
+  if (viewIssue) {
+    return (
+      <ViewIssue
+        issue={{ id: viewIssue.id }}
+        onBack={() => {
+          setViewIssue(null);
+          fetchIssues(activeTab);
+        }}
+      />
+    );
+  }
 
-  // Define all possible filters
-  const allFilters = [
-    {
-      key: "category",
-      value: "",
-      options: [
-        { value: "", label: "Category" },
-        { value: "Login Issues", label: "Login Issues" },
-        { value: "Appointment Creation", label: "Appointment Creation" },
-        { value: "Billing", label: "Billing" },
-        { value: "Invoicing", label: "Invoicing" },
-        { value: "Creating a Form", label: "Creating a Form" },
-        { value: "Reporting", label: "Reporting" },
-      ],
-    },
-    {
-      key: "severity",
-      value: "",
-      options: [
-        { value: "", label: "Severity" },
-        { value: "Critical", label: "Critical" },
-        { value: "High", label: "High" },
-        { value: "Medium", label: "Medium" },
-        { value: "Low", label: "Low" },
-      ],
-    },
-    {
-      key: "status",
-      value: "",
-      options: [
-        { value: "", label: "Status" },
-        { value: "Pending", label: "Pending" },
-        { value: "Resolved", label: "Resolved" },
-        { value: "Unresolved", label: "Unresolved" },
-      ],
-    },
-  ];
-
-  // State to manage filter values
-  const [filterValues, setFilterValues] = useState({
-    category: "",
-    severity: "",
-    status: "",
-  });
-
-  // Compute filters based on activeTab
-  const filters = useMemo(() => {
-    if (activeTab === "All") {
-      return allFilters.map((filter) => ({
-        ...filter,
-        value: filterValues[filter.key],
-      }));
-    } else {
-      return allFilters
-        .filter((filter) => filter.key !== "status")
-        .map((filter) => ({
-          ...filter,
-          value: filterValues[filter.key],
-        }));
-    }
-  }, [activeTab, filterValues]);
-
-  // Handle filter changes
-  const handleFilterChange = (key, value) => {
-    setFilterValues((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  // Data for the Top Issue donut chart
-  const topIssueData = {
-    series: [30, 25, 20, 15, 10],
-    options: {
-      chart: {
-        type: "donut",
-        height: 180,
-      },
-      labels: ["Issue A", "Issue B", "Issue C", "Issue D", "Issue E"],
-      colors: ["#1D4ED8", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"],
-      dataLabels: {
-        enabled: false,
-      },
-      legend: {
-        show: false,
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: "50%",
-          },
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (val) => `${val}%`,
-        },
-      },
-    },
-  };
+  if (loading) {
+    return (
+      <div className="tenant-list-container">
+        <SectionSpinner />
+      </div>
+    );
+  }
 
   return (
     <>
-      {viewIssueId ? (
-        <TenantListViewIssues
-          issueId={viewIssueId}
-          onBack={() => setViewIssueId(null)}
-        />
-      ) : (
-        <>
-          <div className="tenant-header">
-            <Link to="/tenants/tenant-list" className="back-link">
-              <FaArrowLeft /> Back
-            </Link>
-            <div className="tenant-title-container">
-              <h1 className="tenant-title">Tenant</h1>
-              <h2 className="tenant-title-breadcrumbs">
-                Tenants /{" "}
-                <span className="tenant-title-breadcrumbs-org">ACME Corp</span>
-              </h2>
-            </div>
+      <div className="tenant-header">
+        <Link to="/tenants/tenant-list" className="back-link">
+          <FaArrowLeft /> Back
+        </Link>
+        <div className="tenant-title-container">
+          <h1 className="tenant-title">Tenant</h1>
+          <h2 className="tenant-title-breadcrumbs">
+            Tenants /{" "}
+            <span className="tenant-title-breadcrumbs-org">{tenantName}</span>
+          </h2>
+        </div>
+      </div>
+
+      <h3 className="tenant-header-gen">Overview</h3>
+
+      <div className="issue-overview-section">
+        <div className="issue-overview-cards">
+          <div className="issue-overview-card">
+            <h4>All Issues</h4>
+            <p className="issue-overview-value">
+              {totalIssues.toLocaleString()}
+            </p>
           </div>
-
-          <h3 className="tenant-header-gen">Overview</h3>
-
-          <div className="issue-overview-section">
-            <div className="issue-overview-cards">
-              <div className="issue-overview-card">
-                <h4>All Issues</h4>
-                <p className="issue-overview-value">10.2K</p>
-              </div>
-              <div className="issue-overview-card">
-                <h4>Active Issues</h4>
-                <p className="issue-overview-value">9.2K</p>
-                <a href="#" className="issue-view-link">
-                  View
-                </a>
-              </div>
-              <div className="issue-overview-card">
-                <h4>Avg Resolution Time</h4>
-                <p className="issue-overview-value">98 hrs</p>
-              </div>
-              <div className="issue-overview-card">
-                <h4>Resolved Issues</h4>
-                <p className="issue-overview-value">40.2K</p>
-                <a href="#" className="issue-view-link">
-                  View
-                </a>
-              </div>
-              <div className="issue-overview-card issue-top-issue-card">
-                <div className="issue-top-issue-header">
-                  <h4>Top Issue</h4>
-                  <SelectInput
-                    options={[
-                      { value: "by_percentage", label: "BY %" },
-                      { value: "by_count", label: "BY COUNT" },
-                    ]}
-                  />
-                </div>
-                <div className="issue-top-issue-chart">
-                  <Chart
-                    options={topIssueData.options}
-                    series={topIssueData.series}
-                    type="donut"
-                    height={180}
-                  />
-                </div>
-                <Button label="SEE BREAKDOWN" variant="primary" width="100%" />
-              </div>
-            </div>
+          <div className="issue-overview-card">
+            <h4>Active Issues</h4>
+            <p className="issue-overview-value">
+              {activeIssues.toLocaleString()}
+            </p>
+            <span className="issue-view-link" style={{ cursor: "pointer" }} onClick={() => setActiveTab("pending")}>
+              View
+            </span>
           </div>
-
-          <h3 className="tenant-header-gen">Issue Log</h3>
-
-          <div className="invoices-tabs-container">
-            <div className="tenants-tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.name}
-                  className={`tenants-tab ${
-                    activeTab === tab.name ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab(tab.name)}
-                >
-                  <span>{tab.name.toUpperCase()}</span>
-                  {tab.count > 0 && (
-                    <span className="tab-count">{tab.count}</span>
-                  )}
-                </button>
-              ))}
+          <div className="issue-overview-card">
+            <h4>Avg Resolution Time</h4>
+            <p className="issue-overview-value">
+              {typeof avgResolutionTime === "number"
+                ? `${avgResolutionTime} hrs`
+                : avgResolutionTime}
+            </p>
+          </div>
+          <div className="issue-overview-card">
+            <h4>Resolved Issues</h4>
+            <p className="issue-overview-value">
+              {resolvedIssues.toLocaleString()}
+            </p>
+            <span className="issue-view-link" style={{ cursor: "pointer" }} onClick={() => setActiveTab("Resolved")}>
+              View
+            </span>
+          </div>
+          <div className="issue-overview-card issue-top-issue-card">
+            <div className="issue-top-issue-header">
+              <h4>Top Issue</h4>
             </div>
-
-            <CustomTable
-              data={filteredData}
-              columns={columns}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              actions={actions}
-              showActions={true}
-              itemsPerPage={10}
-              tableName="Issue Log"
+            <div className="issue-top-issue-chart">
+              <Chart
+                key={`donut-${top5Categories.length}`}
+                options={chartData.options}
+                series={chartData.series}
+                type="donut"
+                height={180}
+              />
+            </div>
+            <Button
+              label="SEE BREAKDOWN"
+              variant="primary"
+              width="100%"
+              onClick={() => setBreakdownModal(true)}
             />
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      <h3 className="tenant-header-gen">Issue Log</h3>
+
+      <div className="invoices-tabs-container">
+        <div className="tenants-tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.name}
+              className={`tenants-tab ${activeTab === tab.name ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.name)}
+            >
+              <span>{tab.label.toUpperCase()}</span>
+              {tab.count > 0 && (
+                <span className="tab-count">{tab.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <CustomTable
+          data={filteredTableData}
+          columns={columns}
+          filters={issueLogFilters}
+          onFilterTypeSelect={handleIssueFilterTypeSelect}
+          actions={actions}
+          showActions={true}
+          itemsPerPage={10}
+          tableName="Issue Log"
+        />
+
+        {/* Filter modals */}
+        <TableFilterModal
+          isOpen={openFilterModal === "category"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Category"
+          label="Select category"
+          options={categoryOptions}
+          onApply={(val) => setActiveFilters((prev) => ({ ...prev, category: val }))}
+        />
+        <TableFilterModal
+          isOpen={openFilterModal === "severity"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Severity"
+          label="Select severity"
+          options={severityOptions}
+          onApply={(val) => setActiveFilters((prev) => ({ ...prev, severity: val }))}
+        />
+        <TableFilterModal
+          isOpen={openFilterModal === "status"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Status"
+          label="Select status"
+          options={statusOptions}
+          onApply={(val) => setActiveFilters((prev) => ({ ...prev, status: val }))}
+        />
+        <TableFilterDateModal
+          isOpen={openFilterModal === "date"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by date"
+          onApply={(range) => setActiveFilters((prev) => ({ ...prev, dateRange: range }))}
+        />
+      </div>
+
+      {/* See Breakdown Modal */}
+      <ReusableModal
+        isOpen={breakdownModal}
+        onClose={() => setBreakdownModal(false)}
+        title="Issue Category Breakdown"
+        secondaryButtonText="Close"
+        onSecondaryButtonClick={() => setBreakdownModal(false)}
+      >
+        <div className="breakdown-list">
+          {countByCategory.length === 0 ? (
+            <p style={{ color: "#6b7280", textAlign: "center" }}>No category data available</p>
+          ) : (
+            [...normalisedCategories]
+              .sort((a, b) => b.count - a.count)
+              .map((cat, idx) => (
+                <div key={idx} className="breakdown-item">
+                  <span className="breakdown-category">{cat.category}</span>
+                  <span className="breakdown-count">{cat.count}</span>
+                </div>
+              ))
+          )}
+        </div>
+      </ReusableModal>
     </>
   );
 };

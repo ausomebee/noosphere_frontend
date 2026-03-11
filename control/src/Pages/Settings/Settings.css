@@ -26,10 +26,18 @@
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: 24px;
   gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-tab {
   flex: 1;
+  min-width: max-content;
   padding: 12px 32px;
   border: none;
   background: none;

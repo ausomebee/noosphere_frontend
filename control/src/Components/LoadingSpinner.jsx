@@ -8,4 +8,10 @@ const LoadingSpinner = React.memo(() => (
   </div>
 ));
 
+export const SectionSpinner = () => (
+  <div className="section-spinner-container">
+    <FaSpinner className="loading-spinner" />
+  </div>
+);
+
 export default LoadingSpinner;

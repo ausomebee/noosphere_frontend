@@ -9,6 +9,11 @@
   padding: 1.25rem;
 }
 
+.billing-board-header .billing-board-title {
+  flex: 1;
+  min-width: 0;
+}
+
 .billing-board-buttons {
   display: flex;
   justify-content: end;
@@ -20,7 +25,7 @@
 .billing-board-title h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #000000;
+  color: #333;
   margin: 0;
 }
 
@@ -34,13 +39,22 @@
   display: flex;
   margin: 20px 0;
   border-bottom: 1px solid #777c85;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
+  flex: 1;
+  min-width: max-content;
   padding: 10px 20px;
   cursor: pointer;
   font-weight: bold;
   color: #777c85;
+  text-align: center;
 }
 
 .tab.active {
@@ -372,7 +386,6 @@
   display: flex;
   gap: 20px;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .filter-group {
@@ -477,6 +490,49 @@
 
 .subcriber-dropdown-menu button:hover {
   background-color: #f0f0f0; /* Highlight on hover */
+}
+
+/* Report page title (scoped to billing reports only) */
+.report-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.report-page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.report-page-breadcrumbs {
+  font-size: 13px;
+  font-weight: 500;
+  color: #a1a8b3;
+  margin: 0;
+}
+
+.report-page-breadcrumbs-active {
+  font-size: 13px;
+  font-weight: 600;
+  color: #002d7d;
+}
+
+/* Report header — back button left, title centered */
+.report-header-centered {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.report-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Activity Reports Styles */
@@ -623,10 +679,17 @@
   background-color: #ececec;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.invoice-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 .invoice-tab {
   flex: 1;
+  min-width: max-content;
   padding: 8px 16px;
   border: none;
   background: #ececec;
@@ -651,10 +714,17 @@
   width: 100%;
   display: flex;
   padding: 10px 20px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+}
+
+.sub-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 .sub-tab {
   flex: 1;
+  min-width: max-content;
   padding: 5px 15px;
   border: none;
   background: none;
