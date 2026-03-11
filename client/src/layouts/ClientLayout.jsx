@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoHome } from "react-icons/go";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoChatbubblesOutline } from "react-icons/io5";
 import { LuUser } from "react-icons/lu";
 import { MdOutlineNotificationsNone } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
@@ -10,15 +10,23 @@ import { VscClose } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { logout } from "../ReduxStore/features/authentication";
 import useAuth from "../hooks/useAuth";
+import useSocket from "../hooks/useSocket";
+import { disconnectSocket } from "../api/socketService";
+import MessageModal from "../Components/Modal/MessageModal";
 import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { firstName, lastName, avatarUrl } = useAuth();
+  useSocket({
+    onMessage: () => setMessageCount((c) => c + 1),
+  });
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
   const navItems = [
@@ -30,6 +38,7 @@ const DashboardLayout = ({ children }) => {
   ];
 
   const handleLogout = () => {
+    disconnectSocket();
     dispatch(logout());
     navigate("/");
   };
@@ -46,13 +55,37 @@ const DashboardLayout = ({ children }) => {
           <img src={Logo} alt="Logo" />
         </div>
 
-        <button
-          className="header-menu-btn"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? <VscClose size={24} /> : <HiOutlineMenuAlt2 size={24} />}
-        </button>
+        <div className="header-actions">
+          <button
+            className="header-msg-btn"
+            onClick={() => {
+              setMessageCount(0);
+              setMessageModalOpen(true);
+            }}
+            aria-label="Send message"
+            title="Message your clinician"
+          >
+            <IoChatbubblesOutline size={20} />
+            {messageCount > 0 && (
+              <span className="header-msg-badge">
+                {messageCount > 99 ? "99+" : messageCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            className="header-menu-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <VscClose size={24} /> : <HiOutlineMenuAlt2 size={24} />}
+          </button>
+        </div>
       </header>
+
+      <MessageModal
+        isOpen={messageModalOpen}
+        onClose={() => setMessageModalOpen(false)}
+      />
 
       {/* Sidebar Overlay */}
       <div
@@ -62,7 +95,6 @@ const DashboardLayout = ({ children }) => {
 
       {/* Main Container */}
       <div className="dashboard-container">
-        {/* Sidebar Card */}
         <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-profile">
             <div className="profile-avatar">
@@ -117,7 +149,6 @@ const DashboardLayout = ({ children }) => {
           </button>
         </aside>
 
-        {/* Main Content */}
         <main className="dashboard-main">{children}</main>
       </div>
     </div>

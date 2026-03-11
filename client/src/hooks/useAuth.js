@@ -14,6 +14,7 @@ const useAuth = () => {
     refreshToken: auth?.refreshToken || user?.refreshToken,
 
     // User info
+    userId: user?.id || user?.userId || null,
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     avatarUrl: user?.avatarUrl || null,

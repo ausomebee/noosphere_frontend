@@ -32,6 +32,12 @@
   color: #1a365d;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .header-menu-btn {
   display: none;
   background: none;
@@ -157,6 +163,17 @@
   background: #1a56db;
   color: white;
   border-left: 4px solid #1a56db;
+}
+
+/* Message clinician button styled as nav link */
+.nav-link-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .logout-link {
