@@ -36,6 +36,7 @@ const TenantSingleBilling = lazy(() => import("../Pages/Tenant/TenantSingle/Tena
 const TenantSingleIssueManagement = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleIssueManagement"));
 const TenantSingleUserLogs = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleUserLogs"));
 const TenantSingleSecuritySettings = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleSecuritySettings"));
+const TenantListUsageStatistics = lazy(() => import("../Pages/Tenant/TenantList/TenantListUsageStatistics"));
 const FeatureManagement = lazy(() => import("../Pages/FeatureManagement/FeatureManagement"));
 const PlansAndPayment = lazy(() => import("../Pages/BillingsAndPayment/PlansAndPayment"));
 const BillingManager = lazy(() => import("../Pages/BillingsAndPayment/BillingManager"));
@@ -83,6 +84,7 @@ const AllRoutes = () => {
           <Route path="/tenants/tenant-lists/issues/:tenantId" element={<TenantSingleIssueManagement />} />
           <Route path="/tenants/tenant-lists/logs/:tenantId" element={<TenantSingleUserLogs />} />
           <Route path="/tenants/tenant-lists/security/:tenantId" element={<TenantSingleSecuritySettings />} />
+          <Route path="/tenants/tenant-lists/usage-statistics/:tenantId" element={<TenantListUsageStatistics />} />
           <Route path="/plans/subscribers/:planId" element={<SubscriberList />} />
 
           {/* Performance */}

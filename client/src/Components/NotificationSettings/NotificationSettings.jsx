@@ -11,7 +11,7 @@ const NotificationItem = ({ label, checked, onChange, disabled }) => {
   );
 };
 
-const NotificationSettings = ({ notifications, isLoading, onToggle }) => {
+const NotificationSettings = ({ notifications, isLoading, loadingKeys = new Set(), onToggle }) => {
   const notificationItems = [
     {
       key: "appointmentScheduled",
@@ -95,7 +95,7 @@ const NotificationSettings = ({ notifications, isLoading, onToggle }) => {
             label={item.label}
             checked={notifications[item.key]}
             onChange={() => onToggle(item.key)}
-            disabled={isLoading}
+            disabled={loadingKeys.has(item.key)}
           />
         ))}
       </div>

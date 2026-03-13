@@ -14,23 +14,53 @@ const CalendarIcon = () => (
   </svg>
 );
 
-const resolveTime = (notif) => {
-  if (!notif.createdAt) return "";
-  return new Date(notif.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// Notification type → section header label
+const TYPE_LABEL = {
+  APPOINTMENT_SCHEDULED:                   "NEW APPOINTMENT",
+  APPOINTMENT_ABOUT_TO_START:              "UPCOMING APPOINTMENT",
+  APPOINTMENT_RESCHEDULED:                 "RESCHEDULED APPOINTMENT",
+  APPOINTMENT_STARTED:                     "APPOINTMENT START",
+  APPOINTMENT_CANCELLED:                   "CANCELLED APPOINTMENTS",
+  APPOINTMENT_COMPLETED_AWAITING_FEEDBACK: "COMPLETED APPOINTMENT AWAITING FEEDBACK",
+  DOCUMENT_REQUESTED:                      "DOCUMENT REQUEST",
+  DOCUMENT_REQUEST_NUDGE:                  "DOCUMENT REQUEST NUDGE",
+  FORM_SHARED:                             "FORM REQUEST",
+  AUTHORIZATION_EXPIRY_30_DAYS:            "AUTHORIZATION EXPIRY - 30 DAYS",
+  AUTHORIZATION_EXPIRY_7_DAYS:             "AUTHORIZATION EXPIRY - 7 DAYS",
+  AUTHORIZATION_EXPIRED:                   "AUTHORIZATION EXPIRED",
+  AUTHORIZATION_UNITS_ALMOST_EXHAUSTED:    "AUTHORIZATION UTILIZATION",
+  AUTHORIZATION_UNITS_EXHAUSTED:           "AUTHORIZATION UTILIZATION",
+  SIGNATURE_REQUESTED:                     "CLIENT REPORT SIGNATURE REQUEST",
 };
 
-const resolveGroup = (notif) => {
-  if (!notif.createdAt) return "Other";
-  const d = new Date(notif.createdAt);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "today";
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return "yesterday";
-  return "earlier";
+const TYPE_ORDER = [
+  "APPOINTMENT_SCHEDULED",
+  "APPOINTMENT_ABOUT_TO_START",
+  "APPOINTMENT_RESCHEDULED",
+  "APPOINTMENT_STARTED",
+  "APPOINTMENT_CANCELLED",
+  "APPOINTMENT_COMPLETED_AWAITING_FEEDBACK",
+  "DOCUMENT_REQUESTED",
+  "DOCUMENT_REQUEST_NUDGE",
+  "FORM_SHARED",
+  "AUTHORIZATION_EXPIRY_30_DAYS",
+  "AUTHORIZATION_EXPIRY_7_DAYS",
+  "AUTHORIZATION_EXPIRED",
+  "AUTHORIZATION_UNITS_ALMOST_EXHAUSTED",
+  "AUTHORIZATION_UNITS_EXHAUSTED",
+  "SIGNATURE_REQUESTED",
+];
+
+const resolveRelativeTime = (createdAt) => {
+  if (!createdAt) return "";
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
 };
 
 const Notifications = () => {
@@ -49,43 +79,47 @@ const Notifications = () => {
       })
       .catch((err) => console.error("[Notifications] Failed to load:", err))
       .finally(() => setLoading(false));
-  }, [userId, accessToken]);
+  }, [userId, accessToken, refreshToken]);
 
-  const handleMarkRead = (notif) => {
-    setAllNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
-    );
-    messageApi.MarkNotificationRead({ id: notif.id, accessToken, refreshToken }).catch(() => {});
-    emitNotificationRead(notif.id);
+  const handleAction = (notification) => {
+    if (!notification.isRead) {
+      setAllNotifications((prev) =>
+        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+      );
+      messageApi.MarkNotificationRead({ id: notification.id, accessToken, refreshToken }).catch(() => {});
+      emitNotificationRead(notification.id);
+    }
   };
 
-  const grouped = allNotifications.reduce((acc, n) => {
-    const g = resolveGroup(n);
-    (acc[g] = acc[g] || []).push(n);
+  // Group by type, preserve TYPE_ORDER, unknown types appended at end
+  const byType = allNotifications.reduce((acc, n) => {
+    const key = n.type || "UNKNOWN";
+    (acc[key] = acc[key] || []).push(n);
     return acc;
   }, {});
 
-  const renderNotification = (notification) => (
-    <div key={notification.id} className={`notification-card${!notification.isRead ? " notification-card--unread" : ""}`}>
+  const unknownTypes = Object.keys(byType).filter((t) => !TYPE_ORDER.includes(t));
+  const orderedTypes = [...TYPE_ORDER, ...unknownTypes].filter((t) => byType[t]?.length > 0);
+
+  const renderCard = (notification) => (
+    <div
+      key={notification.id}
+      className={`notification-card${!notification.isRead ? " notification-card--unread" : ""}`}
+    >
       <div className="notification-icon">
         <CalendarIcon />
       </div>
       <div className="notification-body">
-        <h3 className="notification-title">{notification.title || "Notification"}</h3>
+        <div className="notification-top-row">
+          <h3 className="notification-title">{notification.title || "Notification"}</h3>
+          <button className="notification-action" onClick={() => handleAction(notification)}>
+            {notification.type === "APPOINTMENT_COMPLETED_AWAITING_FEEDBACK" ? "Review" : "View details"}
+          </button>
+        </div>
         <p className="notification-message">
           {notification.content || notification.description || notification.body || ""}
         </p>
-        <div className="notification-footer">
-          <span className="notification-time">{resolveTime(notification)}</span>
-          {!notification.isRead && (
-            <button
-              className="notification-action"
-              onClick={() => handleMarkRead(notification)}
-            >
-              Mark as read
-            </button>
-          )}
-        </div>
+        <span className="notification-time">{resolveRelativeTime(notification.createdAt)}</span>
       </div>
     </div>
   );
@@ -104,30 +138,16 @@ const Notifications = () => {
             <p style={{ color: "#5f6368", fontSize: "14px" }}>No notifications</p>
           ) : (
             <div className="notifications-content">
-              {grouped.today?.length > 0 && (
-                <section className="notifications-section">
-                  <h2 className="section-title">Today</h2>
+              {orderedTypes.map((type) => (
+                <section key={type} className="notifications-section">
+                  <h2 className="notification-type-label">
+                    {TYPE_LABEL[type] ?? type.replace(/_/g, " ")}
+                  </h2>
                   <div className="notifications-list">
-                    {grouped.today.map(renderNotification)}
+                    {byType[type].map(renderCard)}
                   </div>
                 </section>
-              )}
-              {grouped.yesterday?.length > 0 && (
-                <section className="notifications-section">
-                  <h2 className="section-title">Yesterday</h2>
-                  <div className="notifications-list">
-                    {grouped.yesterday.map(renderNotification)}
-                  </div>
-                </section>
-              )}
-              {grouped.earlier?.length > 0 && (
-                <section className="notifications-section">
-                  <h2 className="section-title">Earlier</h2>
-                  <div className="notifications-list">
-                    {grouped.earlier.map(renderNotification)}
-                  </div>
-                </section>
-              )}
+              ))}
             </div>
           )}
         </div>

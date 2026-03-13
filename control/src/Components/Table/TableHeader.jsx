@@ -20,6 +20,8 @@ const TableHeader = ({
   isDateFilterDropdownOpen,
   setIsDateFilterDropdownOpen,
   handleDateRangeSelect,
+  liveRange,
+  onDatePreview,
   dateFilterKeys,
   uniqueFilterValues,
   onFilterTypeSelect,
@@ -102,8 +104,8 @@ const TableHeader = ({
                     <TextInput
                       type="text"
                       value={
-                        filterValues[selectedFilterType]?.start
-                          ? format(filterValues[selectedFilterType].start, "MMM d, yyyy")
+                        (liveRange?.[selectedFilterType]?.start || filterValues[selectedFilterType]?.start)
+                          ? format(liveRange?.[selectedFilterType]?.start || filterValues[selectedFilterType].start, "MMM d, yyyy")
                           : "Select start date"
                       }
                       readOnly
@@ -118,8 +120,8 @@ const TableHeader = ({
                     <TextInput
                       type="text"
                       value={
-                        filterValues[selectedFilterType]?.end
-                          ? format(filterValues[selectedFilterType].end, "MMM d, yyyy")
+                        (liveRange?.[selectedFilterType]?.end || filterValues[selectedFilterType]?.end)
+                          ? format(liveRange?.[selectedFilterType]?.end || filterValues[selectedFilterType].end, "MMM d, yyyy")
                           : "Select end date"
                       }
                       readOnly
@@ -139,6 +141,7 @@ const TableHeader = ({
                           isOpen={isDateFilterDropdownOpen}
                           onClose={() => setIsDateFilterDropdownOpen(false)}
                           onDateRangeSelect={handleDateRangeSelect}
+                          onDateChange={onDatePreview}
                         />
                       </div>
                     )}

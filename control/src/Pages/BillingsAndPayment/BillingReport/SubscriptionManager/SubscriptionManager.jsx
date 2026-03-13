@@ -528,12 +528,6 @@ const SubscriptionManager = () => {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (subscriptionData.length > 0 && checkboxSelectedRows.length === 0) {
-      handleCheckboxSelectionChange([0], [subscriptionData[0]]);
-    }
-  }, [subscriptionData]);
-
   const getFilteredData = useMemo(() => {
     let data = [...subscriptionData];
     if (activeTab !== "all") {

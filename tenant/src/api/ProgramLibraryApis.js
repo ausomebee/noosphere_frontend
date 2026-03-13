@@ -334,6 +334,16 @@ const GetClientTargetPerformance = async ({
   }
 };
 
+const GetTargetBaselineData = async ({ targetId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const res = await authFetch.get(`${PLAIN_API_URL}/targets/baseline/${targetId}`);
+    return res;
+  } catch (e) {
+    throw new Error(e.response?.data?.message || "Failed to fetch target baseline data");
+  }
+};
+
 export default {
     DuplicateProgramsTarget,
   CreateProgramsDomain,
@@ -354,4 +364,5 @@ export default {
   CreateClientDataCollectionData,
   GetSessionsByTarget,
   GetClientTargetPerformance,
+  GetTargetBaselineData,
 };

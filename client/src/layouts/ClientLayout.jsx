@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoHome } from "react-icons/go";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
@@ -20,6 +20,29 @@ const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOnlineBanner, setShowOnlineBanner] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineBanner(true);
+      timer = setTimeout(() => setShowOnlineBanner(false), 3000);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOnlineBanner(false);
+      clearTimeout(timer);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      clearTimeout(timer);
+    };
+  }, []);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -49,6 +72,12 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="dashboard-layout">
+      {(!isOnline || showOnlineBanner) && (
+        <div className={`network-status-banner ${isOnline ? "online" : "offline"}`}>
+          <span className="network-status-dot" />
+          {isOnline ? "Back online" : "You are offline — check your connection"}
+        </div>
+      )}
       {/* Header */}
       <header className="dashboard-header">
         <div className="header-logo">

@@ -22,6 +22,29 @@ const Layout = ({ children }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [openNavs, setOpenNavs] = useState({});
   const [tenantName, setTenantName] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOnlineBanner, setShowOnlineBanner] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineBanner(true);
+      timer = setTimeout(() => setShowOnlineBanner(false), 3000);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOnlineBanner(false);
+      clearTimeout(timer);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      clearTimeout(timer);
+    };
+  }, []);
   const location = useLocation();
   const { accessToken, refreshToken, user } = useAuth();
   const { hasModuleAccess, hasPermission } = usePermission();
@@ -135,7 +158,7 @@ const Layout = ({ children }) => {
   );
 
   // Extract tenantId from current path for secondary nav links
-  const tenantIdMatch = location.pathname.match(/\/tenants\/tenant-lists\/\w+\/([^/]+)/);
+  const tenantIdMatch = location.pathname.match(/\/tenants\/tenant-lists\/[\w-]+\/([^/]+)/);
   const currentTenantId = tenantIdMatch ? tenantIdMatch[1] : "";
 
   useEffect(() => {
@@ -203,21 +226,15 @@ const Layout = ({ children }) => {
   };
 
   const isSecondaryNavActive = (itemPath) => {
-    const matchingPaths = secondaryNavItems
-      .filter(
-        (item) =>
-          isPathActive(item.path) || location.pathname.startsWith(item.path)
-      )
-      .map((item) => item.path);
-
-    if (matchingPaths.length > 0) {
-      const longestMatchingPath = matchingPaths.reduce((a, b) =>
-        a.length > b.length ? a : b
-      );
-      return itemPath === longestMatchingPath;
+    // Usage statistics is a child of Feature Management
+    if (
+      currentTenantId &&
+      location.pathname === `/tenants/tenant-lists/usage-statistics/${currentTenantId}`
+    ) {
+      return itemPath === `/tenants/tenant-lists/features/${currentTenantId}`;
     }
 
-    return false;
+    return isPathActive(itemPath);
   };
 
   useEffect(() => {
@@ -233,6 +250,12 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-container">
+      {(!isOnline || showOnlineBanner) && (
+        <div className={`network-status-banner ${isOnline ? "online" : "offline"}`}>
+          <span className="network-status-dot" />
+          {isOnline ? "Back online" : "You are offline — check your connection"}
+        </div>
+      )}
       <aside
         className={`sidebar no-scrollbar::-webkit-scrollbar no-scrollbar ${
           isSidebarOpen ? "open" : ""
@@ -335,9 +358,10 @@ const Layout = ({ children }) => {
                 <li key={index}>
                   <NavLink
                     to={item.path}
-                    className={`nav-item ${
-                      isSecondaryNavActive(item.path) ? "active" : ""
-                    }`}
+                    end
+                    className={() =>
+                      `secondary-nav-item${isSecondaryNavActive(item.path) ? " active" : ""}`
+                    }
                   >
                     {item.name}
                   </NavLink>

@@ -791,9 +791,10 @@
 
 .bulk-actions {
   display: flex;
+  width: 100%;
   gap: 10px;
   margin-bottom: 10px;
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .invoice-management-container {

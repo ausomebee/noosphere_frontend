@@ -44,6 +44,7 @@ const CustomTable = ({
   const [openDropdown, setOpenDropdown] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [filterValues, setFilterValues] = useState({ filter_type: "" });
+  const [liveRange, setLiveRange] = useState({});
   const [isDateFilterDropdownOpen, setIsDateFilterDropdownOpen] =
     useState(false);
   const [currentDateFilterKey, setCurrentDateFilterKey] = useState(null);
@@ -57,7 +58,7 @@ const CustomTable = ({
 
   // Date filter keys that use date range picker instead of value select
   const dateFilterKeys = useMemo(
-    () => ["date_reported", "date_updated", "date_created", "due_date", "nextBillingDate"],
+    () => ["date_reported", "date_updated", "date_created", "due_date", "nextBillingDate", "dateAdded"],
     []
   );
 
@@ -310,34 +311,29 @@ const CustomTable = ({
     if (!startInput || !dropdown) return;
 
     const startInputRect = startInput.getBoundingClientRect();
-    const dropdownRect = dropdown.getBoundingClientRect();
-
-    const dropdownHeight = dropdownRect.height;
+    const dropdownHeight = dropdown.scrollHeight || 300;
     const spaceBelow = window.innerHeight - startInputRect.bottom - 10;
     const spaceAbove = startInputRect.top - 10;
 
-    let top;
+    dropdown.style.position = "fixed";
+    dropdown.style.zIndex = "9999";
+    dropdown.style.overflowY = "auto";
+    dropdown.style.left = `${startInputRect.left}px`;
+    dropdown.style.right = "auto";
 
     if (spaceBelow >= dropdownHeight) {
-      top = startInput.offsetHeight + 4;
-      dropdown.style.top = `${top}px`;
+      dropdown.style.top = `${startInputRect.bottom + 4}px`;
       dropdown.style.bottom = "auto";
       dropdown.style.maxHeight = `${spaceBelow}px`;
     } else if (spaceAbove >= dropdownHeight) {
-      top = -dropdownHeight - 4;
-      dropdown.style.top = `${top}px`;
+      dropdown.style.top = `${startInputRect.top - dropdownHeight - 4}px`;
       dropdown.style.bottom = "auto";
       dropdown.style.maxHeight = `${spaceAbove}px`;
     } else {
-      top = startInput.offsetHeight + 4;
-      dropdown.style.top = `${top}px`;
+      dropdown.style.top = `${startInputRect.bottom + 4}px`;
       dropdown.style.bottom = "auto";
       dropdown.style.maxHeight = `${spaceBelow}px`;
     }
-
-    dropdown.style.position = "absolute";
-    dropdown.style.overflowY = "auto";
-    dropdown.style.left = "0";
   };
 
   const handleFilterValueChange = (filterKey, value) => {
@@ -377,8 +373,17 @@ const CustomTable = ({
     setIsDateFilterDropdownOpen(false);
   };
 
+  const handleDatePreview = useCallback(
+    (range) => {
+      const key = currentDateFilterKey || filterValues.filter_type;
+      if (key) setLiveRange((prev) => ({ ...prev, [key]: range }));
+    },
+    [currentDateFilterKey, filterValues.filter_type]
+  );
+
   const resetFilters = () => {
     setFilterValues({ filter_type: "" });
+    setLiveRange({});
     setCurrentDateFilterKey(null);
     onFilterChange("filter_type", "");
   };
@@ -472,6 +477,8 @@ const CustomTable = ({
         isDateFilterDropdownOpen={isDateFilterDropdownOpen}
         setIsDateFilterDropdownOpen={setIsDateFilterDropdownOpen}
         handleDateRangeSelect={handleDateRangeSelect}
+        liveRange={liveRange}
+        onDatePreview={handleDatePreview}
         dateFilterKeys={dateFilterKeys}
         uniqueFilterValues={uniqueFilterValues}
         toggleExportDropdown={toggleExportDropdown}

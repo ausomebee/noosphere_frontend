@@ -345,6 +345,8 @@ const ProspectPanel = () => {
           : null,
         progress,
         paymentVerified: pipelineItem?.paymentVerified || false,
+        subscriptionStatus: pipelineItem?.tenant?.Subscription?.[0]?.status || null,
+        paymentStatus: pipelineItem?.tenant?.Subscription?.[0]?.payment?.status || null,
       });
 
       setDoneTasks(doneTasksObj);
@@ -857,14 +859,26 @@ const ProspectPanel = () => {
             <div className="org-info">
               <div className="org-info-item">
                 <span>Payment Status</span>
-                <span
-                  className={`payment-status ${
-                    candidate.paymentVerified ? "Verified" : "Unverified"
-                  }`}
-                >
-                  <span className="status-dot"></span>
-                  {candidate.paymentVerified ? "Verified" : "Unverified"}
-                </span>
+                {candidate.paymentStatus ? (
+                  <span className={`prospect-status-badge prospect-payment-${candidate.paymentStatus.toLowerCase()}`}>
+                    {candidate.paymentStatus}
+                  </span>
+                ) : (
+                  <span className={`payment-status ${candidate.paymentVerified ? "Verified" : "Unverified"}`}>
+                    <span className="status-dot"></span>
+                    {candidate.paymentVerified ? "Verified" : "Unverified"}
+                  </span>
+                )}
+              </div>
+              <div className="org-info-item">
+                <span>Subscription Status</span>
+                {candidate.subscriptionStatus ? (
+                  <span className={`prospect-status-badge prospect-sub-${candidate.subscriptionStatus.toLowerCase()}`}>
+                    {candidate.subscriptionStatus}
+                  </span>
+                ) : (
+                  <span>—</span>
+                )}
               </div>
               <div className="org-info-item">
                 <span>Assign to</span>
@@ -1263,22 +1277,28 @@ const ProspectPanel = () => {
                     </p>
                   ) : (
                     <div className="payment-links-list">
-                      {invoiceHistory.map((entry, idx) => (
-                        <div key={entry.tokenId || idx} className="history-entry">
-                          <span className="history-entry-text">
-                            {formatEventLabel(entry.event)} {formatHistoryDate(entry.time)}
-                          </span>
-                          {entry.event === "PAYMENT_LINK_EXPIRED" && (
-                            <Button
-                              label="Regenerate link"
-                              variant="primary"
-                              onClick={handleRegenerateLink}
-                              width="auto"
-                              loading={isGeneratingLink}
-                            />
-                          )}
-                        </div>
-                      ))}
+                      {(() => {
+                        const lastExpiredIdx = invoiceHistory.reduce(
+                          (last, entry, i) => entry.event === "PAYMENT_LINK_EXPIRED" ? i : last,
+                          -1
+                        );
+                        return invoiceHistory.map((entry, idx) => (
+                          <div key={entry.tokenId || idx} className="history-entry">
+                            <span className="history-entry-text">
+                              {formatEventLabel(entry.event)} {formatHistoryDate(entry.time)}
+                            </span>
+                            {entry.event === "PAYMENT_LINK_EXPIRED" && idx === lastExpiredIdx && (
+                              <Button
+                                label="Regenerate link"
+                                variant="primary"
+                                onClick={handleRegenerateLink}
+                                width="auto"
+                                loading={isGeneratingLink}
+                              />
+                            )}
+                          </div>
+                        ));
+                      })()}
                     </div>
                   )}
                 </div>

@@ -1,263 +1,225 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Chart from "react-apexcharts";
 import "./TenantList.css";
-import { SelectInput } from "../../../Components/Input/Inputs";
-import Button from "../../../Components/Button/Button";
-import { IoIosArrowForward } from "react-icons/io";
 import CustomTable from "../../../Components/Table/CustomTable";
+import Button from "../../../Components/Button/Button";
 import { FaArrowLeft } from "react-icons/fa";
-const TenantListUsageStatistics = ({ onBack }) => {
-  const breadcrumb = "Tenants/ACME Corp/Usage Statistics";
+import { IoIosArrowForward } from "react-icons/io";
+import tenantApi from "../../../api/TenantApis";
+import useAuth from "../../../hooks/useAuth";
+import { showToast } from "../../../Helper/ShowToast";
+import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
-  // State to toggle graph visibility for Total Active Sessions and Number of Server Requests
+const LIMIT = 20;
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const TenantListUsageStatistics = () => {
+  const { tenantId } = useParams();
+  const navigate = useNavigate();
+  const { accessToken, refreshToken } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
   const [showActiveSessionsGraph, setShowActiveSessionsGraph] = useState(false);
   const [showServerRequestsGraph, setShowServerRequestsGraph] = useState(false);
+  const [showSessionsTable, setShowSessionsTable] = useState(false);
 
-  // Data for the Sessions over time graph (default view)
-  const sessionsOverTimeData = {
-    series: [
-      {
-        name: "Sessions",
-        data: [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 45], // Example data for each month
-      },
-    ],
-    options: {
-      chart: {
-        type: "area",
-        height: 200,
-        toolbar: {
-          show: false,
-        },
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      stroke: {
-        curve: "smooth",
-        width: 2,
-      },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.3,
-        },
-      },
-      xaxis: {
-        categories: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ],
-        labels: {
-          style: {
-            colors: "#6B7280", // Gray color for labels
-          },
-        },
-      },
-      yaxis: {
-        labels: false,
-      },
-      colors: ["#3B82F6"], // Blue color for the chart
-      tooltip: {
-        x: {
-          format: "MMM",
-        },
-      },
+  // Server requests table (moved from user logs)
+  const [serverRequests, setServerRequests] = useState([]);
+  const [serverMeta, setServerMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [serverPage, setServerPage] = useState(1);
+  const [serverLoading, setServerLoading] = useState(false);
+
+  const [serverFilters, setServerFilters] = useState([
+    {
+      key: "filter_type",
+      value: "",
+      options: [
+        { value: "", label: "Select Filter" },
+        { value: "date_created", label: "Date Created" },
+      ],
     },
-  };
+  ]);
 
-  // Data for Total Active Sessions graph (when toggled)
-  const activeSessionsData = {
-    series: [
-      {
-        name: "Active Sessions",
-        data: [8.5, 8.7, 9.0, 9.2, 9.5, 9.7, 9.8, 9.9, 10.0, 10.2, 9.2, 9.0],
-      },
-    ],
-    options: {
-      ...sessionsOverTimeData.options,
-      chart: {
-        ...sessionsOverTimeData.options.chart,
-        id: "active-sessions-chart",
-      },
-    },
-  };
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await tenantApi.GetTenantUsageStatistics({ accessToken, refreshToken, tenantId });
+      setStats(res?.data || res || null);
+    } catch (err) {
+      showToast(err.message || "Failed to load usage statistics", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, refreshToken, tenantId]);
 
-  // Data for Number of Server Requests graph (when toggled)
-  const serverRequestsData = {
-    series: [
-      {
-        name: "Server Requests",
-        data: [38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 40],
-      },
-    ],
-    options: {
-      ...sessionsOverTimeData.options,
-      chart: {
-        ...sessionsOverTimeData.options.chart,
-        id: "server-requests-chart",
-      },
-    },
-  };
+  const fetchServerRequests = useCallback(async (page) => {
+    try {
+      setServerLoading(true);
+      const res = await tenantApi.GetTenantServerRequest({
+        accessToken,
+        refreshToken,
+        tenantId,
+        page,
+        limit: LIMIT,
+      });
+      setServerRequests(res?.data?.data || res?.data || []);
+      setServerMeta(res?.data?.meta || { total: 0, page: 1, totalPages: 1 });
+    } catch (err) {
+      showToast(err.message || "Failed to load server requests", "error");
+    } finally {
+      setServerLoading(false);
+    }
+  }, [accessToken, refreshToken, tenantId]);
 
-  
-  
-    const [filters, setFilters] = useState([
-       {
-         key: "filter_type",
-         value: "",
-         options: [
-           { value: "", label: "Select Filter" },
-           { value: "date_created", label: "Date Created" },
-           { value: "due_date", label: "Due Date" },
-         ],
-       },
-     ]);
+  useEffect(() => {
+    fetchStats();
+    fetchServerRequests(1);
+  }, [fetchStats, fetchServerRequests]);
 
-  // Define the column headers based on the image
-  const columns = [
-    { key: "request_id", header: "REQUEST ID" },
-    { key: "timestamp", header: "TIMESTAMP" },
-    { key: "log_id", header: "LOG ID" },
-    { key: "client_ip", header: "CLIENT IP" },
-    { key: "user_id", header: "USER ID" },
-  ];
+  useEffect(() => {
+    if (serverPage !== 1) fetchServerRequests(serverPage);
+  }, [serverPage, fetchServerRequests]);
 
   const handleFilterChange = (key, value) => {
-    setFilters((prevFilters) =>
-      prevFilters.map((filter) =>
-        filter.key === key ? { ...filter, value } : filter
-      )
+    setServerFilters((prev) =>
+      prev.map((f) => (f.key === key ? { ...f, value } : f))
     );
   };
-  // Sample data for the table
-  const tableData = [
-    {
-      request_id: "ACME Corp",
-      timestamp: "12/10/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
+
+  // Build chart data from API response, filling 0 for missing months
+  const ALL_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const fillMonths = (graph) => {
+    const map = {};
+    (graph || []).forEach((g) => {
+      // period is like "Dec 2025" — extract short month name
+      const shortMonth = g.period?.split(" ")[0];
+      if (shortMonth) map[shortMonth] = (map[shortMonth] || 0) + g.session_count;
+    });
+    return {
+      categories: ALL_MONTHS,
+      values: ALL_MONTHS.map((m) => map[m] || 0),
+    };
+  };
+
+  const sessionGraph = stats?.tenantSessionGraph || [];
+
+  // New API shape: getTenantServerRequestGraphLastYear: { labels: [...], values: [...] }
+  const srGraph = stats?.getTenantServerRequestGraphLastYear || {};
+  const srLabels = srGraph.labels || [];
+  const srValues = srGraph.values || [];
+
+  const filledSessions = fillMonths(sessionGraph);
+
+  // Fill from labels/values format instead of period/session_count
+  const serverRequestMap = {};
+  srLabels.forEach((label, i) => {
+    const shortMonth = label?.split(" ")[0];
+    if (shortMonth) serverRequestMap[shortMonth] = (serverRequestMap[shortMonth] || 0) + (srValues[i] || 0);
+  });
+  const filledServerRequests = {
+    categories: ALL_MONTHS,
+    values: ALL_MONTHS.map((m) => serverRequestMap[m] || 0),
+  };
+
+  const sessionCategories = filledSessions.categories;
+  const sessionValues = filledSessions.values;
+  const serverRequestCategories = filledServerRequests.categories;
+  const serverRequestValues = filledServerRequests.values;
+
+  const buildChartOptions = (categories, id) => ({
+    chart: { type: "area", height: 200, toolbar: { show: false }, id },
+    dataLabels: { enabled: false },
+    stroke: { curve: "smooth", width: 2 },
+    fill: {
+      type: "gradient",
+      gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3 },
     },
-    {
-      request_id: "Thomas Inc",
-      timestamp: "12/13/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
+    xaxis: {
+      categories,
+      labels: { style: { colors: "#6B7280" } },
     },
-    {
-      request_id: "West ABA",
-      timestamp: "1/10/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "Jefferson Co",
-      timestamp: "2/1/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "Lanrey LLC",
-      timestamp: "2/1/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "You Min",
-      timestamp: "2/1/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "Midrand Ltd",
-      timestamp: "2/1/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "Lanrey LLC",
-      timestamp: "2/1/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "Thomas Inc",
-      timestamp: "12/13/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
-    {
-      request_id: "West ABA",
-      timestamp: "1/10/2024",
-      log_id: "SD83B02A849",
-      client_ip: "12:24:54:679:0",
-      user_id: "BCD94545ddc",
-      hasCheckbox: true,
-      hasActions: true,
-    },
+    yaxis: { labels: { show: false } },
+    colors: ["#3B82F6"],
+    tooltip: { x: { format: "MMM" } },
+  });
+
+  const sessionsChartData = {
+    series: [{ name: "Sessions", data: sessionValues }],
+    options: buildChartOptions(sessionCategories, "sessions-chart"),
+  };
+
+  const activeSessionsChartData = {
+    series: [{ name: "Active Sessions", data: sessionValues }],
+    options: buildChartOptions(sessionCategories, "active-sessions-chart"),
+  };
+
+  const serverRequestsChartData = {
+    series: [{ name: "Server Requests", data: serverRequestValues }],
+    options: buildChartOptions(serverRequestCategories, "server-requests-chart"),
+  };
+
+  // Table for chart data (toggled by "View data table") — always 12 months
+  const activeFilledData = showServerRequestsGraph ? filledServerRequests : filledSessions;
+
+  const graphTableColumns = [
+    { key: "period", header: "PERIOD" },
+    { key: "count", header: "COUNT" },
   ];
 
-  // Define actions for the table
-  const actions = [
-    {
-      label: "View Details",
-      onClick: (row) => {
-      },
-    },
-    {
-      label: "Delete Request",
-      className: "remove",
-      onClick: (row) => {
-      },
-    },
+  const graphTableData = activeFilledData.categories.map((month, i) => ({
+    period: month,
+    count: activeFilledData.values[i],
+  }));
+
+  // Server requests table columns
+  const serverColumns = [
+    { key: "method", header: "METHOD" },
+    { key: "statusCode", header: "STATUS CODE" },
+    { key: "durationMs", header: "DURATION (ms)" },
+    { key: "ipAddress", header: "IP ADDRESS" },
+    { key: "errorMessage", header: "ERROR" },
+    { key: "dateTime", header: "DATE & TIME" },
   ];
 
-  // Split the breadcrumb into parts
-  const breadcrumbParts = breadcrumb.split(" / ");
+  const serverTableData = serverRequests.map((req) => ({
+    id: req.id,
+    method: req.method || "—",
+    statusCode: req.statusCode ?? "—",
+    durationMs: req.durationMs != null ? `${req.durationMs}ms` : "—",
+    ipAddress: req.ipAddress || "—",
+    errorMessage: req.errorMessage || "—",
+    dateTime: formatDate(req.createdAt),
+  }));
+
+  if (loading) {
+    return (
+      <div className="tenant-payment-page">
+        <SectionSpinner />
+      </div>
+    );
+  }
+
+  const breadcrumbParts = ["Tenants", "Usage Statistics"];
 
   return (
     <div className="tenant-payment-page">
       <div className="tenant-header">
-        <button className="back-button" onClick={onBack}>
-        <FaArrowLeft/> Back
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <FaArrowLeft /> Back
         </button>
         <div className="header-info">
           <h1>Tenants</h1>
@@ -275,13 +237,7 @@ const TenantListUsageStatistics = ({ onBack }) => {
                     {" / "}
                   </span>
                 )}
-                <span
-                  className={
-                    index === breadcrumbParts.length - 1
-                      ? "breadcrumb-active"
-                      : ""
-                  }
-                >
+                <span className={index === breadcrumbParts.length - 1 ? "breadcrumb-active" : ""}>
                   {part}
                 </span>
               </React.Fragment>
@@ -290,20 +246,25 @@ const TenantListUsageStatistics = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Cards Section */}
+      {/* Summary Cards */}
       <div className="usage-statistics-cards">
         <div className="usage-card">
           <h3>Total Clients</h3>
-          <p className="usage-value">320.4K</p>
+          <p className="usage-value">
+            {stats?.tenantClientsCount != null ? stats.tenantClientsCount.toLocaleString() : "—"}
+          </p>
         </div>
         <div className="usage-card">
-          <h3>Total Active Sessions</h3>
-          <p className="usage-value">9.2K</p>
+          <h3>Total Sessions</h3>
+          <p className="usage-value">
+            {stats?.tenantSessionCount != null ? stats.tenantSessionCount.toLocaleString() : "—"}
+          </p>
           <button
             className="view-graph-button"
             onClick={() => {
               setShowActiveSessionsGraph(!showActiveSessionsGraph);
-              setShowServerRequestsGraph(false); // Close other graph
+              setShowServerRequestsGraph(false);
+              setShowSessionsTable(false);
             }}
           >
             View graph
@@ -311,12 +272,15 @@ const TenantListUsageStatistics = ({ onBack }) => {
         </div>
         <div className="usage-card">
           <h3>Number of Server Requests</h3>
-          <p className="usage-value">40.2K</p>
+          <p className="usage-value">
+            {stats?.serverRequestsCount != null ? stats.serverRequestsCount.toLocaleString() : "—"}
+          </p>
           <button
             className="view-graph-button"
             onClick={() => {
               setShowServerRequestsGraph(!showServerRequestsGraph);
-              setShowActiveSessionsGraph(false); // Close other graph
+              setShowActiveSessionsGraph(false);
+              setShowSessionsTable(false);
             }}
           >
             View graph
@@ -324,7 +288,7 @@ const TenantListUsageStatistics = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Graph Section */}
+      {/* Chart Section */}
       <div className="usage-graph-section">
         <div className="graph-header">
           <div className="graph-title-headers">
@@ -335,78 +299,120 @@ const TenantListUsageStatistics = ({ onBack }) => {
                 ? "Server Requests over time"
                 : "Sessions over time"}
             </h3>
-            <SelectInput
-              options={[
-                { value: "per Client", label: "Per Client" },
-                { value: "per Session", label: "Per Session" },
-              ]}
-            />
-
-            <SelectInput
-              options={[
-                { value: "Per Period", label: "Per Period" },
-                { value: "Daily", label: "Daily" },
-                { value: "Weekly", label: "Weekly" },
-                { value: "Monthly", label: "Monthly" },
-              ]}
-            />
           </div>
-
           <div className="graph-controls">
             <Button
-              label="View data Table"
+              label={showSessionsTable ? "View graph" : "View data table"}
               variant="action"
               icon={<IoIosArrowForward size={20} />}
               iconPosition="right"
               width="150px"
+              onClick={() => setShowSessionsTable((v) => !v)}
             />
           </div>
         </div>
+
         <div className="graph-container">
-          {showActiveSessionsGraph ? (
+          {showSessionsTable ? (
+            <div className="graph-data-table">
+              <table className="features-table">
+                <thead>
+                  <tr>
+                    {graphTableColumns.map((col) => (
+                      <th key={col.key}>{col.header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {graphTableData.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} style={{ textAlign: "center", color: "#9ca3af" }}>
+                        No data available
+                      </td>
+                    </tr>
+                  ) : (
+                    graphTableData.map((row, i) => (
+                      <tr key={i}>
+                        <td>{row.period}</td>
+                        <td>{row.count}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : showActiveSessionsGraph ? (
             <Chart
-              options={activeSessionsData.options}
-              series={activeSessionsData.series}
+              options={activeSessionsChartData.options}
+              series={activeSessionsChartData.series}
               type="area"
               height={200}
             />
           ) : showServerRequestsGraph ? (
             <Chart
-              options={serverRequestsData.options}
-              series={serverRequestsData.series}
+              options={serverRequestsChartData.options}
+              series={serverRequestsChartData.series}
               type="area"
               height={200}
             />
           ) : (
-            <div className="sessions-over-time">
-              <p className="sessions-change">
-                <span className="change-value">45 Sessions</span>
-                <span className="change-percentage">+25% from last period</span>
-              </p>
-              <Chart
-                options={sessionsOverTimeData.options}
-                series={sessionsOverTimeData.series}
-                type="area"
-                height={200}
-              />
-            </div>
+            <Chart
+              options={sessionsChartData.options}
+              series={sessionsChartData.series}
+              type="area"
+              height={200}
+            />
           )}
         </div>
-
-        
       </div>
 
+      {/* Server Requests Table */}
       <h3 className="tenant-header-gen">SERVER REQUESTS</h3>
-        <CustomTable
-          data={tableData}
-          columns={columns}
-          actions={actions}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          showActions={true}
-          itemsPerPage={10}
-          tableName="Server Requests"
-        />
+      {serverLoading ? (
+        <SectionSpinner />
+      ) : (
+        <>
+          <CustomTable
+            data={serverTableData}
+            columns={serverColumns}
+            filters={serverFilters}
+            onFilterChange={handleFilterChange}
+            showActions={false}
+            showCheckbox={false}
+            itemsPerPage={LIMIT}
+            tableName="Server Requests"
+          />
+          {serverMeta.totalPages > 1 && (
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginTop: 16,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <button
+                className="btn btn-outline"
+                disabled={serverPage <= 1}
+                onClick={() => setServerPage((p) => p - 1)}
+              >
+                Previous
+              </button>
+              <span style={{ fontSize: 14, color: "#6b7280" }}>
+                Page {serverMeta.page} of {serverMeta.totalPages}
+              </span>
+              <button
+                className="btn btn-outline"
+                disabled={serverPage >= serverMeta.totalPages}
+                onClick={() => setServerPage((p) => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

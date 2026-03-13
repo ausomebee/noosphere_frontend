@@ -725,6 +725,34 @@ const GetTenantPaymentsByStatus = async ({ accessToken, refreshToken, tenantId, 
   }
 };
 
+const GetTenantFeatureActivityLogs = async ({ accessToken, refreshToken, tenantId, page = 1, limit = 20 }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/logs/tenant/feature/activity?tenantId=${tenantId}&page=${page}&limit=${limit}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Tenant Feature Activity Logs failed",
+    );
+  }
+};
+
+const GetTenantPaymentMethods = async ({ accessToken, refreshToken, tenantId }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/billing/payment-methods/tenant/${tenantId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Get Tenant Payment Methods failed",
+    );
+  }
+};
+
 
 
 export default {
@@ -766,4 +794,6 @@ export default {
   GetTenantInvoicesByStatus,
   GetTenantPayments,
   GetTenantPaymentsByStatus,
+  GetTenantPaymentMethods,
+  GetTenantFeatureActivityLogs,
 };
