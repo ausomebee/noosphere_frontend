@@ -14,21 +14,35 @@ import {
 import "./CustomTable.css";
 import Button from "../Button/Button";
 
-const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
+const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect, onDateChange }) => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
-  const [selectedRange, setSelectedRange] = useState({
-    start: null,
-    end: null,
-  });
+  const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
   const [tempRange, setTempRange] = useState(null);
+  const [hoverDate, setHoverDate] = useState(null);
+
+  // Compute the effective end for hover preview
+  const previewEnd =
+    tempRange && !tempRange.end && hoverDate ? hoverDate : selectedRange.end;
+  const previewStart = selectedRange.start;
+  const previewRange =
+    previewStart && previewEnd
+      ? previewStart <= previewEnd
+        ? { start: previewStart, end: previewEnd }
+        : { start: previewEnd, end: previewStart }
+      : null;
+
+  const updateRange = (newRange) => {
+    setSelectedRange(newRange);
+    onDateChange?.(newRange);
+  };
 
   const renderMonth = (month) => {
     const start = startOfMonth(month);
     const end = endOfMonth(month);
     const days = eachDayOfInterval({ start, end });
-    const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sat", "Su"];
-    const firstDayOfMonth = (start.getDay() + 6) % 7; // Adjust for Monday start (0 = Monday, 6 = Sunday)
+    const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+    const firstDayOfMonth = (start.getDay() + 6) % 7;
     const paddedDays = Array(firstDayOfMonth).fill(null).concat(days);
     const totalCells = Math.ceil(paddedDays.length / 7) * 7;
     const nextMonthDays = Array(totalCells - paddedDays.length)
@@ -45,18 +59,26 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
             </div>
           ))}
           {allDays.map((day, index) => {
-            const isInRange =
+            const isStart = day && selectedRange.start && isSameDay(day, selectedRange.start);
+            const isEnd =
+              day &&
+              selectedRange.end &&
+              !isSameDay(selectedRange.start, selectedRange.end) &&
+              isSameDay(day, selectedRange.end);
+            const isSingle =
               day &&
               selectedRange.start &&
               selectedRange.end &&
-              isWithinInterval(day, {
-                start: selectedRange.start,
-                end: selectedRange.end,
-              });
-            const isStart =
-              day && selectedRange.start && isSameDay(day, selectedRange.start);
-            const isEnd =
-              day && selectedRange.end && isSameDay(day, selectedRange.end);
+              isSameDay(selectedRange.start, selectedRange.end) &&
+              isSameDay(day, selectedRange.start);
+            const isInRange =
+              day &&
+              previewRange &&
+              !isSameDay(day, previewRange.start) &&
+              !isSameDay(day, previewRange.end) &&
+              isWithinInterval(day, { start: previewRange.start, end: previewRange.end });
+            const isPreviewEnd =
+              day && previewRange && !isEnd && isSameDay(day, previewRange.end);
             const isOutsideMonth = day && !isSameMonth(day, month);
 
             return (
@@ -65,39 +87,43 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
                 onClick={() => {
                   if (!day) return;
                   if (!tempRange) {
-                    // Start a new selection (single date)
+                    const newRange = { start: day, end: day };
                     setTempRange({ start: day, end: null });
-                    setSelectedRange({ start: day, end: day }); // Set as single date initially
+                    updateRange(newRange);
                   } else if (!tempRange.end) {
-                    // Complete the range selection
-                    const newEnd = day;
-                    const newStart = tempRange.start;
-                    if (newEnd < newStart) {
-                      setTempRange({ start: newEnd, end: newStart });
-                      setSelectedRange({ start: newEnd, end: newStart });
-                    } else {
-                      setTempRange({ start: newStart, end: newEnd });
-                      setSelectedRange({ start: newStart, end: newEnd });
-                    }
+                    const a = tempRange.start;
+                    const b = day;
+                    const newRange =
+                      b < a ? { start: b, end: a } : { start: a, end: b };
+                    setTempRange(newRange);
+                    updateRange(newRange);
                   } else {
-                    // Start a new selection (single date)
+                    const newRange = { start: day, end: day };
                     setTempRange({ start: day, end: null });
-                    setSelectedRange({ start: day, end: day });
+                    updateRange(newRange);
                   }
                 }}
-                className={`date-filter-day ${
-                  day ? "date-filter-day-clickable" : "date-filter-day-empty"
-                } ${
-                  isStart || isEnd
-                    ? "date-filter-day-start-end"
+                onMouseEnter={() => {
+                  if (tempRange && !tempRange.end) setHoverDate(day);
+                }}
+                onMouseLeave={() => setHoverDate(null)}
+                className={[
+                  "date-filter-day",
+                  day ? "date-filter-day-clickable" : "date-filter-day-empty",
+                  isSingle
+                    ? "date-filter-day-single"
+                    : isStart
+                    ? "date-filter-day-start"
+                    : isEnd || isPreviewEnd
+                    ? "date-filter-day-end"
+                    : isInRange
+                    ? "date-filter-day-in-range"
                     : isOutsideMonth
                     ? "date-filter-day-outside"
-                    : "date-filter-day-normal date-filter-day-hover"
-                } ${
-                  isInRange && !isStart && !isEnd
-                    ? "date-filter-day-in-range"
-                    : ""
-                }`}
+                    : "date-filter-day-normal date-filter-day-hover",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 {day ? format(day, "d") : ""}
               </div>
@@ -140,20 +166,14 @@ const DateFilterDropdown = ({ isOpen, onClose, onDateRangeSelect }) => {
       {renderMonth(currentMonth)}
 
       <div className="date-filter-footer">
-        <Button
-          onClick={onClose}
-          variant="secondary"
-          label={"Cancel"}
-          className="date-filter-button"
-        />
+        <Button onClick={onClose} variant="secondary" label="Cancel" className="date-filter-button" />
         <Button
           onClick={handleApply}
           className="date-filter-button date-filter-apply"
           label="Apply"
           variant="primary"
+          disabled={!selectedRange.start}
         />
-        
-        
       </div>
     </div>
   );

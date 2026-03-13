@@ -9,6 +9,8 @@ import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
+import invoiceApi from "../../../api/InvoiceApi";
+import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const orgTypeOptions = [
@@ -59,7 +61,6 @@ const TenantSingleAccOverview = () => {
 
   const [tenant, setTenant] = useState(null);
   const [admins, setAdmins] = useState([]);
-  const [usageStats, setUsageStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Change officer modal
@@ -73,13 +74,17 @@ const TenantSingleAccOverview = () => {
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
 
+  // Invoice modal
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [tenantRes, adminsRes, statsRes] = await Promise.allSettled([
+      const [tenantRes, adminsRes] = await Promise.allSettled([
         tenantApi.GetSingleTenant({ tenantId, accessToken, refreshToken }),
         tenantApi.getAllAdmins({ accessToken, refreshToken }),
-        tenantApi.GetTenantUsageStatistics({ accessToken, refreshToken, tenantId }),
       ]);
       if (tenantRes.status === "fulfilled") {
         const data = tenantRes.value.data || tenantRes.value;
@@ -90,9 +95,6 @@ const TenantSingleAccOverview = () => {
       if (adminsRes.status === "fulfilled") {
         const adminData = adminsRes.value.data?.data || adminsRes.value.data || [];
         setAdmins(Array.isArray(adminData) ? adminData : []);
-      }
-      if (statsRes.status === "fulfilled") {
-        setUsageStats(statsRes.value?.data || statsRes.value);
       }
     } catch (err) {
       showToast(err.message || "Failed to load data", "error");
@@ -224,6 +226,56 @@ const TenantSingleAccOverview = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const formatCurrency = (value) => {
+    if (value == null) return "$0";
+    return `$${Number(value).toLocaleString()}`;
+  };
+
+  const buildInvoiceItems = (items, billingFrequency) => {
+    const rows = [];
+    let rowNum = 1;
+    (items || []).forEach((item) => {
+      rows.push({ id: `${rowNum++}`, description: item.description, rate: formatCurrency(item.rate?.price || 0), quantity: item.quantity, price: formatCurrency(item.price || 0) });
+      (item.extraFeaturesWithPrice || []).forEach((feature) => {
+        const isYearly = billingFrequency?.toLowerCase() === "yearly";
+        const featurePrice = isYearly ? feature.pricePerYear?.price || 0 : feature.pricePerMonth?.price || 0;
+        const qty = item.quantity || 1;
+        rows.push({ id: `${rowNum++}`, description: "Add-on Feature", rate: formatCurrency(featurePrice), quantity: qty, price: formatCurrency(featurePrice * qty) });
+      });
+    });
+    return rows;
+  };
+
+  const handleViewInvoice = async () => {
+    const invoiceId = tenant?.Invoice?.[0]?.id;
+    if (!invoiceId) { showToast("No invoice available", "error"); return; }
+    try {
+      setInvoiceLoading(true);
+      const response = await invoiceApi.GetInvoiceById({ id: invoiceId, accessToken, refreshToken });
+      const invoiceData = response.data || {};
+      setSelectedInvoice({
+        companyName: "noosphere",
+        companyAddress: invoiceData.companyAddress,
+        invoiceId: invoiceData.invoiceId || invoiceId,
+        dueDate: formatDate(invoiceData.dueDate),
+        billingFrequency: invoiceData.billingFrequency,
+        customerInfo: invoiceData.customerInfo,
+        items: buildInvoiceItems(invoiceData.items, invoiceData.billingFrequency),
+        total: formatCurrency(invoiceData.total || 0),
+      });
+      setShowInvoiceModal(true);
+    } catch (err) {
+      showToast(err.message || "Failed to load invoice", "error");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="tenant-list-container">
@@ -240,7 +292,16 @@ const TenantSingleAccOverview = () => {
     );
   }
 
-  const planName = tenant.BillingPlan?.[0]?.name || "—";
+  const subscription = tenant.Subscription?.[0] || null;
+  const plan = subscription?.plan || null;
+  const planTypeBadge = plan?.planType ? plan.planType.charAt(0) + plan.planType.slice(1).toLowerCase() : "—";
+  const planDisplayName = plan?.name || "—";
+  const clientSeatsUsed = tenant._count?.clientLinks ?? 0;
+  const clientSeatsTotal = plan?.forClient ?? 0;
+  const seatsPercent = clientSeatsTotal > 0 ? Math.min((clientSeatsUsed / clientSeatsTotal) * 100, 100) : 0;
+  const nextPaymentDate = formatDate(subscription?.endDate);
+  const pipelineItem = tenant.pipelineItems?.[0];
+  const hasInvoice = !!tenant.Invoice?.[0]?.id;
 
   return (
     <div className="tenant-list-container">
@@ -340,46 +401,50 @@ const TenantSingleAccOverview = () => {
         </div>
       </div>
 
-      {/* Plan Info (static UI for now) */}
+      {/* Plan Info */}
       <h3 className="tenant-header-gen">Plan Info</h3>
       <div className="plan-info">
         <div className="plan-details">
           <div className="plan-item">
             <p>
-              <span className="plan-badge">{planName !== "—" ? planName : "Enterprise"}</span>
-              Plan
+              <span className="plan-badge">{planTypeBadge}</span>
+              {planDisplayName}
             </p>
             <Button
               label="Change plan"
               iconPosition="right"
               icon={<FiArrowUpRight size={20} />}
               width="auto"
+              onClick={() => {
+                if (pipelineItem) {
+                  navigate(`/tenants/candidate-single/${pipelineItem.pipelineStageId}/${pipelineItem.id}`);
+                } else {
+                  showToast("Pipeline data not available for this tenant", "error");
+                }
+              }}
             />
           </div>
           <div className="plan-item">
             <label>Usage</label>
             <p>Client seats</p>
-            {usageStats?.tenantClientsCount != null ? (
-              <>
-                <div className="usage-bar">
-                  <div
-                    className="usage-filled"
-                    style={{ width: `${Math.min(usageStats.tenantClientsCount * 10, 100)}%` }}
-                  />
-                </div>
-                <p>{usageStats.tenantClientsCount} clients</p>
-              </>
-            ) : (
-              <p style={{ color: "#9ca3af", fontSize: 13 }}>Usage data unavailable</p>
-            )}
+            <div className="usage-bar">
+              <div className="usage-filled" style={{ width: `${seatsPercent}%` }} />
+            </div>
+            <p>{clientSeatsUsed} out of {clientSeatsTotal} used</p>
           </div>
-          <div className="plan-item">
-            <label>Sessions</label>
-            <p style={{ fontWeight: 600, color: "#004aba" }}>
-              {usageStats?.tenantSessionCount != null
-                ? usageStats.tenantSessionCount.toLocaleString()
-                : "—"}
-            </p>
+          <div className="plan-item next-payment-item">
+            <label>Next Payment</label>
+            <p style={{ fontWeight: 600, color: "#004aba" }}>{nextPaymentDate}</p>
+            <Button
+              label="View invoice"
+              iconPosition="right"
+              icon={<FiArrowUpRight size={16} />}
+              variant="outline"
+              width="auto"
+              onClick={handleViewInvoice}
+              loading={invoiceLoading}
+              disabled={!hasInvoice}
+            />
           </div>
         </div>
       </div>
@@ -408,6 +473,27 @@ const TenantSingleAccOverview = () => {
           onChange={(e) => setOfficerTo(e.target.value)}
         />
       </ReusableModal>
+
+      {/* Invoice Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <div
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}
+          onClick={() => setShowInvoiceModal(false)}
+        >
+          <div
+            style={{ backgroundColor: "#fff", borderRadius: "8px", maxWidth: "900px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative", padding: "20px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={{ position: "absolute", top: "10px", right: "10px", background: "none", border: "none", fontSize: "16px", cursor: "pointer" }}
+              onClick={() => setShowInvoiceModal(false)}
+            >
+              ✕
+            </button>
+            <SubscriptionInvoice {...selectedInvoice} />
+          </div>
+        </div>
+      )}
 
       {/* Edit Tenant Information Modal */}
       <ReusableModal

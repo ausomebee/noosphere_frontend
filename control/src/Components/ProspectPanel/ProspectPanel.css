@@ -659,3 +659,23 @@
   font-size: 0.875rem;
   color: #444;
 }
+
+/* Payment & Subscription status badges in prospect panel */
+.prospect-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Payment status */
+.prospect-payment-success  { background: #ECFDF3; color: #027A48; }
+.prospect-payment-failed   { background: #FEF3F2; color: #B42318; }
+.prospect-payment-pending  { background: #FFFAEB; color: #B54708; }
+
+/* Subscription status */
+.prospect-sub-active    { background: #ECFDF3; color: #027A48; }
+.prospect-sub-paused    { background: #F8F9FA; color: #5C6167; }
+.prospect-sub-cancelled { background: #FEF3F2; color: #B42318; }
+.prospect-sub-pending   { background: #FFFAEB; color: #B54708; }

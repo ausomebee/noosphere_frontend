@@ -283,6 +283,13 @@
   min-width: 0;
 }
 
+.plan-details-col2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
 .plan-item label {
   font-size: 11px;
   color: #6b7280;
@@ -360,6 +367,11 @@
 
   .plan-details {
     flex-direction: column;
+    gap: 16px;
+  }
+
+  .plan-details-col2 {
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 
@@ -470,19 +482,19 @@
   vertical-align: middle;
 }
 
-/* Checkbox Column */
+/* Feature Column */
 .features-table td:first-child,
 .features-table th:first-child {
-  width: 40px;
-  text-align: center;
-}
-
-/* Feature Column */
-.features-table td:nth-child(2) {
+  text-align: left;
   font-weight: 500;
+  width: 40%;
 }
 
 /* Active Column */
+.features-table td:nth-child(2) {
+  width: 15%;
+}
+
 .features-table .active-cell {
   display: flex;
   align-items: center;
@@ -495,8 +507,23 @@
 }
 
 /* Action Column */
-.features-table td:last-child {
+.features-table td:last-child,
+.features-table th:last-child {
   text-align: left;
+  width: 45%;
+}
+
+.features-table-container {
+  margin-bottom: 8px;
+}
+
+.tenant-header-sub {
+  color: #a1a8b3;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 20px 0 6px;
+  letter-spacing: 0.05em;
 }
 
 /* Optional: Hover effect on rows */
@@ -639,7 +666,7 @@
 .tenants-tab {
   background: none;
   flex: 1;
-  min-width: max-content;
+  min-width: 0;
   border: none;
   padding: 10px 16px;
   font-size: 0.8rem;
@@ -966,5 +993,280 @@
 
   .tenant-settings-input {
     width: 100%;
+  }
+}
+
+/* Payment Methods List */
+.payment-methods-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+
+.carousel-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+  z-index: 1;
+}
+
+.carousel-arrow:hover {
+  background: #f3f4f6;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.payment-methods-list {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  flex: 1;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.payment-methods-list::-webkit-scrollbar {
+  display: none;
+}
+
+.payment-method-card {
+  position: relative;
+  border-radius: 16px;
+  padding: 24px 24px 28px;
+  min-width: 360px;
+  max-width: 380px;
+  min-height: 200px;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 60%, #1a8fc1 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.35);
+  overflow: hidden;
+}
+
+.payment-method-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  z-index: 0;
+}
+
+.payment-method-card::after {
+  content: "";
+  position: absolute;
+  bottom: -50px;
+  left: -20px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 0;
+}
+
+.payment-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-card-chip {
+  width: 36px;
+  height: 28px;
+  background: linear-gradient(135deg, #e8c96b, #c9a227);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 6px;
+}
+
+.chip-line {
+  height: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 1px;
+}
+
+.payment-card-number-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-card-number {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #fff;
+  margin: 0;
+  font-family: "Courier New", monospace;
+}
+
+.payment-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.payment-card-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.payment-card-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Billing main tab switcher (Invoices / Payments) */
+.billing-main-tabs {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.billing-main-tab {
+  background: none;
+  border: none;
+  flex: 1;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.billing-main-tab.active {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Billing Plan Info — 3-column layout */
+.plan-info-billing {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.plan-info-col {
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-info-col:not(:last-child) {
+  border-right: 1px solid #e5e7eb;
+}
+
+.plan-badge-billing {
+  display: inline-block;
+  background-color: #e8ebf9;
+  color: #1e3a8a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+
+.plan-name-billing {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.plan-info-col-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-info-col-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.plan-info-col-usage {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.plan-info-col-date {
+  font-size: 16px;
+  font-weight: 600;
+  color: #004aba;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .plan-info-billing {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-info-col:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
   }
 }

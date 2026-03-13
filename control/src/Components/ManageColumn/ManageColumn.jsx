@@ -851,13 +851,13 @@ const actions = [
   {
     label: "View candidate",
     onClick: (candidate, { navigate }) => {
-      navigate(`/tenants/candidate-single/${candidate.id}`);
+      navigate(`/tenants/candidate-single/${candidate.columnId}/${candidate.id}`);
     },
   },
   {
     label: "Edit candidate",
     onClick: (candidate, { navigate }) => {
-      navigate(`/tenants/candidate-single/${candidate.id}/edit`);
+      navigate(`/tenants/candidate-single/${candidate.columnId}/${candidate.id}/edit`);
     },
   },
   {

@@ -1,68 +1,152 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { parse, isWithinInterval, isSameDay, isValid } from "date-fns";
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
-import { FiArrowUpRight } from "react-icons/fi";
+import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { SiAmericanexpress, SiMastercard, SiPaypal, SiVisa } from "react-icons/si";
 import CustomTable from "../../../Components/Table/CustomTable";
-import "../../../Components/Table/CustomTable.css";
 import TableFilterModal from "../../../Components/ReusableModal/TableFilterModal";
 import TableFilterDateModal from "../../../Components/ReusableModal/TableFilterDateModal";
 import tenantApi from "../../../api/TenantApis";
+import invoiceApi from "../../../api/InvoiceApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 
-const formatDate = (dateStr) => {
+// MM/dd/yyyy format required by CustomTable's date range filter parser
+const toFilterDate = (dateStr) => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US");
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "—";
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${m}/${day}/${d.getFullYear()}`;
 };
 
-const INVOICE_TABS = ["All", "paid", "pending", "overdue", "upcoming"];
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const formatCurrency = (value) => {
+  if (value == null) return "$0";
+  return `$${Number(value).toLocaleString()}`;
+};
+
+const CardBrandIcon = ({ brand }) => {
+  const size = 36;
+  const b = (brand || "").toLowerCase();
+  if (b === "amex" || b === "american express") return <SiAmericanexpress size={size} color="#fff" />;
+  if (b === "mastercard")                       return <SiMastercard size={size} color="#fff" />;
+  if (b === "paypal")                           return <SiPaypal size={size} color="#fff" />;
+  return <SiVisa size={size} color="#fff" />;
+};
+
+const INVOICE_SUB_TABS = [
+  { name: "All",      label: "All" },
+  { name: "Paid",     label: "Paid" },
+  { name: "Upcoming", label: "Upcoming" },
+  { name: "Due",      label: "Due/Unpaid" },
+  { name: "Overdue",  label: "Overdue" },
+];
+
+const PAYMENT_SUB_TABS = [
+  { name: "All",     label: "All" },
+  { name: "SUCCESS", label: "Paid" },
+  { name: "FAILED",  label: "Failed" },
+];
+
+const INVOICE_FILTERS = [
+  {
+    key: "filter_type",
+    options: [
+      { value: "",                    label: "Select Filter" },
+      { value: "status",              label: "Status" },
+      { value: "inv_date_created",    label: "Date Created" },
+      { value: "inv_due_date",        label: "Due Date" },
+      { value: "clear_filters",       label: "Clear Filters" },
+    ],
+  },
+];
+
+const PAYMENT_FILTERS = [
+  {
+    key: "filter_type",
+    options: [
+      { value: "",              label: "Select Filter" },
+      { value: "status",        label: "Status" },
+      { value: "method",        label: "Method" },
+      { value: "clear_filters", label: "Clear Filters" },
+    ],
+  },
+];
 
 const TenantSingleBilling = () => {
   const { tenantId } = useParams();
+  const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
 
-  const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState([]);
-  const [payments, setPayments] = useState([]);
-  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading]                 = useState(true);
+  const [tenant, setTenant]                   = useState(null);
+  const [paymentMethods, setPaymentMethods]   = useState([]);
+  // allInvoices/allPayments hold the full list (for counts)
+  const [allInvoices, setAllInvoices] = useState([]);
+  const [allPayments, setAllPayments] = useState([]);
+  // displayed holds the currently active tab's data
+  const [displayInvoices, setDisplayInvoices] = useState([]);
+  const [displayPayments, setDisplayPayments] = useState([]);
+  const [tabLoading, setTabLoading] = useState(false);
 
+  const [mainTab, setMainTab]                   = useState("invoices");
   const [activeInvoiceTab, setActiveInvoiceTab] = useState("All");
   const [activePaymentTab, setActivePaymentTab] = useState("All");
 
-  const [invoiceFilterModal, setInvoiceFilterModal] = useState(null); // "status"|"date"
-  const [paymentFilterModal, setPaymentFilterModal] = useState(null); // "status"|"method"|"date"
-  const [invoiceFilters, setInvoiceFilters] = useState({ status: "", dateRange: null });
-  const [paymentFilters, setPaymentFilters] = useState({ status: "", method: "", dateRange: null });
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice]   = useState(null);
+  const [invoiceLoading, setInvoiceLoading]     = useState(false);
+
+  const carouselRef = useRef(null);
+  const scrollCarousel = (dir) => {
+    if (carouselRef.current) carouselRef.current.scrollBy({ left: dir * 320, behavior: "smooth" });
+  };
+
+  // Filter modal state
+  const [openFilterModal, setOpenFilterModal] = useState(null); // e.g. "inv-status", "inv-date_created", "pay-status"
+  const [invoiceFilters, setInvoiceFilters] = useState({ status: "", dateCreated: null, dueDate: null });
+  const [paymentFilters, setPaymentFilters] = useState({ status: "", method: "" });
+
+  const extractList = (raw) => raw?.data?.data || raw?.data || (Array.isArray(raw) ? raw : []);
 
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [invoicesRes, paymentsRes, featuresRes] = await Promise.allSettled([
+      const [tenantRes, invoicesRes, paymentsRes, paymentMethodsRes] = await Promise.allSettled([
+        tenantApi.GetSingleTenant({ tenantId, accessToken, refreshToken }),
         tenantApi.GetTenantInvoices({ accessToken, refreshToken, tenantId }),
         tenantApi.GetTenantPayments({ accessToken, refreshToken, tenantId }),
-        tenantApi.GetTenantFeatures({ accessToken, refreshToken, tenantId }),
+        tenantApi.GetTenantPaymentMethods({ accessToken, refreshToken, tenantId }),
       ]);
-
+      if (tenantRes.status === "fulfilled") {
+        const d = tenantRes.value?.data || tenantRes.value;
+        setTenant(d || null);
+      }
       if (invoicesRes.status === "fulfilled") {
-        const raw = invoicesRes.value;
-        setInvoices(raw?.data?.data || raw?.data || raw || []);
-      } else {
-        if (import.meta.env.DEV)
-          console.warn("Invoices fetch error:", invoicesRes.reason?.message);
+        const list = extractList(invoicesRes.value);
+        setAllInvoices(list);
+        setDisplayInvoices(list);
       }
-
       if (paymentsRes.status === "fulfilled") {
-        const raw = paymentsRes.value;
-        setPayments(raw?.data?.data || raw?.data || raw || []);
-      } else {
-        if (import.meta.env.DEV)
-          console.warn("Payments fetch error:", paymentsRes.reason?.message);
+        const list = extractList(paymentsRes.value);
+        setAllPayments(list);
+        setDisplayPayments(list);
       }
-
-      if (featuresRes.status === "fulfilled") {
-        setSubscription(featuresRes.value?.data || featuresRes.value);
+      if (paymentMethodsRes.status === "fulfilled") {
+        const list = extractList(paymentMethodsRes.value);
+        setPaymentMethods(list);
       }
     } catch (err) {
       showToast(err.message || "Failed to load billing data", "error");
@@ -71,167 +155,130 @@ const TenantSingleBilling = () => {
     }
   }, [accessToken, refreshToken, tenantId]);
 
-  const fetchInvoicesByStatus = useCallback(
-    async (status) => {
-      try {
-        setLoading(true);
-        const res = await tenantApi.GetTenantInvoicesByStatus({
-          accessToken,
-          refreshToken,
-          tenantId,
-          status,
-        });
-        const raw = res;
-        setInvoices(raw?.data?.data || raw?.data || raw || []);
-      } catch (err) {
-        showToast(err.message || "Failed to load invoices", "error");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [accessToken, refreshToken, tenantId]
-  );
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const fetchPaymentsByStatus = useCallback(
-    async (status) => {
-      try {
-        setLoading(true);
-        const res = await tenantApi.GetTenantPaymentsByStatus({
-          accessToken,
-          refreshToken,
-          tenantId,
-          status,
-        });
-        const raw = res;
-        setPayments(raw?.data?.data || raw?.data || raw || []);
-      } catch (err) {
-        showToast(err.message || "Failed to load payments", "error");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [accessToken, refreshToken, tenantId]
-  );
-
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  const handleInvoiceTabChange = (tab) => {
+  const handleInvoiceTabChange = useCallback(async (tab) => {
     setActiveInvoiceTab(tab);
-    if (tab === "All") {
-      tenantApi
-        .GetTenantInvoices({ accessToken, refreshToken, tenantId })
-        .then((res) => {
-          const raw = res;
-          setInvoices(raw?.data?.data || raw?.data || raw || []);
-        })
-        .catch((err) => showToast(err.message || "Failed to load invoices", "error"));
-    } else {
-      fetchInvoicesByStatus(tab);
+    if (tab === "All") { setDisplayInvoices(allInvoices); return; }
+    setDisplayInvoices([]);
+    try {
+      setTabLoading(true);
+      const res = await tenantApi.GetTenantInvoicesByStatus({ accessToken, refreshToken, tenantId, status: tab });
+      setDisplayInvoices(extractList(res));
+    } catch {
+      setDisplayInvoices([]);
+    } finally {
+      setTabLoading(false);
     }
-  };
+  }, [accessToken, refreshToken, tenantId, allInvoices]);
 
-  const handlePaymentTabChange = (tab) => {
+  const handlePaymentTabChange = useCallback(async (tab) => {
     setActivePaymentTab(tab);
-    if (tab === "All") {
-      tenantApi
-        .GetTenantPayments({ accessToken, refreshToken, tenantId })
-        .then((res) => {
-          const raw = res;
-          setPayments(raw?.data?.data || raw?.data || raw || []);
-        })
-        .catch((err) => showToast(err.message || "Failed to load payments", "error"));
-    } else {
-      fetchPaymentsByStatus(tab);
+    if (tab === "All") { setDisplayPayments(allPayments); return; }
+    setDisplayPayments([]);
+    try {
+      setTabLoading(true);
+      const res = await tenantApi.GetTenantPaymentsByStatus({ accessToken, refreshToken, tenantId, status: tab });
+      setDisplayPayments(extractList(res));
+    } catch {
+      setDisplayPayments([]);
+    } finally {
+      setTabLoading(false);
     }
-  };
+  }, [accessToken, refreshToken, tenantId, allPayments]);
 
-  // Plan info
-  const planName =
-    subscription?.plan?.name ||
-    subscription?.planName ||
-    subscription?.data?.plan?.name ||
-    "—";
+  // Plan info derived from tenant
+  const subscription     = tenant?.Subscription?.[0] || null;
+  const plan             = subscription?.plan || null;
+  const planTypeBadge    = plan?.planType ? plan.planType.charAt(0).toUpperCase() + plan.planType.slice(1).toLowerCase() : "—";
+  const planDisplayName  = plan?.name || "—";
+  const clientSeatsUsed  = tenant?._count?.clientLinks ?? 0;
+  const clientSeatsTotal = plan?.forClient ?? 0;
+  const seatsPercent     = clientSeatsTotal > 0 ? Math.min((clientSeatsUsed / clientSeatsTotal) * 100, 100) : 0;
+  const nextPaymentDate  = formatDateDisplay(subscription?.endDate);
+  const pipelineItem     = tenant?.pipelineItems?.[0];
+  const hasInvoice       = !!tenant?.Invoice?.[0]?.id;
 
-  // Map invoices to table rows (flexible field names)
-  const invoiceData = (Array.isArray(invoices) ? invoices : []).map((inv) => ({
-    id: inv.id || inv.invoiceId,
-    document: inv.invoiceNumber || inv.invoiceId || inv.id || "—",
-    date_created: formatDate(inv.createdAt || inv.dateCreated || inv.issueDate),
-    due_date: formatDate(inv.dueDate || inv.due_date),
-    billing_frequency: inv.billingFrequency || "—",
-    amount: (inv.total ?? inv.amount) != null ? `$${Number(inv.total ?? inv.amount).toFixed(2)}` : "—",
-    status: inv.status || "—",
+  const mapInvoice = (inv) => ({
+    id:           inv.id || inv.invoiceId,
+    document:     inv.invoiceNumber || inv.invoiceId || inv.id || "—",
+    date_created: toFilterDate(inv.createdAt || inv.dateCreated || inv.issueDate),
+    due_date:     toFilterDate(inv.dueDate || inv.due_date),
+    amount:       (inv.total ?? inv.amount) != null ? `$${Number(inv.total ?? inv.amount).toFixed(2)}` : "—",
+    status:       inv.status || "—",
+    hasCheckbox:  true,
+  });
+
+  const mapPayment = (pay) => ({
+    id:        pay.id || pay.paymentId,
+    reference: pay.transactionRef || pay.transactionId || pay.reference || pay.id || "—",
+    amount:    pay.amount != null ? `$${Number(pay.amount).toFixed(2)}` : "—",
+    method:    pay.gateway || pay.method || pay.paymentMethod || "—",
+    date:      toFilterDate(pay.paymentDate || pay.createdAt || pay.paidAt),
+    status:    pay.status || "—",
     hasCheckbox: true,
-  }));
+  });
 
-  // Map payments to table rows (flexible field names)
-  const paymentData = (Array.isArray(payments) ? payments : []).map((pay) => ({
-    id: pay.id || pay.paymentId,
-    reference: pay.reference || pay.paymentReference || pay.id || "—",
-    amount: pay.amount != null ? `$${Number(pay.amount).toFixed(2)}` : "—",
-    method: pay.method || pay.paymentMethod || "—",
-    date: formatDate(pay.paymentDate || pay.createdAt || pay.paidAt),
-    status: pay.status || "—",
-    hasCheckbox: true,
-  }));
+  // Table data — from active display list
+  const invoiceData = useMemo(() => (Array.isArray(displayInvoices) ? displayInvoices : []).map(mapInvoice), [displayInvoices]);
+  const paymentData = useMemo(() => (Array.isArray(displayPayments) ? displayPayments : []).map(mapPayment), [displayPayments]);
 
-  const invoiceColumns = [
-    { key: "document", header: "INVOICE" },
-    { key: "date_created", header: "DATE CREATED" },
-    { key: "due_date", header: "DUE DATE" },
-    { key: "billing_frequency", header: "FREQUENCY" },
-    { key: "amount", header: "AMOUNT" },
-    ...(activeInvoiceTab === "All"
-      ? [{ key: "status", header: "STATUS", type: "status" }]
-      : []),
-  ];
+  // Counts from full "All" data for tab badges
+  const invoiceCounts = useMemo(() => {
+    const counts = { All: allInvoices.length };
+    allInvoices.forEach((inv) => {
+      const s = inv.status || "";
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return counts;
+  }, [allInvoices]);
 
-  const paymentColumns = [
-    { key: "reference", header: "REFERENCE" },
-    { key: "amount", header: "AMOUNT" },
-    { key: "method", header: "METHOD" },
-    { key: "date", header: "DATE" },
-    ...(activePaymentTab === "All"
-      ? [{ key: "status", header: "STATUS", type: "status" }]
-      : []),
-  ];
+  const paymentCounts = useMemo(() => {
+    const counts = { All: allPayments.length };
+    allPayments.forEach((pay) => {
+      const s = pay.status || "";
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return counts;
+  }, [allPayments]);
 
-  const invoiceTabs = [
-    { name: "All", label: "All" },
-    { name: "Paid", label: "Paid" },
-    { name: "Upcoming", label: "Upcoming" },
-    { name: "Due", label: "Due" },
-    { name: "Overdue", label: "Overdue" },
-  ];
-
-  const paymentTabs = [
-    { name: "All", label: "All" },
-    { name: "paid", label: "Paid" },
-    { name: "failed", label: "Failed" },
-    { name: "pending", label: "Pending" },
-  ];
-
-  // Filter modal options derived from data
+  // Unique status/method options derived from full data (for filter modals)
   const invoiceStatusOpts = useMemo(() => [
     { value: "", label: "All Statuses" },
-    ...[...new Set(invoiceData.map((r) => r.status).filter((s) => s && s !== "—"))].map((s) => ({ value: s, label: s })),
-  ], [invoiceData]);
+    ...[...new Set(allInvoices.map((inv) => inv.status).filter(Boolean))].map((s) => ({ value: s, label: s })),
+  ], [allInvoices]);
 
   const paymentStatusOpts = useMemo(() => [
     { value: "", label: "All Statuses" },
-    ...[...new Set(paymentData.map((r) => r.status).filter((s) => s && s !== "—"))].map((s) => ({ value: s, label: s })),
-  ], [paymentData]);
+    ...[...new Set(allPayments.map((pay) => pay.status).filter(Boolean))].map((s) => ({ value: s, label: s })),
+  ], [allPayments]);
 
   const paymentMethodOpts = useMemo(() => [
     { value: "", label: "All Methods" },
-    ...[...new Set(paymentData.map((r) => r.method).filter((m) => m && m !== "—"))].map((m) => ({ value: m, label: m })),
-  ], [paymentData]);
+    ...[...new Set(allPayments.map((pay) => pay.method || pay.paymentMethod).filter(Boolean))].map((m) => ({ value: m, label: m })),
+  ], [allPayments]);
 
-  // Client-side filtering
+  // Apply external filters to current tab data
+  const parseDate = (str) => str && str !== "—" ? parse(str, "MM/dd/yyyy", new Date()) : null;
+
   const filteredInvoiceData = useMemo(() => invoiceData.filter((row) => {
     if (invoiceFilters.status && row.status !== invoiceFilters.status) return false;
+    if (invoiceFilters.dateCreated) {
+      const d = parseDate(row.date_created);
+      if (!isValid(d)) return false;
+      const { start, end } = invoiceFilters.dateCreated;
+      if (start && end && !isSameDay(start, end)) {
+        if (!isWithinInterval(d, { start, end })) return false;
+      } else if (start && !isSameDay(d, start)) return false;
+    }
+    if (invoiceFilters.dueDate) {
+      const d = parseDate(row.due_date);
+      if (!isValid(d)) return false;
+      const { start, end } = invoiceFilters.dueDate;
+      if (start && end && !isSameDay(start, end)) {
+        if (!isWithinInterval(d, { start, end })) return false;
+      } else if (start && !isSameDay(d, start)) return false;
+    }
     return true;
   }), [invoiceData, invoiceFilters]);
 
@@ -241,32 +288,64 @@ const TenantSingleBilling = () => {
     return true;
   }), [paymentData, paymentFilters]);
 
-  const invoiceTableFilters = useMemo(() => [
-    {
-      key: "filter_type",
-      options: [
-        { value: "", label: "Filter by..." },
-        ...(activeInvoiceTab === "All" ? [{ value: "status", label: "Status" }] : []),
-        { value: "date", label: "Date" },
-        { value: "clear_filters", label: "Clear Filters" },
-      ],
-    },
-  ], [activeInvoiceTab]);
+  const buildInvoiceItems = (items, billingFrequency) => {
+    const rows = [];
+    let n = 1;
+    (items || []).forEach((item) => {
+      rows.push({ id: `${n++}`, description: item.description, rate: formatCurrency(item.rate?.price || 0), quantity: item.quantity, price: formatCurrency(item.price || 0) });
+      (item.extraFeaturesWithPrice || []).forEach((feature) => {
+        const isYearly = billingFrequency?.toLowerCase() === "yearly";
+        const fp = isYearly ? feature.pricePerYear?.price || 0 : feature.pricePerMonth?.price || 0;
+        rows.push({ id: `${n++}`, description: "Add-on Feature", rate: formatCurrency(fp), quantity: item.quantity || 1, price: formatCurrency(fp * (item.quantity || 1)) });
+      });
+    });
+    return rows;
+  };
 
-  const paymentTableFilters = useMemo(() => [
-    {
-      key: "filter_type",
-      options: [
-        { value: "", label: "Filter by..." },
-        ...(activePaymentTab === "All" ? [{ value: "status", label: "Status" }] : []),
-        { value: "method", label: "Method" },
-        { value: "clear_filters", label: "Clear Filters" },
-      ],
-    },
-  ], [activePaymentTab]);
+  const handleViewInvoice = async (invoiceId) => {
+    const id = invoiceId || tenant?.Invoice?.[0]?.id;
+    if (!id) { showToast("No invoice available", "error"); return; }
+    try {
+      setInvoiceLoading(true);
+      const response = await invoiceApi.GetInvoiceById({ id, accessToken, refreshToken });
+      const data = response.data || {};
+      setSelectedInvoice({
+        companyName:      "noosphere",
+        companyAddress:   data.companyAddress,
+        invoiceId:        data.invoiceId || id,
+        dueDate:          formatDateDisplay(data.dueDate),
+        billingFrequency: data.billingFrequency,
+        customerInfo:     data.customerInfo,
+        items:            buildInvoiceItems(data.items, data.billingFrequency),
+        total:            formatCurrency(data.total || 0),
+      });
+      setShowInvoiceModal(true);
+    } catch (err) {
+      showToast(err.message || "Failed to load invoice", "error");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
 
-  const handleInvoiceFilterTypeSelect = (type) => setInvoiceFilterModal(type);
-  const handlePaymentFilterTypeSelect = (type) => setPaymentFilterModal(type);
+  const invoiceColumns = [
+    { key: "document",     header: "NAME" },
+    { key: "date_created", header: "DATE CREATED" },
+    { key: "due_date",     header: "DUE DATE" },
+    { key: "status",       header: "STATUS", type: "status" },
+  ];
+
+  const paymentColumns = [
+    { key: "reference", header: "REFERENCE" },
+    { key: "amount",    header: "AMOUNT" },
+    { key: "method",    header: "METHOD" },
+    { key: "date",      header: "DATE" },
+    { key: "status",    header: "STATUS", type: "status" },
+  ];
+
+  const invoiceActions = [
+    { label: "View Invoice",     onClick: (row) => handleViewInvoice(row.id) },
+    { label: "Download Invoice", onClick: () => showToast("Download coming soon", "info") },
+  ];
 
   if (loading) {
     return (
@@ -278,90 +357,256 @@ const TenantSingleBilling = () => {
 
   return (
     <div className="tenant-list-container">
-      {/* Plan Info Section */}
-      <h3 className="tenant-header-gen">Plan Info</h3>
-      <div className="plan-info">
-        <div className="plan-details">
-          <div className="plan-item">
-            <p>
-              <span className="plan-badge">
-                {planName !== "—" ? planName : "Enterprise"}
-              </span>{" "}
-              Plan
-            </p>
-            <Button
-              label="Change plan"
-              iconPosition="right"
-              icon={<FiArrowUpRight size={20} />}
-              width="180px"
-            />
+      {/* Plan Info */}
+      <h3 className="tenant-header-gen">PLAN INFO</h3>
+      <div className="plan-info-billing">
+        <div className="plan-info-col">
+          <span className="plan-badge-billing">{planTypeBadge}</span>
+          <p className="plan-name-billing">Plan</p>
+          <Button
+            label="Change plan"
+            iconPosition="right"
+            icon={<FiArrowUpRight size={18} />}
+            width="auto"
+            onClick={() => {
+              if (pipelineItem) {
+                navigate(`/tenants/candidate-single/${pipelineItem.pipelineStageId}/${pipelineItem.id}`);
+              } else {
+                showToast("Pipeline data not available", "error");
+              }
+            }}
+          />
+        </div>
+        <div className="plan-info-col">
+          <label className="plan-info-col-label">USAGE</label>
+          <p className="plan-info-col-sub">Client seats</p>
+          <div className="usage-bar">
+            <div className="usage-filled" style={{ width: `${seatsPercent}%` }} />
           </div>
+          <p className="plan-info-col-usage">{clientSeatsUsed} out of {clientSeatsTotal} used</p>
+        </div>
+        <div className="plan-info-col">
+          <label className="plan-info-col-label">NEXT PAYMENT</label>
+          <p className="plan-info-col-date">{nextPaymentDate}</p>
+          <Button
+            label="View invoice"
+            iconPosition="right"
+            icon={<FiArrowUpRight size={16} />}
+            variant="outline"
+            width="auto"
+            onClick={() => handleViewInvoice(null)}
+            loading={invoiceLoading}
+            disabled={!hasInvoice}
+          />
         </div>
       </div>
 
-      {/* Invoices Section */}
-      <h3 className="tenant-header-gen">Invoices</h3>
-      <div className="invoices-tabs-container">
-        <div className="tenants-tabs">
-          {invoiceTabs.map((tab) => (
-            <button
-              key={tab.name}
-              className={`tenants-tab ${activeInvoiceTab === tab.name ? "active" : ""}`}
-              onClick={() => handleInvoiceTabChange(tab.name)}
-            >
-              <span>{tab.label}</span>
-            </button>
-          ))}
+      {/* Payment Methods */}
+      <h3 className="tenant-header-gen">PAYMENT METHODS</h3>
+      <div className="payment-methods-carousel-wrapper">
+        {paymentMethods.length > 1 && (
+          <button className="carousel-arrow carousel-arrow-left" onClick={() => scrollCarousel(-1)}>
+            <FiChevronLeft size={20} />
+          </button>
+        )}
+        <div className="payment-methods-list" ref={carouselRef}>
+          {paymentMethods.length === 0 ? (
+            <p className="no-data-text">No payment methods on file.</p>
+          ) : (
+            paymentMethods.map((card) => (
+              <div key={card.id} className="payment-method-card">
+                <div className="payment-card-top">
+                  <div className="payment-card-chip">
+                    <div className="chip-line" />
+                    <div className="chip-line" />
+                    <div className="chip-line" />
+                  </div>
+                  <CardBrandIcon brand={card.cardType} />
+                </div>
+                <div className="payment-card-number-row">
+                  <span className="payment-card-label">CARD NUMBER</span>
+                  <span className="payment-card-number">•••• •••• •••• {card.lastFourDigits}</span>
+                </div>
+                <div className="payment-card-bottom">
+                  <div className="payment-card-info">
+                    <span className="payment-card-label">CARD HOLDER</span>
+                    <span className="payment-card-value">{card.holderName}</span>
+                  </div>
+                  <div className="payment-card-info">
+                    <span className="payment-card-label">ADDED</span>
+                    <span className="payment-card-value">
+                      {card.createdAt ? new Date(card.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-        <CustomTable
-          data={filteredInvoiceData}
-          columns={invoiceColumns}
-          filters={invoiceTableFilters}
-          onFilterTypeSelect={handleInvoiceFilterTypeSelect}
-          showActions={false}
-          itemsPerPage={10}
-          tableName="Invoices"
-        />
+        {paymentMethods.length > 1 && (
+          <button className="carousel-arrow carousel-arrow-right" onClick={() => scrollCarousel(1)}>
+            <FiChevronRight size={20} />
+          </button>
+        )}
+      </div>
+
+      {/* Invoices & Payments */}
+      <h3 className="tenant-header-gen">INVOICES &amp; PAYMENTS</h3>
+      <div className="invoices-tabs-container">
+        <div className="billing-main-tabs">
+          <button
+            className={`billing-main-tab ${mainTab === "invoices" ? "active" : ""}`}
+            onClick={() => setMainTab("invoices")}
+          >
+            Invoices
+          </button>
+          <button
+            className={`billing-main-tab ${mainTab === "payments" ? "active" : ""}`}
+            onClick={() => setMainTab("payments")}
+          >
+            Payments
+          </button>
+        </div>
+
+        {mainTab === "invoices" ? (
+          <>
+            <div className="tenants-tabs">
+              {INVOICE_SUB_TABS.map((tab) => {
+                const count = tab.name === "All" ? invoiceCounts.All : invoiceCounts[tab.name];
+                return (
+                  <button
+                    key={tab.name}
+                    className={`tenants-tab ${activeInvoiceTab === tab.name ? "active" : ""}`}
+                    onClick={() => handleInvoiceTabChange(tab.name)}
+                  >
+                    <span>{tab.label}</span>
+                    {count > 0 && <span className="tab-count">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            {tabLoading ? <SectionSpinner /> : (
+              <CustomTable
+                data={filteredInvoiceData}
+                columns={invoiceColumns}
+                filters={INVOICE_FILTERS}
+                onFilterTypeSelect={(type) => {
+                  if (type === "clear_filters") {
+                    setInvoiceFilters({ status: "", dateCreated: null, dueDate: null });
+                  } else if (type === "inv_date_created") {
+                    setOpenFilterModal("inv-date_created");
+                  } else if (type === "inv_due_date") {
+                    setOpenFilterModal("inv-due_date");
+                  } else {
+                    setOpenFilterModal(`inv-${type}`);
+                  }
+                }}
+                actions={invoiceActions}
+                showActions={true}
+                showCheckbox={false}
+                itemsPerPage={10}
+                tableName="Invoices"
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="tenants-tabs">
+              {PAYMENT_SUB_TABS.map((tab) => {
+                const count = tab.name === "All" ? paymentCounts.All : paymentCounts[tab.name];
+                return (
+                  <button
+                    key={tab.name}
+                    className={`tenants-tab ${activePaymentTab === tab.name ? "active" : ""}`}
+                    onClick={() => handlePaymentTabChange(tab.name)}
+                  >
+                    <span>{tab.label}</span>
+                    {count > 0 && <span className="tab-count">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            {tabLoading ? <SectionSpinner /> : (
+              <CustomTable
+                data={filteredPaymentData}
+                columns={paymentColumns}
+                filters={PAYMENT_FILTERS}
+                onFilterTypeSelect={(type) => {
+                  if (type === "clear_filters") {
+                    setPaymentFilters({ status: "", method: "" });
+                  } else {
+                    setOpenFilterModal(`pay-${type}`);
+                  }
+                }}
+                showActions={false}
+                showCheckbox={false}
+                itemsPerPage={10}
+                tableName="Payments"
+              />
+            )}
+          </>
+        )}
+
+        {/* Invoice filter modals */}
         <TableFilterModal
-          isOpen={invoiceFilterModal === "status"}
-          onClose={() => setInvoiceFilterModal(null)}
+          isOpen={openFilterModal === "inv-status"}
+          onClose={() => setOpenFilterModal(null)}
           title="Filter by Status"
           label="Select status"
           options={invoiceStatusOpts}
-          onApply={(val) => setInvoiceFilters((p) => ({ ...p, status: val }))}
+          onApply={(val) => { setInvoiceFilters((p) => ({ ...p, status: val })); setOpenFilterModal(null); }}
         />
         <TableFilterDateModal
-          isOpen={invoiceFilterModal === "date"}
-          onClose={() => setInvoiceFilterModal(null)}
-          title="Filter by due date"
-          onApply={(range) => setInvoiceFilters((p) => ({ ...p, dateRange: range }))}
+          isOpen={openFilterModal === "inv-date_created"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Date Created"
+          onApply={(range) => { setInvoiceFilters((p) => ({ ...p, dateCreated: range })); setOpenFilterModal(null); }}
+        />
+        <TableFilterDateModal
+          isOpen={openFilterModal === "inv-due_date"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Due Date"
+          onApply={(range) => { setInvoiceFilters((p) => ({ ...p, dueDate: range })); setOpenFilterModal(null); }}
+        />
+
+        {/* Payment filter modals */}
+        <TableFilterModal
+          isOpen={openFilterModal === "pay-status"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Status"
+          label="Select status"
+          options={paymentStatusOpts}
+          onApply={(val) => { setPaymentFilters((p) => ({ ...p, status: val })); setOpenFilterModal(null); }}
+        />
+        <TableFilterModal
+          isOpen={openFilterModal === "pay-method"}
+          onClose={() => setOpenFilterModal(null)}
+          title="Filter by Method"
+          label="Select method"
+          options={paymentMethodOpts}
+          onApply={(val) => { setPaymentFilters((p) => ({ ...p, method: val })); setOpenFilterModal(null); }}
         />
       </div>
 
-      {/* Payments Section */}
-      <h3 className="tenant-header-gen" style={{ marginTop: 32 }}>Payments</h3>
-      <div className="invoices-tabs-container">
-        <div className="tenants-tabs">
-          {paymentTabs.map((tab) => (
+      {showInvoiceModal && selectedInvoice && (
+        <div
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}
+          onClick={() => setShowInvoiceModal(false)}
+        >
+          <div
+            style={{ backgroundColor: "#fff", borderRadius: "8px", maxWidth: "900px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative", padding: "20px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
-              key={tab.name}
-              className={`tenants-tab ${activePaymentTab === tab.name ? "active" : ""}`}
-              onClick={() => handlePaymentTabChange(tab.name)}
+              style={{ position: "absolute", top: "10px", right: "10px", background: "none", border: "none", fontSize: "16px", cursor: "pointer" }}
+              onClick={() => setShowInvoiceModal(false)}
             >
-              <span>{tab.label}</span>
+              ✕
             </button>
-          ))}
+            <SubscriptionInvoice {...selectedInvoice} />
+          </div>
         </div>
-        <CustomTable
-          data={filteredPaymentData}
-          columns={paymentColumns}
-          filters={paymentTableFilters}
-          onFilterTypeSelect={handlePaymentFilterTypeSelect}
-          showActions={false}
-          itemsPerPage={10}
-          tableName="Payments"
-        />
-      </div>
+      )}
     </div>
   );
 };

@@ -253,9 +253,24 @@ const PauseSubscriptionSchedule = async ({
   }
 };
 
+const GetSubscriptionByPlan = async ({ planId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/subscription/plan/${planId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch subscriptions by plan"
+    );
+  }
+};
+
 export default {
   GetSubscriptionByStatus,
   GetCountForSubscription,
+  GetSubscriptionByPlan,
   CancelSubscriptionNow,
   CancelSubscriptionLater,
   ResumeSubscriptionNow,

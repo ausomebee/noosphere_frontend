@@ -77,12 +77,13 @@ const BillingManager = () => {
         const featurePrice = isYearly
           ? feature.pricePerYear?.price || 0
           : feature.pricePerMonth?.price || 0;
+        const qty = item.quantity || 1;
         rows.push({
           id: `${rowNum++}`,
           description: "Add-on Feature",
           rate: formatNumber(featurePrice, true),
-          quantity: 1,
-          price: formatNumber(featurePrice, true),
+          quantity: qty,
+          price: formatNumber(featurePrice * qty, true),
         });
       });
     });

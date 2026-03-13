@@ -468,7 +468,7 @@
 .action-menu {
   position: relative;
   display: inline-block;
-  z-index: 1; /* Menu icon below the modal */
+  z-index: 100;
 }
 
 .action-cell {
@@ -707,8 +707,9 @@
   text-align: center;
   padding: 6px;
   font-size: 14px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s;
+  position: relative;
+  border-radius: 0;
 }
 
 .date-filter-day-clickable {
@@ -722,23 +723,45 @@
 .date-filter-day-normal {
   background-color: transparent;
   color: #333;
+  border-radius: 50%;
 }
 
 .date-filter-day-hover:hover {
   background-color: #e9ecef;
+  border-radius: 50%;
 }
 
 .date-filter-day-outside {
   color: #adb5bd;
+  border-radius: 50%;
 }
 
 .date-filter-day-in-range {
-  background-color: #e6f0fa;
+  background-color: #e5e5e5;
+  border-radius: 0;
+  color: #000;
 }
 
-.date-filter-day-start-end {
-  background-color: #007bff;
+.date-filter-day-in-range:hover {
+  background-color: #d0d0d0;
+}
+
+.date-filter-day-start {
+  background-color: #000;
   color: white;
+  border-radius: 50% 0 0 50%;
+}
+
+.date-filter-day-end {
+  background-color: #000;
+  color: white;
+  border-radius: 0 50% 50% 0;
+}
+
+.date-filter-day-single {
+  background-color: #000;
+  color: white;
+  border-radius: 50%;
 }
 
 /* Footer styling */
