@@ -93,7 +93,16 @@ const NotificationSettings = () => {
   const fetchSettings = useCallback(async () => {
     try {
       const data = await api.getNotificationSettings({ userId, accessToken, refreshToken });
-      if (data) setSettings(data);
+      if (!Array.isArray(data)) return;
+      const transformed = {};
+      for (const cat of data) {
+        transformed[cat.key] = { enabled: false };
+        for (const item of cat.items) {
+          transformed[cat.key][item.key] = item.enabled ?? false;
+        }
+        transformed[cat.key].enabled = cat.items.length > 0 && cat.items.every((item) => transformed[cat.key][item.key]);
+      }
+      setSettings(transformed);
     } catch {
       // silently fall back to defaults
     }
@@ -145,7 +154,7 @@ const NotificationSettings = () => {
 
       {NOTIFICATION_CONFIG.map((cat) => {
         const isExpanded = !!expandedSections[cat.key];
-        const catSettings = settings[cat.key];
+        const catSettings = settings[cat.key] ?? buildDefaultState()[cat.key];
 
         return (
           <div key={cat.key} className="notif-settings-section">

@@ -35,6 +35,7 @@ const TargetSingle = () => {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [targetInfo, setTargetInfo] = useState(null);
   const [baselineData, setBaselineData] = useState(null);
+  const [baselineDataRequired, setBaselineDataRequired] = useState(false);
   const [clientTargetId, setClientTargetId] = useState(null);
   const [hasPerformanceData, setHasPerformanceData] = useState(false);
   const [hasSessionData, setHasSessionData] = useState(false);
@@ -144,32 +145,72 @@ const TargetSingle = () => {
         setTargetInfo(null);
       }
 
+      const isBaselineRequired = target.baselineDataRequired === true;
+      setBaselineDataRequired(isBaselineRequired);
+
       if (clientId && targetId) {
         const ctId = res?.data?.data?.[0]?.id;
         setClientTargetId(ctId);
-        const baselineRes = await api.GetBaselineDataByClientTargetId({
-          clientTargetId: ctId,
-          accessToken,
-          refreshToken,
-        });
-        const records = baselineRes?.data?.data || [];
-        if (records.length > 0) {
-          const latest = records[0];
-          const type = target.dataCollectionType;
-          setBaselineData({
-            title: type,
-            headers: getHeaders(type),
-            data: getDataRows(type, latest.data),
-            summary: getSummary(type, latest.data),
-          });
-        } else {
+        try {
+          const baselineRes = await api.GetTargetBaselineData({ targetId, accessToken, refreshToken });
+          const targetFromBaseline = baselineRes?.data?.data;
+          const isBaseline = targetFromBaseline?.baselineDataRequired === true;
+          setBaselineDataRequired(isBaseline);
+          if (isBaseline) {
+            const sessionDatas = targetFromBaseline?.sessionDatas || [];
+            const type = target.dataCollectionType;
+            if (sessionDatas.length > 0) {
+              const latest = sessionDatas[0];
+              setBaselineData({
+                title: type,
+                headers: getHeaders(type),
+                data: getDataRows(type, latest.data),
+                summary: getSummary(type, latest.data),
+              });
+            } else {
+              setBaselineData(null);
+            }
+          } else {
+            setBaselineData(null);
+          }
+        } catch {
+          setBaselineDataRequired(false);
           setBaselineData(null);
         }
         // Always fetch performance and session data when client context exists
         setHasPerformanceData(true);
         setHasSessionData(true);
       } else {
-        setBaselineData(null);
+        if (targetId) {
+          try {
+            const baselineRes = await api.GetTargetBaselineData({ targetId, accessToken, refreshToken });
+            const targetFromBaseline = baselineRes?.data?.data;
+            const isBaseline = targetFromBaseline?.baselineDataRequired === true;
+            setBaselineDataRequired(isBaseline);
+            if (isBaseline) {
+              const sessionDatas = targetFromBaseline?.sessionDatas || [];
+              const type = target.dataCollectionType;
+              if (sessionDatas.length > 0) {
+                const rows = sessionDatas.flatMap((sd) => getDataRows(type, sd.data));
+                setBaselineData({
+                  title: type,
+                  headers: getHeaders(type),
+                  data: rows,
+                  summary: null,
+                });
+              } else {
+                setBaselineData(null);
+              }
+            } else {
+              setBaselineData(null);
+            }
+          } catch {
+            setBaselineDataRequired(false);
+            setBaselineData(null);
+          }
+        } else {
+          setBaselineData(null);
+        }
         setHasPerformanceData(false);
         setHasSessionData(false);
       }
@@ -1022,69 +1063,73 @@ const TargetSingle = () => {
         </div>
 
         {/* Baseline Data Section */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="font-bold text-lg text-white-light mb-4">
-            Baseline Data
-          </h1>
-          <div className="flex gap-2">
-            <div className="relative">
-              <button onClick={toggleExportDropdown} ref={exportButtonRef}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </button>
-              {exportDropdownOpen && (
-                <div
-                  className="action-dropdown export-dropdown absolute right-0 mt-1 bg-white rounded-md shadow-lg py-1 z-10"
-                  ref={exportDropdownRef}
-                >
-                  <button
-                    className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    onClick={handleExportCSV}
-                  >
-                    Export as CSV
+        {baselineDataRequired && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="font-bold text-lg text-white-light mb-4">
+                Baseline Data
+              </h1>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <button onClick={toggleExportDropdown} ref={exportButtonRef}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
                   </button>
-                  <button
-                    className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    onClick={handleExportPDF}
-                  >
-                    Export as PDF
-                  </button>
+                  {exportDropdownOpen && (
+                    <div
+                      className="action-dropdown export-dropdown absolute right-0 mt-1 bg-white rounded-md shadow-lg py-1 z-10"
+                      ref={exportDropdownRef}
+                    >
+                      <button
+                        className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        onClick={handleExportCSV}
+                      >
+                        Export as CSV
+                      </button>
+                      <button
+                        className="dropdown-item px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        onClick={handleExportPDF}
+                      >
+                        Export as PDF
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+                <button onClick={handlePrint}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <button onClick={handlePrint}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        {renderBaselineTable()}
+            {renderBaselineTable()}
+          </>
+        )}
 
         {/* Performance Graph Section */}
         <div className="flex justify-between items-center mb-6">

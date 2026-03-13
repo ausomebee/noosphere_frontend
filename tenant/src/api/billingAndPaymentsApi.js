@@ -548,6 +548,18 @@ const GetClaimsByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
   }
 };
 
+const NudgeClientForApproval = async ({ clientId, staffId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/sessions/nudge-client/${clientId}/${staffId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to send nudge to client");
+  }
+};
+
 export default {
   CreateTenantServiceCode,
   UpdateTenantServiceCode,
@@ -572,6 +584,6 @@ export default {
   GetClaimsByTenantId,
   GetSessionsTimesheetHistoryByTimesheetId,
   ApproveTimeSheetBySupervisor,
-  RejectTimeSheetBySupervisor
-
+  RejectTimeSheetBySupervisor,
+  NudgeClientForApproval,
 };

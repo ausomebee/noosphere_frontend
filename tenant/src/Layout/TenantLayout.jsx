@@ -233,6 +233,8 @@ const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const [messageCount, setMessageCount] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 992);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOnlineBanner, setShowOnlineBanner] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -263,6 +265,27 @@ const DashboardLayout = ({ children }) => {
     : typeof displayName === "string"
     ? displayName[0].toUpperCase()
     : "U";
+
+  useEffect(() => {
+    let timer;
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineBanner(true);
+      timer = setTimeout(() => setShowOnlineBanner(false), 3000);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOnlineBanner(false);
+      clearTimeout(timer);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -301,6 +324,12 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="dashboard-layout">
+      {(!isOnline || showOnlineBanner) && (
+        <div className={`network-status-banner ${isOnline ? "online" : "offline"}`}>
+          <span className="network-status-dot" />
+          {isOnline ? "Back online" : "You are offline — check your connection"}
+        </div>
+      )}
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}

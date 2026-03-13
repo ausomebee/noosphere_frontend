@@ -643,12 +643,18 @@ const SingleTimeSheet = () => {
   };
 
   const handleNudgeClient = async () => {
+    const clientId = timesheetData?.appointment?.clientId;
+    const staffId = userId;
+    if (!clientId) {
+      showToast("Client information not available.", "error");
+      return;
+    }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await api.NudgeClientForApproval({ clientId, staffId, accessToken, refreshToken });
       showToast("Nudge sent successfully!", "success");
     } catch (error) {
       console.error("Error sending nudge:", error);
-      showToast("Failed to send nudge.", "error");
+      showToast(error.message || "Failed to send nudge.", "error");
     }
   };
 
