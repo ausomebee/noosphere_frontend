@@ -4,32 +4,47 @@ const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
 export const CreateNotificationSettings = async ({
   tenantClientId,
-  reschedule,
-  starts,
-  completed,
-  awaitingReview,
-  approvedReschedule,
+  appointmentScheduled,
+  appointmentRescheduled,
+  appointmentAboutToStart,
+  appointmentStarted,
+  appointmentCancelled,
+  appointmentCompletedAwaitingFeedback,
+  documentRequested,
+  formShared,
+  authorizationAboutToExpire,
+  authorizationExpired,
+  authorizationUnitsAlmostExhausted,
+  authorizationUnitsExhausted,
+  signatureRequested,
   accessToken,
   refreshToken,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(
-      `${PLAIN_API_URL}/notification-settings`,
+      `${PLAIN_API_URL}/client/notification-settings`,
       {
         tenantClientId,
-        reschedule,
-        starts,
-        completed,
-        awaitingReview,
-        approvedReschedule,
+        appointmentScheduled,
+        appointmentRescheduled,
+        appointmentAboutToStart,
+        appointmentStarted,
+        appointmentCancelled,
+        appointmentCompletedAwaitingFeedback,
+        documentRequested,
+        formShared,
+        authorizationAboutToExpire,
+        authorizationExpired,
+        authorizationUnitsAlmostExhausted,
+        authorizationUnitsExhausted,
+        signatureRequested,
       },
     );
     return response;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message ||
-        "Create new notification settings failed",
+      error.response?.data?.message || "Create new notification settings failed",
     );
   }
 };
@@ -42,12 +57,32 @@ export const GetNotificationSettings = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/notification-settings/tenant/${tenantClientId}`,
+      `${PLAIN_API_URL}/client/notification-settings/${tenantClientId}`,
     );
     return response;
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Get notification settings failed",
+    );
+  }
+};
+
+export const UpdateNotificationSettings = async ({
+  id,
+  accessToken,
+  refreshToken,
+  ...fields
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/client/notification-settings/${id}`,
+      { id, ...fields },
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Update notification settings failed",
     );
   }
 };
@@ -156,6 +191,7 @@ export const UpdatePassword = async ({
 export default {
   CreateNotificationSettings,
   GetNotificationSettings,
+  UpdateNotificationSettings,
   UpdateClientDetails,
   UpdatePassword,
   UploadProfileImage,

@@ -55,6 +55,7 @@ const Profile = () => {
   const {
     notifications,
     isLoading: isLoadingNotifications,
+    loadingKeys: notificationLoadingKeys,
     toggleNotification,
     resetToSaved: resetNotifications,
   } = useNotificationSettings(clientTenantId, accessToken, refreshToken);
@@ -385,6 +386,7 @@ const Profile = () => {
           <NotificationSettings
             notifications={notifications}
             isLoading={isLoadingNotifications}
+            loadingKeys={notificationLoadingKeys}
             onToggle={toggleNotification}
           />
 

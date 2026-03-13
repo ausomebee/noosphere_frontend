@@ -21,6 +21,7 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
   });
   const [notificationSettingsId, setNotificationSettingsId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingKeys, setLoadingKeys] = useState(new Set());
 
   useEffect(() => {
     if (clientTenantId && accessToken) {
@@ -103,13 +104,12 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
       ...notifications,
       [key]: !notifications[key],
     };
-    
+
     // Optimistic update
     setNotifications(updatedNotifications);
+    setLoadingKeys((prev) => new Set(prev).add(key));
 
     try {
-      setIsLoading(true);
-
       if (notificationSettingsId) {
         await api2.UpdateNotificationSettings({
           id: notificationSettingsId,
@@ -137,7 +137,11 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
       showToast("Failed to update notification settings", "error");
       console.error("Error updating notification settings:", error);
     } finally {
-      setIsLoading(false);
+      setLoadingKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
     }
   };
 
@@ -148,6 +152,7 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
   return {
     notifications,
     isLoading,
+    loadingKeys,
     toggleNotification,
     resetToSaved,
   };
