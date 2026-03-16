@@ -7,6 +7,7 @@ import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 
 const TenantSingleFeature = () => {
   const { tenantId } = useParams();
@@ -15,6 +16,7 @@ const TenantSingleFeature = () => {
 
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -58,11 +60,7 @@ const TenantSingleFeature = () => {
   const extraFeatures = plan?.extraFeatures || [];
 
   const handleChangePlan = () => {
-    if (pipelineItem) {
-      navigate(`/tenants/candidate-single/${pipelineItem.pipelineStageId}/${pipelineItem.id}`);
-    } else {
-      showToast("Pipeline data not available for this tenant", "error");
-    }
+    setIsPaymentLinkModalOpen(true);
   };
 
   const renderFeaturesTable = (featureList) => (
@@ -145,6 +143,11 @@ const TenantSingleFeature = () => {
           {renderFeaturesTable(extraFeatures)}
         </>
       )}
+      <GeneratePaymentLinkModal
+        isOpen={isPaymentLinkModalOpen}
+        onClose={() => setIsPaymentLinkModalOpen(false)}
+        tenantId={tenantId}
+      />
     </div>
   );
 };

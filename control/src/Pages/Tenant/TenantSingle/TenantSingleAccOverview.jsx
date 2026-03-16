@@ -12,6 +12,7 @@ import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 
 const orgTypeOptions = [
   { value: "", label: "Select" },
@@ -78,6 +79,7 @@ const TenantSingleAccOverview = () => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -415,13 +417,7 @@ const TenantSingleAccOverview = () => {
               iconPosition="right"
               icon={<FiArrowUpRight size={20} />}
               width="auto"
-              onClick={() => {
-                if (pipelineItem) {
-                  navigate(`/tenants/candidate-single/${pipelineItem.pipelineStageId}/${pipelineItem.id}`);
-                } else {
-                  showToast("Pipeline data not available for this tenant", "error");
-                }
-              }}
+              onClick={() => setIsPaymentLinkModalOpen(true)}
             />
           </div>
           <div className="plan-item">
@@ -592,6 +588,12 @@ const TenantSingleAccOverview = () => {
           </div>
         </div>
       </ReusableModal>
+
+      <GeneratePaymentLinkModal
+        isOpen={isPaymentLinkModalOpen}
+        onClose={() => setIsPaymentLinkModalOpen(false)}
+        tenantId={tenantId}
+      />
     </div>
   );
 };

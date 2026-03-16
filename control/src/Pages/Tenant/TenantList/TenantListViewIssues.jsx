@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
+import React from "react";
 import "./TenantList.css";
 import { FaArrowLeft } from "react-icons/fa";
+import ExportPrintActions from "../../../Components/ExportPrintActions/ExportPrintActions";
 import {
   exportTableData,
   printTableData,
@@ -87,158 +88,61 @@ const TenantListViewIssues = ({
       },
     ],
   },
-  onExportCSV = exportTableData,
-  onExportPDF = exportTableToPDF,
-  onPrint = printTableData,
   onBack,
 }) => {
-  // State and refs for each section's export dropdown
-  const [exportDropdownOpen, setExportDropdownOpen] = useState({
-    issueInfo: false,
-    description: false,
-    activityHistory: false,
-    documents: false,
-    comments: false,
-  });
-
-  const exportButtonRefs = {
-    issueInfo: useRef(null),
-    description: useRef(null),
-    activityHistory: useRef(null),
-    documents: useRef(null),
-    comments: useRef(null),
-  };
-
-  const exportDropdownRefs = {
-    issueInfo: useRef(null),
-    description: useRef(null),
-    activityHistory: useRef(null),
-    documents: useRef(null),
-    comments: useRef(null),
-  };
-
-  // Toggle export dropdown for a specific section
-  const toggleExportDropdown = (section) => {
-    setExportDropdownOpen((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Extract table data for Issue Information section as a 2D array (only values, no headers)
-  const issueInfoTableData = [
-    [issue.tenant],
-    [issue.issueId],
-    [issue.title],
-    [issue.category],
-    [issue.priority], // Remove HTML markup
-    [issue.status],
-    [issue.loggedBy],
-    [issue.assignedTo],
-    [issue.dateReported],
-    [issue.lastUpdate],
-    [issue.attachments.map((att) => att.name).join(", ")],
-    [issue.resolutionDeadline],
+  const issueInfoColumns = [
+    { key: "field", header: "Field" },
+    { key: "value", header: "Value" },
+  ];
+  const issueInfoData = [
+    { field: "Tenant", value: issue.tenant },
+    { field: "Issue ID", value: issue.issueId },
+    { field: "Title", value: issue.title },
+    { field: "Category", value: issue.category },
+    { field: "Priority", value: issue.priority },
+    { field: "Status", value: issue.status },
+    { field: "Logged by", value: issue.loggedBy },
+    { field: "Assigned to", value: issue.assignedTo },
+    { field: "Date Reported", value: issue.dateReported },
+    { field: "Last Update", value: issue.lastUpdate },
+    { field: "Attachments", value: issue.attachments.map((a) => a.name).join(", ") },
+    { field: "Resolution Deadline", value: issue.resolutionDeadline },
   ];
 
-  // Extract table data for Description section as a 2D array (only values, no headers)
-  const descriptionTableData = [
-    [issue.description],
+  const descriptionColumns = [
+    { key: "field", header: "Field" },
+    { key: "value", header: "Value" },
   ];
+  const descriptionData = [{ field: "Description", value: issue.description }];
 
-  // Extract table data for Activity History section as a 2D array (no headers)
-  const activityHistoryTableData = issue.activityHistory.map((activity) => [
-    `${activity.date}, ${activity.time}`,
-    activity.action,
-    activity.user,
-    activity.details,
-  ]);
+  const activityColumns = [
+    { key: "datetime", header: "Date & Time" },
+    { key: "action", header: "Action" },
+    { key: "user", header: "User" },
+    { key: "details", header: "Details" },
+  ];
+  const activityData = issue.activityHistory.map((a) => ({
+    datetime: `${a.date}, ${a.time}`,
+    action: a.action,
+    user: a.user,
+    details: a.details,
+  }));
 
-  // Extract data for Documents section as a 2D array (no headers)
-  const documentsTableData = issue.documents.map((doc) => [doc.name]);
+  const documentColumns = [{ key: "name", header: "Document" }];
+  const documentData = issue.documents;
 
-  // Extract data for Comments section as a 2D array (no headers)
-  const commentsTableData = issue.comments.map((comment) => [
-    `${comment.date}, ${comment.time}`,
-    comment.user,
-    comment.action,
-    comment.text,
-  ]);
-
-  // Handlers for Issue Information section
-  const handleExportCSVIssueInfo = () => {
-    onExportCSV(issueInfoTableData);
-    toggleExportDropdown("issueInfo");
-  };
-
-  const handleExportPDFIssueInfo = () => {
-    onExportPDF(issueInfoTableData);
-    toggleExportDropdown("issueInfo");
-  };
-
-  const handlePrintIssueInfo = () => {
-    onPrint(issueInfoTableData);
-  };
-
-  // Handlers for Description section
-  const handleExportCSVDescription = () => {
-    onExportCSV(descriptionTableData);
-    toggleExportDropdown("description");
-  };
-
-  const handleExportPDFDescription = () => {
-    onExportPDF(descriptionTableData);
-    toggleExportDropdown("description");
-  };
-
-  const handlePrintDescription = () => {
-    onPrint(descriptionTableData);
-  };
-
-  // Handlers for Activity History section
-  const handleExportCSVActivityHistory = () => {
-    onExportCSV(activityHistoryTableData);
-    toggleExportDropdown("activityHistory");
-  };
-
-  const handleExportPDFActivityHistory = () => {
-    onExportPDF(activityHistoryTableData);
-    toggleExportDropdown("activityHistory");
-  };
-
-  const handlePrintActivityHistory = () => {
-    onPrint(activityHistoryTableData);
-  };
-
-  // Handlers for Documents section
-  const handleExportCSVDocuments = () => {
-    onExportCSV(documentsTableData);
-    toggleExportDropdown("documents");
-  };
-
-  const handleExportPDFDocuments = () => {
-    onExportPDF(documentsTableData);
-    toggleExportDropdown("documents");
-  };
-
-  const handlePrintDocuments = () => {
-    onPrint(documentsTableData);
-  };
-
-  // Handlers for Comments section
-  const handleExportCSVComments = () => {
-    onExportCSV(commentsTableData);
-    toggleExportDropdown("comments");
-  };
-
-  const handleExportPDFComments = () => {
-    onExportPDF(commentsTableData);
-    toggleExportDropdown("comments");
-  };
-
-  const handlePrintComments = () => {
-    onPrint(commentsTableData);
-  };
+  const commentColumns = [
+    { key: "datetime", header: "Date & Time" },
+    { key: "user", header: "User" },
+    { key: "action", header: "Action" },
+    { key: "text", header: "Comment" },
+  ];
+  const commentData = issue.comments.map((c) => ({
+    datetime: `${c.date}, ${c.time}`,
+    user: c.user,
+    action: c.action,
+    text: c.text,
+  }));
 
   return (
     <div className="tli-tenant-issue-page">
@@ -259,71 +163,15 @@ const TenantListViewIssues = ({
         </div>
       </div>
 
-      {/* Payment Info */}
+      {/* Issue Info */}
       <div className="payment-info">
         <div className="header-actions">
           <h2>Issue Information</h2>
-          <div className="table-actions">
-            <div className="action-menu">
-              <button
-                onClick={() => toggleExportDropdown("issueInfo")}
-                className="action-button"
-                ref={exportButtonRefs.issueInfo}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </button>
-              {exportDropdownOpen.issueInfo && (
-                <div
-                  className="action-dropdown export-dropdown"
-                  ref={exportDropdownRefs.issueInfo}
-                >
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportCSVIssueInfo}
-                  >
-                    Export as CSV
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportPDFIssueInfo}
-                  >
-                    Export as PDF
-                  </button>
-                </div>
-              )}
-            </div>
-            <button onClick={handlePrintIssueInfo} className="action-button">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
-          </div>
+          <ExportPrintActions
+            onExportCSV={() => exportTableData(issueInfoData, issueInfoColumns, "issue-info.csv", "Issue Information")}
+            onExportPDF={() => exportTableToPDF(issueInfoData, issueInfoColumns, "issue-info.pdf", "Issue Information")}
+            onPrint={() => printTableData(issueInfoData, issueInfoColumns, "Issue Information")}
+          />
         </div>
         <div className="issue-details">
           <table className="details-table">
@@ -417,67 +265,11 @@ const TenantListViewIssues = ({
       <div className="description">
         <div className="header-actions">
           <h2>Description</h2>
-          <div className="table-actions">
-            <div className="action-menu">
-              <button
-                onClick={() => toggleExportDropdown("description")}
-                className="action-button"
-                ref={exportButtonRefs.description}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </button>
-              {exportDropdownOpen.description && (
-                <div
-                  className="action-dropdown export-dropdown"
-                  ref={exportDropdownRefs.description}
-                >
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportCSVDescription}
-                  >
-                    Export as CSV
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportPDFDescription}
-                  >
-                    Export as PDF
-                  </button>
-                </div>
-              )}
-            </div>
-            <button onClick={handlePrintDescription} className="action-button">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
-          </div>
+          <ExportPrintActions
+            onExportCSV={() => exportTableData(descriptionData, descriptionColumns, "description.csv", "Description")}
+            onExportPDF={() => exportTableToPDF(descriptionData, descriptionColumns, "description.pdf", "Description")}
+            onPrint={() => printTableData(descriptionData, descriptionColumns, "Description")}
+          />
         </div>
         <table className="details-table">
           <thead>
@@ -499,70 +291,11 @@ const TenantListViewIssues = ({
       <div className="activity-history">
         <div className="header-actions">
           <h2>Activity History</h2>
-          <div className="table-actions">
-            <div className="action-menu">
-              <button
-                onClick={() => toggleExportDropdown("activityHistory")}
-                className="action-button"
-                ref={exportButtonRefs.activityHistory}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </button>
-              {exportDropdownOpen.activityHistory && (
-                <div
-                  className="action-dropdown export-dropdown"
-                  ref={exportDropdownRefs.activityHistory}
-                >
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportCSVActivityHistory}
-                  >
-                    Export as CSV
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportPDFActivityHistory}
-                  >
-                    Export as PDF
-                  </button>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={handlePrintActivityHistory}
-              className="action-button"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
-          </div>
+          <ExportPrintActions
+            onExportCSV={() => exportTableData(activityData, activityColumns, "activity-history.csv", "Activity History")}
+            onExportPDF={() => exportTableToPDF(activityData, activityColumns, "activity-history.pdf", "Activity History")}
+            onPrint={() => printTableData(activityData, activityColumns, "Activity History")}
+          />
         </div>
         <table className="details-table">
           <thead>
@@ -593,67 +326,11 @@ const TenantListViewIssues = ({
       <div className="documents-section">
         <div className="header-actions">
           <h2>Documents</h2>
-          <div className="table-actions">
-            <div className="action-menu">
-              <button
-                onClick={() => toggleExportDropdown("documents")}
-                className="action-button"
-                ref={exportButtonRefs.documents}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </button>
-              {exportDropdownOpen.documents && (
-                <div
-                  className="action-dropdown export-dropdown"
-                  ref={exportDropdownRefs.documents}
-                >
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportCSVDocuments}
-                  >
-                    Export as CSV
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleExportPDFDocuments}
-                  >
-                    Export as PDF
-                  </button>
-                </div>
-              )}
-            </div>
-            <button onClick={handlePrintDocuments} className="action-button">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
-          </div>
+          <ExportPrintActions
+            onExportCSV={() => exportTableData(documentData, documentColumns, "documents.csv", "Documents")}
+            onExportPDF={() => exportTableToPDF(documentData, documentColumns, "documents.pdf", "Documents")}
+            onPrint={() => printTableData(documentData, documentColumns, "Documents")}
+          />
         </div>
         <div className="documents-list">
           {issue.documents.map((document) => (
@@ -689,67 +366,11 @@ const TenantListViewIssues = ({
         <div className="issues-comments-section">
           <div className="header-actions">
             <h2>Comments</h2>
-            <div className="table-actions">
-              <div className="action-menu">
-                <button
-                  onClick={() => toggleExportDropdown("comments")}
-                  className="action-button"
-                  ref={exportButtonRefs.comments}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
-                {exportDropdownOpen.comments && (
-                  <div
-                    className="action-dropdown export-dropdown"
-                    ref={exportDropdownRefs.comments}
-                  >
-                    <button
-                      className="dropdown-item"
-                      onClick={handleExportCSVComments}
-                    >
-                      Export as CSV
-                    </button>
-                    <button
-                      className="dropdown-item"
-                      onClick={handleExportPDFComments}
-                    >
-                      Export as PDF
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button onClick={handlePrintComments} className="action-button">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="6 9 6 2 18 2 18 9" />
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect x="6" y="14" width="12" height="8" />
-                </svg>
-              </button>
-            </div>
+            <ExportPrintActions
+              onExportCSV={() => exportTableData(commentData, commentColumns, "comments.csv", "Comments")}
+              onExportPDF={() => exportTableToPDF(commentData, commentColumns, "comments.pdf", "Comments")}
+              onPrint={() => printTableData(commentData, commentColumns, "Comments")}
+            />
           </div>
           <div className="issues-comments-list">
             {issue.comments.map((comment, index) => (

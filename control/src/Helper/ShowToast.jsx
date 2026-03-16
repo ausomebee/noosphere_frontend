@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export const showToast = (message, type) => {
+  toast.dismiss(); // prevent stacking duplicate toasts
   const successToastOptions = {
     position: "top-center",
     style: {

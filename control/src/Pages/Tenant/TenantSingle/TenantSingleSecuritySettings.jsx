@@ -5,7 +5,6 @@ import { FiCopy } from "react-icons/fi";
 import "./TenantSingle.css";
 import {
   PasswordInput,
-  RadioInput,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -41,8 +40,6 @@ const TenantSingleSecuritySettings = () => {
   // Editable fields
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [billingFrequency, setBillingFrequency] = useState("Yearly");
-
   // Edit mode toggles
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
@@ -298,9 +295,9 @@ const TenantSingleSecuritySettings = () => {
             <Button
               onClick={handleEmailToggle}
               variant="action"
-              label={savingEmail ? "Saving..." : editingEmail ? "Save" : "Change"}
+              label={editingEmail ? "Save" : "Change"}
               width="100px"
-              disabled={savingEmail}
+              loading={savingEmail}
             />
           </div>
 
@@ -321,9 +318,9 @@ const TenantSingleSecuritySettings = () => {
             <Button
               onClick={handlePhoneToggle}
               variant="action"
-              label={savingPhone ? "Saving..." : editingPhone ? "Save" : "Change"}
+              label={editingPhone ? "Save" : "Change"}
               width="100px"
-              disabled={savingPhone}
+              loading={savingPhone}
             />
           </div>
 
@@ -347,32 +344,6 @@ const TenantSingleSecuritySettings = () => {
             </div>
           </div>
 
-          {/* Billing Frequency (dummy) */}
-          <div className="tenant-settings-row">
-            <div>
-              <label className="tenant-settings-label">Billing Frequency</label>
-              <div className="tenant-settings-radio-group">
-                <label className="tenant-settings-radio-label">
-                  <RadioInput
-                    name="billingFrequency"
-                    value="Yearly"
-                    checked={billingFrequency === "Yearly"}
-                    onChange={(e) => setBillingFrequency(e.target.value)}
-                  />
-                  Yearly
-                </label>
-                <label className="tenant-settings-radio-label">
-                  <RadioInput
-                    name="billingFrequency"
-                    value="Monthly"
-                    checked={billingFrequency === "Monthly"}
-                    onChange={(e) => setBillingFrequency(e.target.value)}
-                  />
-                  Monthly
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Admin Security Settings */}
@@ -383,10 +354,10 @@ const TenantSingleSecuritySettings = () => {
             <div className="tenant-settings-action-group">
               <Button
                 onClick={handleResetPassword}
-                label={savingPassword ? "Resetting..." : "Reset Password"}
+                label="Reset Password"
                 variant="important"
                 width="100%"
-                disabled={savingPassword}
+                loading={savingPassword}
               />
             </div>
           </div>

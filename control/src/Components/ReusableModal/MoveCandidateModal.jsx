@@ -84,7 +84,8 @@ const MoveCandidateModal = ({
         setTargetColumnId("");
         onClose();
       }}
-      isPrimaryButtonDisabled={isLoading || !targetColumnId}
+      primaryButtonDisabled={isLoading || !targetColumnId}
+      primaryButtonLoading={isLoading}
     >
       <div className="modal-content-wrapper">
         <SelectInput

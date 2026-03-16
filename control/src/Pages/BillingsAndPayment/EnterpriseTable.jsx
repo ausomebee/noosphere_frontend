@@ -1,103 +1,61 @@
-import React, { useEffect, useRef, useState } from "react";
-import { SwitchInput } from "../../Components/Input/Inputs";
-import { FiMoreVertical } from "react-icons/fi";
+import React, { useMemo } from "react";
+import CustomTable from "../../Components/Table/CustomTable";
 
-const Table = ({ plans, onDuplicate, onStatusChange, onEdit, onDelete, onViewProfile }) => {
-  const [openDropdowns, setOpenDropdowns] = useState({});
-  const dropdownRefs = useRef([]);
+const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete, onViewProfile }) => {
+  const columns = [
+    { key: "organization", header: "Organization" },
+    { key: "dateAdded", header: "Date Added" },
+    { key: "accountManager", header: "Account Manager" },
+    { key: "active", header: "Active", type: "active" },
+  ];
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      dropdownRefs.current.forEach((ref, index) => {
-        if (ref && !ref.contains(event.target) && openDropdowns[index]) {
-          setOpenDropdowns((prev) => ({ ...prev, [index]: false }));
-        }
-      });
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openDropdowns]);
+  const tableData = useMemo(
+    () =>
+      plans.map((plan) => ({
+        ...plan,
+        organization: plan.tenantName || plan.organization || "—",
+        accountManager: plan.accountManagerName || "—",
+        active: plan.status === "active",
+        hasActions: true,
+        _raw: plan,
+      })),
+    [plans]
+  );
 
-  const toggleDropdown = (index) => {
-    setOpenDropdowns((prev) => ({ ...prev, [index]: !prev[index] }));
-  };
+  const actions = [
+    {
+      label: "View Organization Profile",
+      onClick: (row) => onViewProfile(row._raw),
+    },
+    {
+      label: "Edit Plan",
+      onClick: (row) => onEdit(row._raw, "enterprise"),
+    },
+    {
+      label: "Remove Plan",
+      className: "remove",
+      onClick: (row) => onDelete(row._raw, "enterprise"),
+    },
+  ];
 
-  const handleViewPlanDetails = (plan) => {
-    // You can implement this functionality later
-  };
-
-  const handleViewOrganizationProfile = (plan) => {
-    // Close the dropdown first
-    setOpenDropdowns({});
-    // Call the navigation function
-    onViewProfile(plan);
-  };
-
-  const handleEditPlan = (plan) => {
-    setOpenDropdowns({});
-    onEdit(plan, "enterprise");
-  };
-
-  const handleDeletePlan = (plan) => {
-    setOpenDropdowns({});
-    onDelete(plan, "enterprise");
+  const handleToggleActive = (rowIndex) => {
+    const row = tableData[rowIndex];
+    if (!row) return;
+    const action = row.active ? "deactivate" : "activate";
+    onStatusChange(row._raw, action, "enterprise");
   };
 
   return (
-    <div className="billing-table-container">
-      <table className="billing-table">
-        <thead>
-          <tr>
-            <th>Organization</th>
-            <th>Date Added</th>
-            <th>Account Manager</th>
-            <th>Active</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {plans.map((plan, index) => (
-            <tr key={plan.id}>
-              <td>{plan.tenantName}</td>
-              <td>{plan.dateAdded}</td>
-              <td>{plan.accountManagerName}</td>
-              <td>
-                <SwitchInput
-                  checked={plan.status === "active"}
-                  onChange={() => onStatusChange(plan, plan.status === "active" ? "deactivate" : "activate", "enterprise")}
-                  aria-label={`Toggle active status for ${plan.organization}`}
-                  label={plan.status === "active" ? "Yes" : "No"}
-                />
-              </td>
-              <td className="action-cell">
-                <div className="dropdown-container" ref={(el) => (dropdownRefs.current[index] = el)}>
-                  <button className="feature-action-icon" onClick={() => toggleDropdown(index)}>
-                    <FiMoreVertical />
-                  </button>
-                  {openDropdowns[index] && (
-                    <div className="dropdown-menu dropdown-menu-row">
-                      <div className="dropdown-items">
-                        
-                        <button className="dropdown-item" onClick={() => handleViewOrganizationProfile(plan)}>
-                          View Organization Profile
-                        </button>
-                        <button className="dropdown-item" onClick={() => handleEditPlan(plan)}>
-                          Edit Plan
-                        </button>
-                        <button className="dropdown-item dropdown-item-danger" onClick={() => handleDeletePlan(plan)}>
-                          Remove plan
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <CustomTable
+      data={tableData}
+      columns={columns}
+      actions={actions}
+      showCheckbox={false}
+      itemsPerPage={10}
+      tableName="Enterprise Plans"
+      onToggleActive={handleToggleActive}
+    />
   );
 };
 
-export default Table;
+export default EnterpriseTable;

@@ -3,6 +3,7 @@ import useAuth from "../../hooks/useAuth";
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import {
   TextInput,
+  SelectInput,
   CheckboxInput,
   SwitchInput,
 } from "../../Components/Input/Inputs";
@@ -11,6 +12,30 @@ import authApis from "../../api/authApis";
 import { showToast } from "../../Helper/ShowToast";
 import { FiSettings, FiEdit2, FiTrash2 } from "react-icons/fi";
 import "./SecuritySettings.css";
+
+const SECURITY_QUESTION_OPTIONS = [
+  { value: "", label: "Select a security question" },
+  { value: "What is the name of your first pet?", label: "What is the name of your first pet?" },
+  { value: "What was the make of your first car?", label: "What was the make of your first car?" },
+  { value: "What is your mother's maiden name?", label: "What is your mother's maiden name?" },
+  { value: "What was the name of your elementary school?", label: "What was the name of your elementary school?" },
+  { value: "What is your favorite book?", label: "What is your favorite book?" },
+  { value: "In what city were you born?", label: "In what city were you born?" },
+  { value: "What was your childhood nickname?", label: "What was your childhood nickname?" },
+  { value: "What is the name of your favorite teacher?", label: "What is the name of your favorite teacher?" },
+  { value: "What was the first concert you attended?", label: "What was the first concert you attended?" },
+  { value: "What is your favorite vacation destination?", label: "What is your favorite vacation destination?" },
+  { value: "What was the name of your first best friend?", label: "What was the name of your first best friend?" },
+  { value: "What is the name of the street you grew up on?", label: "What is the name of the street you grew up on?" },
+  { value: "What was your favorite childhood game?", label: "What was your favorite childhood game?" },
+  { value: "What is the name of your favorite movie?", label: "What is the name of your favorite movie?" },
+  { value: "What was the first job you ever had?", label: "What was the first job you ever had?" },
+  { value: "What is your favorite hobby?", label: "What is your favorite hobby?" },
+  { value: "What was the model of your first phone?", label: "What was the model of your first phone?" },
+  { value: "What is the name of your favorite restaurant?", label: "What is the name of your favorite restaurant?" },
+  { value: "What was the name of your high school mascot?", label: "What was the name of your high school mascot?" },
+  { value: "What is your favorite historical figure?", label: "What is your favorite historical figure?" },
+];
 
 const SecuritySettings = () => {
   const { user, userId } = useAuth();
@@ -441,11 +466,11 @@ const SecuritySettings = () => {
         }}
         size="sm"
       >
-        <TextInput
+        <SelectInput
           label="Question"
           value={newQuestion}
           onChange={(e) => setNewQuestion(e.target.value)}
-          placeholder="Type something"
+          options={SECURITY_QUESTION_OPTIONS}
         />
       </ReusableModal>
 

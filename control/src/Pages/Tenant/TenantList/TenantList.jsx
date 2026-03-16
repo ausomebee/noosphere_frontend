@@ -83,7 +83,7 @@ const TenantList = () => {
         const officerName = t.accountOfficer
           ? `${t.accountOfficer.firstName || ""} ${t.accountOfficer.lastName || ""}`.trim()
           : "—";
-        const plan = t.BillingPlan?.[0]?.name || "—";
+        const plan = t.Subscription?.[0]?.plan?.name || t.BillingPlan?.[0]?.name || "—";
         const subStatus = t.Subscription?.[0]?.status || "—";
 
         return {

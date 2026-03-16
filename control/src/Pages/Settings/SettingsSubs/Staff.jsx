@@ -12,7 +12,7 @@ import useAuth from "../../../hooks/useAuth";
 import staffApi from "../../../api/staffApis";
 import departmentApi from "../../../api/departmentApis";
 import roleApi from "../../../api/roleApis";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import { SkeletonTable } from "../../../Components/LoadingSpinner";
 
 const schema = yup.object().shape({
   firstName: yup.string().required("First name is required").trim(),
@@ -41,6 +41,7 @@ const Staff = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filterValue, setFilterValue] = useState("");
 
   const {
     register,
@@ -117,6 +118,26 @@ const Staff = () => {
     ],
     [roles]
   );
+
+  const filters = useMemo(
+    () => [
+      {
+        key: "filter_type",
+        value: filterValue,
+        options: [
+          { value: "", label: "Filters" },
+          { value: "role", label: "Role" },
+          { value: "active", label: "Status" },
+          { value: "clear_filters", label: "Clear Filters" },
+        ],
+      },
+    ],
+    [filterValue]
+  );
+
+  const handleFilterChange = (key, value) => {
+    setFilterValue(value);
+  };
 
   const tableData = useMemo(
     () =>
@@ -236,7 +257,6 @@ const Staff = () => {
       fetchData();
     } catch (err) {
       showToast(err.message || "Failed to save staff", "error");
-      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -247,10 +267,6 @@ const Staff = () => {
     setEditingStaff(null);
     reset(defaultValues);
   };
-
-  if (loading) {
-    return <SectionSpinner />;
-  }
 
   return (
     <div>
@@ -268,15 +284,21 @@ const Staff = () => {
         </div>
       </div>
 
-      <CustomTable
-        data={tableData}
-        columns={columns}
-        actions={actions}
-        showCheckbox={false}
-        itemsPerPage={10}
-        tableName="Staff"
-        onToggleActive={handleToggleActive}
-      />
+      {loading ? (
+        <SkeletonTable rows={5} cols={columns.length} />
+      ) : (
+        <CustomTable
+          data={tableData}
+          columns={columns}
+          actions={actions}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          showCheckbox={false}
+          itemsPerPage={10}
+          tableName="Staff"
+          onToggleActive={handleToggleActive}
+        />
+      )}
 
       <ReusableModal
         isOpen={isModalOpen}

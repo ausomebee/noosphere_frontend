@@ -6,7 +6,7 @@ import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import roleApi from "../../../api/roleApis";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import { SkeletonTable } from "../../../Components/LoadingSpinner";
 
 const Roles = () => {
   const navigate = useNavigate();
@@ -100,10 +100,6 @@ const Roles = () => {
     setFilterValue(value);
   };
 
-  if (loading) {
-    return <SectionSpinner />;
-  }
-
   return (
     <div>
       <div className="settings-action-bar">
@@ -120,17 +116,21 @@ const Roles = () => {
         </div>
       </div>
 
-      <CustomTable
-        data={roles}
-        columns={columns}
-        actions={actions}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        showCheckbox={false}
-        itemsPerPage={10}
-        tableName="Roles"
-        onToggleActive={handleToggleActive}
-      />
+      {loading ? (
+        <SkeletonTable rows={5} cols={columns.length} />
+      ) : (
+        <CustomTable
+          data={roles}
+          columns={columns}
+          actions={actions}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          showCheckbox={false}
+          itemsPerPage={10}
+          tableName="Roles"
+          onToggleActive={handleToggleActive}
+        />
+      )}
     </div>
   );
 };

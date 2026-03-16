@@ -11,7 +11,7 @@ import {
   moduleAccessOptions,
   dataAccessLevelOptions,
 } from "../../../Data/permissionsConfig";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import { Skeleton } from "../../../Components/LoadingSpinner";
 import "./RoleConfiguration.css";
 
 const RoleConfiguration = () => {
@@ -142,8 +142,6 @@ const RoleConfiguration = () => {
     }
   };
 
-  if (loadingRole) return <div className="role-config-container"><SectionSpinner /></div>;
-
   return (
     <div className="role-config-container">
 
@@ -174,39 +172,56 @@ const RoleConfiguration = () => {
       {/* ── BASIC SETTINGS ── */}
       {activeTab === "basic" && (
         <div className="role-config-content">
-          <div className="role-field-group">
-            <TextInput
-              label="Role Name"
-              placeholder="Enter role name"
-              value={roleName}
-              onChange={(e) => setRoleName(e.target.value)}
-            />
-          </div>
+          {loadingRole ? (
+            <>
+              <div className="role-field-group">
+                <Skeleton width="100%" height="40px" />
+              </div>
+              <div className="role-field-group">
+                <Skeleton width="140px" height="14px" style={{ marginBottom: "8px" }} />
+                <Skeleton width="100%" height="80px" />
+              </div>
+              <div className="role-field-group">
+                <Skeleton width="100%" height="40px" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="role-field-group">
+                <TextInput
+                  label="Role Name"
+                  placeholder="Enter role name"
+                  value={roleName}
+                  onChange={(e) => setRoleName(e.target.value)}
+                />
+              </div>
 
-          <div className="role-field-group">
-            <label className="role-field-label">Select Module Access</label>
-            <div className="role-module-list">
-              {moduleAccessOptions.map((mod) => (
-                <label key={mod.key} className="role-module-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedModules.includes(mod.key)}
-                    onChange={() => handleModuleToggle(mod.key)}
-                  />
-                  <span>{mod.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+              <div className="role-field-group">
+                <label className="role-field-label">Select Module Access</label>
+                <div className="role-module-list">
+                  {moduleAccessOptions.map((mod) => (
+                    <label key={mod.key} className="role-module-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedModules.includes(mod.key)}
+                        onChange={() => handleModuleToggle(mod.key)}
+                      />
+                      <span>{mod.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-          <div className="role-field-group">
-            <SelectInput
-              label="Select Data Access Level"
-              options={dataAccessLevelOptions}
-              value={dataAccessLevel}
-              onChange={(e) => setDataAccessLevel(e.target.value)}
-            />
-          </div>
+              <div className="role-field-group">
+                <SelectInput
+                  label="Select Data Access Level"
+                  options={dataAccessLevelOptions}
+                  value={dataAccessLevel}
+                  onChange={(e) => setDataAccessLevel(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="role-config-actions">
             <Button label="Cancel" variant="secondary" onClick={() => navigate("/settings/roles-permissions")} />
@@ -268,7 +283,7 @@ const RoleConfiguration = () => {
 
           <div className="role-config-actions">
             <Button label="Previous" variant="secondary" onClick={() => setActiveTab("basic")} />
-            <Button label={saving ? "Saving..." : isEditing ? "Save Changes" : "Create Role"} variant="dark" onClick={handleSave} disabled={saving} />
+            <Button label={isEditing ? "Save Changes" : "Create Role"} variant="dark" onClick={handleSave} loading={saving} />
           </div>
         </div>
       )}

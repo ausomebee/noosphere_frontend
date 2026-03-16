@@ -5,7 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LoadingSpinner from "./LoadingSpinner";
 
 /* ============================
-   Authentication (public, no layout)
+   Authentication (public, no layout) — keep lazy since they're a separate flow
 ============================ */
 const SuperAdminLogin = lazy(() => import("../Pages/Authentication/SuperAdminLogin"));
 const SuperAdminChangePassword = lazy(() => import("../Pages/Authentication/SuperAdminChangePassword"));
@@ -24,31 +24,31 @@ const AdminOnboarding = lazy(() => import("../Pages/Authentication/AdminAuth/Adm
 const PaymentPage = lazy(() => import("../Pages/Payment/PaymentPage"));
 
 /* ============================
-   Dashboard (protected, with layout)
+   Dashboard (protected, with layout) — eager imports for instant navigation
 ============================ */
-const TenantList = lazy(() => import("../Pages/Tenant/TenantList/TenantList"));
-const TenantSingle = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleAccOverview"));
-const TenantPipeline = lazy(() => import("../Pages/Tenant/TenantPipeline/TenantPipeline"));
-const ProspectPanel = lazy(() => import("./ProspectPanel/ProspectPanel"));
-const ManageColumn = lazy(() => import("./ManageColumn/ManageColumn"));
-const TenantSingleFeature = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleFeature"));
-const TenantSingleBilling = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleBilling"));
-const TenantSingleIssueManagement = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleIssueManagement"));
-const TenantSingleUserLogs = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleUserLogs"));
-const TenantSingleSecuritySettings = lazy(() => import("../Pages/Tenant/TenantSingle/TenantSingleSecuritySettings"));
-const TenantListUsageStatistics = lazy(() => import("../Pages/Tenant/TenantList/TenantListUsageStatistics"));
-const FeatureManagement = lazy(() => import("../Pages/FeatureManagement/FeatureManagement"));
-const PlansAndPayment = lazy(() => import("../Pages/BillingsAndPayment/PlansAndPayment"));
-const BillingManager = lazy(() => import("../Pages/BillingsAndPayment/BillingManager"));
-const BillingReports = lazy(() => import("../Pages/BillingsAndPayment/BillingReports"));
-const SubscriberList = lazy(() => import("../Pages/BillingsAndPayment/SubscriberList"));
-const SubscriptionManager = lazy(() => import("../Pages/BillingsAndPayment/BillingReport/SubscriptionManager/SubscriptionManager"));
-const AutoBilling = lazy(() => import("../Pages/BillingsAndPayment/BillingReport/AutoBilling/AutoBilling"));
-const MainPerformance = lazy(() => import("../Pages/Performance/MainPerformance"));
-const IssueManagement = lazy(() => import("../Pages/IssueManagement/IssueManagement"));
-const ControlSettings = lazy(() => import("../Pages/Settings/ControlSettings"));
-const SecuritySettings = lazy(() => import("../Pages/Settings/SecuritySettings"));
-const RoleConfiguration = lazy(() => import("../Pages/Settings/SettingsSubs/RoleConfiguration"));
+import TenantList from "../Pages/Tenant/TenantList/TenantList";
+import TenantSingle from "../Pages/Tenant/TenantSingle/TenantSingleAccOverview";
+import TenantPipeline from "../Pages/Tenant/TenantPipeline/TenantPipeline";
+import ProspectPanel from "./ProspectPanel/ProspectPanel";
+import ManageColumn from "./ManageColumn/ManageColumn";
+import TenantSingleFeature from "../Pages/Tenant/TenantSingle/TenantSingleFeature";
+import TenantSingleBilling from "../Pages/Tenant/TenantSingle/TenantSingleBilling";
+import TenantSingleIssueManagement from "../Pages/Tenant/TenantSingle/TenantSingleIssueManagement";
+import TenantSingleUserLogs from "../Pages/Tenant/TenantSingle/TenantSingleUserLogs";
+import TenantSingleSecuritySettings from "../Pages/Tenant/TenantSingle/TenantSingleSecuritySettings";
+import TenantListUsageStatistics from "../Pages/Tenant/TenantList/TenantListUsageStatistics";
+import FeatureManagement from "../Pages/FeatureManagement/FeatureManagement";
+import PlansAndPayment from "../Pages/BillingsAndPayment/PlansAndPayment";
+import BillingManager from "../Pages/BillingsAndPayment/BillingManager";
+import BillingReports from "../Pages/BillingsAndPayment/BillingReports";
+import SubscriberList from "../Pages/BillingsAndPayment/SubscriberList";
+import SubscriptionManager from "../Pages/BillingsAndPayment/BillingReport/SubscriptionManager/SubscriptionManager";
+import AutoBilling from "../Pages/BillingsAndPayment/BillingReport/AutoBilling/AutoBilling";
+import MainPerformance from "../Pages/Performance/MainPerformance";
+import IssueManagement from "../Pages/IssueManagement/IssueManagement";
+import ControlSettings from "../Pages/Settings/ControlSettings";
+import SecuritySettings from "../Pages/Settings/SecuritySettings";
+import RoleConfiguration from "../Pages/Settings/SettingsSubs/RoleConfiguration";
 
 const AllRoutes = () => {
   return (

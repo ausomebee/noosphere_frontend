@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import "./Inputs.css";
 
@@ -313,19 +314,56 @@ const MultiSelectInput = ({
   onChange,
   placeholder = "Select...",
   error = "",
+  usePortal = false,
+  dropDirection = "down",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState(null);
   const containerRef = React.useRef(null);
+  const triggerRef = React.useRef(null);
+  const dropdownRef = React.useRef(null);
 
   React.useEffect(() => {
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(e.target))
+      ) {
         setIsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const updateDropdownPosition = React.useCallback(() => {
+    if (!usePortal || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    if (dropDirection === "up") {
+      setDropdownPos({
+        position: "fixed",
+        left: rect.left,
+        bottom: window.innerHeight - rect.top + 4,
+        width: rect.width,
+        zIndex: 99999,
+      });
+    } else {
+      setDropdownPos({
+        position: "fixed",
+        left: rect.left,
+        top: rect.bottom + 4,
+        width: rect.width,
+        zIndex: 99999,
+      });
+    }
+  }, [usePortal, dropDirection]);
+
+  React.useEffect(() => {
+    if (isOpen && usePortal) {
+      updateDropdownPosition();
+    }
+  }, [isOpen, usePortal, updateDropdownPosition]);
 
   const handleToggle = (optionValue) => {
     const next = value.includes(optionValue)
@@ -340,10 +378,34 @@ const MultiSelectInput = ({
 
   const selectedLabels = options.filter((o) => value.includes(o.value));
 
+  const dropdownContent = isOpen ? (
+    <div
+      className="multi-select-dropdown"
+      ref={dropdownRef}
+      style={usePortal && dropdownPos ? dropdownPos : undefined}
+    >
+      {options.length === 0 ? (
+        <div className="multi-select-option multi-select-empty">No options available</div>
+      ) : (
+        options.map((option) => (
+          <label key={option.value} className="multi-select-option">
+            <input
+              type="checkbox"
+              checked={value.includes(option.value)}
+              onChange={() => handleToggle(option.value)}
+            />
+            <span>{option.label}</span>
+          </label>
+        ))
+      )}
+    </div>
+  ) : null;
+
   return (
     <div className="input-group" ref={containerRef}>
       {label && <label className="input-label">{label}</label>}
       <div
+        ref={triggerRef}
         className={`multi-select-trigger ${error ? "input-error" : ""}`}
         onClick={() => setIsOpen((prev) => !prev)}
       >
@@ -369,24 +431,7 @@ const MultiSelectInput = ({
           <span className="multi-select-placeholder">{placeholder}</span>
         )}
       </div>
-      {isOpen && (
-        <div className="multi-select-dropdown">
-          {options.length === 0 ? (
-            <div className="multi-select-option multi-select-empty">No options available</div>
-          ) : (
-            options.map((option) => (
-              <label key={option.value} className="multi-select-option">
-                <input
-                  type="checkbox"
-                  checked={value.includes(option.value)}
-                  onChange={() => handleToggle(option.value)}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))
-          )}
-        </div>
-      )}
+      {usePortal ? createPortal(dropdownContent, document.body) : dropdownContent}
       {error && <span className="input-error-message">{error}</span>}
     </div>
   );
@@ -404,6 +449,8 @@ MultiSelectInput.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   error: PropTypes.string,
+  usePortal: PropTypes.bool,
+  dropDirection: PropTypes.oneOf(["up", "down"]),
 };
 
 // Exports

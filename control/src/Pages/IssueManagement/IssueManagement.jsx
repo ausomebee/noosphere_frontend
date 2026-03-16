@@ -51,7 +51,6 @@ const IssueManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isIssueLoading, setIsIssueLoading] = useState(false);
   const [isAddingIssue, setIsAddingIssue] = useState(false);
-  const [error, setError] = useState("");
   const itemsPerPage = 5;
   const cache = useRef(new Map());
   const staffCache = useRef([]);
@@ -117,7 +116,6 @@ const IssueManagement = () => {
   const fetchData = useCallback(async () => {
     const controller = new AbortController();
     setLoading(true);
-    setError("");
     const errors = [];
     try {
       const status =
@@ -313,11 +311,11 @@ const IssueManagement = () => {
       }
 
       if (errors.length > 0) {
-        setError(errors.join(" "));
+        showToast(errors.join(" "), "error");
       }
     } catch (err) {
       if (err.name !== "AbortError") {
-        setError("Unexpected error occurred while loading data.");
+        showToast("Unexpected error occurred while loading data.", "error");
         if (import.meta.env.DEV) console.error("Fetch error:", err);
       }
     } finally {
@@ -341,8 +339,7 @@ const IssueManagement = () => {
   const handleAddIssue = useCallback(
     async (newIssue, onSuccess) => {
       setIsAddingIssue(true);
-      setError("");
-      try {
+        try {
         const formData = new FormData();
         formData.append("title", newIssue.title || "");
         formData.append("description", newIssue.description || "");
@@ -391,7 +388,7 @@ const IssueManagement = () => {
         showToast("Issue added successfully", "success");
         onSuccess();
       } catch (err) {
-        setError("Failed to add issue.");
+        showToast("Failed to add issue.", "error");
         showToast("Error adding issue: " + err.message, "error");
         if (import.meta.env.DEV) console.error("Error adding issue:", err);
       } finally {
@@ -404,8 +401,7 @@ const IssueManagement = () => {
   const handleViewIssue = useCallback(
     async (row) => {
       setIsIssueLoading(true);
-      setError("");
-      const cacheKey = `issue_${row.id}`;
+        const cacheKey = `issue_${row.id}`;
       if (cache.current.has(cacheKey)) {
         setSelectedIssue(cache.current.get(cacheKey));
         setIsIssueLoading(false);
@@ -445,7 +441,7 @@ const IssueManagement = () => {
         cache.current.set(cacheKey, issue);
         setSelectedIssue(issue);
       } catch (err) {
-        setError("Failed to load issue details.");
+        showToast("Failed to load issue details.", "error");
         showToast("Error loading issue: " + err.message, "error");
         if (import.meta.env.DEV) console.error("Error fetching issue:", err);
       } finally {
@@ -677,9 +673,6 @@ const IssueManagement = () => {
         >
           <LoadingSpinner />
         </div>
-      )}
-      {error && (
-        <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
       )}
       <div className="billing-board-header">
         <div className="billing-board-title">

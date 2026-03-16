@@ -34,6 +34,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, access
 
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files).map((file) => {
@@ -98,14 +99,19 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, access
   const onSubmit = async (data) => {
     const validFile = files.find((f) => !f.error && f.progress === 100);
     if (data.resolution.trim() && data.tenantApproval) {
-      await onSave({
-        resolution: data.resolution,
-        attachmentFile: validFile ? validFile.file : null,
-      });
-      reset();
-      setFiles([]);
-      setUploading(false);
-      onClose();
+      setIsSaving(true);
+      try {
+        await onSave({
+          resolution: data.resolution,
+          attachmentFile: validFile ? validFile.file : null,
+        });
+        reset();
+        setFiles([]);
+        setUploading(false);
+        onClose();
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -121,7 +127,8 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, access
       title="Mark as Resolved"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      primaryButtonDisabled={uploading && !files.some((f) => !f.error && f.progress === 100)}
+      primaryButtonDisabled={isSaving || (uploading && !files.some((f) => !f.error && f.progress === 100))}
+      primaryButtonLoading={isSaving}
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={() => {
         reset();

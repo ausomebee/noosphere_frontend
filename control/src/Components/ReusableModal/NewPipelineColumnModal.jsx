@@ -26,28 +26,36 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Log activeTab and draft changes for debugging
-  useEffect(() => {}, [activeTab, draft, errors]);
+  // Reset all state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(resetDraft());
+      setActiveTab("Basic Setup");
+      setShowColorPicker(false);
+      setShowDocumentModal(false);
+      setShowTaskModal(false);
+    }
+  }, [isOpen, dispatch]);
 
   // Validate form inputs for the current tab
   const validateForm = (tabName) => {
-    const newErrors = {};
     if (tabName === "Basic Setup") {
       if (!draft.name?.trim()) {
-        newErrors.name = "Column name is required.";
+        showToast("Column name is required.", "error");
+        return false;
       }
       if (!draft.description?.trim()) {
-        newErrors.description = "Description is required.";
+        showToast("Description is required.", "error");
+        return false;
       }
       if (!draft.colorCode || !/^#[0-9A-Fa-f]{6}$/.test(draft.colorCode)) {
-        newErrors.colorCode = "A valid color code (e.g., #RRGGBB) is required.";
+        showToast("A valid color code is required.", "error");
+        return false;
       }
     }
-    // No validation for Tasks or Documents tabs, as they are optional
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleOpenColorPicker = () => {
@@ -76,7 +84,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
     dispatch(removeDocumentFromDraft(docId));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm(activeTab)) {
       showToast("Please fix the errors before saving.", "error");
       return;
@@ -89,15 +97,20 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       requiredTasks: draft.requiredTasks,
       requiredDocuments: draft.requiredDocuments,
     };
-    dispatch(resetDraft());
-    onSave(pipelineData);
-    handleClose(); // Close modal and reset state
+    setIsSaving(true);
+    try {
+      await onSave(pipelineData);
+      handleClose();
+    } catch {
+      // keep modal open on failure
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleClose = () => {
     dispatch(resetDraft());
     setActiveTab("Basic Setup");
-    setErrors({});
     setShowColorPicker(false);
     setShowDocumentModal(false);
     setShowTaskModal(false);
@@ -125,7 +138,6 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
     if (currentIndex > 0) {
       const prevTab = tabs[currentIndex - 1].name;
       setActiveTab(prevTab);
-      setErrors({}); // Clear errors when moving back
     }
   };
 
@@ -140,16 +152,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
             value={draft.name || ""}
             onChange={(e) => dispatch(updateDraft({ name: e.target.value }))}
             placeholder="Type something"
-            error={errors.name}
           />
-          {errors.name && (
-            <div
-              className="error-message text-xs mt-1"
-              style={{ color: "red" }}
-            >
-              {errors.name}
-            </div>
-          )}
           <TextareaInput
             label="Description"
             id="description"
@@ -158,16 +161,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               dispatch(updateDraft({ description: e.target.value }))
             }
             placeholder="Enter a description..."
-            error={errors.description}
           />
-          {errors.description && (
-            <div
-              className="error-message text-xs mt-1"
-              style={{ color: "red" }}
-            >
-              {errors.description}
-            </div>
-          )}
           <div className="color-picker-container">
             <div
               className="color-picker-row flex items-center"
@@ -193,14 +187,6 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
                 Change
               </button>
             </div>
-            {errors.colorCode && (
-              <div
-                className="error-message text-xs mt-1"
-                style={{ color: "red" }}
-              >
-                {errors.colorCode}
-              </div>
-            )}
           </div>
           {showColorPicker && (
             <ColorPicker
@@ -363,6 +349,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
         onSecondaryButtonClick={
           activeTab === tabs[0].name ? handleClose : handlePreviousClick
         }
+        primaryButtonLoading={isSaving}
       />
     )
   );

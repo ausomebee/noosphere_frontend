@@ -7,32 +7,29 @@ import "./ReusableModal.css";
 
 const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPassword("");
-      setError("");
       setIsLoading(false);
     }
   }, [isOpen]);
 
   const validatePassword = () => {
     if (!password.trim()) {
-      setError("Administrative password is required.");
+      showToast("Administrative password is required.", "error");
       return false;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      showToast("Password must be at least 6 characters long.", "error");
       return false;
     }
-    setError("");
     return true;
   };
 
   const handleConfirm = async (e) => {
-    e?.preventDefault(); // Prevent form submission if called from form
+    e?.preventDefault();
     if (!validatePassword()) return;
 
     setIsLoading(true);
@@ -40,7 +37,7 @@ const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
       await onConfirm({ plan, administratorPassword: password });
       onClose();
     } catch (err) {
-      setError(err.message || "Invalid administrative password");
+      showToast(err.message || "Invalid administrative password", "error");
     } finally {
       setIsLoading(false);
     }
@@ -63,25 +60,22 @@ const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
       primaryButtonLoading={isLoading}
     >
       <form onSubmit={handleConfirm} className="modal-form">
-      <div className="delete-confirmation-content">
-        <IoMdAlert className="warning-icon" />
-        <h3>{title}</h3>
-        <p>{message}</p>
-        
+        <div className="delete-confirmation-content">
+          <IoMdAlert className="warning-icon" />
+          <h3>{title}</h3>
+          <p>{message}</p>
           <div className="password-input-wrapper">
             <PasswordInput
               label="Administrative Password"
-              id="admin-password" // Added for accessibility
+              id="admin-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your Administrative password"
-              error={error}
-              autoFocus={isOpen} // Focus input when modal opens
+              autoFocus={isOpen}
             />
           </div>
-        
-      </div>
+        </div>
       </form>
     </ReusableModal>
   );

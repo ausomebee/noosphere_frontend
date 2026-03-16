@@ -88,7 +88,6 @@ const usePricingForm = ({
         }))
       : [],
   });
-  const [errors, setErrors] = useState({});
   const [pricePerMonth, setPricePerMonth] = useState(
     initialData.pricing?.pricePerMonth?.amount || "0"
   );
@@ -276,32 +275,35 @@ const usePricingForm = ({
   ];
 
   const validateForm = (tabName) => {
-    const newErrors = {};
+    const msgs = [];
     if (tabName === "General") {
-      if (!formData.name?.trim()) newErrors.name = "Plan name is required.";
+      if (!formData.name?.trim()) msgs.push("Plan name is required.");
       if (formData.type === "Enterprise" && !formData.assignedTo)
-        newErrors.assignedTo = "Client assignment is required for Enterprise plans.";
+        msgs.push("Client assignment is required for Enterprise plans.");
       if (!formData.colorCode || !/^#[0-9A-Fa-f]{6}$/.test(formData.colorCode))
-        newErrors.colorCode = "A valid hex color code is required (e.g., #000000).";
+        msgs.push("A valid hex color code is required.");
     } else if (tabName === "Setting & Pricing") {
       if (!pricePerMonth || !/^\d*\.?\d+$/.test(pricePerMonth))
-        newErrors.pricePerMonth = "Valid monthly price is required.";
+        msgs.push("Valid monthly price is required.");
       if (!pricePerYear || !/^\d*\.?\d+$/.test(pricePerYear))
-        newErrors.pricePerYear = "Valid yearly price is required.";
-      if (!clients) newErrors.clients = "Number of clients is required.";
-      if (!storage) newErrors.storage = "Storage amount is required.";
+        msgs.push("Valid yearly price is required.");
+      if (!clients) msgs.push("Number of clients is required.");
+      if (!storage) msgs.push("Storage amount is required.");
       if (formData.features.some((f) => !f.id || f.id.startsWith("temp-")))
-        newErrors.features = "All features must be selected.";
+        msgs.push("All features must be selected.");
       if (
         enableExtraPricing &&
         formData.extraPricing.some(
           (e) => !e.id || e.id.startsWith("extra-") || !e.cost || !e.storage
         )
       )
-        newErrors.extraPricing = "All extra features must have a valid feature, monthly price, and yearly price.";
+        msgs.push("All extra features must have valid values.");
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (msgs.length > 0) {
+      showToast(msgs[0], "error");
+      return false;
+    }
+    return true;
   };
 
   const handleAddFeature = (featureId) => {
@@ -466,7 +468,7 @@ const usePricingForm = ({
       extraPricing: [],
     });
     setActiveTab("General");
-    setErrors({});
+
     setEnableExtraPricing(false);
     setPricePerMonth("0");
     setPricePerYear("0");
@@ -511,7 +513,7 @@ const usePricingForm = ({
               setFormData((prev) => ({ ...prev, name: e.target.value }))
             }
             placeholder="Type something"
-            error={errors.name}
+
           />
           {formData.type === "Enterprise" && (
             <>
@@ -527,7 +529,7 @@ const usePricingForm = ({
                 }
                 options={tenantOptions}
                 placeholder="Select Client"
-                error={errors.assignedTo}
+
               />
               <SelectInput
                 label="Account Manager"
@@ -578,14 +580,6 @@ const usePricingForm = ({
                 Change
               </button>
             </div>
-            {errors.colorCode && (
-              <div
-                className="error-message"
-                style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.colorCode}
-              </div>
-            )}
           </div>
           {showColorPicker && (
             <ColorPicker
@@ -636,11 +630,7 @@ const usePricingForm = ({
                 </button>
               </div>
             ))}
-            {errors.features && (
-              <p style={{ color: "red", fontSize: "12px", marginTop: "8px" }}>
-                {errors.features}
-              </p>
-            )}
+
             <div className="pricing-plan-add-button-container">
               <Button
                 label="Add Feature"
@@ -700,9 +690,7 @@ const usePricingForm = ({
                       }));
                     }}
                     placeholder="0.00"
-                    className={`pricing-plan-custom-input ${
-                      errors.pricePerMonth ? "error" : ""
-                    }`}
+                    className={`pricing-plan-custom-input ${""}`}
                     style={{
                       border: "none",
                       borderRadius: "0",
@@ -757,14 +745,6 @@ const usePricingForm = ({
                 </select>
               </div>
             </div>
-            {errors.pricePerMonth && (
-              <div
-                className="pricing-plan-error-message"
-                style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.pricePerMonth}
-              </div>
-            )}
 
             <div
               className="pricing-plan-form-group"
@@ -809,9 +789,7 @@ const usePricingForm = ({
                       }));
                     }}
                     placeholder="0.00"
-                    className={`pricing-plan-custom-input ${
-                      errors.pricePerYear ? "error" : ""
-                    }`}
+                    className={`pricing-plan-custom-input ${""}`}
                     style={{
                       border: "none",
                       borderRadius: "0",
@@ -866,14 +844,6 @@ const usePricingForm = ({
                 </select>
               </div>
             </div>
-            {errors.pricePerYear && (
-              <div
-                className="pricing-plan-error-message"
-                style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.pricePerYear}
-              </div>
-            )}
 
             <div className="pricing-plan-form-group pricing-plan-for-group">
               <div className="pricing-plan-input-group">
@@ -944,14 +914,6 @@ const usePricingForm = ({
                 <span className="pricing-plan-input-suffix">of Storage</span>
               </div>
             </div>
-            {(errors.clients || errors.storage) && (
-              <div
-                className="pricing-plan-error-message"
-                style={{ color: "red", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.clients || errors.storage}
-              </div>
-            )}
           </div>
 
           <div className="pricing-plan-section-titles">Extras</div>
@@ -1018,18 +980,6 @@ const usePricingForm = ({
                         </button>
                       </div>
                     </div>
-                    {errors.extraPricing && (
-                      <p
-                        style={{
-                          color: "red",
-                          fontSize: "12px",
-                          marginTop: "4px",
-                        }}
-                      >
-                        {errors.extraPricing}
-                      </p>
-                    )}
-
                     <div
                       className="pricing-plan-input-group"
                       style={{
@@ -1212,11 +1162,6 @@ const usePricingForm = ({
                 ) : null}
               </div>
             )}
-            {errors.extraPricing && (
-              <p style={{ color: "red", fontSize: "12px", marginTop: "8px" }}>
-                {errors.extraPricing}
-              </p>
-            )}
           </div>
         </div>
       ),
@@ -1228,7 +1173,6 @@ const usePricingForm = ({
     setActiveTab,
     tabs,
     formData,
-    errors,
     enableExtraPricing,
     pricePerMonth,
     setPricePerMonth,

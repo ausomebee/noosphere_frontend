@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
-import LoadingSpinner from "../../Components/LoadingSpinner";
+import { SkeletonTable } from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/SubcriptionApis";
+import GeneratePaymentLinkModal from "../../Components/ReusableModal/GeneratePaymentLinkModal";
 import "./BillingAndPayments.css";
 
 const columns = [
@@ -34,6 +35,8 @@ const SubscriberList = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [currentPlanLabel, setCurrentPlanLabel] = useState("Plan");
   const [loading, setLoading] = useState(true);
+  const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState(null);
 
   const formatDateStr = (dateString) => {
     if (!dateString) return "N/A";
@@ -93,16 +96,15 @@ const SubscriberList = () => {
     {
       label: "Change Plan",
       onClick: (row) => {
-        if (row.pipelineStageId && row.pipelineItemId) {
-          navigate(`/tenants/candidate-single/${row.pipelineStageId}/${row.pipelineItemId}`);
+        if (row.tenantId) {
+          setSelectedTenantId(row.tenantId);
+          setIsPaymentLinkModalOpen(true);
         } else {
-          showToast("Pipeline data not available for this subscriber", "error");
+          showToast("Tenant ID not available for this subscriber", "error");
         }
       },
     },
   ];
-
-  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="subscriber-list-container">
@@ -130,17 +132,26 @@ const SubscriberList = () => {
         </button>
       </div>
 
-      <CustomTable
-        data={subscribers}
-        columns={columns}
-        filters={filters}
-        actions={tableActions}
-        showCheckbox={false}
-        showActions={true}
-        tableName="Subscribers"
-        itemsPerPage={10}
-      />
+      {loading ? (
+        <SkeletonTable rows={5} cols={columns.length} />
+      ) : (
+        <CustomTable
+          data={subscribers}
+          columns={columns}
+          filters={filters}
+          actions={tableActions}
+          showCheckbox={false}
+          showActions={true}
+          tableName="Subscribers"
+          itemsPerPage={10}
+        />
+      )}
 
+      <GeneratePaymentLinkModal
+        isOpen={isPaymentLinkModalOpen}
+        onClose={() => setIsPaymentLinkModalOpen(false)}
+        tenantId={selectedTenantId}
+      />
     </div>
   );
 };

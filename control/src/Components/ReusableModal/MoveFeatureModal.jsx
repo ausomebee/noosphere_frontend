@@ -41,7 +41,8 @@ const MoveToFeatureGroupModal = ({ isOpen, onClose, onSave, featureId, currentGr
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={handleClose}
-      isPrimaryButtonDisabled={isLoading}
+      primaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
     >
       <p className="text-sm text-gray-600 mb-4">
         Select the group to move this feature to

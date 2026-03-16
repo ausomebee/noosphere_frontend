@@ -95,7 +95,8 @@ const EditFeatureModal = ({
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={handleClose}
-      isPrimaryButtonDisabled={isLoading || !formData.name.trim() }
+      primaryButtonDisabled={isLoading || !formData.name.trim() }
+      primaryButtonLoading={isLoading}
     >
       <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
         <TextInput

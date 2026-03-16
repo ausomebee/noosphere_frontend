@@ -89,6 +89,7 @@ const AssignCandidateModal = ({
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={handleClose}
       primaryButtonDisabled={isLoading || (!selectedStaff && taskIds?.length > 1)}
+      primaryButtonLoading={isLoading}
     >
       <div className="modal-content-wrapper">
         <SelectInput
