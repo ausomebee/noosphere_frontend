@@ -24,12 +24,6 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     return socket;
   }
 
-    url: SOCKET_URL,
-    userId,
-    tenantId,
-    hasToken: !!accessToken,
-  });
-
   socket = io(SOCKET_URL, {
     auth: { token: accessToken },
     query: { userId, tenantId },

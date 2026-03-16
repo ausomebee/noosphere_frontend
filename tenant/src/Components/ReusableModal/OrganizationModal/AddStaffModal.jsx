@@ -893,9 +893,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         },
         documents: fileResults,
       };
-        "TRANSFORMED PAYLOAD:",
-        JSON.stringify(transformedData, null, 2),
-      );
 
       setSubmitting(true);
       setSubmitError("");
