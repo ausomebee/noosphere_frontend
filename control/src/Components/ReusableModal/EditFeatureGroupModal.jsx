@@ -62,7 +62,8 @@ const EditFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading  }) => {
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
-        isPrimaryButtonDisabled={isLoading || !formData.title.trim() || selectedGroup === formData.title}
+        primaryButtonDisabled={isLoading || !formData.title.trim() || selectedGroup === formData.title}
+        primaryButtonLoading={isLoading}
       >
         <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
           <SelectInput

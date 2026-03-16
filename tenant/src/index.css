@@ -1659,11 +1659,15 @@ input:checked + .slider:before {
 }
 
 /* Spinner Styling */
+.btn-spinner,
 .modal-btn-spinner {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
+.btn-spinner .spinner,
 .modal-btn-spinner .modal-spinner {
   animation: spin 1s linear infinite;
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 
-const ConfirmCancelModal = ({ isOpen, onClose, onConfirm }) => (
+const ConfirmCancelModal = ({ isOpen, onClose, onConfirm, loading = false }) => (
   <ReusableModal
     isOpen={isOpen}
     onClose={onClose}
@@ -10,6 +10,7 @@ const ConfirmCancelModal = ({ isOpen, onClose, onConfirm }) => (
     onPrimaryButtonClick={onConfirm}
     onSecondaryButtonClick={onClose}
     primaryButtonColor="#D92D20"
+    primaryButtonLoading={loading}
     size="md"
   >
     <div className="text-center">

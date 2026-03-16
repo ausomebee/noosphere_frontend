@@ -83,6 +83,17 @@ export const exportTableToPDF = (data, columns = [], filename = 'export.pdf', ta
   doc.save(filename);
 };
 
+// Escape HTML to prevent XSS in print output
+const escapeHtml = (str) => {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 // Print table data
 export const printTableData = (data, columns = [], tableName = '') => {
   const printWindow = window.open('', '_blank');
@@ -91,12 +102,12 @@ export const printTableData = (data, columns = [], tableName = '') => {
   let rowsHtml = '';
 
   if (columns.length > 0) {
-    headersHtml += columns.map(col => `<th>${col.header}</th>`).join('');
+    headersHtml += columns.map(col => `<th>${escapeHtml(col.header)}</th>`).join('');
     rowsHtml = data
       .map(
         (row, index) =>
           `<tr><td>${index + 1}</td>${columns
-            .map(col => `<td>${row[col.key] || ''}</td>`)
+            .map(col => `<td>${escapeHtml(row[col.key])}</td>`)
             .join('')}</tr>`
       )
       .join('');
@@ -105,7 +116,7 @@ export const printTableData = (data, columns = [], tableName = '') => {
     rowsHtml = Object.entries(data)
       .map(
         ([key, value], index) =>
-          `<tr><td>${index + 1}</td><td>${key}</td><td>${typeof value === 'object' ? JSON.stringify(value) : value}</td></tr>`
+          `<tr><td>${index + 1}</td><td>${escapeHtml(key)}</td><td>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : value)}</td></tr>`
       )
       .join('');
   }
@@ -113,7 +124,7 @@ export const printTableData = (data, columns = [], tableName = '') => {
   printWindow.document.write(`
     <html>
       <head>
-        <title>${tableName}</title>
+        <title>${escapeHtml(tableName)}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 0; }
           h1 { text-align: center; margin: 20px 0 10px; }
@@ -127,7 +138,7 @@ export const printTableData = (data, columns = [], tableName = '') => {
         </style>
       </head>
       <body>
-        <h1>${tableName}</h1>
+        <h1>${escapeHtml(tableName)}</h1>
         <table>
           <thead><tr>${headersHtml}</tr></thead>
           <tbody>${rowsHtml}</tbody>

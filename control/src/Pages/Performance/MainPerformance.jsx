@@ -4,7 +4,7 @@ import Gauge from "../../Components/Guages/Gauge";
 import SystemSpeedChart from "../../Components/SpeedChart/SpeedChart";
 import StackedBarChart from "../../Components/BarChart/StackedBarChart";
 import ResourceUtilizationChart from "../../Components/ResourceUtilizationUsage/ResourceUtilizationUsage";
-import { SectionSpinner } from "../../Components/LoadingSpinner";
+import { Skeleton } from "../../Components/LoadingSpinner";
 import useAuth from "../../hooks/useAuth";
 import performanceApi from "../../api/performanceApi";
 
@@ -67,14 +67,6 @@ const MainPerformance = () => {
     fetchAll();
   }, [accessToken, refreshToken]);
 
-  if (loading) {
-    return (
-      <div className="billing-board-header">
-        <SectionSpinner />
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="billing-board-header">
@@ -91,52 +83,61 @@ const MainPerformance = () => {
       <div className="general-performance-wrapper">
         <div className="general-performance-container">
           <div className="gauge-grid">
-            <Gauge
-              value={generalMetrics.systemSpeed.value}
-              maxValue={generalMetrics.systemSpeed.maxValue}
-              label="System Speed"
-              color="#F79009"
-              isPercentage={false}
-            />
-            <Gauge
-              value={generalMetrics.latency.value}
-              maxValue={generalMetrics.latency.maxValue}
-              label="Latency"
-              color="#12B76A"
-              isPercentage={false}
-            />
-            <Gauge
-              value={generalMetrics.uptime.value}
-              maxValue={generalMetrics.uptime.maxValue}
-              label="Uptime"
-              color="#12B76A"
-              isPercentage={true}
-            />
-            <Gauge
-              value={generalMetrics.apiResponseTime.value}
-              maxValue={generalMetrics.apiResponseTime.maxValue}
-              label="API Response Time"
-              color="#004ABA"
-              isPercentage={false}
-            />
+            {loading ? (
+              <>
+                <Skeleton width="100%" height="160px" borderRadius="8px" />
+                <Skeleton width="100%" height="160px" borderRadius="8px" />
+                <Skeleton width="100%" height="160px" borderRadius="8px" />
+                <Skeleton width="100%" height="160px" borderRadius="8px" />
+              </>
+            ) : (
+              <>
+                <Gauge value={generalMetrics.systemSpeed.value} maxValue={generalMetrics.systemSpeed.maxValue} label="System Speed" color="#F79009" isPercentage={false} />
+                <Gauge value={generalMetrics.latency.value} maxValue={generalMetrics.latency.maxValue} label="Latency" color="#12B76A" isPercentage={false} />
+                <Gauge value={generalMetrics.uptime.value} maxValue={generalMetrics.uptime.maxValue} label="Uptime" color="#12B76A" isPercentage={true} />
+                <Gauge value={generalMetrics.apiResponseTime.value} maxValue={generalMetrics.apiResponseTime.maxValue} label="API Response Time" color="#004ABA" isPercentage={false} />
+              </>
+            )}
           </div>
 
           <div className="system-charts-one">
-            <SystemSpeedChart periodDataMap={generalTimeseries.uptime}   title="Uptime" />
-            <SystemSpeedChart periodDataMap={generalTimeseries.latency}  title="Latency" />
+            {loading ? (
+              <>
+                <Skeleton width="100%" height="250px" borderRadius="8px" />
+                <Skeleton width="100%" height="250px" borderRadius="8px" />
+              </>
+            ) : (
+              <>
+                <SystemSpeedChart periodDataMap={generalTimeseries.uptime} title="Uptime" />
+                <SystemSpeedChart periodDataMap={generalTimeseries.latency} title="Latency" />
+              </>
+            )}
           </div>
         </div>
 
         <div className="system-charts">
-          <SystemSpeedChart periodDataMap={generalTimeseries.systemSpeed}     title="System Speed" />
-          <SystemSpeedChart periodDataMap={generalTimeseries.apiResponseTime} title="API Response Time" />
+          {loading ? (
+            <>
+              <Skeleton width="100%" height="250px" borderRadius="8px" />
+              <Skeleton width="100%" height="250px" borderRadius="8px" />
+            </>
+          ) : (
+            <>
+              <SystemSpeedChart periodDataMap={generalTimeseries.systemSpeed} title="System Speed" />
+              <SystemSpeedChart periodDataMap={generalTimeseries.apiResponseTime} title="API Response Time" />
+            </>
+          )}
         </div>
 
         <div className="stacked-bar-chart">
-          <StackedBarChart
-            series={errorRate.series?.length     ? errorRate.series     : undefined}
-            categories={errorRate.categories?.length ? errorRate.categories : undefined}
-          />
+          {loading ? (
+            <Skeleton width="100%" height="300px" borderRadius="8px" />
+          ) : (
+            <StackedBarChart
+              series={errorRate.series?.length ? errorRate.series : undefined}
+              categories={errorRate.categories?.length ? errorRate.categories : undefined}
+            />
+          )}
         </div>
       </div>
 
@@ -145,31 +146,27 @@ const MainPerformance = () => {
       </div>
 
       <div className="gauge-grid-two">
-        <Gauge
-          value={resourceMetrics.cpu.value}
-          maxValue={resourceMetrics.cpu.maxValue}
-          label="CPU Usage"
-          color="#DC6803"
-          isPercentage={true}
-        />
-        <Gauge
-          value={resourceMetrics.memory.value}
-          maxValue={resourceMetrics.memory.maxValue}
-          label="Memory Usage"
-          color="#F79009"
-          isPercentage={true}
-        />
-        <Gauge
-          value={resourceMetrics.storage.value}
-          maxValue={resourceMetrics.storage.maxValue}
-          label="Storage Usage"
-          color="#D92D20"
-          isPercentage={true}
-        />
+        {loading ? (
+          <>
+            <Skeleton width="100%" height="160px" borderRadius="8px" />
+            <Skeleton width="100%" height="160px" borderRadius="8px" />
+            <Skeleton width="100%" height="160px" borderRadius="8px" />
+          </>
+        ) : (
+          <>
+            <Gauge value={resourceMetrics.cpu.value} maxValue={resourceMetrics.cpu.maxValue} label="CPU Usage" color="#DC6803" isPercentage={true} />
+            <Gauge value={resourceMetrics.memory.value} maxValue={resourceMetrics.memory.maxValue} label="Memory Usage" color="#F79009" isPercentage={true} />
+            <Gauge value={resourceMetrics.storage.value} maxValue={resourceMetrics.storage.maxValue} label="Storage Usage" color="#D92D20" isPercentage={true} />
+          </>
+        )}
       </div>
 
       <div className="resource-utilization-chart-wrapper">
-        <ResourceUtilizationChart periodDataMap={resourceTimeseries} />
+        {loading ? (
+          <Skeleton width="100%" height="300px" borderRadius="8px" />
+        ) : (
+          <ResourceUtilizationChart periodDataMap={resourceTimeseries} />
+        )}
       </div>
     </>
   );

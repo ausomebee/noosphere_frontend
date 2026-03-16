@@ -24,9 +24,10 @@ const AuthorizationCard = ({
   const circumference = Math.PI * radius; // Half circle
   const filledLength = (percentage / 100) * circumference;
 
-  const handleServiceCodeChange = (value) => {
+  const handleServiceCodeChange = (e) => {
+    const val = e?.target?.value ?? e;
     if (onServiceCodeChange) {
-      onServiceCodeChange(value);
+      onServiceCodeChange(val);
     }
   };
 
@@ -41,9 +42,9 @@ const AuthorizationCard = ({
       <div className="service-type-selector">
         <SelectInput
           options={serviceCodeOptions}
-          value={selectedServiceCodeId}
+          value={selectedServiceCodeId || ""}
           onChange={handleServiceCodeChange}
-          placeholder="Select Service Type"
+          placeholder="Select service code"
           width="100%"
           disabled={serviceCodeOptions.length === 0}
         />

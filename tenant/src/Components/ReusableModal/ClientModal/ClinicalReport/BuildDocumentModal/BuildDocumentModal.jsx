@@ -206,6 +206,7 @@ const BuildDocumentModal = ({
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleStartCreating}
       onSecondaryButtonClick={onClose}
+      primaryButtonLoading={loading}
       primaryButtonDisabled={!isFormValid || loading}
       size="lg"
     >

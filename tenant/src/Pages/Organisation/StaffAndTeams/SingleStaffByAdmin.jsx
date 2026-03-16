@@ -288,7 +288,6 @@ const SingleStaffByAdmin = () => {
 
   const handleSaveBasicInfo = async (payload) => {
     try {
-      console.log("Saving Basic Info Payload:", payload);
       await api.UpdateTenantStaffBasicInfo({
         id: tenantStaffId,
         fullName: payload.fullName,

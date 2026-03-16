@@ -33,11 +33,11 @@ const AppContent = () => {
   }, [dispatch]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner fullPage />;
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingSpinner fullPage />}>
     
         <AllRoutes />
      

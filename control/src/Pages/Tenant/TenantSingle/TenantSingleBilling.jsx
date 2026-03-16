@@ -14,6 +14,9 @@ import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
+import TenantListViewPayment from "../../../Pages/Tenant/TenantList/TenantListViewPayment";
+import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
+import { createRoot } from "react-dom/client";
 
 // MM/dd/yyyy format required by CustomTable's date range filter parser
 const toFilterDate = (dateStr) => {
@@ -108,6 +111,9 @@ const TenantSingleBilling = () => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice]   = useState(null);
   const [invoiceLoading, setInvoiceLoading]     = useState(false);
+  const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
+  const [showPaymentView, setShowPaymentView] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
 
   const carouselRef = useRef(null);
   const scrollCarousel = (dir) => {
@@ -207,6 +213,7 @@ const TenantSingleBilling = () => {
     amount:       (inv.total ?? inv.amount) != null ? `$${Number(inv.total ?? inv.amount).toFixed(2)}` : "—",
     status:       inv.status || "—",
     hasCheckbox:  true,
+    hasActions:   true,
   });
 
   const mapPayment = (pay) => ({
@@ -217,6 +224,7 @@ const TenantSingleBilling = () => {
     date:      toFilterDate(pay.paymentDate || pay.createdAt || pay.paidAt),
     status:    pay.status || "—",
     hasCheckbox: true,
+    hasActions:  true,
   });
 
   // Table data — from active display list
@@ -327,6 +335,94 @@ const TenantSingleBilling = () => {
     }
   };
 
+  const getPaymentIcon = (name) => {
+    const brand = (name || "").toLowerCase();
+    if (brand === "amex" || brand === "american express") return <SiAmericanexpress size={20} />;
+    if (brand === "mastercard") return <SiMastercard size={20} />;
+    if (brand === "paypal") return <SiPaypal size={20} />;
+    return <SiVisa size={20} />;
+  };
+
+  const handleViewPayment = async (row) => {
+    try {
+      const paymentId = row.id;
+      const response = await invoiceApi.GetPaymentById({ id: paymentId, accessToken, refreshToken });
+      const paymentData = response.data || {};
+
+      const payment = {
+        Plan: paymentData.Plan || "N/A",
+        Period:
+          paymentData.Period && typeof paymentData.Period === "object"
+            ? `${formatDateDisplay(paymentData.Period.start)} - ${formatDateDisplay(paymentData.Period.stop)}`
+            : paymentData.Period || "N/A",
+        "Payment ID": `PAY00${paymentId}`,
+        "Payment Date": formatDateDisplay(paymentData.paymentDate),
+        "Time of Payment": formatDateDisplay(paymentData.paymentTime),
+        "Payment Amount": paymentData.amount != null ? `$${Number(paymentData.amount).toLocaleString()}` : "N/A",
+        "Payment Method": {
+          icon: getPaymentIcon(paymentData.paymentMethod?.name),
+          number: paymentData.paymentMethod?.code || "N/A",
+        },
+        Invoice: {
+          id: paymentData.invoice?.invoiceId?.replace(/^INV/, "") || "N/A",
+          ...paymentData.invoice,
+          link: "#",
+        },
+      };
+      setSelectedPayment(payment);
+      setShowPaymentView(true);
+    } catch (err) {
+      showToast(err.message || "Failed to load payment details", "error");
+    }
+  };
+
+  const handleDownloadInvoice = async (row) => {
+    try {
+      const invoiceId = row.id;
+      const response = await invoiceApi.GetInvoiceById({ id: invoiceId, accessToken, refreshToken });
+      const data = response.data || {};
+
+      const invoice = {
+        companyName: "noosphere",
+        companyAddress: data.companyAddress,
+        invoiceId: data.invoiceId || invoiceId,
+        dueDate: formatDateDisplay(data.dueDate),
+        billingFrequency: data.billingFrequency,
+        customerInfo: data.customerInfo,
+        items: buildInvoiceItems(data.items, data.billingFrequency),
+        total: formatCurrency(data.total || 0),
+      };
+
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "absolute";
+      tempContainer.style.left = "-9999px";
+      tempContainer.style.width = "700px";
+      document.body.appendChild(tempContainer);
+
+      const root = createRoot(tempContainer);
+      root.render(<SubscriptionInvoice {...invoice} />);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(tempContainer, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`invoice_${invoiceId}.pdf`);
+
+      root.unmount();
+      document.body.removeChild(tempContainer);
+    } catch (err) {
+      showToast(err.message || "Failed to download invoice", "error");
+    }
+  };
+
   const invoiceColumns = [
     { key: "document",     header: "NAME" },
     { key: "date_created", header: "DATE CREATED" },
@@ -344,7 +440,12 @@ const TenantSingleBilling = () => {
 
   const invoiceActions = [
     { label: "View Invoice",     onClick: (row) => handleViewInvoice(row.id) },
-    { label: "Download Invoice", onClick: () => showToast("Download coming soon", "info") },
+    { label: "Download Invoice", onClick: handleDownloadInvoice },
+  ];
+
+  const paymentActions = [
+    { label: "View Payment", onClick: handleViewPayment },
+    { label: "Download Invoice", onClick: handleDownloadInvoice },
   ];
 
   if (loading) {
@@ -368,13 +469,7 @@ const TenantSingleBilling = () => {
             iconPosition="right"
             icon={<FiArrowUpRight size={18} />}
             width="auto"
-            onClick={() => {
-              if (pipelineItem) {
-                navigate(`/tenants/candidate-single/${pipelineItem.pipelineStageId}/${pipelineItem.id}`);
-              } else {
-                showToast("Pipeline data not available", "error");
-              }
-            }}
+            onClick={() => setIsPaymentLinkModalOpen(true)}
           />
         </div>
         <div className="plan-info-col">
@@ -538,7 +633,8 @@ const TenantSingleBilling = () => {
                     setOpenFilterModal(`pay-${type}`);
                   }
                 }}
-                showActions={false}
+                actions={paymentActions}
+                showActions={true}
                 showCheckbox={false}
                 itemsPerPage={10}
                 tableName="Payments"
@@ -607,6 +703,33 @@ const TenantSingleBilling = () => {
           </div>
         </div>
       )}
+
+      {showPaymentView && selectedPayment && (
+        <div
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}
+          onClick={() => setShowPaymentView(false)}
+        >
+          <div
+            style={{ backgroundColor: "#fff", borderRadius: "8px", maxWidth: "900px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative", padding: "20px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TenantListViewPayment
+              paymentInfo={selectedPayment}
+              onBack={() => setShowPaymentView(false)}
+              onViewInvoice={(invoiceId) => {
+                setShowPaymentView(false);
+                handleViewInvoice(invoiceId);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <GeneratePaymentLinkModal
+        isOpen={isPaymentLinkModalOpen}
+        onClose={() => setIsPaymentLinkModalOpen(false)}
+        tenantId={tenantId}
+      />
     </div>
   );
 };

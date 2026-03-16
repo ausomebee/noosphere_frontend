@@ -12,6 +12,7 @@ import {
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi"; // For fetching service codes
+import roleApi from "../../../api/roleApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
@@ -80,11 +81,6 @@ const locationOptions = [
   { value: "Other", label: "Other" },
 ];
 
-const staffRoleOptions = [
-  { value: "Role 1", label: "Role 1" },
-  { value: "Role 2", label: "Role 2" },
-  { value: "Role 3", label: "Role 3" },
-];
 
 // Utility to transform initial data for edit mode
 const transformSessionTypeToFormData = (data) => {
@@ -123,6 +119,8 @@ const AddSessionTypeModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+  const [staffRoleOptions, setStaffRoleOptions] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
   const { tenantId, accessToken, refreshToken } = useAuth();
 
@@ -184,16 +182,40 @@ const AddSessionTypeModal = ({
     }
   }, [tenantId, accessToken, refreshToken]);
 
+  const fetchRoles = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+    setLoadingRoles(true);
+    try {
+      const response = await roleApi.GetAllRolesByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const roles = response?.data?.data || response?.data || [];
+      const options = roles.map((role) => ({
+        value: role.id,
+        label: role.name,
+      }));
+      setStaffRoleOptions(options);
+    } catch (error) {
+      console.error("Failed to load roles:", error);
+      showToast("Failed to load staff roles", "error");
+    } finally {
+      setLoadingRoles(false);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
   useEffect(() => {
     if (isOpen) {
       fetchServiceCodes();
+      fetchRoles();
       const values =
         mode === "edit"
           ? transformSessionTypeToFormData(initialData)
           : defaultFormValues;
       reset(values);
     }
-  }, [isOpen, mode, initialData, reset, fetchServiceCodes]);
+  }, [isOpen, mode, initialData, reset, fetchServiceCodes, fetchRoles]);
 
   const handleSave = async (data) => {
     setIsLoading(true);
@@ -223,8 +245,7 @@ const AddSessionTypeModal = ({
       reset(defaultFormValues);
       onClose();
     } catch (error) {
-      console.error("Error saving session type:", error);
-      showToast("Failed to save session type", "error");
+      showToast(error.message || "Failed to save session type", "error");
     } finally {
       setIsLoading(false);
     }
@@ -347,6 +368,7 @@ const AddSessionTypeModal = ({
               <SelectInput
                 label="Staff Role(s) Allowed"
                 options={staffRoleOptions}
+                isLoading={loadingRoles}
                 error={errors.staffRole?.message}
                 placeholder="Select staff role"
                 {...field}

@@ -13,6 +13,7 @@ const AddAuthorizationModal = ({
   onSubmit,
   initialData = {},
   mode = "add",
+  loading = false,
 }) => {
   const [formData, setFormData] = useState({
     title: initialData.title || "",
@@ -244,6 +245,7 @@ const AddAuthorizationModal = ({
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit}
       onSecondaryButtonClick={onClose}
+      primaryButtonLoading={loading}
       size="lg"
     >
       <div className="space-y-6">

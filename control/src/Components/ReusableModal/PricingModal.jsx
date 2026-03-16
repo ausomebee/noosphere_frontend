@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReusableModal from "./ReusableModal";
 import usePricingForm from "../../Pages/BillingsAndPayment/usePricingForm";
 import { showToast } from "../../Helper/ShowToast";
@@ -45,12 +45,14 @@ const PricingPlanModal = ({
     onSave,
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleClose = () => {
     resetForm();
     onClose();
   };
 
-  const handleNextClick = () => {
+  const handleNextClick = async () => {
     if (!validateForm(activeTab)) {
       showToast("Please fill in all required fields.", "error");
       return;
@@ -59,8 +61,13 @@ const PricingPlanModal = ({
     if (currentIndex < tabs.length - 1) {
       setActiveTab(tabs[currentIndex + 1].name);
     } else {
-      handleSave();
-      handleClose();
+      setIsSaving(true);
+      try {
+        await handleSave();
+        handleClose();
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -88,6 +95,7 @@ const PricingPlanModal = ({
         onTabChange={setActiveTab}
         onPrimaryButtonClick={handleNextClick}
         onSecondaryButtonClick={handlePreviousClick}
+        primaryButtonLoading={isSaving}
       />
     )
   );

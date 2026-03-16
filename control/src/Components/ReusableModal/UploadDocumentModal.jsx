@@ -130,6 +130,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
       onPrimaryButtonClick={handleAttachFiles}
       onSecondaryButtonClick={handleClose}
       primaryButtonDisabled={uploading || files.length === 0}
+      primaryButtonLoading={uploading}
     >
       <div className="upload-modal-content">
         <div className="upload-area">

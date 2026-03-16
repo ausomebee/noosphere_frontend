@@ -3,18 +3,12 @@ import React, { useState } from "react";
 import ReusableModal from "../../ReusableModal/ReusableModal";
 import { TextInput, TextareaInput, CheckboxInput } from "../../Input/Inputs";
 
-const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit }) => {
+const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [dueDate, setDueDate] = useState("");
 
   const handleSave = (e) => {
     e.preventDefault();
-    console.log({
-      documentName: e.target.documentName.value,
-      description: e.target.description.value,
-      allowMultiple,
-      dueDate,
-    });
     onSubmit({
       name: e.target.documentName.value,
       description: e.target.description.value,
@@ -33,6 +27,7 @@ const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSave}
+      primaryButtonLoading={loading}
       size="md"
     >
       {/* Name of document */}

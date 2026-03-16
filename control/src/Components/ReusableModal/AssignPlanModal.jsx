@@ -56,7 +56,8 @@ const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTit
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
-        isPrimaryButtonDisabled={isLoading}
+        primaryButtonDisabled={isLoading}
+        primaryButtonLoading={isLoading}
       >
         <div>
           <p className="text-sm text-gray-600 mb-4">

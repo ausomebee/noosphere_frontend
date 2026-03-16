@@ -32,11 +32,13 @@ const TargetLibraryModal = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectingId, setSelectingId] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
       setSearchTerm("");
       setCurrentPage(1);
+      setSelectingId(null);
     }
   }, [isOpen]);
 
@@ -49,10 +51,16 @@ const TargetLibraryModal = ({
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleSelect = (target) => {
-    onSelectTarget(target.id, target.name);
-    showToast(`"${target.name}" imported`, "success");
-    onClose();
+  const handleSelect = async (target) => {
+    setSelectingId(target.id);
+    try {
+      await onSelectTarget(target.id, target.name);
+      onClose();
+    } catch (e) {
+      showToast(e.message || "Failed to import target", "error");
+    } finally {
+      setSelectingId(null);
+    }
   };
 
   return (
@@ -103,6 +111,8 @@ const TargetLibraryModal = ({
                   <Button
                     variant="primary"
                     label="Use Target"
+                    loading={selectingId === target.id}
+                    disabled={selectingId !== null}
                     onClick={() => handleSelect(target)}
                   />
                 </div>

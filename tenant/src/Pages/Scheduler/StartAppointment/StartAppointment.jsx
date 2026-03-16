@@ -293,7 +293,6 @@ const StartAppointment = () => {
           currentTarget.taskSteps.length > 0
             ? currentTarget.taskSteps
             : [];
-        console.log("Opening Task Analysis with steps:", extraProps.steps);
         break;
       case "Latency":
         modalType = "latency";

@@ -204,7 +204,6 @@ const BasicInfoModal = ({
         accessToken,
         refreshToken,
       };
-      console.log("Saving Basic Info:", payload);
       await onSave(payload);
       reset(); // Reset form after successful save
       onClose();

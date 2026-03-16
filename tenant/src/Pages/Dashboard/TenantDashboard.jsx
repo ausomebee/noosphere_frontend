@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import { Menu } from "@headlessui/react";
 import Button from "../../Components/Button/Button";
-
-import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import IntakePipeline from "../Dashboard/DashboardCards/IntakePipeline";
 import SessionInformation from "../Dashboard/DashboardCards/SessionInformation";
 import Authorizations from "../Dashboard/DashboardCards/Authorizations";
@@ -16,10 +13,8 @@ const DashboardCard = ({
   title,
   children,
   onRearrange,
-  onHide,
   index,
   hasData,
-  onMove,
   count,
   selectInputs = [],
   viewMoreRoute,
@@ -87,48 +82,6 @@ const DashboardCard = ({
           </div>
 
           <div className="dashboard-card-header-right">
-            <Menu as="div" className="relative">
-              <Menu.Button
-                className={`button-base ${
-                  !hasData ? "button-disabled" : "button-hover:hover"
-                }`}
-                disabled={!hasData}
-              >
-                <HiOutlineCog6Tooth size={24} />
-              </Menu.Button>
-
-              {hasData && (
-                <Menu.Items className="absolute right-0 mt-2 w-150 bg-white border border-gray-200 p-6 rounded-md shadow-lg z-50">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-100" : ""
-                        } w-full text-left px-4 py-2 text-sm text-gray-700`}
-                        onClick={() => onHide(index)}
-                      >
-                        Hide this Card
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-100" : ""
-                        } w-full text-left px-4 py-2 text-sm text-gray-700`}
-                        onClick={() =>
-                          onMove(index, prompt("Move to position (0-4):") || 0)
-                        }
-                      >
-                        Move Card
-                      </button>
-                    )}
-                  </Menu.Item>
-                </Menu.Items>
-              )}
-            </Menu>
-
             {hasData &&
               (viewMoreRoute || onViewMore) &&
               title !== "Productivity Information" && (

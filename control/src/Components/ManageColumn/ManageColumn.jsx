@@ -508,10 +508,10 @@ const ManageColumn = () => {
                 />
                 <div className="save-button-container">
                   <Button
-                    label={isSaving ? "Saving..." : "Save Changes"}
-                    icon={!isSaving && <FaSave />}
+                    label="Save Changes"
+                    icon={<FaSave />}
                     onClick={handleSaveBasicInfo}
-                    disabled={isSaving}
+                    loading={isSaving}
                     width="auto"
                   />
                 </div>
@@ -585,8 +585,9 @@ const ManageColumn = () => {
                   </div>
                   <div className="save-button-container">
                     <Button
-                      label={isSaving ? "Saving..." : "Save Tasks"}
-                      icon={!isSaving && <FaSave />}
+                      label="Save Tasks"
+                      icon={<FaSave />}
+                      loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
                           "tasks",
@@ -665,8 +666,9 @@ const ManageColumn = () => {
                   </div>
                   <div className="save-button-container">
                     <Button
-                      label={isSaving ? "Saving..." : "Save Documents"}
-                      icon={!isSaving && <FaSave />}
+                      label="Save Documents"
+                      icon={<FaSave />}
+                      loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
                           "documents",

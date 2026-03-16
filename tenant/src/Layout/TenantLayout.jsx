@@ -115,7 +115,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       moduleKey: "HELP_SUPPORT",
       children: [
         { name: "Support Requests", path: "/help/support-requests", permissionKey: "view_support_request_list" },
-        { name: "Knowledge Base", path: "/help/knowledge-base", permissionKey: "view_knowledge_base" },
+        // { name: "Knowledge Base", path: "/help/knowledge-base", permissionKey: "view_knowledge_base" },
       ],
     },
     { name: "Settings", icon: FaCog, path: "/settings", moduleKey: "SETTINGS" },

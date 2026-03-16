@@ -61,7 +61,6 @@ const ClientList = () => {
   // Handle Create or Update
   const handleSubmitClient = async (formData) => {
     setIsUpdating(true);
-    console.log(formData)
     try {
       if (editingClient) {
         // UPDATE

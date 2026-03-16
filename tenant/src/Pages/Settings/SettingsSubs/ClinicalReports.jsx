@@ -180,7 +180,6 @@ const ClinicalReports = () => {
 
   const handleCreateTemplate = ({ initialTitle }) => {
     // ← changed from templateName → initialTitle
-    console.log("Received from modal:", initialTitle); // ← debug log (remove later)
 
     if (!initialTitle?.trim()) {
       showToast("Please enter a template name", "warning");

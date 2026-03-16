@@ -12,8 +12,9 @@ const DeleteConfirmationModal = ({
   confirmButtonText,
   confirmButtonColor,
   showConfirmButton = true,
-  showSecondaryButton = true, 
-  icon: IconComponent, 
+  showSecondaryButton = true,
+  icon: IconComponent,
+  loading = false,
 }) => {
   return (
     <ReusableModal
@@ -26,6 +27,7 @@ const DeleteConfirmationModal = ({
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={onConfirm}
       onSecondaryButtonClick={onClose}
+      primaryButtonLoading={loading}
       showPrimaryButton={showConfirmButton}
       showSecondaryButton={showSecondaryButton}
       footerClassName={

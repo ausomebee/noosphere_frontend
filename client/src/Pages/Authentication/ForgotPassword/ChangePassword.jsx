@@ -33,8 +33,6 @@ const ChangePassword = () => {
   const navigate = useNavigate();
   const { clientTenantId } = useParams();
 
-  console.log(clientTenantId);
-
   const {
     register,
     handleSubmit,

@@ -365,7 +365,6 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to create plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Create plan error:", err);
-    throw err;
   } finally {
     setLoading(false);
   }
@@ -450,7 +449,6 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to update plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Update plan error:", err);
-    throw err;
   } finally {
     setLoading(false);
   }
@@ -560,7 +558,6 @@ const handleSavePlan = async (planData) => {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
       if (import.meta.env.DEV) console.error("Status change error:", err);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -611,7 +608,6 @@ const handleSavePlan = async (planData) => {
       const errorMsg = err.message || "Invalid administrator password";
       showToast(errorMsg, "error");
       if (import.meta.env.DEV) console.error("Delete plan error:", err);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -811,21 +807,15 @@ const handleSavePlan = async (planData) => {
             (filteredEnterprisePlans.length === 0 ? (
               <FallbackUI />
             ) : (
-              <div className="billing-table-container">
-                <Table
-                  plans={filteredEnterprisePlans}
-                  onDuplicate={(plan) =>
-                    handleDuplicatePlan(plan, "enterprise")
-                  }
-                  onStatusChange={(plan, action) =>
-                    handleStatusChange(plan, action, "enterprise")
-                  }
-                  onEdit={(plan) => handleEditPlan(plan, "enterprise")}
-                  onDelete={(plan) => handleDeletePlan(plan, "enterprise")}
-                  onViewProfile={handleViewOrganizationProfile}
-                  disabled={loading}
-                />
-              </div>
+              <Table
+                plans={filteredEnterprisePlans}
+                onStatusChange={(plan, action) =>
+                  handleStatusChange(plan, action, "enterprise")
+                }
+                onEdit={(plan) => handleEditPlan(plan, "enterprise")}
+                onDelete={(plan) => handleDeletePlan(plan, "enterprise")}
+                onViewProfile={handleViewOrganizationProfile}
+              />
             ))}
         </div>
       )}

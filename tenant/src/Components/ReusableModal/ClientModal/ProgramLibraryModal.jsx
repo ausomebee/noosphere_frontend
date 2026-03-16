@@ -29,11 +29,13 @@ const ProgramLibraryModal = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectingId, setSelectingId] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
       setSearchTerm("");
       setCurrentPage(1);
+      setSelectingId(null);
     }
   }, [isOpen]);
 
@@ -46,10 +48,16 @@ const ProgramLibraryModal = ({
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleSelect = (program) => {
-    onSelectProgram(program.id, program.name);
-    showToast(`"${program.name}" imported`, "success");
-    onClose();
+  const handleSelect = async (program) => {
+    setSelectingId(program.id);
+    try {
+      await onSelectProgram(program.id, program.name);
+      onClose();
+    } catch (e) {
+      showToast(e.message || "Failed to import program", "error");
+    } finally {
+      setSelectingId(null);
+    }
   };
 
   return (
@@ -100,6 +108,8 @@ const ProgramLibraryModal = ({
                   <Button
                     variant="primary"
                     label="Use Program"
+                    loading={selectingId === program.id}
+                    disabled={selectingId !== null}
                     onClick={() => handleSelect(program)}
                   />
                 </div>

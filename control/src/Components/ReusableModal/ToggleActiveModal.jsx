@@ -29,7 +29,8 @@ const ToggleActiveModal = ({
       onSecondaryButtonClick={onClose}
       showPrimaryButton={true}
       showSecondaryButton={true}
-      isPrimaryButtonDisabled={isLoading}
+      primaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
     >
       <div className="delete-confirmation-content">
         <IoMdAlert className="warning-icon" style={{ color: "#000000" }} /> {/* Black icon */}

@@ -299,7 +299,6 @@ const SingleViewPayer = () => {
 
   const handleServiceCodeSave = async (data) => {
     try {
-      console.log("Saving service code:", data); // Debug
       let updatedRawPayerServiceCodes;
       if (selectedService) {
         updatedRawPayerServiceCodes = rawPayerServiceCodes.map((psc) =>
@@ -406,7 +405,6 @@ const SingleViewPayer = () => {
   };
 
   const transformTableDataToServiceCode = (tableRow) => {
-    console.log("Transforming table row to service code:", tableRow); // Debug
     const modifiers = Array.isArray(tableRow.modifiersData)
       ? tableRow.modifiersData.map((m) => ({
           modifier: m.modifier || "",
@@ -473,7 +471,6 @@ const SingleViewPayer = () => {
             variant="secondary"
             icon={<FaPlus />}
             onClick={() => {
-              console.log("Opening Add Service Code Modal"); // Debug
               setSelectedService(null);
               setIsServiceCodeModalOpen(true);
             }}
@@ -510,7 +507,6 @@ const SingleViewPayer = () => {
         <AddSingleServiceCodeModal
           isOpen={isServiceCodeModalOpen}
           onClose={() => {
-            console.log("Closing Service Code Modal"); // Debug
             setIsServiceCodeModalOpen(false);
             setSelectedService(null);
           }}

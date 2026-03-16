@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import DashboardLayout from "../../layouts/ClientLayout";
 
 import "./Home.css";
@@ -204,11 +204,6 @@ const Home = () => {
         });
 
         setAuthorizationData(response.data.data);
-        
-        // Set first service code as selected by default
-        if (response.data.data.length > 0) {
-          setSelectedServiceCode(response.data.data[0]);
-        }
       } catch (error) {
         console.error("Failed to fetch authorization codes:", error);
         setError("Failed to load authorization data");
@@ -718,10 +713,12 @@ const Home = () => {
   };
 
   // Success Handlers
-  const showSuccess = () => {
+  const successTimerRef = useRef(null);
+  const showSuccess = useCallback(() => {
     setSuccessModalOpen(true);
-    setTimeout(() => setSuccessModalOpen(false), 3500);
-  };
+    clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => setSuccessModalOpen(false), 3500);
+  }, []);
 
   const handleRescheduleSuccess = () => {
     setRescheduleModalOpen(false);

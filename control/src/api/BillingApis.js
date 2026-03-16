@@ -17,7 +17,7 @@ const CreateBillingPlan = async ({
   extraFeaturesEnabled,
   tenantId,
   adminId,
-  extraFeatures = [],
+  extraFeatures = { connect: [] },
   extraFeaturesWithPrice = [],
   accessToken,
   refreshToken,
@@ -45,7 +45,7 @@ const CreateBillingPlan = async ({
     adminId,
     features,
     extraFeatures,
-    extraFeaturesWithPrice, // should already be in correct format
+    extraFeaturesWithPrice,
   };
 
   try {
@@ -73,7 +73,7 @@ const UpdateBillingPlan = async ({
   extraFeaturesEnabled,
   tenantId,
   adminId,
-  extraFeatures = [],
+  extraFeatures = { connect: [] },
   extraFeaturesWithPrice = [],
   accessToken,
   refreshToken,

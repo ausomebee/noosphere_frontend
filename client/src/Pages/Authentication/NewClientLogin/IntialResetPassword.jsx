@@ -32,7 +32,6 @@ const InitialResetPassword = () => {
   const clientTenantId = useSelector((state) => state.auth?.user?.tenantLinks[0]?.id);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  console.log("Client Tenant ID:", clientTenantId);
   const {
     register,
     handleSubmit,

@@ -82,7 +82,6 @@ const LatencyModal = ({
     const stimTime = trials[currentTrialIdx].stimulusPresented;
     const stimSeconds = timeToSeconds(stimTime);
     if (stimSeconds === 0) {
-      console.log("No stimulus time set, cannot start latency");
       return;
     }
 
@@ -151,7 +150,6 @@ const LatencyModal = ({
 
   // Save handler
   const handleSave = () => {
-    console.log("Saving trials and notes:", { trials, notes });
     onSave({ trials, notes });
   };
 
@@ -165,7 +163,6 @@ const LatencyModal = ({
     );
     setCurrentIdx(idx);
     setRenderTrigger((prev) => prev + 1); // Force re-render
-    console.log(`Set stimulusPresented for trial ${idx + 1} to ${currentTime}`);
   };
 
   const current = trials[currentTrialIdx];

@@ -18,12 +18,14 @@ const FormLibraryModal = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectingId, setSelectingId] = useState(null);
 
   // Reset page & search when modal opens
   useEffect(() => {
     if (isOpen) {
       setSearchTerm("");
       setCurrentPage(1);
+      setSelectingId(null);
     }
   }, [isOpen]);
 
@@ -39,10 +41,16 @@ const FormLibraryModal = ({
     startIndex + ITEMS_PER_PAGE
   );
 
-  const handleUseForm = (form) => {
-    onSelectForm(form.id, form.name);
-    showToast(`"${form.name}" imported successfully`, "success");
-    onClose();
+  const handleUseForm = async (form) => {
+    setSelectingId(form.id);
+    try {
+      await onSelectForm(form.id, form.name);
+      onClose();
+    } catch (e) {
+      showToast(e.message || "Failed to import form", "error");
+    } finally {
+      setSelectingId(null);
+    }
   };
 
   return (
@@ -97,6 +105,8 @@ const FormLibraryModal = ({
                   <Button
                     variant="primary"
                     label="Use Form"
+                    loading={selectingId === form.id}
+                    disabled={selectingId !== null}
                     onClick={() => handleUseForm(form)}
                   />
                 </div>

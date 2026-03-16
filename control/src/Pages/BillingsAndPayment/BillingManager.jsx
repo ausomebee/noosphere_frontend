@@ -8,6 +8,9 @@ import api2 from "../../api/TenantApis";
 import useAuth from "../../hooks/useAuth";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
+import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
+import { showToast } from "../../Helper/ShowToast";
+import "./BillingAndPayments.css";
 
 const BillingManager = () => {
   const { accessToken, refreshToken } = useAuth();
@@ -40,7 +43,6 @@ const BillingManager = () => {
     },
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -149,6 +151,14 @@ const BillingManager = () => {
       : `${formattedValue}${suffix}`;
   };
 
+  const getPaymentIcon = (name) => {
+    const brand = (name || "").toLowerCase();
+    if (brand === "amex" || brand === "american express") return <SiAmericanexpress size={20} />;
+    if (brand === "mastercard") return <SiMastercard size={20} />;
+    if (brand === "paypal") return <SiPaypal size={20} />;
+    return <SiVisa size={20} />;
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -163,7 +173,6 @@ const BillingManager = () => {
     const fetchMetrics = async () => {
       try {
         setLoading(true);
-        setError(null);
 
         const params = {
           from: "all",
@@ -244,7 +253,7 @@ const BillingManager = () => {
         });
       } catch (err) {
         if (import.meta.env.DEV) console.error("Error fetching metrics:", err);
-        setError("Failed to load metrics. Please try again later.");
+        showToast("Failed to load metrics. Please try again later.", "error");
       } finally {
         setLoading(false);
       }
@@ -257,7 +266,6 @@ const BillingManager = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
 
         const params =
           activeSubTab === "all"
@@ -369,7 +377,7 @@ const BillingManager = () => {
         }
       } catch (err) {
         if (import.meta.env.DEV) console.error(`Error fetching ${activeTab}:`, err);
-        setError(`Failed to load ${activeTab}. Please try again later.`);
+        showToast(`Failed to load ${activeTab}. Please try again later.`, "error");
       } finally {
         setLoading(false);
       }
@@ -390,8 +398,7 @@ const BillingManager = () => {
       ) {
         try {
           setLoading(true);
-          setError(null);
-
+  
           const totalBilledPromise =
             filterValues.totalBilled === "custom" &&
             customDates.totalBilled.start &&
@@ -443,7 +450,7 @@ const BillingManager = () => {
           setOverviewData(updatedOverviewData);
         } catch (err) {
           if (import.meta.env.DEV) console.error("Error fetching custom metrics:", err);
-          setError("Failed to load custom metrics.");
+          showToast("Failed to load custom metrics.", "error");
         } finally {
           setLoading(false);
         }
@@ -482,7 +489,7 @@ const BillingManager = () => {
       setShowInvoiceModal(true);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
-      setError("Failed to load invoice details.");
+      showToast("Failed to load invoice details.", "error");
     }
   };
 
@@ -498,13 +505,16 @@ const BillingManager = () => {
 
       const payment = {
         Plan: paymentData.Plan || "N/A",
-        Period: paymentData.Period || "N/A",
+        Period:
+          paymentData.Period && typeof paymentData.Period === "object"
+            ? `${formatDate(paymentData.Period.start)} - ${formatDate(paymentData.Period.stop)}`
+            : paymentData.Period || "N/A",
         "Payment ID": formatPaymentId(paymentId),
         "Payment Date": formatDate(paymentData.paymentDate),
         "Time of Payment": formatDate(paymentData.paymentTime),
         "Payment Amount": formatNumber(paymentData.amount, true),
         "Payment Method": {
-          icon: "/visa-icon.png",
+          icon: getPaymentIcon(paymentData.paymentMethod?.name),
           number: paymentData.paymentMethod?.code || "N/A",
         },
         Invoice: {
@@ -517,7 +527,7 @@ const BillingManager = () => {
       setShowPaymentView(true);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error fetching payment:", err);
-      setError("Failed to load payment details.");
+      showToast("Failed to load payment details.", "error");
     }
   };
 

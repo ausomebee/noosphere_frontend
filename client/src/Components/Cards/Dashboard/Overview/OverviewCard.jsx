@@ -1,7 +1,9 @@
+import { useState } from "react";
 import "./OverviewCard.css";
 
 const OverviewCard = ({ data, onPeriodChange, selectedPeriod }) => {
   const isEmpty = !data || !data.chartData || data.chartData.length === 0;
+  const [hoveredBar, setHoveredBar] = useState(null);
 
   const maxValue = isEmpty
     ? 24
@@ -82,8 +84,19 @@ const OverviewCard = ({ data, onPeriodChange, selectedPeriod }) => {
                   </div>
                 ))
               : data.chartData.map((item, index) => (
-                  <div key={index} className="bar-group">
+                  <div
+                    key={index}
+                    className="bar-group"
+                    onMouseEnter={() => setHoveredBar(index)}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  >
                     <div className="bar-wrapper">
+                      {hoveredBar === index && (
+                        <div className="bar-tooltip">
+                          <span className="bar-tooltip-value">{item.value}</span>
+                          <span className="bar-tooltip-label">sessions</span>
+                        </div>
+                      )}
                       <div
                         className="bar"
                         style={{ height: `${(item.value / 24) * 100}%` }}

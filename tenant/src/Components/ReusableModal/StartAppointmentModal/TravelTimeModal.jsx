@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 
-const TravelTimeModal = ({ isOpen, onClose, onSave }) => {
+const TravelTimeModal = ({ isOpen, onClose, onSave, loading = false }) => {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
@@ -33,6 +33,7 @@ const TravelTimeModal = ({ isOpen, onClose, onSave }) => {
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={handleClose}
+      primaryButtonLoading={loading}
       size="lg"
     >
       <div className=" grid grid-cols-2 gap-4">

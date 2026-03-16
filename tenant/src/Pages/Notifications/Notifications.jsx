@@ -125,7 +125,6 @@ const Notifications = () => {
       .then((res) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
         const list = Array.isArray(raw) ? raw : [];
-        console.log("[Notifications] raw:", list);
         setNotifications(list);
       })
       .catch((err) => console.error("[Notifications] Failed to load:", err))

@@ -10,7 +10,7 @@ import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import departmentApi from "../../../api/departmentApis";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import { SkeletonTable } from "../../../Components/LoadingSpinner";
 
 const schema = yup.object().shape({
   name: yup.string().required("Department name is required").trim(),
@@ -32,6 +32,7 @@ const Departments = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filterValue, setFilterValue] = useState("");
 
   const {
     register,
@@ -95,6 +96,26 @@ const Departments = () => {
     () => admins.map((a) => ({ value: a.id, label: `${a.firstName} ${a.lastName}`.trim() })),
     [admins]
   );
+
+  const filters = useMemo(
+    () => [
+      {
+        key: "filter_type",
+        value: filterValue,
+        options: [
+          { value: "", label: "Filters" },
+          { value: "teamLead", label: "Team Lead" },
+          { value: "active", label: "Status" },
+          { value: "clear_filters", label: "Clear Filters" },
+        ],
+      },
+    ],
+    [filterValue]
+  );
+
+  const handleFilterChange = (key, value) => {
+    setFilterValue(value);
+  };
 
   const tableData = useMemo(
     () =>
@@ -199,7 +220,6 @@ const Departments = () => {
       fetchData();
     } catch (err) {
       showToast(err.message || "Failed to save department", "error");
-      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -210,10 +230,6 @@ const Departments = () => {
     setEditingDepartment(null);
     reset(defaultValues);
   };
-
-  if (loading) {
-    return <SectionSpinner />;
-  }
 
   return (
     <div>
@@ -231,15 +247,21 @@ const Departments = () => {
         </div>
       </div>
 
-      <CustomTable
-        data={tableData}
-        columns={columns}
-        actions={actions}
-        showCheckbox={false}
-        itemsPerPage={10}
-        tableName="Departments"
-        onToggleActive={handleToggleActive}
-      />
+      {loading ? (
+        <SkeletonTable rows={5} cols={columns.length} />
+      ) : (
+        <CustomTable
+          data={tableData}
+          columns={columns}
+          actions={actions}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          showCheckbox={false}
+          itemsPerPage={10}
+          tableName="Departments"
+          onToggleActive={handleToggleActive}
+        />
+      )}
 
       <ReusableModal
         isOpen={isModalOpen}
@@ -271,6 +293,8 @@ const Departments = () => {
             onChange={(val) => setValue("members", val)}
             placeholder="Select members..."
             error={errors.members?.message}
+            usePortal
+            dropDirection="up"
           />
         </form>
       </ReusableModal>

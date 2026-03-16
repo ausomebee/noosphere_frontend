@@ -56,7 +56,6 @@ const PayrollCycles = () => {
         accessToken,
         refreshToken,
       });
-      console.log("Fetched payroll cycles:", JSON.stringify(data, null, 2));
       const transformedData = data.data.map((item) => ({
         id: item.id,
         name: item.name || "Unknown",
@@ -127,7 +126,6 @@ const PayrollCycles = () => {
       }
 
       try {
-        console.log("API payload:", JSON.stringify(payload, null, 2));
         if (mode === "add") {
           await api.CreatePayrollCycles(payload);
           showToast("Payroll cycle created successfully", "success");

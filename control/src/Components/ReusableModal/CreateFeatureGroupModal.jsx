@@ -39,7 +39,8 @@ const CreateFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading }) => {
         secondaryButtonColor="#ffffff"
         onPrimaryButtonClick={handleSave}
         onSecondaryButtonClick={handleClose}
-        isPrimaryButtonDisabled={isLoading}
+        primaryButtonDisabled={isLoading}
+        primaryButtonLoading={isLoading}
       >
         <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
           <TextInput

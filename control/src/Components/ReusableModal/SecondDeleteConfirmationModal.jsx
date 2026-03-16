@@ -113,6 +113,7 @@ const DeleteConfirmationModal = ({
         (step === 2 && requirePassword && !password.trim())
       }
       secondaryButtonDisabled={isLoading}
+      primaryButtonLoading={isLoading}
       footerClassName={
         showConfirmButton && !showSecondaryButton
           ? "center-footer"

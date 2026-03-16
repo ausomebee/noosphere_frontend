@@ -18,9 +18,12 @@ import TenantListViewPayment from "../../../../Pages/Tenant/TenantList/TenantLis
 import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvoice";
 import api from "../../../../api/SubcriptionApis";
 import apiInvoice from "../../../../api/InvoiceApi";
+import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
 import { createRoot } from "react-dom/client";
+import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import { showToast } from "../../../../Helper/ShowToast";
+import "../../BillingAndPayments.css";
 import { debounce } from "lodash";
 
 const SubscriptionManager = () => {
@@ -45,7 +48,6 @@ const SubscriptionManager = () => {
     CANCELLED: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showPaymentView, setShowPaymentView] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -53,8 +55,18 @@ const SubscriptionManager = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [isInvoiceLoading, setIsInvoiceLoading] = useState(false);
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState(null);
 
   const cache = useRef(new Map()); // In-memory cache for GET APIs
+
+  const getPaymentIcon = useCallback((name) => {
+    const brand = (name || "").toLowerCase();
+    if (brand === "amex" || brand === "american express") return <SiAmericanexpress size={20} />;
+    if (brand === "mastercard") return <SiMastercard size={20} />;
+    if (brand === "paypal") return <SiPaypal size={20} />;
+    return <SiVisa size={20} />;
+  }, []);
 
   const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
@@ -194,7 +206,10 @@ const SubscriptionManager = () => {
 
         const payment = {
           Plan: paymentData.Plan || row.plan,
-          Period: paymentData.Period,
+          Period:
+            paymentData.Period && typeof paymentData.Period === "object"
+              ? `${formatDate(paymentData.Period.start)} - ${formatDate(paymentData.Period.stop)}`
+              : paymentData.Period || "N/A",
           "Payment ID": formatPaymentId(paymentId),
           "Payment Date": formatDate(paymentData.paymentDate),
           "Time of Payment": formatDate(paymentData.paymentTime),
@@ -203,7 +218,7 @@ const SubscriptionManager = () => {
             true
           ),
           "Payment Method": {
-            icon: "/visa-icon.png",
+            icon: getPaymentIcon(paymentData.paymentMethod?.name),
             number: paymentData.paymentMethod?.code || "N/A",
           },
           Invoice: {
@@ -218,7 +233,7 @@ const SubscriptionManager = () => {
         setSelectedPayment(payment);
         setShowPaymentView(true);
       } catch (err) {
-        setError("Failed to load payment details.");
+        showToast("Failed to load payment details.", "error");
         if (import.meta.env.DEV) console.error("Error fetching payment:", err);
       } finally {
         setIsPaymentLoading(false);
@@ -268,7 +283,7 @@ const SubscriptionManager = () => {
         setSelectedInvoice(invoice);
         setShowInvoiceModal(true);
       } catch (err) {
-        setError("Failed to load invoice details.");
+        showToast("Failed to load invoice details.", "error");
         if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
       } finally {
         setIsInvoiceLoading(false);
@@ -366,7 +381,10 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => {} // TODO: implement handler,
+        onClick: (row) => {
+          setSelectedTenantId(row.tenantId);
+          setIsPaymentLinkModalOpen(true);
+        },
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -392,7 +410,10 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => {} // TODO: implement handler,
+        onClick: (row) => {
+          setSelectedTenantId(row.tenantId);
+          setIsPaymentLinkModalOpen(true);
+        },
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -404,7 +425,10 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Assign a New Plan",
-        onClick: (row) => {} // TODO: implement handler,
+        onClick: (row) => {
+          setSelectedTenantId(row.tenantId);
+          setIsPaymentLinkModalOpen(true);
+        },
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -437,7 +461,10 @@ const SubscriptionManager = () => {
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
       {
         label: "Change Plan",
-        onClick: (row) => {} // TODO: implement handler,
+        onClick: (row) => {
+          setSelectedTenantId(row.tenantId);
+          setIsPaymentLinkModalOpen(true);
+        },
       },
     ],
     [handleViewPayment, handleViewTenantProfile]
@@ -458,7 +485,6 @@ const SubscriptionManager = () => {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const params =
         activeTab === "all"
@@ -517,7 +543,7 @@ const SubscriptionManager = () => {
         throw new Error("Failed to fetch some data.");
       }
     } catch (err) {
-      setError("Failed to load subscriptions. Please try again later.");
+      showToast("Failed to load subscriptions. Please try again later.", "error");
       if (import.meta.env.DEV) console.error("Error fetching subscriptions:", err);
     } finally {
       setLoading(false);
@@ -657,8 +683,7 @@ const SubscriptionManager = () => {
   const handleSave = useCallback(
     async (data) => {
       setLoading(true);
-      setError(null);
-      try {
+        try {
         const subscriptionIds =
           data.items.length === 1
             ? data.items[0].id
@@ -736,10 +761,9 @@ const SubscriptionManager = () => {
           setSelectedStatuses(new Array());
         }
       } catch (err) {
-        setError("Failed to perform subscription action.");
+        showToast("Failed to perform subscription action.", "error");
         showToast("Error updating subscription: " + err.message, "error");
         if (import.meta.env.DEV) console.error("Error saving subscription action:", err);
-        throw err;
       } finally {
         setLoading(false);
       }
@@ -771,9 +795,6 @@ const SubscriptionManager = () => {
         >
           <LoadingSpinner />
         </div>
-      )}
-      {error && (
-        <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
       )}
       {showInvoiceModal && selectedInvoice && (
         <div
@@ -896,6 +917,11 @@ const SubscriptionManager = () => {
         onClose={() => setIsPauseModalOpen(false)}
         onSave={handleSave}
         selectedItems={selectedItems}
+      />
+      <GeneratePaymentLinkModal
+        isOpen={isPaymentLinkModalOpen}
+        onClose={() => setIsPaymentLinkModalOpen(false)}
+        tenantId={selectedTenantId}
       />
     </>
   );

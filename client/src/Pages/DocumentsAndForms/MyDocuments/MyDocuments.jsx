@@ -135,7 +135,6 @@ const MyDocuments = () => {
 
   const handleCreateFolder = async (folderData) => {
     try {
-      showToast("Creating folder...", "info");
       const res = await api.CreateNewFolder({
         clientTenantId,
         folderName: folderData.name.trim(),
@@ -170,7 +169,6 @@ const MyDocuments = () => {
 
   const handleCreateFile = async (payloads) => {
     try {
-      showToast("Uploading file(s)...", "info");
       for (const payload of payloads) {
         await api.CreateNewFile({
           clientTenantId,

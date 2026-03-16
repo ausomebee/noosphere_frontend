@@ -39,7 +39,6 @@ const AddClaimModal = ({ isOpen, onClose, onSave, isLoading }) => {
   };
 
   const onError = (errors) => {
-    console.log("Form errors:", errors);
   };
 
   return (

@@ -37,7 +37,6 @@ const AppointmentModal = ({
   sessionTypes,
   staff,
 }) => {
-  console.log(initialData);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -621,8 +620,7 @@ const AppointmentModal = ({
         onClose();
       }
     } catch (error) {
-      console.error("Submission error:", error.message);
-      showToast(error.message || "Failed to save appointment");
+      // Parent handles the error toast
     } finally {
       setIsLoading(false);
     }
