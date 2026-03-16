@@ -58,6 +58,7 @@ const CreateAReportDocumentModal = ({ isOpen, onClose, onStartCreating, clientDa
         secondaryButtonText="Cancel"
         onPrimaryButtonClick={handleNext}
         onSecondaryButtonClick={handleMainClose}
+        primaryButtonLoading={false}
         size="lg"
       >
         <div className="create-document-content">

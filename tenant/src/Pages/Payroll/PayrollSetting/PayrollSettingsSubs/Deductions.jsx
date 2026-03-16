@@ -59,7 +59,6 @@ const Deductions = () => {
         accessToken,
         refreshToken,
       });
-      console.log("Fetched deductions:", JSON.stringify(data, null, 2));
       const transformedData = data.data.map((item) => ({
         id: item.id,
         name: item.name || "Unknown",

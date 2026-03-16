@@ -114,7 +114,6 @@ const ClientInformationSection = ({
           : formData.otherClientInformation,
     };
 
-    console.log("Setting form data to:", updatedFormData);
     setFormData(updatedFormData);
 
     // Only call onChange on initial load if we have auto-populated data

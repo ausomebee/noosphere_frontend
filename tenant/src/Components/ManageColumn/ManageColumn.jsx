@@ -265,7 +265,6 @@ const ManageColumn = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    console.log(`Filter changed: ${key} = ${value}`);
   };
 
   const filters = [
@@ -284,211 +283,207 @@ const ManageColumn = () => {
   };
 
   return (
-    <Layout>
-      <div className="manage-column-container">
-        {/* Header */}
-        <div className="manage-column-header" onClick={() => navigate(-1)}>
-          <button className="manage-back-button">
-            <FaArrowLeft />
-            Back
-          </button>
-          <h1>{draft.name || "Pipeline Stage"}</h1>
-          <button
-            className="manage-back-button"
-            style={{ opacity: 0, pointerEvents: "none" }}
-          >
-            <FaArrowLeft />
-            Back
-          </button>
-        </div>
+    <div className="manage-column-container">
+      {/* Header */}
+      <div className="manage-column-header" onClick={() => navigate(-1)}>
+        <button className="manage-back-button">
+          <FaArrowLeft />
+          Back
+        </button>
+        <h1>{draft.name || "Pipeline Stage"}</h1>
+        <button
+          className="manage-back-button"
+          style={{ opacity: 0, pointerEvents: "none" }}
+        >
+          <FaArrowLeft />
+          Back
+        </button>
+      </div>
 
-        {/* Tabs */}
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === "basic" ? "active" : ""}`}
-            onClick={() => setActiveTab("basic")}
-          >
-            Basic setup
-          </button>
-          <button
-            className={`tab ${activeTab === "candidates" ? "active" : ""}`}
-            onClick={() => setActiveTab("candidates")}
-          >
-            Intake Candidates
-            <span className="candidate-count">{tableDataState.length}</span>
-          </button>
-        </div>
+      {/* Tabs */}
+      <div className="tabs">
+        <button
+          className={`tab ${activeTab === "basic" ? "active" : ""}`}
+          onClick={() => setActiveTab("basic")}
+        >
+          Basic setup
+        </button>
+        <button
+          className={`tab ${activeTab === "candidates" ? "active" : ""}`}
+          onClick={() => setActiveTab("candidates")}
+        >
+          Intake Candidates
+          <span className="candidate-count">{tableDataState.length}</span>
+        </button>
+      </div>
 
-        {/* Tab Content */}
-        <div className="tab-content">
-          {activeTab === "basic" && (
-            <div className="basic-setup">
-              <TextInput
-                label="Column name"
-                value={draft.name}
-                onChange={(e) =>
-                  dispatch(updateDraft({ name: e.target.value }))
-                }
-                placeholder="Enter column name"
-              />
-              <TextareaInput
-                label="Description"
-                value={draft.description}
-                onChange={(e) =>
-                  dispatch(updateDraft({ description: e.target.value }))
-                }
-                placeholder="Enter description"
-              />
-              <div className="color-picker-container">
-                <div
-                  className="color-picker-row"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginTop: "20px",
-                  }}
-                >
-                  <label style={{ marginRight: "10px" }}>Colour code</label>
-                  <div
-                    className="color-preview"
-                    style={{
-                      backgroundColor: draft.colorCode || "#000000",
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      display: "inline-block",
-                    }}
-                  />
-                  <button
-                    className="change-button"
-                    onClick={() => setShowColorPicker(true)}
-                    style={{
-                      marginLeft: "auto",
-                      color: "#0000EE",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Change
-                  </button>
-                </div>
-              </div>
-              {showColorPicker && (
-                <ColorPicker
-                  color={draft.colorCode}
-                  onChange={(color) => {
-                    dispatch(updateDraft({ colorCode: color }));
-                    setShowColorPicker(false);
-                  }}
-                  onClose={() => setShowColorPicker(false)}
-                />
-              )}
-
+      {/* Tab Content */}
+      <div className="tab-content">
+        {activeTab === "basic" && (
+          <div className="basic-setup">
+            <TextInput
+              label="Column name"
+              value={draft.name}
+              onChange={(e) => dispatch(updateDraft({ name: e.target.value }))}
+              placeholder="Enter column name"
+            />
+            <TextareaInput
+              label="Description"
+              value={draft.description}
+              onChange={(e) =>
+                dispatch(updateDraft({ description: e.target.value }))
+              }
+              placeholder="Enter description"
+            />
+            <div className="color-picker-container">
               <div
+                className="color-picker-row"
                 style={{
                   display: "flex",
-                  gap: "10px",
-                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "20px",
                 }}
               >
-                <Button
-                  variant="secondary-danger"
-                  width="200px"
-                  label="Delete this Column"
-                  onClick={() => {
-                    if (window.confirm("Delete this stage?")) {
-                      navigate(-1);
-                      showToast("Stage deleted", "success");
-                    }
+                <label style={{ marginRight: "10px" }}>Colour code</label>
+                <div
+                  className="color-preview"
+                  style={{
+                    backgroundColor: draft.colorCode || "#000000",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    display: "inline-block",
                   }}
                 />
-                <div className="save-button-container">
-                  <Button
-                    label={isSaving ? "Saving..." : "Save Changes"}
-                    icon={!isSaving && <FaSave />}
-                    onClick={handleSaveBasicInfo}
-                    disabled={isSaving}
-                    width="auto"
-                  />
-                </div>
+                <button
+                  className="change-button"
+                  onClick={() => setShowColorPicker(true)}
+                  style={{
+                    marginLeft: "auto",
+                    color: "#0000EE",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Change
+                </button>
               </div>
             </div>
-          )}
+            {showColorPicker && (
+              <ColorPicker
+                color={draft.colorCode}
+                onChange={(color) => {
+                  dispatch(updateDraft({ colorCode: color }));
+                  setShowColorPicker(false);
+                }}
+                onClose={() => setShowColorPicker(false)}
+              />
+            )}
 
-          {activeTab === "candidates" && (
-            <div className="candidates-tab">
-              <div className="add-candidate-manage">
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "space-between",
+              }}
+            >
+              <Button
+                variant="secondary-danger"
+                width="200px"
+                label="Delete this Column"
+                onClick={() => {
+                  if (window.confirm("Delete this stage?")) {
+                    navigate(-1);
+                    showToast("Stage deleted", "success");
+                  }
+                }}
+              />
+              <div className="save-button-container">
                 <Button
-                  label="Add new candidate"
-                  icon={<FaPlus />}
-                  iconPosition="left"
-                  variant="primary"
+                  label={isSaving ? "Saving..." : "Save Changes"}
+                  icon={!isSaving && <FaSave />}
+                  onClick={handleSaveBasicInfo}
+                  disabled={isSaving}
                   width="auto"
-                  onClick={() => setShowAddClientModal(true)}
-                  disabled={isCreatingCandidate}
-                />
-              </div>
-              <div className="candidates-content">
-                <CustomTable
-                  data={tableDataState}
-                  columns={columns}
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  actions={actions.map((action) => ({
-                    ...action,
-                    onClick: (candidate) =>
-                      action.onClick(candidate, {
-                        setSelectedCandidate,
-                        setSelectedCandidates,
-                        setShowDeleteCandidateModal,
-                        navigate,
-                      }),
-                  }))}
-                  showActions={true}
-                  itemsPerPage={15}
-                  tableName="ManageColumn"
-                  onSelectionChange={(selectedRows, selectedItems) => {
-                    const selectedIds = selectedItems.map((item) => item.id);
-                    setSelectedCandidates(selectedIds);
-                  }}
-                  onDelete={(selectedIds) => {
-                    setSelectedCandidates(selectedIds);
-                    setShowDeleteCandidateModal(true);
-                  }}
                 />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Modals */}
-        <AddClientModal
-          isOpen={showAddClientModal}
-          onClose={() => setShowAddClientModal(false)}
-          onSubmit={handleAddCandidate}
-          initialData={null}
-        />
-
-        <DeleteConfirmationModal
-          isOpen={showDeleteCandidateModal}
-          onClose={() => {
-            setShowDeleteCandidateModal(false);
-            setSelectedCandidate(null);
-            setSelectedCandidates([]);
-          }}
-          onConfirm={handleDeleteTask}
-          title={`Are you sure you want to delete ${selectedCandidates.length} candidate(s)?`}
-          message="All information and files related to the selected candidate(s) will be deleted forever. This action cannot be undone."
-          confirmButtonText="Delete"
-          confirmButtonColor="#D92D20"
-        />
-
-        {(status === "loading" || isSaving || isCreatingCandidate) && (
-          <LoadingSpinner />
+        {activeTab === "candidates" && (
+          <div className="candidates-tab">
+            <div className="add-candidate-manage">
+              <Button
+                label="Add new candidate"
+                icon={<FaPlus />}
+                iconPosition="left"
+                variant="primary"
+                width="auto"
+                onClick={() => setShowAddClientModal(true)}
+                disabled={isCreatingCandidate}
+              />
+            </div>
+            <div className="candidates-content">
+              <CustomTable
+                data={tableDataState}
+                columns={columns}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                actions={actions.map((action) => ({
+                  ...action,
+                  onClick: (candidate) =>
+                    action.onClick(candidate, {
+                      setSelectedCandidate,
+                      setSelectedCandidates,
+                      setShowDeleteCandidateModal,
+                      navigate,
+                    }),
+                }))}
+                showActions={true}
+                itemsPerPage={15}
+                tableName="ManageColumn"
+                onSelectionChange={(selectedRows, selectedItems) => {
+                  const selectedIds = selectedItems.map((item) => item.id);
+                  setSelectedCandidates(selectedIds);
+                }}
+                onDelete={(selectedIds) => {
+                  setSelectedCandidates(selectedIds);
+                  setShowDeleteCandidateModal(true);
+                }}
+              />
+            </div>
+          </div>
         )}
       </div>
-    </Layout>
+
+      {/* Modals */}
+      <AddClientModal
+        isOpen={showAddClientModal}
+        onClose={() => setShowAddClientModal(false)}
+        onSubmit={handleAddCandidate}
+        initialData={null}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteCandidateModal}
+        onClose={() => {
+          setShowDeleteCandidateModal(false);
+          setSelectedCandidate(null);
+          setSelectedCandidates([]);
+        }}
+        onConfirm={handleDeleteTask}
+        title={`Are you sure you want to delete ${selectedCandidates.length} candidate(s)?`}
+        message="All information and files related to the selected candidate(s) will be deleted forever. This action cannot be undone."
+        confirmButtonText="Delete"
+        confirmButtonColor="#D92D20"
+      />
+
+      {(status === "loading" || isSaving || isCreatingCandidate) && (
+        <LoadingSpinner />
+      )}
+    </div>
   );
 };
 

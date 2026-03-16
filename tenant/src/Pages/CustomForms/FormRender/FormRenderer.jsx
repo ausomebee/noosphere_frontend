@@ -60,7 +60,6 @@ const FormRenderer = () => {
   };
 
   const handleSubmit = () => {
-    console.log("Submitted:", { responses, files, signatures });
     alert("Form submitted successfully!");
   };
 

@@ -7,7 +7,7 @@ import { addDeductionSchema } from "../../../Data/schemas";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
 
-const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems }) => {
+const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems, loading = false }) => {
   const [fetchedItems, setFetchedItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
@@ -93,6 +93,7 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit)}
       onSecondaryButtonClick={handleClose}
+      primaryButtonLoading={loading}
       size="medium"
     >
       <div className="flex flex-col gap-4">

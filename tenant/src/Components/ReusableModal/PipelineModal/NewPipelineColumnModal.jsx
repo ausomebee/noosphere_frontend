@@ -9,7 +9,7 @@ import {
   resetDraft,
 } from "../../../ReduxStore/features/PipelineSlice";
 
-const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
+const NewPipelineColumnModal = ({ isOpen, onClose, onSave, loading = false }) => {
   const dispatch = useDispatch();
   const { draft } = useSelector((state) => state.pipeline);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -70,6 +70,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={handleCloseModal}
+      primaryButtonLoading={loading}
       closeOnOverlayClick={!showColorPicker}   // important: don't close modal while picker is open
     >
       <div className="modal-content-wrapper">

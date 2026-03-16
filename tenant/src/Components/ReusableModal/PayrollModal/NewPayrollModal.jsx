@@ -72,6 +72,7 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
         secondaryButtonText="Cancel"
         onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
         onSecondaryButtonClick={handleClose}
+        primaryButtonLoading={false}
         size="medium"
       >
         <div className="flex flex-col gap-4">

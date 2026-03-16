@@ -417,7 +417,6 @@ const StaffsAndTeams = () => {
       };
 
       // Debug: see exactly what is being sent
-      console.log("FINAL PAYLOAD TO API:", JSON.stringify(payload, null, 2));
 
       modalMode === "edit"
         ? await api.UpdateTenantStaff({ ...payload, accessToken })

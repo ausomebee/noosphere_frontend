@@ -827,7 +827,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   //       // delete data.payroll; // ← optional
   //     };
 
-  //     console.log("TRANSFORMED PAYLOAD:", JSON.stringify(transformedData, null, 2));
 
   //     setSubmitting(true);
   //     setSubmitError("");
@@ -894,7 +893,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         },
         documents: fileResults,
       };
-      console.log(
         "TRANSFORMED PAYLOAD:",
         JSON.stringify(transformedData, null, 2),
       );

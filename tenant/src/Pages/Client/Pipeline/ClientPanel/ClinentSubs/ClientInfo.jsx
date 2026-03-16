@@ -19,6 +19,8 @@ import FormLibraryModal from "../../../../../Components/ReusableModal/ClientModa
 import ClientDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentRequestModal";
 import ClientDocumentUploadModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentUploadModal";
 import DocumentViewer from "../../../../../Components/FileUpload/DocumentViewer";
+import { useDispatch } from "react-redux";
+import { loadForm } from "../../../../../ReduxStore/features/formBuilderSlice";
 
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
@@ -226,6 +228,7 @@ const BasicInformation = ({ clientData }) => {
 // Documents & Forms - UPDATED WITH REAL API INTEGRATION
 const DocumentsForms = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { tenantClientId } = useParams();
   const { accessToken, refreshToken, userId, tenantId } = useAuth();
 
@@ -391,7 +394,9 @@ const DocumentsForms = () => {
 
       const forms = (res?.data?.data || []).map((f) => ({
         id: f.id,
+        formId: f.form.id,
         name: f.form.name,
+        formFields: f.form.formFields || [],
         dateCreated: f.createdAt
           ? new Date(f.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
@@ -426,7 +431,6 @@ const DocumentsForms = () => {
         id: f.id,
         name: f.name || "Untitled Form",
       }));
-      console.log(library);
 
       setLibraryForms(library);
     } catch (err) {
@@ -517,15 +521,28 @@ const DocumentsForms = () => {
   // 2. DOCUMENT REQUESTS DATA - USING REAL DATA
   // =====================================
   // Transform API response to match your table structure
-  const transformedRequestsData = requestsData.map((req) => ({
-    id: req.id,
-    name: req.name,
-    dateCreated: new Date(req.createdAt).toLocaleDateString(),
-    dueDate: req.dueDate ? new Date(req.dueDate).toLocaleDateString() : "—",
-    status: req.status || "Pending upload",
-    note: req.description,
-    files: req.documents || [], // Assuming documents array contains uploaded files
-  }));
+  const transformedRequestsData = requestsData.map((req) => {
+    // Extract files from clientDocuments -> documentDetails (doc1, doc2, etc.)
+    const files = (req.clientDocuments || []).flatMap((cd) => {
+      const details = cd.documentDetails || {};
+      return Object.values(details).map((doc) => ({
+        name: cd.name || req.name,
+        fileUrl: doc.url || doc.fileUrl,
+      }));
+    });
+
+    return {
+      id: req.id,
+      name: req.name,
+      dateCreated: new Date(req.createdAt).toLocaleDateString(),
+      dueDate: req.dueDate
+        ? new Date(req.dueDate).toLocaleDateString()
+        : "—",
+      status: req.status || "Pending upload",
+      note: req.description,
+      files,
+    };
+  });
 
   // =====================================
   // 3. FORMS TAB - USING REAL DATA
@@ -548,6 +565,29 @@ const DocumentsForms = () => {
     },
   ];
 
+  const handleViewForm = async (row) => {
+    try {
+      // Fetch full form data by formId
+      const res = await api3.GetFormsByFormId({
+        formId: row.formId,
+        accessToken,
+        refreshToken,
+      });
+      const formData = res?.data?.data || res?.data;
+      // Load form into Redux so the renderer can display it
+      dispatch(
+        loadForm({
+          formName: formData.name || row.name,
+          elements: formData.formFields || row.formFields || [],
+          status: formData.status || "published",
+        })
+      );
+      navigate(`/custom-forms/forms/renderer/${row.formId}`);
+    } catch (err) {
+      showToast("Failed to load form", "error");
+    }
+  };
+
   const formsActions = [
     {
       type: "dropdown",
@@ -555,17 +595,15 @@ const DocumentsForms = () => {
       items: [
         {
           label: "View Form",
-          onClick: (row) =>
-            navigate(`/custom-forms/forms/renderer/${row.id}`),
+          onClick: handleViewForm,
         },
         {
           label: "Nudge Client",
           onClick: (row) => {
-            // Implement nudge functionality
             showToast(`Nudge sent for form "${row.name}"`, "success");
           }
         },
-       
+
       ],
       className: "more-dropdown",
     },
@@ -813,6 +851,8 @@ const DocumentsForms = () => {
                                     className={`status-label ${
                                       req.status === "Uploaded"
                                         ? "status-active"
+                                        : req.status === "OVERDUE"
+                                        ? "status-overdue"
                                         : "status-pending"
                                     }`}
                                   >
@@ -826,26 +866,12 @@ const DocumentsForms = () => {
                                   <td colSpan={5} className="bg-gray-50">
                                     <div className="p-6">
                                       <div className="space-y-4">
-                                        <div className="items-center justify-center flex">
+                                        {/* Show uploaded files if available */}
+                                        {req.files && req.files.length > 0 ? (
                                           <div>
-                                            <h3 className="text-base  text-gray-800">
-                                              Awaiting Upload from the Client..
+                                            <h3 className="text-base font-600 text-gray-800 mb-4">
+                                              Uploaded Documents ({req.files.length})
                                             </h3>
-                                            {req.status === "PENDING" && (
-                                              <div className="flex gap-6">
-                                                <button className="text-primary font-600 text-base hover:underline cursor-pointer">
-                                                  Nudge
-                                                </button>
-                                                <button className="text-red-600 font-600 text-base hover:underline cursor-pointer">
-                                                  Cancel request
-                                                </button>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-
-                                        {req.files && req.files.length > 0 && (
-                                          <div className="pt-4">
                                             {req.files.map((file, i) => (
                                               <div
                                                 key={i}
@@ -860,7 +886,7 @@ const DocumentsForms = () => {
                                                       fill="none"
                                                       xmlns="http://www.w3.org/2000/svg"
                                                     >
-                                                      <g clip-path="url(#clip0_2228_42782)">
+                                                      <g clipPath="url(#clip0_2228_42782)">
                                                         <path
                                                           opacity="0.3"
                                                           d="M13 4H6V20H18V9H13V4Z"
@@ -883,33 +909,31 @@ const DocumentsForms = () => {
                                                     </svg>
                                                   </span>
                                                   <span className="text-sm font-medium text-gray-800">
-                                                    {file.name || file}
+                                                    {file.name}
                                                   </span>
                                                 </div>
                                                 <div className="flex gap-4">
                                                   <button
-                                                    onClick={() =>
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
                                                       handleViewDocument(
-                                                        file.fileUrl ||
-                                                          file.documentDetails
-                                                            ?.fileUrl,
-                                                        file.name || file
-                                                      )
-                                                    }
+                                                        file.fileUrl,
+                                                        file.name
+                                                      );
+                                                    }}
                                                     className="text-primary text-sm flex font-bold items-center gap-1 hover:underline"
                                                   >
                                                     <LuEye className="w-4 h-4" />
                                                     View
                                                   </button>
                                                   <button
-                                                    onClick={() =>
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
                                                       handleDownloadDocument(
-                                                        file.fileUrl ||
-                                                          file.documentDetails
-                                                            ?.fileUrl,
-                                                        file.name || file
-                                                      )
-                                                    }
+                                                        file.fileUrl,
+                                                        file.name
+                                                      );
+                                                    }}
                                                     className="text-primary text-sm flex font-bold items-center gap-1 hover:underline"
                                                   >
                                                     <svg
@@ -930,6 +954,25 @@ const DocumentsForms = () => {
                                                 </div>
                                               </div>
                                             ))}
+                                          </div>
+                                        ) : (
+                                          /* No files yet - show awaiting message */
+                                          <div className="items-center justify-center flex">
+                                            <div>
+                                              <h3 className="text-base text-gray-800">
+                                                Awaiting Upload from the Client..
+                                              </h3>
+                                              {(req.status === "PENDING" || req.status === "OVERDUE") && (
+                                                <div className="flex gap-6 mt-2">
+                                                  <button className="text-primary font-600 text-base hover:underline cursor-pointer">
+                                                    Nudge
+                                                  </button>
+                                                  <button className="text-red-600 font-600 text-base hover:underline cursor-pointer">
+                                                    Cancel request
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </div>
                                           </div>
                                         )}
                                       </div>
@@ -1088,7 +1131,6 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
     addIfValue("caregiverZip", data.caregiverZip);
     addIfValue("documents", data.documents);
 
-    console.log("Update Client Payload:", payload);
     try {
       await api.UpdateCandidate(payload);
 

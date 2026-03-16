@@ -95,8 +95,6 @@ const PayersAndInsurance = () => {
       const insuranceTypeMap = new Map(
         insuranceTypeTableData.map((it) => [it.id, it.name])
       );
-      console.log("Insurance Type Map:", insuranceTypeMap); // 👈 Temp debug: Check if map has the ID
-      console.log("Sample Payer ID:", data[0]?.insuranceTypeId); // 👈 Temp debug: Check if ID exists
       const transformedData = data.map((item) => ({
         id: item.id,
         payerName: item.payerName,

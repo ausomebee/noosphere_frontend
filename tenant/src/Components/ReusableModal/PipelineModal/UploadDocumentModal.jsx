@@ -10,7 +10,7 @@ import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa"
 import { RiDeleteBin6Line } from "react-icons/ri";
 import "../ReusableModal.css";
 
-const UploadDocumentModal = ({ isOpen, onClose, onUpload, pipelineItemId, pipelineStageId, accessToken, refreshToken }) => {
+const UploadDocumentModal = ({ isOpen, onClose, onUpload, pipelineItemId, pipelineStageId, accessToken, refreshToken, loading = false }) => {
   const [files, setFiles] = useState([]);
 
   const getFileIcon = (fileName) => {
@@ -80,6 +80,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload, pipelineItemId, pipeli
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleAttachFiles}
       onSecondaryButtonClick={handleClose}
+      primaryButtonLoading={loading}
       primaryButtonDisabled={files.length === 0 || files.some((file) => file.error)}
     >
       <div className="upload-modal-content">

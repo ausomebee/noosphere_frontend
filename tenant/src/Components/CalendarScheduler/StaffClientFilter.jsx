@@ -15,7 +15,6 @@ const StaffClientFilter = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  console.log(clients)
 
   // Helper function to get client full name from first and last name
   const getClientFullName = (client) => {

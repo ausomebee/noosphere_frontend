@@ -21,11 +21,9 @@ if (import.meta.hot) {
  */
 export const connectSocket = ({ accessToken, userId, tenantId }) => {
   if (socket?.connected) {
-    console.log("[Socket] Already connected, reusing socket:", socket.id);
     return socket;
   }
 
-  console.log("[Socket] Attempting connection...", {
     url: SOCKET_URL,
     userId,
     tenantId,
@@ -42,7 +40,6 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
   });
 
   socket.on("connect", () => {
-    console.log("[Socket] Connected successfully! ID:", socket.id);
   });
 
   socket.on("disconnect", (reason) => {
@@ -54,11 +51,9 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
   });
 
   socket.on("reconnect_attempt", (attempt) => {
-    console.log("[Socket] Reconnect attempt #" + attempt);
   });
 
   socket.on("reconnect", (attempt) => {
-    console.log("[Socket] Reconnected after", attempt, "attempts");
   });
 
   socket.on("reconnect_failed", () => {
@@ -76,7 +71,6 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
 export const registerUser = ({ userId, userType }) => {
   if (!socket) return;
   socket.emit("register", { userId, userType });
-  console.log("[Socket] Registered as:", userType, userId);
 };
 
 /**
@@ -108,7 +102,6 @@ export const createConversation = ({ participants, tenantId }, callback) => {
     callback?.({ success: false, error: "Not connected" });
     return;
   }
-  console.log("[Socket] Creating conversation:", { participants, tenantId });
   socket.emit("createConversation", { participants, tenantId }, callback);
 };
 

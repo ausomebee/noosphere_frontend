@@ -583,7 +583,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         ),
       );
 
-      console.log("FINAL PAYLOAD →", cleaned);
       await onSubmit(cleaned);
 
       dispatch(resetDraft());

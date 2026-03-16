@@ -24,6 +24,7 @@ const PayrollModal = ({
     minimumHours: "0",
   });
   const [submitError, setSubmitError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setFormData({
@@ -64,11 +65,14 @@ const PayrollModal = ({
       tenantStaffId,
     };
 
+    setSaving(true);
     try {
       await onSave({ id: payrollSettings.id, payroll });
       onClose();
     } catch (e) {
       setSubmitError(e.message || "Failed to save payroll settings");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -91,6 +95,7 @@ const PayrollModal = ({
       secondaryButtonText="Close"
       onPrimaryButtonClick={isEdit ? handleSave : null}
       onSecondaryButtonClick={handleClose}
+      primaryButtonLoading={saving}
       size="lg"
     >
       <div className="p-4 bg-gray-200 rounded-md">
