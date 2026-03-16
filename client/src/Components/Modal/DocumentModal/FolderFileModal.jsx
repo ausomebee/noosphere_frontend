@@ -114,7 +114,7 @@ const FolderFilesModal = ({
                   </p>
                 </div>
                 <button
-                  onClick={() => window.open(file.url, "_blank")}
+                  onClick={() => window.open(file.url, "_blank", "noopener,noreferrer")}
                   style={{
                     background: "#3b82f6",
                     color: "white",

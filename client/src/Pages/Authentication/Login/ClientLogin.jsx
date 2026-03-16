@@ -6,6 +6,7 @@ import AuthLayout from "../AuthLayout";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { ClientLogin } from "../../../ReduxStore/features/authentication";
 
@@ -24,6 +25,7 @@ const loginSchema = yup.object().shape({
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -36,16 +38,14 @@ const Login = () => {
       password: "",
     },
   });
-  // const { loading } = useSelector((state) => state.authentication);
 
   const onSubmit = async (data) => {
+    setLoading(true);
     try {
       const resultAction = await dispatch(ClientLogin(data));
 
       if (ClientLogin.fulfilled.match(resultAction)) {
-        // const user = resultAction.payload.data;
         showToast("Login successful", "success");
-
         navigate("/dashboard");
       } else {
         const errorMessage = resultAction.payload?.message || "Login failed";
@@ -54,6 +54,8 @@ const Login = () => {
     } catch (error) {
       console.error("Login error:", error);
       showToast("Login failed. Please try again.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,7 +97,7 @@ const Login = () => {
           size="large"
           className="w-full mt-4"
           type="submit"
-          // loading={loading}
+          loading={loading}
         />
       </form>
     </AuthLayout>

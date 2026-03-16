@@ -1,7 +1,6 @@
 const getSubdomain = () => {
   const hostname = window.location.hostname.toLowerCase();
 
-  console.log("Current hostname:", hostname);
 
   // === LOCAL DEVELOPMENT: Special handling for localhost ===
   // Allows you to test subdomains like:
@@ -18,7 +17,6 @@ const getSubdomain = () => {
       // Ignore common dev prefixes if you want, or allow everything
       if (potentialSubdomain && potentialSubdomain !== "www") {
         localStorage.setItem("subDomain", potentialSubdomain);
-        console.log("Local dev subdomain detected:", potentialSubdomain);
         return potentialSubdomain;
       }
     }
@@ -50,7 +48,6 @@ const getSubdomain = () => {
     }
 
     localStorage.setItem("subDomain", potentialSubdomain);
-    console.log("Production subdomain detected:", potentialSubdomain);
     return potentialSubdomain;
   }
 

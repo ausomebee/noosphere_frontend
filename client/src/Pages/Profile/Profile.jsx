@@ -393,10 +393,11 @@ const Profile = () => {
           {/* Action Buttons */}
           <div className="action-buttons">
             <Button
-              label={isLoadingProfile ? "Saving..." : "Save Changes"}
+              label="Save Changes"
               variant="primary"
               onClick={handleSaveProfile}
-              disabled={isLoading || isLoadingProfile}
+              loading={isLoadingProfile}
+              disabled={isLoading}
             />
             <Button
               label="Cancel"
@@ -437,10 +438,10 @@ const Profile = () => {
               )}
               <div className="modal-actions">
                 <Button
-                  label={isLoadingPassword ? "Changing..." : "Change Password"}
+                  label="Change Password"
                   variant="primary"
                   onClick={handlePasswordChange}
-                  disabled={isLoadingPassword}
+                  loading={isLoadingPassword}
                 />
                 <Button
                   label="Cancel"

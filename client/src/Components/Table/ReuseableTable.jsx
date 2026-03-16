@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { IoSearchOutline, IoChevronDown, IoChevronUp } from "react-icons/io5";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { BsListUl, BsGrid } from "react-icons/bs";
@@ -37,12 +37,16 @@ const ReusableTable = ({
   const [viewType, setViewType] = useState("list");
   const [expandedRows, setExpandedRows] = useState([]);
   const [openActionMenu, setOpenActionMenu] = useState(null);
+  const debounceRef = useRef(null);
 
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    onSearch?.(value);
-  };
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearch?.(value);
+    }, 300);
+  }, [onSearch]);
 
   const toggleRowExpand = (rowId) => {
     setExpandedRows((prev) =>

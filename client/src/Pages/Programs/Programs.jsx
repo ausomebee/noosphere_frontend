@@ -47,7 +47,6 @@ const Programs = () => {
           refreshToken,
         });
 
-        console.log("API Response:", response);
 
         // Transform the nested data structure
         const rawData = response.data?.data || [];
@@ -77,7 +76,6 @@ const Programs = () => {
           })),
         }));
 
-        console.log("Transformed programs:", transformedPrograms);
         setPrograms(transformedPrograms);
       } catch (err) {
         console.error("Error fetching programs:", err);
@@ -213,7 +211,6 @@ const Programs = () => {
           refreshToken,
         });
 
-        console.log("Performance response:", response);
 
         const monthlyData = response.data?.data || [];
         
@@ -385,8 +382,8 @@ const Programs = () => {
           id: `target-performance-chart`,
           type: "area",
           height: 380,
-          toolbar: { show: true, tools: { download: true, selection: true, zoom: true, pan: true } },
-          zoom: { enabled: true },
+          toolbar: { show: false },
+          zoom: { enabled: false },
           animations: { enabled: true, speed: 800 },
         },
         dataLabels: { 

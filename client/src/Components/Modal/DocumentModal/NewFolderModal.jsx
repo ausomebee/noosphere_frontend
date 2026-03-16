@@ -14,14 +14,16 @@ const NewFolderModal = ({
   folderId = null,
 }) => {
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
+      setLoading(false);
     }
   }, [isOpen, initialName]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) {
       showToast("Folder name is required", "error");
       return;
@@ -29,18 +31,25 @@ const NewFolderModal = ({
 
     const trimmed = name.trim();
 
-    if (isRenameMode) {
-      if (trimmed === initialName) {
-        onClose();
-        return;
+    setLoading(true);
+    try {
+      if (isRenameMode) {
+        if (trimmed === initialName) {
+          onClose();
+          return;
+        }
+        await onRename?.(folderId, trimmed);
+      } else {
+        await onCreate?.({ name: trimmed });
       }
-      onRename?.(folderId, trimmed);
-    } else {
-      onCreate?.({ name: trimmed });
-    }
 
-    setName("");
-    onClose();
+      setName("");
+      onClose();
+    } catch (error) {
+      showToast(error?.message || "Operation failed", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +62,7 @@ const NewFolderModal = ({
       onPrimaryButtonClick={handleSubmit}
       onSecondaryButtonClick={onClose}
       size="md"
+      primaryButtonLoading={loading}
       primaryButtonDisabled={!name.trim() || (isRenameMode && name.trim() === initialName)}
     >
       <div style={{ padding: "16px 0" }}>

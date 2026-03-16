@@ -12,22 +12,32 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // You can log the error to an error reporting service here
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
     this.setState({ errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      // Customize fallback UI here
       return (
-        <div style={{ padding: 20, background: "#fee", color: "#900" }}>
-          <h2>Something went wrong.</h2>
-          <details style={{ whiteSpace: "pre-wrap" }}>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo?.componentStack}
-          </details>
+        <div style={{ padding: 40, textAlign: "center", fontFamily: "sans-serif" }}>
+          <h2 style={{ color: "#1a202c", marginBottom: 8 }}>Something went wrong</h2>
+          <p style={{ color: "#718096", marginBottom: 24 }}>
+            We encountered an unexpected error. Please try refreshing the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "10px 24px",
+              background: "#3b82f6",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Refresh Page
+          </button>
         </div>
       );
     }

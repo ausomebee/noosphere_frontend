@@ -24,7 +24,7 @@ const persistConfig = {
   migrate: (state) => {
     const currentVersion = state?._persist?.version;
     if (currentVersion !== APP_VERSION) {
-      console.log(`Migrating from version ${currentVersion} to ${APP_VERSION}`);
+      // Migration from older version
       // For auth migration, preserve important fields
       if (state.auth) {
         // If old structure had 'token', migrate to 'accessToken'
@@ -54,16 +54,5 @@ const store = configureStore({
 });
 
 const persistor = persistStore(store);
-
-// Optional: Add rehydration callback
-persistor.subscribe(() => {
-  const state = store.getState();
-  console.log('Auth state after rehydration:', {
-    isAuthenticated: state.auth.isAuthenticated,
-    hasUser: !!state.auth.user,
-    hasAccessToken: !!state.auth.accessToken,
-    hasRefreshToken: !!state.auth.refreshToken,
-  });
-});
 
 export { store, persistor };

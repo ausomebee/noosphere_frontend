@@ -117,7 +117,6 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
           accessToken,
           refreshToken,
         });
-        showToast("Notification settings updated successfully", "success");
       } else {
         const response = await api2.CreateNotificationSettings({
           tenantClientId: clientTenantId,
@@ -129,7 +128,6 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
         if (response.data?.data?.id) {
           setNotificationSettingsId(response.data.data.id);
         }
-        showToast("Notification settings created successfully", "success");
       }
     } catch (error) {
       // Revert on error

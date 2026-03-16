@@ -179,7 +179,6 @@ const FormRenderer = () => {
         dispatch(setCurrentPage(savedCurrentPage));
       }
       setFormLoaded(true);
-      showToast("Form loaded successfully", "success");
     } catch (err) {
       console.error("Form loading failed:", err);
       showToast(

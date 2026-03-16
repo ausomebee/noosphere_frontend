@@ -69,7 +69,6 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               navigate("/auth/login"); // Navigate to login if refresh fails
             }
           } catch (refreshError) {
-            console.error("Token refresh failed", refreshError);
             isRefreshing = false;
             navigate("/auth/login");
           }
