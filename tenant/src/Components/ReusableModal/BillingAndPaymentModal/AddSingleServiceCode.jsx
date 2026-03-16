@@ -11,6 +11,7 @@ import {
 } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema for single service code
 const serviceCodeSchema = yup.object().shape({
@@ -381,7 +382,7 @@ const AddSingleServiceCodeModal = ({
       }
       onClose();
     } catch (error) {
-      onClose();
+      showToast(error.message || "Failed to save service code", "error");
     }
   };
 

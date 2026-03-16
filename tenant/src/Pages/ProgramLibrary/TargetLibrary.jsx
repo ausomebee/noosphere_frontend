@@ -125,12 +125,10 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
 
       showToast(response.data.message, "success");
       fetchTargets();
-    } catch (e) {
-      showToast(e.message, "error");
-      throw e; // keep modal open on error
-    } finally {
       setIsAddModalOpen(false);
       setSelectedTargetRow(null);
+    } catch (e) {
+      showToast(e.message || "Failed to save target", "error");
     }
   };
 
