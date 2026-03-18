@@ -177,8 +177,8 @@ const pipelineSlice = createSlice({
             count: 0,
             description: stage.description,
             colorCode: stage.colourCode,
-            requiredTasks: stage.tasks || [],
-            requiredDocuments: stage.documents || [],
+            requiredTasks: stage.requiredTasks || [],
+            requiredDocuments: stage.requiredDocuments || [],
             order: stage.order || 0,
           };
           state.columnOrder.push(stage.id);
@@ -209,9 +209,9 @@ const pipelineSlice = createSlice({
             name: stage.name || "",
             description: stage.description || "",
             colorCode: stage.colourCode || "#1E40AF",
-            requiredTasks: Array.isArray(stage.tasks) ? stage.tasks : [],
-            requiredDocuments: Array.isArray(stage.documents)
-              ? stage.documents
+            requiredTasks: Array.isArray(stage.requiredTasks) ? stage.requiredTasks : [],
+            requiredDocuments: Array.isArray(stage.requiredDocuments)
+              ? stage.requiredDocuments
               : [],
           };
         }
@@ -268,8 +268,8 @@ const pipelineSlice = createSlice({
           count: 0,
           description: stage.description,
           colorCode: stage.colourCode,
-          requiredTasks: stage.tasks || [],
-          requiredDocuments: stage.documents || [],
+          requiredTasks: stage.requiredTasks || [],
+          requiredDocuments: stage.requiredDocuments || [],
           order: stage.order || state.columnOrder.length,
         };
 
@@ -290,10 +290,10 @@ const pipelineSlice = createSlice({
       })
       .addCase(updateStageTasks.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const { pipelineStageId, tasks } = action.payload;
+        const { pipelineStageId, requiredTasks } = action.payload;
         if (state.columns[pipelineStageId]) {
-          state.columns[pipelineStageId].requiredTasks = tasks;
-          state.draft.requiredTasks = tasks;
+          state.columns[pipelineStageId].requiredTasks = requiredTasks;
+          state.draft.requiredTasks = requiredTasks;
         }
       })
       .addCase(updateStageTasks.rejected, (state, action) => {
@@ -306,10 +306,10 @@ const pipelineSlice = createSlice({
       })
       .addCase(updateStageDocuments.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const { pipelineStageId, documents } = action.payload;
+        const { pipelineStageId, requiredDocuments } = action.payload;
         if (state.columns[pipelineStageId]) {
-          state.columns[pipelineStageId].requiredDocuments = documents;
-          state.draft.requiredDocuments = documents;
+          state.columns[pipelineStageId].requiredDocuments = requiredDocuments;
+          state.draft.requiredDocuments = requiredDocuments;
         }
       })
       .addCase(updateStageDocuments.rejected, (state, action) => {
@@ -607,8 +607,8 @@ export const createPipelineStage = createAsyncThunk(
       name,
       description,
       colourCode,
-      tasks = [],
-      documents = [],
+      requiredTasks = [],
+      requiredDocuments = [],
       accessToken,
       refreshToken,
     },
@@ -620,8 +620,8 @@ export const createPipelineStage = createAsyncThunk(
         name,
         description,
         colourCode,
-        tasks: Array.isArray(tasks) ? tasks : [],
-        documents: Array.isArray(documents) ? documents : [],
+        requiredTasks: Array.isArray(requiredTasks) ? requiredTasks : [],
+        requiredDocuments: Array.isArray(requiredDocuments) ? requiredDocuments : [],
         accessToken,
         refreshToken,
       });
@@ -642,13 +642,13 @@ export const createPipelineStage = createAsyncThunk(
 export const updateStageTasks = createAsyncThunk(
   "pipeline/updateStageTasks",
   async (
-    { pipelineStageId, tasks, accessToken, refreshToken },
+    { pipelineStageId, requiredTasks, accessToken, refreshToken },
     { rejectWithValue }
   ) => {
     try {
       const response = await api.UpdateStageTasks({
         pipelineStageId,
-        tasks: tasks.map((task) => ({
+        requiredTasks: requiredTasks.map((task) => ({
           id: task.id || uuidv4(),
           name: task.name,
           required: task.required,
@@ -656,7 +656,7 @@ export const updateStageTasks = createAsyncThunk(
         accessToken,
         refreshToken,
       });
-      return { pipelineStageId, tasks };
+      return { pipelineStageId, requiredTasks };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -666,13 +666,13 @@ export const updateStageTasks = createAsyncThunk(
 export const updateStageDocuments = createAsyncThunk(
   "pipeline/updateStageDocuments",
   async (
-    { pipelineStageId, documents, accessToken, refreshToken },
+    { pipelineStageId, requiredDocuments, accessToken, refreshToken },
     { rejectWithValue }
   ) => {
     try {
       const response = await api.UpdateStageDocuments({
         pipelineStageId,
-        documents: documents.map((doc) => ({
+        requiredDocuments: requiredDocuments.map((doc) => ({
           id: doc.id || uuidv4(),
           name: doc.name,
           required: doc.required,
@@ -680,7 +680,7 @@ export const updateStageDocuments = createAsyncThunk(
         accessToken,
         refreshToken,
       });
-      return { pipelineStageId, documents };
+      return { pipelineStageId, requiredDocuments };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

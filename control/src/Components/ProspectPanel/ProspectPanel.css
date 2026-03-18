@@ -679,3 +679,23 @@
 .prospect-sub-paused    { background: #F8F9FA; color: #5C6167; }
 .prospect-sub-cancelled { background: #FEF3F2; color: #B42318; }
 .prospect-sub-pending   { background: #FFFAEB; color: #B54708; }
+
+/* Requirement badges */
+.requirement-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.requirement-badge.required {
+  background: #FEF3F2;
+  color: #B42318;
+}
+
+.requirement-badge.optional {
+  background: #F2F4F7;
+  color: #344054;
+}

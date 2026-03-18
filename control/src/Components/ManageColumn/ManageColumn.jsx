@@ -156,11 +156,11 @@ const ManageColumn = () => {
                 name: stageData.name || "",
                 description: stageData.description || "",
                 colorCode: stageData.colourCode || "#1E40AF",
-                requiredTasks: Array.isArray(stageData.tasks)
-                  ? stageData.tasks
+                requiredTasks: Array.isArray(stageData.requiredTasks)
+                  ? stageData.requiredTasks
                   : [],
-                requiredDocuments: Array.isArray(stageData.documents)
-                  ? stageData.documents
+                requiredDocuments: Array.isArray(stageData.requiredDocuments)
+                  ? stageData.requiredDocuments
                   : [],
               })
             );
@@ -590,7 +590,7 @@ const ManageColumn = () => {
                       loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
-                          "tasks",
+                          "requiredTasks",
                           draft.requiredTasks,
                           updateStageTasks
                         )
@@ -671,7 +671,7 @@ const ManageColumn = () => {
                       loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
-                          "documents",
+                          "requiredDocuments",
                           draft.requiredDocuments,
                           updateStageDocuments
                         )

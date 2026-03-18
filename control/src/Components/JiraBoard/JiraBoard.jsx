@@ -174,8 +174,8 @@ const JiraBoard = () => {
             title: stage.name || "Unnamed Stage",
             taskIds: [],
             count: 0,
-            requiredTasks: stage.tasks || [],
-            requiredDocuments: stage.documents || [],
+            requiredTasks: stage.requiredTasks || [],
+            requiredDocuments: stage.requiredDocuments || [],
             colorCode: stage.colourCode || "#000000",
           };
           newColumnOrder.push(stage.id);
@@ -203,7 +203,7 @@ const JiraBoard = () => {
           if (Array.isArray(items) && items.length) {
             const stage = stagesData.find((s) => s.id === stageId);
             const totalRequiredItems =
-              (stage?.tasks?.length || 0) + (stage?.documents?.length || 0);
+              (stage?.requiredTasks?.length || 0) + (stage?.requiredDocuments?.length || 0);
 
             for (const item of items) {
               if (!item.id || typeof item.id !== "string") continue;
@@ -576,7 +576,7 @@ const JiraBoard = () => {
 
     startLoading();
     try {
-      if (hasTasks && !isLastColumn) {
+      if (hasTasks) {
         const firstColumnId = columnOrder[0];
         const firstColumn = columns[firstColumnId];
         const updatedFirstColumnTaskIds = [
@@ -593,7 +593,7 @@ const JiraBoard = () => {
           })
         ).unwrap();
         if (response.status !== "ok") {
-          throw new Error("Failed to move tasks.");
+          throw new Error("Failed to move candidates.");
         }
         dispatch(
           updateColumnTaskIds({
@@ -601,24 +601,6 @@ const JiraBoard = () => {
             taskIds: updatedFirstColumnTaskIds,
           })
         );
-      }
-
-      if (isLastColumn && hasTasks) {
-        const response = await dispatch(
-          deletePipelineItem({
-            ids: column.taskIds,
-            accessToken,
-            refreshToken,
-          })
-        ).unwrap();
-        if (response.status !== "ok") {
-          throw new Error("Failed to delete tasks.");
-        }
-        setLocalTasks((prev) => {
-          const newTasks = { ...prev };
-          column.taskIds.forEach((taskId) => delete newTasks[taskId]);
-          return newTasks;
-        });
       }
 
       const response = await dispatch(
@@ -842,10 +824,10 @@ const JiraBoard = () => {
           name: pipelineData.name?.trim() || "",
           description: pipelineData.description?.trim() || "",
           colourCode: pipelineData.colorCode || "#000000",
-          tasks: Array.isArray(pipelineData.requiredTasks)
+          requiredTasks: Array.isArray(pipelineData.requiredTasks)
             ? pipelineData.requiredTasks
             : [],
-          documents: Array.isArray(pipelineData.requiredDocuments)
+          requiredDocuments: Array.isArray(pipelineData.requiredDocuments)
             ? pipelineData.requiredDocuments
             : [],
           accessToken,
@@ -869,7 +851,7 @@ const JiraBoard = () => {
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to create pipeline stage:", error);
       showToast(error?.message || "Failed to create pipeline stage.", "error");
-      setShowErrorModal(true);
+      throw error;
     } finally {
       stopLoading();
     }

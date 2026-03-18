@@ -498,7 +498,7 @@ const ProspectPanel = () => {
       await dispatch(
         updateStageTasks({
           pipelineStageId,
-          tasks: updatedTasks.map((name, i) => ({
+          requiredTasks: updatedTasks.map((name, i) => ({
             id: draft.requiredTasks[i]?.id || uuidv4(),
             name,
             required: draft.requiredTasks[i]?.required || false,
@@ -537,7 +537,7 @@ const ProspectPanel = () => {
       await dispatch(
         updateStageDocuments({
           pipelineStageId,
-          documents: updatedDocuments.map((name, i) => ({
+          requiredDocuments: updatedDocuments.map((name, i) => ({
             id: draft.requiredDocuments[i]?.id || uuidv4(),
             name,
             required: draft.requiredDocuments[i]?.required || false,
@@ -573,7 +573,7 @@ const ProspectPanel = () => {
       await dispatch(
         updateStageDocuments({
           pipelineStageId,
-          documents: updatedDocuments.map((name, i) => ({
+          requiredDocuments: updatedDocuments.map((name, i) => ({
             id: draft.requiredDocuments[i]?.id || uuidv4(),
             name,
             required: draft.requiredDocuments[i]?.required || false,
@@ -1030,10 +1030,16 @@ const ProspectPanel = () => {
                           onChange={() => handleTaskDoneToggle(task)}
                           disabled={isLoading}
                         />
-                        <span>
+                        <span
+                          className={
+                            draft.requiredTasks?.[index]?.required
+                              ? "requirement-badge required"
+                              : "requirement-badge optional"
+                          }
+                        >
                           {draft.requiredTasks?.[index]?.required
                             ? "Required"
-                            : "Not Required"}
+                            : "Optional"}
                         </span>
                       </div>
                     </div>
@@ -1076,10 +1082,16 @@ const ProspectPanel = () => {
                           onChange={() => handleDocumentSentToggle(doc)}
                           disabled={isLoading}
                         />
-                        <span>
+                        <span
+                          className={
+                            draft.requiredDocuments?.[index]?.required
+                              ? "requirement-badge required"
+                              : "requirement-badge optional"
+                          }
+                        >
                           {draft.requiredDocuments?.[index]?.required
                             ? "Required"
-                            : "Not Required"}
+                            : "Optional"}
                         </span>
                       </div>
                     </div>
