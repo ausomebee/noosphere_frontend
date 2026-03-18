@@ -175,6 +175,9 @@ const FormBuilder = React.lazy(() =>
 const FormRenderer = React.lazy(() =>
   import("../Pages/CustomForms/FormRender/FormRenderer")
 );
+const FormResponses = React.lazy(() =>
+  import("../Pages/CustomForms/FormResponses/FormResponses")
+);
 const TemplatesLibrary = React.lazy(() =>
   import("../Pages/CustomForms/TemplatesLibrary/TemplatesLibrary")
 );
@@ -294,6 +297,7 @@ const AllRoutes = () => {
           <Route path="/custom-forms/forms/create" element={<Lazy><FormBuilder /></Lazy>} />
           <Route path="/custom-forms/forms/create/:formId" element={<Lazy><FormBuilder /></Lazy>} />
           <Route path="/custom-forms/forms/renderer/:id" element={<Lazy><FormRenderer /></Lazy>} />
+          <Route path="/custom-forms/forms/responses/:formId" element={<Lazy><FormResponses /></Lazy>} />
           <Route path="/custom-forms/templates-library" element={<Lazy><TemplatesLibrary /></Lazy>} />
         </Route>
 

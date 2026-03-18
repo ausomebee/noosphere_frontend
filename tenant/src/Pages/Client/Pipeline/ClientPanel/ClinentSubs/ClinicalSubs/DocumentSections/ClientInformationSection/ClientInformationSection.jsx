@@ -74,13 +74,12 @@ const ClientInformationSection = ({
   const [errors, setErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
 
-  // Use refs to prevent infinite loops
-  const initialLoadRef = useRef(false);
+  // Use ref to prevent unnecessary onChange calls when data hasn't changed
   const lastDataRef = useRef(null);
+  const lastAutoPopRef = useRef({ clientFullName: "", dateOfBirth: "", gender: "" });
 
-  // Update form data when parent data changes (only once on initial load)
+  // Update form data when parent data changes
   useEffect(() => {
-
     // Check if data has actually changed
     const dataString = JSON.stringify(data);
     if (dataString === lastDataRef.current) {
@@ -116,12 +115,20 @@ const ClientInformationSection = ({
 
     setFormData(updatedFormData);
 
-    // Only call onChange on initial load if we have auto-populated data
-    if (
-      !initialLoadRef.current &&
-      (data.clientFullName || data.dateOfBirth || data.gender)
-    ) {
-      initialLoadRef.current = true;
+    // Always push auto-populated data to Redux when it changes
+    // This ensures DOB, gender, and fullName are saved when drafting/publishing
+    const prevAuto = lastAutoPopRef.current;
+    const autoChanged =
+      updatedFormData.clientFullName !== prevAuto.clientFullName ||
+      updatedFormData.dateOfBirth !== prevAuto.dateOfBirth ||
+      updatedFormData.gender !== prevAuto.gender;
+
+    if (autoChanged && (updatedFormData.clientFullName || updatedFormData.dateOfBirth || updatedFormData.gender)) {
+      lastAutoPopRef.current = {
+        clientFullName: updatedFormData.clientFullName,
+        dateOfBirth: updatedFormData.dateOfBirth,
+        gender: updatedFormData.gender,
+      };
       onChange(updatedFormData);
     }
   }, [data]); // Only re-run when data prop changes

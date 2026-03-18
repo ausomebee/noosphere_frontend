@@ -100,6 +100,10 @@ const Forms = () => {
       type: "dropdown",
       label: "More",
       items: [
+        {
+          label: "View Responses",
+          onClick: (row) => navigate(`/custom-forms/forms/responses/${row.id}`),
+        },
         hasPermission("edit_form") && {
           label: "Edit Form",
           onClick: (row) => navigate(`/custom-forms/forms/create/${row.id}`),
