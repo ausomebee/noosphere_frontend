@@ -12,6 +12,7 @@ import {
 } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { modifierOptions } from "../../../Data/selectOptions";
 
 // Validation schema
 const serviceCodeSchema = yup.object().shape({
@@ -24,20 +25,6 @@ const serviceCodeSchema = yup.object().shape({
   ),
   status: yup.boolean().default(true),
 });
-
-const modifierOptions = [
- { value: "", label: "No Modifier" },
-    { value: "HO", label: "HO - Master's-level provider" },
-    { value: "HP", label: "HP - Doctoral-level provider" },
-    { value: "HN", label: "HN - Associate's-level provider" },
-    { value: "HM", label: "HM - Bachelor's-level provider" },
-    { value: "95", label: "95 - Synchronous telehealth" },
-    { value: "GT", label: "GT - Interactive audio/video" },
-    { value: "KX", label: "KX - Requirements met" },
-    { value: "59", label: "59 - Distinct procedural service" },
-    { value: "76", label: "76 - Repeat same provider" },
-    { value: "77", label: "77 - Repeat different provider" },
-];
 
 // Utility function to transform table data to form data
 const transformServiceCodeToFormData = (data) => ({

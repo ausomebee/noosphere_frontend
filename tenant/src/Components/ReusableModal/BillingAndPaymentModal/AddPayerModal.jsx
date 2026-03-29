@@ -7,6 +7,7 @@ import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Inpu
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast } from "../../../Helper/ShowToast";
+import { currencyOptions, modifierOptions, stateOptions, countryOptions } from "../../../Data/selectOptions";
 
 
 const payerSchema = yup.object().shape({
@@ -277,30 +278,6 @@ const AddPayerModal = ({
   const handleNext = () => setActiveTab("Service Code");
   const handlePrevious = () => setActiveTab("Payer Info");
 
-  const currencyOptions = [
-    { value: "USD", label: "USD" },
-    { value: "EUR", label: "EUR" },
-    { value: "GBP", label: "GBP" },
-  ];
-
-  const modifierOptions = [
-    { value: "HO", label: "HO" },
-    { value: "HP", label: "HP" },
-    { value: "HN", label: "HN" },
-  ];
-
-  const stateOptions = [
-    // ... (unchanged, full list)
-    { value: "AL", label: "Alabama" },
-    { value: "AK", label: "Alaska" },
-    // ... (omitted for brevity)
-    { value: "WY", label: "Wyoming" },
-  ];
-
-  const countryOptions = [
-    { value: "US", label: "United States" },
-    { value: "UK", label: "United Kingdom" },
-  ];
 
   const buildTabs = () => [
     ...(mode !== "view"

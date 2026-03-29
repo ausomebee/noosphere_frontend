@@ -5,6 +5,7 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import { unitTypeOptions, roundingRuleOptions } from "../../../Data/selectOptions";
 
 // Yup validation schema
 const payrollItemSchema = yup.object().shape({
@@ -127,17 +128,6 @@ const PayrollItemModal = ({
       setIsLoading(false);
     }
   };
-
-  const unitTypeOptions = [
-    { value: "Flat Rate", label: "Flat Rate" },
-    { value: "Percentage based", label: "Percentage based" },
-    { value: "Time based", label: "Time based" },
-  ];
-
-  const roundingRuleOptions = [
-    { value: "minutes", label: "Minutes" },
-    { value: "hours", label: "Hours" },
-  ];
 
   const durationOptions = useMemo(() => {
     const options = existingItems

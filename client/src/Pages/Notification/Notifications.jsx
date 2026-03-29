@@ -4,6 +4,7 @@ import DashboardLayout from "../../layouts/ClientLayout";
 import messageApi from "../../api/messageApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
+import { TYPE_LABEL, TYPE_ORDER } from "../../Data/notificationConfig";
 
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -13,43 +14,6 @@ const CalendarIcon = () => (
     <line x1="17" y1="3" x2="17" y2="7" stroke="#4d7cfe" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
-
-// Notification type → section header label
-const TYPE_LABEL = {
-  APPOINTMENT_SCHEDULED:                   "NEW APPOINTMENT",
-  APPOINTMENT_ABOUT_TO_START:              "UPCOMING APPOINTMENT",
-  APPOINTMENT_RESCHEDULED:                 "RESCHEDULED APPOINTMENT",
-  APPOINTMENT_STARTED:                     "APPOINTMENT START",
-  APPOINTMENT_CANCELLED:                   "CANCELLED APPOINTMENTS",
-  APPOINTMENT_COMPLETED_AWAITING_FEEDBACK: "COMPLETED APPOINTMENT AWAITING FEEDBACK",
-  DOCUMENT_REQUESTED:                      "DOCUMENT REQUEST",
-  DOCUMENT_REQUEST_NUDGE:                  "DOCUMENT REQUEST NUDGE",
-  FORM_SHARED:                             "FORM REQUEST",
-  AUTHORIZATION_EXPIRY_30_DAYS:            "AUTHORIZATION EXPIRY - 30 DAYS",
-  AUTHORIZATION_EXPIRY_7_DAYS:             "AUTHORIZATION EXPIRY - 7 DAYS",
-  AUTHORIZATION_EXPIRED:                   "AUTHORIZATION EXPIRED",
-  AUTHORIZATION_UNITS_ALMOST_EXHAUSTED:    "AUTHORIZATION UTILIZATION",
-  AUTHORIZATION_UNITS_EXHAUSTED:           "AUTHORIZATION UTILIZATION",
-  SIGNATURE_REQUESTED:                     "CLIENT REPORT SIGNATURE REQUEST",
-};
-
-const TYPE_ORDER = [
-  "APPOINTMENT_SCHEDULED",
-  "APPOINTMENT_ABOUT_TO_START",
-  "APPOINTMENT_RESCHEDULED",
-  "APPOINTMENT_STARTED",
-  "APPOINTMENT_CANCELLED",
-  "APPOINTMENT_COMPLETED_AWAITING_FEEDBACK",
-  "DOCUMENT_REQUESTED",
-  "DOCUMENT_REQUEST_NUDGE",
-  "FORM_SHARED",
-  "AUTHORIZATION_EXPIRY_30_DAYS",
-  "AUTHORIZATION_EXPIRY_7_DAYS",
-  "AUTHORIZATION_EXPIRED",
-  "AUTHORIZATION_UNITS_ALMOST_EXHAUSTED",
-  "AUTHORIZATION_UNITS_EXHAUSTED",
-  "SIGNATURE_REQUESTED",
-];
 
 const resolveRelativeTime = (createdAt) => {
   if (!createdAt) return "";

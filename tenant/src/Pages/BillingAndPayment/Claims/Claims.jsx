@@ -46,7 +46,7 @@ const Claims = () => {
       });
       
       // Transform API data to match table structure - ONLY THE 4 COLUMNS
-      const transformedData = response.data.map((claim) => ({
+      const transformedData = response.map((claim) => ({
         id: claim.id,
         date: formatDate(claim.date),
         createdBy: claim.approver?.fullName || "N/A",

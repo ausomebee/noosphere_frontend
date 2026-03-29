@@ -17,6 +17,7 @@ import {
   TextInput,
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
 
 /* ---------- Validation Schema ---------- */
 const schema = yup.object().shape({
@@ -405,70 +406,6 @@ const AddTargetModal = ({
     setHasChanges(false);
     onClose();
   };
-
-  /* ---------- Static Options ---------- */
-  const TeachingProcedureOptions = [
-    { value: "Discrete Trial Training (DTT)", label: "Discrete Trial Training (DTT)" },
-    { value: "Natural Environment Teaching (NET)", label: "Natural Environment Teaching (NET)" },
-    { value: "Incidental Teaching", label: "Incidental Teaching" },
-    { value: "Task Analysis", label: "Task Analysis" },
-    { value: "Forward Chaining", label: "Forward Chaining" },
-    { value: "Backward Chaining", label: "Backward Chaining" },
-    { value: "Total Task Presentation", label: "Total Task Presentation" },
-    { value: "Mand Training", label: "Mand Training" },
-    { value: "Shaping", label: "Shaping" },
-    { value: "Modeling", label: "Modeling" },
-    { value: "Errorless Learning", label: "Errorless Learning" },
-    { value: "Visual Supports", label: "Visual Supports" },
-    { value: "Functional Communication Training (FCT)", label: "Functional Communication Training (FCT)" },
-    { value: "Other (specify)", label: "Other (specify)" },
-  ];
-
-  const PromptStrategyOptions = [
-    { label: "Most-to-Least Prompting (MTL)", value: "Most-to-Least Prompting (MTL)" },
-    { label: "Least-to-Most Prompting (LTM)", value: "Least-to-Most Prompting (LTM)" },
-    { label: "Graduated Guidance", value: "Graduated Guidance" },
-    { label: "Time Delay Prompting", value: "Time Delay Prompting" },
-    { label: "Simultaneous Prompting", value: "Simultaneous Prompting" },
-    { label: "No-No-Prompt (2NP)", value: "No-No-Prompt (2NP)" },
-    { label: "Prompt Fading", value: "Prompt Fading" },
-    { label: "Error Correction Procedure", value: "Error Correction Procedure" },
-    { label: "Constant Prompt Level", value: "Constant Prompt Level" },
-    { label: "Flexible Prompting/Clinician Judgement", value: "Flexible Prompting/Clinician Judgement" },
-    { label: "None (Independent)", value: "None (Independent)" },
-    { label: "Other (specify)", value: "Other (specify)" },
-  ];
-
-  const DataCollectionTypeOptions = [
-    { label: "Frequency", value: "Frequency" },
-    { label: "Rate", value: "Rate" },
-    { label: "Duration", value: "Duration" },
-    { label: "Latency", value: "Latency" },
-    { label: "Percentage Correct", value: "Percentage Correct" },
-    { label: "Trials/Opportunities", value: "Trials/Opportunities" },
-    { label: "Task Analysis", value: "Task Analysis" },
-  ];
-
-  const MasteryCriteria = [
-    { label: "Percentage Accuracy", value: "Percentage Accuracy" },
-    { label: "Trials Correct", value: "Trials Correct" },
-    { label: "Independent Responses", value: "Independent Responses" },
-    { label: "Frequency Count", value: "Frequency Count" },
-    { label: "Rate", value: "Rate" },
-    { label: "Duration", value: "Duration" },
-    { label: "Latency", value: "Latency" },
-    { label: "Percentage of Steps Independent", value: "Percentage of Steps Independent" },
-    { label: "Full Task Completion", value: "Full Task Completion" },
-  ];
-
-  const StatusAndAdmin = [
-    { label: "Not Introduced", value: "Not Introduced" },
-    { label: "In Progress", value: "In Progress" },
-    { label: "Mastered", value: "Mastered" },
-    { label: "Maintaining", value: "Maintaining" },
-    { label: "Discontinued", value: "Discontinued" },
-    { label: "On Hold", value: "On Hold" },
-  ];
 
   /* ---------- Tabs Content ---------- */
   const buildTabs = () => [

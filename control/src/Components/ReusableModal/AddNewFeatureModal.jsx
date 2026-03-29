@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput, CheckboxInput, TextareaInput } from "../Input/Inputs";
+import { featureStatusOptions as statusOptions } from "../../Data/selectOptions";
 
 const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
   const featureGroups = useSelector(
@@ -23,11 +24,6 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
     })),
   ];
 
-
-  const statusOptions = [
-    { value: "true", label: "Active" },
-    { value: "false", label: "Disabled" },
-  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

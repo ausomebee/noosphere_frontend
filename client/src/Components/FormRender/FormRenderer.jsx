@@ -21,6 +21,7 @@ import {
   markAsSubmitted,
 } from "../../ReduxStore/features/formResponseSlice";
 import { loadForm } from "../../ReduxStore/features/formBuilderSlice";
+import { mimeMap } from "../../Data/selectOptions";
 
 const FormRenderer = () => {
   const dispatch = useDispatch();
@@ -62,16 +63,6 @@ const FormRenderer = () => {
     ) {
       return "*"; // allow all if no restriction
     }
-    const mimeMap = {
-      PDF: ".pdf",
-      IMAGE: "image/*",
-      DOCX: ".doc,.docx",
-      SPREADSHEET: ".xls,.xlsx,.csv",
-      VIDEO: "video/*",
-      AUDIO: "audio/*",
-      TEXT: ".txt",
-      ALL: "*",
-    };
     const acceptParts = allowedTypes.map((type) => {
       const upper = type.toUpperCase().trim();
       return mimeMap[upper] || `.${upper.toLowerCase()}`;

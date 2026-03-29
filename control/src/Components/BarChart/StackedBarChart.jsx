@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import Chart from "react-apexcharts";
 import "./StackedBarChart.css";
 import { SelectInput } from "../Input/Inputs";
+import { monthAbbreviations as defaultCategories, chartDropdownOptions as defaultDropdownOptions } from "../../Data/selectOptions";
 
 const StackedBarChart = ({
   title = "API Error Rate",
@@ -9,21 +10,8 @@ const StackedBarChart = ({
     { name: "Error", data: [35, 40, 53, 48, 55, 42, 54, 43, 52, 46, 52, 44] },
     { name: "Success", data: [95, 90, 97, 92, 85, 98, 96, 97, 98, 94, 88, 96] },
   ],
-  categories = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ],
-  dropdownOptions = ["Period", "Monthly", "Yearly"],
+  categories = defaultCategories,
+  dropdownOptions = defaultDropdownOptions,
   height = 200,
 }) => {
   const options = {

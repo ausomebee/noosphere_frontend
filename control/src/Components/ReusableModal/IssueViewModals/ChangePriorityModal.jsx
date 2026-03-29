@@ -5,6 +5,7 @@ import { SelectInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { basePriorityOptions, enterprisePriorityOptions } from "../../../Data/selectOptions";
 
 const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selectedTenant, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
@@ -39,20 +40,13 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
   }, [selectedTenant]);
 
   const priorityOptions = useMemo(() => {
-    const baseOptions = [
-      { value: "P1", label: "P1 - Critical" },
-      { value: "P2", label: "P2 - High" },
-      { value: "P3", label: "P3 - Medium" },
-      { value: "P4", label: "P4 - Low" },
-    ];
     if (isEnterprise) {
       return [
-        { value: "EP1", label: "EP1 - Enterprise Critical" },
-        { value: "EP2", label: "EP2 - Enterprise High" },
-        ...baseOptions,
+        ...enterprisePriorityOptions,
+        ...basePriorityOptions,
       ];
     }
-    return baseOptions;
+    return basePriorityOptions;
   }, [isEnterprise]);
 
   const [loading, setLoading] = useState(false);

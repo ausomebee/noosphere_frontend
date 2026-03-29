@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
@@ -21,6 +21,19 @@ const RescheduleModal = ({
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Pre-populate form with current appointment data when modal opens
+  useEffect(() => {
+    if (appointment && isOpen) {
+      const data = appointment?.originalData || appointment;
+      setFormData({
+        date: data?.date ? new Date(data.date).toISOString().split("T")[0] : "",
+        startTime: data?.startTime || "",
+        endTime: data?.endTime || "",
+        reason: "",
+      });
+    }
+  }, [appointment, isOpen]);
 
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -108,6 +121,38 @@ const RescheduleModal = ({
         >
           Let's find a time that works for everyone
         </p>
+
+        {/* Current appointment summary */}
+        {appointment && (
+          <div
+            style={{
+              background: "#f9fafb",
+              borderRadius: "10px",
+              padding: "14px 16px",
+              marginBottom: "20px",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280", fontWeight: "600", marginBottom: "6px" }}>
+              Current appointment
+            </p>
+            {(appointment?.originalData?.session?.name || appointment?.sessionType) && (
+              <p style={{ margin: "0 0 4px", fontSize: "14px", color: "#374151" }}>
+                <strong>Session:</strong> {appointment?.originalData?.session?.name || appointment?.sessionType}
+              </p>
+            )}
+            {(appointment?.originalData?.clinicians?.length > 0 || appointment?.clinician) && (
+              <p style={{ margin: "0 0 4px", fontSize: "14px", color: "#374151" }}>
+                <strong>Clinician:</strong> {appointment?.originalData?.clinicians?.map(c => c.fullName).join(", ") || appointment?.clinician}
+              </p>
+            )}
+            {appointment?.dateTime && (
+              <p style={{ margin: 0, fontSize: "14px", color: "#374151" }}>
+                <strong>Date & Time:</strong> {appointment.dateTime.replace("\n", " ")}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Date Picker */}
         <div style={{ marginBottom: 20 }}>

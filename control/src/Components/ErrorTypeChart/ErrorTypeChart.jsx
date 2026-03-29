@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import "./ErrorTypeChart.css";
 import { SelectInput } from "../Input/Inputs";
+import { errorChartCategories } from "../../Data/selectOptions";
 
 const ErrorTypesChart = () => {
   // State for chart series data (proportions of error types)
@@ -56,12 +57,7 @@ const ErrorTypesChart = () => {
         <SelectInput
           value={category}
           onChange={handleCategoryChange}
-          options={["by category", "by severity", "by frequency"].map(
-            (option) => ({
-              value: option,
-              label: option,
-            })
-          )}
+          options={errorChartCategories}
         />
       </div>
       <ReactApexChart

@@ -9,14 +9,27 @@ describe("SuccessModal Component", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("renders Awesome title when open", () => {
+  it("renders default title when open", () => {
     render(<SuccessModal isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText("Awesome")).toBeInTheDocument();
   });
 
-  it("renders success message", () => {
+  it("renders default message", () => {
     render(<SuccessModal isOpen={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Your reschedule request has been sent!")).toBeInTheDocument();
+    expect(screen.getByText("Your request has been processed!")).toBeInTheDocument();
+  });
+
+  it("renders custom title and message", () => {
+    render(
+      <SuccessModal
+        isOpen={true}
+        onClose={vi.fn()}
+        title="Thank you!"
+        message="Your session feedback has been submitted!"
+      />
+    );
+    expect(screen.getByText("Thank you!")).toBeInTheDocument();
+    expect(screen.getByText("Your session feedback has been submitted!")).toBeInTheDocument();
   });
 
   it("renders SVG illustration", () => {

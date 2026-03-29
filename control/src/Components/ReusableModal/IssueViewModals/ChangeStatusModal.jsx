@@ -5,6 +5,7 @@ import { SelectInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { issueStatusOptions as statusOptions } from "../../../Data/selectOptions";
 
 const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, adminId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
@@ -25,14 +26,6 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
       statusTo: "",
     },
   });
-
-  const statusOptions = [
-    { value: "", label: "Select" },
-    { value: "Unassigned", label: "Unassigned" },
-    { value: "In Progress", label: "In-Progress" },
-    { value: "Not Started", label: "Not Started" },
-    { value: "Resolved", label: "Resolved" },
-  ];
 
   const [loading, setLoading] = useState(false);
 

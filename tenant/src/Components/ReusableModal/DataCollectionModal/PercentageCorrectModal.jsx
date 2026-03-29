@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { showToast } from "../../../Helper/ShowToast";
+import { promptLevelOptions } from "../../../Data/selectOptions";
 
 // Validation schema
 const createValidationSchema = (trialCount) => {
@@ -121,18 +122,6 @@ const PercentageCorrect = ({
     const firstError = Object.values(errors)[0];
     showToast(firstError?.message || "Please fill in all required fields", "error");
   };
-
-  // Prompt level options
-  const promptLevelOptions = [
-    { value: "I", label: "I - Independent" },
-    { value: "VP", label: "VP - Verbal Prompt" },
-    { value: "GP", label: "GP - Gesture Prompt" },
-    { value: "MP", label: "MP - Model Prompt" },
-    { value: "PPP", label: "PPP - Partial Physical Prompt" },
-    { value: "FPP", label: "FPP - Full Physical Prompt" },
-    { value: "VIS", label: "VIS - Visual Prompt" },
-    { value: "POS", label: "POS - Positional Prompt" },
-  ];
 
   return (
     <ReusableModal

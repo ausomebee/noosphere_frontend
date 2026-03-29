@@ -589,10 +589,10 @@ const SingleTimeSheet = () => {
         accessToken,
         refreshToken,
       });
-      setTimesheetData(response.data);
+      setTimesheetData(response);
 
       // Calculate history count
-      const totalHistory = response.data?.timesheetHistories?.length || 0;
+      const totalHistory = response?.timesheetHistories?.length || 0;
 
       setCounts({
         historyAndApprovalsCount: totalHistory,

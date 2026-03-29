@@ -13,6 +13,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import "./ClientInformationSection.css";
 import { RxCross2 } from "react-icons/rx";
 import { showToast } from "../../../../../../../../Helper/ShowToast";
+import { referralSourceOptions, serviceLocationOptions, yesNoOptions } from "../../../../../../../../Data/selectOptions";
 
 // Validation Schema
 const diagnosisSchema = Yup.object().shape({
@@ -132,33 +133,6 @@ const ClientInformationSection = ({
       onChange(updatedFormData);
     }
   }, [data]); // Only re-run when data prop changes
-
-  const referralSourceOptions = [
-    { value: "parent", label: "Parent/Guardian" },
-    { value: "pediatrician", label: "Pediatrician" },
-    { value: "psychologist", label: "Psychologist" },
-    { value: "psychiatrist", label: "Psychiatrist" },
-    { value: "school", label: "School/School District" },
-    { value: "hospital", label: "Hospital/Clinic" },
-    { value: "insurance-provider", label: "Insurance Provider" },
-    { value: "self-referred", label: "Self-referred" },
-    { value: "court-legal", label: "Court/Legal System" },
-    { value: "other", label: "Other" },
-  ];
-
-  const serviceLocationOptions = [
-    { value: "client-home", label: "Client home" },
-    { value: "clinic", label: "Clinic/Center" },
-    { value: "school", label: "School" },
-    { value: "community", label: "Community setting" },
-    { value: "telehealth", label: "Telehealth" },
-    { value: "hybrid", label: "Hybrid (multiple locations)" },
-  ];
-
-  const yesNoOptions = [
-    { value: "no", label: "No" },
-    { value: "yes", label: "Yes" },
-  ];
 
   // Validate form
   const validateForm = async () => {

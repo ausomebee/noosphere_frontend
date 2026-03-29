@@ -15,6 +15,7 @@ import { disconnectSocket } from "../api/socketService";
 import MessageModal from "../Components/Modal/MessageModal";
 import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
+import { navConfig } from "../Data/selectOptions";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,13 +53,18 @@ const DashboardLayout = ({ children }) => {
   });
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
-  const navItems = [
-    { icon: <GoHome size={20} />, label: "Home", path: "/dashboard" },
-    { icon: <HiOutlineMenuAlt2 size={20} />, label: "My programs", path: "/programs" },
-    { icon: <MdOutlineNotificationsNone size={20} />, label: "Notifications", path: "/notifications" },
-    { icon: <IoDocumentTextOutline size={20} />, label: "Documents & Forms", path: "/documents" },
-    { icon: <LuUser size={20} />, label: "My Profile", path: "/profile" },
-  ];
+  const iconMap = {
+    "/dashboard": <GoHome size={20} />,
+    "/programs": <HiOutlineMenuAlt2 size={20} />,
+    "/notifications": <MdOutlineNotificationsNone size={20} />,
+    "/documents": <IoDocumentTextOutline size={20} />,
+    "/profile": <LuUser size={20} />,
+  };
+
+  const navItems = navConfig.map((item) => ({
+    ...item,
+    icon: iconMap[item.path],
+  }));
 
   const handleLogout = () => {
     disconnectSocket();

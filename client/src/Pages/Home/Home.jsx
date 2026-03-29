@@ -117,6 +117,8 @@ const Home = () => {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("Awesome");
+  const [successMessage, setSuccessMessage] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -723,6 +725,8 @@ const Home = () => {
   const handleRescheduleSuccess = () => {
     setRescheduleModalOpen(false);
     setSelectedAppointment(null);
+    setSuccessTitle("Awesome");
+    setSuccessMessage("Your reschedule request has been sent!");
     showSuccess();
     setRefreshKey(prev => prev + 1);
   };
@@ -730,6 +734,8 @@ const Home = () => {
   const handleFeedbackSuccess = () => {
     setFeedbackModalOpen(false);
     setSelectedAppointment(null);
+    setSuccessTitle("Thank you!");
+    setSuccessMessage("Your session feedback has been submitted!");
     showSuccess();
     setRefreshKey(prev => prev + 1);
   };
@@ -880,6 +886,8 @@ const Home = () => {
         <SuccessModal
           isOpen={successModalOpen}
           onClose={() => setSuccessModalOpen(false)}
+          title={successTitle}
+          message={successMessage}
         />
       </div>
     </DashboardLayout>

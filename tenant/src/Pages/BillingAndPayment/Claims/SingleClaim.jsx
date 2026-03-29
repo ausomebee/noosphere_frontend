@@ -49,7 +49,7 @@ const SingleClaim = () => {
         accessToken,
         refreshToken,
       });
-      setClaimData(response.data);
+      setClaimData(response);
     } catch (error) {
       console.error("Error fetching claim:", error);
     } finally {

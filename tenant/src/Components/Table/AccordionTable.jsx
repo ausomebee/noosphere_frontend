@@ -7,6 +7,7 @@ import Button from "../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
 import api2 from "../../api/billingAndPaymentsApi";
+import { modifierOptions, perOptions } from "../../Data/selectOptions";
 
 const AccordionTable = ({
   data,
@@ -69,28 +70,6 @@ const AccordionTable = ({
   useEffect(() => {
     fetchServiceCodes();
   }, [fetchServiceCodes]);
-
-  const modifierOptions = [
-    { value: "", label: "No Modifier" },
-    { value: "HO", label: "HO - Master's-level provider" },
-    { value: "HP", label: "HP - Doctoral-level provider" },
-    { value: "HN", label: "HN - Associate's-level provider" },
-    { value: "HM", label: "HM - Bachelor's-level provider" },
-    { value: "95", label: "95 - Synchronous telehealth" },
-    { value: "GT", label: "GT - Interactive audio/video" },
-    { value: "KX", label: "KX - Requirements met" },
-    { value: "59", label: "59 - Distinct procedural service" },
-    { value: "76", label: "76 - Repeat same provider" },
-    { value: "77", label: "77 - Repeat different provider" },
-  ];
-
-  const perOptions = [
-    { value: "SESSION", label: "Per Session" },
-    { value: "DAY", label: "Per Day" },
-    { value: "WEEK", label: "Per Week" },
-    { value: "MONTH", label: "Per Month" },
-    { value: "YEAR", label: "Per Year" },
-  ];
 
   // Watch form services to detect changes
   const formServices = watch("services");

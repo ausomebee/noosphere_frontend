@@ -672,7 +672,7 @@ const SessionFeedbackModal = ({
           refreshToken,
         });
 
-        setSessionDetails(response.data);
+        setSessionDetails(response);
       } catch (error) {
         console.error("Failed to fetch session details:", error);
         setSessionDetails(appointment.originalData || appointment);

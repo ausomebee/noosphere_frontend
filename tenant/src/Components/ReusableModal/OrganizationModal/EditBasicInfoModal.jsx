@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import useAuth from "../../../hooks/useAuth";
+import roleApi from "../../../api/roleApi";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import { genderOptions, countryOptions, stateOptions } from "../../../Data/selectOptions";
 
 // Validation schema for Basic Information fields
 const schema = yup.object().shape({
@@ -34,78 +36,6 @@ const schema = yup.object().shape({
   active: yup.boolean().required("Active status is required"),
 });
 
-// Options for select inputs
-const genderOptions = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
-  { value: "prefer-not-to-say", label: "Prefer not to say" },
-];
-
-const staffRoleOptions = [
-  { value: "8285a9a5-0455-447d-9dbe-00ad68d6a0e5", label: "Admin" },
-  { value: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", label: "Therapist" },
-  { value: "b2c3d4e5-f6a7-8901-bcde-f23456789012", label: "Supervisor" },
-  { value: "d4e5f6a7-b8c9-0123-def0-456789012345", label: "Assistant" },
-];
-
-const countryOptions = [
-  { value: "US", label: "United States" },
-  { value: "UK", label: "United Kingdom" },
-];
-
-const stateOptions = [
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-];
 
 const BasicInfoModal = ({
   isOpen,
@@ -114,9 +44,32 @@ const BasicInfoModal = ({
   initialData,
   tenantStaffId,
 }) => {
-  const { accessToken, refreshToken } = useAuth();
+  const { accessToken, refreshToken, tenantId } = useAuth();
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [staffRoleOptions, setStaffRoleOptions] = useState([]);
+
+  const fetchRoles = useCallback(async () => {
+    try {
+      const res = await roleApi.GetAllRolesByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const roles = res.data?.data || res.data || [];
+      setStaffRoleOptions(
+        roles.map((role) => ({ value: role.id, label: role.name })),
+      );
+    } catch {
+      setStaffRoleOptions([]);
+    }
+  }, [tenantId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchRoles();
+    }
+  }, [isOpen, fetchRoles]);
 
   const {
     register,

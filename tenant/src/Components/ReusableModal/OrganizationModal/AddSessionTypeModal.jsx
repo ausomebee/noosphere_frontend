@@ -15,6 +15,7 @@ import api2 from "../../../api/billingAndPaymentsApi"; // For fetching service c
 import roleApi from "../../../api/roleApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { modifierOptions, categoryOptions, locationOptions } from "../../../Data/selectOptions";
 
 // Updated validation schema
 const sessionTypeSchema = yup.object().shape({
@@ -42,45 +43,6 @@ const sessionTypeSchema = yup.object().shape({
   location: yup.array().of(yup.string()).optional(),
   staffRole: yup.string().optional(),
 });
-
-// Modifier options from ABA billing standards
-const modifierOptions = [
-  { value: "", label: "No Modifier" },
-  { value: "HO", label: "HO - Master's-level provider" },
-  { value: "HP", label: "HP - Doctoral-level provider" },
-  { value: "HN", label: "HN - Associate's-level provider" },
-  { value: "HM", label: "HM - Bachelor's-level provider" },
-  { value: "95", label: "95 - Synchronous telehealth" },
-  { value: "GT", label: "GT - Via interactive audio and video (older telehealth modifier)" },
-  { value: "KX", label: "KX - Documentation requirements met" },
-  { value: "59", label: "59 - Distinct procedural service" },
-  { value: "76", label: "76 - Repeat procedure/same provider" },
-  { value: "77", label: "77 - Repeat procedure/different provider" },
-];
-
-// Category and other options (kept as before)
-const categoryOptions = [
-  { value: "Assessment", label: "Assessment" },
-  { value: "Planning/Admin", label: "Planning/Admin" },
-  { value: "Supervision", label: "Supervision" },
-  { value: "Caregiver Training", label: "Caregiver Training" },
-  { value: "Direct Service", label: "Direct Service" },
-  { value: "Consultation", label: "Consultation" },
-  { value: "Review/Monitoring", label: "Review/Monitoring" },
-  { value: "Crisis", label: "Crisis" },
-  { value: "Other", label: "Other" },
-];
-
-const locationOptions = [
-  { value: "Clinic/Center", label: "Clinic/Center" },
-  { value: "Home", label: "Home" },
-  { value: "School", label: "School" },
-  { value: "Community", label: "Community" },
-  { value: "Telehealth", label: "Telehealth" },
-  { value: "Telephonic", label: "Telephonic" },
-  { value: "Other", label: "Other" },
-];
-
 
 // Utility to transform initial data for edit mode
 const transformSessionTypeToFormData = (data) => {

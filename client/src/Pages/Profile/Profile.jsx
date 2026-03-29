@@ -9,10 +9,7 @@ import api2 from "../../api/profileAndSettingsApi";
 import { showToast } from "../../Helper/ShowToast";
 import { useNotificationSettings } from "../../hooks/useNotificationSettings";
 import NotificationSettings from "../../Components/NotificationSettings/NotificationSettings";
-
-// Default fallback avatar - you can use a placeholder image or an initials generator
-const DEFAULT_AVATAR =
-  "https://via.placeholder.com/120x120/cccccc/666666?text=Profile";
+import { DEFAULT_AVATAR, validImageTypes } from "../../Data/selectOptions";
 
 // Function to generate avatar URL with fallback
 const getAvatarUrl = (url, firstName, lastName) => {
@@ -119,8 +116,7 @@ const Profile = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-    if (!validTypes.includes(file.type)) {
+    if (!validImageTypes.includes(file.type)) {
       showToast("Please upload a valid image file (JPEG, PNG, GIF)", "error");
       return;
     }

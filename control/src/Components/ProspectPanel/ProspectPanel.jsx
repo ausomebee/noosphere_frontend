@@ -12,6 +12,7 @@ import { CheckboxInput, RadioInput, SelectInput } from "../Input/Inputs";
 import Button from "../Button/Button";
 import "./ProspectPanel.css";
 import "../ReusableModal/ReusableModal.css";
+import { frequencyOptions } from "../../Data/selectOptions";
 
 import { useNavigate, useParams } from "react-router-dom";
 import EditProspectModal from "../ReusableModal/EditProspectModal";
@@ -1179,20 +1180,7 @@ const ProspectPanel = () => {
                     label="Renewal Frequency"
                     value={renewalFrequency}
                     onChange={(e) => setRenewalFrequency(e.target.value)}
-                    options={[
-                      { value: "", label: "Select frequency" },
-                      { value: "monthly", label: "Monthly" },
-                      { value: "1_year", label: "1 Year" },
-                      { value: "2_years", label: "2 Years" },
-                      { value: "3_years", label: "3 Years" },
-                      { value: "4_years", label: "4 Years" },
-                      { value: "5_years", label: "5 Years" },
-                      { value: "6_years", label: "6 Years" },
-                      { value: "7_years", label: "7 Years" },
-                      { value: "8_years", label: "8 Years" },
-                      { value: "9_years", label: "9 Years" },
-                      { value: "10_years", label: "10 Years" },
-                    ]}
+                    options={frequencyOptions}
                   />
 
                   <SelectInput

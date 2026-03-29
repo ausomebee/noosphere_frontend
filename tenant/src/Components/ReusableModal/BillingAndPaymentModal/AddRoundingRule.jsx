@@ -12,6 +12,7 @@ import {
   SwitchInput,
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import { standardRuleOptions } from "../../../Data/selectOptions";
 
 // ----------------- schema -----------------
 const roundingRuleSchema = yup.object().shape({
@@ -56,13 +57,6 @@ const roundingRuleSchema = yup.object().shape({
   }),
   active: yup.boolean().default(true),
 });
-
-// ----------------- standard options -----------------
-const standardRuleOptions = [
-  { value: "8 Minute Rule", label: "8 Minute Rule" },
-  { value: "Midpoint Rule", label: "Midpoint Rule" },
-  { value: "Exact Time Reporting", label: "Exact Time Reporting" },
-];
 
 const standardRuleDescriptions = {
   "8 Minute Rule": "Round up when time is more than 8 min into the next 15 min block",
