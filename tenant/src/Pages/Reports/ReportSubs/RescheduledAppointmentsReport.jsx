@@ -4,19 +4,14 @@ import { FaArrowLeft } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
+import { formatTime } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "../Reports.css";
-
-const convertTo12Hour = (timeStr) => {
-  if (!timeStr) return "";
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const h = hours % 12 || 12;
-  return `${h}:${minutes.toString().padStart(2, "0")} ${period}`;
-};
 
 const RescheduledAppointmentsReport = () => {
   const navigate = useNavigate();
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const { timeFormat } = useFormatSettings();
   const role = authRole?.name ?? "";
 
   const [appointments, setAppointments] = useState([]);
@@ -48,12 +43,12 @@ const RescheduledAppointmentsReport = () => {
             prevDateTime: {
               date: appt.previousDate || "N/A",
               time: appt.previousStartTime && appt.previousEndTime
-                ? `${convertTo12Hour(appt.previousStartTime)} - ${convertTo12Hour(appt.previousEndTime)}`
+                ? `${formatTime(appt.previousStartTime, timeFormat)} - ${formatTime(appt.previousEndTime, timeFormat)}`
                 : "N/A",
             },
             newDateTime: {
               date: appt.date || "N/A",
-              time: `${convertTo12Hour(appt.startTime)} - ${convertTo12Hour(appt.endTime)}`,
+              time: `${formatTime(appt.startTime, timeFormat)} - ${formatTime(appt.endTime, timeFormat)}`,
             },
             date: appt.date,
             hasActions: false,

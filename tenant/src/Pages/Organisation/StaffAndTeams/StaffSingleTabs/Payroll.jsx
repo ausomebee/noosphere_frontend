@@ -5,6 +5,8 @@ import { useParams } from "react-router-dom";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollModal from "../../../../Components/ReusableModal/OrganizationModal/PayRollModal";
 import api from "../../../../api/organisationStaffApis";
+import { formatDate } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 import "../../Organisation.css";
 
 const formatRate = (item) => {
@@ -15,17 +17,9 @@ const formatRate = (item) => {
   return "N/A";
 };
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "N/A";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
-};
-
 const Payroll = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
   const { tenantStaffId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState(null);
@@ -89,8 +83,8 @@ const Payroll = () => {
       if (res?.data?.status === "ok" && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map((item) => ({
           id: item.id,
-          payrollDate: formatDate(item.payrollDate),
-          payPeriod: `${formatDate(item.payrollDate)} - ${formatDate(item.payPeriod)}`,
+          payrollDate: formatDate(item.payrollDate, dateFormat),
+          payPeriod: `${formatDate(item.payrollDate, dateFormat)} - ${formatDate(item.payPeriod, dateFormat)}`,
           totalPayrollValue: `$${item.totalPayrollValue || 0}`,
           hasActions: true,
         }));
@@ -101,7 +95,7 @@ const Payroll = () => {
     } finally {
       setHistoryLoading(false);
     }
-  }, [tenantStaffId, accessToken, refreshToken]);
+  }, [tenantStaffId, accessToken, refreshToken, dateFormat]);
 
   useEffect(() => {
     fetchPayrollSettings();

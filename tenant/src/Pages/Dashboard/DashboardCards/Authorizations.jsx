@@ -5,6 +5,8 @@ import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import "../Dashboard.css";
 import { Link } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
 
 const Authorizations = ({
@@ -14,6 +16,7 @@ const Authorizations = ({
   setIsModalOpen,
 }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const [authorizationData, setAuthorizationData] = useState([
     { label: "Expired", value: 0, color: "#3B82F6" },
@@ -81,7 +84,7 @@ const Authorizations = ({
             `${auth.tenantClient?.client?.firstName} ${auth.tenantClient?.client?.lastName}` ||
             "Unknown Client",
           details: `${auth.title} - ${auth.authorizationNumber}`,
-          date: new Date(auth.startDate).toLocaleDateString(),
+          date: formatDate(auth.startDate, dateFormat),
           endDate: auth.endDate,
           payer: auth.payerDetails?.payerName || "N/A",
           insuranceType: auth.insurance?.name || "N/A",

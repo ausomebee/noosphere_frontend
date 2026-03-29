@@ -4,12 +4,15 @@ import { FiChevronLeft, FiChevronDown, FiChevronUp, FiFile, FiDownload, FiStar }
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateTime } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "./FormResponses.css";
 
 const FormResponses = () => {
   const { formId } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const [responses, setResponses] = useState([]);
   const [originalFields, setOriginalFields] = useState([]);
@@ -45,15 +48,6 @@ const FormResponses = () => {
     setExpandedResponse((prev) => (prev === id ? null : id));
   };
 
-  const formatDate = (iso) => {
-    const d = new Date(iso);
-    const day = String(d.getUTCDate()).padStart(2, "0");
-    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const year = d.getUTCFullYear();
-    const hours = String(d.getUTCHours()).padStart(2, "0");
-    const mins = String(d.getUTCMinutes()).padStart(2, "0");
-    return `${day}-${month}-${year} ${hours}:${mins}`;
-  };
 
   const getFileName = (url) => {
     try {
@@ -227,7 +221,7 @@ const FormResponses = () => {
                   <div className="fr-response-summary">
                     <span className="fr-response-number">#{idx + 1}</span>
                     <span className="fr-response-date">
-                      Submitted: {formatDate(response.submittedAt)}
+                      Submitted: {formatDateTime(response.submittedAt, dateFormat, timeFormat)}
                     </span>
                   </div>
                   {isExpanded ? <FiChevronUp /> : <FiChevronDown />}

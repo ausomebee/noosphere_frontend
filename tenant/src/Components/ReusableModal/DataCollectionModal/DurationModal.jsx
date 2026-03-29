@@ -3,6 +3,7 @@ import ReusableModal from "../ReusableModal";
 import Button from "../../Button/Button";
 import { TextareaInput } from "../../Input/Inputs";
 import { FiRefreshCw } from "react-icons/fi";
+import { formatTimerDisplay } from "../../../Helper/Formatters";
 
 const DurationModal = ({ isOpen, onClose, initialDuration = 0, onSave, submitting = false }) => {
   const [duration, setDuration] = useState(initialDuration);
@@ -79,12 +80,6 @@ const DurationModal = ({ isOpen, onClose, initialDuration = 0, onSave, submittin
     // removed immediate startTimer() call
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const handleSave = () => {
     onSave({ duration, notes });
   };
@@ -104,7 +99,7 @@ const DurationModal = ({ isOpen, onClose, initialDuration = 0, onSave, submittin
       <div className="space-y-4">
         <div className="text-center flex justify-between items-center mb-24px">
           <div className="text-xl font-semibold mb-2">
-            Duration {formatTime(duration)}
+            Duration {formatTimerDisplay(duration)}
           </div>
           <div className="flex justify-center space-x-3 mb-4">
             {!hasStarted ? (

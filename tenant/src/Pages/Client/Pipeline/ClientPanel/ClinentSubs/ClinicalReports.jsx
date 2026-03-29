@@ -8,6 +8,8 @@ import CreateAReportDocumentModal from "../../../../../Components/ReusableModal/
 import api from "../../../../../api/TemplateAndReportApi";
 import usePermissions from "../../../../../hooks/usePermissions";
 import { showToast } from "../../../../../Helper/ShowToast";
+import { formatDate, formatDateTime } from "../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../hooks/useFormatSettings";
 
 // Delete Confirmation Modal
 const DeleteReportConfirmModal = ({
@@ -220,13 +222,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
                       margin: 0,
                     }}
                   >
-                    {new Date(version.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatDateTime(version.createdAt, dateFormat, timeFormat)}
                   </p>
                 </div>
                 <a
@@ -302,6 +298,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
 const ClinicalReportsTab = ({ clientData }) => {
   const { tenantClientId, clientId } = useParams();
   const navigate = useNavigate();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const [activeTab, setActiveTab] = useState("drafts");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -398,10 +395,10 @@ const ClinicalReportsTab = ({ clientData }) => {
         .map((report) => ({
           id: report.id,
           documentTitle: report.title || "Untitled Report",
-          dateCreated: new Date(report.createdAt).toLocaleDateString(),
+          dateCreated: formatDate(report.createdAt, dateFormat),
           createdBy: report.creator?.fullName || "Unknown",
           approverSupervisor: report.approver?.fullName || "None",
-          lastUpdated: new Date(report.updatedAt).toLocaleDateString(),
+          lastUpdated: formatDate(report.updatedAt, dateFormat),
           status: report.status || "DRAFT",
           hasChangesRequested: report.status === "CHANGES_REQUESTED",
           changeRequestedBy:

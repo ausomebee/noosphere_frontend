@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../Input/Inputs";
 import { FiRefreshCcw } from "react-icons/fi";
 import Button from "../../Button/Button";
+import { formatTimerDisplay } from "../../../Helper/Formatters";
 
 /* ----------  validation  ---------- */
 const frequencySchema = yup.object({
@@ -126,15 +127,6 @@ const RateModal = ({
     });
   };
 
-  /* ----------  format  ---------- */
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60)
-      .toString()
-      .padStart(2, "0");
-    const sec = (s % 60).toString().padStart(2, "0");
-    return `${m}:${sec}`;
-  };
-
   return (
     <ReusableModal
       isOpen={isOpen}
@@ -179,7 +171,7 @@ const RateModal = ({
             <div className="flex-1">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-xl font-medium" aria-live="polite">
-                  Duration: {formatTime(seconds)}
+                  Duration: {formatTimerDisplay(seconds)}
                 </div>
                 <div className="space-x-3">
                   {!started ? (

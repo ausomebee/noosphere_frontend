@@ -16,43 +16,17 @@ import {
   onMessagesRead,
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
+import { getInitials, formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 
 const getClientName = (client) =>
   client?.fullName ||
   `${client?.firstName || ""} ${client?.lastName || ""}`.trim() ||
   "Unknown";
 
-const getInitials = (name) =>
-  (name || "?")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-const formatMsgTime = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const now = new Date();
-  const dayLabel =
-    d.toDateString() === now.toDateString()
-      ? ""
-      : d.toLocaleDateString([], { weekday: "short" }) + " ";
-  return dayLabel + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
-
-const formatDateHeader = (dateStr) => {
-  const d = new Date(dateStr);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
-};
-
 const MessageModal = ({ isOpen, onClose }) => {
   const { userId, tenantId, accessToken, refreshToken } = useAuth();
+  const { timeFormat } = useFormatSettings();
 
   const [clients, setClients] = useState([]);
   const [messages, setMessages] = useState({});
@@ -340,7 +314,7 @@ const MessageModal = ({ isOpen, onClose }) => {
                   </div>
                   <div className="msg-conv-meta">
                     {lastMsg?.createdAt && (
-                      <span className="msg-conv-time">{formatMsgTime(lastMsg.createdAt)}</span>
+                      <span className="msg-conv-time">{formatMsgTime(lastMsg.createdAt, timeFormat)}</span>
                     )}
                     {unread > 0 && (
                       <span className="msg-conv-badge">{unread > 99 ? "99+" : unread}</span>
@@ -405,7 +379,7 @@ const MessageModal = ({ isOpen, onClose }) => {
                                 {isMe ? "You" : getClientName(selectedClient)}
                               </span>
                               <span className="msg-bubble-time">
-                                {formatMsgTime(msg.createdAt)}
+                                {formatMsgTime(msg.createdAt, timeFormat)}
                               </span>
                             </div>
                             <div

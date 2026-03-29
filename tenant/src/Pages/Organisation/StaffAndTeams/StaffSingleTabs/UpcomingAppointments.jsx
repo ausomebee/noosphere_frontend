@@ -1,13 +1,27 @@
 import React from 'react';
 import CustomTable from '../../../../Components/Table/CustomTable';
-import { format } from 'date-fns';
+import { formatDate, formatTime } from '../../../../Helper/Formatters';
+import useFormatSettings from '../../../../hooks/useFormatSettings';
 
 const UpcomingAppointments = ({ appointments, loading = false }) => {
-  const formatTime = (appt) => {
-    const startStr = appt.start ? format(new Date(appt.start), "h:mm a") : null;
-    const endStr = appt.end ? format(new Date(appt.end), "h:mm a") : null;
-    if (startStr && endStr) return `${startStr} - ${endStr}`;
-    if (startStr) return startStr;
+  const { dateFormat, timeFormat } = useFormatSettings();
+
+  const getTimeStr = (isoStr) => {
+    if (!isoStr) return null;
+    const d = new Date(isoStr);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return `${hh}:${mm}:${ss}`;
+  };
+
+  const formatApptTime = (appt) => {
+    const startStr = getTimeStr(appt.start);
+    const endStr = getTimeStr(appt.end);
+    const fmtStart = startStr ? formatTime(startStr, timeFormat) : null;
+    const fmtEnd = endStr ? formatTime(endStr, timeFormat) : null;
+    if (fmtStart && fmtEnd) return `${fmtStart} - ${fmtEnd}`;
+    if (fmtStart) return fmtStart;
     return "N/A";
   };
 
@@ -16,8 +30,8 @@ const UpcomingAppointments = ({ appointments, loading = false }) => {
     clientName: appt.clientName || appt.client || "Unknown Client",
     serviceType: appt.serviceType || "N/A",
     sessionType: appt.sessionType || appt.sessionName || "N/A",
-    date: appt.start ? format(new Date(appt.start), "MMM dd, yyyy") : "N/A",
-    time: formatTime(appt),
+    date: appt.start ? formatDate(appt.start, dateFormat) : "N/A",
+    time: formatApptTime(appt),
   }));
 
   return (

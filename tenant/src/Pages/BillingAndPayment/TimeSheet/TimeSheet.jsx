@@ -4,11 +4,14 @@ import usePermissions from "../../../hooks/usePermissions";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/billingAndPaymentsApi";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const TimeSheet = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const navigate = useNavigate();
+  const { dateFormat } = useFormatSettings();
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,16 +52,6 @@ const TimeSheet = () => {
     fetchSessions();
   }, [tenantId, accessToken, refreshToken]);
 
-  // Format date to MM/DD/YYYY or your preferred format
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   // Format hours to 2 decimal places
   const formatHours = (hours) => {
     if (!hours || hours === 0) return "0";
@@ -69,7 +62,7 @@ const TimeSheet = () => {
   const tableData = useMemo(() => {
     return sessions.map((session) => ({
       id: session.id,
-      dateTime: formatDate(session.date),
+      dateTime: formatDate(session.date, dateFormat),
       therapist: session.clinician,
       clientName: session.clientName,
       hours: formatHours(session.totalHours),

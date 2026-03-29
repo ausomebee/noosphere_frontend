@@ -3,9 +3,12 @@ import React, { useMemo, useState, useEffect } from "react";
 import useAuth from "../../../../hooks/useAuth";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
+import { formatDate, formatTime, formatDateTime } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 
 const CancelledAppointments = () => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
   const role = authRole?.name ?? "Client";
 
   const [localAppointments, setLocalAppointments] = useState([]);
@@ -66,21 +69,7 @@ const CancelledAppointments = () => {
           ? serviceTypeText.substring(0, 20) + "..."
           : serviceTypeText;
 
-      const formatTimeToAMPM = (timeStr) => {
-        if (!timeStr) return "";
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        const date = new Date();
-        date.setHours(hours, minutes);
-        return date.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-          timeZone: "Africa/Lagos",
-        });
-      };
-      const formattedTime = `${formatTimeToAMPM(
-        transformed.startTime
-      )} - ${formatTimeToAMPM(transformed.endTime)}`;
+      const formattedTime = `${formatTime(transformed.startTime, timeFormat)} - ${formatTime(transformed.endTime, timeFormat)}`;
 
       const therapistNames =
         transformed.clinicians?.map((c) => c.fullName) || [];
@@ -94,11 +83,7 @@ const CancelledAppointments = () => {
         serviceType: truncatedServiceType,
         sessionType:
           transformed.session?.name || transformed.serviceLocation || "N/A",
-        date: date.toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
+        date: formatDate(date, dateFormat),
         time: formattedTime,
         hasActions: true,
         therapistNames,
@@ -106,19 +91,10 @@ const CancelledAppointments = () => {
         cancellation: {
           cancelledBy: transformed.canceledBy || "N/A",
           dateOfCancellation: cancelTime
-            ? cancelTime.toLocaleDateString("en-US", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
+            ? formatDate(cancelTime, dateFormat)
             : "N/A",
           timeOfCancellation: cancelTime
-            ? cancelTime.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-                timeZone: "Africa/Lagos",
-              })
+            ? formatDateTime(cancelTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
             : "N/A",
           reason: transformed.reasonForCancel || "No reason provided",
         },

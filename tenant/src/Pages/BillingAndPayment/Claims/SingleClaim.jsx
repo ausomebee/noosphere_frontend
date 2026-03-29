@@ -7,20 +7,8 @@ import "../BillingPayment.css";
 import api from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
-
-// Helper functions
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  try {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch (error) {
-    return "Invalid date";
-  }
-};
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const SingleClaim = () => {
   const navigate = useNavigate();
@@ -28,6 +16,7 @@ const SingleClaim = () => {
 
   // Auth state
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
 
   // State
@@ -85,7 +74,7 @@ const SingleClaim = () => {
       doc.setTextColor(100, 100, 100);
       doc.text(`Claim ID: ${claimData.id || "N/A"}`, margin, yPos);
       doc.text(
-        `Generated: ${new Date().toLocaleDateString()}`,
+        `Generated: ${formatDate(new Date(), dateFormat)}`,
         pageWidth - margin,
         yPos,
         { align: "right" }
@@ -109,7 +98,7 @@ const SingleClaim = () => {
         : "N/A";
 
       const generalInfo = [
-        ["Date", formatDate(claimData.createdAt)],
+        ["Date", formatDate(claimData.createdAt, dateFormat)],
         ["Client", clientName],
         ["Client Insurance ID", claimData.client?.insuranceId || "N/A"],
         ["Timesheet ID", claimData.timesheetId || "N/A"],
@@ -144,7 +133,7 @@ const SingleClaim = () => {
         const tableData = claimData.authorizationsUsed.map((auth, index) => [
           index + 1,
           auth.title || "N/A",
-          formatDate(auth.startDate),
+          formatDate(auth.startDate, dateFormat),
         ]);
 
         autoTable(doc, {
@@ -214,7 +203,7 @@ const SingleClaim = () => {
 
       // Save PDF
       const fileName = `Claim_${claimData.id || "unknown"}_${formatDate(
-        claimData.createdAt
+        claimData.createdAt, dateFormat
       ).replace(/\//g, "-")}.pdf`;
       doc.save(fileName);
 
@@ -263,7 +252,7 @@ const SingleClaim = () => {
     claimData.authorizationsUsed?.map((auth, index) => ({
       id: auth.id || index,
       authorization: auth.title || "N/A",
-      date: formatDate(auth.startDate),
+      date: formatDate(auth.startDate, dateFormat),
     })) || [];
 
   // Prepare service data for accordion
@@ -291,7 +280,7 @@ const SingleClaim = () => {
     clientInsID: claimData.client?.insuranceId || "N/A",
     clinicians: clinicianNames || "N/A",
     clinicianNPI: clinicianNpis || "N/A",
-    date: formatDate(claimData.createdAt),
+    date: formatDate(claimData.createdAt, dateFormat),
     timesheetId: claimData.timesheetId || claimData.appointment?.id || "N/A",
     serviceLocation: claimData.appointment?.serviceLocation || "N/A",
     location: claimData.practiceLocation || "N/A",

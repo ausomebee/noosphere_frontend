@@ -19,12 +19,15 @@ import TravelTimeModal from "../../../Components/ReusableModal/StartAppointmentM
 import ConfirmCancelModal from "../../../Components/ReusableModal/StartAppointmentModal/ConfirmCancelModal";
 import ConfirmLeaveModal from "../../../Components/ReusableModal/StartAppointmentModal/ConfirmLeaveModal";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate, formatTime, formatDuration } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const StartAppointment = () => {
   const { clientId, appointmentId } = useParams();
   const navigate = useNavigate();
 
   const { accessToken, refreshToken, userId } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   // States
   const [appointment, setAppointment] = useState(null);
@@ -227,16 +230,6 @@ const StartAppointment = () => {
     return `${h > 0 ? h + "hrs " : ""}${m}m ${s}s`;
   };
 
-  const formatTime = (timeStr) => {
-    if (!timeStr || timeStr === "—") return "—";
-    const [hours, minutes] = timeStr.split(":");
-    let h = parseInt(hours, 10);
-    const m = minutes || "00";
-    const period = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
-    return `${h}:${m} ${period}`;
-  };
-
   const timeStringToIso = (timeStr) => {
     if (!timeStr) return null;
     const today = new Date().toISOString().slice(0, 10);
@@ -411,27 +404,6 @@ const StartAppointment = () => {
       }
     };
 
-    const formatTimeFromString = (timeString) => {
-      if (!timeString) return "12:00:00 AM";
-      const [hours, minutes, seconds = "00"] = timeString.split(":");
-      let h = parseInt(hours, 10);
-      const period = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-      return `${h.toString().padStart(2, "0")}:${minutes}:${seconds} ${period}`;
-    };
-
-    const formatDuration = (secs) => {
-      if (secs === undefined || secs === null) return "Not set";
-      const h = Math.floor(secs / 3600)
-        .toString()
-        .padStart(2, "0");
-      const m = Math.floor((secs % 3600) / 60)
-        .toString()
-        .padStart(2, "0");
-      const s = (secs % 60).toString().padStart(2, "0");
-      return `${h}:${m}:${s}`;
-    };
-
     const headers = getHeaders(type);
     const dataRows = (() => {
       switch (type) {
@@ -479,7 +451,7 @@ const StartAppointment = () => {
         case "Latency":
           return (data.trials || []).map((trial) => ({
             trialCount: trial.trial,
-            sdTime: formatTimeFromString(trial.stimulusPresented),
+            sdTime: formatTime(trial.stimulusPresented, timeFormat),
             response:
               trial.latency !== null
                 ? `${trial.latency >= 0 ? "+" : ""}${trial.latency} secs`
@@ -637,7 +609,7 @@ const StartAppointment = () => {
                 </span>
                 <span className="flex flex-col">
                   <strong>DOB:</strong>{" "}
-                  {new Date(client.DOB).toLocaleDateString()}
+                  {formatDate(client.DOB, dateFormat)}
                 </span>
                 <span className="flex flex-col">
                   <strong>Payer:</strong> {client.payer?.payerName || "—"}
@@ -682,7 +654,7 @@ const StartAppointment = () => {
 
               <h3 style={{ marginTop: "16px" }}>Appointment Time</h3>
               <p className="font-medium text-gray-800">
-                {formatTime(startTime)} - {formatTime(endTime)}
+                {formatTime(startTime, timeFormat)} - {formatTime(endTime, timeFormat)}
               </p>
 
               {requiresTravel && (
@@ -690,8 +662,8 @@ const StartAppointment = () => {
                   <h3 style={{ marginTop: "16px" }}>Travel Time</h3>
                   {travelTime.start && travelTime.end ? (
                     <p className="font-medium text-green-600">
-                      {formatTime(travelTime.start)} -{" "}
-                      {formatTime(travelTime.end)}
+                      {formatTime(travelTime.start, timeFormat)} -{" "}
+                      {formatTime(travelTime.end, timeFormat)}
                     </p>
                   ) : (
                     <Button

@@ -6,12 +6,15 @@ import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
+import { formatDate, formatDateTime } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "./FormRenderer.css";
 
 const FormRenderer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const [formName, setFormName] = useState("");
   const [response, setResponse] = useState(null);
@@ -52,17 +55,6 @@ const FormRenderer = () => {
 
     fetchData();
   }, [id, accessToken, refreshToken]);
-
-  const formatDate = (iso) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const getFileName = (url) => {
     try {
@@ -183,7 +175,7 @@ const FormRenderer = () => {
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(190, 210, 255);
-      doc.text("Submitted: " + formatDate(response.submittedAt), margin, 42);
+      doc.text("Submitted: " + formatDateTime(response.submittedAt, dateFormat, timeFormat), margin, 42);
 
       y = 58;
 
@@ -529,7 +521,7 @@ const FormRenderer = () => {
 
         doc.setFontSize(7);
         doc.text(
-          new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+          formatDate(new Date(), dateFormat),
           rightEdge, pageHeight - 9, { align: "right" }
         );
       }
@@ -681,7 +673,7 @@ const FormRenderer = () => {
             <div className="fr-meta-row">
               <div className="fr-meta-item">
                 <FiCalendar size={14} />
-                <span>{formatDate(response.submittedAt)}</span>
+                <span>{formatDateTime(response.submittedAt, dateFormat, timeFormat)}</span>
               </div>
             </div>
           )}

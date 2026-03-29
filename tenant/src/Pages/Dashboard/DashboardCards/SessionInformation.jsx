@@ -4,10 +4,13 @@ import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
 import useAuth from "../../../hooks/useAuth";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const [chartData, setChartData] = useState({
     series: [{ name: "Sessions", data: [] }],
@@ -80,8 +83,7 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
         expectedPeriods.push(`${y}-${m}-${day}`);
       }
       formatLabel = (p) => {
-        const date = new Date(p);
-        return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        return formatDate(p, dateFormat);
       };
     }
 

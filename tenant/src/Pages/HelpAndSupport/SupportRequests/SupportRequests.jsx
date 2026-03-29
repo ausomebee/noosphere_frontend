@@ -11,7 +11,8 @@ import usePermissions from "../../../hooks/usePermissions";
 import { FiPlus } from "react-icons/fi";
 import { BsCloudUpload } from "react-icons/bs";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { format } from "date-fns";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "./SupportRequests.css";
 
 const CATEGORIES = [
@@ -46,6 +47,7 @@ const SupportRequests = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat } = useFormatSettings();
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,16 +114,6 @@ const SupportRequests = () => {
     fetchOverview();
   }, [fetchTickets, fetchOverview]);
 
-  // Format date helper
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    try {
-      return format(new Date(dateStr), "MM/dd/yy");
-    } catch {
-      return "N/A";
-    }
-  };
-
   // Table data mapped from API response
   const tableData = useMemo(() => {
     return requests.map((req) => ({
@@ -132,7 +124,7 @@ const SupportRequests = () => {
           ? req.description.substring(0, 30) + "..."
           : req.description || "N/A",
       loggedBy: req.loggedBy?.fullName || "N/A",
-      dateReported: formatDate(req.createdAt),
+      dateReported: formatDate(req.createdAt, dateFormat),
       status: req.status || "Not Started",
       hasActions: true,
       rawData: req,
@@ -436,7 +428,7 @@ const SupportRequests = () => {
                 <div key={idx} className="progress-track-item">
                   {item.message || item.action} on{" "}
                   <span className="track-date">
-                    {formatDate(item.createdAt || item.date)}
+                    {formatDate(item.createdAt || item.date, dateFormat)}
                   </span>
                   {item.person && (
                     <>

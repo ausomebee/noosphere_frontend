@@ -12,6 +12,8 @@ import Client from "./StaffSingleTabs/Client";
 import Payroll from "./StaffSingleTabs/Payroll";
 import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "../Organisation.css";
 
 const SingleStaffByAdmin = () => {
@@ -20,6 +22,7 @@ const SingleStaffByAdmin = () => {
   const { tenantStaffId } = useParams();
   const [searchParams] = useSearchParams();
   const staffName = searchParams.get("name");
+  const { dateFormat } = useFormatSettings();
 
   const [staff, setStaff] = useState(null);
   const [licenses, setLicenses] = useState([]);
@@ -74,7 +77,7 @@ const SingleStaffByAdmin = () => {
         country: staffData.staff.country,
         active: staffData.staff.active,
         dateJoined: staffData.staff.createdAt
-          ? new Date(staffData.staff.createdAt).toLocaleDateString()
+          ? formatDate(staffData.staff.createdAt, dateFormat)
           : "",
         staffRole: staffData.staff.roleId,
         roleId: staffData.staff.roleId,
@@ -97,7 +100,7 @@ const SingleStaffByAdmin = () => {
           licenseName: l.licenseName,
           licenseType: l.licenseName,
           licenseNumber: l.licenseNumber,
-          expirationDate: new Date(l.expiryDate).toLocaleDateString(),
+          expirationDate: formatDate(l.expiryDate, dateFormat),
           expiryDate: l.expiryDate,
           state: l.issueState,
           issueState: l.issueState,
@@ -123,8 +126,8 @@ const SingleStaffByAdmin = () => {
           documentName:
             d.documentName || d.documentsUrl?.filename || "Unknown File",
           date: d.date
-            ? new Date(d.date).toLocaleDateString()
-            : new Date().toLocaleDateString(),
+            ? formatDate(d.date, dateFormat)
+            : formatDate(new Date(), dateFormat),
           uploadBy: d.uploadedBy || "Unknown User",
           documentsUrl: d.documentsUrl,
           tenantStaffId: d.tenantStaffId,
@@ -180,9 +183,7 @@ const SingleStaffByAdmin = () => {
             id: response.data?.data?.id || Date.now(),
             licenseName: payload.licenseName,
             licenseNumber: payload.licenseNumber,
-            expirationDate: new Date(
-              payload.expirationDate
-            ).toLocaleDateString(),
+            expirationDate: formatDate(payload.expirationDate, dateFormat),
             state: payload.state,
             hasActions: true,
           },
@@ -226,7 +227,7 @@ const SingleStaffByAdmin = () => {
           const newFile = {
             id: response.data?.data?.id || payload.id,
             documentName: payload.documentName,
-            date: new Date().toLocaleDateString(),
+            date: formatDate(new Date(), dateFormat),
             uploadBy: user.fullName,
             documentsUrl:
               response.data?.data?.documentsUrl || payload.documentsUrl,

@@ -10,9 +10,12 @@ import {
   
 } from "date-fns";
 import { CgChevronRight } from "react-icons/cg";
+import { formatHour } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 import "./Scheduler.css";
 
 const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
+  const { timeFormat } = useFormatSettings();
   const viewDate = useMemo(() => startOfDay(date ? new Date(date) : new Date()), [date]);
 
   const days = useMemo(() => {
@@ -31,13 +34,6 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
     if (!isValid(d) || isNaN(h) || isNaN(m)) return null;
     d.setHours(h, m, 0, 0);
     return d;
-  }, []);
-
-  const formatHour = useCallback((hour) => {
-    if (hour === 0) return "12 am";
-    if (hour === 12) return "12 pm";
-    if (hour < 12) return `${hour} am`;
-    return `${hour - 12} pm`;
   }, []);
 
   const calculatePositionAndHeight = useCallback(
@@ -170,7 +166,7 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
               className="week-view-hour-label"
               style={{ gridRow: `${hour + 2}` }}
             >
-              {formatHour(hour)}
+              {formatHour(hour, timeFormat)}
             </div>
             {days.map((day, dayIndex) => {
               const isTodayDate = isToday(day);

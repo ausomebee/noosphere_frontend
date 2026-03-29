@@ -8,11 +8,14 @@ import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate, formatCurrency } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const Payroll = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat, currency } = useFormatSettings();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState([]);
@@ -31,17 +34,13 @@ const Payroll = () => {
         ? data.map((item) => ({
             id: item.id,
             date: item.payrollDate
-              ? new Date(item.payrollDate).toLocaleDateString("en-US", {
-                  month: "2-digit",
-                  day: "2-digit",
-                  year: "numeric",
-                })
+              ? formatDate(item.payrollDate, dateFormat)
               : "-",
             payPeriod: item.payPeriod || "-",
             noOfStaff: item.numberOfStaffs?.toString() || "0",
             totalPayrollValue: item.totalPayrollValue != null
-              ? `$${Number(item.totalPayrollValue).toLocaleString()}`
-              : "$0",
+              ? formatCurrency(item.totalPayrollValue, currency)
+              : formatCurrency(0, currency),
             hasActions: true,
           }))
         : [];

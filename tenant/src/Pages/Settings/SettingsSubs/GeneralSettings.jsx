@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch } from "react-redux";
 import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import {
@@ -12,53 +13,17 @@ import api from "../../../api/generalSettingsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { FiSettings, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
 import usePermissions from "../../../hooks/usePermissions";
+import { setSettings } from "../../../ReduxStore/features/generalSettingsSlice";
+import {
+  DATE_FORMAT_OPTIONS,
+  TIME_FORMAT_OPTIONS,
+  CURRENCY_OPTIONS,
+  SECURITY_QUESTION_OPTIONS,
+} from "../../../Data/selectOptions";
 import "./GeneralSettings.css";
 
-const DATE_FORMAT_OPTIONS = [
-  { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
-  { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
-  { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
-  { value: "MMM DD, YYYY", label: "MMM DD, YYYY" },
-];
-
-const TIME_FORMAT_OPTIONS = [
-  { value: "12-hour", label: "12-hour (AM/PM)" },
-  { value: "24-hour", label: "24-hour" },
-];
-
-const CURRENCY_OPTIONS = [
-  { value: "USD", label: "USD ($)" },
-  { value: "EUR", label: "EUR (€)" },
-  { value: "GBP", label: "GBP (£)" },
-  { value: "NGN", label: "NGN (₦)" },
-  { value: "CAD", label: "CAD (C$)" },
-];
-
-const SECURITY_QUESTION_OPTIONS = [
-  { value: "", label: "Select a security question" },
-  { value: "What is the name of your first pet?", label: "What is the name of your first pet?" },
-  { value: "What was the make of your first car?", label: "What was the make of your first car?" },
-  { value: "What is your mother's maiden name?", label: "What is your mother's maiden name?" },
-  { value: "What was the name of your elementary school?", label: "What was the name of your elementary school?" },
-  { value: "What is your favorite book?", label: "What is your favorite book?" },
-  { value: "In what city were you born?", label: "In what city were you born?" },
-  { value: "What was your childhood nickname?", label: "What was your childhood nickname?" },
-  { value: "What is the name of your favorite teacher?", label: "What is the name of your favorite teacher?" },
-  { value: "What was the first concert you attended?", label: "What was the first concert you attended?" },
-  { value: "What is your favorite vacation destination?", label: "What is your favorite vacation destination?" },
-  { value: "What was the name of your first best friend?", label: "What was the name of your first best friend?" },
-  { value: "What is the name of the street you grew up on?", label: "What is the name of the street you grew up on?" },
-  { value: "What was your favorite childhood game?", label: "What was your favorite childhood game?" },
-  { value: "What is the name of your favorite movie?", label: "What is the name of your favorite movie?" },
-  { value: "What was the first job you ever had?", label: "What was the first job you ever had?" },
-  { value: "What is your favorite hobby?", label: "What is your favorite hobby?" },
-  { value: "What was the model of your first phone?", label: "What was the model of your first phone?" },
-  { value: "What is the name of your favorite restaurant?", label: "What is the name of your favorite restaurant?" },
-  { value: "What was the name of your high school mascot?", label: "What was the name of your high school mascot?" },
-  { value: "What is your favorite historical figure?", label: "What is your favorite historical figure?" },
-];
-
 const GeneralSettings = () => {
+  const dispatch = useDispatch();
   const { user, tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
 
@@ -135,6 +100,11 @@ const GeneralSettings = () => {
         if (data.dateFormat) setDateFormat(data.dateFormat);
         if (data.timeFormat) setTimeFormat(data.timeFormat);
         if (data.currency) setCurrency(data.currency);
+        dispatch(setSettings({
+          dateFormat: data.dateFormat,
+          timeFormat: data.timeFormat,
+          currency: data.currency,
+        }));
       }
     } catch (error) {
       console.error("Failed to fetch general settings:", error);
@@ -238,6 +208,11 @@ const GeneralSettings = () => {
         await api.CreateGeneralSettings(payload);
         setSettingsExist(true);
       }
+      dispatch(setSettings({
+        dateFormat: newDateFormat,
+        timeFormat: newTimeFormat,
+        currency: newCurrency,
+      }));
       showToast("Settings updated successfully", "success");
     } catch (error) {
       console.error("Failed to save general settings:", error);

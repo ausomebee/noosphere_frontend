@@ -9,6 +9,7 @@ import { FaImage, FaPhotoVideo, FaCheckCircle } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import uploadApi from "../../api/ImageUpload";
 import { showToast } from "../../Helper/ShowToast";
+import { formatFileSize } from "../../Helper/Formatters";
 import { useSelector } from "react-redux";
 
 const FileUploadArea = memo(
@@ -54,13 +55,6 @@ const FileUploadArea = memo(
       return <BsFileEarmarkPdf size={20} className="text-gray-600" />;
     };
 
-    const formatSize = (bytes) => {
-      if (!bytes) return "Unknown";
-      if (bytes < 1024) return bytes + " B";
-      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
-      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-    };
-
     const handleFiles = async (selectedFiles) => {
       const newFiles = selectedFiles
         .map((file) => {
@@ -72,7 +66,7 @@ const FileUploadArea = memo(
           return {
             file,
             name: file.name,
-            size: formatSize(file.size),
+            size: formatFileSize(file.size),
             progress: 0,
             id: Math.random().toString(36).substr(2, 9), // temporary id
           };

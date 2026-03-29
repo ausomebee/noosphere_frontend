@@ -22,6 +22,7 @@ import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { genderOptions, countryOptions, stateOptions as usStates } from "../../../Data/selectOptions";
+import { formatDateForInput } from "../../../Helper/Formatters";
 
 // ==================== SCHEMA ====================
 const schema = yup.object().shape({
@@ -82,16 +83,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const hasInitialized = useRef(false);
   const { tenantId, accessToken, refreshToken } = useAuth();
-
-  // Format DOB from ISO string → YYYY-MM-DD
-  const formatDateForInput = (isoString) => {
-    if (!isoString) return "";
-    try {
-      return isoString.split("T")[0]; // "2025-11-27T00:00:00.000Z" → "2025-11-27"
-    } catch {
-      return "";
-    }
-  };
 
   // Fetch Clinicians & Payers
   const fetchClinicians = useCallback(async () => {

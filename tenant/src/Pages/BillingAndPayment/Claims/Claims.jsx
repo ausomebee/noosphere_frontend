@@ -3,27 +3,15 @@ import { useNavigate } from "react-router-dom";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
-
-// Helper function to format date
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  } catch (error) {
-    return "Invalid date";
-  }
-};
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const Claims = () => {
   const navigate = useNavigate();
-  
+
   // Auth state
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
   
   // State
   const [tableData, setTableData] = useState([]);
@@ -48,7 +36,7 @@ const Claims = () => {
       // Transform API data to match table structure - ONLY THE 4 COLUMNS
       const transformedData = response.map((claim) => ({
         id: claim.id,
-        date: formatDate(claim.date),
+        date: formatDate(claim.date, dateFormat),
         createdBy: claim.approver?.fullName || "N/A",
         clientName: claim.clientName || "N/A",
         payer: claim.authorizationsUsed?.[0]?.payerDetails?.payerName || "N/A",

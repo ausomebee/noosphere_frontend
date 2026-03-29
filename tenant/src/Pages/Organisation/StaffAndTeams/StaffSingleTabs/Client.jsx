@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import { formatDate } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 import api from "../../../../api/organisationStaffApis";
 
 const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
+  const { dateFormat } = useFormatSettings();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +40,7 @@ const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
       `${client.firstName || ""} ${client.lastName || ""}`.trim() ||
       "Unknown Client",
     dateAdded: client.createdAt
-      ? new Date(client.createdAt).toLocaleDateString()
+      ? formatDate(client.createdAt, dateFormat)
       : "N/A",
     email: client.email || "N/A",
     emergencyContact: client.caregiverName || client.emergencyContact || "N/A",

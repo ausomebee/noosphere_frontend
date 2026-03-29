@@ -42,6 +42,8 @@ import Alert from "../../../../../../Components/Alert/Alert";
 import ReusableModal from "../../../../../../Components/ReusableModal/ReusableModal";
 import { TextareaInput } from "../../../../../../Components/Input/Inputs";
 import api from "../../../../../../api/TemplateAndReportApi";
+import { formatDate, formatDateTime, formatGender } from "../../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 
 import {
   initializeReport,
@@ -111,27 +113,6 @@ const getAutoPopulatedClientData = (clientData) => {
   if (!client) {
     return {};
   }
-
-  // Format date from ISO string to readable format
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      return "";
-    }
-  };
-
-  // Format gender (capitalize first letter)
-  const formatGender = (gender) => {
-    if (!gender) return "";
-    return gender.charAt(0).toUpperCase() + gender.slice(1);
-  };
 
   // Get full name from client object
   const getFullName = () => {
@@ -519,6 +500,7 @@ const ClinicalReportBuilder = () => {
   const dispatch = useDispatch();
 
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const {
     id: reportId,
@@ -1178,7 +1160,7 @@ const ClinicalReportBuilder = () => {
                     <span className="crb-metadata-label">Date Created</span>
                     <span className="crb-metadata-value">
                       {metadata.dateCreated ||
-                        new Date().toLocaleDateString("en-GB")}
+                        formatDate(new Date(), dateFormat)}
                     </span>
                   </div>
                   <div className="crb-metadata-field">
@@ -1415,13 +1397,7 @@ const ClinicalReportBuilder = () => {
                       )}
                       {cr.createdAt && (
                         <p className="text-sm text-gray-400 mt-4">
-                          {new Date(cr.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatDateTime(cr.createdAt, dateFormat, timeFormat)}
                         </p>
                       )}
                     </div>

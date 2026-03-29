@@ -9,19 +9,13 @@ import RejectConfirmationModal from "../../../../Components/ReusableModal/Schedu
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
 import api from "../../../../api/AppointmentApi";
-
-// Convert 24-hour time to 12-hour AM/PM
-const convertTo12Hour = (timeStr) => {
-  if (!timeStr) return "";
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const adjustedHours = hours % 12 || 12;
-  return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-};
+import { formatTime } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 
 const RescheduleRequests = ({ counts, setCounts }) => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { timeFormat } = useFormatSettings();
   const role = authRole?.name ?? "Client";
 
   const [appointments, setAppointments] = useState([]);
@@ -106,20 +100,20 @@ const RescheduleRequests = ({ counts, setCounts }) => {
             date: appt.previousDate || "N/A",
             time:
               appt.previousStartTime && appt.previousEndTime
-                ? `${convertTo12Hour(
-                    appt.previousStartTime,
-                  )} - ${convertTo12Hour(appt.previousEndTime)}`
+                ? `${formatTime(
+                    appt.previousStartTime, timeFormat,
+                  )} - ${formatTime(appt.previousEndTime, timeFormat)}`
                 : "N/A",
           },
           newDateTime: {
             date: appt.date,
-            time: `${convertTo12Hour(appt.startTime)} - ${convertTo12Hour(
-              appt.endTime,
+            time: `${formatTime(appt.startTime, timeFormat)} - ${formatTime(
+              appt.endTime, timeFormat,
             )}`,
           },
           date: appt.date,
-          startTime: convertTo12Hour(appt.startTime),
-          endTime: convertTo12Hour(appt.endTime),
+          startTime: formatTime(appt.startTime, timeFormat),
+          endTime: formatTime(appt.endTime, timeFormat),
           hasActions: true,
           hasCheckbox: true,
           therapistNames,

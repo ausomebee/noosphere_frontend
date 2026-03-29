@@ -2,8 +2,11 @@
 import React, { useState } from "react";
 import ReusableModal from "../../ReusableModal/ReusableModal";
 import { TextInput, TextareaInput, CheckboxInput } from "../../Input/Inputs";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
+  const { dateFormat } = useFormatSettings();
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [dueDate, setDueDate] = useState("");
 
@@ -81,7 +84,7 @@ const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit, loading = false })
         />
         {dueDate && (
           <p className="text-xs text-gray-500 mt-1">
-            Selected: {new Date(dueDate).toLocaleDateString("en-GB")}
+            Selected: {formatDate(dueDate, dateFormat)}
           </p>
         )}
       </div>

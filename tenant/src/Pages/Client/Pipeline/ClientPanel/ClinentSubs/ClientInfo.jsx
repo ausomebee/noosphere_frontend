@@ -21,6 +21,8 @@ import ClientDocumentUploadModal from "../../../../../Components/ReusableModal/C
 import DocumentViewer from "../../../../../Components/FileUpload/DocumentViewer";
 import { useDispatch } from "react-redux";
 import { loadForm } from "../../../../../ReduxStore/features/formBuilderSlice";
+import { formatDate } from "../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../hooks/useFormatSettings";
 
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
@@ -231,6 +233,7 @@ const DocumentsForms = () => {
   const dispatch = useDispatch();
   const { tenantClientId } = useParams();
   const { accessToken, refreshToken, userId, tenantId } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
@@ -327,11 +330,7 @@ const DocumentsForms = () => {
           const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
           const dateCreated =
             createdAt && !isNaN(createdAt)
-              ? createdAt.toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
+              ? formatDate(createdAt, dateFormat)
               : "—";
 
           // Safely get createdBy name (fallback to "System" or ID)
@@ -398,11 +397,7 @@ const DocumentsForms = () => {
         name: f.form.name,
         formFields: f.form.formFields || [],
         dateCreated: f.createdAt
-          ? new Date(f.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })
+          ? formatDate(f.createdAt, dateFormat)
           : "—",
         status: f.status || "Assigned",
         hasActions: true,
@@ -534,9 +529,9 @@ const DocumentsForms = () => {
     return {
       id: req.id,
       name: req.name,
-      dateCreated: new Date(req.createdAt).toLocaleDateString(),
+      dateCreated: formatDate(req.createdAt, dateFormat),
       dueDate: req.dueDate
-        ? new Date(req.dueDate).toLocaleDateString()
+        ? formatDate(req.dueDate, dateFormat)
         : "—",
       status: req.status || "Pending upload",
       note: req.description,

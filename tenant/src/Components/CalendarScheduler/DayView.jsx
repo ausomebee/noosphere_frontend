@@ -8,6 +8,8 @@ import {
   parseISO,
 } from "date-fns";
 import { CgChevronRight } from "react-icons/cg";
+import { formatHour } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 import "./Scheduler.css";
 
 // Parse time (e.g., "01:30") with date (e.g., "2025-09-27") to create a Date object
@@ -36,13 +38,6 @@ const parseTime = (time, date) => {
   } catch (e) {
     return null;
   }
-};
-
-// Format hour for grid (e.g., 10 => "10:00 AM")
-const formatHour = (hour) => {
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour}:00 ${period}`;
 };
 
 // Calculate top and height for appointment positioning
@@ -86,6 +81,8 @@ const processAppointments = (appointments) => {
 };
 
 const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
+  const { timeFormat } = useFormatSettings();
+
   // Normalize viewDate to start of day
   const viewDate = useMemo(() => {
     const d = startOfDay(date ? new Date(date) : new Date());
@@ -154,7 +151,7 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
               lineHeight: `${rowHeightPx}px`,
             }}
           >
-            {formatHour(hour)}
+            {formatHour(hour, timeFormat)}
           </div>
         ))}
         {/* Hour slots */}
