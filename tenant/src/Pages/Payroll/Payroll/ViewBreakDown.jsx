@@ -59,6 +59,7 @@ const ViewBreakDown = () => {
         setDeductionItems(Array.isArray(dedData) ? dedData : []);
       } catch (error) {
         console.error("Failed to fetch payroll items:", error);
+        showToast("Failed to load payroll items", "error");
       }
     };
     fetchItems();

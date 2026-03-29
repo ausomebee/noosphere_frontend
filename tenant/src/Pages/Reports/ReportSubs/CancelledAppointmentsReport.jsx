@@ -6,6 +6,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
 import { formatDate, formatTime, formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import { showToast } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const CancelledAppointmentsReport = () => {
@@ -65,6 +66,7 @@ const CancelledAppointmentsReport = () => {
         setAppointments(transformAppointments(response?.data?.data || []));
       } catch (err) {
         console.error("Failed to fetch cancelled appointments:", err);
+        showToast("Failed to load cancelled appointments", "error");
         setAppointments([]);
       } finally {
         setLoading(false);

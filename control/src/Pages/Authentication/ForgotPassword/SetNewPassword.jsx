@@ -42,45 +42,9 @@ const SetNewPassword = () => {
     },
   });
 
-  const onSubmit = async (data) => {
-    navigate("/SA/2fa-question/login")
-  }
-//   // Handle form submission
-//   const onSubmit = async (data) => {
-//     if (!token) {
-//       console.error("No reset token provided");
-//       return;
-//     }
-
-//     setLoading(true);
-
-//     try {
-//       // Send new password and token to server to update the user's password
-//       const response = await fetch("/api/reset-password", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           token,
-//           newPassword: data.password,
-//         }),
-//       });
-
-//       const result = await response.json();
-//       if (result.success) {
-//         // Navigate to a success page or login page
-//         navigate("/"); // Redirect to login after successful password reset
-//       } else {
-//         throw new Error(result.message || "Failed to reset password. Please try again.");
-//       }
-//     } catch (error) {
-//       console.error("Error resetting password:", error);
-//       // For simplicity, we're logging the error; you can add a state to display server-side errors
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  const onSubmit = async () => {
+    navigate("/SA/2fa-question/login");
+  };
 
   return (
     <div className="auth-background">

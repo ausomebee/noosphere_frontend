@@ -66,7 +66,7 @@ const StackedBarChart = ({
   useEffect(() => {
     // Insert a style tag to apply border radius to both bars
     const styleTag = document.createElement("style");
-    styleTag.innerHTML = `
+    styleTag.textContent = `
     
       .apexcharts-series[seriesName="Error"] path {
         clip-path: inset(0 0 0 0 round 4px 4px 0 0) !important;

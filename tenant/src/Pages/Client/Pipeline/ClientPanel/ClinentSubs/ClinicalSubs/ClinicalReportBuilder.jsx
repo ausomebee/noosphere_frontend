@@ -876,6 +876,7 @@ const ClinicalReportBuilder = () => {
       setChangeRequests(response?.data || []);
     } catch (err) {
       console.error("Failed to fetch change requests:", err);
+      showToast("Failed to load change requests", "error");
     } finally {
       setChangeRequestsLoading(false);
     }

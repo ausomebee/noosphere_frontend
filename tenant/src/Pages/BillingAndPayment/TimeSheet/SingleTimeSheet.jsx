@@ -542,6 +542,7 @@ const SingleTimeSheet = () => {
       });
     } catch (error) {
       console.error("Error fetching timesheet:", error);
+      showToast("Failed to load timesheet", "error");
     } finally {
       setLoading(false);
     }

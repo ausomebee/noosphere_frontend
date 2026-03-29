@@ -50,7 +50,9 @@ const Notifications = () => {
       setAllNotifications((prev) =>
         prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
       );
-      messageApi.MarkNotificationRead({ id: notification.id, accessToken, refreshToken }).catch(() => {});
+      messageApi.MarkNotificationRead({ id: notification.id, accessToken, refreshToken }).catch(() => {
+        // Silent — marking as read is non-critical, UI already updated optimistically
+      });
       emitNotificationRead(notification.id);
     }
   };

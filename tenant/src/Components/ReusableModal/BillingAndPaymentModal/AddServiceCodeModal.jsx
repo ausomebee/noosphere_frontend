@@ -13,6 +13,7 @@ import {
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { modifierOptions } from "../../../Data/selectOptions";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const serviceCodeSchema = yup.object().shape({
@@ -87,6 +88,7 @@ const AddServiceCodeModal = ({
       reset(defaultFormValues);
     } catch (error) {
       console.error("Error saving service code:", error);
+      showToast("Failed to save service code", "error");
     } finally {
       setIsLoading(false);
     }

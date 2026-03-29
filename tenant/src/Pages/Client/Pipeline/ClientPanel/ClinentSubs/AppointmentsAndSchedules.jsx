@@ -195,6 +195,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           }
         } catch (err) {
           console.error("Failed to fetch client:", err);
+          showToast("Failed to fetch client data", "error");
         }
       }
     } catch (err) {

@@ -108,6 +108,7 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch general settings:", error);
+      showToast("Failed to load general settings", "error");
     }
   }, [tenantId, accessToken, refreshToken]);
 
@@ -130,6 +131,7 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch security questions:", error);
+      showToast("Failed to load security questions", "error");
     }
   }, [tenantId, accessToken, refreshToken]);
 
@@ -161,6 +163,7 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch tenant admin choices:", error);
+      showToast("Failed to load admin choices", "error");
     }
   }, [tenantId, accessToken, refreshToken]);
 
@@ -179,6 +182,7 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch tenant info:", error);
+      showToast("Failed to load tenant information", "error");
     }
   }, [tenantId, accessToken, refreshToken]);
 

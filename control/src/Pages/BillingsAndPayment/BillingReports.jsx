@@ -447,7 +447,7 @@ const BillingReports = () => {
             showActions={config.showActions}
             actions={
               config.showActions
-                ? [{ label: "View Details", onClick: (row) => console.log("View", row) }]
+                ? [{ label: "View Details", onClick: () => {} }]
                 : undefined
             }
             showCheckbox={false}

@@ -260,6 +260,7 @@ const AddPayerModal = ({
       onClose();
     } catch (error) {
       console.error("Error saving payer:", error);
+      showToast("Failed to save payer", "error");
     } finally {
       setSubmitting(false);
     }

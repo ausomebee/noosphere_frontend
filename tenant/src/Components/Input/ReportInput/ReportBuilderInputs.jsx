@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import useAuth from "../../../hooks/useAuth";
 import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
 import uploadApi from "../../../api/ImageUpload";
+import { showToast } from "../../../Helper/ShowToast";
 import "./ReportInput.css";
 // Text Input Component
 const ReportTextInput = ({
@@ -260,6 +261,7 @@ const ReportFileUpload = ({
       }
     } catch (err) {
       console.error("File upload failed:", err);
+      showToast("File upload failed", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

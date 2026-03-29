@@ -5,6 +5,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
 import { formatDate, formatTime, formatDateTime } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
+import { showToast } from "../../../../Helper/ShowToast";
 
 const CancelledAppointments = () => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
@@ -211,6 +212,7 @@ const CancelledAppointments = () => {
         setLocalAppointments(transformed);
       } catch (err) {
         console.error("Error fetching cancelled appointments:", err);
+        showToast("Failed to load cancelled appointments", "error");
         setLocalAppointments([]);
       } finally {
         setLoading(false);

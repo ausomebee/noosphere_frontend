@@ -5,6 +5,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import expandForAppointments from "../../../utils/expandForAppointments";
+import { showToast } from "../../../Helper/ShowToast";
 import "../Dashboard.css";
 
 const ITEMS_PER_PAGE = 5;
@@ -76,6 +77,7 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
       }
     } catch (err) {
       console.error("Failed to load upcoming appointments:", err);
+      showToast("Failed to load upcoming appointments", "error");
       setMasters([]);
       if (setCount) setCount(0);
     } finally {

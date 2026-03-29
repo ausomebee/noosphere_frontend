@@ -75,6 +75,7 @@ const AddServiceType = ({
       onClose();
     } catch (error) {
       console.error("Error saving service type:", error);
+      showToast("Failed to save service type", "error");
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
+import { showToast } from "../../Helper/ShowToast";
 import {
   IoClose,
   IoCalendarOutline,
@@ -121,7 +122,7 @@ const Notifications = () => {
         const list = Array.isArray(raw) ? raw : [];
         setNotifications(list);
       })
-      .catch((err) => console.error("[Notifications] Failed to load:", err))
+      .catch(() => showToast("Failed to load notifications", "error"))
       .finally(() => setLoading(false));
   }, [userId, accessToken]);
 

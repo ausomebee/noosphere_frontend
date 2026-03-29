@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
+import { showToast } from "../../../Helper/ShowToast";
 
 const Authorizations = ({
   hasData,
@@ -64,6 +65,7 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorization metrics:", error);
+      showToast("Failed to load authorization metrics", "error");
     }
   };
 
@@ -95,6 +97,7 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorizations:", error);
+      showToast("Failed to load authorizations", "error");
     } finally {
       setLoading(false);
     }

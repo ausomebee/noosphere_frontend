@@ -163,6 +163,7 @@ const AddRoundingRule = ({
       onClose();
     } catch (err) {
       console.error("Error saving rounding rule:", err);
+      showToast("Failed to save rounding rule", "error");
     } finally {
       setSubmitting(false);
     }

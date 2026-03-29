@@ -78,6 +78,7 @@ const StaffsAndTeams = () => {
         setAllTenantStaff(allStaffRes.data?.data || []);
       } catch (err) {
         console.error("Failed to load staff lists:", err);
+        showToast("Failed to load staff lists", "error");
       }
     };
     fetchStaffForTeams();

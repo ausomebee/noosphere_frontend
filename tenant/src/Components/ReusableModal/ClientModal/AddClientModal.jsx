@@ -100,6 +100,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       );
     } catch (err) {
       console.error("Failed to load clinicians:", err);
+      showToast("Failed to load clinicians", "error");
     } finally {
       setLoadingClinicians(false);
     }
@@ -121,6 +122,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       setPayers(payerList);
     } catch (err) {
       console.error("Failed to load payers:", err);
+      showToast("Failed to load payers", "error");
     } finally {
       setLoadingPayers(false);
     }
@@ -515,6 +517,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       onClose();
     } catch (err) {
       console.error("Submit error:", err);
+      showToast("Failed to save client", "error");
     } finally {
       setSubmitting(false);
     }

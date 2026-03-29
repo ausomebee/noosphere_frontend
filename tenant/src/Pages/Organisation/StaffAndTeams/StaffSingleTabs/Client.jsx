@@ -3,6 +3,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 import api from "../../../../api/organisationStaffApis";
+import { showToast } from "../../../../Helper/ShowToast";
 
 const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
   const { dateFormat } = useFormatSettings();
@@ -24,6 +25,7 @@ const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
       setClients(list);
     } catch (error) {
       console.error("Failed to fetch staff clients:", error);
+      showToast("Failed to load staff clients", "error");
     } finally {
       setLoading(false);
     }

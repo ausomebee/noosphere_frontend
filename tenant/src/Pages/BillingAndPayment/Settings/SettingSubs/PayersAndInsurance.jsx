@@ -116,7 +116,8 @@ const PayersAndInsurance = () => {
       setPayerTableData(transformedData);
     } catch (error) {
       showToast("Failed to load payers", "error");
-      console.error("Payers fetch error:", error); // 👈 Temp debug
+      console.error("Payers fetch error:", error);
+      showToast("Failed to load payers", "error");
     } finally {
       setPayerLoading(false);
     }

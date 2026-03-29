@@ -7,6 +7,7 @@ import PayrollModal from "../../../../Components/ReusableModal/OrganizationModal
 import api from "../../../../api/organisationStaffApis";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
+import { showToast } from "../../../../Helper/ShowToast";
 import "../../Organisation.css";
 
 const formatRate = (item) => {
@@ -92,6 +93,7 @@ const Payroll = () => {
       }
     } catch (e) {
       console.error("Failed to fetch payroll history:", e.message);
+      showToast("Failed to load payroll history", "error");
     } finally {
       setHistoryLoading(false);
     }

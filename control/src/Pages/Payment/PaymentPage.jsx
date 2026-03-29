@@ -10,8 +10,10 @@ import NoosphereLogo from "../../assets/NoosphereLogo-white.png";
 import invoiceApi from "../../api/InvoiceApi";
 import "./PaymentPage.css";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK || "pk_test_placeholder");
-const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb";
+const stripePromise = import.meta.env.VITE_STRIPE_PK
+  ? loadStripe(import.meta.env.VITE_STRIPE_PK)
+  : null;
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || "";
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const StripeIcon = () => (

@@ -106,6 +106,7 @@ const SupportRequests = () => {
       }
     } catch (error) {
       console.error("Failed to fetch overview:", error);
+      showToast("Failed to load support overview", "error");
     }
   }, [tenantId, accessToken, refreshToken]);
 

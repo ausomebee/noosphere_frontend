@@ -125,6 +125,7 @@ const PayrollItemModal = ({
       onClose();
     } catch (error) {
       console.error(`Error saving ${isDeduction ? "deduction" : "income item"}:`, error);
+      showToast(`Failed to save ${isDeduction ? "deduction" : "income item"}`, "error");
       setIsLoading(false);
     }
   };

@@ -5,6 +5,7 @@ import api from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import { showToast } from "../../../Helper/ShowToast";
 
 const Claims = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const Claims = () => {
       setTableData(transformedData);
     } catch (error) {
       console.error("Error fetching claims:", error);
+      showToast("Failed to load claims", "error");
       // Empty table if API fails
       setTableData([]);
     } finally {
