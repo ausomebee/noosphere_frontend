@@ -12,6 +12,7 @@ import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../../Pages/Tenant/TenantList/TenantListViewPayment";
@@ -26,13 +27,6 @@ const toFilterDate = (dateStr) => {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${m}/${day}/${d.getFullYear()}`;
-};
-
-const formatDateDisplay = (dateStr) => {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "—";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
 const formatCurrency = (value) => {
@@ -530,7 +524,7 @@ const TenantSingleBilling = () => {
                   <div className="payment-card-info">
                     <span className="payment-card-label">ADDED</span>
                     <span className="payment-card-value">
-                      {card.createdAt ? new Date(card.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}
+                      {card.createdAt ? formatDateMonthYear(card.createdAt) : "—"}
                     </span>
                   </div>
                 </div>

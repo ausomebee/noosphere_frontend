@@ -7,6 +7,7 @@ import { IoDocumentText, IoSearch } from "react-icons/io5";
 import { BsCheckCircleFill } from "react-icons/bs";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/documentsAndFormsApis";
+import { formatDate } from "../../Helper/Formatters";
 
 const SelectFromMyDocumentsModal = ({
   isOpen,
@@ -152,7 +153,7 @@ const SelectFromMyDocumentsModal = ({
                   <div className="document-details">
                     <div className="document-name">{doc.name}</div>
                     <div className="document-date">
-                      Added {new Date(doc.uploadedAt).toLocaleDateString()}
+                      Added {formatDate(doc.uploadedAt)}
                     </div>
                   </div>
 

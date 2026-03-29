@@ -23,6 +23,7 @@ import { createRoot } from "react-dom/client";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import { showToast } from "../../../../Helper/ShowToast";
+import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
 import debounce from "lodash/debounce";
 
@@ -68,15 +69,6 @@ const SubscriptionManager = () => {
     return <SiVisa size={20} />;
   }, []);
 
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
-  }, []);
 
   const formatNumber = useCallback((value, isCurrency = false) => {
     if (value === null || value === undefined) return isCurrency ? "$0" : "0";

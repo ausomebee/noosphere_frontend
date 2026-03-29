@@ -8,6 +8,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import { formatDate } from "../../../Helper/Formatters";
 
 const deactivationReasons = [
   { value: "", label: "Select an option" },
@@ -90,7 +91,7 @@ const TenantList = () => {
           tenantId: t.id,
           name: t.companyName || t.contactPerson || t.email,
           date_created: t.createdAt
-            ? new Date(t.createdAt).toLocaleDateString("en-US")
+            ? formatDate(t.createdAt)
             : "—",
           plan,
           status: t.active ? "Active" : "Inactive",

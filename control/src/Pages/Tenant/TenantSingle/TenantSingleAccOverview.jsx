@@ -7,6 +7,7 @@ import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateShortMonth as formatDate } from "../../../Helper/Formatters";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
@@ -193,11 +194,6 @@ const TenantSingleAccOverview = () => {
     } finally {
       setEditSaving(false);
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
   const formatCurrency = (value) => {

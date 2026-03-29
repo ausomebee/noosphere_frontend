@@ -139,24 +139,12 @@ import { FiCreditCard } from "react-icons/fi";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SectionSpinner } from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDate, formatTime } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/InvoiceApi";
 import "./BillingAndPayments.css";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const formatDate = (iso) => {
-  if (!iso) return "N/A";
-  return new Date(iso).toLocaleDateString("en-US");
-};
-
-const formatTime = (iso) => {
-  if (!iso) return "N/A";
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-};
 
 const formatDayTime = (iso) => ({
   date: formatDate(iso),

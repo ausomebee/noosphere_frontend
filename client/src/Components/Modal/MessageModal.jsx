@@ -15,6 +15,7 @@ import {
   onMessagesRead,
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
+import { formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
 
 const getClinicianName = (c) => c?.fullName?.trim() || "Unknown";
 
@@ -25,27 +26,6 @@ const getInitials = (name) =>
     .join("")
     .toUpperCase()
     .slice(0, 2);
-
-const formatMsgTime = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const now = new Date();
-  const dayLabel =
-    d.toDateString() === now.toDateString()
-      ? ""
-      : d.toLocaleDateString([], { weekday: "short" }) + " ";
-  return dayLabel + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
-
-const formatDateHeader = (dateStr) => {
-  const d = new Date(dateStr);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
-};
 
 const MessageModal = ({ isOpen, onClose }) => {
   const { userId, clientId, tenantId, accessToken, refreshToken } = useAuth();

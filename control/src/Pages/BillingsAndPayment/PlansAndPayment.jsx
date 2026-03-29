@@ -17,6 +17,7 @@ import api1 from "../../api/FeatureApis";
 import api2 from "../../api/TenantApis";
 import api from "../../api/BillingApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import { formatDate } from "../../Helper/Formatters";
 
 const PlansAndPayment = () => {
   const navigate = useNavigate();
@@ -163,12 +164,8 @@ const PlansAndPayment = () => {
                     organization:
                       plan.organization || plan.name || "Unnamed Organization",
                     dateAdded: plan.createdAt
-                      ? new Date(plan.createdAt).toLocaleDateString("en-US", {
-                          month: "numeric",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : new Date().toLocaleDateString("en-US"),
+                      ? formatDate(plan.createdAt)
+                      : formatDate(new Date().toISOString()),
                   };
                   return mappedPlan;
                 });
@@ -483,7 +480,7 @@ const handleSavePlan = async (planData) => {
           type === "enterprise"
             ? `${plan.organization} (Copy)`
             : `${plan.name} (Copy)`,
-        dateAdded: new Date().toLocaleDateString("en-US"),
+        dateAdded: formatDate(new Date().toISOString()),
         accountManager: plan.accountManager,
       };
 

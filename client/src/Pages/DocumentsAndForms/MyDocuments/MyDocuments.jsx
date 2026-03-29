@@ -20,6 +20,7 @@ import NewFolderModal from "../../../Components/Modal/DocumentModal/NewFolderMod
 import NewFileModal from "../../../Components/Modal/DocumentModal/NewFileModal";
 import FolderFilesModal from "../../../Components/Modal/DocumentModal/FolderFileModal";
 import useAuth from "../../../hooks/useAuth";
+import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 
 const MyDocuments = () => {
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
@@ -89,11 +90,7 @@ const MyDocuments = () => {
               (res?.data?.data || []).map((f) => ({
                 id: f.id,
                 name: f.name,
-                date: new Date(f.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                }),
+                date: formatDate(f.createdAt),
                 size: f.size || "—",
                 icon: <IoDocumentOutline size={20} />,
                 url: f.url || f.fileUrl || f.downloadUrl || f.previewUrl || "",
@@ -367,10 +364,7 @@ const MyDocuments = () => {
                 <div className="folder-info">
                   <h3 className="folder-name">{folder.name}</h3>
                   <p className="folder-meta">
-                    {new Date(folder.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {formatDateShort(folder.createdAt)}
                     {" • "}
                     {folder.folderSize || "0"} items
                   </p>

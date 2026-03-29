@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput, CheckboxInput, TextareaInput } from "../Input/Inputs";
 import { featureStatusOptions as statusOptions } from "../../Data/selectOptions";
+import { formatDate } from "../../Helper/Formatters";
 
 const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
   const featureGroups = useSelector(
@@ -61,7 +62,7 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
         name: formData.name.trim(),
         description: formData.description.trim(),
         managedBy: formData.managedBy.trim() || "Current User", // Fallback to "Current User"
-        dateAdded: new Date().toLocaleDateString("en-US"),
+        dateAdded: formatDate(new Date().toISOString()),
         active: formData.active,
         selected: false,
       };

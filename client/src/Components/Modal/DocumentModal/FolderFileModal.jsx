@@ -9,6 +9,7 @@ import {
   IoDocumentOutline,
 } from "react-icons/io5";
 import { fileTypeColors } from "../../../Data/selectOptions";
+import { formatDate } from "../../../Helper/Formatters";
 
 const getFileIcon = (fileType = "") => {
   const ext = fileType.toLowerCase();
@@ -106,11 +107,7 @@ const FolderFilesModal = ({
                       color: "#6b7280",
                     }}
                   >
-                    {new Date(file.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {formatDate(file.createdAt)}
                     {" • "}
                     {file.size || "—"}
                   </p>

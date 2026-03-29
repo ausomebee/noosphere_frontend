@@ -9,21 +9,10 @@ import { IoIosArrowForward } from "react-icons/io";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const LIMIT = 20;
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
 
 const TenantListUsageStatistics = () => {
   const { tenantId } = useParams();

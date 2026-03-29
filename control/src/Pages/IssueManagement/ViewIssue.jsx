@@ -22,6 +22,7 @@ import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/C
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
 import api from "../../api/IssueApi";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDateTimeParenthesized as formatDateTime } from "../../Helper/Formatters";
 import { Skeleton, SkeletonText, SkeletonTable } from "../../Components/LoadingSpinner";
 
 const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
@@ -33,20 +34,6 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
 
   const actionButtonRef = useRef(null);
   const actionDropdownRef = useRef(null);
-
-  // Format date to "Nov 25, 2023 (02:45 pm)"
-  const formatDateTime = (dateString) => {
-    if (!dateString || dateString === "N/A") return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }).replace(",", " (").replace(/(\d+:\d+ [AP]M)/, "$1)");
-  };
 
   // Refetch issue data
   const refetchIssue = async () => {

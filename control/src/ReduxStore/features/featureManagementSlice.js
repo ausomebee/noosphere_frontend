@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/FeatureApis";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDatePadded } from "../../Helper/Formatters";
 
 const initialState = {
   featureGroups: [],
@@ -485,14 +486,7 @@ const featureManagementSlice = createSlice({
             id: action.payload.id,
             name: action.payload.name,
             description: action.payload.description || "",
-            dateAdded: new Date(action.payload.createdAt).toLocaleDateString(
-              "en-US",
-              {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-              }
-            ),
+            dateAdded: formatDatePadded(action.payload.createdAt),
             managedBy: action.payload.managedBy || "Admin",
             active: action.payload.active,
             selected: false,
@@ -536,14 +530,7 @@ const featureManagementSlice = createSlice({
               managedBy:
                 action.payload.managedBy ||
                 group.features[featureIndex].managedBy,
-              dateAdded: new Date(action.payload.updatedAt).toLocaleDateString(
-                "en-US",
-                {
-                  month: "2-digit",
-                  day: "2-digit",
-                  year: "numeric",
-                }
-              ),
+              dateAdded: formatDatePadded(action.payload.updatedAt),
             };
           }
         });
@@ -708,11 +695,7 @@ const featureManagementSlice = createSlice({
             id: feature.id,
             name: feature.name,
             description: feature.description || "",
-            dateAdded: new Date(feature.createdAt).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            }),
+            dateAdded: formatDatePadded(feature.createdAt),
             managedBy: feature.managedBy || "Admin",
             active: feature.active,
             plans: Array.isArray(feature.plans) ? feature.plans.map((plan) => plan.name) : [],
@@ -727,11 +710,7 @@ const featureManagementSlice = createSlice({
             id: feature.id,
             name: feature.name,
             description: feature.description || "",
-            dateAdded: new Date(feature.createdAt).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            }),
+            dateAdded: formatDatePadded(feature.createdAt),
             managedBy: feature.managedBy || "Admin",
             active: feature.active,
             plans: Array.isArray(feature.plans) ? feature.plans.map((plan) => plan.name) : [],
@@ -783,11 +762,7 @@ const featureManagementSlice = createSlice({
             id: feature.id,
             name: feature.name,
             description: feature.description || "",
-            dateAdded: new Date(feature.createdAt).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            }),
+            dateAdded: formatDatePadded(feature.createdAt),
             managedBy: feature.managedBy || "Admin",
             active: feature.active,
             plans: Array.isArray(feature.plans)
