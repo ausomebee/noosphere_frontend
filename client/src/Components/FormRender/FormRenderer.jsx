@@ -108,7 +108,7 @@ const FormRenderer = () => {
       }
       const formData = responseBody.data;
       if (!Array.isArray(formData.fields)) {
-        console.warn("Form has no fields or fields is not array", formData);
+        if (import.meta.env.DEV) console.warn("Form has no fields or fields is not array", formData);
       }
       const transformedElements = (formData.fields || []).map((field) => {
         const base = {

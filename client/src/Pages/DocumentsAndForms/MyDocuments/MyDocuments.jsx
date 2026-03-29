@@ -59,7 +59,7 @@ const MyDocuments = () => {
 
   useEffect(() => {
     if (!clientTenantId || !accessToken || !refreshToken) {
-      console.warn("Missing auth data");
+      if (import.meta.env.DEV) console.warn("Missing auth data");
       setFoldersLoading(false);
       setRecentLoading(false);
       setAllFilesLoading(false);

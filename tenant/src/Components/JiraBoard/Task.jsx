@@ -21,7 +21,7 @@ const Task = ({
  
 }) => {
   if (!task) {
-    console.warn(`Task with ID ${id} is undefined`);
+    if (import.meta.env.DEV) console.warn(`Task with ID ${id} is undefined`);
     return null;
   }
 
@@ -48,7 +48,7 @@ const Task = ({
     if (typeof onMoveTask === "function") {
       onMoveTask(id, columnId);
     } else {
-      console.warn("onMoveTask function is not available");
+      if (import.meta.env.DEV) console.warn("onMoveTask function is not available");
       // Optionally show a user-friendly message or implement fallback behavior
     }
   };
@@ -58,7 +58,7 @@ const Task = ({
     if (typeof onRemoveTask === "function") {
       onRemoveTask(id);
     } else {
-      console.warn("onRemoveTask function is not available");
+      if (import.meta.env.DEV) console.warn("onRemoveTask function is not available");
     }
   };
 
@@ -67,7 +67,7 @@ const Task = ({
     if (typeof onViewCandidate === "function") {
       onViewCandidate(task.clientId, task.tenantClientId);
     } else {
-      console.warn("onViewCandidate function is not available");
+      if (import.meta.env.DEV) console.warn("onViewCandidate function is not available");
     }
   };
 

@@ -143,7 +143,9 @@ const Notifications = () => {
     // Mark as read on server + via socket for real-time sync
     notificationApi
       .markNotificationRead({ id: notif.id, accessToken, refreshToken })
-      .catch(() => {});
+      .catch(() => {
+        // Non-critical — UI already updated optimistically
+      });
     emitNotificationRead(notif.id);
   };
 

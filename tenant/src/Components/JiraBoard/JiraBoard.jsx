@@ -177,7 +177,7 @@ const JiraBoard = () => {
             name: stage.name || "Unnamed Stage",
           });
         } else {
-          console.warn("Skipping stage with missing ID:", stage);
+          if (import.meta.env.DEV) console.warn("Skipping stage with missing ID:", stage);
         }
       });
 
@@ -217,7 +217,7 @@ const JiraBoard = () => {
           if (Array.isArray(items)) {
             for (const item of items) {
               if (!item.id || typeof item.id !== "string") {
-                console.warn(
+                if (import.meta.env.DEV) console.warn(
                   `Item in stage ${stageId} missing or invalid id:`,
                   item
                 );

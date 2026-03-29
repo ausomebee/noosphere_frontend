@@ -202,7 +202,7 @@ const CancelledAppointments = () => {
             refreshToken,
           });
         } else {
-          console.warn(`Role ${role} not supported for fetching appointments`);
+          if (import.meta.env.DEV) console.warn(`Role ${role} not supported for fetching appointments`);
           setLocalAppointments([]);
           return;
         }

@@ -108,7 +108,6 @@ const NewFileModal = ({ isOpen, onClose, onCreate, folders = [] }) => {
                 onChange={(e) => {
                   const newId = e?.target?.value || "";
                   setSelectedFolderId(newId);
-                  // Optional: console.log("Selected folder:", newId);
                 }}
                 placeholder={
                   folders.length === 0

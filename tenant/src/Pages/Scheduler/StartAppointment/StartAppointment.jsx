@@ -198,7 +198,7 @@ const StartAppointment = () => {
                       }));
                     }
                   } catch (e) {
-                    console.warn("Failed to parse taskSteps:", t.taskSteps, e);
+                    if (import.meta.env.DEV) console.warn("Failed to parse taskSteps:", t.taskSteps, e);
                   }
                 }
 

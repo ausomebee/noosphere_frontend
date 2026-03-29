@@ -419,7 +419,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       setReports(uniqueReports);
 
       if (uniqueReports.length < reportsData.length) {
-        console.warn(
+        if (import.meta.env.DEV) console.warn(
           `Filtered ${reportsData.length - uniqueReports.length} duplicate reports`,
         );
       }

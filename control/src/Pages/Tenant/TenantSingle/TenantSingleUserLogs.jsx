@@ -74,7 +74,9 @@ const TenantSingleUserLogs = () => {
         const d = res.data || res;
         setTenantName(d.companyName || d.contactPerson || "Tenant");
       })
-      .catch(() => {});
+      .catch(() => {
+        // Non-critical — fallback name "Tenant" is already set
+      });
     fetchLogs();
   }, []);
 

@@ -37,7 +37,7 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
   });
 
   socket.on("disconnect", (reason) => {
-    console.warn("[Socket] Disconnected. Reason:", reason);
+    if (import.meta.env.DEV) console.warn("[Socket] Disconnected. Reason:", reason);
   });
 
   socket.on("connect_error", (err) => {
