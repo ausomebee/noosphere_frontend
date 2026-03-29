@@ -15,28 +15,15 @@ import DeleteModal from "../../../Components/ReusableModal/OrganizationModal/Del
 import { CgDanger } from "react-icons/cg";
 import api from "../../../api/organisationApis";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import "../Organisation.css";
-
-// Date formatter for MM/DD/YYYY
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "N/A";
-    return new Intl.DateTimeFormat("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    }).format(date);
-  } catch {
-    return "N/A";
-  }
-};
 
 const General = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat } = useFormatSettings();
 
   /* -------------------------------------------------------------- */
   /* 1. ORGANISATION ---------------------------------------------- */
@@ -349,6 +336,7 @@ const General = () => {
             <LicenseCard
               key={l.id}
               data={l}
+              dateFormat={dateFormat}
               onEdit={hasPermission("edit_license") ? () => {
                 setLicenseToEdit(l);
                 setShowLicenseModal(true);
@@ -376,7 +364,7 @@ const General = () => {
             {
               header: "Expiration",
               key: "expiryDate",
-              render: (row) => formatDate(row.expiryDate),
+              render: (row) => formatDate(row.expiryDate, dateFormat),
             },
           ]}
           actions={[
@@ -443,7 +431,7 @@ const General = () => {
             {
               header: "Date Created",
               key: "createdAt",
-              render: (row) => formatDate(row.createdAt),
+              render: (row) => formatDate(row.createdAt, dateFormat),
             },
             { header: "Uploaded By", key: "uploadedBy" },
           ]}
@@ -715,7 +703,7 @@ const Field = ({ label, value, isLink }) => (
   </div>
 );
 
-const LicenseCard = ({ data, onEdit, onDelete }) => (
+const LicenseCard = ({ data, dateFormat, onEdit, onDelete }) => (
   <div className="border rounded-md border-gray-200 bg-white p-6">
     <div className="flex justify-between">
       <div className="flex gap-6">
@@ -741,7 +729,7 @@ const LicenseCard = ({ data, onEdit, onDelete }) => (
     </div>
     <div className="flex flex-col gap-3 mt-4">
       <Row label="License Number" value={data.licenseNumber} />
-      <Row label="Expiration Date" value={formatDate(data.expiryDate)} />
+      <Row label="Expiration Date" value={formatDate(data.expiryDate, dateFormat)} />
       <Row label="State" value={data.issueState} />
     </div>
   </div>

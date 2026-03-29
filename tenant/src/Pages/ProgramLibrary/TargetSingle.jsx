@@ -15,6 +15,8 @@ import useAuth from "../../hooks/useAuth";
 import api from "../../api/ProgramLibraryApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDate, formatDateTime, formatTime, formatDuration } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 import FrequencyModal from "../../Components/ReusableModal/DataCollectionModal/FrequencyModal";
 import DurationModal from "../../Components/ReusableModal/DataCollectionModal/DurationModal";
 import RateModal from "../../Components/ReusableModal/DataCollectionModal/RateModal";
@@ -30,6 +32,7 @@ const TargetSingle = () => {
   const targetId = searchParams.get("targetId");
   const clientId = searchParams.get("clientId");
   const { accessToken, refreshToken, tenantId } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   // State for dropdowns and data
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -251,11 +254,8 @@ const TargetSingle = () => {
           : "0 hrs",
         dateTime: session.date
           ? {
-              date: new Date(session.date).toLocaleDateString("en-US"),
-              time: new Date(session.date).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+              date: formatDate(session.date, dateFormat),
+              time: formatDateTime(session.date, dateFormat, timeFormat).split(" ").slice(1).join(" "),
             }
           : { date: "N/A", time: "" },
         payer:
@@ -265,11 +265,12 @@ const TargetSingle = () => {
       setSessionData(mapped);
     } catch (err) {
       console.error("Failed to fetch sessions:", err);
+      showToast("Failed to load sessions", "error");
       setSessionData([]);
     } finally {
       setSessionLoading(false);
     }
-  }, [targetId, clientId, tenantId, accessToken, refreshToken]);
+  }, [targetId, clientId, tenantId, accessToken, refreshToken, dateFormat, timeFormat]);
 
   useEffect(() => {
     if (hasSessionData) {
@@ -508,33 +509,6 @@ const TargetSingle = () => {
     }
   };
 
-  const formatTimeFromString = (timeString) => {
-    if (!timeString) return "12:00:00 AM";
-
-    // Split the time string into hours, minutes, seconds
-    const timeParts = timeString.split(":");
-
-    // Ensure we have at least 3 parts (HH:mm:ss)
-    if (timeParts.length >= 3) {
-      let hours = parseInt(timeParts[0] || "00");
-      const minutes = timeParts[1] || "00";
-      const seconds = timeParts[2] || "00";
-
-      // Determine AM/PM
-      const period = hours >= 12 ? "PM" : "AM";
-
-      // Convert to 12-hour format
-      hours = hours % 12 || 12;
-
-      // Format hours to always have 2 digits
-      const formattedHours = hours.toString().padStart(2, "0");
-
-      return `${formattedHours}:${minutes}:${seconds} ${period}`;
-    }
-
-    return "12:00:00 AM";
-  };
-
   const getDataRows = (type, data) => {
     switch (type) {
       case "Frequency":
@@ -544,7 +518,7 @@ const TargetSingle = () => {
       case "Duration":
         return [
           {
-            duration: formatTime(data.duration || 0),
+            duration: formatDuration(data.duration || 0),
             notes: data.notes || "N/A",
           },
         ];
@@ -580,7 +554,7 @@ const TargetSingle = () => {
       case "Latency":
         return (data.trials || []).map((trial) => ({
           trialCount: trial.trial,
-          sdTime: formatTimeFromString(trial.stimulusPresented),
+          sdTime: formatTime(trial.stimulusPresented, timeFormat),
           response:
             trial.latency !== null
               ? `${trial.latency >= 0 ? "+" : ""}${trial.latency} secs`
@@ -617,14 +591,6 @@ const TargetSingle = () => {
       default:
         return null;
     }
-  };
-
-  const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return "Not set";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const onBack = () => {

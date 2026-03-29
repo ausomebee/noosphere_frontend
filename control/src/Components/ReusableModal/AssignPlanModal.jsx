@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReusableModal from "./ReusableModal";
 import { CheckboxInput } from "../Input/Inputs";
+import { planOptions } from "../../Data/selectOptions";
 
 const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTitle, currentPlans, isLoading }) => {
   const [selectedPlans, setSelectedPlans] = useState([]);
@@ -11,13 +12,6 @@ const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTit
       setSelectedPlans(currentPlans);
     }
   }, [currentPlans]);
-
-  const planOptions = [
-    { value: "Basic", label: "Basic Plan" },
-    { value: "Standard", label: "Standard Plan" },
-    { value: "Pro", label: "Pro Plan" },
-    { value: "Enterprise", label: "Enterprise Plan" },
-  ];
 
   const handlePlanChange = (e) => {
     const { value, checked } = e.target;

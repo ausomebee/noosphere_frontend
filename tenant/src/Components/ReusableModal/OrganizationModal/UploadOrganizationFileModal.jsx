@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import { BsCloudUpload } from "react-icons/bs";
 import useAuth from "../../../hooks/useAuth";
+import { showToast } from "../../../Helper/ShowToast";
 
 // Validation schema
 const documentSchema = yup.object({
@@ -124,6 +125,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
       onClose();
     } catch (error) {
       console.error("Error saving document:", error);
+      showToast("Failed to save document", "error");
     } finally {
       setIsLoading(false);
     }

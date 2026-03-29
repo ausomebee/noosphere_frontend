@@ -21,6 +21,8 @@ import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
+import { genderOptions, countryOptions, stateOptions as usStates } from "../../../Data/selectOptions";
+import { formatDateForInput } from "../../../Helper/Formatters";
 
 // ==================== SCHEMA ====================
 const schema = yup.object().shape({
@@ -67,72 +69,6 @@ const schema = yup.object().shape({
   hasDocument: yup.boolean().default(false),
 });
 
-const genderOptions = [
-  { value: "", label: "Select Gender" },
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Prefer not to say" },
-];
-
-const countryOptions = [
-  { value: "", label: "Select Country" },
-  { value: "US", label: "United States" },
-  { value: "UK", label: "United Kingdom" },
-];
-
-const usStates = [
-  { value: "", label: "Select State" },
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-];
 
 const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const dispatch = useDispatch();
@@ -147,16 +83,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const hasInitialized = useRef(false);
   const { tenantId, accessToken, refreshToken } = useAuth();
-
-  // Format DOB from ISO string → YYYY-MM-DD
-  const formatDateForInput = (isoString) => {
-    if (!isoString) return "";
-    try {
-      return isoString.split("T")[0]; // "2025-11-27T00:00:00.000Z" → "2025-11-27"
-    } catch {
-      return "";
-    }
-  };
 
   // Fetch Clinicians & Payers
   const fetchClinicians = useCallback(async () => {
@@ -174,6 +100,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       );
     } catch (err) {
       console.error("Failed to load clinicians:", err);
+      showToast("Failed to load clinicians", "error");
     } finally {
       setLoadingClinicians(false);
     }
@@ -195,6 +122,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       setPayers(payerList);
     } catch (err) {
       console.error("Failed to load payers:", err);
+      showToast("Failed to load payers", "error");
     } finally {
       setLoadingPayers(false);
     }
@@ -589,6 +517,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       onClose();
     } catch (err) {
       console.error("Submit error:", err);
+      showToast("Failed to save client", "error");
     } finally {
       setSubmitting(false);
     }

@@ -5,7 +5,10 @@ import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import "../Dashboard.css";
 import { Link } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
+import { showToast } from "../../../Helper/ShowToast";
 
 const Authorizations = ({
   hasData,
@@ -14,6 +17,7 @@ const Authorizations = ({
   setIsModalOpen,
 }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const [authorizationData, setAuthorizationData] = useState([
     { label: "Expired", value: 0, color: "#3B82F6" },
@@ -61,6 +65,7 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorization metrics:", error);
+      showToast("Failed to load authorization metrics", "error");
     }
   };
 
@@ -81,7 +86,7 @@ const Authorizations = ({
             `${auth.tenantClient?.client?.firstName} ${auth.tenantClient?.client?.lastName}` ||
             "Unknown Client",
           details: `${auth.title} - ${auth.authorizationNumber}`,
-          date: new Date(auth.startDate).toLocaleDateString(),
+          date: formatDate(auth.startDate, dateFormat),
           endDate: auth.endDate,
           payer: auth.payerDetails?.payerName || "N/A",
           insuranceType: auth.insurance?.name || "N/A",
@@ -92,6 +97,7 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorizations:", error);
+      showToast("Failed to load authorizations", "error");
     } finally {
       setLoading(false);
     }

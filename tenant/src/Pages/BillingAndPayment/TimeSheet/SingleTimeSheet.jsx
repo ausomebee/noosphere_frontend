@@ -20,66 +20,8 @@ import Modal from "../../../Components/ReusableModal/ReusableModal";
 import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import usePermissions from "../../../hooks/usePermissions";
-
-// Helper functions
-const formatTimeFromString = (timeString) => {
-  if (!timeString) return "12:00:00 AM";
-  const [hours, minutes, seconds = "00"] = timeString.split(":");
-  let h = parseInt(hours, 10);
-  const period = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h.toString().padStart(2, "0")}:${minutes}:${seconds} ${period}`;
-};
-
-const formatDuration = (secs) => {
-  if (secs === undefined || secs === null) return "Not set";
-  const h = Math.floor(secs / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((secs % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (secs % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-};
-
-const calculateSessionHours = (startTime, endTime) => {
-  if (!startTime || !endTime) return "0.00";
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  if (isNaN(start) || isNaN(end)) return "0.00";
-  const diffMs = end - start;
-  const diffHours = diffMs / (1000 * 60 * 60);
-  return diffHours.toFixed(2);
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  try {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch (error) {
-    return "Invalid date";
-  }
-};
-
-const formatDateTime = (dateString) => {
-  if (!dateString) return "N/A";
-  try {
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch (error) {
-    return "Invalid date";
-  }
-};
+import { formatTime, formatDuration, calculateSessionHours, formatDate, formatDateTime } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 // Document Modal Component
 const DocumentModal = ({ isOpen, onClose, document }) => {
@@ -500,7 +442,7 @@ const ProgramDataModal = ({ isOpen, onClose, sessionDatas }) => {
                   }}
                 >
                   <span>Type: {getDataType(sessionData)}</span>
-                  <span>Created: {formatDateTime(sessionData.createdAt)}</span>
+                  <span>Created: {formatDateTime(sessionData.createdAt, dateFormat, timeFormat)}</span>
                 </div>
               </div>
             </div>
@@ -558,6 +500,7 @@ const SingleTimeSheet = () => {
   // Auth state
   const { tenantId, role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat, timeFormat } = useFormatSettings();
   const role = roleObj?.name ?? "Client";
 
   // State
@@ -589,16 +532,17 @@ const SingleTimeSheet = () => {
         accessToken,
         refreshToken,
       });
-      setTimesheetData(response.data);
+      setTimesheetData(response);
 
       // Calculate history count
-      const totalHistory = response.data?.timesheetHistories?.length || 0;
+      const totalHistory = response?.timesheetHistories?.length || 0;
 
       setCounts({
         historyAndApprovalsCount: totalHistory,
       });
     } catch (error) {
       console.error("Error fetching timesheet:", error);
+      showToast("Failed to load timesheet", "error");
     } finally {
       setLoading(false);
     }
@@ -732,7 +676,7 @@ const SingleTimeSheet = () => {
       doc.setTextColor(100, 100, 100);
       doc.text(`Timesheet ID: ${timesheetData.id || "N/A"}`, margin, yPos);
       doc.text(
-        `Generated: ${new Date().toLocaleDateString()}`,
+        `Generated: ${formatDate(new Date(), dateFormat)}`,
         pageWidth - margin,
         yPos,
         { align: "right" }
@@ -780,7 +724,7 @@ const SingleTimeSheet = () => {
         : "N/A";
 
       const sessionInfo = [
-        ["Date", formatDate(timesheetData.startTime)],
+        ["Date", formatDate(timesheetData.startTime, dateFormat)],
         ["Client", clientName],
         ["Client ID", timesheetData.appointment?.clientId || "N/A"],
         ["Clinician(s)", clinicianNames || "N/A"],
@@ -832,13 +776,13 @@ const SingleTimeSheet = () => {
         [
           "Session Start",
           timesheetData.startTime
-            ? new Date(timesheetData.startTime).toLocaleTimeString()
+            ? formatDateTime(timesheetData.startTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
             : "N/A",
         ],
         [
           "Session End",
           timesheetData.endTime
-            ? new Date(timesheetData.endTime).toLocaleTimeString()
+            ? formatDateTime(timesheetData.endTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
             : "N/A",
         ],
         ["Session Duration", `${sessionHours} hours`],
@@ -861,7 +805,7 @@ const SingleTimeSheet = () => {
         doc.setFont("helvetica", "normal");
         doc.text(
           timesheetData.travelStartTime
-            ? new Date(timesheetData.travelStartTime).toLocaleTimeString()
+            ? formatDateTime(timesheetData.travelStartTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
             : "N/A",
           margin + 45,
           yPos
@@ -873,7 +817,7 @@ const SingleTimeSheet = () => {
         doc.setFont("helvetica", "normal");
         doc.text(
           timesheetData.travelEndTime
-            ? new Date(timesheetData.travelEndTime).toLocaleTimeString()
+            ? formatDateTime(timesheetData.travelEndTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
             : "N/A",
           margin + 45,
           yPos
@@ -988,7 +932,7 @@ const SingleTimeSheet = () => {
           doc.setTextColor(100, 100, 100);
           doc.text(`Type: ${getDataType(sessionData)}`, margin, yPos);
           doc.text(
-            `Created: ${formatDateTime(sessionData.createdAt)}`,
+            `Created: ${formatDateTime(sessionData.createdAt, dateFormat, timeFormat)}`,
             pageWidth - margin,
             yPos,
             { align: "right" }
@@ -1204,7 +1148,7 @@ const SingleTimeSheet = () => {
           ["Delivery Confirmed", approval.confirmDelivery ? "Yes" : "No"],
           ["Service Rating", `${approval.rateService || 0}/5`],
           ["Therapist Rating", `${approval.rateTherapist || 0}/5`],
-          ["Approved Date", formatDateTime(approval.createdAt)],
+          ["Approved Date", formatDateTime(approval.createdAt, dateFormat, timeFormat)],
           ["FeedBack", approval.feedback],
         ];
 
@@ -1276,8 +1220,8 @@ const SingleTimeSheet = () => {
           const authDetails = [
             ["Authorization #", auth.authorizationNumber || "N/A"],
             ["Title", auth.title || "N/A"],
-            ["Start Date", formatDate(auth.startDate)],
-            ["End Date", formatDate(auth.endDate)],
+            ["Start Date", formatDate(auth.startDate, dateFormat)],
+            ["End Date", formatDate(auth.endDate, dateFormat)],
             ["Status", auth.isActive ? "Active" : "Inactive"],
             ["Units Authorized", auth.totalUnits || "N/A"],
             ["Units Used", auth.unitsUsed || "0"],
@@ -1357,7 +1301,7 @@ const SingleTimeSheet = () => {
         // Create table data for history
         const historyTableData = timesheetData.timesheetHistories.map(
           (entry, index) => {
-            const date = formatDateTime(entry.createdAt || entry.date);
+            const date = formatDateTime(entry.createdAt || entry.date, dateFormat, timeFormat);
             const by = entry.performedBy || entry.by || "Unknown";
             const action = entry.action || "Updated";
             const reason = entry.reason ? `Reason: ${entry.reason}` : "";
@@ -1398,7 +1342,7 @@ const SingleTimeSheet = () => {
         doc.text(
           `Generated by ${
             user?.fullName || user?.email || "System"
-          } on ${new Date().toLocaleString()}`,
+          } on ${formatDateTime(new Date(), dateFormat, timeFormat)}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 5,
           { align: "center" }
@@ -1407,7 +1351,7 @@ const SingleTimeSheet = () => {
 
       // Save PDF
       const fileName = `Timesheet_${timesheetData.id || "unknown"}_${formatDate(
-        timesheetData.startTime
+        timesheetData.startTime, dateFormat
       ).replace(/\//g, "-")}_Complete.pdf`;
       doc.save(fileName);
 
@@ -1596,7 +1540,7 @@ const SingleTimeSheet = () => {
       id: auth.id || index,
       authorization: auth.authorizationNumber || "N/A",
       utilization: "0%",
-      dateCreated: formatDate(auth.startDate),
+      dateCreated: formatDate(auth.startDate, dateFormat),
     })) || [];
 
   // Prepare service data with serviceCodeId and per as requested
@@ -1838,7 +1782,7 @@ const SingleTimeSheet = () => {
                     <div>
                       <span className="text-gray-400 font-bold">Date</span>
                       <span className="ml-2 text-gray-700">
-                        {formatDate(timesheetData.startTime)}
+                        {formatDate(timesheetData.startTime, dateFormat)}
                       </span>
                     </div>
                     <div>
@@ -1924,9 +1868,7 @@ const SingleTimeSheet = () => {
                       </span>
                       <span className="ml-2 text-gray-700">
                         {timesheetData.startTime
-                          ? new Date(
-                              timesheetData.startTime
-                            ).toLocaleTimeString()
+                          ? formatDateTime(timesheetData.startTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
                           : "N/A"}
                       </span>
                     </div>
@@ -1936,7 +1878,7 @@ const SingleTimeSheet = () => {
                       </span>
                       <span className="ml-2 text-gray-700">
                         {timesheetData.endTime
-                          ? new Date(timesheetData.endTime).toLocaleTimeString()
+                          ? formatDateTime(timesheetData.endTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")
                           : "N/A"}
                       </span>
                     </div>
@@ -1957,9 +1899,7 @@ const SingleTimeSheet = () => {
                             Travel Start Time
                           </span>
                           <span className="ml-2 text-gray-700">
-                            {new Date(
-                              timesheetData.travelStartTime
-                            ).toLocaleTimeString()}
+                            {formatDateTime(timesheetData.travelStartTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")}
                           </span>
                         </div>
                         <div>
@@ -1967,9 +1907,7 @@ const SingleTimeSheet = () => {
                             Travel End Time
                           </span>
                           <span className="ml-2 text-gray-700">
-                            {new Date(
-                              timesheetData.travelEndTime
-                            ).toLocaleTimeString()}
+                            {formatDateTime(timesheetData.travelEndTime, dateFormat, timeFormat).split(" ").slice(1).join(" ")}
                           </span>
                         </div>
                       </>
@@ -2173,7 +2111,7 @@ const SingleTimeSheet = () => {
                       <p className="text-gray-700 mt-2">
                         Signed on{" "}
                         {formatDate(
-                          timesheetData.sessionApprovals[0].createdAt
+                          timesheetData.sessionApprovals[0].createdAt, dateFormat
                         )}
                       </p>
 
@@ -2334,7 +2272,7 @@ const SingleTimeSheet = () => {
                     <div key={entry.id || index} className="approval-item p-6">
                       {renderApprovalEntry({
                         ...entry,
-                        date: formatDateTime(entry.createdAt || entry.date),
+                        date: formatDateTime(entry.createdAt || entry.date, dateFormat, timeFormat),
                         by: entry?.staff?.fullName || entry.by || "Unknown",
                         action: entry.action || "Updated",
                       })}

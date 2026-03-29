@@ -8,6 +8,7 @@ import expand from "../../../utils/expand";
 import { format } from "date-fns";
 import api from "../../../api/AppointmentApi";
 import usePermissions from "../../../hooks/usePermissions";
+import { showToast } from "../../../Helper/ShowToast";
 
 const toUICard = (apiAppt, masters = []) => {
   if (!apiAppt || typeof apiAppt !== "object") {
@@ -169,6 +170,7 @@ const Calendar = () => {
         sess = sessResponse?.data?.data || [];
       } catch (err) {
         console.error("Failed to fetch session types:", err);
+        showToast("Failed to fetch session types", "error");
       }
       setSessionTypes(sess);
 
@@ -183,6 +185,7 @@ const Calendar = () => {
         clis = clisResponse?.data?.data || [];
       } catch (err) {
         console.error("Failed to fetch clients:", err);
+        showToast("Failed to fetch clients", "error");
       }
       // Get staff
       let stf = [];
@@ -195,6 +198,7 @@ const Calendar = () => {
         stf = stfResponse?.data?.data || [];
       } catch (err) {
         console.error("Failed to fetch staff:", err);
+        showToast("Failed to fetch staff", "error");
       }
       setStaff(stf);
 
@@ -209,6 +213,7 @@ const Calendar = () => {
         allAppts = apptsResponse?.data?.data || [];
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
+        showToast("Failed to fetch appointments", "error");
       }
 
       const enriched = allAppts.map(appt => ({

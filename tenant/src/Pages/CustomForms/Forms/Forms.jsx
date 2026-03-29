@@ -7,6 +7,8 @@ import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const Forms = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ const Forms = () => {
 
   // ---- Redux -------------------------------------------------
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   // ---- Local state -------------------------------------------
   const [forms, setForms] = useState([]);       // raw API data
@@ -49,23 +52,16 @@ const Forms = () => {
   const tableData = useMemo(
     () =>
       forms.map((f) => {
-        // ---- Parse ISO → DD-MM-YYYY ----
-        const d = new Date(f.createdAt);
-        const day = String(d.getUTCDate()).padStart(2, "0");
-        const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-        const year = d.getUTCFullYear();
-        const formatted = `${day}-${month}-${year}`;
-
         return {
           id: f.id,
           name: f.name,
-          dateCreated: formatted, // <-- formatted string
+          dateCreated: formatDate(f.createdAt, dateFormat),
           isDraft: f.isDraft,
           hasActions: true,
           _raw: f,
         };
       }),
-    [forms]
+    [forms, dateFormat]
   );
 
   // ---- Columns ------------------------------------------------
@@ -100,6 +96,10 @@ const Forms = () => {
       type: "dropdown",
       label: "More",
       items: [
+        {
+          label: "View Responses",
+          onClick: (row) => navigate(`/custom-forms/forms/responses/${row.id}`),
+        },
         hasPermission("edit_form") && {
           label: "Edit Form",
           onClick: (row) => navigate(`/custom-forms/forms/create/${row.id}`),

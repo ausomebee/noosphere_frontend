@@ -3,6 +3,23 @@ import ReusableModal from './ReusableModal';
 import { TextInput, SelectInput } from '../Input/Inputs';
 import './ReusableModal.css';
 import Button from '../Button/Button';
+const clientOptions = [
+  { value: "10", label: "10" },
+  { value: "20", label: "20" },
+  { value: "30", label: "30" },
+];
+
+const storageOptions = [
+  { value: "1GB", label: "1GB" },
+  { value: "2GB", label: "2GB" },
+  { value: "5GB", label: "5GB" },
+];
+
+const currencyOptions = [
+  { value: "USD", label: "USD ($)" },
+  { value: "EUR", label: "EUR (€)" },
+  { value: "GBP", label: "GBP (£)" },
+];
 
 const PricingModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,24 +28,6 @@ const PricingModal = () => {
   const [clients, setClients] = useState('10');
   const [storage, setStorage] = useState('1GB');
   const [currency, setCurrency] = useState('USD');
-
-  const clientOptions = [
-    { value: '10', label: '10' },
-    { value: '20', label: '20' },
-    { value: '30', label: '30' },
-  ];
-
-  const storageOptions = [
-    { value: '1GB', label: '1GB' },
-    { value: '2GB', label: '2GB' },
-    { value: '5GB', label: '5GB' },
-  ];
-
-  const currencyOptions = [
-    { value: 'USD', label: 'USD' },
-    { value: 'EUR', label: 'EUR' },
-    { value: 'GBP', label: 'GBP' },
-  ];
 
   return (
     <>

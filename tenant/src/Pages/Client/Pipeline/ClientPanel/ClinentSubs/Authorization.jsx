@@ -10,8 +10,11 @@ import { showToast } from "../../../../../Helper/ShowToast";
 import api from "../../../../../api/clientPanelApis";
 import api2 from "../../../../../api/billingAndPaymentsApi";
 import { useParams } from "react-router-dom";
+import { formatDate } from "../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../hooks/useFormatSettings";
 
 const AuthorizationTab = () => {
+  const { dateFormat } = useFormatSettings();
   const [authorizations, setAuthorizations] = useState([]);
   const [serviceData, setServiceData] = useState({}); // authId → array of services for inline editing
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -98,8 +101,8 @@ const AuthorizationTab = () => {
           id: auth.id,
           name: auth.title || "Untitled",
           insuranceCompany: auth.payerDetails?.payerName || "—",
-          startDate: formatDate(auth.startDate),
-          endDate: auth.endDate ? formatDate(auth.endDate) : "—",
+          startDate: formatAuthDate(auth.startDate),
+          endDate: auth.endDate ? formatAuthDate(auth.endDate) : "—",
           status: getStatus(auth.startDate, auth.endDate),
           utilization,
           isActive: auth.isActive !== false,
@@ -158,7 +161,7 @@ const AuthorizationTab = () => {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
+  const formatAuthDate = (d) => (d ? formatDate(d, dateFormat) : "—");
   const getStatus = (start, end) => {
     const now = new Date();
     const s = new Date(start);

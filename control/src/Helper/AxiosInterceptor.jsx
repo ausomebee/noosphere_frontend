@@ -20,6 +20,7 @@ function addSubscriber(callback) {
 const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
   const authFetch = axios.create({
     withCredentials: true,
+    timeout: 30000,
   });
 
   // Request Interceptor

@@ -13,6 +13,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import "./ClientInformationSection.css";
 import { RxCross2 } from "react-icons/rx";
 import { showToast } from "../../../../../../../../Helper/ShowToast";
+import { referralSourceOptions, serviceLocationOptions, yesNoOptions } from "../../../../../../../../Data/selectOptions";
 
 // Validation Schema
 const diagnosisSchema = Yup.object().shape({
@@ -74,13 +75,12 @@ const ClientInformationSection = ({
   const [errors, setErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
 
-  // Use refs to prevent infinite loops
-  const initialLoadRef = useRef(false);
+  // Use ref to prevent unnecessary onChange calls when data hasn't changed
   const lastDataRef = useRef(null);
+  const lastAutoPopRef = useRef({ clientFullName: "", dateOfBirth: "", gender: "" });
 
-  // Update form data when parent data changes (only once on initial load)
+  // Update form data when parent data changes
   useEffect(() => {
-
     // Check if data has actually changed
     const dataString = JSON.stringify(data);
     if (dataString === lastDataRef.current) {
@@ -116,42 +116,23 @@ const ClientInformationSection = ({
 
     setFormData(updatedFormData);
 
-    // Only call onChange on initial load if we have auto-populated data
-    if (
-      !initialLoadRef.current &&
-      (data.clientFullName || data.dateOfBirth || data.gender)
-    ) {
-      initialLoadRef.current = true;
+    // Always push auto-populated data to Redux when it changes
+    // This ensures DOB, gender, and fullName are saved when drafting/publishing
+    const prevAuto = lastAutoPopRef.current;
+    const autoChanged =
+      updatedFormData.clientFullName !== prevAuto.clientFullName ||
+      updatedFormData.dateOfBirth !== prevAuto.dateOfBirth ||
+      updatedFormData.gender !== prevAuto.gender;
+
+    if (autoChanged && (updatedFormData.clientFullName || updatedFormData.dateOfBirth || updatedFormData.gender)) {
+      lastAutoPopRef.current = {
+        clientFullName: updatedFormData.clientFullName,
+        dateOfBirth: updatedFormData.dateOfBirth,
+        gender: updatedFormData.gender,
+      };
       onChange(updatedFormData);
     }
   }, [data]); // Only re-run when data prop changes
-
-  const referralSourceOptions = [
-    { value: "parent", label: "Parent/Guardian" },
-    { value: "pediatrician", label: "Pediatrician" },
-    { value: "psychologist", label: "Psychologist" },
-    { value: "psychiatrist", label: "Psychiatrist" },
-    { value: "school", label: "School/School District" },
-    { value: "hospital", label: "Hospital/Clinic" },
-    { value: "insurance-provider", label: "Insurance Provider" },
-    { value: "self-referred", label: "Self-referred" },
-    { value: "court-legal", label: "Court/Legal System" },
-    { value: "other", label: "Other" },
-  ];
-
-  const serviceLocationOptions = [
-    { value: "client-home", label: "Client home" },
-    { value: "clinic", label: "Clinic/Center" },
-    { value: "school", label: "School" },
-    { value: "community", label: "Community setting" },
-    { value: "telehealth", label: "Telehealth" },
-    { value: "hybrid", label: "Hybrid (multiple locations)" },
-  ];
-
-  const yesNoOptions = [
-    { value: "no", label: "No" },
-    { value: "yes", label: "Yes" },
-  ];
 
   // Validate form
   const validateForm = async () => {

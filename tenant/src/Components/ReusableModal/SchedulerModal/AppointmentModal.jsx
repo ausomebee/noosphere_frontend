@@ -26,6 +26,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
+import { locationOptions, modifierOptions } from "../../../Data/selectOptions";
 
 const AppointmentModal = ({
   isOpen,
@@ -110,31 +111,6 @@ const AppointmentModal = ({
       })),
     [sessionTypes]
   );
-
-  const locationOptions = [
-    { value: "Clinic/Center", label: "Clinic/Center" },
-    { value: "Home", label: "Home" },
-    { value: "School", label: "School" },
-    { value: "Community", label: "Community" },
-    { value: "Telehealth", label: "Telehealth" },
-    { value: "Telephonic", label: "Telephonic" },
-    { value: "Other", label: "Other" },
-  ];
-
-  // Standard ABA modifiers
-  const modifierOptions = [
-    { value: "", label: "No Modifier" },
-    { value: "HO", label: "HO - Master's-level provider" },
-    { value: "HP", label: "HP - Doctoral-level provider" },
-    { value: "HN", label: "HN - Associate's-level provider" },
-    { value: "HM", label: "HM - Bachelor's-level provider" },
-    { value: "95", label: "95 - Synchronous telehealth" },
-    { value: "GT", label: "GT - Interactive audio/video" },
-    { value: "KX", label: "KX - Requirements met" },
-    { value: "59", label: "59 - Distinct procedural service" },
-    { value: "76", label: "76 - Repeat same provider" },
-    { value: "77", label: "77 - Repeat different provider" },
-  ];
 
   const validationSchema = Yup.object({
     date: Yup.date().required("Date is required"),

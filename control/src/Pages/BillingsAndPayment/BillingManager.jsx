@@ -10,6 +10,7 @@ import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
 import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDate } from "../../Helper/Formatters";
 import "./BillingAndPayments.css";
 
 const BillingManager = () => {
@@ -157,16 +158,6 @@ const BillingManager = () => {
     if (brand === "mastercard") return <SiMastercard size={20} />;
     if (brand === "paypal") return <SiPaypal size={20} />;
     return <SiVisa size={20} />;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
   };
 
   useEffect(() => {

@@ -17,47 +17,15 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import api from "../../api/TemplateAndReportApi";
+import { formatDate, formatDateTime, formatLabel } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 import "./ClientReportView.css";
 
 // ─── Helpers ──────────────────────────────────────────────
 const SKIP_KEYS = ["id", "clinicalReportId"];
 
-const formatLabel = (key) =>
-  key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (s) => s.toUpperCase())
-    .trim();
-
 const isHTMLString = (str) =>
   typeof str === "string" && /<[a-z][\s\S]*>/i.test(str);
-
-const formatDateString = (dateStr) => {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-};
-
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
-};
 
 const SIGNATURE_TYPES = [
   { value: "type", label: "Type", icon: <FiType size={20} /> },
@@ -266,6 +234,7 @@ const ClientReportView = () => {
   const { reportId } = useParams();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   // Report state
   const [report, setReport] = useState(null);
@@ -279,13 +248,7 @@ const ClientReportView = () => {
   const [uploadedSignature, setUploadedSignature] = useState(null);
   const [uploadPreview, setUploadPreview] = useState(null);
   const [signerName, setSignerName] = useState("");
-  const [signDate] = useState(
-    new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-  );
+  const [signDate] = useState(formatDate(new Date(), dateFormat));
 
   // Action states
   const [signing, setSigning] = useState(false);
@@ -558,14 +521,14 @@ const ClientReportView = () => {
               <FiCalendar size={14} />
               <span className="crv-info-label">Created</span>
               <span className="crv-info-value">
-                {formatDateString(report?.createdAt)}
+                {formatDate(report?.createdAt, dateFormat)}
               </span>
             </div>
             <div className="crv-info-item">
               <FiCalendar size={14} />
               <span className="crv-info-label">Last Updated</span>
               <span className="crv-info-value">
-                {formatDateString(report?.updatedAt)}
+                {formatDate(report?.updatedAt, dateFormat)}
               </span>
             </div>
           </div>
@@ -586,7 +549,7 @@ const ClientReportView = () => {
                 <div key={cr.id || idx} className="crv-change-item">
                   <p className="crv-change-desc">{cr.description}</p>
                   <span className="crv-change-date">
-                    {formatDateTime(cr.createdAt)}
+                    {formatDateTime(cr.createdAt, dateFormat, timeFormat)}
                   </span>
                 </div>
               ))}

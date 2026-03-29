@@ -9,6 +9,7 @@ import tenantSubdomainReducer from "./features/tenantSlice";
 import clinicalReportBuilderReducer from "./features/clinicalReportSlice";
 import clinicalTemplateBuilderReducer from "./features/clinicalReportTemplateSlice";
 import roleDraftReducer from "./features/roleDraftSlice";
+import generalSettingsReducer from "./features/generalSettingsSlice";
 
 const rootReducer = combineReducers({
   authentication: authReducer,
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
 clinicalReportTemplate: clinicalTemplateBuilderReducer,
 clinicalReport: clinicalReportBuilderReducer,
 roleDraft: roleDraftReducer,
+generalSettings: generalSettingsReducer,
 });
 
 export default rootReducer;

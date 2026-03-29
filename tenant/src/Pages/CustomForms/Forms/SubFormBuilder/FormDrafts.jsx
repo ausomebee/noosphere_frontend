@@ -7,19 +7,13 @@ import { FiEdit2 } from "react-icons/fi";
 import api from "../../../../api/customFormsApi";
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
-
-// FORMAT: DD-MM-YYYY
-const formatDate = (isoString) => {
-  const date = new Date(isoString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-};
+import { formatDate } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 
 const FormDrafts = ({ onCountChange }) => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +33,7 @@ const FormDrafts = ({ onCountChange }) => {
         const formatted = data.map((d) => ({
           id: d.id,
           name: d.name,
-          dateCreated: formatDate(d.createdAt),
+          dateCreated: formatDate(d.createdAt, dateFormat),
           hasActions: true,
         }));
 
@@ -89,7 +83,7 @@ const FormDrafts = ({ onCountChange }) => {
             const newCopy = {
               id: res.data.id,
               name: `${row.name} (Copy)`,
-              dateCreated: formatDate(new Date().toISOString()),
+              dateCreated: formatDate(new Date().toISOString(), dateFormat),
               hasActions: true,
             };
             setDrafts((prev) => [...prev, newCopy]);

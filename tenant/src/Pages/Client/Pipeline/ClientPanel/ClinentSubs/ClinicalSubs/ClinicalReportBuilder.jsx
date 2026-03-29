@@ -42,6 +42,8 @@ import Alert from "../../../../../../Components/Alert/Alert";
 import ReusableModal from "../../../../../../Components/ReusableModal/ReusableModal";
 import { TextareaInput } from "../../../../../../Components/Input/Inputs";
 import api from "../../../../../../api/TemplateAndReportApi";
+import { formatDate, formatDateTime, formatGender } from "../../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 
 import {
   initializeReport,
@@ -111,27 +113,6 @@ const getAutoPopulatedClientData = (clientData) => {
   if (!client) {
     return {};
   }
-
-  // Format date from ISO string to readable format
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      return "";
-    }
-  };
-
-  // Format gender (capitalize first letter)
-  const formatGender = (gender) => {
-    if (!gender) return "";
-    return gender.charAt(0).toUpperCase() + gender.slice(1);
-  };
 
   // Get full name from client object
   const getFullName = () => {
@@ -501,9 +482,7 @@ const SortableSectionCard = React.memo(
           {SectionComponent && (
             <SectionComponent
               data={combinedData}
-              onChange={(data) =>
-                canEditInputs && onDataChange(sectionId, data)
-              }
+              onChange={(data) => onDataChange(sectionId, data)}
               isReadOnly={!canEditInputs}
               onRemoveSection={() => onSectionAction(sectionId, "remove")}
             />
@@ -521,6 +500,7 @@ const ClinicalReportBuilder = () => {
   const dispatch = useDispatch();
 
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const {
     id: reportId,
@@ -573,8 +553,33 @@ const ClinicalReportBuilder = () => {
   const canEditInputs = !isReadOnly;
   const canAddSections = !isReadOnly;
 
-  // Get client data from metadata - THIS IS THE KEY LINE
-  const clientData = metadata?.clientData || initialMetadata?.clientData;
+  // Get client data from metadata
+  // When loading from API, metadata.clientData may lack DOB/gender,
+  // so merge with initialMetadata.clientData (from location.state) which has full client profile
+  const clientData = useMemo(() => {
+    const apiData = metadata?.clientData;
+    const navData = initialMetadata?.clientData;
+
+    if (!apiData && !navData) return null;
+    if (!apiData) return navData;
+    if (!navData) return apiData;
+
+    // Merge: use navData as base (has full client profile), override with apiData
+    const mergedClient = {
+      ...(navData?.client || {}),
+      ...(apiData?.client || {}),
+    };
+
+    // Preserve DOB and gender from navData if apiData doesn't have them
+    if (!mergedClient.DOB && navData?.client?.DOB) {
+      mergedClient.DOB = navData.client.DOB;
+    }
+    if (!mergedClient.gender && navData?.client?.gender) {
+      mergedClient.gender = navData.client.gender;
+    }
+
+    return { ...apiData, ...navData, client: mergedClient };
+  }, [metadata?.clientData, initialMetadata?.clientData]);
 
 
   // Only approver in submittedForApproval can request changes
@@ -634,6 +639,13 @@ const ClinicalReportBuilder = () => {
     activeTab,
   ]);
 
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimerRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
   useEffect(() => {
     if (saveSuccess) {
       showToast("Draft saved successfully!");
@@ -658,11 +670,49 @@ const ClinicalReportBuilder = () => {
     [dispatch],
   );
 
+  const handleActionMenu = useCallback(
+    (id) => dispatch(setActionMenuOpen(id)),
+    [dispatch],
+  );
+
+  // Debounce Redux updates to prevent re-renders on every keystroke
+  const pendingUpdatesRef = React.useRef({});
+  const debounceTimerRef = React.useRef({});
+
   const handleSectionDataChange = useCallback(
-    (sectionId, data) =>
-      canEditInputs && dispatch(updateSectionData({ sectionId, data })),
+    (sectionId, data) => {
+      const isClientInfo = sectionId.split("_")[0] === "clientInformation";
+      if (!canEditInputs && !isClientInfo) return;
+
+      // Store the latest data
+      pendingUpdatesRef.current[sectionId] = data;
+
+      // Clear previous timer for this section
+      if (debounceTimerRef.current[sectionId]) {
+        clearTimeout(debounceTimerRef.current[sectionId]);
+      }
+
+      // Debounce: dispatch after 300ms of inactivity
+      debounceTimerRef.current[sectionId] = setTimeout(() => {
+        const latestData = pendingUpdatesRef.current[sectionId];
+        if (latestData) {
+          dispatch(updateSectionData({ sectionId, data: latestData }));
+          delete pendingUpdatesRef.current[sectionId];
+        }
+      }, 300);
+    },
     [dispatch, canEditInputs],
   );
+
+  // Flush pending updates before save/publish
+  const flushPendingUpdates = useCallback(() => {
+    Object.entries(pendingUpdatesRef.current).forEach(([sectionId, data]) => {
+      dispatch(updateSectionData({ sectionId, data }));
+    });
+    pendingUpdatesRef.current = {};
+    Object.values(debounceTimerRef.current).forEach(clearTimeout);
+    debounceTimerRef.current = {};
+  }, [dispatch]);
 
   const handleSectionAction = useCallback(
     (sectionId, action) => {
@@ -725,11 +775,17 @@ const ClinicalReportBuilder = () => {
   );
 
   const handleSaveDraft = useCallback(() => {
+    // Flush any pending debounced updates before saving
+    flushPendingUpdates();
+
+    // Merge pending data with current Redux sectionData
+    const mergedSectionData = { ...sectionData, ...pendingUpdatesRef.current };
+
     const reportData = {
       reportId: storedReportId,
       metadata,
       activeSections,
-      sectionData,
+      sectionData: mergedSectionData,
     };
     dispatch(
       saveDraft({ reportData, api, tokens: { accessToken, refreshToken } }),
@@ -742,14 +798,20 @@ const ClinicalReportBuilder = () => {
     accessToken,
     refreshToken,
     dispatch,
+    flushPendingUpdates,
   ]);
 
   const handlePublish = useCallback(() => {
+    // Flush any pending debounced updates before publishing
+    flushPendingUpdates();
+
+    const mergedSectionData = { ...sectionData, ...pendingUpdatesRef.current };
+
     const reportData = {
       reportId: storedReportId,
       metadata,
       activeSections,
-      sectionData,
+      sectionData: mergedSectionData,
     };
     dispatch(
       publishReport({ reportData, api, tokens: { accessToken, refreshToken } }),
@@ -762,6 +824,7 @@ const ClinicalReportBuilder = () => {
     accessToken,
     refreshToken,
     dispatch,
+    flushPendingUpdates,
   ]);
 
   // ────────────────────────────────────────────────
@@ -813,6 +876,7 @@ const ClinicalReportBuilder = () => {
       setChangeRequests(response?.data || []);
     } catch (err) {
       console.error("Failed to fetch change requests:", err);
+      showToast("Failed to load change requests", "error");
     } finally {
       setChangeRequestsLoading(false);
     }
@@ -1097,7 +1161,7 @@ const ClinicalReportBuilder = () => {
                     <span className="crb-metadata-label">Date Created</span>
                     <span className="crb-metadata-value">
                       {metadata.dateCreated ||
-                        new Date().toLocaleDateString("en-GB")}
+                        formatDate(new Date(), dateFormat)}
                     </span>
                   </div>
                   <div className="crb-metadata-field">
@@ -1203,16 +1267,16 @@ const ClinicalReportBuilder = () => {
                     items={activeSections}
                     strategy={verticalListSortingStrategy}
                   >
-                    {sectionsWithData.map(({ id, label, data, isExpanded }) => (
+                    {sectionsWithData.map((swd) => (
                       <SortableSectionCard
-                        key={id}
-                        sectionId={id}
-                        section={{ id, label }}
-                        isExpanded={isExpanded}
-                        sectionData={data}
+                        key={swd.id}
+                        sectionId={swd.id}
+                        section={swd}
+                        isExpanded={swd.isExpanded}
+                        sectionData={swd.data}
                         actionMenuOpen={actionMenuOpen}
                         onToggleExpand={handleToggleExpand}
-                        onActionMenu={(id) => dispatch(setActionMenuOpen(id))}
+                        onActionMenu={handleActionMenu}
                         onSectionAction={handleSectionAction}
                         onDataChange={handleSectionDataChange}
                         canEditInputs={canEditInputs}
@@ -1334,13 +1398,7 @@ const ClinicalReportBuilder = () => {
                       )}
                       {cr.createdAt && (
                         <p className="text-sm text-gray-400 mt-4">
-                          {new Date(cr.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatDateTime(cr.createdAt, dateFormat, timeFormat)}
                         </p>
                       )}
                     </div>

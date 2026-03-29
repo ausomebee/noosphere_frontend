@@ -8,6 +8,7 @@ import Button from "../Button/Button";
 import { FaPlus, FaTrash, FaEllipsisV, FaSave } from "react-icons/fa";
 import { showToast } from "../../Helper/ShowToast";
 import "./AccordionTableRobust.css";
+import { modifierOptions, perOptions } from "../../Data/selectOptions";
 
 const AccordionTableRobust = ({
   data = [],
@@ -36,28 +37,6 @@ const AccordionTableRobust = ({
   const { control, watch, setValue, getValues, reset } = useForm({
     defaultValues: { services: initialServiceData },
   });
-
-  const modifierOptions = [
-   { value: "", label: "No Modifier" },
-    { value: "HO", label: "HO - Master's-level provider" },
-    { value: "HP", label: "HP - Doctoral-level provider" },
-    { value: "HN", label: "HN - Associate's-level provider" },
-    { value: "HM", label: "HM - Bachelor's-level provider" },
-    { value: "95", label: "95 - Synchronous telehealth" },
-    { value: "GT", label: "GT - Interactive audio/video" },
-    { value: "KX", label: "KX - Requirements met" },
-    { value: "59", label: "59 - Distinct procedural service" },
-    { value: "76", label: "76 - Repeat same provider" },
-    { value: "77", label: "77 - Repeat different provider" },
-  ];
-
-  const perOptions = [
-    { value: "day", label: "Per Day" },
-    { value: "week", label: "Per Week" },
-    { value: "month", label: "Per Month" },
-    { value: "year", label: "Per Year" },
-    { value: "SESSION", label: "Per Session" },
-  ];
 
   const formServices = watch("services");
 

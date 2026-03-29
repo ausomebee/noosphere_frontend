@@ -18,6 +18,7 @@ import SuccessModal from "../../Components/Modal/SuccessModal";
 import api from "../../api/homeApis";
 
 import useAuth from "../../hooks/useAuth";
+import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
 
 // ============================================================================
 // Loading Spinner Component (Embedded)
@@ -70,16 +71,6 @@ const LoadingSpinner = ({ size = "medium", message = "Loading..." }) => {
   );
 };
 
-// Convert "HH:mm" or "HH:mm:ss" to "h:mm AM/PM"
-const formatTimeTo12h = (time) => {
-  if (!time) return "";
-  const [h, m] = time.split(":");
-  const hour = parseInt(h, 10);
-  const period = hour >= 12 ? "PM" : "AM";
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${m.padStart(2, "0")} ${period}`;
-};
-
 // ============================================================================
 // Main Home Component
 // ============================================================================
@@ -117,6 +108,8 @@ const Home = () => {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("Awesome");
+  const [successMessage, setSuccessMessage] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -250,16 +243,10 @@ const Home = () => {
                 .join(", ") || "Not assigned";
 
               // Format date and time
-              const dateFormatted = apt.date 
-                ? new Date(apt.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })
-                : "N/A";
+              const dateFormatted = formatDate(apt.date);
 
               const timeRange = apt.startTime
-                ? `${formatTimeTo12h(apt.startTime)} - ${formatTimeTo12h(apt.endTime)}`
+                ? `${formatTime(apt.startTime)} - ${formatTime(apt.endTime)}`
                 : "";
 
               return {
@@ -299,19 +286,10 @@ const Home = () => {
                 .join(", ") || "Not assigned";
 
               // Format date and time
-              const dateFormatted = session.startTime 
-                ? new Date(session.startTime).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })
-                : "N/A";
+              const dateFormatted = formatDate(session.startTime);
 
               const timeFormatted = session.startTime
-                ? new Date(session.startTime).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })
+                ? formatTimeFromDate(session.startTime)
                 : "";
 
               return {
@@ -338,20 +316,11 @@ const Home = () => {
             // Transform completed appointments data
             transformedData = response.data.data.map(session => {
               // Format date (ISO 8601 format from API)
-              const dateFormatted = session.date 
-                ? new Date(session.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })
-                : "N/A";
+              const dateFormatted = formatDate(session.date);
 
               // Format time from ISO date
               const timeFormatted = session.date
-                ? new Date(session.date).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })
+                ? formatTimeFromDate(session.date)
                 : "";
 
               // Format duration - convert decimal hours to readable format
@@ -409,16 +378,10 @@ const Home = () => {
                 .join(", ") || "Not assigned";
 
               // Format date and time
-              const dateFormatted = apt.date 
-                ? new Date(apt.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })
-                : "N/A";
+              const dateFormatted = formatDate(apt.date);
 
               const cancelTimeRange = apt.startTime
-                ? `${formatTimeTo12h(apt.startTime)} - ${formatTimeTo12h(apt.endTime)}`
+                ? `${formatTime(apt.startTime)} - ${formatTime(apt.endTime)}`
                 : "";
 
               return {
@@ -458,16 +421,10 @@ const Home = () => {
                 .join(", ") || "Not assigned";
 
               // Format date and time
-              const dateFormatted = apt.date 
-                ? new Date(apt.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })
-                : "N/A";
+              const dateFormatted = formatDate(apt.date);
 
               const rescheduleTimeRange = apt.startTime
-                ? `${formatTimeTo12h(apt.startTime)} - ${formatTimeTo12h(apt.endTime)}`
+                ? `${formatTime(apt.startTime)} - ${formatTime(apt.endTime)}`
                 : "";
 
               return {
@@ -723,6 +680,8 @@ const Home = () => {
   const handleRescheduleSuccess = () => {
     setRescheduleModalOpen(false);
     setSelectedAppointment(null);
+    setSuccessTitle("Awesome");
+    setSuccessMessage("Your reschedule request has been sent!");
     showSuccess();
     setRefreshKey(prev => prev + 1);
   };
@@ -730,6 +689,8 @@ const Home = () => {
   const handleFeedbackSuccess = () => {
     setFeedbackModalOpen(false);
     setSelectedAppointment(null);
+    setSuccessTitle("Thank you!");
+    setSuccessMessage("Your session feedback has been submitted!");
     showSuccess();
     setRefreshKey(prev => prev + 1);
   };
@@ -880,6 +841,8 @@ const Home = () => {
         <SuccessModal
           isOpen={successModalOpen}
           onClose={() => setSuccessModalOpen(false)}
+          title={successTitle}
+          message={successMessage}
         />
       </div>
     </DashboardLayout>

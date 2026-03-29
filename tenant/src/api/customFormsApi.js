@@ -126,6 +126,18 @@ const DeleteFormsByFormId = async ({
   }
 };
 
+const GetFormResponsesByFormId = async ({ formId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/form-responses/form/${formId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.message || "Get form responses failed");
+  }
+};
+
 export default {
   CreateCustomForm,
   UpdateCustomForm,
@@ -135,4 +147,5 @@ export default {
   DuplicateFormByFormId,
   GetFormsByFormId,
   DeleteFormsByFormId,
+  GetFormResponsesByFormId,
 };

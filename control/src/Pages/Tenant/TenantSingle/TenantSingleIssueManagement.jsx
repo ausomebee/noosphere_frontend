@@ -13,6 +13,7 @@ import useAuth from "../../../hooks/useAuth";
 import issueApi from "../../../api/IssueApi";
 import tenantApi from "../../../api/TenantApis";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const TenantSingleIssueManagement = () => {
@@ -197,7 +198,7 @@ const TenantSingleIssueManagement = () => {
         issue_id: `ISS-${String(index + 1).padStart(3, "0")}`,
         name: issue.title || "—",
         time: issue.createdAt
-          ? new Date(issue.createdAt).toLocaleDateString("en-US")
+          ? formatDate(issue.createdAt)
           : "—",
         category: issue.category || "—",
         severity: issue.priority || "—",

@@ -6,21 +6,10 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const LIMIT = 20;
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
 
 const capitalize = (str) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : str;
@@ -74,7 +63,9 @@ const TenantSingleUserLogs = () => {
         const d = res.data || res;
         setTenantName(d.companyName || d.contactPerson || "Tenant");
       })
-      .catch(() => {});
+      .catch(() => {
+        // Non-critical — fallback name "Tenant" is already set
+      });
     fetchLogs();
   }, []);
 

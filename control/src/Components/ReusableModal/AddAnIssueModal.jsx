@@ -8,6 +8,7 @@ import { TextInput, SelectInput, TextareaInput } from "../Input/Inputs";
 import { showToast } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
 import { BsCloudUpload } from "react-icons/bs";
+import { issueCategoryOptions as categoryOptions, basePriorityOptions, enterprisePriorityOptions } from "../../Data/selectOptions";
 
 
 // Yup schema for AddIssueModal
@@ -68,43 +69,16 @@ const AddIssueModal = ({
     setSelectedTenant(tenant || null);
   }, [tenantValue, tenantList]);
 
-  const categoryOptions = useMemo(
-    () => [
-      { value: "", label: "Select" },
-      { value: "Account & Access", label: "Account & Access" },
-      { value: "Billing & Payments", label: "Billing & Payments" },
-      { value: "Subscription & Plans", label: "Subscription & Plans" },
-      { value: "Data Issues", label: "Data Issues" },
-      { value: "User Management & Roles", label: "User Management & Roles" },
-      { value: "Client/Patient Management Issues", label: "Client/Patient Management Issues" },
-      { value: "Bug Report", label: "Bug Report" },
-      { value: "Performance", label: "Performance" },
-      { value: "Compliance & Security", label: "Compliance & Security" },
-      { value: "Notifications & Emails", label: "Notifications & Emails" },
-      { value: "Analytics & Reporting", label: "Analytics & Reporting" },
-      { value: "Customization & Settings", label: "Customization & Settings" },
-      { value: "Third-Party Integrations", label: "Third-Party Integrations" },
-      { value: "Training & Onboarding", label: "Training & Onboarding" },
-      { value: "Feature Request", label: "Feature Request" },
-      { value: "Other / Miscellaneous", label: "Other / Miscellaneous" },
-    ],
-    []
-  );
-
   const priorityOptions = useMemo(() => {
     const baseOptions = [
       { value: "", label: "Select" },
-      { value: "P1", label: "P1 - Critical" },
-      { value: "P2", label: "P2 - High" },
-      { value: "P3", label: "P3 - Medium" },
-      { value: "P4", label: "P4 - Low" },
+      ...basePriorityOptions,
     ];
     if (selectedTenant?.isEnterprise) {
       return [
         { value: "", label: "Select" },
-        { value: "EP1", label: "EP1 - Enterprise Critical" },
-        { value: "EP2", label: "EP2 - Enterprise High" }, // Fixed typo
-        ...baseOptions.slice(1),
+        ...enterprisePriorityOptions,
+        ...basePriorityOptions,
       ];
     }
     return baseOptions;

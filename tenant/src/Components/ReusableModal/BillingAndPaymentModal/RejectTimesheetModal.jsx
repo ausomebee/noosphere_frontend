@@ -3,6 +3,7 @@ import React from "react";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
+import { showToast } from "../../../Helper/ShowToast";
 
 const RejectTimeSheetModal = ({ isOpen, onClose, onSave }) => {
   const {
@@ -23,6 +24,7 @@ const RejectTimeSheetModal = ({ isOpen, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error("Error rejecting timesheet:", error);
+      showToast("Failed to reject timesheet", "error");
     }
   };
 

@@ -1,15 +1,10 @@
 import React, { useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import "./ResourceUtilizationChart.css";
+import { chartPeriodOptions as PERIODS } from "../../Data/selectOptions";
 
 // Accepts: periodDataMap = { cpu: {year,month,week,day}, memory: {...}, storage: {...} }
 // Each period array: [{ x: unixMs, y: number }, ...]
-const PERIODS = [
-  { key: "year",  label: "Year"  },
-  { key: "month", label: "Month" },
-  { key: "week",  label: "Week"  },
-  { key: "day",   label: "Day"   },
-];
 
 const ResourceUtilizationChart = ({ periodDataMap }) => {
   const [activePeriod, setActivePeriod] = useState("year");

@@ -61,7 +61,7 @@ const DatePickerModal = ({ isOpen, onClose, onDateSelect }) => {
 
             return (
               <div
-                key={index}
+                key={day ? day.toISOString() : `empty-${index}`}
                 onClick={() => {
                   if (!day) return;
                   if (!tempRange) {

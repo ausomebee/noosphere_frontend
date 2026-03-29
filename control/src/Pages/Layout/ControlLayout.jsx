@@ -16,8 +16,10 @@ import { GrDocumentPerformance } from "react-icons/gr";
 import { PiUserList } from "react-icons/pi";
 import "./ControlLayout.css";
 import NoosphereLogo from "../../assets/NoosphereLogo.png";
+import useIdleTimeout from "../../hooks/useIdleTimeout";
 
 const Layout = ({ children }) => {
+  useIdleTimeout();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [openNavs, setOpenNavs] = useState({});

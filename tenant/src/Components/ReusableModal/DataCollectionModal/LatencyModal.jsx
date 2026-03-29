@@ -3,6 +3,7 @@ import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../Input/Inputs";
 import { FiRefreshCcw } from "react-icons/fi";
 import Button from "../../Button/Button";
+import { timeToSeconds, formatDuration, getCurrentTimestamp, formatLatency } from "../../../Helper/Formatters";
 
 const LatencyModal = ({
   isOpen,
@@ -39,44 +40,6 @@ const LatencyModal = ({
     setRenderTrigger(0);
   }, [isOpen, trialCount]);
 
-  // Convert HH:MM:SS string to seconds
-  const timeToSeconds = (timeStr) => {
-    if (!timeStr || !/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) return 0;
-    const [hours, minutes, seconds] = timeStr.split(":").map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
-  };
-
-  // Convert seconds to HH:MM:SS
-  const formatTime = (totalSeconds) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  // Get current timestamp in HH:MM:SS
-  const getCurrentTimestamp = () => {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const seconds = now.getSeconds().toString().padStart(2, "0");
-    return `${hours}:${minutes}:${seconds}`;
-  };
-
-  // Format latency for display
-  const formatLatency = (seconds) => {
-    if (seconds === null || seconds === undefined) return "--:--:--";
-    const absSeconds = Math.max(0, seconds); // Ensure non-negative
-    const hours = Math.floor(absSeconds / 3600);
-    const minutes = Math.floor((absSeconds % 3600) / 60);
-    const secs = absSeconds % 60;
-    return `${hours.toString().padStart(2, "0")}hr:${minutes
-      .toString()
-      .padStart(2, "0")}mm:${secs.toString().padStart(2, "0")}ss`;
-  };
-
   // Start latency timer
   const startLatency = () => {
     const stimTime = trials[currentTrialIdx].stimulusPresented;
@@ -92,13 +55,13 @@ const LatencyModal = ({
       const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
       // Behavior time starts from stimulus time and counts up
       const behaviorSeconds = stimSeconds + elapsedSec;
-      setBehaviorTime(formatTime(behaviorSeconds));
+      setBehaviorTime(formatDuration(behaviorSeconds));
       setTrials((t) =>
         t.map((tr, idx) =>
           idx === currentTrialIdx
             ? {
                 ...tr,
-                behaviourStart: formatTime(behaviorSeconds),
+                behaviourStart: formatDuration(behaviorSeconds),
               }
             : tr
         )
@@ -125,7 +88,7 @@ const LatencyModal = ({
         idx === currentTrialIdx
           ? {
               ...tr,
-              behaviourStart: formatTime(behaviorSeconds),
+              behaviourStart: formatDuration(behaviorSeconds),
               latency: latency,
             }
           : tr

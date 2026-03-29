@@ -2,6 +2,8 @@ import React from "react";
 import { CheckboxInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
+import { formatItemLabel, getCurrencySymbol, formatCurrency } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const EmployeeRow = ({
   employee,
@@ -12,6 +14,7 @@ const EmployeeRow = ({
   onAddIncome,
   onAddDeduction,
 }) => {
+  const { currency } = useFormatSettings();
   const isExpanded = expandedEmployee === employee.id;
 
   const getAmount = (item) => {
@@ -24,17 +27,15 @@ const EmployeeRow = ({
     return 0;
   };
 
-  const formatItemLabel = (item) => {
+  const getItemLabel = (item) => {
     if (item.name) return item.name;
-    if (item.type) {
-      return item.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    }
+    if (item.type) return formatItemLabel(item.type);
     return "Item";
   };
 
   const getUnitSymbol = (item) => {
     if (item.type === "Percentage based" || item.unitType === "percentage_based") return "%";
-    return "$";
+    return getCurrencySymbol("USD");
   };
 
   const displayGrossPay = employee.grossPay || 0;
@@ -56,10 +57,10 @@ const EmployeeRow = ({
         </td>
         <td className="py-3 px-4 text-gray-700">{employee.paymentSchedule}</td>
         <td className="py-3 px-4 text-gray-700">
-          ${displayGrossPay.toLocaleString()}
+          {formatCurrency(displayGrossPay, currency)}
         </td>
         <td className="py-3 px-4 text-gray-700">
-          ${displayNetPay.toLocaleString()}
+          {formatCurrency(displayNetPay, currency)}
         </td>
         <td className="py-3 px-4">
           <button
@@ -165,7 +166,7 @@ const EmployeeRow = ({
                   <div key={`income-${index}`} className="flex justify-between p-20 items-center border-b">
                     <div>
                       <h2 className="text-left text-gray-400 text-base">
-                        {formatItemLabel(income)}
+                        {getItemLabel(income)}
                       </h2>
                     </div>
                     <div className="flex">
@@ -213,7 +214,7 @@ const EmployeeRow = ({
                   <div key={`deduction-${index}`} className="flex justify-between p-20 items-center border-b">
                     <div>
                       <h2 className="text-left text-gray-400 text-base">
-                        {formatItemLabel(deduction)}
+                        {getItemLabel(deduction)}
                       </h2>
                     </div>
                     <div className="flex">

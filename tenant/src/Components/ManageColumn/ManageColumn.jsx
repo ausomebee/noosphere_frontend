@@ -25,6 +25,8 @@ import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
 import { FiEdit2 } from "react-icons/fi";
 import { BsTrash } from "react-icons/bs";
+import { formatDate } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 
 const ManageColumn = () => {
   const { pipelineStageId } = useParams();
@@ -34,6 +36,7 @@ const ManageColumn = () => {
     (state) => state.pipeline,
   );
   const { tenantId, accessToken, refreshToken, userId } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");
@@ -56,17 +59,6 @@ const ManageColumn = () => {
     [accessToken, refreshToken],
   );
 
-  // Date formatting function
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
-
   // Fetch pipeline items
   const fetchPipelineItemsData = useCallback(() => {
     dispatch(fetchPipelineItems({ stageId: pipelineStageId, ...authTokens }))
@@ -84,7 +76,7 @@ const ManageColumn = () => {
           email: item.email || "",
           phoneNumber: item.phoneNumber || "",
           added_by: item.createdBy || "Unknown Admin",
-          dateTime: formatDate(item.createdAt),
+          dateTime: formatDate(item.createdAt, dateFormat),
           hasActions: true,
           hasCheckbox: true,
         }));
@@ -95,7 +87,7 @@ const ManageColumn = () => {
         showToast("Failed to load candidates.", "error");
         setTableDataState([]);
       });
-  }, [dispatch, pipelineStageId, authTokens]);
+  }, [dispatch, pipelineStageId, authTokens, dateFormat]);
 
   // Fetch stages data
   const fetchStages = useCallback(async () => {

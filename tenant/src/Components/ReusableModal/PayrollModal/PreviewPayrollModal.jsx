@@ -10,6 +10,8 @@ import { RxCross2 } from "react-icons/rx";
 import { CheckboxInput } from "../../Input/Inputs";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDateRange } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const PreviewPayrollModal = ({
   isOpen,
@@ -20,6 +22,7 @@ const PreviewPayrollModal = ({
   accessToken,
   refreshToken,
 }) => {
+  const { dateFormat } = useFormatSettings();
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [expandedEmployee, setExpandedEmployee] = useState(null);
@@ -175,13 +178,6 @@ const PreviewPayrollModal = ({
     setExpandedEmployee(null);
   };
 
-  const formatDateRange = (from, to) => {
-    if (!from || !to) return "";
-    const fromDate = new Date(from).toLocaleDateString();
-    const toDate = new Date(to).toLocaleDateString();
-    return `${fromDate} - ${toDate}`;
-  };
-
   const handleSave = async () => {
     if (employees.length === 0) {
       showToast("No staff in payroll to save", "error");
@@ -221,7 +217,7 @@ const PreviewPayrollModal = ({
         isOpen={isOpen}
         onClose={onClose}
         title="Preview Payroll"
-        subTitle={`Payroll Cycle: (${formatDateRange(payrollData?.from, payrollData?.to)})`}
+        subTitle={`Payroll Cycle: (${formatDateRange(payrollData?.from, payrollData?.to, dateFormat)})`}
         primaryButtonText="Save"
         secondaryButtonText="Cancel"
         onPrimaryButtonClick={handleSave}

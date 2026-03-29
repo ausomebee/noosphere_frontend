@@ -1,10 +1,13 @@
 import AllRoutes from "./Components/Allroutes";
+import ErrorBoundary from "./Helper/ErrorBoundary";
 
 const App = () => {
   return (
-    <div>
-      <AllRoutes />
-    </div>
+    <ErrorBoundary>
+      <div>
+        <AllRoutes />
+      </div>
+    </ErrorBoundary>
   );
 };
 

@@ -20,6 +20,8 @@ import { IoMdRefresh } from "react-icons/io";
 import { TextInput } from "../../Input/Inputs";
 import uploadApi from "../../../api/ImageUpload";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 // Yup validation schema
 const schema = yup.object().shape({
@@ -247,6 +249,7 @@ const UploadTenantStaffDocumentModal = ({
   const [uploadingFile, setUploadingFile] = useState(false);
   const [fileResult, setFileResult] = useState(null);
   const { user, accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
   const {
     register,
@@ -384,7 +387,7 @@ const UploadTenantStaffDocumentModal = ({
         const payload = {
           id: initialValues?.id || Date.now() + Math.random(),
           documentName: data.documentName,
-          date: new Date().toLocaleDateString(),
+          date: formatDate(new Date(), dateFormat),
           uploadBy: user?.email || "Unknown User",
           documentsUrl: fileResult || initialValues?.documentsUrl,
           tenantStaffId,

@@ -3,6 +3,7 @@ import {
   createAsyncThunk,
   createSelector,
 } from "@reduxjs/toolkit";
+import { formatDate } from "../../Helper/Formatters";
 
 export const SECTIONS_CONFIG = [
   { id: "clientInformation", label: "Client Information" },
@@ -276,14 +277,14 @@ export const loadReport = createAsyncThunk(
       const metadata = {
         documentTitle: data.title || "",
         dateCreated: data.createdAt
-          ? new Date(data.createdAt).toLocaleDateString("en-GB")
+          ? formatDate(data.createdAt)
           : "",
         approver: data.approver?.fullName || "",
         approverId: data.approverId || null,
         createdBy: data.creator?.fullName || "",
         creatorId: data.creatorId || null,
         lastUpdated: data.updatedAt
-          ? new Date(data.updatedAt).toLocaleDateString("en-GB")
+          ? formatDate(data.updatedAt)
           : "",
         status: data.status || "DRAFT",
         version: "v1",
@@ -345,12 +346,12 @@ const slice = createSlice({
         state.metadata = {
           documentTitle: meta.documentTitle || "Behaviour Intervention Plan",
           dateCreated:
-            meta.dateCreated || new Date().toLocaleDateString("en-GB"),
+            meta.dateCreated || formatDate(new Date()),
           approver: meta.approver || "",
           approverId: meta.approverId || null,
           createdBy: meta.createdBy || "",
           creatorId: meta.creatorId || null,
-          lastUpdated: new Date().toLocaleDateString("en-GB"),
+          lastUpdated: formatDate(new Date()),
           status: mode === "view" ? "APPROVED" : "DRAFT",
           version: "v1",
           client: meta.client || { name: "", initials: "" },
@@ -400,7 +401,7 @@ const slice = createSlice({
       }
 
       delete state.sectionData[sectionId];
-      state.metadata.lastUpdated = new Date().toLocaleDateString("en-GB");
+      state.metadata.lastUpdated = formatDate(new Date());
     },
 
     toggleSectionExpand(state, { payload: sectionId }) {
@@ -423,7 +424,7 @@ const slice = createSlice({
       state.sectionData[sectionId] = Array.isArray(data)
         ? data
         : { ...state.sectionData[sectionId], ...data };
-      state.metadata.lastUpdated = new Date().toLocaleDateString("en-GB");
+      state.metadata.lastUpdated = formatDate(new Date());
     },
 
     reorderSections(state, { payload: { activeId, overId } }) {
@@ -442,7 +443,7 @@ const slice = createSlice({
 
     updateMetadata(state, { payload }) {
       state.metadata = { ...state.metadata, ...payload };
-      state.metadata.lastUpdated = new Date().toLocaleDateString("en-GB");
+      state.metadata.lastUpdated = formatDate(new Date());
     },
 
     setActionMenuOpen(state, { payload }) {

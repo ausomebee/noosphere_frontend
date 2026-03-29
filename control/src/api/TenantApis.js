@@ -48,8 +48,8 @@ const CreatePipelineStage = async ({
   name,
   description,
   colourCode,
-  tasks = [],
-  documents = [],
+  requiredTasks = [],
+  requiredDocuments = [],
   accessToken,
   refreshToken,
 }) => {
@@ -61,8 +61,8 @@ const CreatePipelineStage = async ({
       name,
       description,
       colourCode,
-      tasks: Array.isArray(tasks) ? tasks : [],
-      documents: Array.isArray(documents) ? documents : [],
+      requiredTasks: Array.isArray(requiredTasks) ? requiredTasks : [],
+      requiredDocuments: Array.isArray(requiredDocuments) ? requiredDocuments : [],
     };
 
     const response = await authFetch.post(
@@ -346,7 +346,7 @@ const UpdateCandidate = async ({
 
 const UpdateStageTasks = async ({
   pipelineStageId,
-  tasks,
+  requiredTasks,
   accessToken,
   refreshToken,
 }) => {
@@ -356,7 +356,7 @@ const UpdateStageTasks = async ({
       `${PLAIN_API_URL}/pipeline/stage/task`,
       {
         id: pipelineStageId,
-        tasks: Array.isArray(tasks) ? tasks : [],
+        requiredTasks: Array.isArray(requiredTasks) ? requiredTasks : [],
       },
     );
     return response;
@@ -369,7 +369,7 @@ const UpdateStageTasks = async ({
 
 const UpdateStageDocuments = async ({
   pipelineStageId,
-  documents,
+  requiredDocuments,
   accessToken,
   refreshToken,
 }) => {
@@ -379,7 +379,7 @@ const UpdateStageDocuments = async ({
       `${PLAIN_API_URL}/pipeline/stage/document`,
       {
         id: pipelineStageId,
-        documents: Array.isArray(documents) ? documents : [],
+        requiredDocuments: Array.isArray(requiredDocuments) ? requiredDocuments : [],
       },
     );
     return response;

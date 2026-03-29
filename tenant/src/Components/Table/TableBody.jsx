@@ -154,7 +154,7 @@ const TableBody = ({
               >
                 {col.columnActions.map((action, index) => (
                   <button
-                    key={index}
+                    key={action.label || index}
                     className={`dropdown-item ${action.className || ""}`}
                     onClick={() => {
                       action.onClick(row);
@@ -304,8 +304,8 @@ const TableBody = ({
               />
             </th>
           )}
-          {columns.map((col, idx) => (
-            <th key={idx}>{col.header}</th>
+          {columns.map((col) => (
+            <th key={col.key || col.header}>{col.header}</th>
           ))}
           {showActions && <th>Action</th>}
         </tr>

@@ -9,6 +9,8 @@ import AddTeamsModal from "../../../Components/ReusableModal/OrganizationModal/A
 import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "../../../Components/CalendarScheduler/Scheduler.css";
 
 const ALL_TABS = [
@@ -19,6 +21,7 @@ const ALL_TABS = [
 const StaffsAndTeams = () => {
   const { accessToken, refreshToken, tenantId } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat } = useFormatSettings();
   const navigate = useNavigate();
 
   const visibleTabs = useMemo(
@@ -75,6 +78,7 @@ const StaffsAndTeams = () => {
         setAllTenantStaff(allStaffRes.data?.data || []);
       } catch (err) {
         console.error("Failed to load staff lists:", err);
+        showToast("Failed to load staff lists", "error");
       }
     };
     fetchStaffForTeams();
@@ -89,7 +93,7 @@ const StaffsAndTeams = () => {
         id: u.id,
         name: u.fullName,
         role: u.role.name,
-        dateJoined: new Date(u.createdAt).toLocaleDateString(),
+        dateJoined: formatDate(u.createdAt, dateFormat),
         status: u.active ? "Active" : "Inactive",
         raw: u,
         hasActions: true,
@@ -131,7 +135,7 @@ const StaffsAndTeams = () => {
         id: t.id,
         name: t.name,
         noMembers: t._count?.teamMembers ?? t.teamMembers?.length ?? "—",
-        dateCreated: new Date(t.createdAt).toLocaleDateString(),
+        dateCreated: formatDate(t.createdAt, dateFormat),
         teamLead: t.teamLead?.fullName || staffLookup[t.teamLeadId] || "—",
         teamLeadId: t.teamLeadId,
         teamMemberNames: (t.teamMembers || [])

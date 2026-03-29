@@ -13,12 +13,15 @@ import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const ViewBreakDown = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { dateFormat } = useFormatSettings();
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportButtonRef = useRef(null);
   const exportDropdownRef = useRef(null);
@@ -56,6 +59,7 @@ const ViewBreakDown = () => {
         setDeductionItems(Array.isArray(dedData) ? dedData : []);
       } catch (error) {
         console.error("Failed to fetch payroll items:", error);
+        showToast("Failed to load payroll items", "error");
       }
     };
     fetchItems();
@@ -78,11 +82,7 @@ const ViewBreakDown = () => {
         setCompensationType(firstRecord?.payrollCycle?.compensationType || "");
         if (firstRecord?.payrollCycle?.startDate) {
           setPayrollDate(
-            new Date(firstRecord.payrollCycle.startDate).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            })
+            formatDate(firstRecord.payrollCycle.startDate, dateFormat)
           );
         }
       }

@@ -4,19 +4,15 @@ import { FaArrowLeft } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
+import { formatDate, formatTime, formatDateTime } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
+import { showToast } from "../../../Helper/ShowToast";
 import "../Reports.css";
-
-const formatTimeToAMPM = (timeStr) => {
-  if (!timeStr) return "";
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  const d = new Date();
-  d.setHours(hours, minutes);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-};
 
 const CancelledAppointmentsReport = () => {
   const navigate = useNavigate();
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
   const role = authRole?.name ?? "";
 
   const [appointments, setAppointments] = useState([]);
@@ -42,15 +38,15 @@ const CancelledAppointmentsReport = () => {
         therapistName: therapistNames.join(", ") || "N/A",
         serviceType: truncated || "N/A",
         sessionType: appt.session?.name || appt.serviceLocation || "N/A",
-        date: appt.date ? new Date(appt.date).toLocaleDateString("en-US", { day: "2-digit", month: "2-digit", year: "numeric" }) : "N/A",
-        time: `${formatTimeToAMPM(appt.startTime)} - ${formatTimeToAMPM(appt.endTime)}`,
+        date: appt.date ? formatDate(appt.date, dateFormat) : "N/A",
+        time: `${formatTime(appt.startTime, timeFormat)} - ${formatTime(appt.endTime, timeFormat)}`,
         hasActions: true,
         therapistNames,
         serviceTypes,
         cancellation: {
           cancelledBy: appt.canceledBy || "N/A",
-          dateOfCancellation: cancelTime ? cancelTime.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit", year: "numeric" }) : "N/A",
-          timeOfCancellation: cancelTime ? cancelTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "N/A",
+          dateOfCancellation: cancelTime ? formatDate(cancelTime, dateFormat) : "N/A",
+          timeOfCancellation: cancelTime ? formatDateTime(cancelTime, dateFormat, timeFormat).split(" ").slice(1).join(" ") : "N/A",
           reason: appt.reasonForCancel || "No reason provided",
         },
       };
@@ -70,6 +66,7 @@ const CancelledAppointmentsReport = () => {
         setAppointments(transformAppointments(response?.data?.data || []));
       } catch (err) {
         console.error("Failed to fetch cancelled appointments:", err);
+        showToast("Failed to load cancelled appointments", "error");
         setAppointments([]);
       } finally {
         setLoading(false);

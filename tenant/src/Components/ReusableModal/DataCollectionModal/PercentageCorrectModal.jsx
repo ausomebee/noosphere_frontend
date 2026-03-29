@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { showToast } from "../../../Helper/ShowToast";
+import { promptLevelOptions } from "../../../Data/selectOptions";
 
 // Validation schema
 const createValidationSchema = (trialCount) => {
@@ -122,18 +123,6 @@ const PercentageCorrect = ({
     showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
-  // Prompt level options
-  const promptLevelOptions = [
-    { value: "I", label: "I - Independent" },
-    { value: "VP", label: "VP - Verbal Prompt" },
-    { value: "GP", label: "GP - Gesture Prompt" },
-    { value: "MP", label: "MP - Model Prompt" },
-    { value: "PPP", label: "PPP - Partial Physical Prompt" },
-    { value: "FPP", label: "FPP - Full Physical Prompt" },
-    { value: "VIS", label: "VIS - Visual Prompt" },
-    { value: "POS", label: "POS - Positional Prompt" },
-  ];
-
   return (
     <ReusableModal
       isOpen={isOpen}
@@ -159,7 +148,7 @@ const PercentageCorrect = ({
             </thead>
             <tbody>
               {Array.from({ length: trialCount }, (_, index) => (
-                <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <tr key={`trial-${index}`} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="p-3 trial-number font-medium">{index + 1}</td>
                   <td className="p-3 performance-cell">
                     <div className="performance-options space-y-2">

@@ -10,7 +10,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import useAuth from "../../../hooks/useAuth";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import {
   setDraftField,
   resetDraft,

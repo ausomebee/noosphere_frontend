@@ -11,6 +11,8 @@ import {
 } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { showToast } from "../../../Helper/ShowToast";
+import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 
 // Validation schema for single service code
 const serviceCodeSchema = yup.object().shape({
@@ -156,12 +158,6 @@ const AddSingleServiceCodeModal = ({
     name: "modifiers",
   });
 
-  // Static modifier options
-  const modifierOptions = [
-    { value: "HO", label: "HO" },
-    { value: "HP", label: "HP" },
-    { value: "HN", label: "HN" },
-  ];
 
   // Dynamic service code options
   const serviceCodeOptions = useMemo(() => {
@@ -198,12 +194,6 @@ const AddSingleServiceCodeModal = ({
     }
   }, [serviceCodes]);
 
-  // Dynamic currency options
-  const currencyOptions = [
-    { value: "USD", label: "USD ($)" },
-    { value: "EUR", label: "EUR (€)" },
-    { value: "GBP", label: "GBP (£)" },
-  ];
 
   // Dynamic rounding rule options
   const roundingRuleOptions = useMemo(() => {
@@ -381,7 +371,7 @@ const AddSingleServiceCodeModal = ({
       }
       onClose();
     } catch (error) {
-      onClose();
+      showToast(error.message || "Failed to save service code", "error");
     }
   };
 

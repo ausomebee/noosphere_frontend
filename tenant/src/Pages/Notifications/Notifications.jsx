@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
+import { showToast } from "../../Helper/ShowToast";
 import {
   IoClose,
   IoCalendarOutline,
@@ -12,6 +13,8 @@ import {
   IoCheckmarkCircleOutline,
   IoAlertCircleOutline,
 } from "react-icons/io5";
+import { formatDateHeader, formatMsgTime } from "../../Helper/Formatters";
+import useFormatSettings from "../../hooks/useFormatSettings";
 import "./Notifications.css";
 
 const ICON_MAP = {
@@ -94,26 +97,18 @@ const resolveType = (notif) => {
 
 const resolveDate = (notif) => {
   if (!notif.createdAt) return "Other";
-  const d = new Date(notif.createdAt);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+  return formatDateHeader(notif.createdAt);
 };
 
-const resolveTime = (notif) => {
+const resolveTime = (notif, timeFormat) => {
   if (!notif.createdAt) return "";
-  return new Date(notif.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMsgTime(notif.createdAt, timeFormat);
 };
 
 const Notifications = () => {
   const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
+  const { timeFormat } = useFormatSettings();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,7 +122,7 @@ const Notifications = () => {
         const list = Array.isArray(raw) ? raw : [];
         setNotifications(list);
       })
-      .catch((err) => console.error("[Notifications] Failed to load:", err))
+      .catch(() => showToast("Failed to load notifications", "error"))
       .finally(() => setLoading(false));
   }, [userId, accessToken]);
 
@@ -148,7 +143,9 @@ const Notifications = () => {
     // Mark as read on server + via socket for real-time sync
     notificationApi
       .markNotificationRead({ id: notif.id, accessToken, refreshToken })
-      .catch(() => {});
+      .catch(() => {
+        // Non-critical — UI already updated optimistically
+      });
     emitNotificationRead(notif.id);
   };
 
@@ -208,7 +205,7 @@ const Notifications = () => {
                           {notif.content || notif.description || notif.body || ""}
                         </p>
                         <div className="notification-card-footer">
-                          <span className="notification-card-time">{resolveTime(notif)}</span>
+                          <span className="notification-card-time">{resolveTime(notif, timeFormat)}</span>
                           {!notif.isRead && (
                             <button
                               className="notification-card-link"

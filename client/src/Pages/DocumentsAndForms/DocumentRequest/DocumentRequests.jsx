@@ -17,6 +17,7 @@ import UploadDocumentModal from "../../../Components/Modal/ClientDocumentUploadM
 import SelectFromMyDocumentsModal from "../../../Components/Modal/SelectFromMyDocumentsModal";
 
 import api from "../../../api/documentsAndFormsApis";
+import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 
 const DocumentRequests = () => {
   const navigate = useNavigate();
@@ -107,13 +108,7 @@ const DocumentRequests = () => {
           id: item.id,
           formId: item.formId,
           name: item.form?.name || "Unnamed Form",
-          dateReceived: item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : "—",
+          dateReceived: item.createdAt ? formatDate(item.createdAt) : "—",
           status: item.status || "PENDING",
           statusColor: item.status === "PENDING" ? "warning" : "success",
         }));
@@ -230,14 +225,7 @@ const DocumentRequests = () => {
     {
       key: "dueDate",
       title: "Due Date",
-      render: (v) =>
-        v
-          ? new Date(v).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "—",
+      render: (v) => (v ? formatDate(v) : "—"),
     },
     {
       key: "status",
@@ -424,13 +412,7 @@ const DocumentRequests = () => {
                         <>
                           <span>•</span>
                           <span>
-                            {new Date(doc.uploadedAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )}
+                            {formatDateShort(doc.uploadedAt)}
                           </span>
                         </>
                       )}

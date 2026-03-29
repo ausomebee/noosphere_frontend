@@ -8,17 +8,20 @@ import {
   IoImageOutline,
   IoDocumentOutline,
 } from "react-icons/io5";
+import { fileTypeColors } from "../../../Data/selectOptions";
+import { formatDate } from "../../../Helper/Formatters";
 
 const getFileIcon = (fileType = "") => {
   const ext = fileType.toLowerCase();
-  if (ext === "pdf") return <IoDocumentTextOutline size={24} color="#e74c3c" />;
+  const color = fileTypeColors[ext] || fileTypeColors.default;
+  if (ext === "pdf") return <IoDocumentTextOutline size={24} color={color} />;
   if (["jpg", "jpeg", "png", "gif"].includes(ext))
-    return <IoImageOutline size={24} color="#3498db" />;
+    return <IoImageOutline size={24} color={color} />;
   if (["doc", "docx"].includes(ext))
-    return <IoDocumentOutline size={24} color="#2b579a" />;
+    return <IoDocumentOutline size={24} color={color} />;
   if (["xls", "xlsx"].includes(ext))
-    return <IoDocumentOutline size={24} color="#107c41" />;
-  return <IoDocumentOutline size={24} color="#6b7280" />;
+    return <IoDocumentOutline size={24} color={color} />;
+  return <IoDocumentOutline size={24} color={color} />;
 };
 
 const FolderFilesModal = ({
@@ -104,11 +107,7 @@ const FolderFilesModal = ({
                       color: "#6b7280",
                     }}
                   >
-                    {new Date(file.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {formatDate(file.createdAt)}
                     {" • "}
                     {file.size || "—"}
                   </p>

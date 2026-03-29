@@ -21,6 +21,7 @@ import api from "../../api/IssueApi";
 import api2 from "../../api/TenantApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDate } from "../../Helper/Formatters";
 
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
@@ -55,15 +56,6 @@ const IssueManagement = () => {
   const cache = useRef(new Map());
   const staffCache = useRef([]);
   const tenantCache = useRef([]);
-
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
-  }, []);
 
   const formatNumber = useCallback((num) => {
     if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";

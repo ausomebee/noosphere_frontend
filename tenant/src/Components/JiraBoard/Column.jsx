@@ -34,7 +34,7 @@ const Column = ({
 }) => {
   // Early return if column is invalid
   if (!column || !column.id) {
-    console.warn("Invalid column prop received:", column);
+    if (import.meta.env.DEV) console.warn("Invalid column prop received:", column);
     return null;
   }
 

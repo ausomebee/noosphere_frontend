@@ -34,6 +34,7 @@ import {
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDatePadded as formatDate } from "../../Helper/Formatters";
 import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
 
@@ -67,17 +68,6 @@ const ManageColumn = () => {
     }),
     [accessToken, refreshToken]
   );
-
-  // Date formatting function
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
 
   // Fetch pipeline items
   const fetchPipelineItemsData = useCallback(() => {
@@ -156,11 +146,11 @@ const ManageColumn = () => {
                 name: stageData.name || "",
                 description: stageData.description || "",
                 colorCode: stageData.colourCode || "#1E40AF",
-                requiredTasks: Array.isArray(stageData.tasks)
-                  ? stageData.tasks
+                requiredTasks: Array.isArray(stageData.requiredTasks)
+                  ? stageData.requiredTasks
                   : [],
-                requiredDocuments: Array.isArray(stageData.documents)
-                  ? stageData.documents
+                requiredDocuments: Array.isArray(stageData.requiredDocuments)
+                  ? stageData.requiredDocuments
                   : [],
               })
             );
@@ -590,7 +580,7 @@ const ManageColumn = () => {
                       loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
-                          "tasks",
+                          "requiredTasks",
                           draft.requiredTasks,
                           updateStageTasks
                         )
@@ -671,7 +661,7 @@ const ManageColumn = () => {
                       loading={isSaving}
                       onClick={() =>
                         handleSaveItems(
-                          "documents",
+                          "requiredDocuments",
                           draft.requiredDocuments,
                           updateStageDocuments
                         )

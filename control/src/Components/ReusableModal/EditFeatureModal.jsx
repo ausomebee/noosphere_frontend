@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput, CheckboxInput, TextareaInput } from "../Input/Inputs";
+import { featureStatusOptions as statusOptions } from "../../Data/selectOptions";
 
 const EditFeatureModal = ({
   isOpen,
@@ -21,11 +22,6 @@ const EditFeatureModal = ({
     active: currentActive ?? true,
   });
 
-
-  const statusOptions = [
-    { value: "true", label: "Active" },
-    { value: "false", label: "Disabled" },
-  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

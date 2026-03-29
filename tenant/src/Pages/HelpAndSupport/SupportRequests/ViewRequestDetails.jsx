@@ -7,7 +7,8 @@ import { showToast } from "../../../Helper/ShowToast";
 import { FiArrowLeft, FiFileText, FiExternalLink } from "react-icons/fi";
 import { LuPrinter } from "react-icons/lu";
 import { RiFileUploadLine } from "react-icons/ri";
-import { format } from "date-fns";
+import { formatDateTime, formatDate } from "../../../Helper/Formatters";
+import useFormatSettings from "../../../hooks/useFormatSettings";
 import "./ViewRequestDetails.css";
 import "./SupportRequests.css";
 
@@ -15,19 +16,11 @@ const ViewRequestDetails = () => {
   const navigate = useNavigate();
   const { requestId } = useParams();
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    try {
-      return format(new Date(dateStr), "MMM dd, yyyy | hh:mm:ss a");
-    } catch {
-      return "N/A";
-    }
-  };
 
   const fetchTicket = useCallback(async () => {
     if (!requestId) return;
@@ -132,11 +125,11 @@ const ViewRequestDetails = () => {
             </tr>
             <tr>
               <td className="field-label">Date Reported</td>
-              <td className="field-value">{formatDate(request.createdAt)}</td>
+              <td className="field-value">{formatDateTime(request.createdAt, dateFormat, timeFormat)}</td>
             </tr>
             <tr>
               <td className="field-label">Last Update</td>
-              <td className="field-value">{formatDate(request.updatedAt)}</td>
+              <td className="field-value">{formatDateTime(request.updatedAt, dateFormat, timeFormat)}</td>
             </tr>
             <tr>
               <td className="field-label">Attachments</td>
@@ -265,7 +258,7 @@ const ViewRequestDetails = () => {
                   on{" "}
                   <span className="track-date">
                     {item.createdAt
-                      ? format(new Date(item.createdAt), "MM/dd/yy")
+                      ? formatDate(item.createdAt, dateFormat)
                       : "N/A"}
                   </span>
                 </div>

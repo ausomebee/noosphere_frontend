@@ -20,6 +20,7 @@ function addSubscriber(callback) {
 const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
   const authFetch = axios.create({
     withCredentials: true,
+    timeout: 30000,
   });
 
   // Request Interceptor
@@ -69,7 +70,7 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               navigate("/auth/login"); // Navigate to login if refresh fails
             }
           } catch (refreshError) {
-            console.error("Token refresh failed", refreshError);
+            if (import.meta.env.DEV) console.error("Token refresh failed", refreshError);
             isRefreshing = false;
             navigate("/auth/login");
           }

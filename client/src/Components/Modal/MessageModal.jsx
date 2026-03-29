@@ -15,6 +15,7 @@ import {
   onMessagesRead,
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
+import { formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
 
 const getClinicianName = (c) => c?.fullName?.trim() || "Unknown";
 
@@ -25,27 +26,6 @@ const getInitials = (name) =>
     .join("")
     .toUpperCase()
     .slice(0, 2);
-
-const formatMsgTime = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const now = new Date();
-  const dayLabel =
-    d.toDateString() === now.toDateString()
-      ? ""
-      : d.toLocaleDateString([], { weekday: "short" }) + " ";
-  return dayLabel + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
-
-const formatDateHeader = (dateStr) => {
-  const d = new Date(dateStr);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
-};
 
 const MessageModal = ({ isOpen, onClose }) => {
   const { userId, clientId, tenantId, accessToken, refreshToken } = useAuth();
@@ -59,6 +39,7 @@ const MessageModal = ({ isOpen, onClose }) => {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const mountedRef = useRef(true);
 
   // ─── On open: load clinicians + message history ───────────────────
   const fetchData = useCallback(async () => {
@@ -70,12 +51,16 @@ const MessageModal = ({ isOpen, onClose }) => {
         messageApi.GetUserMessages({ userId, userType: "CLIENT", accessToken, refreshToken }),
       ]);
 
+      if (!mountedRef.current) return;
+
       if (clinicianRes.status === "fulfilled") {
         const raw = clinicianRes.value?.data?.data ?? [];
         setClinicians(Array.isArray(raw) ? raw : []);
       } else {
         console.error("[MessageModal] Failed to load clinicians:", clinicianRes.reason);
       }
+
+      if (!mountedRef.current) return;
 
       if (msgRes.status === "fulfilled") {
         const rawMsgs = msgRes.value?.data?.data ?? msgRes.value?.data ?? [];
@@ -91,12 +76,14 @@ const MessageModal = ({ isOpen, onClose }) => {
         console.error("[MessageModal] Failed to load messages:", msgRes.reason);
       }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [userId, clientId, tenantId, accessToken, refreshToken]);
 
   useEffect(() => {
+    mountedRef.current = true;
     if (isOpen) fetchData();
+    return () => { mountedRef.current = false; };
   }, [isOpen, fetchData]);
 
   // ─── Scroll to bottom on new messages ────────────────────────────

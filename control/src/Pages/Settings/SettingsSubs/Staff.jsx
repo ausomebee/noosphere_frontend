@@ -13,6 +13,7 @@ import staffApi from "../../../api/staffApis";
 import departmentApi from "../../../api/departmentApis";
 import roleApi from "../../../api/roleApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
+import { formatDate } from "../../../Helper/Formatters";
 
 const schema = yup.object().shape({
   firstName: yup.string().required("First name is required").trim(),
@@ -147,7 +148,7 @@ const Staff = () => {
         email: s.email,
         role: roleMap[s.roleId] || s.roles?.name || "—",
         dateAdded: s.createdAt
-          ? new Date(s.createdAt).toLocaleDateString("en-US")
+          ? formatDate(s.createdAt)
           : "—",
         active: s.active,
         hasActions: true,

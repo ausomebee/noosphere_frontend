@@ -2,7 +2,7 @@
 import React from "react";
 import ReusableModal from "../../Components/Modal/ReusableModal"; // Adjust path if needed
 
-const SuccessModal = ({ isOpen, onClose }) => {
+const SuccessModal = ({ isOpen, onClose, title = "Awesome", message = "Your request has been processed!" }) => {
   return (
     <ReusableModal isOpen={isOpen} onClose={onClose} size="lg">
       {/* Full overlay & centered content */}
@@ -151,7 +151,7 @@ const SuccessModal = ({ isOpen, onClose }) => {
             margin: "0 0 16px 0",
           }}
         >
-          Awesome
+          {title}
         </h2>
 
         {/* Subtitle */}
@@ -163,7 +163,7 @@ const SuccessModal = ({ isOpen, onClose }) => {
             lineHeight: "1.5",
           }}
         >
-          Your reschedule request has been sent!
+          {message}
         </p>
       </div>
     </ReusableModal>

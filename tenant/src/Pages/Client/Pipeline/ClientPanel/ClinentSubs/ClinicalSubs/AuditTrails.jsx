@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import useAuth from "../../../../../../hooks/useAuth";
+import { formatDate } from "../../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 import "./AuditTrails.css";
 import "../../../../../../Components/ManageColumn/ManageColumn.css";
 import api from "../../../../../../api/TemplateAndReportApi";
@@ -13,6 +15,7 @@ const AuditTrails = () => {
   const { reportId } = location.state || {};
   
   const { accessToken, refreshToken } = useAuth();
+  const { dateFormat } = useFormatSettings();
 
 
   const [auditTrails, setAuditTrails] = useState([]);
@@ -47,14 +50,9 @@ const AuditTrails = () => {
     fetchAuditTrails();
   }, [reportId, accessToken, refreshToken]);
 
-  const formatDateTime = (dateString) => {
+  const formatAuditDate = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "2-digit",
-    });
+    return formatDate(dateString, dateFormat);
   };
 
   const renderAuditEntry = (entry) => {
@@ -260,7 +258,7 @@ const AuditTrails = () => {
                       <div className="approval-item p-6">
                         {renderAuditEntry({
                           ...entry,
-                          date: formatDateTime(entry.createdAt || entry.date || entry.timestamp),
+                          date: formatAuditDate(entry.createdAt || entry.date || entry.timestamp),
                           by: entry?.user?.fullName || entry?.performedBy || entry?.userName || entry.by || "Unknown",
                           action: entry.action || entry.type || entry.activity || "Updated",
                         })}

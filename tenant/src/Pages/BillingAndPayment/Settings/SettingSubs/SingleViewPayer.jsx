@@ -9,6 +9,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import AddSingleServiceCodeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddSingleServiceCode";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
+import { formatCurrency } from "../../../../Helper/Formatters";
 import "../../BillingPayment.css";
 
 
@@ -152,7 +153,7 @@ const SingleViewPayer = () => {
           id: psc.id,
           name: serviceCode.description || "Unknown",
           code: serviceCode.code || "Unknown",
-          rates: formatRate(psc.ratePerUnit, psc.unitCurrency),
+          rates: formatCurrency(psc.ratePerUnit, psc.unitCurrency),
           modifiers: Array.isArray(psc.modifiers) ? psc.modifiers.map((m) => m.modifier).join(", ") : "",
           isActive: psc.isActive,
           hasActions: true,
@@ -198,11 +199,6 @@ const SingleViewPayer = () => {
       fetchPayerData();
     }
   }, [id, tenantId, insuranceTypeTableData, fetchPayerData]);
-
-  const formatRate = (amount, currency) => {
-    const symbols = { USD: "$", EUR: "€", GBP: "£" };
-    return `${symbols[currency] || currency}${amount || 0}`;
-  };
 
   const columns = [
     { header: "Name", key: "name", type: "text" },
@@ -323,7 +319,7 @@ const SingleViewPayer = () => {
                   ...item,
                   name: data.description || item.name,
                   code: data.code || item.code,
-                  rates: formatRate(data.ratePerUnit, data.unitCurrency),
+                  rates: formatCurrency(data.ratePerUnit, data.unitCurrency),
                   modifiers: Array.isArray(data.modifiers) ? data.modifiers.map((m) => m.modifier).join(", ") : "",
                   unitCurrency: data.unitCurrency,
                   ratePerUnit: data.ratePerUnit,
@@ -354,7 +350,7 @@ const SingleViewPayer = () => {
           id: `temp-${Date.now()}`,
           name: serviceCode.description || data.description || "Unknown",
           code: serviceCode.code || data.code || "Unknown",
-          rates: formatRate(data.ratePerUnit, data.unitCurrency),
+          rates: formatCurrency(data.ratePerUnit, data.unitCurrency),
           modifiers: Array.isArray(data.modifiers) ? data.modifiers.map((m) => m.modifier).join(", ") : "",
           isActive: true,
           hasActions: true,

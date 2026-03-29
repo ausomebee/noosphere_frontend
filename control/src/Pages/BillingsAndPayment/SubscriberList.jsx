@@ -4,6 +4,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SkeletonTable } from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
+import { formatDate as formatDateStr } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/SubcriptionApis";
 import GeneratePaymentLinkModal from "../../Components/ReusableModal/GeneratePaymentLinkModal";
@@ -37,15 +38,6 @@ const SubscriberList = () => {
   const [loading, setLoading] = useState(true);
   const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState(null);
-
-  const formatDateStr = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
 
   useEffect(() => {
     if (!planId || !accessToken) return;

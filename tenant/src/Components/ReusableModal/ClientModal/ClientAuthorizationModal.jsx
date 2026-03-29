@@ -304,7 +304,7 @@ const AddAuthorizationModal = ({
 
           <div className="space-y-6">
             {formData.service.map((serviceItem, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
+              <div key={serviceItem.serviceCodeId || `service-${index}`} className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex gap-4 items-end">
                   <div className="flex-2">
                     <SelectInput
