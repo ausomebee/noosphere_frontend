@@ -12,7 +12,7 @@ export default defineConfig({
     css: true,
   },
   build: {
-    // Strip console logs and debugger in production
+    chunkSizeWarningLimit: 500,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -20,17 +20,19 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-    // Chunk splitting for better caching
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          redux: ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
-          ui: ['react-select', 'react-icons', 'react-toastify'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+          'vendor-charts': ['apexcharts', 'react-apexcharts'],
+          'vendor-pdf': ['jspdf', 'html2canvas'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'yup'],
+          'vendor-ui': ['react-select', 'react-toastify', 'react-icons'],
+          'vendor-payments': ['@stripe/stripe-js', '@stripe/react-stripe-js', '@paypal/react-paypal-js'],
         },
       },
     },
-    // Enable source maps for error tracking (not exposed to users)
     sourcemap: false,
   },
 })
