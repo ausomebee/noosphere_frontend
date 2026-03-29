@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import {
   SwitchInput,
   TextInput,

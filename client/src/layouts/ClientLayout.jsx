@@ -12,6 +12,8 @@ import { logout } from "../ReduxStore/features/authentication";
 import useAuth from "../hooks/useAuth";
 import useSocket from "../hooks/useSocket";
 import { disconnectSocket } from "../api/socketService";
+import { persistor } from "../ReduxStore/store";
+import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/Modal/MessageModal";
 import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
@@ -51,6 +53,7 @@ const DashboardLayout = ({ children }) => {
   useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
   });
+  useIdleTimeout();
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
   const iconMap = {
@@ -69,6 +72,7 @@ const DashboardLayout = ({ children }) => {
   const handleLogout = () => {
     disconnectSocket();
     dispatch(logout());
+    persistor.purge();
     navigate("/");
   };
 

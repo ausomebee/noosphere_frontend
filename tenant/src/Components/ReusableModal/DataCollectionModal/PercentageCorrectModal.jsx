@@ -148,7 +148,7 @@ const PercentageCorrect = ({
             </thead>
             <tbody>
               {Array.from({ length: trialCount }, (_, index) => (
-                <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <tr key={`trial-${index}`} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="p-3 trial-number font-medium">{index + 1}</td>
                   <td className="p-3 performance-cell">
                     <div className="performance-options space-y-2">

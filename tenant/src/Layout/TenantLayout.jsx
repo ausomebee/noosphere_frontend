@@ -26,6 +26,8 @@ import useAuth from "../hooks/useAuth";
 import usePermissions from "../hooks/usePermissions";
 import { logout } from "../ReduxStore/features/authentication";
 import { disconnectSocket } from "../api/socketService";
+import { persistor } from "../ReduxStore/store";
+import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/MessageModal/MessageModal";
 import NotificationAlert from "../Components/NotificationAlert/NotificationAlert";
 import useSocket from "../hooks/useSocket";
@@ -241,6 +243,8 @@ const DashboardLayout = ({ children }) => {
   const [alerts, setAlerts] = useState([]);
   const profileDropdownRef = useRef(null);
 
+  useIdleTimeout();
+
   // Wire socket: register + listen for notifications and new messages
   const { isConnected } = useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
@@ -410,6 +414,7 @@ const DashboardLayout = ({ children }) => {
                         setShowProfileDropdown(false);
                         disconnectSocket();
                         dispatch(logout());
+                        persistor.purge();
                         navigate("/");
                       }}
                     >

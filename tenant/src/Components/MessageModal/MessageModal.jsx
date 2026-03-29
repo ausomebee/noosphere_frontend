@@ -37,6 +37,7 @@ const MessageModal = ({ isOpen, onClose }) => {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const mountedRef = useRef(true);
 
   // ─── On open: load clients + message history ─────────────────────
   const fetchData = useCallback(async () => {
@@ -47,6 +48,8 @@ const MessageModal = ({ isOpen, onClose }) => {
         orgApi.GetStaffClients({ staffId: userId, tenantId, accessToken, refreshToken }),
         chatApi.GetUserMessages({ userId, userType: "TENANT_STAFF", accessToken, refreshToken }),
       ]);
+
+      if (!mountedRef.current) return;
 
       if (clientRes.status === "fulfilled") {
         const raw = clientRes.value?.data?.data ?? clientRes.value?.data ?? clientRes.value ?? [];
@@ -71,12 +74,16 @@ const MessageModal = ({ isOpen, onClose }) => {
         showToast("Failed to load messages", "error");
       }
     } finally {
-      setLoadingClients(false);
+      if (mountedRef.current) {
+        setLoadingClients(false);
+      }
     }
   }, [userId, tenantId, accessToken, refreshToken]);
 
   useEffect(() => {
+    mountedRef.current = true;
     if (isOpen) fetchData();
+    return () => { mountedRef.current = false; };
   }, [isOpen, fetchData]);
 
   // ─── Scroll to bottom on new messages ───────────────────────────

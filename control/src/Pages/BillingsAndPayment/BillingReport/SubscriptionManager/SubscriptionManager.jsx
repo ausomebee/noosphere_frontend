@@ -24,7 +24,7 @@ import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/Gener
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import { showToast } from "../../../../Helper/ShowToast";
 import "../../BillingAndPayments.css";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 
 const SubscriptionManager = () => {
   const navigate = useNavigate();
