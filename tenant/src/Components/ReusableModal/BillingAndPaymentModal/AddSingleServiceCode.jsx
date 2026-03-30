@@ -309,7 +309,9 @@ const AddSingleServiceCodeModal = ({
             removeModifier(modifierFields.length - 1);
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        // Non-critical — form validation handles invalid selections
+      }
     },
     [
       mode,

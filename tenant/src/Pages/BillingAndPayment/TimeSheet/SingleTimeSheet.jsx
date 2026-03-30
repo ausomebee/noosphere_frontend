@@ -68,6 +68,7 @@ const DocumentModal = ({ isOpen, onClose, document }) => {
 
 // Consolidated Program Data Modal Component - Shows all sessionDatas in one modal
 const ProgramDataModal = ({ isOpen, onClose, sessionDatas }) => {
+  const { dateFormat, timeFormat } = useFormatSettings();
   if (!sessionDatas || sessionDatas.length === 0) return null;
 
   // Determine data collection type based on data structure
@@ -77,6 +78,8 @@ const ProgramDataModal = ({ isOpen, onClose, sessionDatas }) => {
     if (data.data.steps) return "Task Analysis";
     if (data.data.trials && data.data.trials[0]?.latency !== undefined)
       return "Latency";
+    if (data.data.trials && data.data.percentageCorrect !== undefined)
+      return "Percentage Correct";
     if (data.data.trials && data.data.trials[0]?.performance !== undefined)
       return "Trials/Opportunities";
     if (
@@ -305,6 +308,89 @@ const ProgramDataModal = ({ isOpen, onClose, sessionDatas }) => {
           </div>
         );
 
+      case "Duration":
+        return (
+          <div style={{ overflowX: "auto", marginTop: "16px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f3f4f6" }}>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Duration</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{formatDuration(data.duration)}</td>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{data.notes || "—"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "Rate":
+        return (
+          <div style={{ overflowX: "auto", marginTop: "16px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f3f4f6" }}>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Occurrences</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Duration</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Rate</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{data.numberOfOccurrence || 0}</td>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{formatDuration(data.duration)}</td>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>
+                    {data.duration > 0 ? ((data.numberOfOccurrence || 0) / (data.duration / 60)).toFixed(2) + "/min" : "—"}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{data.notes || "—"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "Percentage Correct":
+        return (
+          <div style={{ overflowX: "auto", marginTop: "16px" }}>
+            <div style={{ marginBottom: "8px", fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+              Overall: {data.percentageCorrect ?? 0}% Correct
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f3f4f6" }}>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Trial</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Performance</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Prompt Level</th>
+                  <th style={{ padding: "12px", border: "1px solid #e5e7eb", textAlign: "left" }}>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.trials || []).map((trial, i) => (
+                  <tr key={trial.id || i}>
+                    <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{trial.id || i + 1}</td>
+                    <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: "12px", fontSize: "12px",
+                        background: trial.performance === "correct" ? "#dcfce7" : "#fee2e2",
+                        color: trial.performance === "correct" ? "#16a34a" : "#dc2626",
+                      }}>
+                        {trial.performance || "—"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{trial.promptLevel || "—"}</td>
+                    <td style={{ padding: "12px", border: "1px solid #e5e7eb" }}>{trial.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
       case "Trials/Opportunities":
         return (
           <div style={{ overflowX: "auto", marginTop: "16px" }}>
@@ -431,7 +517,7 @@ const ProgramDataModal = ({ isOpen, onClose, sessionDatas }) => {
                     marginBottom: "4px",
                   }}
                 >
-                  Target {index + 1}: {sessionData.targetId || "N/A"}
+                  Target {index + 1}
                 </h4>
                 <div
                   style={{
@@ -532,10 +618,11 @@ const SingleTimeSheet = () => {
         accessToken,
         refreshToken,
       });
-      setTimesheetData(response);
+      const timesheetResult = response?.data ?? response;
+      setTimesheetData(timesheetResult);
 
       // Calculate history count
-      const totalHistory = response?.timesheetHistories?.length || 0;
+      const totalHistory = timesheetResult?.timesheetHistories?.length || 0;
 
       setCounts({
         historyAndApprovalsCount: totalHistory,
@@ -920,7 +1007,7 @@ const SingleTimeSheet = () => {
           doc.setFont("helvetica", "bold");
           doc.setTextColor(44, 62, 80);
           doc.text(
-            `Target ${index + 1}: ${sessionData.targetId || "N/A"}`,
+            `Target ${index + 1}`,
             margin,
             yPos
           );
@@ -1494,7 +1581,7 @@ const SingleTimeSheet = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !timesheetData) {
     return (
       <>
         <div
@@ -1536,12 +1623,17 @@ const SingleTimeSheet = () => {
   ];
 
   const billingData =
-    timesheetData.authorizationsUsed?.map((auth, index) => ({
-      id: auth.id || index,
-      authorization: auth.authorizationNumber || "N/A",
-      utilization: "0%",
-      dateCreated: formatDate(auth.startDate, dateFormat),
-    })) || [];
+    timesheetData.authorizationsUsed?.map((auth, index) => {
+      const totalUnits = auth.clientAuthorizationServices?.reduce((sum, s) => sum + (s.units || 0), 0) || 0;
+      const usedUnits = auth.clientAuthorizationServices?.reduce((sum, s) => sum + (s.usedUnit || 0), 0) || 0;
+      const utilPct = totalUnits > 0 ? Math.round((usedUnits / totalUnits) * 100) : 0;
+      return {
+        id: auth.id || index,
+        authorization: auth.title || auth.authorizationNumber || "N/A",
+        utilization: utilPct,
+        dateCreated: formatDate(auth.startDate, dateFormat),
+      };
+    }) || [];
 
   // Prepare service data with serviceCodeId and per as requested
   const serviceData =
@@ -1549,11 +1641,10 @@ const SingleTimeSheet = () => {
       (service, index) => ({
         id: service.id || index,
         serviceCode: service.serviceCode?.code || "N/A",
+        serviceCodeId: service.serviceCodeId || "",
         modifiers: service.modifiers || "N/A",
         units: service.units || 0,
-        unitRate: "N/A",
-        // ADDED: serviceCodeId and per as requested
-        serviceCodeId: service.serviceCodeId || "N/A",
+        usedUnit: service.usedUnit || 0,
         per: service.per || "N/A",
       })
     ) || [];

@@ -38,7 +38,7 @@ const SingleClaim = () => {
         accessToken,
         refreshToken,
       });
-      setClaimData(response);
+      setClaimData(response?.data ?? response);
     } catch (error) {
       console.error("Error fetching claim:", error);
       showToast("Failed to load claim details", "error");
@@ -218,7 +218,7 @@ const SingleClaim = () => {
   };
 
 
-  if (loading) {
+  if (loading || !claimData) {
     return (
       <>
         <div className="flex justify-center items-center h-64">
@@ -263,8 +263,10 @@ const SingleClaim = () => {
       initialServiceData[authIndex] = auth.clientAuthorizationServices.map(
         (service) => ({
           serviceCode: service.serviceCode?.code || "N/A",
+          serviceCodeId: service.serviceCodeId || "",
           modifiers: service.modifiers || "N/A",
-          units: service.units || "0",
+          units: service.units || 0,
+          usedUnit: service.usedUnit || 0,
           per: service.per || "N/A",
         })
       );
@@ -278,14 +280,18 @@ const SingleClaim = () => {
 
   const displayData = {
     clientName: clientName,
-    clientInsID: claimData.client?.insuranceId || "N/A",
+    clientInsID: claimData.client?.insuranceId || claimData.appointment?.client?.insuranceId || "N/A",
     clinicians: clinicianNames || "N/A",
     clinicianNPI: clinicianNpis || "N/A",
     date: formatDate(claimData.createdAt, dateFormat),
-    timesheetId: claimData.timesheetId || claimData.appointment?.id || "N/A",
+    timesheetId: claimData.id || claimData.appointment?.id || "N/A",
+    sessionType: claimData.appointment?.session?.name || "N/A",
     serviceLocation: claimData.appointment?.serviceLocation || "N/A",
-    location: claimData.practiceLocation || "N/A",
+    location: claimData.practiceLocation || claimData.appointment?.serviceLocation || "N/A",
     practiceNPI: claimData.practiceNPI || "N/A",
+    approver: claimData.approver?.fullName || "N/A",
+    supervisorStatus: claimData.supervisorApprovalStatus || "N/A",
+    clientStatus: claimData.clientApprovalStatus || "N/A",
   };
 
   return (

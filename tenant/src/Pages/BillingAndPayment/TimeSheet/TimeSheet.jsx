@@ -35,7 +35,8 @@ const TimeSheet = () => {
         });
 
         // Sort by date descending (newest first)
-        const sortedData = data.data.sort(
+        const sessions = Array.isArray(data) ? data : data?.data ?? [];
+        const sortedData = sessions.sort(
           (a, b) => new Date(b.date) - new Date(a.date),
         );
 
