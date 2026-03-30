@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setDraftField,
@@ -18,61 +17,7 @@ import {
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
-
-/* ---------- Validation Schema ---------- */
-const schema = yup.object().shape({
-  teachingProcedure: yup.string().required("Teaching Procedure is required"),
-  teachingOthers: yup.string().when("teachingProcedure", {
-    is: "Other (specify)",
-    then: (s) => s.required("Others is required when Other is selected"),
-  }),
-  promptingStrategy: yup.array().of(yup.string()).optional(),
-  promptOthers: yup.string().when("promptingStrategy", {
-    is: (val) => val && val.includes("Other (specify)"),
-    then: (s) => s.required("Others is required when Other is selected"),
-  }),
-  dataCollectionType: yup.string().required("Data Collection Type is required"),
-  percentageCorrectTrialSession: yup
-    .number()
-    .typeError("Must be a valid number")
-    .nullable()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .when("dataCollectionType", {
-      is: "Percentage Correct",
-      then: (s) => s.required("Number of trials is required"),
-    }),
-  trialOrOpportunitiesSession: yup
-    .number()
-    .typeError("Must be a valid number")
-    .nullable()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .when("dataCollectionType", {
-      is: "Trials/Opportunities",
-      then: (s) => s.required("Number of trials is required"),
-    }),
-  taskSteps: yup.array().when("dataCollectionType", {
-    is: "Task Analysis",
-    then: (s) => s.of(yup.string().required("Task step is required")),
-  }),
-  baselineDataRequired: yup.boolean().optional(),
-  masteryCriteria: yup.object().nullable(),
-  statusAndAdmin: yup.string().required("Initial Status is required"),
-  note: yup.string().optional(),
-  attachment: yup.mixed(),
-});
-
-/* ---------- Mastery Option → Slot Mapping ---------- */
-const MASTERY_OPTION_SLOTS = {
-  "Percentage Accuracy": { percentage: "optionOne", percentageOf: "optionTwo", average: "optionThree" },
-  "Trials Correct": { consecutive: "optionOne", percentageOf: "optionTwo" },
-  "Independent Responses": { consecutive: "optionOne", percentageOf: "optionTwo" },
-  "Frequency Count": { greaterThan: "optionOne" },
-  "Rate": { greaterThan: "optionOne" },
-  "Duration": { duration: "optionOne" },
-  "Latency": { latency: "optionOne" },
-  "Percentage of Steps Independent": { percentageSteps: "optionOne", allSteps: "optionTwo" },
-  "Full Task Completion": { completion: "optionOne" },
-};
+import { addTargetSchema as schema, MASTERY_OPTION_SLOTS } from "./addTargetSchema";
 
 /* ---------- FileUploadArea Component ---------- */
 const FileUploadArea = ({
