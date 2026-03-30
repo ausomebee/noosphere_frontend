@@ -202,6 +202,7 @@ const Calendar = () => {
       }
       setStaff(stf);
 
+      
       // All roles fetch all appointments; filter visibility is controlled by permissions
       let allAppts = [];
       try {
