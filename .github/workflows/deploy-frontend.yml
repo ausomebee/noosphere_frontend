@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '20'
 
-      # Create and Update ENV variables    
+      # Create and update  ENV variables    
       - name: Create .env files
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > ./client/.env
