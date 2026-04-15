@@ -22,12 +22,17 @@ jobs:
 
       # Create and update  ENV variables    
       - name: Create .env files
-        run: |
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/client/.env
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/control/.env
-          echo "VITE_STRIPE_PK=${{ secrets.VITE_STRIPE_PK }}" >> /var/www/control/.env
-          echo "VITE_PAYPAL_CLIENT_ID=${{ secrets.VITE_PAYPAL_CLIENT_ID }}" >> /var/www/control/.env
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/tenant/.env
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST_FRONTEND }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          run: |
+            echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/client/.env
+            echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/control/.env
+            echo "VITE_STRIPE_PK=${{ secrets.VITE_STRIPE_PK }}" >> /var/www/control/.env
+            echo "VITE_PAYPAL_CLIENT_ID=${{ secrets.VITE_PAYPAL_CLIENT_ID }}" >> /var/www/control/.env
+            echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > /var/www/tenant/.env
 
       # Build client
       - name: Install & build client
