@@ -48,6 +48,7 @@ const Board = ({
                   {hoverIndex === 0 && (
                     <button
                       className="add-column-button"
+                      aria-label="Add column"
                       onClick={() => onAddColumn(0)}
                     >
                       <FaCirclePlus />
@@ -83,6 +84,7 @@ const Board = ({
                 {hoverIndex === index + 1 && (
                   <button
                     className="add-column-button"
+                    aria-label="Add column"
                     onClick={() => onAddColumn(index + 1)}
                   >
                     <FaCirclePlus />

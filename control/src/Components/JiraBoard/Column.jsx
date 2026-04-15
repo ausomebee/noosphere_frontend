@@ -154,7 +154,7 @@ const Column = React.memo(({
           </span>
         </h3>
         <Menu as="div" className="dropdown-container">
-          <Menu.Button className="dropdown-icon">
+          <Menu.Button className="dropdown-icon" aria-label="Column menu">
             <FaEllipsisV />
           </Menu.Button>
           <Menu.Items className="menu-items">
@@ -165,7 +165,7 @@ const Column = React.memo(({
                     className={`menu-item ${active ? 'menu-item-active' : ''}`}
                     onClick={handleAddProspectModalOpen}
                   >
-                    <FiUserPlus className="menu-item-icon" /> Add new candidate
+                    <FiUserPlus className="menu-item-icon" aria-hidden="true" /> Add new candidate
                   </button>
                 )}
               </Menu.Item>
@@ -196,7 +196,7 @@ const Column = React.memo(({
       {validTaskIds.length === 0 ? (
         <div className="empty-column">
           <button className="add-candidate" onClick={handleAddProspectModalOpen}>
-            <FiPlusCircle /> Add a candidate
+            <FiPlusCircle aria-hidden="true" /> Add a candidate
           </button>
         </div>
       ) : (

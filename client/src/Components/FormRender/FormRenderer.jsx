@@ -784,6 +784,7 @@ const FormRenderer = () => {
                           onClick={() => handleFileRemove(el.id, index)}
                           className="remove-btn"
                           disabled={item.progress > 0 && item.progress < 100}
+                          aria-label="Remove file"
                         >
                           <FiTrash2 />
                         </button>

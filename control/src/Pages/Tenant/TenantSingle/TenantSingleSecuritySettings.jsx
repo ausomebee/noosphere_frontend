@@ -141,8 +141,24 @@ const TenantSingleSecuritySettings = () => {
   // --- Copy URL ---
   const handleCopyUrl = () => {
     if (portalUrl !== "—") {
-      navigator.clipboard.writeText(`https://${portalUrl}`);
-      showToast("URL copied to clipboard", "success");
+      const url = `https://${portalUrl}`;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(url);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = url;
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+        showToast("URL copied to clipboard", "success");
+      } catch {
+        showToast("Failed to copy URL", "error");
+      }
     }
   };
 

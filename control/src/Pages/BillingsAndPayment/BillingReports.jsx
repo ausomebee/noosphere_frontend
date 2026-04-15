@@ -382,7 +382,7 @@ const BillingReports = () => {
         <div className="billing-board-title">
           {selectedReport ? (
             <div className="report-header-centered">
-              <div onClick={handleBack} className="back-link report-back-btn">
+              <div onClick={handleBack} className="back-link report-back-btn" role="button" tabIndex={0} aria-label="Go back">
                 <FaArrowLeft /> Back
               </div>
               <div className="report-title-container">

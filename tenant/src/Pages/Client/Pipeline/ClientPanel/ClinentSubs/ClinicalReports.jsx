@@ -10,6 +10,7 @@ import usePermissions from "../../../../../hooks/usePermissions";
 import { showToast } from "../../../../../Helper/ShowToast";
 import { formatDate, formatDateTime } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
+import useDocumentViewer from "../../../../../hooks/useDocumentViewer";
 
 // Delete Confirmation Modal
 const DeleteReportConfirmModal = ({
@@ -31,6 +32,9 @@ const DeleteReportConfirmModal = ({
         justifyContent: "center",
         zIndex: 1050,
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
     >
       <div
         style={{
@@ -43,6 +47,7 @@ const DeleteReportConfirmModal = ({
         }}
       >
         <h3
+          id="delete-modal-title"
           style={{
             fontSize: "1.25rem",
             fontWeight: 600,
@@ -115,6 +120,7 @@ const DeleteReportConfirmModal = ({
 
 // Signed PDFs Modal - lists all signed PDF versions
 const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
+  const { openDocument } = useDocumentViewer();
   if (!isOpen) return null;
 
   const sortedVersions = [...(versions || [])].sort(
@@ -132,6 +138,9 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
         justifyContent: "center",
         zIndex: 1050,
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="signed-pdf-title"
     >
       <div
         style={{
@@ -155,6 +164,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
           }}
         >
           <h3
+            id="signed-pdf-title"
             style={{
               fontSize: "1.25rem",
               fontWeight: 600,
@@ -166,6 +176,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
           </h3>
           <button
             onClick={onClose}
+            aria-label="Close signed documents dialog"
             style={{
               background: "transparent",
               border: "none",
@@ -225,16 +236,16 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
                     {formatDateTime(version.createdAt, dateFormat, timeFormat)}
                   </p>
                 </div>
-                <a
-                  href={version.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => openDocument(version.url, `${reportTitle} - Version ${version.versionNumber}`)}
                   style={{
                     padding: "6px 14px",
                     backgroundColor: "#2563eb",
                     color: "#ffffff",
                     borderRadius: "6px",
-                    textDecoration: "none",
+                    border: "none",
+                    cursor: "pointer",
                     fontSize: "0.85rem",
                     fontWeight: 500,
                   }}
@@ -246,7 +257,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
                   }
                 >
                   View PDF
-                </a>
+                </button>
               </div>
             ))
           ) : (
@@ -691,11 +702,13 @@ const ClinicalReportsTab = ({ clientData }) => {
         />
       </div>
 
-      <div className="documents-tabs w-full mt-6">
+      <div className="documents-tabs w-full mt-6" role="tablist">
         {Object.keys(tabConfig).map((tab) => (
           <button
             key={tab}
-            className={`doc-tab flex-1 ${activeTab === tab ? "doc-tab-active" : ""}`}
+            role="tab"
+            aria-selected={activeTab === tab}
+            className={`doc-tab flex-1 cursor-pointer ${activeTab === tab ? "doc-tab-active" : ""}`}
             onClick={() => setActiveTab(tab)}
           >
             {tabConfig[tab].label}

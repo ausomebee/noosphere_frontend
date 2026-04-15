@@ -255,8 +255,10 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
             <button
               className="feature-action-icon"
               onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
+              aria-label="Feature actions"
+              aria-expanded={isRowDropdownOpen}
             >
-              <FiMoreVertical />
+              <FiMoreVertical aria-hidden="true" />
             </button>
             {isRowDropdownOpen && (
               <div className="dropdown-menu dropdown-menu-row">

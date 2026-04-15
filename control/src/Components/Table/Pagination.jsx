@@ -31,6 +31,8 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
         >
           <polyline points="15 18 9 12 15 6" />
         </svg>
@@ -53,6 +55,7 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             className={`pagination-page ${page === currentPage ? 'active' : ''}`}
+            aria-current={page === currentPage ? "page" : undefined}
             onClick={() => onPageChange(page)}
           >
             {page}
@@ -87,6 +90,8 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
         >
           <polyline points="9 18 15 12 9 6" />
         </svg>

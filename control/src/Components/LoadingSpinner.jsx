@@ -3,14 +3,16 @@ import { FaSpinner } from 'react-icons/fa';
 import './LoadingSpinner.css';
 
 const LoadingSpinner = React.memo(() => (
-  <div className="loading-spinner-container">
-    <FaSpinner className="loading-spinner" />
+  <div className="loading-spinner-container" role="status" aria-live="polite">
+    <FaSpinner className="loading-spinner" aria-hidden="true" />
+    <span className="sr-only">Loading...</span>
   </div>
 ));
 
 export const SectionSpinner = () => (
-  <div className="section-spinner-container">
-    <FaSpinner className="loading-spinner" />
+  <div className="section-spinner-container" role="status" aria-live="polite">
+    <FaSpinner className="loading-spinner" aria-hidden="true" />
+    <span className="sr-only">Loading...</span>
   </div>
 );
 

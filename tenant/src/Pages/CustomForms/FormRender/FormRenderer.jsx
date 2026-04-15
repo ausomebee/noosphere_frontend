@@ -8,6 +8,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { formatDate, formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import "./FormRenderer.css";
 
 const FormRenderer = () => {
@@ -15,6 +16,7 @@ const FormRenderer = () => {
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
   const { dateFormat, timeFormat } = useFormatSettings();
+  const { openDocument } = useDocumentViewer();
 
   const [formName, setFormName] = useState("");
   const [response, setResponse] = useState(null);
@@ -648,17 +650,17 @@ const FormRenderer = () => {
     <div className="fr-page">
       {/* Top bar */}
       <div className="fr-topbar">
-        <button className="fr-back" onClick={() => navigate(-1)}>
-          <FiChevronLeft size={18} />
+        <button className="fr-back cursor-pointer" onClick={() => navigate(-1)}>
+          <FiChevronLeft size={18} aria-hidden="true" />
           <span>Back</span>
         </button>
         {response && (
           <button
-            className="fr-download-btn"
+            className="fr-download-btn cursor-pointer"
             onClick={handleDownloadPDF}
             disabled={downloading}
           >
-            <FiDownload size={16} />
+            <FiDownload size={16} aria-hidden="true" />
             <span>{downloading ? "Downloading..." : "Download PDF"}</span>
           </button>
         )}
@@ -737,11 +739,11 @@ const FormRenderer = () => {
                                 <span className="fr-file-label">{getFileName(f.value)}</span>
                               </>
                             ) : (
-                              <a href={f.value} target="_blank" rel="noopener noreferrer" className="fr-file-doc">
-                                <FiFile size={24} />
+                              <button type="button" onClick={() => openDocument(f.value, getFileName(f.value))} className="fr-file-doc cursor-pointer" aria-label={`Open ${getFileName(f.value)}`}>
+                                <FiFile size={24} aria-hidden="true" />
                                 <span className="fr-file-label">{getFileName(f.value)}</span>
-                                <FiDownload size={16} className="fr-dl-icon" />
-                              </a>
+                                <FiDownload size={16} className="fr-dl-icon" aria-hidden="true" />
+                              </button>
                             )}
                           </div>
                         ))}

@@ -133,11 +133,13 @@ const AppointmentDetailsModal = ({
       <div
         className="appointment-details-modal"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
         <div className="modal-header">
           <h2 className="details-modal-title">Appointment details</h2>
-          <button onClick={onClose} className="close-button">
+          <button onClick={onClose} className="close-button" aria-label="Close appointment details">
             <RxCross2 size={20} />
           </button>
         </div>

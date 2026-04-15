@@ -168,6 +168,8 @@ const SearchInput = ({ placeholder, className = "", ...props }) => (
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
       >
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -257,6 +259,9 @@ const PasswordInput = ({
           type="button"
           className="toggle-password"
           onClick={toggleShowPassword}
+          role="button"
+          tabIndex={0}
+          aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? (
             <svg
@@ -408,6 +413,10 @@ const MultiSelectInput = ({
         ref={triggerRef}
         className={`multi-select-trigger ${error ? "input-error" : ""}`}
         onClick={() => setIsOpen((prev) => !prev)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         {selectedLabels.length > 0 ? (
           <div className="multi-select-tags">
@@ -417,6 +426,7 @@ const MultiSelectInput = ({
                 <button
                   type="button"
                   className="multi-select-tag-remove"
+                  aria-label="Remove"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemove(item.value);

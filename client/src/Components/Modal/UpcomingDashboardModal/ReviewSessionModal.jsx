@@ -22,6 +22,7 @@ const StarRating = ({ label, rating, onChange }) => {
           <button
             key={star}
             type="button"
+            aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
             onClick={() => onChange(star)}
             style={{
               background: "none",
@@ -63,6 +64,8 @@ const SOAPNotesModal = ({ isOpen, onClose, note }) => {
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "white",
@@ -104,6 +107,7 @@ const SOAPNotesModal = ({ isOpen, onClose, note }) => {
           </h2>
           <button
             type="button"
+            aria-label="Close modal"
             onClick={onClose}
             style={{
               background: "#f3f4f6",
@@ -221,6 +225,8 @@ const SessionDataModal = ({ isOpen, onClose, sessionData }) => {
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "white",
@@ -262,6 +268,7 @@ const SessionDataModal = ({ isOpen, onClose, sessionData }) => {
           </h2>
           <button
             type="button"
+            aria-label="Close modal"
             onClick={onClose}
             style={{
               background: "#f3f4f6",

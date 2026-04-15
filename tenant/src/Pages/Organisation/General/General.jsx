@@ -3,6 +3,7 @@ import { FiEdit3 } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { PiListDashesBold } from "react-icons/pi";
 import Button from "../../../Components/Button/Button";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
@@ -24,6 +25,7 @@ const General = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
+  const { openDocument, downloadDocument } = useDocumentViewer();
 
   /* -------------------------------------------------------------- */
   /* 1. ORGANISATION ---------------------------------------------- */
@@ -443,23 +445,17 @@ const General = () => {
                 hasPermission("view_document") && {
                   label: "View",
                   onClick: (row) => {
-                    try {
-                      const parsed = new URL(row.documentUrl);
-                      if (["http:", "https:"].includes(parsed.protocol)) {
-                        window.open(row.documentUrl, "_blank", "noopener,noreferrer");
-                      }
-                    } catch {
-                      // Invalid URL
+                    if (row.documentUrl) {
+                      openDocument(row.documentUrl, row.documentName || "Document");
                     }
                   },
                 },
                 hasPermission("download_document") && {
                   label: "Download",
                   onClick: (row) => {
-                    const a = document.createElement("a");
-                    a.href = row.documentUrl;
-                    a.download = row.documentName;
-                    a.click();
+                    if (row.documentUrl) {
+                      downloadDocument(row.documentUrl, row.documentName || "document");
+                    }
                   },
                 },
                 hasPermission("delete_document") && {
@@ -531,7 +527,7 @@ const General = () => {
             <h2 className="font-bold text-lg text-gray-700-em">Licenses</h2>
             <div className="org-section-actions">
               <div className="org-view-toggle">
-                <div className="p-3 bg-gray-200 rounded-md">
+                <div className="p-3 bg-gray-200 rounded-md cursor-pointer">
                   <RxDashboard
                     className="cursor-pointer"
                     size={24}
@@ -539,7 +535,7 @@ const General = () => {
                     color={licenseView === "card" ? "#004ABA" : "#000"}
                   />
                 </div>
-                <div className="p-3 bg-gray-200 rounded-md">
+                <div className="p-3 bg-gray-200 rounded-md cursor-pointer">
                   <PiListDashesBold
                     className="cursor-pointer"
                     size={24}

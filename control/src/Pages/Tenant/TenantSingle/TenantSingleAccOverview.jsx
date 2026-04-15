@@ -271,7 +271,7 @@ const TenantSingleAccOverview = () => {
   return (
     <div className="tenant-list-container">
       <div className="tenant-header">
-        <div onClick={() => navigate(-1)} className="back-link">
+        <div onClick={() => navigate(-1)} className="back-link" role="button" tabIndex={0} aria-label="Go back">
           <FaArrowLeft /> Back
         </div>
         <div className="tenant-title-container">

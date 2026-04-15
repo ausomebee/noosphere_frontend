@@ -391,7 +391,7 @@ const ManageColumn = () => {
   return (
     <div className="manage-column-container">
         {/* Header */}
-        <div className="manage-column-header" onClick={() => navigate(-1)}>
+        <div className="manage-column-header" onClick={() => navigate(-1)} role="button" tabIndex={0} aria-label="Go back">
           <button className="back-button">
             <FaArrowLeft />
             Back

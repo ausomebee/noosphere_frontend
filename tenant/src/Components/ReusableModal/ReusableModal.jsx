@@ -118,13 +118,15 @@ const ReusableModal = ({
         </div>
 
         {tabs && tabs.length > 0 && (
-          <div className="modal-tabs">
+          <div className="modal-tabs" role="tablist">
             {tabs.map((tab) => (
               <button
                 key={tab.name}
                 type="button"
                 className={`modal-tab-btn ${activeTab === tab.name ? "active" : ""}`}
                 onClick={() => onTabChange?.(tab.name)}
+                role="tab"
+                aria-selected={activeTab === tab.name}
               >
                 {tab.name}
               </button>

@@ -240,7 +240,7 @@ const RoleConfiguration = () => {
               const isExpanded = !!expandedModules[module.key];
               return (
                 <div key={module.key} className="role-accordion">
-                  <div className="role-accordion-header" onClick={() => toggleAccordion(module.key)}>
+                  <div className="role-accordion-header" onClick={() => toggleAccordion(module.key)} role="button" tabIndex={0} aria-expanded={isExpanded}>
                     <span className="role-accordion-title">{module.module}</span>
                     {isExpanded ? <FaChevronUp className="role-accordion-icon" /> : <FaChevronDown className="role-accordion-icon" />}
                   </div>

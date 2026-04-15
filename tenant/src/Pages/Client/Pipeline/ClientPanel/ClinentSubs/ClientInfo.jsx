@@ -18,7 +18,7 @@ import api3 from "../../../../../api/customFormsApi";
 import FormLibraryModal from "../../../../../Components/ReusableModal/ClientModal/FormLibraryModal";
 import ClientDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentRequestModal";
 import ClientDocumentUploadModal from "../../../../../Components/ReusableModal/ClientModal/ClientDocumentUploadModal";
-import DocumentViewer from "../../../../../Components/FileUpload/DocumentViewer";
+import useDocumentViewer from "../../../../../hooks/useDocumentViewer";
 import { useDispatch } from "react-redux";
 import { loadForm } from "../../../../../ReduxStore/features/formBuilderSlice";
 import { formatDate } from "../../../../../Helper/Formatters";
@@ -71,7 +71,7 @@ const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
 const Accordion = ({ title, isOpen, onToggle, children, badge }) => {
   return (
     <div className="accordion-container">
-      <div className="accordion-header" onClick={onToggle}>
+      <div className="accordion-header cursor-pointer" onClick={onToggle}>
         <div className="accordion-title-wrapper">
           <h2 className="accordion-title">{title}</h2>
           {badge && <span className="document-count">{badge}</span>}
@@ -234,6 +234,7 @@ const DocumentsForms = () => {
   const { tenantClientId } = useParams();
   const { accessToken, refreshToken, userId, tenantId } = useAuth();
   const { dateFormat } = useFormatSettings();
+  const { openDocument, downloadDocument } = useDocumentViewer();
 
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
@@ -243,13 +244,6 @@ const DocumentsForms = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isFormLibraryOpen, setIsFormLibraryOpen] = useState(false);
-
-  // Document Viewer State
-  const [viewerState, setViewerState] = useState({
-    isOpen: false,
-    fileUrl: null,
-    fileName: null,
-  });
 
   // Data States
   const [formsData, setFormsData] = useState([]); // Assigned to this client
@@ -646,32 +640,6 @@ const DocumentsForms = () => {
     }
   };
 
-  // Document handlers for requests tab
-  const handleViewDocument = (fileUrl, fileName) => {
-    setViewerState({
-      isOpen: true,
-      fileUrl: fileUrl,
-      fileName: fileName,
-    });
-  };
-
-  const handleDownloadDocument = (fileUrl, fileName) => {
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const closeViewer = () => {
-    setViewerState({
-      isOpen: false,
-      fileUrl: null,
-      fileName: null,
-    });
-  };
 
   return (
     <>
@@ -911,7 +879,7 @@ const DocumentsForms = () => {
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      handleViewDocument(
+                                                      openDocument(
                                                         file.fileUrl,
                                                         file.name
                                                       );
@@ -924,7 +892,7 @@ const DocumentsForms = () => {
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      handleDownloadDocument(
+                                                      downloadDocument(
                                                         file.fileUrl,
                                                         file.name
                                                       );
@@ -1001,15 +969,6 @@ const DocumentsForms = () => {
           </div>
         </div>
       </Accordion>
-
-      {/* DOCUMENT VIEWER MODAL */}
-      {viewerState.isOpen && (
-        <DocumentViewer
-          fileUrl={viewerState.fileUrl}
-          fileName={viewerState.fileName}
-          onClose={closeViewer}
-        />
-      )}
 
       {/* EXISTING MODALS */}
       <ClientDocumentUploadModal

@@ -1,5 +1,6 @@
 import React from "react";
 import usePermissions from "../../../../hooks/usePermissions";
+import useDocumentViewer from "../../../../hooks/useDocumentViewer";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
 import { FiEdit3 } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
@@ -28,6 +29,7 @@ const Profile = ({
   openBasicInfoModal, // New prop for opening Basic Info modal
 }) => {
   const { hasPermission } = usePermissions();
+  const { openDocument, downloadDocument } = useDocumentViewer();
   const renderLicenses = () => {
     if (!licenses.length) {
       return (
@@ -148,14 +150,7 @@ const Profile = ({
                   label: "View",
                   onClick: (row) => {
                     if (row.documentsUrl?.url) {
-                      try {
-                        const parsed = new URL(row.documentsUrl.url);
-                        if (["http:", "https:"].includes(parsed.protocol)) {
-                          window.open(row.documentsUrl.url, "_blank", "noopener,noreferrer");
-                        }
-                      } catch {
-                        // Invalid URL
-                      }
+                      openDocument(row.documentsUrl.url, row.documentName || "Document");
                     }
                   },
                 },
@@ -163,12 +158,7 @@ const Profile = ({
                   label: "Download",
                   onClick: (row) => {
                     if (row.documentsUrl?.url) {
-                      const a = document.createElement("a");
-                      a.href = row.documentsUrl.url;
-                      a.download = row.documentName || row.documentsUrl.filename || "document";
-                      a.click();
-                    } else {
-                      console.error("No URL available for this document");
+                      downloadDocument(row.documentsUrl.url, row.documentName || row.documentsUrl.filename || "document");
                     }
                   },
                 },

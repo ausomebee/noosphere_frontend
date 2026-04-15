@@ -248,6 +248,7 @@ const FileUploadArea = memo(
                     <button
                       className="remove-file"
                       onClick={() => handleRemoveFile(idx)}
+                      aria-label="Remove file"
                     >
                       <RiDeleteBin6Line size={16} />
                     </button>
@@ -255,6 +256,7 @@ const FileUploadArea = memo(
                       <button
                         className="retry-file"
                         onClick={() => handleRetryFile(idx)}
+                        aria-label="Retry upload"
                       >
                         <IoMdRefresh size={16} />
                       </button>
@@ -264,7 +266,7 @@ const FileUploadArea = memo(
                 {file.error ? (
                   <span className="file-error">{file.errorMessage}</span>
                 ) : (
-                  <div className="progress-bar">
+                  <div className="progress-bar" role="progressbar" aria-valuenow={file.progress} aria-valuemin={0} aria-valuemax={100}>
                     <div
                       className="progress"
                       style={{ width: `${file.progress}%` }}

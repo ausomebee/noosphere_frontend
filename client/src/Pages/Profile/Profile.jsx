@@ -408,7 +408,7 @@ const Profile = () => {
       {/* Password Change Modal */}
       {showPasswordModal && (
         <div className="modal-overlay">
-          <div className="password-modal">
+          <div className="password-modal" role="dialog" aria-modal="true">
             <h3>Change Password</h3>
             <div className="modal-content">
               <PasswordInput
