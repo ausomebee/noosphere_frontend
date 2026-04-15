@@ -23,6 +23,8 @@ jobs:
       # Build client
       - name: Install & build client
         working-directory: ./client
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm ci
           npm run build
@@ -30,6 +32,10 @@ jobs:
       # Build control
       - name: Install & build control
         working-directory: ./control
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_STRIPE_PK: ${{ secrets.VITE_STRIPE_PK }}
+          VITE_PAYPAL_CLIENT_ID: ${{ secrets.VITE_PAYPAL_CLIENT_ID }}
         run: |
           npm ci
           npm run build
@@ -37,6 +43,8 @@ jobs:
       # Build tenant
       - name: Install & build tenant
         working-directory: ./tenant
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm ci
           npm run build
