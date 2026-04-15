@@ -94,28 +94,6 @@ jobs:
           target: "/var/www/tenant"
           strip_components: 2
 
-      # Create and update ENV variables    
-      - name: Create .env files
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cat <<EOF > /var/www/client/.env
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            EOF
-      
-            cat <<EOF > /var/www/control/.env
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_STRIPE_PK=${{ secrets.VITE_STRIPE_PK }}
-            VITE_PAYPAL_CLIENT_ID=${{ secrets.VITE_PAYPAL_CLIENT_ID }}
-            EOF
-      
-            cat <<EOF > /var/www/tenant/.env
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            EOF    
-
       # Reload nginx
       - name: Reload nginx on EC2
         uses: appleboy/ssh-action@v1.0.0
