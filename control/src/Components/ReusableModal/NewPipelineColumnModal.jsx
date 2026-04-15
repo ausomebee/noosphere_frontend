@@ -183,6 +183,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
                   color: "#0000EE",
                   background: "none",
                 }}
+                aria-label="Change column color"
               >
                 Change
               </button>
@@ -223,8 +224,9 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
                       className="delete-btn ml-2 border-0 cursor-pointer p-0"
                       onClick={() => handleDeleteTask(task.id)}
                       style={{ background: "none" }}
+                      aria-label="Delete task"
                     >
-                      <AiOutlineDelete color="red" size={16} />
+                      <AiOutlineDelete color="red" size={16} aria-hidden="true" />
                     </button>
                   </div>
                   <div className="toggle-switch-container">
@@ -288,8 +290,9 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
                       className="delete-btn ml-2 border-0 cursor-pointer p-0"
                       onClick={() => handleDeleteDocument(doc.id)}
                       style={{ background: "none" }}
+                      aria-label="Delete document"
                     >
-                      <AiOutlineDelete color="red" size={16} />
+                      <AiOutlineDelete color="red" size={16} aria-hidden="true" />
                     </button>
                   </div>
                   <div className="toggle-switch-container">

@@ -92,14 +92,16 @@ const DocumentViewer = ({ fileUrl, fileName, onClose }) => {
               onClick={handleDownload}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
               title="Download"
+              aria-label="Download file"
             >
-              <LuDownload size={20} />
+              <LuDownload size={20} aria-hidden="true" />
             </button>
             <button
               onClick={onClose}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Close document viewer"
             >
-              <LuX size={20} />
+              <LuX size={20} aria-hidden="true" />
             </button>
           </div>
         </div>

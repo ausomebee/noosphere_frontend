@@ -110,6 +110,7 @@ const getHeaderClass = () => "plan-header";
             className="cog-button"
             onClick={handleDropdownToggle}
             aria-label="Plan options"
+            aria-expanded={isDropdownOpen}
           >
             <HiOutlineCog6Tooth className="gear-icon" size={30} />
           </button>

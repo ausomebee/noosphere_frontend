@@ -58,7 +58,7 @@ const NotificationAlert = ({
           </button>
         )}
         {onClose && (
-          <button className="notif-alert-close" onClick={onClose}>
+          <button className="notif-alert-close" onClick={onClose} aria-label="Close notification">
             <IoClose size={18} />
           </button>
         )}

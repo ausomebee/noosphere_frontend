@@ -2,6 +2,7 @@ import React from "react";
 import "./TenantList.css";
 import { FaArrowLeft } from "react-icons/fa";
 import ExportPrintActions from "../../../Components/ExportPrintActions/ExportPrintActions";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import {
   exportTableData,
   printTableData,
@@ -90,6 +91,8 @@ const TenantListViewIssues = ({
   },
   onBack,
 }) => {
+  const { openDocument } = useDocumentViewer();
+
   const issueInfoColumns = [
     { key: "field", header: "Field" },
     { key: "value", header: "Value" },
@@ -231,7 +234,14 @@ const TenantListViewIssues = ({
                 <td>
                   {issue.attachments.map((attachment, index) => (
                     <React.Fragment key={index}>
-                      <a href={attachment.url} className="attachment-link">
+                      <a
+                        href={attachment.url}
+                        className="attachment-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openDocument(attachment.url, attachment.name);
+                        }}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -242,6 +252,8 @@ const TenantListViewIssues = ({
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
+                          aria-hidden="true"
+                          focusable="false"
                         >
                           <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                         </svg>
@@ -346,6 +358,8 @@ const TenantListViewIssues = ({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 className="document-icon"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -353,7 +367,14 @@ const TenantListViewIssues = ({
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              <a href={document.url} className="document-link">
+              <a
+                href={document.url}
+                className="document-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openDocument(document.url, document.name);
+                }}
+              >
                 {document.name}
               </a>
             </div>

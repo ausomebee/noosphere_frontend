@@ -1,12 +1,15 @@
 import AllRoutes from "./Components/Allroutes";
 import ErrorBoundary from "./Helper/ErrorBoundary";
+import { DocumentViewerProvider } from "./hooks/useDocumentViewer";
 
 const App = () => {
   return (
     <ErrorBoundary>
-      <div>
-        <AllRoutes />
-      </div>
+      <DocumentViewerProvider>
+        <div>
+          <AllRoutes />
+        </div>
+      </DocumentViewerProvider>
     </ErrorBoundary>
   );
 };

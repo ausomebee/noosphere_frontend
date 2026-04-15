@@ -136,7 +136,18 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
 
   const handleCopyLink = async (url) => {
     try {
-      await navigator.clipboard.writeText(url);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
       showToast("Link copied to clipboard!", "success");
     } catch {
       showToast("Failed to copy link", "error");

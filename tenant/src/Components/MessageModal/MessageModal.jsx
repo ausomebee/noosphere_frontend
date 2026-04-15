@@ -308,8 +308,10 @@ const MessageModal = ({ isOpen, onClose }) => {
               conversationList.map(({ partnerId, client, lastMsg, unread }) => (
                 <div
                   key={partnerId}
-                  className={`msg-conv-item${selectedClientId === partnerId ? " active" : ""}`}
+                  className={`msg-conv-item cursor-pointer${selectedClientId === partnerId ? " active" : ""}`}
                   onClick={() => handleSelectClient(partnerId)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="msg-conv-avatar">
                     {getInitials(getClientName(client))}
@@ -350,7 +352,7 @@ const MessageModal = ({ isOpen, onClose }) => {
             ) : (
               <span className="msg-chat-name msg-chat-placeholder">Select a client</span>
             )}
-            <button className="msg-modal-close" onClick={onClose}>
+            <button className="msg-modal-close" onClick={onClose} aria-label="Close messages">
               <IoClose size={20} />
             </button>
           </div>
@@ -471,6 +473,7 @@ const MessageModal = ({ isOpen, onClose }) => {
               className="msg-send-button"
               onClick={handleSend}
               disabled={!messageText.trim() || !selectedClientId}
+              aria-label="Send message"
             >
               <IoSend size={18} />
             </button>

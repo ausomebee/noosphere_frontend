@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import useAuth from "../../../hooks/useAuth";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
 import uploadApi from "../../../api/ImageUpload";
 import { showToast } from "../../../Helper/ShowToast";
@@ -39,12 +40,15 @@ const ReportSelect = ({ label, placeholder, options, value, onChange }) => {
           type="button"
           className={`report-builder-select-button ${isOpen ? "open" : ""}`}
           onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
         >
           <span className={selectedOption ? "" : "placeholder"}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <FiChevronDown
             className={`report-builder-select-icon ${isOpen ? "rotate" : ""}`}
+            aria-hidden="true"
           />
         </button>
 
@@ -107,12 +111,15 @@ const ReportMultiSelect = ({
           type="button"
           className={`report-builder-select-button ${isOpen ? "open" : ""}`}
           onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
         >
           <span className={selectedLabels ? "" : "placeholder"}>
             {selectedLabels || placeholder}
           </span>
           <FiChevronDown
             className={`report-builder-select-icon ${isOpen ? "rotate" : ""}`}
+            aria-hidden="true"
           />
         </button>
 
@@ -221,6 +228,7 @@ const ReportFileUpload = ({
   readOnly = false,
 }) => {
   const { accessToken, refreshToken } = useAuth();
+  const { openDocument } = useDocumentViewer();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
@@ -323,15 +331,16 @@ const ReportFileUpload = ({
           {displayFiles.map((file, index) => (
             <div key={file.url || index} className="report-builder-uploaded-file">
               <FiFile size={14} />
-              <a
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="report-builder-uploaded-link"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                className="report-builder-uploaded-link cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDocument(file.url, file.filename || `File ${index + 1}`);
+                }}
               >
                 {file.filename || `File ${index + 1}`}
-              </a>
+              </button>
               {!readOnly && (
                 <button
                   type="button"

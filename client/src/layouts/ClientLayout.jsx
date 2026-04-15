@@ -101,7 +101,7 @@ const DashboardLayout = ({ children }) => {
               setMessageCount(0);
               setMessageModalOpen(true);
             }}
-            aria-label="Send message"
+            aria-label="Messages"
             title="Message your clinician"
           >
             <IoChatbubblesOutline size={20} />
@@ -115,6 +115,7 @@ const DashboardLayout = ({ children }) => {
           <button
             className="header-menu-btn"
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle menu"
           >
             {sidebarOpen ? <VscClose size={24} /> : <HiOutlineMenuAlt2 size={24} />}
           </button>

@@ -176,14 +176,15 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                             : ""
                         }`}
                         onClick={() => toggleExpand(item.name)}
+                        aria-expanded={!!expandedItems[item.name]}
                       >
-                        <item.icon className="nav-icon" size={24} />
+                        <item.icon className="nav-icon" size={24} aria-hidden="true" />
                         {isOpen && item.name}
                         {isOpen &&
                           (expandedItems[item.name] ? (
-                            <FaChevronUp className="expand-icon" />
+                            <FaChevronUp className="expand-icon" aria-hidden="true" />
                           ) : (
-                            <FaChevronDown className="expand-icon" />
+                            <FaChevronDown className="expand-icon" aria-hidden="true" />
                           ))}
                       </button>
                       {isOpen && expandedItems[item.name] && (
@@ -348,8 +349,8 @@ const DashboardLayout = ({ children }) => {
         <header className="header">
           <div className="header-actions">
             {isMobile && (
-              <button className="menu-button" onClick={toggleSidebar}>
-                <FaBars />
+              <button className="menu-button" onClick={toggleSidebar} aria-label="Toggle sidebar menu">
+                <FaBars aria-hidden="true" />
               </button>
             )}
             <div className="flex gap-4 items-center justify-end">
@@ -374,6 +375,9 @@ const DashboardLayout = ({ children }) => {
                 <div
                   className="user-profile"
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={showProfileDropdown}
                 >
                   <div className="user-avatar">{userInitials}</div>
                   {!isMobile && (

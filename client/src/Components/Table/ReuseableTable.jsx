@@ -175,12 +175,14 @@ const ReusableTable = ({
               <button
                 className={`view-btn ${viewType === "list" ? "active" : ""}`}
                 onClick={() => setViewType("list")}
+                aria-label="List view"
               >
                 <BsListUl size={18} />
               </button>
               <button
                 className={`view-btn ${viewType === "grid" ? "active" : ""}`}
                 onClick={() => setViewType("grid")}
+                aria-label="Grid view"
               >
                 <BsGrid size={16} />
               </button>
@@ -221,7 +223,7 @@ const ReusableTable = ({
                   >
                     {renderExpandedRow && (
                       <td className="expand-col">
-                        <button className="expand-btn">
+                        <button className="expand-btn" aria-label={expandedRows.includes(row.id) ? "Collapse row" : "Expand row"}>
                           {expandedRows.includes(row.id) ? (
                             <IoChevronUp size={16} />
                           ) : (
@@ -252,6 +254,7 @@ const ReusableTable = ({
                               <button
                                 className="action-menu-btn"
                                 onClick={() => toggleActionMenu(row.id)}
+                                aria-label="More actions"
                               >
                                 <FiMoreVertical size={18} />
                               </button>

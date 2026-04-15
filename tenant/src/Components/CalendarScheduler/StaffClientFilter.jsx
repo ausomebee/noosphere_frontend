@@ -48,7 +48,7 @@ const StaffClientFilter = ({
         <h2 className="staff-client-title">
           View by {activeTab === "staff" ? "Staff" : "Clients"}
         </h2>
-        <button onClick={onHideSidebar} className="staff-client-close-button">
+        <button onClick={onHideSidebar} className="staff-client-close-button" aria-label="Close sidebar">
           <svg className="staff-client-close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
           </svg>

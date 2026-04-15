@@ -53,7 +53,7 @@ const Task = React.memo(({
         <span>{task.progress} task done</span>
       </div>
       <Menu as="div" className="dropdown-container">
-        <Menu.Button className="dropdown-icon">
+        <Menu.Button className="dropdown-icon" aria-label="Task menu">
           <FiChevronDown />
         </Menu.Button>
         <Menu.Items className="menu-items">

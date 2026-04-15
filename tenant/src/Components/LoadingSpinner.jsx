@@ -10,8 +10,11 @@ const LoadingSpinner = ({ fullPage = false }) => (
     className={`flex justify-center items-center ${
       fullPage ? 'h-100vh' : 'h-full min-h-[200px]'
     }`}
+    role="status"
+    aria-live="polite"
   >
-    <FaSpinner className="text-40 text-[#000000] animate-spin" />
+    <FaSpinner className="text-40 text-[#000000] animate-spin" aria-hidden="true" />
+    <span className="sr-only">Loading...</span>
   </div>
 );
 

@@ -282,7 +282,7 @@ const MessageModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="msg-modal-overlay" onClick={onClose}>
-      <div className="msg-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="msg-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
 
         {/* ── LEFT SIDEBAR ── */}
         <div className="msg-sidebar">
@@ -356,7 +356,7 @@ const MessageModal = ({ isOpen, onClose }) => {
             ) : (
               <span className="msg-chat-name msg-chat-placeholder">Select a clinician</span>
             )}
-            <button className="msg-modal-close" onClick={onClose}>
+            <button className="msg-modal-close" onClick={onClose} aria-label="Close messages">
               <IoClose size={20} />
             </button>
           </div>
@@ -455,6 +455,7 @@ const MessageModal = ({ isOpen, onClose }) => {
               type="text"
               className="msg-input"
               placeholder="Message"
+              aria-label="Type a message"
               value={messageText}
               onChange={(e) => {
                 setMessageText(e.target.value);

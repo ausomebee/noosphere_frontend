@@ -200,11 +200,11 @@ const FileUploadArea = memo(
                   {file.progress === 100 && !file.error && (
                     <FaCheckCircle className="text-green-600" />
                   )}
-                  <button onClick={() => handleRemoveFile(idx)}>
+                  <button type="button" aria-label="Remove file" onClick={() => handleRemoveFile(idx)}>
                     <RiDeleteBin6Line />
                   </button>
                   {file.error && (
-                    <button onClick={() => handleRetryFile(idx)}>
+                    <button type="button" aria-label="Retry upload" onClick={() => handleRetryFile(idx)}>
                       <IoMdRefresh />
                     </button>
                   )}

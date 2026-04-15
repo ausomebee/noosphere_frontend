@@ -53,6 +53,7 @@ const Board = ({
                     <button
                       className="add-column-button"
                       onClick={() => onAddColumn(0)}
+                      aria-label="Add column"
                     >
                       <FaCirclePlus />
                     </button>
@@ -88,6 +89,7 @@ const Board = ({
                   <button
                     className="add-column-button"
                     onClick={() => onAddColumn(index + 1)}
+                    aria-label="Add column"
                   >
                     <FaCirclePlus />
                   </button>

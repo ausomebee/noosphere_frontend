@@ -182,6 +182,7 @@ const TableHeader = ({
             onClick={toggleExportDropdown}
             className="action-button"
             ref={exportButtonRef}
+            aria-label="Export data"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -193,6 +194,8 @@ const TableHeader = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
             >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -213,7 +216,7 @@ const TableHeader = ({
             </div>
           )}
         </div>
-        <button onClick={handlePrint} className="action-button">
+        <button onClick={handlePrint} className="action-button" aria-label="Print table">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -224,6 +227,8 @@ const TableHeader = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
           >
             <polyline points="6 9 6 2 18 2 18 9" />
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />

@@ -86,6 +86,9 @@ const PasswordInput = ({
           strokeLinecap="round"
           strokeLinejoin="round"
           onClick={togglePasswordVisibility}
+          role="button"
+          tabIndex={0}
+          aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? (
             <>
@@ -440,6 +443,7 @@ const SearchInput = ({ value, onChange, placeholder, width, ...props }) => (
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -629,7 +633,7 @@ const CustomDatePickerInput = ({
           ref={inputRef}
           readOnly // Explicitly set to read-only
         />
-        <GoCalendar className="custom-datepicker-icon" />
+        <GoCalendar className="custom-datepicker-icon" aria-hidden="true" />
       </div>
       {error && (
         <div className="auth-error-message text-red-500 text-xs mt-1">

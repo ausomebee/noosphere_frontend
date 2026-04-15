@@ -20,6 +20,7 @@ import ReassignModal from "../../Components/ReusableModal/IssueViewModals/Reassi
 import ChangeStatusModal from "../../Components/ReusableModal/IssueViewModals/ChangeStatusModal";
 import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/ContactTenantModal";
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
+import useDocumentViewer from "../../hooks/useDocumentViewer";
 import api from "../../api/IssueApi";
 import { showToast } from "../../Helper/ShowToast";
 import { formatDateTimeParenthesized as formatDateTime } from "../../Helper/Formatters";
@@ -31,6 +32,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   const [issueData, setIssueData] = useState(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(null);
+  const { openDocument } = useDocumentViewer();
 
   const actionButtonRef = useRef(null);
   const actionDropdownRef = useRef(null);
@@ -397,15 +399,17 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                 ref={actionButtonRef}
                 onClick={() => setActionDropdownOpen(!actionDropdownOpen)}
                 aria-haspopup="true"
+                aria-expanded={actionDropdownOpen}
                 width="120px"
               />
               {actionDropdownOpen && (
-                <div ref={actionDropdownRef} className="dropdown-menu dropdown-menu-header">
+                <div ref={actionDropdownRef} className="dropdown-menu dropdown-menu-header" role="menu">
                   <div className="dropdown-items">
                     {actions.map((action, index) => (
                       <button
                         key={index}
                         className="dropdown-item"
+                        role="menuitem"
                         onClick={() => handleActionClick(action)}
                       >
                         {action}
@@ -486,7 +490,14 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                     <td>
                       {issueData.attachments?.map((attachment, index) => (
                         <React.Fragment key={index}>
-                          <a href={attachment.url} className="attachment-link">
+                          <a
+                            href={attachment.url}
+                            className="attachment-link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              openDocument(attachment.url, attachment.name);
+                            }}
+                          >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -497,6 +508,8 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
                             >
                               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                             </svg>
@@ -602,6 +615,8 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       className="document-icon"
+                      aria-hidden="true"
+                      focusable="false"
                     >
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                       <polyline points="14 2 14 8 20 8"></polyline>
@@ -609,7 +624,14 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
                       <line x1="16" y1="17" x2="8" y2="17"></line>
                       <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
-                    <a href={document.url} className="document-link">
+                    <a
+                      href={document.url}
+                      className="document-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openDocument(document.url, document.name);
+                      }}
+                    >
                       {document.name}
                     </a>
                   </div>

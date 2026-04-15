@@ -352,9 +352,18 @@ const MyDocuments = () => {
               <div
                 key={folder.id}
                 className="folder-card"
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   setSelectedFolder(folder);
                   setShowFolderFilesModal(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedFolder(folder);
+                    setShowFolderFilesModal(true);
+                  }
                 }}
                 style={{ cursor: "pointer" }}
               >
@@ -369,14 +378,18 @@ const MyDocuments = () => {
                     {folder.folderSize || "0"} items
                   </p>
                 </div>
-                <FiEdit3
-                  style={{ cursor: "pointer", marginLeft: "auto" }}
+                <button
+                  type="button"
+                  aria-label="Rename folder"
+                  style={{ cursor: "pointer", marginLeft: "auto", background: "none", border: "none", padding: 0, display: "flex", alignItems: "center" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedFolder(folder);
                     setShowRenameFolderModal(true);
                   }}
-                />
+                >
+                  <FiEdit3 />
+                </button>
               </div>
             ))}
           </div>
@@ -401,6 +414,8 @@ const MyDocuments = () => {
               <div
                 key={file.id}
                 className="recent-card"
+                role="button"
+                tabIndex={0}
                 onClick={() => handleRecentFileClick(file)}
                 style={{ cursor: file.url ? "pointer" : "default" }}
               >

@@ -124,6 +124,7 @@ const SelectFromMyDocumentsModal = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-field"
             disabled={loading || fetching}
+            aria-label="Search documents"
           />
         </div>
 
@@ -145,6 +146,10 @@ const SelectFromMyDocumentsModal = ({
                   key={doc.id}
                   className={`document-row ${isSelected ? "selected" : ""}`}
                   onClick={() => !loading && toggleSelect(doc.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={doc.name || "Select document"}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); !loading && toggleSelect(doc.id); } }}
                 >
                   <div className="document-icon-container">
                     {getFileIcon(doc.type)}

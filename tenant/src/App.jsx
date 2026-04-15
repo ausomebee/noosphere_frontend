@@ -20,6 +20,7 @@ import { setSubdomain } from "./ReduxStore/features/tenantSlice";
 import ErrorBoundary from "./Helper/ErrorBoundary";
 import LoadingSpinner from "./Components/LoadingSpinner";
 import getSubdomain from "./Helper/getSubdomain";
+import { DocumentViewerProvider } from "./hooks/useDocumentViewer";
 
 const AllRoutes = React.lazy(() => import("./Components/Allroutes"));
 
@@ -37,11 +38,11 @@ const AppContent = () => {
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner fullPage />}>
-    
+    <DocumentViewerProvider>
+      <Suspense fallback={<LoadingSpinner fullPage />}>
         <AllRoutes />
-     
-    </Suspense>
+      </Suspense>
+    </DocumentViewerProvider>
   );
 };
 

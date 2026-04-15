@@ -47,14 +47,18 @@ const ExportPrintActions = ({ onExportCSV, onExportPDF, onPrint }) => {
           onClick={handleToggle}
           className="action-button"
           ref={buttonRef}
+          aria-label="Export data"
+          aria-expanded={dropdownOpen}
+          aria-haspopup="true"
         >
-          <FiDownload size={20} />
+          <FiDownload size={20} aria-hidden="true" />
         </button>
         {dropdownOpen && (
           <div
             className="action-dropdown export-dropdown"
             ref={dropdownRef}
             style={dropdownStyle}
+            role="menu"
           >
             <button
               className="dropdown-item"
@@ -77,8 +81,8 @@ const ExportPrintActions = ({ onExportCSV, onExportPDF, onPrint }) => {
           </div>
         )}
       </div>
-      <button onClick={onPrint} className="action-button">
-        <FiPrinter size={20} />
+      <button onClick={onPrint} className="action-button" aria-label="Print">
+        <FiPrinter size={20} aria-hidden="true" />
       </button>
     </div>
   );

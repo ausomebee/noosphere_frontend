@@ -9,6 +9,7 @@ import { LuPrinter } from "react-icons/lu";
 import { RiFileUploadLine } from "react-icons/ri";
 import { formatDateTime, formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import "./ViewRequestDetails.css";
 import "./SupportRequests.css";
 
@@ -17,6 +18,7 @@ const ViewRequestDetails = () => {
   const { requestId } = useParams();
   const { accessToken, refreshToken } = useAuth();
   const { dateFormat, timeFormat } = useFormatSettings();
+  const { openDocument } = useDocumentViewer();
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -82,15 +84,15 @@ const ViewRequestDetails = () => {
         <div className="view-request-topbar">
           <div className="view-request-topbar-left">
             <button
-              className="view-request-back"
+              className="view-request-back cursor-pointer"
               onClick={() => navigate("/help/support-requests")}
             >
-              <FiArrowLeft size={16} />
+              <FiArrowLeft size={16} aria-hidden="true" />
               Back
             </button>
             <h2>View issue details</h2>
           </div>
-          <button className="withdraw-btn" onClick={handleWithdraw}>
+          <button className="withdraw-btn cursor-pointer" onClick={handleWithdraw}>
             Withdraw Request
           </button>
         </div>
@@ -136,16 +138,15 @@ const ViewRequestDetails = () => {
               <td className="field-value">
                 {attachments.length > 0 ? (
                   attachments.map((att, idx) => (
-                    <a
+                    <button
                       key={idx}
-                      href={att.location}
-                      className="attachment-link"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      type="button"
+                      onClick={() => openDocument(att.location, att.key?.split("-").slice(1).join("-") || `Attachment ${idx + 1}`)}
+                      className="attachment-link cursor-pointer"
                     >
                       {att.key?.split("-").slice(1).join("-") ||
                         `Attachment ${idx + 1}`}
-                    </a>
+                    </button>
                   ))
                 ) : (
                   <span>None</span>
@@ -159,11 +160,11 @@ const ViewRequestDetails = () => {
         <div className="view-request-description-header">
           <h3>Description</h3>
           <div className="view-request-description-actions">
-            <button title="Export">
-              <RiFileUploadLine size={18} />
+            <button aria-label="Export description" className="cursor-pointer">
+              <RiFileUploadLine size={18} aria-hidden="true" />
             </button>
-            <button title="Print">
-              <LuPrinter size={18} />
+            <button aria-label="Print description" className="cursor-pointer">
+              <LuPrinter size={18} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -186,30 +187,29 @@ const ViewRequestDetails = () => {
         <div className="view-request-documents-header">
           <h3>Documents</h3>
           <div className="view-request-description-actions">
-            <button title="Export">
-              <RiFileUploadLine size={18} />
+            <button aria-label="Export documents" className="cursor-pointer">
+              <RiFileUploadLine size={18} aria-hidden="true" />
             </button>
-            <button title="Print">
-              <LuPrinter size={18} />
+            <button aria-label="Print documents" className="cursor-pointer">
+              <LuPrinter size={18} aria-hidden="true" />
             </button>
           </div>
         </div>
         {attachments.length > 0 ? (
           attachments.map((doc, idx) => (
-            <a
+            <button
               key={idx}
-              href={doc.location}
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
+              onClick={() => openDocument(doc.location, doc.key?.split("-").slice(1).join("-") || `Document ${idx + 1}`)}
               className="document-item"
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", border: "none", background: "none", cursor: "pointer" }}
             >
-              <FiFileText size={20} />
+              <FiFileText size={20} aria-hidden="true" />
               <span>
                 {doc.key?.split("-").slice(1).join("-") ||
                   `Document ${idx + 1}`}
               </span>
-            </a>
+            </button>
           ))
         ) : (
           <p style={{ color: "#666", fontSize: "14px" }}>
@@ -219,10 +219,10 @@ const ViewRequestDetails = () => {
 
         {/* Track Progress */}
         <button
-          className="track-progress-link"
+          className="track-progress-link cursor-pointer"
           onClick={() => setIsProgressModalOpen(true)}
         >
-          Track Progress <FiExternalLink size={14} />
+          Track Progress <FiExternalLink size={14} aria-hidden="true" />
         </button>
 
         {/* Progress Track Modal */}

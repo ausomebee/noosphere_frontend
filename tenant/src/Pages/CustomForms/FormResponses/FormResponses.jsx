@@ -6,6 +6,7 @@ import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import "./FormResponses.css";
 
 const FormResponses = () => {
@@ -13,6 +14,7 @@ const FormResponses = () => {
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
   const { dateFormat, timeFormat } = useFormatSettings();
+  const { openDocument } = useDocumentViewer();
 
   const [responses, setResponses] = useState([]);
   const [originalFields, setOriginalFields] = useState([]);
@@ -135,11 +137,11 @@ const FormResponses = () => {
                 <span className="fr-file-name">{getFileName(value)}</span>
               </div>
             ) : (
-              <a href={value} target="_blank" rel="noopener noreferrer" className="fr-file-link">
-                <FiFile className="fr-file-icon" />
+              <button type="button" onClick={() => openDocument(value, getFileName(value))} className="fr-file-link cursor-pointer" aria-label={`Open ${getFileName(value)}`}>
+                <FiFile className="fr-file-icon" aria-hidden="true" />
                 <span className="fr-file-name">{getFileName(value)}</span>
-                <FiDownload className="fr-download-icon" />
-              </a>
+                <FiDownload className="fr-download-icon" aria-hidden="true" />
+              </button>
             )}
           </div>
         );
@@ -162,7 +164,7 @@ const FormResponses = () => {
 
   if (loading) {
     return (
-      <div className="fr-loading">
+      <div className="fr-loading" role="status" aria-live="polite">
         <div className="fr-spinner" />
         <p>Loading form responses...</p>
       </div>
@@ -172,7 +174,7 @@ const FormResponses = () => {
   return (
     <div className="fr-container">
       <div className="fr-header">
-        <button className="fr-back-btn" onClick={() => navigate(-1)}>
+        <button className="fr-back-btn cursor-pointer" onClick={() => navigate(-1)}>
           <FiChevronLeft /> Back
         </button>
         <div>
@@ -215,8 +217,9 @@ const FormResponses = () => {
             return (
               <div key={response.id} className="fr-response-card">
                 <button
-                  className="fr-response-header"
+                  className="fr-response-header cursor-pointer"
                   onClick={() => toggleResponse(response.id)}
+                  aria-expanded={isExpanded}
                 >
                   <div className="fr-response-summary">
                     <span className="fr-response-number">#{idx + 1}</span>
@@ -246,11 +249,11 @@ const FormResponses = () => {
                                       <span className="fr-file-name">{getFileName(url)}</span>
                                     </div>
                                   ) : (
-                                    <a href={url} target="_blank" rel="noopener noreferrer" className="fr-file-link">
-                                      <FiFile className="fr-file-icon" />
+                                    <button type="button" onClick={() => openDocument(url, getFileName(url))} className="fr-file-link cursor-pointer" aria-label={`Open ${getFileName(url)}`}>
+                                      <FiFile className="fr-file-icon" aria-hidden="true" />
                                       <span className="fr-file-name">{getFileName(url)}</span>
-                                      <FiDownload className="fr-download-icon" />
-                                    </a>
+                                      <FiDownload className="fr-download-icon" aria-hidden="true" />
+                                    </button>
                                   )}
                                 </div>
                               ))}
