@@ -13,13 +13,10 @@ const initialState = {
 export const ClientLogin = createAsyncThunk(
   'auth/clientLogin',
   async ({ email, password }, { rejectWithValue }) => {
-    console.log("[THUNK] ClientLogin called with email:", email);
     try {
       const response = await api.ClientLogin({ email, password });
-      console.log("[THUNK] ClientLogin response:", JSON.stringify(response.data));
       return response.data;
     } catch (error) {
-      console.error("[THUNK] ClientLogin error:", error.message);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }

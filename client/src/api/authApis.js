@@ -6,18 +6,13 @@ const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 const fingerprintHeader = () => ({ "x-fingerprint": getFingerprint() });
 
 const ClientLogin = async ({ email, password }) => {
-  const url = `${PLAIN_API_URL}/client/login`;
-  console.log("[API] ClientLogin URL:", url);
-  console.log("[API] ClientLogin email:", email);
   try {
-    const response = await axios.post(url, {
+    const response = await axios.post(`${PLAIN_API_URL}/client/login`, {
       email,
       password,
     }, { headers: fingerprintHeader() });
-    console.log("[API] ClientLogin success:", response.status);
     return response;
   } catch (error) {
-    console.error("[API] ClientLogin error:", error.response?.status, error.response?.data, error.message);
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };

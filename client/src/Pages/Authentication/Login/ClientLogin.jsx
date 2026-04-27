@@ -40,24 +40,19 @@ const Login = () => {
   });
 
   const onSubmit = async (data) => {
-    console.log("[LOGIN] onSubmit fired, data:", JSON.stringify(data));
     setLoading(true);
     try {
-      console.log("[LOGIN] dispatching ClientLogin...");
       const resultAction = await dispatch(ClientLogin(data));
-      console.log("[LOGIN] resultAction:", JSON.stringify(resultAction));
 
       if (ClientLogin.fulfilled.match(resultAction)) {
-        console.log("[LOGIN] fulfilled - navigating to dashboard");
         showToast("Login successful", "success");
         navigate("/dashboard");
       } else {
         const errorMessage = resultAction.payload?.message || resultAction.payload || "Login failed";
-        console.log("[LOGIN] rejected - error:", errorMessage);
         showToast(errorMessage, "error");
       }
     } catch (error) {
-      console.error("[LOGIN] catch error:", error.message, error.stack);
+      console.error("Login error:", error);
       showToast("Login failed. Please try again.", "error");
     } finally {
       setLoading(false);
