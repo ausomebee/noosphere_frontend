@@ -20,10 +20,12 @@ import NewFolderModal from "../../../Components/Modal/DocumentModal/NewFolderMod
 import NewFileModal from "../../../Components/Modal/DocumentModal/NewFileModal";
 import FolderFilesModal from "../../../Components/Modal/DocumentModal/FolderFileModal";
 import useAuth from "../../../hooks/useAuth";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 
 const MyDocuments = () => {
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
+  const { openDocument } = useDocumentViewer();
 
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -187,7 +189,7 @@ const MyDocuments = () => {
 
   const handleRecentFileClick = (file) => {
     if (file.url?.trim()) {
-      window.open(file.url, "_blank", "noopener,noreferrer");
+      openDocument(file.url, file.name || "Document");
     } else {
       showToast("No file link available", "warning");
     }
@@ -203,7 +205,7 @@ const MyDocuments = () => {
           style={{ cursor: row.url ? "pointer" : "default" }}
           onClick={() => {
             if (row.url?.trim()) {
-              window.open(row.url, "_blank", "noopener,noreferrer");
+              openDocument(row.url, row.name || "Document");
             } else {
               showToast("No file link available", "warning");
             }
@@ -234,7 +236,7 @@ const MyDocuments = () => {
       label: "View",
       onClick: (row) => {
         if (row.url?.trim()) {
-          window.open(row.url, "_blank", "noopener,noreferrer");
+          openDocument(row.url, row.name || "Document");
         } else {
           showToast(
             "No preview/download link available for this file",

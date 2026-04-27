@@ -17,11 +17,13 @@ import UploadDocumentModal from "../../../Components/Modal/ClientDocumentUploadM
 import SelectFromMyDocumentsModal from "../../../Components/Modal/SelectFromMyDocumentsModal";
 
 import api from "../../../api/documentsAndFormsApis";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 
 const DocumentRequests = () => {
   const navigate = useNavigate();
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
+  const { openDocument } = useDocumentViewer();
 
   const [documentRequests, setDocumentRequests] = useState([]);
   const [counts, setCounts] = useState({ request: {}, overdue: 0 });
@@ -420,10 +422,9 @@ const DocumentRequests = () => {
                   </div>
                 </div>
 
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => openDocument(doc.url, doc.name || "Document")}
                   className="download-btn"
                   style={{
                     display: "flex",
@@ -433,11 +434,12 @@ const DocumentRequests = () => {
                     background: "#3b82f6",
                     color: "white",
                     borderRadius: "6px",
-                    textDecoration: "none",
+                    border: "none",
                     fontSize: "13px",
                     fontWeight: "500",
                     transition: "all 0.2s",
                     whiteSpace: "nowrap",
+                    cursor: "pointer",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "#2563eb";
@@ -449,8 +451,8 @@ const DocumentRequests = () => {
                   }}
                 >
                   <IoDownloadOutline size={16} />
-                  Download
-                </a>
+                  View
+                </button>
               </div>
             ))}
           </div>

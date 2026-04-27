@@ -1,7 +1,6 @@
 // src/Components/AllRoutes.jsx (or wherever your file is)
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoadingSpinner from "../Components/LoadingSpinner";
 import ProtectedRoute from "./ProtectedRoute";
 import FormRenderer from "./FormRender/FormRenderer";
 

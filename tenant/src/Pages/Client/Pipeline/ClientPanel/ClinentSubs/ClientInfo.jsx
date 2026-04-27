@@ -478,14 +478,7 @@ const DocumentsForms = () => {
       icon: <LuEye className="w-5 h-5 text-blue-600" />,
       onClick: (row) => {
         if (row.fileUrl) {
-          setViewerState({
-            isOpen: true,
-            fileUrl: row.fileUrl,
-            fileName: row.name,
-          });
-        } else {
-          // Fallback if no fileUrl
-          navigate(`/documents/view/${row.id}`);
+          openDocument(row.fileUrl, row.name);
         }
       },
     },

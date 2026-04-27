@@ -1,5 +1,10 @@
 @import "react-multi-date-picker/styles/layouts/mobile.css";
 
+@keyframes logoBreath {
+  0%, 100% { opacity: 0.3; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
 /* ============================
    1. CSS Reset + Normalize
 ============================ */
