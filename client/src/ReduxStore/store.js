@@ -22,15 +22,11 @@ const persistConfig = {
   // Whitelist the slices you want to persist
   whitelist: ['auth', 'formBuilder', 'formResponse'],
   migrate: (state) => {
-    const currentVersion = state?._persist?.version;
+    if (!state) return Promise.resolve(state);
+    const currentVersion = state._persist?.version;
     if (currentVersion !== APP_VERSION) {
-      // Migration from older version
-      // For auth migration, preserve important fields
-      if (state.auth) {
-        // If old structure had 'token', migrate to 'accessToken'
-        if (state.auth.token && !state.auth.accessToken) {
-          state.auth.accessToken = state.auth.token;
-        }
+      if (state.auth?.token && !state.auth.accessToken) {
+        state.auth.accessToken = state.auth.token;
       }
       return Promise.resolve(state);
     }
