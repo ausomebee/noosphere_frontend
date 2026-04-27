@@ -1,5 +1,5 @@
 import React from "react";
-import AuthImg from "../../assets/Images/AuthImage.png";
+import AuthImg from "../../assets/Images/AuthImage.webp";
 import Logo from "../../assets/Logo.svg";
 const AuthLayout = ({ children }) => {
   return (
