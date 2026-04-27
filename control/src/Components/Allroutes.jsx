@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import LayoutRoute from "./LayoutRoute";
 import ProtectedRoute from "./ProtectedRoute";
-import LoadingSpinner from "./LoadingSpinner";
+import FullPageLoader from "./FullPageLoader";
 
 /* ============================
    Authentication (public, no layout) — keep lazy since they're a separate flow
@@ -52,7 +52,7 @@ import RoleConfiguration from "../Pages/Settings/SettingsSubs/RoleConfiguration"
 
 const AllRoutes = () => {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<FullPageLoader />}>
       <Routes>
         {/* Authentication (no layout) */}
         <Route path="/" element={<SuperAdminLogin />} />

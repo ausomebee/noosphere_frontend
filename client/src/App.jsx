@@ -3,7 +3,8 @@ import React, { useEffect, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSubdomain } from "./ReduxStore/features/tenantSlice";
 import ErrorBoundary from "./Helper/ErrorBoundary";
-import LoadingSpinner from "./Components/LoadingSpinner";
+import FullPageLoader from "./Components/FullPageLoader";
+import { DocumentViewerProvider } from "./hooks/useDocumentViewer";
 import getSubdomain from "./Helper/getSubdomain";
 
 const AllRoutes = React.lazy(() => import("./Components/AllRoutes"));
@@ -18,13 +19,15 @@ const AppContent = () => {
   }, [dispatch]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <FullPageLoader />;
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <AllRoutes />
-    </Suspense>
+    <DocumentViewerProvider>
+      <Suspense fallback={<FullPageLoader />}>
+        <AllRoutes />
+      </Suspense>
+    </DocumentViewerProvider>
   );
 };
 

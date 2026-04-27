@@ -1,15 +1,15 @@
 // src/Components/Allroutes.jsx
 import React, { useEffect, Suspense } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import LoadingSpinner from "./LoadingSpinner";
+import FullPageLoader from "./FullPageLoader";
 import ProtectedRoute from "./ProtectedRoute";
 import { LayoutRoute } from "../Layout/TenantLayout";
 import usePermissions from "../hooks/usePermissions";
 import { showToast } from "../Helper/ShowToast";
 
-/** Wraps a lazy component in Suspense so route transitions don't flash the top-level spinner */
+/** Wraps a lazy component in Suspense so route transitions show the branded loader */
 const Lazy = ({ children }) => (
-  <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+  <Suspense fallback={<FullPageLoader />}>{children}</Suspense>
 );
 
 /** Blocks child routes if user lacks the given module. Shows a toast, renders nothing. */

@@ -167,7 +167,7 @@
   }
 }
 
-.sr-only {
+.doc-viewer-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -179,7 +179,6 @@
   border: 0;
 }
 
-/* ===== Mobile (max-width: 640px) ===== */
 @media (max-width: 640px) {
   .doc-viewer-overlay {
     padding: 0;

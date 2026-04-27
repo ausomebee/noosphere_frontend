@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ReusableModal from "../ReusableModal"; // adjust path if needed
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/documentsAndFormsApis";
+import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import {
   IoDocumentTextOutline,
   IoImageOutline,
@@ -31,6 +32,7 @@ const FolderFilesModal = ({
   accessToken,
   refreshToken,
 }) => {
+  const { openDocument } = useDocumentViewer();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +115,7 @@ const FolderFilesModal = ({
                   </p>
                 </div>
                 <button
-                  onClick={() => window.open(file.url, "_blank", "noopener,noreferrer")}
+                  onClick={() => openDocument(file.url, file.name || "Document")}
                   style={{
                     background: "#3b82f6",
                     color: "white",

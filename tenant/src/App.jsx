@@ -18,7 +18,7 @@ import React, { useEffect, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSubdomain } from "./ReduxStore/features/tenantSlice";
 import ErrorBoundary from "./Helper/ErrorBoundary";
-import LoadingSpinner from "./Components/LoadingSpinner";
+import FullPageLoader from "./Components/FullPageLoader";
 import getSubdomain from "./Helper/getSubdomain";
 import { DocumentViewerProvider } from "./hooks/useDocumentViewer";
 
@@ -34,12 +34,12 @@ const AppContent = () => {
   }, [dispatch]);
 
   if (loading) {
-    return <LoadingSpinner fullPage />;
+    return <FullPageLoader />;
   }
 
   return (
     <DocumentViewerProvider>
-      <Suspense fallback={<LoadingSpinner fullPage />}>
+      <Suspense fallback={<FullPageLoader />}>
         <AllRoutes />
       </Suspense>
     </DocumentViewerProvider>

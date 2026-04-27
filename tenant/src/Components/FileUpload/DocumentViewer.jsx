@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { LuDownload, LuX } from "react-icons/lu";
+import "./DocumentViewer.css";
 
 const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const scrollPositionRef = useRef(0);
 
-  const getFileExtension = (url) => {
-    return url?.split("?")[0]?.split(".").pop()?.toLowerCase() || "";
-  };
+  const getFileExtension = (url) =>
+    url?.split("?")[0]?.split(".").pop()?.toLowerCase() || "";
 
   const fileExtension = getFileExtension(fileUrl);
   const isPdf = fileExtension === "pdf";
@@ -32,32 +32,23 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
     }
   }, [fileUrl, fileName]);
 
-  // Reset loading state when file changes
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-    }
+    if (isOpen) setIsLoading(true);
   }, [isOpen, fileUrl]);
 
-  // Disable interactions on content behind modal (inert)
   useEffect(() => {
     if (isOpen) {
       const appRoot = document.getElementById("root");
-      if (appRoot) {
-        appRoot.setAttribute("inert", "");
-      }
+      if (appRoot) appRoot.setAttribute("inert", "");
     }
     return () => {
       if (isOpen) {
         const appRoot = document.getElementById("root");
-        if (appRoot) {
-          appRoot.removeAttribute("inert");
-        }
+        if (appRoot) appRoot.removeAttribute("inert");
       }
     };
   }, [isOpen]);
 
-  // Body scroll lock
   useEffect(() => {
     if (isOpen) {
       scrollPositionRef.current = window.scrollY;
@@ -77,30 +68,25 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
     };
   }, [isOpen]);
 
-  // Escape key to close
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
-  const renderDocumentContent = () => {
+  const renderContent = () => {
     if (isPdf) {
       return (
         <iframe
           src={fileUrl}
-          className="w-full h-full border-0"
+          className="doc-viewer-iframe"
           onLoad={() => setIsLoading(false)}
           title={fileName}
         />
@@ -111,8 +97,8 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
       return (
         <img
           src={fileUrl}
-          alt={fileName}
-          className="max-w-full max-h-full object-contain"
+          alt={fileName || "Document preview"}
+          className="doc-viewer-image"
           onLoad={() => setIsLoading(false)}
           onError={() => setIsLoading(false)}
         />
@@ -124,7 +110,7 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
       return (
         <iframe
           src={googleDocsViewerUrl}
-          className="w-full h-full border-0"
+          className="doc-viewer-iframe"
           onLoad={() => setIsLoading(false)}
           title={fileName}
         />
@@ -132,20 +118,15 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8">
-        <div className="text-6xl mb-4">📄</div>
-        <p className="text-lg font-medium text-gray-700 mb-2">
-          {fileName || "Document"}
-        </p>
-        <p className="text-gray-500 mb-4">
-          This document type cannot be previewed directly.
-        </p>
-        <button
-          onClick={handleDownload}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors cursor-pointer"
-        >
-          <LuDownload size={18} />
-          Download File
+      <div className="doc-viewer-fallback">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        <p>This file type cannot be previewed.</p>
+        <button className="doc-viewer-btn" onClick={handleDownload} aria-label="Download file">
+          <LuDownload size={16} aria-hidden="true" />
+          <span>Download File</span>
         </button>
       </div>
     );
@@ -154,48 +135,30 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   if (!isOpen) return null;
 
   const modalContent = (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4"
-      style={{ zIndex: 10000 }}
-      onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="doc-viewer-title"
-    >
-      <div className="bg-white rounded-lg w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 id="doc-viewer-title" className="text-lg font-semibold text-gray-800 truncate flex-1 mr-4">
-            {fileName || "Document Preview"}
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownload}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              aria-label="Download file"
-            >
-              <LuDownload size={20} aria-hidden="true" />
+    <div className="doc-viewer-overlay" onClick={handleOverlayClick} role="dialog" aria-modal="true" aria-labelledby="doc-viewer-title">
+      <div className="doc-viewer-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="doc-viewer-header">
+          <h3 id="doc-viewer-title" className="doc-viewer-title">{fileName || "Document Preview"}</h3>
+          <div className="doc-viewer-actions">
+            <button className="doc-viewer-btn" onClick={handleDownload} aria-label="Download file">
+              <LuDownload size={16} aria-hidden="true" />
+              <span>Download</span>
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              aria-label="Close document viewer"
-            >
-              <LuX size={20} aria-hidden="true" />
+            <button className="doc-viewer-close" onClick={onClose} aria-label="Close document viewer">
+              <LuX size={18} aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 relative overflow-hidden" aria-busy={isLoading}>
+        <div className="doc-viewer-body" aria-busy={isLoading}>
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white" role="status" aria-live="polite">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <span className="sr-only">Loading document...</span>
+            <div className="doc-viewer-loading" role="status" aria-live="polite">
+              <div className="doc-viewer-spinner" />
+              <span className="doc-viewer-sr-only">Loading document...</span>
             </div>
           )}
-          <div
-            className={`w-full h-full ${isImage ? "flex items-center justify-center p-4" : ""} ${isLoading ? "opacity-0" : "opacity-100"}`}
-          >
-            {renderDocumentContent()}
+          <div className={`doc-viewer-content ${isImage ? "doc-viewer-content-image" : ""} ${isLoading ? "doc-viewer-content-hidden" : ""}`}>
+            {renderContent()}
           </div>
         </div>
       </div>
