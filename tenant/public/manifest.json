@@ -1,0 +1,12 @@
+{
+  "name": "Noosphere Tenant Portal",
+  "short_name": "Noosphere",
+  "description": "Tenant management portal for Noosphere platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    { "src": "/logosvg.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

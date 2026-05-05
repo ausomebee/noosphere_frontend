@@ -1,3 +1,4 @@
+import usePageTitle from "../../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
@@ -27,6 +28,7 @@ const MyDocuments = () => {
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
   const { openDocument } = useDocumentViewer();
 
+  usePageTitle("Documents & Forms");
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showRenameFolderModal, setShowRenameFolderModal] = useState(false);

@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
@@ -29,6 +30,7 @@ const resolveRelativeTime = (createdAt) => {
 
 const Notifications = () => {
   const { userId, accessToken, refreshToken } = useAuth();
+  usePageTitle("Notifications");
   const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,6 +1,7 @@
 // src/Components/Allroutes.jsx
 import React, { useEffect, Suspense } from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
+import NotFound from "./NotFound";
 import FullPageLoader from "./FullPageLoader";
 import ProtectedRoute from "./ProtectedRoute";
 import { LayoutRoute } from "../Layout/TenantLayout";
@@ -329,7 +330,7 @@ const AllRoutes = () => {
       </Route>
 
       {/* Optional: Redirect any unknown route to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

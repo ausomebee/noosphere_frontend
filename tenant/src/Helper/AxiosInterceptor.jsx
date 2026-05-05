@@ -1,4 +1,5 @@
 import axios from "axios";
+import { showToast } from "./ShowToast";
 import api from "../api/authApis";
 
 
@@ -67,11 +68,13 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
                 },
               });
             } else {
-              navigate("/auth/login"); // Navigate to login if refresh fails
+              showToast("Session expired. Please log in again.", "error");
+              navigate("/auth/login");
             }
           } catch (refreshError) {
             if (import.meta.env.DEV) console.error("Token refresh failed", refreshError);
             isRefreshing = false;
+            showToast("Session expired. Please log in again.", "error");
             navigate("/auth/login");
           }
         }

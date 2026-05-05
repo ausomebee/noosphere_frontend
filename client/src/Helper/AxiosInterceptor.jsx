@@ -1,5 +1,6 @@
 import axios from "axios";
 import api from "../api/authApis";
+import { showToast } from "./ShowToast";
 import { getFingerprint } from "./fingerprint";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
@@ -67,10 +68,12 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
                 },
               });
             } else {
-              navigate("/auth/login"); // Navigate to login if refresh fails
+              showToast("Session expired. Please log in again.", "error");
+              navigate("/auth/login");
             }
           } catch (refreshError) {
             isRefreshing = false;
+            showToast("Session expired. Please log in again.", "error");
             navigate("/auth/login");
           }
         }

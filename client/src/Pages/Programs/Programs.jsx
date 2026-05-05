@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import ReusableTable from "../../Components/Table/ReuseableTable";
 import { FiEye } from "react-icons/fi";
@@ -11,6 +12,7 @@ import Button from "../../Components/Button/Button";
 const Programs = () => {
   const { clientId, accessToken, refreshToken } = useAuth();
 
+  usePageTitle("Programs");
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

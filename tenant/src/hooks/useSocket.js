@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import useAuth from "./useAuth";
+import { showToast } from "../Helper/ShowToast";
 import {
   connectSocket,
   disconnectSocket,
@@ -36,10 +37,19 @@ const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
       setIsConnected(true);
       registerUser({ userId, userType: "TENANT_STAFF" });
     };
-    const handleDisconnect = () => setIsConnected(false);
+    const handleDisconnect = (reason) => {
+      setIsConnected(false);
+      if (reason !== "io client disconnect") {
+        showToast("Connection lost. Reconnecting...", "error");
+      }
+    };
+    const handleReconnect = () => {
+      showToast("Connection restored", "success");
+    };
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
+    socket.io.on("reconnect", handleReconnect);
 
     // Already connected (e.g. hot-reload)
     if (socket.connected) {
@@ -54,6 +64,7 @@ const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
     return () => {
       socket?.off("connect", handleConnect);
       socket?.off("disconnect", handleDisconnect);
+      socket?.io?.off("reconnect", handleReconnect);
       unsubMsg?.();
       unsubNotif?.();
     };

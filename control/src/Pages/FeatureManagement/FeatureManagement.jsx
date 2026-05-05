@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
@@ -28,6 +29,7 @@ const FeatureManagement = () => {
     (state) => state.featureManagement
   );
 
+  usePageTitle("Features");
   const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false);
   const [modalState, setModalState] = useState({
     createFeatureGroup: false,

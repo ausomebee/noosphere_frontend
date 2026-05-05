@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState } from "react";
 import Button from "../../Components/Button/Button";
 import IntakePipeline from "../Dashboard/DashboardCards/IntakePipeline";
@@ -20,6 +21,7 @@ const DashboardCard = ({
   viewMoreRoute,
   onViewMore,
 }) => {
+  usePageTitle("Dashboard");
   const [isDragging, setIsDragging] = useState(false);
   const navigate = useNavigate();
 

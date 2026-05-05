@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useRef, useEffect } from "react";
 import { PasswordInput, TextInput } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
@@ -31,6 +32,7 @@ const getAvatarUrl = (url, firstName, lastName) => {
 const Profile = () => {
   const { tenantClientId: clientTenantId, clientId, accessToken, refreshToken } = useAuth();
 
+  usePageTitle("Profile");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);

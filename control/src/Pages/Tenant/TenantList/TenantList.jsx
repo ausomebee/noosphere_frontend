@@ -1,3 +1,4 @@
+import usePageTitle from "../../../hooks/usePageTitle";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./TenantList.css";
@@ -28,6 +29,7 @@ const TenantList = () => {
   const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
 
+  usePageTitle("Tenants");
   const [tenants, setTenants] = useState([]);
   const [overview, setOverview] = useState({ totalTenants: 0, totalStaffs: 0, totalClients: 0 });
   const [loading, setLoading] = useState(true);

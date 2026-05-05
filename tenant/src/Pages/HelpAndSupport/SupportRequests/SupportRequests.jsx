@@ -1,3 +1,4 @@
+import usePageTitle from "../../../hooks/usePageTitle";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
@@ -49,6 +50,7 @@ const SupportRequests = () => {
   const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
 
+  usePageTitle("Support Requests");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ all: 0, resolved: 0, pending: 0 });
