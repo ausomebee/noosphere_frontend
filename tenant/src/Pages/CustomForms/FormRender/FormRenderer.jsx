@@ -630,7 +630,7 @@ const FormRenderer = () => {
         return (
           <div className="fr-signature-box">
             {isBase64Image(value) ? (
-              <img src={value} alt="Signature" className="fr-sig-img" />
+              <img src={value} alt="Signature" className="fr-sig-img" loading="lazy" />
             ) : (
               <p className="fr-sig-typed">{value}</p>
             )}
@@ -735,7 +735,7 @@ const FormRenderer = () => {
                           <div key={i} className="fr-file-card">
                             {isImageUrl(f.value) ? (
                               <>
-                                <img src={f.value} alt="Upload" className="fr-file-thumb" />
+                                <img src={f.value} alt="Upload" className="fr-file-thumb" loading="lazy" />
                                 <span className="fr-file-label">{getFileName(f.value)}</span>
                               </>
                             ) : (

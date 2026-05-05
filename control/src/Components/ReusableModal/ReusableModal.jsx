@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import './ReusableModal.css';
 
@@ -20,6 +20,26 @@ const ReusableModal = ({
   children,
 }) => {
   const [scrollPosition, setScrollPosition] = React.useState(0);
+  const modalRef = useRef(null);
+
+  /* ---------- Focus trap + Escape ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Tab") {
+        const focusable = modalRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable?.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+        else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    const timer = setTimeout(() => { modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus(); }, 50);
+    return () => { document.removeEventListener("keydown", handleKeyDown); clearTimeout(timer); };
+  }, [isOpen, onClose]);
 
   // Handle body scroll and position when modal opens/closes
   useEffect(() => {
@@ -53,7 +73,7 @@ const ReusableModal = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div ref={modalRef} className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         {/* Modal Title */}
         <h2 id="modal-title" className="modal-title">{title}</h2>
 

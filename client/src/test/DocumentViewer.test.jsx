@@ -46,22 +46,20 @@ describe("DocumentViewer Component", () => {
 
   it("shows cannot preview message for unsupported types", () => {
     render(<DocumentViewer fileUrl="data.csv" fileName="Data" onClose={vi.fn()} />);
-    expect(screen.getByText("This document type cannot be previewed directly.")).toBeInTheDocument();
+    expect(screen.getByText("This file type cannot be previewed.")).toBeInTheDocument();
   });
 
   it("calls onClose when close button clicked", () => {
     const handleClose = vi.fn();
     render(<DocumentViewer fileUrl="test.pdf" fileName="Test" onClose={handleClose} />);
-    // Find the close button (has LuX icon)
-    const buttons = document.querySelectorAll("button");
-    const closeBtn = buttons[buttons.length - 1]; // last button is close
+    const closeBtn = screen.getByLabelText("Close document viewer");
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalled();
   });
 
   it("shows loading spinner initially", () => {
     render(<DocumentViewer fileUrl="test.pdf" fileName="Test" onClose={vi.fn()} />);
-    const spinner = document.querySelector(".animate-spin");
+    const spinner = document.querySelector(".doc-viewer-spinner");
     expect(spinner).toBeInTheDocument();
   });
 });

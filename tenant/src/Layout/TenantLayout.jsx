@@ -144,6 +144,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 
   return (
     <>
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
       <div
         className={`sidebar ${isOpen ? "open" : "closed"} ${
           isMobile ? "mobile" : ""
@@ -432,7 +433,7 @@ const DashboardLayout = ({ children }) => {
           </div>
         </header>
 
-        <main className="main-content">
+        <main id="main-content" className="main-content">
           {/* Notification alert banners */}
           {alerts.length > 0 && (
             <div className="layout-alerts">

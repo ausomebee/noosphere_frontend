@@ -34,7 +34,7 @@ describe("AxiosInterceptor", () => {
 
   it("creates an axios instance with withCredentials", () => {
     AxiosInterceptor("access-tok", "refresh-tok");
-    expect(axios.create).toHaveBeenCalledWith({ withCredentials: true });
+    expect(axios.create).toHaveBeenCalledWith({ withCredentials: true, timeout: 30000 });
   });
 
   it("registers request interceptor", () => {

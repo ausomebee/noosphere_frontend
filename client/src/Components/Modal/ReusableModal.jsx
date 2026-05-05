@@ -24,6 +24,26 @@ const ReusableModal = ({
   onTabChange,
 }) => {
   const scrollPositionRef = useRef(0);
+  const modalRef = useRef(null);
+
+  /* ---------- Focus trap + Escape ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Tab") {
+        const focusable = modalRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable?.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+        else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    const timer = setTimeout(() => { modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus(); }, 50);
+    return () => { document.removeEventListener("keydown", handleKeyDown); clearTimeout(timer); };
+  }, [isOpen, onClose]);
 
   /* ---------- Disable interactions on content behind modal ---------- */
   useEffect(() => {
@@ -96,6 +116,7 @@ const ReusableModal = ({
       <form
         id="modal-form"
         className={`modal-content modal-${size}`}
+        ref={modalRef}
         role="dialog"
         aria-labelledby="modal-title"
         onSubmit={handleSubmit}

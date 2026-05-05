@@ -77,7 +77,7 @@ const TenantListViewPayment = ({
                 value !== null ? (
                   <>
                     {typeof value.icon === "string" ? (
-                      <img src={value.icon} alt="Card" className="card-icon" />
+                      <img src={value.icon} alt="Card" className="card-icon" loading="lazy" />
                     ) : (
                       value.icon
                     )}

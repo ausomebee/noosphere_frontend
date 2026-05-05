@@ -623,7 +623,7 @@ const ClientReportView = () => {
                 <div className="crv-upload-area">
                   {uploadPreview ? (
                     <div className="crv-upload-preview">
-                      <img src={uploadPreview} alt="Signature" />
+                      <img src={uploadPreview} alt="Signature" loading="lazy" />
                       <button
                         type="button"
                         className="crv-remove-upload"

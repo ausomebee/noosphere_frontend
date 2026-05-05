@@ -133,7 +133,7 @@ const FormResponses = () => {
           <div className="fr-value-file">
             {isImageUrl(value) ? (
               <div className="fr-file-preview">
-                <img src={value} alt="Upload" className="fr-file-image" />
+                <img src={value} alt="Upload" className="fr-file-image" loading="lazy" />
                 <span className="fr-file-name">{getFileName(value)}</span>
               </div>
             ) : (
@@ -150,7 +150,7 @@ const FormResponses = () => {
         return (
           <div className="fr-value-signature">
             {isBase64Image(value) ? (
-              <img src={value} alt="Signature" className="fr-signature-image" />
+              <img src={value} alt="Signature" className="fr-signature-image" loading="lazy" />
             ) : (
               <p className="fr-signature-typed">{value}</p>
             )}
@@ -245,7 +245,7 @@ const FormResponses = () => {
                                 <div key={i} className="fr-value-file">
                                   {isImageUrl(url) ? (
                                     <div className="fr-file-preview">
-                                      <img src={url} alt="Upload" className="fr-file-image" />
+                                      <img src={url} alt="Upload" className="fr-file-image" loading="lazy" />
                                       <span className="fr-file-name">{getFileName(url)}</span>
                                     </div>
                                   ) : (

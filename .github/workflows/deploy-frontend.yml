@@ -20,17 +20,18 @@ jobs:
         with:
           node-version: '20'
 
-      # Build client
-      - name: Install & build client
+      # Test & build client
+      - name: Install, test & build client
         working-directory: ./client
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm ci
+          npm test
           npm run build
 
-      # Build control
-      - name: Install & build control
+      # Test & build control
+      - name: Install, test & build control
         working-directory: ./control
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
@@ -38,15 +39,17 @@ jobs:
           VITE_PAYPAL_CLIENT_ID: ${{ secrets.VITE_PAYPAL_CLIENT_ID }}
         run: |
           npm ci
+          npm test
           npm run build
 
-      # Build tenant
-      - name: Install & build tenant
+      # Test & build tenant
+      - name: Install, test & build tenant
         working-directory: ./tenant
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm ci
+          npm test
           npm run build
 
             # Clean target dirs on EC2 before uploading
