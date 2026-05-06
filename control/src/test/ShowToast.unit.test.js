@@ -6,6 +6,7 @@ vi.mock('react-toastify', () => ({
   toast: Object.assign(vi.fn(), {
     success: vi.fn(),
     error: vi.fn(),
+    dismiss: vi.fn(),
   }),
 }));
 

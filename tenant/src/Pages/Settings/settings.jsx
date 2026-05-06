@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState, useMemo } from "react";
 import GeneralSettings from "./SettingsSubs/GeneralSettings";
 import NotificationSettings from "./SettingsSubs/NotificationSettings";
@@ -18,6 +19,7 @@ const Settings = () => {
     [hasPermission]
   );
 
+  usePageTitle("Settings");
   const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
 
   const renderActiveTab = () => {

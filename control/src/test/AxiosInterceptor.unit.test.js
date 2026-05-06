@@ -47,7 +47,7 @@ describe('AxiosInterceptor', () => {
 
   it('creates axios instance with withCredentials', () => {
     AxiosInterceptor('token', 'refresh');
-    expect(axios.create).toHaveBeenCalledWith({ withCredentials: true });
+    expect(axios.create).toHaveBeenCalledWith({ withCredentials: true, timeout: 30000 });
   });
 
   it('registers request and response interceptors', () => {

@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState } from "react";
 import Staff from "./SettingsSubs/Staff";
 import Departments from "./SettingsSubs/Departments";
@@ -11,6 +12,7 @@ const tabs = [
 ];
 
 const ControlSettings = () => {
+  usePageTitle("Settings");
   const [activeTab, setActiveTab] = useState("staff");
 
   return (

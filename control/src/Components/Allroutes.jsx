@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import LayoutRoute from "./LayoutRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import FullPageLoader from "./FullPageLoader";
+import NotFound from "./NotFound";
 
 /* ============================
    Authentication (public, no layout) — keep lazy since they're a separate flow
@@ -107,6 +108,9 @@ const AllRoutes = () => {
           <Route path="/settings/roles-permissions/configure/:roleId" element={<RoleConfiguration />} />
           <Route path="/settings/securitySettings" element={<SecuritySettings />} />
         </Route>
+
+        {/* 404 catch-all */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

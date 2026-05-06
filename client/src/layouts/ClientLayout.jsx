@@ -82,6 +82,7 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="dashboard-layout">
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
       {(!isOnline || showOnlineBanner) && (
         <div className={`network-status-banner ${isOnline ? "online" : "offline"}`}>
           <span className="network-status-dot" />
@@ -189,7 +190,7 @@ const DashboardLayout = ({ children }) => {
           </button>
         </aside>
 
-        <main className="dashboard-main">{children}</main>
+        <main id="main-content" className="dashboard-main">{children}</main>
       </div>
     </div>
   );

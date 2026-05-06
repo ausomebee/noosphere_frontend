@@ -252,6 +252,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-container">
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
       {(!isOnline || showOnlineBanner) && (
         <div className={`network-status-banner ${isOnline ? "online" : "offline"}`}>
           <span className="network-status-dot" />
@@ -409,7 +410,7 @@ const Layout = ({ children }) => {
             </div>
           </div>
         </header>
-        <main className="main-content">{children}</main>
+        <main id="main-content" className="main-content">{children}</main>
       </div>
     </div>
   );

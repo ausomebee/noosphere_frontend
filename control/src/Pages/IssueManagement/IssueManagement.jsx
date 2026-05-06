@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, {
   useState,
   useEffect,
@@ -26,6 +27,7 @@ import { formatDate } from "../../Helper/Formatters";
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
 
+  usePageTitle("Issues");
   const [selectedFilter, setSelectedFilter] = useState("by category");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddIssueModalOpen, setIsAddIssueModalOpen] = useState(false);

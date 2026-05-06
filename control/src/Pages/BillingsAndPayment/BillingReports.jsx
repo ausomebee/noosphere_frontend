@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 /**
  * BillingReports.jsx
  *
@@ -333,6 +334,7 @@ const REPORT_CONFIG = {
 
 const BillingReports = () => {
   const { accessToken, refreshToken } = useAuth();
+  usePageTitle("Billing");
   const [selectedReport, setSelectedReport] = useState(null);
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -1,7 +1,8 @@
 // src/Components/AllRoutes.jsx (or wherever your file is)
 import React, { Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import NotFound from "./NotFound";
 import FormRenderer from "./FormRender/FormRenderer";
 
 // Lazy load all page components
@@ -61,8 +62,8 @@ const AllRoutes = () => {
 
       <Route path="/changePassword/:clientTenantId" element={<ChangePassword />} />
 
-      {/* Catch-all: redirect unknown routes to login */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 catch-all */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

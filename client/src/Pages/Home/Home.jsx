@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import DashboardLayout from "../../layouts/ClientLayout";
 
@@ -75,6 +76,7 @@ const LoadingSpinner = ({ size = "medium", message = "Loading..." }) => {
 // Main Home Component
 // ============================================================================
 const Home = () => {
+  usePageTitle("Dashboard");
   const [activeTab, setActiveTab] = useState("upcoming");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState({

@@ -1,3 +1,4 @@
+import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
@@ -109,6 +110,7 @@ const Notifications = () => {
   const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
   const { timeFormat } = useFormatSettings();
+  usePageTitle("Notifications");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
