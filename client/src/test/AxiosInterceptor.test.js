@@ -77,4 +77,30 @@ describe("AxiosInterceptor", () => {
     expect(instance).toBeDefined();
     expect(typeof instance).toBe("object");
   });
+
+  describe("response error interceptor", () => {
+    let errorHandler;
+
+    beforeEach(() => {
+      AxiosInterceptor("tok", "ref", vi.fn(), vi.fn());
+      errorHandler = axios.create().interceptors.response.use.mock.calls[0][1];
+    });
+
+    it("rejects non-401 errors", async () => {
+      const error = { response: { status: 500 }, config: {} };
+      await expect(errorHandler(error)).rejects.toEqual(error);
+    });
+
+    it("rejects errors without response", async () => {
+      const error = { config: {} };
+      await expect(errorHandler(error)).rejects.toEqual(error);
+    });
+
+    it("request error interceptor rejects", () => {
+      AxiosInterceptor("tok", "ref");
+      const requestErrorHandler = axios.create().interceptors.request.use.mock.calls[0][1];
+      const error = new Error("Request failed");
+      expect(requestErrorHandler(error)).rejects.toEqual(error);
+    });
+  });
 });

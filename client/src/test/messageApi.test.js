@@ -78,5 +78,28 @@ describe("messageApi", () => {
       await api.MarkNotificationRead({ id: "n1", ...auth });
       expect(mockPost).toHaveBeenCalledWith(expect.stringContaining("/notifications/read/n1"));
     });
+    it("throws on failure", async () => {
+      mockPost.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.MarkNotificationRead({ id: "n1", ...auth })).rejects.toThrow("Fail");
+    });
+  });
+
+  describe("error paths", () => {
+    it("GetAssignedClinicians throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAssignedClinicians({ clientId: "c1", tenantId: "t1", ...auth })).rejects.toThrow("Fail");
+    });
+    it("GetUserMessages throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetUserMessages({ userId: "u1", ...auth })).rejects.toThrow("Fail");
+    });
+    it("GetNotifications throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetNotifications({ userId: "u1", ...auth })).rejects.toThrow("Fail");
+    });
+    it("SendMessage throws on error", async () => {
+      mockPost.mockRejectedValue({ response: { data: { message: "Send fail" } } });
+      await expect(api.SendMessage({ senderId: "u1", receiverId: "u2", content: "hi", ...auth })).rejects.toThrow("Send fail");
+    });
   });
 });

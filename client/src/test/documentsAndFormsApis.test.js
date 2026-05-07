@@ -7,6 +7,7 @@ vi.mock("../Helper/AxiosInterceptor", () => ({
 }));
 
 import api from "../api/documentsAndFormsApis";
+import { fileToBase64 } from "../api/documentsAndFormsApis";
 
 describe("documentsAndFormsApis", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -146,6 +147,84 @@ describe("documentsAndFormsApis", () => {
         expect.objectContaining({ formId: "f1", responseFields: fields }),
       );
       expect(result).toEqual({ id: "resp1" });
+    });
+
+    it("throws on failure", async () => {
+      mockPost.mockRejectedValue({ response: { data: { message: "Submit failed" } } });
+      await expect(api.CreateFormResponseField({ formId: "f1", tenantId: "t1", submittedBy: "u1", responseFields: [], ...auth })).rejects.toThrow("Submit failed");
+    });
+  });
+
+  describe("error paths", () => {
+    it("CreateNewFile throws default message", async () => {
+      mockPost.mockRejectedValue({});
+      await expect(api.CreateNewFile({ clientTenantId: "ct1", name: "x", url: "u", size: "1", fileType: "pdf", ...auth })).rejects.toThrow();
+    });
+
+    it("GetAllFiles throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAllFiles({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetRecentFiles throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetRecentFiles({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetAllFilesInFolder throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAllFilesInFolder({ folderId: "f1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetAllFolders throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAllFolders({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetAllRequestDocuments throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAllRequestDocuments({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetCountsForDocumentRequests throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetCountsForDocumentRequests({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetAllClientForms throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetAllClientForms({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetFormsCounts throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetFormsCounts({ clientTenantId: "ct1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("AttachDocumentsToRequest throws on error", async () => {
+      mockPost.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.AttachDocumentsToRequest({ clientTenantId: "ct1", name: "X", documentDetails: [], requestId: "r1", ...auth })).rejects.toThrow("Fail");
+    });
+
+    it("GetFormWithItsFields throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Not found" } } });
+      await expect(api.GetFormWithItsFields({ formId: "f1", ...auth })).rejects.toThrow("Not found");
+    });
+
+  });
+
+  describe("fileToBase64", () => {
+    it("converts file to base64 string", async () => {
+      const file = new File(["hello world"], "test.txt", { type: "text/plain" });
+      const result = await fileToBase64(file);
+      expect(result).toContain("data:");
+      expect(typeof result).toBe("string");
+    });
+
+    it("rejects on reader error", async () => {
+      const badFile = { name: "bad" };
+      // FileReader will fail on non-Blob input
+      await expect(fileToBase64(badFile)).rejects.toBeDefined();
     });
   });
 });

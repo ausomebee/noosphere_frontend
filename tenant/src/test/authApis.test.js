@@ -130,6 +130,96 @@ describe('authApis', () => {
     });
   });
 
+  describe('AdminVerifyToken', () => {
+    it('sends POST with userId and token', async () => {
+      axios.post.mockResolvedValueOnce({ data: { valid: true } });
+      await api.AdminVerifyToken({ userId: 'u1', token: 'tok123' });
+      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verify'), { userId: 'u1', token: 'tok123' });
+    });
+    it('throws on failure', async () => {
+      axios.post.mockRejectedValueOnce({ response: { data: { message: 'Invalid' } } });
+      await expect(api.AdminVerifyToken({ userId: 'u1', token: 'bad' })).rejects.toThrow('Invalid');
+    });
+  });
+
+  describe('AdminOnboarding', () => {
+    it('sends PATCH with id and password', async () => {
+      axios.patch.mockResolvedValueOnce({ data: { status: 'ok' } });
+      await api.AdminOnboarding({ id: 'u1', password: 'newPass' });
+      expect(axios.patch).toHaveBeenCalledWith(expect.stringContaining('/tenant/setpassword'), { id: 'u1', password: 'newPass' });
+    });
+    it('throws on failure', async () => {
+      axios.patch.mockRejectedValueOnce({ response: { data: { message: 'Onboarding failed' } } });
+      await expect(api.AdminOnboarding({ id: 'u1', password: 'x' })).rejects.toThrow('Onboarding failed');
+    });
+  });
+
+  describe('Admin2FALink', () => {
+    it('sends GET with id and moduleType', async () => {
+      axios.get.mockResolvedValueOnce({ data: { link: 'otpauth://...' } });
+      await api.Admin2FALink({ id: 'u1', moduleType: 'TENANT' });
+      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/u1/TENANT'));
+    });
+    it('throws on failure', async () => {
+      axios.get.mockRejectedValueOnce({ response: { data: { message: '2FA fail' } } });
+      await expect(api.Admin2FALink({ id: 'u1', moduleType: 'TENANT' })).rejects.toThrow('2FA fail');
+    });
+  });
+
+  describe('GetSuperAdminChoices', () => {
+    it('sends GET with id and headers', async () => {
+      axios.get.mockResolvedValueOnce({ data: { Authenticator2FA: true } });
+      await api.GetSuperAdminChoices({ id: 't1' });
+      expect(axios.get).toHaveBeenCalledWith(
+        expect.stringContaining('/tenant/tenantadminchoices/t1'),
+        expect.objectContaining({ headers: { "Content-Type": "application/json" } })
+      );
+    });
+    it('throws on failure', async () => {
+      axios.get.mockRejectedValueOnce({ response: { data: { message: 'Not found' } } });
+      await expect(api.GetSuperAdminChoices({ id: 't1' })).rejects.toThrow('Not found');
+    });
+  });
+
+  describe('Admin2FAVerifySecretMessage', () => {
+    it('sends POST with secret answer', async () => {
+      axios.post.mockResolvedValueOnce({ data: { verified: true } });
+      await api.Admin2FAVerifySecretMessage({ userId: 'u1', secret: 'answer', authQuestion: 'What?' });
+      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verifysecretmessage'), { userId: 'u1', secret: 'answer', authQuestion: 'What?' });
+    });
+    it('throws on failure', async () => {
+      axios.post.mockRejectedValueOnce({ response: { data: { message: 'Wrong answer' } } });
+      await expect(api.Admin2FAVerifySecretMessage({ userId: 'u1', secret: 'bad', authQuestion: 'What?' })).rejects.toThrow('Wrong answer');
+    });
+  });
+
+  describe('error paths - default messages', () => {
+    it('AdminSetPassword throws on error with nested data.data', async () => {
+      axios.patch.mockRejectedValueOnce({ response: { data: { data: { message: 'Fail' } } } });
+      await expect(api.AdminSetPassword({ id: '1', password: 'x' })).rejects.toThrow('Fail');
+    });
+    it('AdminSetPassword throws default message', async () => {
+      axios.patch.mockRejectedValueOnce(new Error('Network'));
+      await expect(api.AdminSetPassword({ id: '1', password: 'x' })).rejects.toThrow('Password setting failed');
+    });
+    it('Admin2FAVerify throws on error', async () => {
+      axios.post.mockRejectedValueOnce({ response: { data: { message: 'Bad token' } } });
+      await expect(api.Admin2FAVerify({ userId: 'u1', token: 'bad' })).rejects.toThrow('Bad token');
+    });
+    it('Admin2FACreateSecretMessage throws on error', async () => {
+      axios.post.mockRejectedValueOnce({ response: { data: { message: 'Fail' } } });
+      await expect(api.Admin2FACreateSecretMessage({ userId: 'u1', secret: 's', authQuestion: 'q', module: 'TENANT' })).rejects.toThrow('Fail');
+    });
+    it('SuperAdminChoices throws on error', async () => {
+      axios.patch.mockRejectedValueOnce({ response: { data: { message: 'Fail' } } });
+      await expect(api.SuperAdminChoices({ Authenticator2FA: true, securityQuestion: false, setForAll: true, tenantId: 't1' })).rejects.toThrow('Fail');
+    });
+    it('AdminForgetPassword throws default message', async () => {
+      axios.get.mockRejectedValueOnce(new Error('Network'));
+      await expect(api.AdminForgetPassword({ email: 'x@x.com' })).rejects.toThrow('Forget Password Email failed');
+    });
+  });
+
   describe('refreshAccessToken', () => {
     it('dispatches updateAccessToken on success', async () => {
       const { refreshAccessToken } = await import('../api/authApis');

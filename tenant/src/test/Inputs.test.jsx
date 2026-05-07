@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { TextInput, PasswordInput, CheckboxInput, SwitchInput, TextareaInput, SearchInput } from '../Components/Input/Inputs';
+import { TextInput, PasswordInput, CheckboxInput, SwitchInput, TextareaInput, SearchInput, RadioInput, TimeInput, CustomDatePickerInput, SelectInput, SearchableSelectInput } from '../Components/Input/Inputs';
 
 describe('TextInput', () => {
   it('renders with label', () => {
@@ -163,5 +163,134 @@ describe('SearchInput', () => {
   it('renders search icon', () => {
     const { container } = render(<SearchInput onChange={vi.fn()} />);
     expect(container.querySelector('.search-icon')).toBeInTheDocument();
+  });
+});
+
+describe('RadioInput', () => {
+  it('renders with label before input (default)', () => {
+    render(<RadioInput label="Option A" name="choice" value="a" checked={false} onChange={vi.fn()} />);
+    expect(screen.getByText('Option A')).toBeInTheDocument();
+  });
+  it('renders with label after input', () => {
+    render(<RadioInput label="Option B" name="choice" value="b" checked={true} onChange={vi.fn()} inputPosition="after" />);
+    expect(screen.getByRole('radio')).toBeChecked();
+  });
+  it('calls onChange', () => {
+    const fn = vi.fn();
+    render(<RadioInput label="Opt" name="c" value="a" checked={false} onChange={fn} />);
+    fireEvent.click(screen.getByRole('radio'));
+    expect(fn).toHaveBeenCalled();
+  });
+  it('shows error', () => {
+    render(<RadioInput label="X" name="c" value="a" checked={false} onChange={vi.fn()} error="Pick one" />);
+    expect(screen.getByText('Pick one')).toBeInTheDocument();
+  });
+  it('renders without label', () => {
+    const { container } = render(<RadioInput name="c" value="a" checked={false} onChange={vi.fn()} />);
+    expect(container.querySelector('.input-radio-label')).not.toBeInTheDocument();
+  });
+});
+
+describe('TimeInput', () => {
+  it('renders three inputs', () => {
+    const { container } = render(<TimeInput onChange={vi.fn()} />);
+    expect(container.querySelectorAll('input')).toHaveLength(3);
+  });
+  it('displays formatted time', () => {
+    render(<TimeInput value={{ hours: 9, minutes: 5, seconds: 30 }} onChange={vi.fn()} />);
+    expect(screen.getByText('09:05:30')).toBeInTheDocument();
+  });
+  it('calls onChange when hours change', () => {
+    const fn = vi.fn();
+    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
+    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: '14' } });
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 14 }));
+  });
+  it('clamps hours to 23', () => {
+    const fn = vi.fn();
+    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
+    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: '99' } });
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 23 }));
+  });
+  it('clamps minutes to 59', () => {
+    const fn = vi.fn();
+    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
+    fireEvent.change(container.querySelectorAll('input')[1], { target: { value: '99' } });
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ minutes: 59 }));
+  });
+  it('handles NaN as 0', () => {
+    const fn = vi.fn();
+    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
+    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: 'abc' } });
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 0 }));
+  });
+});
+
+describe('CustomDatePickerInput', () => {
+  it('renders with value', () => {
+    render(<CustomDatePickerInput value="2026-01-01" placeholder="Pick" />);
+    expect(screen.getByDisplayValue('2026-01-01')).toBeInTheDocument();
+  });
+  it('calls onClick', () => {
+    const fn = vi.fn();
+    render(<CustomDatePickerInput value="" onClick={fn} placeholder="Pick" />);
+    fireEvent.click(screen.getByPlaceholderText('Pick'));
+    expect(fn).toHaveBeenCalled();
+  });
+  it('shows string error', () => {
+    render(<CustomDatePickerInput value="" error="Required" placeholder="Pick" />);
+    expect(screen.getByText('Required')).toBeInTheDocument();
+  });
+  it('shows error.message', () => {
+    render(<CustomDatePickerInput value="" error={{ message: "Invalid" }} placeholder="Pick" />);
+    expect(screen.getByText('Invalid')).toBeInTheDocument();
+  });
+  it('adds error class', () => {
+    const { container } = render(<CustomDatePickerInput value="" error="Bad" placeholder="Pick" />);
+    expect(container.querySelector('.custom-datepicker-input-error')).toBeInTheDocument();
+  });
+});
+
+describe('SelectInput', () => {
+  const options = [{ value: 'a', label: 'Apple' }, { value: 'b', label: 'Banana' }];
+  it('renders with label', () => {
+    render(<SelectInput label="Fruit" options={options} onChange={vi.fn()} />);
+    expect(screen.getByText('Fruit')).toBeInTheDocument();
+  });
+  it('renders placeholder', () => {
+    render(<SelectInput options={options} onChange={vi.fn()} placeholder="Choose..." />);
+    expect(screen.getByText('Choose...')).toBeInTheDocument();
+  });
+  it('shows error', () => {
+    render(<SelectInput options={options} onChange={vi.fn()} error="Required" />);
+    expect(screen.getByText('Required')).toBeInTheDocument();
+  });
+  it('renders with selected value', () => {
+    render(<SelectInput options={options} value="a" onChange={vi.fn()} />);
+    expect(screen.getByText('Apple')).toBeInTheDocument();
+  });
+});
+
+describe('SearchableSelectInput', () => {
+  const options = [{ value: 'us', label: 'United States' }, { value: 'uk', label: 'United Kingdom' }];
+  it('renders with label', () => {
+    render(<SearchableSelectInput label="Country" options={options} onChange={vi.fn()} />);
+    expect(screen.getByText('Country')).toBeInTheDocument();
+  });
+  it('renders placeholder', () => {
+    render(<SearchableSelectInput options={options} onChange={vi.fn()} placeholder="Select..." />);
+    expect(screen.getByText('Select...')).toBeInTheDocument();
+  });
+  it('shows error', () => {
+    render(<SearchableSelectInput options={options} onChange={vi.fn()} error="Required" />);
+    expect(screen.getByText('Required')).toBeInTheDocument();
+  });
+  it('renders with value', () => {
+    render(<SearchableSelectInput options={options} value="us" onChange={vi.fn()} />);
+    expect(screen.getByText('United States')).toBeInTheDocument();
+  });
+  it('renders disabled', () => {
+    render(<SearchableSelectInput options={options} onChange={vi.fn()} disabled />);
+    expect(screen.getByText('Search options…')).toBeInTheDocument();
   });
 });
