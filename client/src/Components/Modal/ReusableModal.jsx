@@ -25,12 +25,14 @@ const ReusableModal = ({
 }) => {
   const scrollPositionRef = useRef(0);
   const modalRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   /* ---------- Focus trap + Escape ---------- */
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") { onCloseRef.current(); return; }
       if (e.key === "Tab") {
         const focusable = modalRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
         if (!focusable?.length) return;
@@ -43,7 +45,7 @@ const ReusableModal = ({
     document.addEventListener("keydown", handleKeyDown);
     const timer = setTimeout(() => { modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus(); }, 50);
     return () => { document.removeEventListener("keydown", handleKeyDown); clearTimeout(timer); };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   /* ---------- Disable interactions on content behind modal ---------- */
   useEffect(() => {

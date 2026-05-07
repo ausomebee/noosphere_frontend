@@ -25,7 +25,7 @@
 }
 
 .modal-title {
-  font-size: 1.15rem;
+  font-size: 0.8rem;
   font-weight: bold;
   margin-bottom: 1rem;
   color: #333333;
@@ -792,7 +792,7 @@
 
   /* Modal title — smaller text */
   .modal-title {
-    font-size: 1rem;
+    font-size: 0.8rem;
     margin-bottom: 0.75rem;
   }
 
