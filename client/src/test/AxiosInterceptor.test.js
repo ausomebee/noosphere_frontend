@@ -96,11 +96,11 @@ describe("AxiosInterceptor", () => {
       await expect(errorHandler(error)).rejects.toEqual(error);
     });
 
-    it("request error interceptor rejects", () => {
+    it("request error interceptor rejects", async () => {
       AxiosInterceptor("tok", "ref");
       const requestErrorHandler = axios.create().interceptors.request.use.mock.calls[0][1];
       const error = new Error("Request failed");
-      expect(requestErrorHandler(error)).rejects.toEqual(error);
+      await expect(requestErrorHandler(error)).rejects.toEqual(error);
     });
   });
 });
