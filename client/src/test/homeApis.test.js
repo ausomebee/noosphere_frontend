@@ -135,5 +135,41 @@ describe("homeApis", () => {
         expect.objectContaining({ date: "2025-06-15", startTime: "10:00" }),
       );
     });
+
+    it("throws on failure", async () => {
+      mockPatch.mockRejectedValue({ response: { data: { message: "Conflict" } } });
+      await expect(api.RescheduleAppointments({ tenantId: "t1", id: "a1", date: new Date(), ...authParams })).rejects.toThrow();
+    });
+  });
+
+  describe("error paths - default messages", () => {
+    it("GetAllAuthorizationServiceCodes throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Auth fail" } } });
+      await expect(api.GetAllAuthorizationServiceCodes({ tenantClientId: "tc1", ...authParams })).rejects.toThrow("Auth fail");
+    });
+    it("GetClientUpcomingAppointments throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetClientUpcomingAppointments({ clientId: "c1", ...authParams })).rejects.toThrow("Fail");
+    });
+    it("GetClientCompletedAppointments throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetClientCompletedAppointments({ clientId: "c1", ...authParams })).rejects.toThrow("Fail");
+    });
+    it("GetClientCancelAppointments throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetClientCancelAppointments({ clientId: "c1", ...authParams })).rejects.toThrow("Fail");
+    });
+    it("GetClientAwaitingApprovals throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetClientAwaitingApprovals({ clientId: "c1", ...authParams })).rejects.toThrow("Fail");
+    });
+    it("GetClientRescheduledAppointments throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      await expect(api.GetClientRescheduledAppointments({ clientId: "c1", ...authParams })).rejects.toThrow("Fail");
+    });
+    it("GetClientSessionChart throws default message", async () => {
+      mockGet.mockRejectedValue(new Error("Network"));
+      await expect(api.GetClientSessionChart({ clientId: "c1", groupBy: "week", ...authParams })).rejects.toThrow();
+    });
   });
 });

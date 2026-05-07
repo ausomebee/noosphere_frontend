@@ -152,5 +152,112 @@ describe('InvoiceApi', () => {
       await InvoiceApi.GetActivationLogs(tokens);
       expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/tenant/activation-logs'));
     });
+    it('throws on error', async () => {
+      mockGet.mockRejectedValueOnce({ response: { data: { message: 'Logs fail' } } });
+      await expect(InvoiceApi.GetActivationLogs(tokens)).rejects.toThrow('Logs fail');
+    });
+  });
+
+  describe('GetBillingTotalMetric', () => {
+    it('fetches billing total metric', async () => {
+      mockGet.mockResolvedValueOnce({ data: { total: 1000 } });
+      const result = await InvoiceApi.GetBillingTotalMetric({ from: '2026-01-01', to: '2026-12-31', ...tokens });
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/invoice/billed/total/'));
+      expect(result).toEqual({ total: 1000 });
+    });
+    it('throws on error', async () => {
+      mockGet.mockRejectedValueOnce({ response: { data: { message: 'Metric fail' } } });
+      await expect(InvoiceApi.GetBillingTotalMetric({ from: 'a', to: 'b', ...tokens })).rejects.toThrow('Metric fail');
+    });
+  });
+
+  describe('GetBillingDueMetric', () => {
+    it('fetches billing due metric', async () => {
+      mockGet.mockResolvedValueOnce({ data: { due: 500 } });
+      const result = await InvoiceApi.GetBillingDueMetric({ from: '2026-01-01', to: '2026-12-31', ...tokens });
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/invoice/billed/due/'));
+      expect(result).toEqual({ due: 500 });
+    });
+  });
+
+  describe('RecordPayment', () => {
+    it('records payment via fetch', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true }) });
+      const result = await InvoiceApi.RecordPayment({
+        tenantId: 't1', invoiceId: 'inv1', planId: 'p1', billingCycle: 'Monthly',
+        endDate: '2026-12-31', transactionId: 'tx1', transactionRef: 'ref1',
+        amount: 100, cardType: 'Visa', lastFourDigits: '1234', gatewayToken: 'gt1',
+        holderName: 'John', paymentStatus: 'SUCCESS', gateway: 'stripe',
+      });
+      expect(result).toEqual({ success: true });
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/billing/pay-payment-link'), expect.objectContaining({ method: 'POST' }));
+    });
+    it('throws on non-ok response', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Payment failed' }) });
+      await expect(InvoiceApi.RecordPayment({ tenantId: 't1' })).rejects.toThrow('Payment failed');
+    });
+    it('throws on fetch error', async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network'));
+      await expect(InvoiceApi.RecordPayment({ tenantId: 't1' })).rejects.toThrow('Network');
+    });
+  });
+
+  describe('ValidatePaymentToken', () => {
+    it('validates token via fetch', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ valid: true }) });
+      const result = await InvoiceApi.ValidatePaymentToken({ token: 'abc' });
+      expect(result).toEqual({ valid: true });
+    });
+    it('throws on invalid token', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Expired' }) });
+      await expect(InvoiceApi.ValidatePaymentToken({ token: 'bad' })).rejects.toThrow('Expired');
+    });
+    it('throws on fetch error', async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network'));
+      await expect(InvoiceApi.ValidatePaymentToken({ token: 'x' })).rejects.toThrow('Network');
+    });
+  });
+
+  describe('error paths with default messages', () => {
+    it('GetPaymentById throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetPaymentById({ id: '1', ...tokens })).rejects.toThrow('Failed to fetch payment by ID');
+    });
+    it('GetInvoiceByAllAndStatus throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetInvoiceByAllAndStatus({ status: 'x', ...tokens })).rejects.toThrow('Failed to fetch invoices by status');
+    });
+    it('GetPaymentByAllAndStatus throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetPaymentByAllAndStatus({ status: 'x', ...tokens })).rejects.toThrow('Failed to fetch payments by status');
+    });
+    it('GetCountForInvoice throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetCountForInvoice(tokens)).rejects.toThrow('Failed to fetch invoice counts');
+    });
+    it('GetCountForPayment throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetCountForPayment(tokens)).rejects.toThrow('Failed to fetch payment counts');
+    });
+    it('RegeneratePaymentLink throws default message', async () => {
+      mockPatch.mockRejectedValueOnce({});
+      await expect(InvoiceApi.RegeneratePaymentLink({ tenantId: 't1', ...tokens })).rejects.toThrow('Failed to regenerate payment link');
+    });
+    it('GetInvoiceHistory throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetInvoiceHistory({ tenantId: 't1', ...tokens })).rejects.toThrow('Failed to fetch invoice history');
+    });
+    it('GetReportPayments throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetReportPayments(tokens)).rejects.toThrow('Failed to fetch payment activity report');
+    });
+    it('GetReportInvoices throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetReportInvoices(tokens)).rejects.toThrow('Failed to fetch invoice activity report');
+    });
+    it('GetDeactivationLogs throws default message', async () => {
+      mockGet.mockRejectedValueOnce({});
+      await expect(InvoiceApi.GetDeactivationLogs(tokens)).rejects.toThrow('Failed to fetch deactivation logs');
+    });
   });
 });

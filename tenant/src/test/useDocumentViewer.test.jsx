@@ -16,11 +16,12 @@ vi.mock("../Components/FileUpload/DocumentViewer", () => ({
 }));
 
 const TestConsumer = () => {
-  const { openDocument, closeDocument } = useDocumentViewer();
+  const { openDocument, closeDocument, downloadDocument } = useDocumentViewer();
   return (
     <div>
       <button onClick={() => openDocument("report.pdf", "Report")}>Open</button>
       <button onClick={() => closeDocument()}>Close</button>
+      <button onClick={() => downloadDocument("http://example.com/file.pdf", "file.pdf")}>Download</button>
     </div>
   );
 };
@@ -74,5 +75,40 @@ describe("useDocumentViewer", () => {
     expect(screen.getByTestId("document-viewer")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("viewer-close"));
     expect(screen.queryByTestId("document-viewer")).not.toBeInTheDocument();
+  });
+
+  it("downloadDocument fetches and triggers download", async () => {
+    const mockBlob = new Blob(["test"], { type: "application/pdf" });
+    global.fetch = vi.fn().mockResolvedValue({ blob: () => Promise.resolve(mockBlob) });
+    global.URL.createObjectURL = vi.fn().mockReturnValue("blob:url");
+    global.URL.revokeObjectURL = vi.fn();
+
+    const { getByText } = render(
+      <DocumentViewerProvider>
+        <TestConsumer />
+      </DocumentViewerProvider>
+    );
+    fireEvent.click(getByText("Download"));
+
+    await vi.waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith("http://example.com/file.pdf");
+    });
+  });
+
+  it("downloadDocument falls back to window.open on error", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    const mockOpen = vi.fn();
+    window.open = mockOpen;
+
+    const { getByText } = render(
+      <DocumentViewerProvider>
+        <TestConsumer />
+      </DocumentViewerProvider>
+    );
+    fireEvent.click(getByText("Download"));
+
+    await vi.waitFor(() => {
+      expect(mockOpen).toHaveBeenCalledWith("http://example.com/file.pdf", "_blank");
+    });
   });
 });

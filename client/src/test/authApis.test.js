@@ -66,6 +66,17 @@ describe("authApis", () => {
     });
   });
 
+  describe("ClientSetPassword error", () => {
+    it("throws on failure", async () => {
+      axios.patch.mockRejectedValue({ response: { data: { data: { message: "Bad password" } } } });
+      await expect(api.ClientSetPassword({ clientTenantId: "ct1", password: "x" })).rejects.toThrow("Bad password");
+    });
+    it("throws default message", async () => {
+      axios.patch.mockRejectedValue(new Error("Network"));
+      await expect(api.ClientSetPassword({ clientTenantId: "ct1", password: "x" })).rejects.toThrow("Password setting failed");
+    });
+  });
+
   describe("refreshAccessToken", () => {
     it("posts refresh token and dispatches new tokens", async () => {
       const dispatch = vi.fn();

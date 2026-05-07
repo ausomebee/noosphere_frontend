@@ -3,6 +3,9 @@ import formResponseReducer, {
   initializeResponse, setResponse, setCurrentPage, clearAllResponses,
   markAsSubmitted, setSignature, setSignatureMode, setFilesForField,
   setFileUploadStatus, clearResponseField, setLoading, setError, resetFormResponse,
+  selectFormResponse, selectResponses, selectFiles, selectSignatures,
+  selectCurrentPage, selectIsSubmitted, selectSubmissionId, selectIsLoading,
+  selectError, selectFileCount, selectHasResponse,
 } from "../ReduxStore/features/formResponseSlice";
 
 const initialState = {
@@ -154,4 +157,73 @@ describe("formResponse slice", () => {
       expect(formResponseReducer(dirty, resetFormResponse())).toEqual(initialState);
     });
   });
+
+  describe("clearAllResponses", () => {
+    it("clears responses, files, signatures but keeps metadata", () => {
+      const withData = { ...initialState, formId: "f1", responses: { f1: "val" }, files: { f1: [{ name: "a.pdf" }] }, signatures: { f1: "sig" } };
+      const state = formResponseReducer(withData, clearAllResponses());
+      expect(state.responses).toEqual({});
+      expect(state.files).toEqual({});
+      expect(state.signatures).toEqual({});
+      expect(state.formId).toBe("f1");
+    });
+  });
+
+  describe("selectors", () => {
+    const mockState = {
+      formResponse: {
+        ...initialState,
+        formId: "f1",
+        responses: { field1: "value1" },
+        files: { field1: [{ name: "a.pdf" }, { name: "b.pdf" }] },
+        signatures: { field2: "sig-data" },
+        currentPage: 2,
+        submitted: true,
+        submissionId: "sub1",
+        isLoading: true,
+        error: "Something went wrong",
+      },
+    };
+
+    it("selectFormResponse returns full slice", () => {
+      expect(selectFormResponse(mockState)).toBe(mockState.formResponse);
+    });
+    it("selectResponses returns responses", () => {
+      expect(selectResponses(mockState)).toEqual({ field1: "value1" });
+    });
+    it("selectFiles returns files", () => {
+      expect(selectFiles(mockState)).toEqual({ field1: [{ name: "a.pdf" }, { name: "b.pdf" }] });
+    });
+    it("selectSignatures returns signatures", () => {
+      expect(selectSignatures(mockState)).toEqual({ field2: "sig-data" });
+    });
+    it("selectCurrentPage returns currentPage", () => {
+      expect(selectCurrentPage(mockState)).toBe(2);
+    });
+    it("selectIsSubmitted returns submitted", () => {
+      expect(selectIsSubmitted(mockState)).toBe(true);
+    });
+    it("selectSubmissionId returns submissionId", () => {
+      expect(selectSubmissionId(mockState)).toBe("sub1");
+    });
+    it("selectIsLoading returns isLoading", () => {
+      expect(selectIsLoading(mockState)).toBe(true);
+    });
+    it("selectError returns error", () => {
+      expect(selectError(mockState)).toBe("Something went wrong");
+    });
+    it("selectFileCount returns file count for field", () => {
+      expect(selectFileCount(mockState, "field1")).toBe(2);
+    });
+    it("selectFileCount returns 0 for missing field", () => {
+      expect(selectFileCount(mockState, "missing")).toBe(0);
+    });
+    it("selectHasResponse returns true for existing field", () => {
+      expect(selectHasResponse(mockState, "field1")).toBe(true);
+    });
+    it("selectHasResponse returns false for missing field", () => {
+      expect(selectHasResponse(mockState, "missing")).toBe(false);
+    });
+  });
+
 });

@@ -87,6 +87,16 @@ describe("profileAndSettingsApi", () => {
         { clientId: "c1", avatarUrl: "https://img.url" },
       );
     });
+
+    it("throws on failure", async () => {
+      mockPatch.mockRejectedValue({ response: { data: { message: "Upload failed" } } });
+      await expect(api.UploadProfileImage({ clientId: "c1", avatarUrl: "url", ...auth })).rejects.toThrow("Upload failed");
+    });
+
+    it("throws default message on unknown error", async () => {
+      mockPatch.mockRejectedValue({});
+      await expect(api.UploadProfileImage({ clientId: "c1", avatarUrl: "url", ...auth })).rejects.toThrow("Profile image upload failed");
+    });
   });
 
   describe("UpdatePassword", () => {
@@ -102,6 +112,43 @@ describe("profileAndSettingsApi", () => {
     it("throws on failure", async () => {
       mockPatch.mockRejectedValue({ response: { data: { message: "Wrong password" } } });
       await expect(api.UpdatePassword({ clientTenantId: "ct1", currentPassword: "bad", newPassword: "new", ...auth })).rejects.toThrow("Wrong password");
+    });
+
+    it("throws default message on unknown error", async () => {
+      mockPatch.mockRejectedValue({});
+      await expect(api.UpdatePassword({ clientTenantId: "ct1", currentPassword: "x", newPassword: "y", ...auth })).rejects.toThrow("Password update failed");
+    });
+  });
+
+  describe("error paths - default messages", () => {
+    it("UpdateClientDetails throws default message", async () => {
+      mockPut.mockRejectedValue({});
+      await expect(api.UpdateClientDetails({ clientId: "c1", firstName: "J", lastName: "D", email: "j@d.com", phoneNumber: "5", gender: "M", DOB: "1990-01-01", ...auth })).rejects.toThrow("Update client details failed");
+    });
+
+    it("GetNotificationSettings throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Not found" } } });
+      await expect(api.GetNotificationSettings({ tenantClientId: "tc1", ...auth })).rejects.toThrow("Not found");
+    });
+
+    it("GetNotificationSettings throws default message", async () => {
+      mockGet.mockRejectedValue({});
+      await expect(api.GetNotificationSettings({ tenantClientId: "tc1", ...auth })).rejects.toThrow("Get notification settings failed");
+    });
+
+    it("CreateNotificationSettings throws on error", async () => {
+      mockPost.mockRejectedValue({ response: { data: { message: "Invalid" } } });
+      await expect(api.CreateNotificationSettings({ tenantClientId: "tc1", appointmentScheduled: true, appointmentRescheduled: false, appointmentAboutToStart: true, appointmentStarted: false, appointmentCancelled: true, appointmentCompletedAwaitingFeedback: false, documentRequested: true, formShared: false, authorizationAboutToExpire: true, authorizationExpired: false, authorizationUnitsAlmostExhausted: true, authorizationUnitsExhausted: false, signatureRequested: true, ...auth })).rejects.toThrow("Invalid");
+    });
+
+    it("UpdateNotificationSettings throws on error", async () => {
+      mockPut.mockRejectedValue({ response: { data: { message: "Update failed" } } });
+      await expect(api.UpdateNotificationSettings({ id: "ns1", appointmentScheduled: true, ...auth })).rejects.toThrow("Update failed");
+    });
+
+    it("GetClientDetails throws on error", async () => {
+      mockGet.mockRejectedValue({ response: { data: { message: "Not found" } } });
+      await expect(api.GetClientDetails({ clientId: "c1", ...auth })).rejects.toThrow("Not found");
     });
   });
 });

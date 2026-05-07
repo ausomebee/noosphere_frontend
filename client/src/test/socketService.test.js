@@ -19,6 +19,7 @@ import {
   sendChatMessage, emitTyping, registerUser,
   onChatMessage, onTyping, onUserOnline, onUserOffline,
   emitMessagesRead, onMessagesRead,
+  onNotification, emitNotificationRead,
 } from "../api/socketService";
 
 describe("socketService", () => {
@@ -142,6 +143,84 @@ describe("socketService", () => {
       mockSocket.connected = true;
       emitMessagesRead({ readerId: "u1", partnerId: "u2" });
       expect(mockSocket.emit).toHaveBeenCalledWith("messagesRead", { readerId: "u1", partnerId: "u2" });
+    });
+
+    it("does nothing when not connected", () => {
+      connectSocket({ accessToken: "tok", userId: "u1", tenantId: "t1" });
+      mockSocket.connected = false;
+      emitMessagesRead({ readerId: "u1", partnerId: "u2" });
+      expect(mockSocket.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("onNotification", () => {
+    it("subscribes and returns unsubscribe", () => {
+      connectSocket({ accessToken: "tok", userId: "u1", tenantId: "t1" });
+      const callback = vi.fn();
+      const unsub = onNotification(callback);
+      expect(mockSocket.on).toHaveBeenCalledWith("newNotification", callback);
+      unsub();
+      expect(mockSocket.off).toHaveBeenCalledWith("newNotification", callback);
+    });
+
+    it("returns noop when socket is null", () => {
+      const unsub = onNotification(vi.fn());
+      expect(typeof unsub).toBe("function");
+      unsub();
+    });
+  });
+
+  describe("emitNotificationRead", () => {
+    it("emits notificationRead when connected", () => {
+      connectSocket({ accessToken: "tok", userId: "u1", tenantId: "t1" });
+      mockSocket.connected = true;
+      emitNotificationRead("n1");
+      expect(mockSocket.emit).toHaveBeenCalledWith("notificationRead", { notificationId: "n1" });
+    });
+
+    it("does nothing when not connected", () => {
+      connectSocket({ accessToken: "tok", userId: "u1", tenantId: "t1" });
+      mockSocket.connected = false;
+      emitNotificationRead("n1");
+      expect(mockSocket.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("null socket edge cases", () => {
+    it("registerUser does nothing when socket is null", () => {
+      registerUser({ userId: "u1", userType: "CLIENT" });
+      expect(mockSocket.emit).not.toHaveBeenCalled();
+    });
+
+    it("onChatMessage returns noop when socket is null", () => {
+      const unsub = onChatMessage(vi.fn());
+      expect(typeof unsub).toBe("function");
+    });
+
+    it("onTyping returns noop when socket is null", () => {
+      const unsub = onTyping(vi.fn());
+      expect(typeof unsub).toBe("function");
+    });
+
+    it("onUserOnline returns noop when socket is null", () => {
+      const unsub = onUserOnline(vi.fn());
+      expect(typeof unsub).toBe("function");
+    });
+
+    it("onUserOffline returns noop when socket is null", () => {
+      const unsub = onUserOffline(vi.fn());
+      expect(typeof unsub).toBe("function");
+    });
+
+    it("onMessagesRead returns noop when socket is null", () => {
+      const unsub = onMessagesRead(vi.fn());
+      expect(typeof unsub).toBe("function");
+    });
+
+    it("sendChatMessage with no callback when disconnected", () => {
+      connectSocket({ accessToken: "tok", userId: "u1", tenantId: "t1" });
+      mockSocket.connected = false;
+      expect(() => sendChatMessage({ senderId: "u1", receiverId: "u2", content: "hi" })).not.toThrow();
     });
   });
 });
