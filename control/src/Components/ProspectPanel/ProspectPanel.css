@@ -699,3 +699,22 @@
   background: #F2F4F7;
   color: #344054;
 }
+
+.requirement-badge.custom {
+  background: #EFF8FF;
+  color: #175CD3;
+}
+
+.custom-item-delete {
+  background: none;
+  border: none;
+  color: #98A2B3;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.custom-item-delete:hover {
+  color: #B42318;
+}

@@ -3,43 +3,43 @@ import ReusableModal from './ReusableModal';
 import { TextInput, CheckboxInput } from '../Input/Inputs';
 import Button from '../Button/Button';
 
-const CustomTaskModal = ({ isOpen, onClose, onSave }) => {
+const CustomTaskModal = ({ isOpen, onClose, onSave, initialValues }) => {
   const [taskName, setTaskName] = useState('');
   const [isCompulsory, setIsCompulsory] = useState(false);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setTaskName(initialValues?.name || '');
+      setIsCompulsory(initialValues?.required || false);
+    }
+  }, [isOpen, initialValues]);
+
   const handleSave = () => {
     if (taskName.trim()) {
-      const newTask = {
-        id: Date.now(),
-        name: taskName.trim(),
-        required: isCompulsory
-      };
-      onSave(newTask);
+      onSave({ name: taskName.trim(), required: isCompulsory });
       setTaskName('');
       setIsCompulsory(false);
       onClose();
     }
   };
 
+  const handleClose = () => {
+    setTaskName('');
+    setIsCompulsory(false);
+    onClose();
+  };
+
   return (
     <ReusableModal
       isOpen={isOpen}
-      onClose={() => {
-        setTaskName('');
-        setIsCompulsory(false);
-        onClose();
-      }}
-      title="Add Custom Task"
+      onClose={handleClose}
+      title={initialValues ? "Edit Custom Task" : "Add Custom Task"}
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
-      onSecondaryButtonClick={() => {
-        setTaskName('');
-        setIsCompulsory(false);
-        onClose();
-      }}
+      onSecondaryButtonClick={handleClose}
     >
       <div>
         <TextInput

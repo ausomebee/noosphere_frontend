@@ -3,43 +3,43 @@ import ReusableModal from './ReusableModal';
 import { TextInput, CheckboxInput } from '../Input/Inputs';
 import Button from '../Button/Button';
 
-const CustomDocumentModal = ({ isOpen, onClose, onSave }) => {
+const CustomDocumentModal = ({ isOpen, onClose, onSave, initialValues }) => {
   const [documentName, setDocumentName] = useState('');
   const [isCompulsory, setIsCompulsory] = useState(false);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setDocumentName(initialValues?.name || '');
+      setIsCompulsory(initialValues?.required || false);
+    }
+  }, [isOpen, initialValues]);
+
   const handleSave = () => {
     if (documentName.trim()) {
-      const newDocument = {
-        id: Date.now(),
-        name: documentName.trim(),
-        required: isCompulsory
-      };
-      onSave(newDocument);
+      onSave({ name: documentName.trim(), required: isCompulsory });
       setDocumentName('');
       setIsCompulsory(false);
       onClose();
     }
   };
 
+  const handleClose = () => {
+    setDocumentName('');
+    setIsCompulsory(false);
+    onClose();
+  };
+
   return (
     <ReusableModal
       isOpen={isOpen}
-      onClose={() => {
-        setDocumentName('');
-        setIsCompulsory(false);
-        onClose();
-      }}
-      title="Custom document request"
+      onClose={handleClose}
+      title={initialValues ? "Edit Custom Document" : "Custom document request"}
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
-      onSecondaryButtonClick={() => {
-        setDocumentName('');
-        setIsCompulsory(false);
-        onClose();
-      }}
+      onSecondaryButtonClick={handleClose}
     >
       <div>
         <TextInput

@@ -755,6 +755,108 @@ const GetTenantPaymentMethods = async ({ accessToken, refreshToken, tenantId }) 
 
 
 
+// --- Custom Tasks (per pipeline item) ---
+
+const CreateCustomTask = async ({ pipelineItemId, taskName, isRequired, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(`${PLAIN_API_URL}/pipeline/item/custom/task`, {
+      pipelineItemId,
+      taskName,
+      isRequired,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Create custom task failed");
+  }
+};
+
+const GetCustomTasks = async ({ pipelineItemId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/item/${pipelineItemId}/custom/tasks`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Get custom tasks failed");
+  }
+};
+
+const UpdateCustomTask = async ({ id, taskName, isRequired, isCompleted, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/pipeline/item/custom/task`, {
+      id,
+      taskName,
+      isRequired,
+      isCompleted,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Update custom task failed");
+  }
+};
+
+const DeleteCustomTask = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(`${PLAIN_API_URL}/pipeline/item/custom/task/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Delete custom task failed");
+  }
+};
+
+// --- Custom Documents (per pipeline item) ---
+
+const CreateCustomDocument = async ({ pipelineItemId, documentName, isRequired, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(`${PLAIN_API_URL}/pipeline/item/custom/document`, {
+      pipelineItemId,
+      documentName,
+      isRequired,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Create custom document failed");
+  }
+};
+
+const GetCustomDocuments = async ({ pipelineItemId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/item/${pipelineItemId}/custom/documents`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Get custom documents failed");
+  }
+};
+
+const UpdateCustomDocument = async ({ id, documentName, isRequired, isCompleted, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/pipeline/item/custom/document`, {
+      id,
+      documentName,
+      isRequired,
+      isCompleted,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Update custom document failed");
+  }
+};
+
+const DeleteCustomDocument = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(`${PLAIN_API_URL}/pipeline/item/custom/document/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Delete custom document failed");
+  }
+};
+
 export default {
   getAllAdmins,
   getAllTenants,
@@ -796,4 +898,12 @@ export default {
   GetTenantPaymentsByStatus,
   GetTenantPaymentMethods,
   GetTenantFeatureActivityLogs,
+  CreateCustomTask,
+  GetCustomTasks,
+  UpdateCustomTask,
+  DeleteCustomTask,
+  CreateCustomDocument,
+  GetCustomDocuments,
+  UpdateCustomDocument,
+  DeleteCustomDocument,
 };

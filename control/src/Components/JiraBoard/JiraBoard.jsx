@@ -209,6 +209,7 @@ const JiraBoard = () => {
               if (!item.id || typeof item.id !== "string") continue;
 
               let doneCount = 0;
+              let customItemsTotal = 0;
               try {
                 const piResult = await dispatch(
                   fetchSinglePipelineItem({ itemId: item.id, ...authTokens })
@@ -219,6 +220,12 @@ const JiraBoard = () => {
                 doneCount =
                   Object.values(doneTasks).filter((v) => v === true).length +
                   Object.values(sentDocuments).filter((v) => v === true).length;
+
+                // Include custom tasks/documents in progress
+                const customTasksRes = await api.GetCustomTasks({ pipelineItemId: item.id, ...authTokens }).catch(() => null);
+                const ct = Array.isArray(customTasksRes?.data) ? customTasksRes.data : [];
+                customItemsTotal = ct.length;
+                doneCount += ct.filter((t) => t.isCompleted).length;
               } catch {
                 // item detail fetch failed — show 0 progress, still add card
               }
@@ -226,7 +233,7 @@ const JiraBoard = () => {
               newTasks[item.id] = {
                 id: item.id,
                 company: item.companyName || `Candidate ${item.id.slice(0, 8)}`,
-                progress: `${doneCount}/${totalRequiredItems}`,
+                progress: `${doneCount}/${totalRequiredItems + customItemsTotal}`,
                 staff: item.assignToAdmin || null,
                 contactPerson: item.contactPerson || "",
                 email: item.email || "",
