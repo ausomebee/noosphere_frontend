@@ -4,6 +4,7 @@ import {
   FiRefreshCw,
   FiEdit3,
   FiEye,
+  FiTrash2,
 } from "react-icons/fi";
 import { IoMdMove } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
@@ -31,7 +32,6 @@ import {
   fetchSinglePipelineStages,
   fetchPipelineStages,
   updateStageDocuments,
-  updateStageTasks,
   updatePipelineItemTaskToDone,
   updatePipelineItemDocumentToDone,
   selectPipelineItem,
@@ -42,7 +42,6 @@ import {
   updatePipelineItemActivity,
   reassignCandidateToStaff,
   deletePipelineItem,
-  addTaskToDraft,
   addDocumentToDraft,
 } from "../../ReduxStore/features/PipelineSlice";
 import api from "../../api/TenantApis";
@@ -115,6 +114,10 @@ const ProspectPanel = () => {
   const [documents, setDocuments] = useState([]);
   const [doneTasks, setDoneTasks] = useState({});
   const [sentDocuments, setSentDocuments] = useState({});
+  const [customTasks, setCustomTasks] = useState([]);
+  const [customDocuments, setCustomDocuments] = useState([]);
+  const [editingCustomTask, setEditingCustomTask] = useState(null);
+  const [editingCustomDocument, setEditingCustomDocument] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCustomTaskModalOpen, setIsCustomTaskModalOpen] = useState(false);
   const [isCustomDocModalOpen, setIsCustomDocModalOpen] = useState(false);
@@ -361,6 +364,24 @@ const ProspectPanel = () => {
     }
   }, [pipelineItem, status, pipelineStageId, columns, pipelineItemId]);
 
+  // --- Fetch custom tasks & documents for this pipeline item ---
+  useEffect(() => {
+    if (!pipelineItemId || !accessToken) return;
+    const fetchCustomItems = async () => {
+      try {
+        const [tasksRes, docsRes] = await Promise.all([
+          api.GetCustomTasks({ pipelineItemId, accessToken, refreshToken }),
+          api.GetCustomDocuments({ pipelineItemId, accessToken, refreshToken }),
+        ]);
+        setCustomTasks(Array.isArray(tasksRes?.data) ? tasksRes.data : []);
+        setCustomDocuments(Array.isArray(docsRes?.data) ? docsRes.data : []);
+      } catch (err) {
+        if (import.meta.env.DEV) console.error("Error fetching custom items:", err);
+      }
+    };
+    fetchCustomItems();
+  }, [pipelineItemId, accessToken, refreshToken]);
+
   // --- Payment Modal Logic ---
   const handleOpenPaymentModal = (tab = "Plan Settings") => {
     setPaymentModalTab(tab);
@@ -502,32 +523,15 @@ const ProspectPanel = () => {
 
   const handleAddTask = async (newTask) => {
     try {
-      dispatch(
-        addTaskToDraft({ name: newTask.name, required: newTask.required })
-      );
-      const updatedTasks = [...tasks, newTask.name];
-
-      await dispatch(
-        updateStageTasks({
-          pipelineStageId,
-          requiredTasks: updatedTasks.map((name, i) => ({
-            id: draft.requiredTasks[i]?.id || uuidv4(),
-            name,
-            required: draft.requiredTasks[i]?.required || false,
-          })),
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-
-      setTasks(updatedTasks);
-      setDoneTasks((prev) => ({ ...prev, [newTask.name]: false }));
-      setCandidate((prev) => ({
-        ...prev,
-        progress: `${
-          Object.values(doneTasks).filter(Boolean).length
-        }/${updatedTasks.length + documents.length}`,
-      }));
+      const result = await api.CreateCustomTask({
+        pipelineItemId,
+        taskName: newTask.name,
+        isRequired: newTask.required,
+        accessToken,
+        refreshToken,
+      });
+      const created = result?.data || { id: Date.now(), taskName: newTask.name, isRequired: newTask.required, isCompleted: false };
+      setCustomTasks((prev) => [...prev, created]);
       setIsCustomTaskModalOpen(false);
       showToast("Task added successfully!", "success");
     } catch (err) {
@@ -538,35 +542,15 @@ const ProspectPanel = () => {
 
   const handleAddDocument = async (newDocument) => {
     try {
-      dispatch(
-        addDocumentToDraft({
-          name: newDocument.name,
-          required: newDocument.required,
-        })
-      );
-      const updatedDocuments = [...documents, newDocument.name];
-
-      await dispatch(
-        updateStageDocuments({
-          pipelineStageId,
-          requiredDocuments: updatedDocuments.map((name, i) => ({
-            id: draft.requiredDocuments[i]?.id || uuidv4(),
-            name,
-            required: draft.requiredDocuments[i]?.required || false,
-          })),
-          accessToken,
-          refreshToken,
-        })
-      ).unwrap();
-
-      setDocuments(updatedDocuments);
-      setSentDocuments((prev) => ({ ...prev, [newDocument.name]: false }));
-      setCandidate((prev) => ({
-        ...prev,
-        progress: `${
-          Object.values(sentDocuments).filter(Boolean).length
-        }/${tasks.length + updatedDocuments.length}`,
-      }));
+      const result = await api.CreateCustomDocument({
+        pipelineItemId,
+        documentName: newDocument.name,
+        isRequired: newDocument.required,
+        accessToken,
+        refreshToken,
+      });
+      const created = result?.data || { id: Date.now(), documentName: newDocument.name, isRequired: newDocument.required };
+      setCustomDocuments((prev) => [...prev, created]);
       setIsCustomDocModalOpen(false);
       showToast("Document added successfully!", "success");
     } catch (err) {
@@ -680,6 +664,107 @@ const ProspectPanel = () => {
       }));
     } catch (err) {
       showToast("Failed to update document status", "error");
+    }
+  };
+
+  const handleCustomTaskToggle = async (customTask) => {
+    try {
+      await api.UpdateCustomTask({
+        id: customTask.id,
+        taskName: customTask.taskName,
+        isRequired: customTask.isRequired,
+        isCompleted: !customTask.isCompleted,
+        accessToken,
+        refreshToken,
+      });
+      setCustomTasks((prev) =>
+        prev.map((t) => t.id === customTask.id ? { ...t, isCompleted: !t.isCompleted } : t)
+      );
+    } catch (err) {
+      showToast("Failed to update custom task", "error");
+    }
+  };
+
+  const handleDeleteCustomTask = async (customTaskId) => {
+    try {
+      await api.DeleteCustomTask({ id: customTaskId, accessToken, refreshToken });
+      setCustomTasks((prev) => prev.filter((t) => t.id !== customTaskId));
+      showToast("Custom task deleted", "success");
+    } catch (err) {
+      showToast("Failed to delete custom task", "error");
+    }
+  };
+
+  const handleDeleteCustomDocument = async (customDocId) => {
+    try {
+      await api.DeleteCustomDocument({ id: customDocId, accessToken, refreshToken });
+      setCustomDocuments((prev) => prev.filter((d) => d.id !== customDocId));
+      showToast("Custom document deleted", "success");
+    } catch (err) {
+      showToast("Failed to delete custom document", "error");
+    }
+  };
+
+  const handleCustomDocumentToggle = async (customDoc) => {
+    try {
+      await api.UpdateCustomDocument({
+        id: customDoc.id,
+        documentName: customDoc.documentName,
+        isRequired: customDoc.isRequired,
+        isCompleted: !customDoc.isCompleted,
+        accessToken,
+        refreshToken,
+      });
+      setCustomDocuments((prev) =>
+        prev.map((d) => d.id === customDoc.id ? { ...d, isCompleted: !d.isCompleted } : d)
+      );
+    } catch (err) {
+      showToast("Failed to update custom document", "error");
+    }
+  };
+
+  const handleUpdateCustomTask = async (updated) => {
+    if (!editingCustomTask) return;
+    try {
+      await api.UpdateCustomTask({
+        id: editingCustomTask.id,
+        taskName: updated.name,
+        isRequired: updated.required,
+        isCompleted: editingCustomTask.isCompleted,
+        accessToken,
+        refreshToken,
+      });
+      setCustomTasks((prev) =>
+        prev.map((t) => t.id === editingCustomTask.id
+          ? { ...t, taskName: updated.name, isRequired: updated.required }
+          : t)
+      );
+      setEditingCustomTask(null);
+      showToast("Custom task updated", "success");
+    } catch (err) {
+      showToast("Failed to update custom task", "error");
+    }
+  };
+
+  const handleUpdateCustomDocument = async (updated) => {
+    if (!editingCustomDocument) return;
+    try {
+      await api.UpdateCustomDocument({
+        id: editingCustomDocument.id,
+        documentName: updated.name,
+        isRequired: updated.required,
+        accessToken,
+        refreshToken,
+      });
+      setCustomDocuments((prev) =>
+        prev.map((d) => d.id === editingCustomDocument.id
+          ? { ...d, documentName: updated.name, isRequired: updated.required }
+          : d)
+      );
+      setEditingCustomDocument(null);
+      showToast("Custom document updated", "success");
+    } catch (err) {
+      showToast("Failed to update custom document", "error");
     }
   };
 
@@ -806,10 +891,12 @@ const ProspectPanel = () => {
       ? `${candidate.company} - ${stageName}`
       : "Prospecting";
 
-  const doneTasksCount = Object.values(doneTasks).filter(Boolean).length;
-  const totalTasksCount = tasks.length;
-  const sentDocumentsCount = Object.values(sentDocuments).filter(Boolean).length;
-  const totalDocumentsCount = documents.length;
+  const completedCustomTasksCount = customTasks.filter((t) => t.isCompleted).length;
+  const doneTasksCount = Object.values(doneTasks).filter(Boolean).length + completedCustomTasksCount;
+  const totalTasksCount = tasks.length + customTasks.length;
+  const completedCustomDocsCount = customDocuments.filter((d) => d.isCompleted).length;
+  const sentDocumentsCount = Object.values(sentDocuments).filter(Boolean).length + completedCustomDocsCount;
+  const totalDocumentsCount = documents.length + customDocuments.length;
 
 
   return (
@@ -1022,7 +1109,7 @@ const ProspectPanel = () => {
                     {doneTasksCount}/{totalTasksCount} tasks done
                   </span>
                 </div>
-                {tasks.length === 0 && status === "succeeded" && (
+                {tasks.length === 0 && customTasks.length === 0 && status === "succeeded" && (
                   <p>No tasks assigned.</p>
                 )}
                 <div className="section-list">
@@ -1056,6 +1143,41 @@ const ProspectPanel = () => {
                       </div>
                     </div>
                   ))}
+                  {customTasks.map((ct) => (
+                    <div key={ct.id} className="section-item">
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <label>{ct.taskName}</label>
+                        <span className="requirement-badge custom">Custom</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <button
+                          className="custom-item-delete"
+                          onClick={() => setEditingCustomTask(ct)}
+                          disabled={isLoading}
+                          aria-label="Edit custom task"
+                        >
+                          <FiEdit3 size={17} />
+                        </button>
+                        <button
+                          className="custom-item-delete"
+                          onClick={() => handleDeleteCustomTask(ct.id)}
+                          disabled={isLoading}
+                          aria-label="Delete custom task"
+                        >
+                          <FiTrash2 size={17} />
+                        </button>
+                        <CheckboxInput
+                          label="Done"
+                          checked={ct.isCompleted || false}
+                          onChange={() => handleCustomTaskToggle(ct)}
+                          disabled={isLoading}
+                        />
+                        <span className={ct.isRequired ? "requirement-badge required" : "requirement-badge optional"}>
+                          {ct.isRequired ? "Required" : "Optional"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div className="section-footer">
                   <Button
@@ -1074,7 +1196,7 @@ const ProspectPanel = () => {
                     {sentDocumentsCount}/{totalDocumentsCount} uploaded
                   </span>
                 </div>
-                {documents.length === 0 && status === "succeeded" && (
+                {documents.length === 0 && customDocuments.length === 0 && status === "succeeded" && (
                   <p>No documents required.</p>
                 )}
                 <div className="section-list">
@@ -1104,6 +1226,41 @@ const ProspectPanel = () => {
                           {draft.requiredDocuments?.[index]?.required
                             ? "Required"
                             : "Optional"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {customDocuments.map((cd) => (
+                    <div key={cd.id} className="section-item">
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <label>{cd.documentName}</label>
+                        <span className="requirement-badge custom">Custom</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <button
+                          className="custom-item-delete"
+                          onClick={() => setEditingCustomDocument(cd)}
+                          disabled={isLoading}
+                          aria-label="Edit custom document"
+                        >
+                          <FiEdit3 size={17} />
+                        </button>
+                        <button
+                          className="custom-item-delete"
+                          onClick={() => handleDeleteCustomDocument(cd.id)}
+                          disabled={isLoading}
+                          aria-label="Delete custom document"
+                        >
+                          <FiTrash2 size={17} />
+                        </button>
+                        <CheckboxInput
+                          label="Uploaded"
+                          checked={cd.isCompleted || false}
+                          onChange={() => handleCustomDocumentToggle(cd)}
+                          disabled={isLoading}
+                        />
+                        <span className={cd.isRequired ? "requirement-badge required" : "requirement-badge optional"}>
+                          {cd.isRequired ? "Required" : "Optional"}
                         </span>
                       </div>
                     </div>
@@ -1144,10 +1301,22 @@ const ProspectPanel = () => {
           onClose={() => setIsCustomTaskModalOpen(false)}
           onSave={handleAddTask}
         />
+        <CustomTaskModal
+          isOpen={editingCustomTask !== null}
+          onClose={() => setEditingCustomTask(null)}
+          onSave={handleUpdateCustomTask}
+          initialValues={editingCustomTask ? { name: editingCustomTask.taskName, required: editingCustomTask.isRequired } : null}
+        />
         <CustomDocumentModal
           isOpen={isCustomDocModalOpen}
           onClose={() => setIsCustomDocModalOpen(false)}
           onSave={handleAddDocument}
+        />
+        <CustomDocumentModal
+          isOpen={editingCustomDocument !== null}
+          onClose={() => setEditingCustomDocument(null)}
+          onSave={handleUpdateCustomDocument}
+          initialValues={editingCustomDocument ? { name: editingCustomDocument.documentName, required: editingCustomDocument.isRequired } : null}
         />
         <UploadDocumentModal
           isOpen={isUploadModalOpen}
