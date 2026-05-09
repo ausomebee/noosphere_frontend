@@ -25,6 +25,18 @@ vi.mock("../api/authApis", () => ({
   default: { refreshAccessToken: vi.fn() },
 }));
 
+vi.mock("../ReduxStore/store", () => ({
+  store: {
+    getState: vi.fn(() => ({ auth: { refreshToken: "stored-refresh" } })),
+    dispatch: vi.fn(),
+  },
+}));
+
+vi.mock("../ReduxStore/features/authentication", () => ({
+  logout: vi.fn(() => ({ type: "auth/logout" })),
+  setTokens: vi.fn((tokens) => ({ type: "auth/setTokens", payload: tokens })),
+}));
+
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 describe("AxiosInterceptor", () => {

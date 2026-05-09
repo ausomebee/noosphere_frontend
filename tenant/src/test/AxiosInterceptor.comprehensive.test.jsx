@@ -32,6 +32,18 @@ vi.mock("../api/authApis", () => ({
   default: { refreshAccessToken: vi.fn() },
 }));
 
+vi.mock("../ReduxStore/store", () => ({
+  store: {
+    getState: vi.fn(() => ({ authentication: { refreshToken: "stored-refresh" } })),
+    dispatch: vi.fn(),
+  },
+}));
+
+vi.mock("../ReduxStore/features/authentication", () => ({
+  logout: vi.fn(() => ({ type: "auth/logout" })),
+  setTokens: vi.fn((tokens) => ({ type: "auth/setTokens", payload: tokens })),
+}));
+
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 import api from "../api/authApis";
 import { showToast } from "../Helper/ShowToast";
@@ -87,7 +99,7 @@ describe("AxiosInterceptor interceptor callbacks", () => {
       };
 
       const result = await responseErrorCallback(error);
-      expect(api.refreshAccessToken).toHaveBeenCalledWith("refresh-token", mockDispatch);
+      expect(api.refreshAccessToken).toHaveBeenCalledWith("stored-refresh", expect.any(Function));
     });
 
     it("navigates to login when refresh returns no token", async () => {

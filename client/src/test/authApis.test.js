@@ -78,16 +78,16 @@ describe("authApis", () => {
   });
 
   describe("refreshAccessToken", () => {
-    it("posts refresh token and dispatches new tokens", async () => {
-      const dispatch = vi.fn();
-      axios.post.mockResolvedValue({ data: { accessToken: "new-access-tok" } });
-      const result = await refreshAccessToken("old-refresh", dispatch);
+    it("posts to /auth/refresh-token and calls onSuccess with new tokens", async () => {
+      const onSuccess = vi.fn();
+      axios.post.mockResolvedValue({ data: { data: { accessToken: "new-access-tok", refreshToken: "new-refresh-tok" } } });
+      const result = await refreshAccessToken("old-refresh", onSuccess);
       expect(axios.post).toHaveBeenCalledWith(
-        expect.stringContaining("/refresh-token"),
-        { creatorToken: "old-refresh" },
-        expect.any(Object),
+        expect.stringContaining("/auth/refresh-token"),
+        { refreshToken: "old-refresh" },
+        { headers: { "x-fingerprint": "test-fingerprint-123" } },
       );
-      expect(dispatch).toHaveBeenCalled();
+      expect(onSuccess).toHaveBeenCalledWith({ accessToken: "new-access-tok", refreshToken: "new-refresh-tok" });
       expect(result).toBe("new-access-tok");
     });
 
@@ -98,7 +98,7 @@ describe("authApis", () => {
     });
 
     it("returns null when no accessToken in response", async () => {
-      axios.post.mockResolvedValue({ data: {} });
+      axios.post.mockResolvedValue({ data: { data: {} } });
       const result = await refreshAccessToken("tok", vi.fn());
       expect(result).toBeNull();
     });
