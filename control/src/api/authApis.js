@@ -1,6 +1,4 @@
 import axios from "axios";
-import { updateAccessToken } from "../ReduxStore/features/authentication";
-
 // Define your API endpoints
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -175,16 +173,14 @@ const Admin2FAVerify = async ({ userId, token }) => {
   }
 };
 
-export const refreshAccessToken = async (refreshToken, dispatch) => {
+export const refreshAccessToken = async (refreshToken, onSuccess) => {
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/refresh-token`, {
-      creatorToken: refreshToken,
+    const response = await axios.post(`${PLAIN_API_URL}/auth/refresh-token`, {
+      refreshToken,
     });
-    const { accessToken } = response.data;
-
-
+    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     if (accessToken) {
-      dispatch(updateAccessToken(accessToken));
+      onSuccess?.({ accessToken, refreshToken: newRefreshToken });
       return accessToken;
     }
   } catch (error) {

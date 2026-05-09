@@ -2,6 +2,8 @@ import axios from "axios";
 import api from "../api/authApis";
 import { showToast } from "./ShowToast";
 import { getFingerprint } from "./fingerprint";
+import { store } from "../ReduxStore/store";
+import { logout, setTokens } from "../ReduxStore/features/authentication";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
 let refreshSubscribers = []; // Queue to store pending requests while token is refreshing
@@ -52,29 +54,37 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
           isRefreshing = true;
 
           try {
+            const currentRefreshToken =
+              store.getState().auth?.refreshToken ?? refreshToken;
+
             const newAccessToken = await api.refreshAccessToken(
-              refreshToken,
-              dispatch
+              currentRefreshToken,
+              (tokens) => store.dispatch(setTokens(tokens))
             );
 
             if (newAccessToken) {
               isRefreshing = false;
-              onRefreshed(newAccessToken); // Notify all queued requests
+              onRefreshed(newAccessToken);
               return authFetch({
                 ...originalRequest,
                 headers: {
                   ...originalRequest.headers,
-                  Authorization: `Bearer ${newAccessToken}`, // Attach the new token
+                  Authorization: `Bearer ${newAccessToken}`,
                 },
               });
             } else {
+              isRefreshing = false;
+              store.dispatch(logout());
               showToast("Session expired. Please log in again.", "error");
-              navigate("/auth/login");
+              if (navigate) navigate("/auth/login");
+              else window.location.href = "/auth/login";
             }
           } catch (refreshError) {
             isRefreshing = false;
+            store.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");
-            navigate("/auth/login");
+            if (navigate) navigate("/auth/login");
+            else window.location.href = "/auth/login";
           }
         }
 

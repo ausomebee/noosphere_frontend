@@ -3,8 +3,9 @@ import api from '../../api/authApis';
 
 const initialState = {
   isAuthenticated: false,
-  user: null,         
-  token: null,        
+  user: null,
+  token: null,
+  refreshToken: null,
   loading: false,
   error: null,
 };
@@ -41,6 +42,7 @@ const authenticationSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.error = null;
     },
     updateAccessToken(state, action) {
@@ -48,6 +50,14 @@ const authenticationSlice = createSlice({
         state.user.accessToken = action.payload;
       }
       state.token = action.payload;
+    },
+    setTokens(state, action) {
+      const { accessToken, refreshToken } = action.payload;
+      if (state.user) {
+        state.user.accessToken = accessToken;
+      }
+      state.token = accessToken;
+      state.refreshToken = refreshToken;
     },
   },
   extraReducers: (builder) => {
@@ -62,7 +72,8 @@ const authenticationSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = userData;
-        state.token = userData.token;
+        state.token = userData.token || userData.accessToken;
+        state.refreshToken = userData.refreshToken || null;
       })
       .addCase(AdminLogin.rejected, (state, action) => {
         state.loading = false;
@@ -78,7 +89,8 @@ const authenticationSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = userData;
-        state.token = userData.token;
+        state.token = userData.token || userData.accessToken;
+        state.refreshToken = userData.refreshToken || null;
       })
       .addCase(OnboardAdmin.rejected, (state, action) => {
         state.loading = false;
@@ -87,5 +99,5 @@ const authenticationSlice = createSlice({
   },
 });
 
-export const { logout, updateAccessToken } = authenticationSlice.actions;
+export const { logout, updateAccessToken, setTokens } = authenticationSlice.actions;
 export default authenticationSlice.reducer;
