@@ -43,11 +43,16 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
     async (error) => {
       const originalRequest = error.config;
 
-      if (
-        error.response &&
-        error.response.status === 401 &&
-        !originalRequest._retry
-      ) {
+      const isAuthError = error.response && !originalRequest._retry && (
+        error.response.status === 401 ||
+        (error.response.status === 500 && (
+          (error.response.data?.message || "").toLowerCase().includes("not authorized") ||
+          (error.response.data?.message || "").toLowerCase().includes("expired token") ||
+          (error.response.data?.message || "").toLowerCase().includes("invalid or expired")
+        ))
+      );
+
+      if (isAuthError) {
         originalRequest._retry = true;
 
         if (!isRefreshing) {
@@ -76,16 +81,14 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               isRefreshing = false;
               getStore()?.dispatch(logout());
               showToast("Session expired. Please log in again.", "error");
-              if (navigate) navigate("/auth/login");
-              else window.location.href = "/auth/login";
+              return Promise.reject(error);
             }
           } catch (refreshError) {
             if (import.meta.env.DEV) console.error("Token refresh failed", refreshError);
             isRefreshing = false;
             getStore()?.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");
-            if (navigate) navigate("/auth/login");
-            else window.location.href = "/auth/login";
+            return Promise.reject(error);
           }
         }
 
