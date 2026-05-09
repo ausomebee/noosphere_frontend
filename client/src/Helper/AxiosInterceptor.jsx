@@ -2,7 +2,7 @@ import axios from "axios";
 import api from "../api/authApis";
 import { showToast } from "./ShowToast";
 import { getFingerprint } from "./fingerprint";
-import { store } from "../ReduxStore/store";
+import { getStore } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
@@ -43,11 +43,16 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
     async (error) => {
       const originalRequest = error.config;
 
-      if (
-        error.response &&
-        error.response.status === 401 &&
-        !originalRequest._retry
-      ) {
+      const isAuthError = error.response && !originalRequest._retry && (
+        error.response.status === 401 ||
+        (error.response.status === 500 && (
+          (error.response.data?.message || "").toLowerCase().includes("not authorized") ||
+          (error.response.data?.message || "").toLowerCase().includes("expired token") ||
+          (error.response.data?.message || "").toLowerCase().includes("invalid or expired")
+        ))
+      );
+
+      if (isAuthError) {
         originalRequest._retry = true;
 
         if (!isRefreshing) {
@@ -55,11 +60,11 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
 
           try {
             const currentRefreshToken =
-              store.getState().auth?.refreshToken ?? refreshToken;
+              getStore()?.getState().auth?.refreshToken ?? refreshToken;
 
             const newAccessToken = await api.refreshAccessToken(
               currentRefreshToken,
-              (tokens) => store.dispatch(setTokens(tokens))
+              (tokens) => getStore()?.dispatch(setTokens(tokens))
             );
 
             if (newAccessToken) {
@@ -74,17 +79,15 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               });
             } else {
               isRefreshing = false;
-              store.dispatch(logout());
+              getStore()?.dispatch(logout());
               showToast("Session expired. Please log in again.", "error");
-              if (navigate) navigate("/auth/login");
-              else window.location.href = "/auth/login";
+              return Promise.reject(error);
             }
           } catch (refreshError) {
             isRefreshing = false;
-            store.dispatch(logout());
+            getStore()?.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");
-            if (navigate) navigate("/auth/login");
-            else window.location.href = "/auth/login";
+            return Promise.reject(error);
           }
         }
 

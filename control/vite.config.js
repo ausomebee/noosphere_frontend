@@ -10,6 +10,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    fileParallelism: false,
   },
   build: {
     chunkSizeWarningLimit: 500,

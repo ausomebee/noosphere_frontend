@@ -63,7 +63,7 @@ const AddProspectModal = ({
   pipelineStageId, // Added to preselect the current stage
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { userId: adminId } = useAuth();
+  const { userId: adminId, accessToken, refreshToken } = useAuth();
   const {
     register,
     handleSubmit,
@@ -127,7 +127,7 @@ const AddProspectModal = ({
 
     setIsLoading(true);
     try {
-      const response = await api.CreateCandidate(prospectData);
+      const response = await api.CreateCandidate({ ...prospectData, accessToken, refreshToken });
       if (response.data.status === "ok" && response.data.data?.id) {
         showToast("Candidate created successfully", "success");
         // Pass the created candidate data to the parent

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
+import { showToast } from "../../../Helper/ShowToast";
 
 const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({
@@ -100,6 +101,8 @@ const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, ref
         setFiles([]);
         setUploading(false);
         onClose();
+      } catch (err) {
+        showToast(err?.response?.data?.message || err?.message || "Failed to send message", "error");
       } finally {
         setIsSaving(false);
       }

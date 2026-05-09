@@ -34,16 +34,20 @@ vi.mock('../api/authApis', () => ({
   },
 }));
 
-vi.mock('../ReduxStore/store', () => ({
-  store: {
+vi.mock('../Helper/storeRef', () => ({
+  getStore: vi.fn(() => ({
     getState: vi.fn(() => ({ authentication: { refreshToken: 'stored-refresh' } })),
     dispatch: vi.fn(),
-  },
+  })),
 }));
 
 vi.mock('../ReduxStore/features/authentication', () => ({
   logout: vi.fn(() => ({ type: 'auth/logout' })),
   setTokens: vi.fn((tokens) => ({ type: 'auth/setTokens', payload: tokens })),
+}));
+
+vi.mock('../Helper/ShowToast', () => ({
+  showToast: vi.fn(),
 }));
 
 import axios from 'axios';
@@ -99,10 +103,10 @@ describe('AxiosInterceptor', () => {
       expect(responseFn(response)).toEqual(response);
     });
 
-    it('rejects non-401 errors', async () => {
+    it('rejects 500 errors without auth message', async () => {
       AxiosInterceptor('token', 'refresh');
       const error = {
-        response: { status: 500 },
+        response: { status: 500, data: { message: 'Internal Server Error' } },
         config: {},
       };
       await expect(responseErrFn(error)).rejects.toEqual(error);
@@ -112,6 +116,20 @@ describe('AxiosInterceptor', () => {
       AxiosInterceptor('token', 'refresh');
       const error = { config: {} };
       await expect(responseErrFn(error)).rejects.toEqual(error);
+    });
+
+    it('triggers refresh on 500 with auth error message', async () => {
+      const api = await import('../api/authApis');
+      api.default.refreshAccessToken.mockResolvedValue(null);
+
+      AxiosInterceptor('token', 'refresh');
+      const error = {
+        response: { status: 500, data: { message: 'Not Authorized: Invalid or expired token' } },
+        config: { headers: {} },
+      };
+
+      await responseErrFn(error).catch(() => {});
+      expect(api.default.refreshAccessToken).toHaveBeenCalled();
     });
   });
 });

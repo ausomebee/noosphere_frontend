@@ -32,11 +32,13 @@ vi.mock("../api/authApis", () => ({
   default: { refreshAccessToken: vi.fn() },
 }));
 
-vi.mock("../ReduxStore/store", () => ({
-  store: {
-    getState: vi.fn(() => ({ authentication: { refreshToken: "stored-refresh" } })),
-    dispatch: vi.fn(),
-  },
+const mockStore = vi.hoisted(() => ({
+  getState: vi.fn(() => ({ authentication: { refreshToken: "stored-refresh" } })),
+  dispatch: vi.fn(),
+}));
+
+vi.mock("../Helper/storeRef", () => ({
+  getStore: vi.fn(() => mockStore),
 }));
 
 vi.mock("../ReduxStore/features/authentication", () => ({
@@ -102,24 +104,21 @@ describe("AxiosInterceptor interceptor callbacks", () => {
       expect(api.refreshAccessToken).toHaveBeenCalledWith("stored-refresh", expect.any(Function));
     });
 
-    it("navigates to login when refresh returns no token", async () => {
+    it("dispatches logout and rejects when refresh returns no token", async () => {
       api.refreshAccessToken.mockResolvedValue(null);
+      const { logout } = await import("../ReduxStore/features/authentication");
 
       const error = {
         response: { status: 401 },
         config: { headers: {}, _retry: false },
       };
 
-      // This will hang on the subscriber promise, so we just check the navigate was called
-      responseErrorCallback(error);
-      await new Promise((r) => setTimeout(r, 50));
+      await expect(responseErrorCallback(error)).rejects.toEqual(error);
       expect(showToast).toHaveBeenCalledWith("Session expired. Please log in again.", "error");
-      expect(mockNavigate).toHaveBeenCalledWith("/auth/login");
+      expect(mockStore.dispatch).toHaveBeenCalledWith(logout());
     });
 
     it("handles refresh error gracefully", async () => {
-      // The isRefreshing flag from the previous test may still be set,
-      // so this test just verifies the error handler doesn't throw
       api.refreshAccessToken.mockRejectedValue(new Error("refresh failed"));
 
       const error = {
@@ -127,9 +126,7 @@ describe("AxiosInterceptor interceptor callbacks", () => {
         config: { headers: {}, _retry: false },
       };
 
-      // Should not throw
-      const promise = responseErrorCallback(error);
-      expect(promise).toBeInstanceOf(Promise);
+      await expect(responseErrorCallback(error)).rejects.toEqual(error);
     });
   });
 });

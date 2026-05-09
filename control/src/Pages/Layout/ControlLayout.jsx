@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../../ReduxStore/features/authentication";
 import tenantApi from "../../api/TenantApis";
 import useAuth from "../../hooks/useAuth";
 import usePermission from "../../hooks/usePermission";
@@ -26,6 +28,10 @@ const Layout = ({ children }) => {
   const [tenantName, setTenantName] = useState("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showOnlineBanner, setShowOnlineBanner] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let timer;
@@ -50,6 +56,21 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const { accessToken, refreshToken, user } = useAuth();
   const { hasModuleAccess, hasPermission } = usePermission();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/auth/login");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -396,7 +417,12 @@ const Layout = ({ children }) => {
             </button>
           </div>
           <div className="header-right">
-            <div className="user-profile">
+            <div
+              className="user-profile"
+              ref={profileDropdownRef}
+              onClick={() => setIsProfileDropdownOpen((prev) => !prev)}
+              style={{ position: "relative" }}
+            >
               <div className="user-avatar">
                 {((user?.firstName?.[0] || "") + (user?.lastName?.[0] || "")).toUpperCase() || "?"}
               </div>
@@ -406,7 +432,30 @@ const Layout = ({ children }) => {
                 </span>
                 <span className="user-role">{user?.roles?.name || "Administrator"}</span>
               </div>
-              <FiChevronDown size={16} className="dropdown-arrow" />
+              <FiChevronDown
+                size={16}
+                className="dropdown-arrow"
+                style={{ transform: isProfileDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+              />
+              {isProfileDropdownOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0,
+                  background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)", minWidth: "160px", zIndex: 1000,
+                }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "8px",
+                      width: "100%", padding: "10px 16px", background: "none",
+                      border: "none", color: "#D92D20", fontWeight: 500,
+                      fontSize: "14px", textAlign: "left",
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
