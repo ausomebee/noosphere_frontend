@@ -3,6 +3,22 @@ import { describe, it, expect, vi } from 'vitest';
 const mockRequestUse = vi.fn();
 const mockResponseUse = vi.fn();
 
+vi.mock('../api/authApis', () => ({
+  default: { refreshAccessToken: vi.fn() },
+}));
+
+vi.mock('../ReduxStore/store', () => ({
+  store: {
+    getState: vi.fn(() => ({ authentication: { refreshToken: 'stored-refresh' } })),
+    dispatch: vi.fn(),
+  },
+}));
+
+vi.mock('../ReduxStore/features/authentication', () => ({
+  logout: vi.fn(() => ({ type: 'auth/logout' })),
+  setTokens: vi.fn((tokens) => ({ type: 'auth/setTokens', payload: tokens })),
+}));
+
 vi.mock('axios', () => ({
   default: {
     create: vi.fn(() => ({

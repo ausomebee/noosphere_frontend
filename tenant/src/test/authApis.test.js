@@ -221,24 +221,21 @@ describe('authApis', () => {
   });
 
   describe('refreshAccessToken', () => {
-    it('dispatches updateAccessToken on success', async () => {
+    it('posts to /auth/refresh-token and calls onSuccess with new tokens', async () => {
       const { refreshAccessToken } = await import('../api/authApis');
-      const dispatch = vi.fn();
-      axios.post.mockResolvedValueOnce({ data: { accessToken: 'new-token' } });
+      const onSuccess = vi.fn();
+      axios.post.mockResolvedValueOnce({ data: { data: { accessToken: 'new-token', refreshToken: 'new-refresh' } } });
 
-      const result = await refreshAccessToken('refresh-t', dispatch);
+      const result = await refreshAccessToken('refresh-t', onSuccess);
       expect(result).toBe('new-token');
-      expect(dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ payload: 'new-token' })
-      );
+      expect(onSuccess).toHaveBeenCalledWith({ accessToken: 'new-token', refreshToken: 'new-refresh' });
     });
 
     it('returns null on failure', async () => {
       const { refreshAccessToken } = await import('../api/authApis');
-      const dispatch = vi.fn();
       axios.post.mockRejectedValueOnce(new Error('fail'));
 
-      const result = await refreshAccessToken('bad-refresh', dispatch);
+      const result = await refreshAccessToken('bad-refresh', vi.fn());
       expect(result).toBeNull();
     });
   });
