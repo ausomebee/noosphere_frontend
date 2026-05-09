@@ -2,7 +2,7 @@ import axios from "axios";
 import api from "../api/authApis";
 import { showToast } from "./ShowToast";
 import { getFingerprint } from "./fingerprint";
-import { store } from "../ReduxStore/store";
+import { getStore } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
@@ -55,11 +55,11 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
 
           try {
             const currentRefreshToken =
-              store.getState().auth?.refreshToken ?? refreshToken;
+              getStore()?.getState().auth?.refreshToken ?? refreshToken;
 
             const newAccessToken = await api.refreshAccessToken(
               currentRefreshToken,
-              (tokens) => store.dispatch(setTokens(tokens))
+              (tokens) => getStore()?.dispatch(setTokens(tokens))
             );
 
             if (newAccessToken) {
@@ -74,14 +74,14 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               });
             } else {
               isRefreshing = false;
-              store.dispatch(logout());
+              getStore()?.dispatch(logout());
               showToast("Session expired. Please log in again.", "error");
               if (navigate) navigate("/auth/login");
               else window.location.href = "/auth/login";
             }
           } catch (refreshError) {
             isRefreshing = false;
-            store.dispatch(logout());
+            getStore()?.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");
             if (navigate) navigate("/auth/login");
             else window.location.href = "/auth/login";

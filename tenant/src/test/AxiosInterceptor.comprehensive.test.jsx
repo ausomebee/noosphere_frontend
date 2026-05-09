@@ -32,11 +32,11 @@ vi.mock("../api/authApis", () => ({
   default: { refreshAccessToken: vi.fn() },
 }));
 
-vi.mock("../ReduxStore/store", () => ({
-  store: {
+vi.mock("../Helper/storeRef", () => ({
+  getStore: vi.fn(() => ({
     getState: vi.fn(() => ({ authentication: { refreshToken: "stored-refresh" } })),
     dispatch: vi.fn(),
-  },
+  })),
 }));
 
 vi.mock("../ReduxStore/features/authentication", () => ({

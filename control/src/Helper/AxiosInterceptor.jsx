@@ -1,7 +1,7 @@
 import axios from "axios";
 import { showToast } from "./ShowToast";
 import api from "../api/authApis";
-import { store } from "../ReduxStore/store";
+import { getStore } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
 
 
@@ -55,11 +55,11 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
 
           try {
             const currentRefreshToken =
-              store.getState().authentication?.refreshToken ?? refreshToken;
+              getStore()?.getState().authentication?.refreshToken ?? refreshToken;
 
             const newAccessToken = await api.refreshAccessToken(
               currentRefreshToken,
-              (tokens) => store.dispatch(setTokens(tokens))
+              (tokens) => getStore()?.dispatch(setTokens(tokens))
             );
 
             if (newAccessToken) {
@@ -74,7 +74,7 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               });
             } else {
               isRefreshing = false;
-              store.dispatch(logout());
+              getStore()?.dispatch(logout());
               showToast("Session expired. Please log in again.", "error");
               if (navigate) navigate("/auth/login");
               else window.location.href = "/auth/login";
@@ -82,7 +82,7 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
           } catch (refreshError) {
             if (import.meta.env.DEV) console.error("Token refresh failed", refreshError);
             isRefreshing = false;
-            store.dispatch(logout());
+            getStore()?.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");
             if (navigate) navigate("/auth/login");
             else window.location.href = "/auth/login";
