@@ -116,7 +116,7 @@ const ViewBreakDown = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, accessToken, refreshToken]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchCycleStaffs();

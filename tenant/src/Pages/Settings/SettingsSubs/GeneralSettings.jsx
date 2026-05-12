@@ -110,7 +110,7 @@ const GeneralSettings = () => {
       console.error("Failed to fetch general settings:", error);
       showToast("Failed to load general settings", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch security questions — API returns an array of { id, question } records
   const fetchSecurityQuestions = useCallback(async () => {
@@ -133,7 +133,7 @@ const GeneralSettings = () => {
       console.error("Failed to fetch security questions:", error);
       showToast("Failed to load security questions", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch 2FA choices from /tenant/tenantadminchoices/{tenantId}
   const fetchTenantAdminChoices = useCallback(async () => {
@@ -165,7 +165,7 @@ const GeneralSettings = () => {
       console.error("Failed to fetch tenant admin choices:", error);
       showToast("Failed to load admin choices", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch tenant email from /tenant/{tenantId}
   const fetchTenantInfo = useCallback(async () => {
@@ -184,7 +184,7 @@ const GeneralSettings = () => {
       console.error("Failed to fetch tenant info:", error);
       showToast("Failed to load tenant information", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchGeneralSettings();

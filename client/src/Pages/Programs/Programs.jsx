@@ -88,7 +88,7 @@ const Programs = () => {
     };
 
     fetchProgramsAndTargets();
-  }, [clientId, accessToken, refreshToken]);
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns = [
     {

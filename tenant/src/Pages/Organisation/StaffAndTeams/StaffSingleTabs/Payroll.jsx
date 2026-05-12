@@ -70,7 +70,7 @@ const Payroll = () => {
     } finally {
       setLoading(false);
     }
-  }, [tenantStaffId, accessToken, refreshToken]);
+  }, [tenantStaffId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchPayrollHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -97,7 +97,7 @@ const Payroll = () => {
     } finally {
       setHistoryLoading(false);
     }
-  }, [tenantStaffId, accessToken, refreshToken, dateFormat]);
+  }, [tenantStaffId, dateFormat]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchPayrollSettings();

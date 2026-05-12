@@ -76,7 +76,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
         setLoadingPlans(false);
       }
     },
-    [accessToken, refreshToken]
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
@@ -170,7 +170,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isOpen && activeTab === "Payment Link") {

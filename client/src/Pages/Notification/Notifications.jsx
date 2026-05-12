@@ -45,7 +45,7 @@ const Notifications = () => {
       })
       .catch((err) => console.error("[Notifications] Failed to load:", err))
       .finally(() => setLoading(false));
-  }, [userId, accessToken, refreshToken]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAction = (notification) => {
     if (!notification.isRead) {

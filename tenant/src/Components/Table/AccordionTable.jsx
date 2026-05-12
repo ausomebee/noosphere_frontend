@@ -64,7 +64,7 @@ const AccordionTable = ({
     } finally {
       setLoadingServiceCodes(false);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch service codes on component mount
   useEffect(() => {

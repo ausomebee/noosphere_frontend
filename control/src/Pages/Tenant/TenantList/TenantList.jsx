@@ -65,7 +65,7 @@ const TenantList = () => {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, refreshToken]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchData();

@@ -417,6 +417,8 @@ const JiraBoard = () => {
         showToast("Failed to update task order.", "error");
       }
     } else {
+      if (activeColumnId === targetColumnId) return;
+
       const activeTaskIds = [...activeColumn.taskIds];
       const targetTaskIds = [...targetColumn.taskIds];
 

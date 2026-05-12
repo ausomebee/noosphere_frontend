@@ -52,7 +52,7 @@ const TenantListUsageStatistics = () => {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchServerRequests = useCallback(async (page) => {
     try {
@@ -71,7 +71,7 @@ const TenantListUsageStatistics = () => {
     } finally {
       setServerLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchStats();

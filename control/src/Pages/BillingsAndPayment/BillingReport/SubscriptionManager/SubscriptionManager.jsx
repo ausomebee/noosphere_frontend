@@ -540,7 +540,7 @@ const SubscriptionManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, accessToken, refreshToken, formatDate]);
+  }, [activeTab, formatDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchData();

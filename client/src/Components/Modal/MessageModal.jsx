@@ -78,7 +78,7 @@ const MessageModal = ({ isOpen, onClose }) => {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [userId, clientId, tenantId, accessToken, refreshToken]);
+  }, [userId, clientId, tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     mountedRef.current = true;
