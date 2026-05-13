@@ -60,7 +60,7 @@ const ProgramsTab = ({ fullName }) => {
     } finally {
       setLoading(false);
     }
-  }, [clientId, accessToken, refreshToken]);
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---------- Fetch Library Programs ---------- */
   const fetchLibraryPrograms = async () => {

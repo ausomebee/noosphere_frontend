@@ -880,7 +880,7 @@ const ClinicalReportBuilder = () => {
     } finally {
       setChangeRequestsLoading(false);
     }
-  }, [storedReportId, accessToken, refreshToken]);
+  }, [storedReportId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleViewChangeRequest = useCallback(() => {
     fetchChangeRequests();

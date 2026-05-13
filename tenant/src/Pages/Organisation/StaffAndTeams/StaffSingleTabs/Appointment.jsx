@@ -301,7 +301,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
     } finally {
       setLoading(false);
     }
-  }, [staffId, accessToken, refreshToken]);
+  }, [staffId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch upcoming appointments from GET /appointments/staff/upcoming/{staffId}
   const fetchUpcomingAppointments = useCallback(async () => {
@@ -322,7 +322,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
     } finally {
       setUpcomingLoading(false);
     }
-  }, [staffId, accessToken, refreshToken]);
+  }, [staffId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch availability from GET /organization/staff-availability/staff/{staffId}
   const fetchAvailability = useCallback(async () => {
@@ -351,7 +351,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
       console.error("Failed to fetch staff availability:", error);
       showToast("Failed to load staff availability", "error");
     }
-  }, [staffId, accessToken, refreshToken]);
+  }, [staffId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchCalendarAppointments();

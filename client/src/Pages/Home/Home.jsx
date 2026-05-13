@@ -183,7 +183,7 @@ const Home = () => {
     };
 
     fetchChartData();
-  }, [clientId, chartPeriod, accessToken, refreshToken]);
+  }, [clientId, chartPeriod]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch Authorization Service Codes
   useEffect(() => {
@@ -208,7 +208,7 @@ const Home = () => {
     };
 
     fetchAuthorizationCodes();
-  }, [tenantClientId, accessToken, refreshToken]);
+  }, [tenantClientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch Appointments Data based on active tab
   useEffect(() => {

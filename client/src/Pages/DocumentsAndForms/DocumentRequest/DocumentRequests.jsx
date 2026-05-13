@@ -132,7 +132,7 @@ const DocumentRequests = () => {
     };
 
     loadAllData();
-  }, [clientTenantId, accessToken, refreshToken]);
+  }, [clientTenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshDocuments = async () => {
     try {

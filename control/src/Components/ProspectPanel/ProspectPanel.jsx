@@ -470,7 +470,7 @@ const ProspectPanel = () => {
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [candidate?.id, accessToken, refreshToken]);
+  }, [candidate?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isPaymentModalOpen && paymentModalTab === "Payment Link") {

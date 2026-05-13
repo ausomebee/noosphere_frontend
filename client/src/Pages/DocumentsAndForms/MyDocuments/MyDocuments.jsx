@@ -132,7 +132,7 @@ const MyDocuments = () => {
     };
 
     loadAllData();
-  }, [clientTenantId, accessToken, refreshToken]);
+  }, [clientTenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateFolder = async (folderData) => {
     try {

@@ -29,7 +29,7 @@ const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
     } finally {
       setLoading(false);
     }
-  }, [staffId, tenantId, accessToken, refreshToken]);
+  }, [staffId, tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchClients();

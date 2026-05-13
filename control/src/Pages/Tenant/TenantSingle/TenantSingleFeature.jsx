@@ -30,7 +30,7 @@ const TenantSingleFeature = () => {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchData();

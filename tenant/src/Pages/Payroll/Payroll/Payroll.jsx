@@ -50,7 +50,7 @@ const Payroll = () => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchPayrollStats();

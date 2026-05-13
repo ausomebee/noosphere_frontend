@@ -66,7 +66,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       console.error("Failed to load service codes:", error);
       showToast("Failed to load service codes", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchServiceCodes();

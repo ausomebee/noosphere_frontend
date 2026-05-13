@@ -106,7 +106,7 @@ const NotificationSettings = () => {
     } catch {
       // silently fall back to defaults
     }
-  }, [userId, accessToken, refreshToken]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (userId && accessToken) fetchSettings();

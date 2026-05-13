@@ -153,7 +153,7 @@ const TenantSingleBilling = () => {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -170,7 +170,7 @@ const TenantSingleBilling = () => {
     } finally {
       setTabLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId, allInvoices]);
+  }, [tenantId, allInvoices]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePaymentTabChange = useCallback(async (tab) => {
     setActivePaymentTab(tab);
@@ -185,7 +185,7 @@ const TenantSingleBilling = () => {
     } finally {
       setTabLoading(false);
     }
-  }, [accessToken, refreshToken, tenantId, allPayments]);
+  }, [tenantId, allPayments]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Plan info derived from tenant
   const subscription     = tenant?.Subscription?.[0] || null;
@@ -212,6 +212,7 @@ const TenantSingleBilling = () => {
 
   const mapPayment = (pay) => ({
     id:        pay.id || pay.paymentId,
+    invoiceId: pay.invoice?.id || pay.invoiceId || null,
     reference: pay.transactionRef || pay.transactionId || pay.reference || pay.id || "—",
     amount:    pay.amount != null ? `$${Number(pay.amount).toFixed(2)}` : "—",
     method:    pay.gateway || pay.method || pay.paymentMethod || "—",
@@ -417,6 +418,23 @@ const TenantSingleBilling = () => {
     }
   };
 
+  const handleDownloadPaymentInvoice = async (row) => {
+    try {
+      let invoiceId = row.invoiceId;
+      if (!invoiceId) {
+        const res = await invoiceApi.GetPaymentById({ id: row.id, accessToken, refreshToken });
+        invoiceId = res.data?.invoice?.id || res.data?.invoiceId;
+      }
+      if (!invoiceId) {
+        showToast("No invoice found for this payment", "error");
+        return;
+      }
+      await handleDownloadInvoice({ id: invoiceId });
+    } catch (err) {
+      showToast(err.message || "Failed to load payment invoice", "error");
+    }
+  };
+
   const invoiceColumns = [
     { key: "document",     header: "NAME" },
     { key: "date_created", header: "DATE CREATED" },
@@ -439,7 +457,7 @@ const TenantSingleBilling = () => {
 
   const paymentActions = [
     { label: "View Payment", onClick: handleViewPayment },
-    { label: "Download Invoice", onClick: handleDownloadInvoice },
+    { label: "Download Invoice", onClick: handleDownloadPaymentInvoice },
   ];
 
   if (loading) {

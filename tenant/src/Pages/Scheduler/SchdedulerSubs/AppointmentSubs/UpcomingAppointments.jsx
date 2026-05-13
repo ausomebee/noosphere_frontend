@@ -99,7 +99,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     } finally {
       setLoading(false);
     }
-  }, [role, tenantId, userId, accessToken, refreshToken]);
+  }, [role, tenantId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch supporting data
   const fetchSupportingData = useCallback(async () => {
@@ -125,7 +125,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
     } catch (error) {
       showToast("Failed to load support data", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchAppointments();

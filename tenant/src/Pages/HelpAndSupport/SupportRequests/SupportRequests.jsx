@@ -87,7 +87,7 @@ const SupportRequests = () => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch overview stats
   const fetchOverview = useCallback(async () => {
@@ -110,7 +110,7 @@ const SupportRequests = () => {
       console.error("Failed to fetch overview:", error);
       showToast("Failed to load support overview", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchTickets();

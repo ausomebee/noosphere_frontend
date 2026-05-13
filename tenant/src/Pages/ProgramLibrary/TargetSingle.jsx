@@ -222,7 +222,7 @@ const TargetSingle = () => {
       console.error("Fetch error:", e);
     }
     setLoading(false);
-  }, [targetId, clientId, accessToken, refreshToken]);
+  }, [targetId, clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchData();
@@ -322,7 +322,7 @@ const TargetSingle = () => {
     } finally {
       setPerformanceLoading(false);
     }
-  }, [targetId, clientId, accessToken, refreshToken]);
+  }, [targetId, clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (hasPerformanceData) {

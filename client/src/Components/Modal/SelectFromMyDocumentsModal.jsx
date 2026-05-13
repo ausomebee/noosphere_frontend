@@ -53,7 +53,7 @@ const SelectFromMyDocumentsModal = ({
     };
 
     loadMyDocuments();
-  }, [isOpen, clientTenantId, accessToken, refreshToken]);
+  }, [isOpen, clientTenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredDocs = documents.filter((doc) =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase().trim())

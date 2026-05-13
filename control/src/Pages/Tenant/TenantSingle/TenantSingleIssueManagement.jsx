@@ -43,7 +43,7 @@ const TenantSingleIssueManagement = () => {
     } catch (err) {
       if (import.meta.env.DEV) console.warn("Overview error:", err.message);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchIssues = useCallback(async (status) => {
     try {
@@ -57,7 +57,7 @@ const TenantSingleIssueManagement = () => {
     } catch (err) {
       showToast(err.message || "Failed to load issues", "error");
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchTenant = useCallback(async () => {
     try {
@@ -66,7 +66,7 @@ const TenantSingleIssueManagement = () => {
     } catch (err) {
       if (import.meta.env.DEV) console.warn("Tenant fetch error:", err.message);
     }
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const loadAll = async () => {

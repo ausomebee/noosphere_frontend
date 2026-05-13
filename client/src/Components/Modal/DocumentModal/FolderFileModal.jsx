@@ -57,7 +57,7 @@ const FolderFilesModal = ({
     };
 
     fetchFiles();
-  }, [isOpen, folder?.id, accessToken, refreshToken]);
+  }, [isOpen, folder?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen || !folder) return null;
 

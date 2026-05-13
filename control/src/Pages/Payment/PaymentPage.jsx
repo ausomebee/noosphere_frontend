@@ -8,6 +8,7 @@ import StripeForm from "./StripeForm";
 import PayPalForm from "./PayPalForm";
 import NoosphereLogo from "../../assets/NoosphereLogo-white.png";
 import invoiceApi from "../../api/InvoiceApi";
+import { showToast } from "../../Helper/ShowToast";
 import "./PaymentPage.css";
 
 const stripePromise = import.meta.env.VITE_STRIPE_PK
@@ -180,17 +181,21 @@ const PaymentPage = () => {
         paymentStatus: "SUCCESS",
         gateway: result.paymentMethod || "stripe",
       });
+      showToast("Payment successful! Your subscription is now active.", "success");
+      setPaymentResult(result);
+      setPaymentError(null);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to record payment:", err);
+      showToast(err.message || "Payment was processed but failed to record. Please contact support.", "error");
     } finally {
       setRecording(false);
     }
-    setPaymentResult(result);
-    setPaymentError(null);
   };
 
   const handleError = async (error) => {
-    setPaymentError(error.error || "Payment failed. Please try again.");
+    const errorMsg = error.error || "Payment failed. Please try again.";
+    setPaymentError(errorMsg);
+    showToast(errorMsg, "error");
     try {
       await invoiceApi.RecordPayment({
         tenantId: invoice.tenantId,
@@ -210,6 +215,7 @@ const PaymentPage = () => {
       });
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to record payment failure:", err);
+      showToast(err.message || "Failed to log payment failure.", "error");
     }
   };
 

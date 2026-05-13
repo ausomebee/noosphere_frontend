@@ -185,6 +185,7 @@ const StaffsAndTeams = () => {
               const res = await api.GetSingleTenantStaffById({
                 id: row.id,
                 accessToken,
+                refreshToken,
               });
               const staffData = res.data?.data;
               const formattedData = {
@@ -261,6 +262,7 @@ const StaffsAndTeams = () => {
                 id: row.id,
                 active: row.status !== "Active",
                 accessToken,
+                refreshToken,
               });
               setStaffData((prev) =>
                 prev.map((s) =>
@@ -423,8 +425,8 @@ const StaffsAndTeams = () => {
       // Debug: see exactly what is being sent
 
       modalMode === "edit"
-        ? await api.UpdateTenantStaff({ ...payload, accessToken })
-        : await api.CreateTenantStaff({ ...payload, accessToken });
+        ? await api.UpdateTenantStaff({ ...payload, accessToken, refreshToken })
+        : await api.CreateTenantStaff({ ...payload, accessToken, refreshToken });
 
       setIsAddModalOpen(false);
       setRefreshTrigger((prev) => prev + 1);

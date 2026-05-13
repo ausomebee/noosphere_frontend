@@ -40,7 +40,7 @@ const ViewRequestDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [requestId, accessToken, refreshToken]);
+  }, [requestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchTicket();

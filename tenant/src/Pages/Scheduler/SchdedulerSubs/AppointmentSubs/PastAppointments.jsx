@@ -76,7 +76,7 @@ const PastAppointments = () => {
     } finally {
       setLoading(false);
     }
-  }, [role, tenantId, userId, accessToken, refreshToken]);
+  }, [role, tenantId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchPastAppointments();

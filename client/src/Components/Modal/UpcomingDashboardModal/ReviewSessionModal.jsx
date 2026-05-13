@@ -689,7 +689,7 @@ const SessionFeedbackModal = ({
     };
 
     fetchSessionDetails();
-  }, [isOpen, appointment, accessToken, refreshToken]);
+  }, [isOpen, appointment]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset form when modal closes
   useEffect(() => {

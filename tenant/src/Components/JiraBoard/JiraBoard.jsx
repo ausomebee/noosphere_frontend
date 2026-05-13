@@ -279,7 +279,7 @@ const JiraBoard = () => {
     return () => {
       isMounted = false;
     };
-  }, [dispatch, authTokens, tenantId, isDataLoaded]);
+  }, [dispatch, tenantId, isDataLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let isMounted = true;
