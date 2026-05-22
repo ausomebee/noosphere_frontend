@@ -1,4 +1,4 @@
-name: Deploy Frontend to Dev Server
+name: Deploy Frontend
 
 on:
   push:
@@ -12,15 +12,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      #########################################################
+      # CHECKOUT REPOSITORY
+      #########################################################
+
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      #########################################################
+      # DETERMINE ENVIRONMENT
+      #########################################################
+
+      - name: Set deployment environment
+        id: env
+        run: |
+          BRANCH=${GITHUB_REF##*/}
+
+          if [ "$BRANCH" = "develop" ]; then
+            echo "host=${{ secrets.DEV_EC2_HOST_FRONTEND }}" >> $GITHUB_OUTPUT
+
+            echo "ssh_key<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ secrets.DEV_EC2_SSH_KEY_FRONTEND }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            echo "environment=development" >> $GITHUB_OUTPUT
+
+          elif [ "$BRANCH" = "pre-prod" ]; then
+            echo "host=${{ secrets.PREPROD_EC2_HOST_FRONTEND }}" >> $GITHUB_OUTPUT
+
+            echo "ssh_key<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ secrets.PREPROD_EC2_SSH_KEY_FRONTEND }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            echo "environment=preprod" >> $GITHUB_OUTPUT
+
+          elif [ "$BRANCH" = "master" ]; then
+            echo "host=${{ secrets.PROD_EC2_HOST_FRONTEND }}" >> $GITHUB_OUTPUT
+
+            echo "ssh_key<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ secrets.PROD_EC2_SSH_KEY_FRONTEND }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            echo "environment=production" >> $GITHUB_OUTPUT
+          fi
+
+      #########################################################
+      # SETUP NODE
+      #########################################################
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
-      # Test & build client
+      #########################################################
+      # BUILD CLIENT
+      #########################################################
+
       - name: Install, test & build client
         working-directory: ./client
         env:
@@ -30,7 +78,10 @@ jobs:
           npm test
           npm run build
 
-      # Test & build control
+      #########################################################
+      # BUILD CONTROL
+      #########################################################
+
       - name: Install, test & build control
         working-directory: ./control
         env:
@@ -42,7 +93,10 @@ jobs:
           npm test
           npm run build
 
-      # Test & build tenant
+      #########################################################
+      # BUILD TENANT
+      #########################################################
+
       - name: Install, test & build tenant
         working-directory: ./tenant
         env:
@@ -52,57 +106,87 @@ jobs:
           npm test
           npm run build
 
-            # Clean target dirs on EC2 before uploading
-      - name: Clean target dirs on EC2
-        uses: appleboy/ssh-action@v1.0.0
+      #########################################################
+      # PREPARE SERVER DIRECTORIES
+      #########################################################
+
+      - name: Prepare target directories on EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ steps.env.outputs.host }}
+          username: ec2-user
+          key: ${{ steps.env.outputs.ssh_key }}
           script: |
+            sudo mkdir -p /var/www/client
+            sudo mkdir -p /var/www/control
+            sudo mkdir -p /var/www/tenant
+
+            sudo chown -R ec2-user:ec2-user /var/www
+
             sudo rm -rf /var/www/client/*
             sudo rm -rf /var/www/control/*
             sudo rm -rf /var/www/tenant/*
 
-      # Upload client/dist -> /var/www/client
+      #########################################################
+      # UPLOAD CLIENT BUILD
+      #########################################################
+
       - name: Upload client to EC2
-        uses: appleboy/scp-action@v1
+        uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ steps.env.outputs.host }}
+          username: ec2-user
+          key: ${{ steps.env.outputs.ssh_key }}
           source: "client/dist/**"
           target: "/var/www/client"
           strip_components: 2
 
-      # Upload control/dist -> /var/www/control
+      #########################################################
+      # UPLOAD CONTROL BUILD
+      #########################################################
+
       - name: Upload control to EC2
-        uses: appleboy/scp-action@v1
+        uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ steps.env.outputs.host }}
+          username: ec2-user
+          key: ${{ steps.env.outputs.ssh_key }}
           source: "control/dist/**"
           target: "/var/www/control"
           strip_components: 2
 
-      # Upload tenant/dist -> /var/www/tenant
+      #########################################################
+      # UPLOAD TENANT BUILD
+      #########################################################
+
       - name: Upload tenant to EC2
-        uses: appleboy/scp-action@v1
+        uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ steps.env.outputs.host }}
+          username: ec2-user
+          key: ${{ steps.env.outputs.ssh_key }}
           source: "tenant/dist/**"
           target: "/var/www/tenant"
           strip_components: 2
 
-      # Reload nginx
+      #########################################################
+      # VERIFY NGINX CONFIG + RELOAD
+      #########################################################
+
       - name: Reload nginx on EC2
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_FRONTEND }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ steps.env.outputs.host }}
+          username: ec2-user
+          key: ${{ steps.env.outputs.ssh_key }}
           script: |
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo nginx -t
+            sudo systemctl reload nginx
+
+      #########################################################
+      # SUCCESS MESSAGE
+      #########################################################
+
+      - name: Deployment completed
+        run: |
+          echo "Frontend deployed successfully to ${{ steps.env.outputs.environment }}"
