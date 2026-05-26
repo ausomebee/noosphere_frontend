@@ -184,9 +184,10 @@
     padding: 20px;
     overflow-y: auto;
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     margin: 0;
-    
+
   }
   
   /* Logo */

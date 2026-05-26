@@ -1,11 +1,13 @@
 .custom-table-container {
   padding: 15px;
   background-color: #fff;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
   position: relative;
   overflow-x: auto;
-  padding-top: 0; 
+  padding-top: 0;
+  box-sizing: border-box;
 }
 
 .custom-table-container.export-dropdown-open {

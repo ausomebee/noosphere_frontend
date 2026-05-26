@@ -77,6 +77,8 @@
   flex-direction: column; /* Override row direction for table */
   overflow-x: visible; /* Allow table to take full width without horizontal scroll */
   white-space: normal; /* Reset nowrap for table */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Ensure billing-table takes full width */
