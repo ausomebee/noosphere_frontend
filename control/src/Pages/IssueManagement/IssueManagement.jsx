@@ -248,7 +248,8 @@ const IssueManagement = () => {
 
       // Process percentages
       if (statusPercentagesResult.status === "fulfilled") {
-        setStatusPercentages(statusPercentagesResult.value.data ?? []);
+        const d = statusPercentagesResult.value.data;
+        setStatusPercentages(Array.isArray(d) ? d : []);
       } else {
         errors.push("Failed to load status percentages.");
         setStatusPercentages([]);
@@ -259,7 +260,8 @@ const IssueManagement = () => {
       }
 
       if (categoryPercentagesResult.status === "fulfilled") {
-        setCategoryPercentages(categoryPercentagesResult.value.data ?? []);
+        const d2 = categoryPercentagesResult.value.data;
+        setCategoryPercentages(Array.isArray(d2) ? d2 : []);
       } else {
         errors.push("Failed to load category percentages.");
         setCategoryPercentages([]);
@@ -270,9 +272,8 @@ const IssueManagement = () => {
       }
 
       if (dateCreatedPercentagesResult.status === "fulfilled") {
-        setDateCreatedPercentages(
-          dateCreatedPercentagesResult.value.data ?? []
-        );
+        const d3 = dateCreatedPercentagesResult.value.data;
+        setDateCreatedPercentages(Array.isArray(d3) ? d3 : []);
       } else {
         errors.push("Failed to load date created percentages.");
         setDateCreatedPercentages([]);
@@ -283,7 +284,8 @@ const IssueManagement = () => {
       }
 
       if (assigneePercentagesResult.status === "fulfilled") {
-        setAssigneePercentages(assigneePercentagesResult.value.data ?? []);
+        const d4 = assigneePercentagesResult.value.data;
+        setAssigneePercentages(Array.isArray(d4) ? d4 : []);
       } else {
         errors.push("Failed to load assignee percentages.");
         setAssigneePercentages([]);
@@ -294,7 +296,8 @@ const IssueManagement = () => {
       }
 
       if (priorityPercentagesResult.status === "fulfilled") {
-        setPriorityPercentages(priorityPercentagesResult.value.data ?? []);
+        const d5 = priorityPercentagesResult.value.data;
+        setPriorityPercentages(Array.isArray(d5) ? d5 : []);
       } else {
         errors.push("Failed to load priority percentages.");
         setPriorityPercentages([]);
@@ -492,7 +495,8 @@ const IssueManagement = () => {
       "by assigned to": assigneePercentages,
       "by priority": priorityPercentages,
     };
-    const data = dataMap[selectedFilter] || [];
+    const raw = dataMap[selectedFilter] || [];
+    const data = Array.isArray(raw) ? raw : [];
     const top5 = data.slice(0, 5);
     const series = top5.map((item) => parseFloat(item.percentage) || 0);
     const labels = top5.map((item) => {
@@ -534,7 +538,8 @@ const IssueManagement = () => {
       "by assigned to": assigneePercentages,
       "by priority": priorityPercentages,
     };
-    const data = dataMap[selectedFilter] || [];
+    const raw2 = dataMap[selectedFilter] || [];
+    const data = Array.isArray(raw2) ? raw2 : [];
     if (selectedFilter === "by status" || selectedFilter === "by priority") {
       return data.map((item) => ({
         category: item.status || item.priority || "Unknown",

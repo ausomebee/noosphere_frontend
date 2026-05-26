@@ -92,17 +92,15 @@ const TenantSingleIssueManagement = () => {
   const activeIssues = overview?.activeIssues?._count?._all ?? overview?.activeIssues ?? 0;
   const resolvedIssues = overview?.resolvedIssues?._count?._all ?? overview?.resolvedIssues ?? 0;
   const avgResolutionTime = overview?.averageResolutionTime ?? overview?.avgResolutionTime ?? "—";
-  const countByCategory = overview?.countByCategory || [];
-
   // API returns count as _count.category — normalise to a flat list
-  const normalisedCategories = useMemo(
-    () =>
-      countByCategory.map((c) => ({
-        category: c.category || c.name || "Unknown",
-        count: c._count?.category ?? c.count ?? 0,
-      })),
-    [countByCategory]
-  );
+  const normalisedCategories = useMemo(() => {
+    const raw = overview?.countByCategory;
+    const cats = Array.isArray(raw) ? raw : [];
+    return cats.map((c) => ({
+      category: c.category || c.name || "Unknown",
+      count: c._count?.category ?? c.count ?? 0,
+    }));
+  }, [overview?.countByCategory]);
 
   // Donut chart — top 5 categories
   const top5Categories = useMemo(() => {
@@ -428,7 +426,7 @@ const TenantSingleIssueManagement = () => {
         onSecondaryButtonClick={() => setBreakdownModal(false)}
       >
         <div className="breakdown-list">
-          {countByCategory.length === 0 ? (
+          {normalisedCategories.length === 0 ? (
             <p style={{ color: "#6b7280", textAlign: "center" }}>No category data available</p>
           ) : (
             [...normalisedCategories]
