@@ -47,8 +47,8 @@
 
 /* Styles for each tab button */
 .tab-button {
-  flex: 1; /* Each tab takes up an equal portion of the container's width */
-  padding: 10px 20px;
+  flex: 1 1 0; /* Each tab takes up an equal portion of the container's width */
+  padding: 10px 8px;
   font-size: 0.875rem;
   font-weight: 500;
   border: none;
@@ -59,6 +59,9 @@
   transition: all 0.3s ease;
   text-align: center; /* Center the text within each tab */
   white-space: nowrap; /* Prevent text from wrapping */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Hover state */
@@ -813,9 +816,8 @@
   }
 
   .tab-button {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    min-width: max-content;
+    padding: 8px 6px;
+    font-size: 0.7rem;
   }
 
   .tab-content {
