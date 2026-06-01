@@ -21,6 +21,11 @@ const AccordionTable = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
+
+  // Reset pagination when data changes (e.g. tab switch)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
   const [serviceRows, setServiceRows] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
   const [serviceCodes, setServiceCodes] = useState([]);

@@ -116,6 +116,11 @@ const CustomTable = ({
     }
   }, [filterValues.filter_type, getUniqueValues, filters]);
 
+  // Reset pagination when data changes (e.g. tab switch, new filter)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
   const filteredData = useMemo(() => {
     let filtered = [...data];
 

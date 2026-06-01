@@ -767,7 +767,10 @@ const IssueManagement = () => {
               className={`subscription-tab ${
                 activeTab === tab.key ? "active" : ""
               }`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setCurrentPage(1);
+              }}
             >
               {tab.label} <span className="candidate-count">{tab.count}</span>
             </button>

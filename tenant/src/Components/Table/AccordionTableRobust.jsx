@@ -27,6 +27,11 @@ const AccordionTableRobust = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
+
+  // Reset pagination when data changes (e.g. tab switch)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);

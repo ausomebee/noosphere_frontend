@@ -78,6 +78,11 @@ const CustomTable = ({
     return valuesMap;
   }, [data, filters, dateFilterKeys]);
 
+  // Reset pagination when data changes (e.g. tab switch, new filter)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
   // Filtered and sorted data
   const filteredData = useMemo(() => {
     let filtered = [...data];

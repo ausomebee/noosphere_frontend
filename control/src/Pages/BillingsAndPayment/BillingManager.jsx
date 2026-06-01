@@ -13,6 +13,18 @@ import { showToast } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
 import "./BillingAndPayments.css";
 
+const statusMap = {
+  // Payment statuses
+  successful: "Successful",
+  in_progress: "InProgress",
+  failed: "Failed",
+  // Invoice statuses
+  paid: "Paid",
+  upcoming: "Upcoming",
+  due: "Due",
+  overdue: "Overdue",
+};
+
 const BillingManager = () => {
   const { accessToken, refreshToken } = useAuth();
 
@@ -262,10 +274,7 @@ const BillingManager = () => {
           activeSubTab === "all"
             ? { status: "all", accessToken, refreshToken }
             : {
-                status: activeSubTab
-                  .split("_")[0]
-                  .toLowerCase()
-                  .replace(/\b\w/g, (c) => c.toUpperCase()),
+                status: statusMap[activeSubTab] || activeSubTab,
                 accessToken,
                 refreshToken,
               };
@@ -669,7 +678,7 @@ const BillingManager = () => {
         : paymentData.filter(
             (item) =>
               item.status.toLowerCase() ===
-              activeSubTab.split("_")[0].toLowerCase()
+              (statusMap[activeSubTab] || activeSubTab).toLowerCase()
           );
     }
   };
