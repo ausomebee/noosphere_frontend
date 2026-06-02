@@ -1,0 +1,71 @@
+/* GeneralizationSection.css */
+.crb-section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Select with Other Container */
+.select-with-other-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.other-input-wrapper {
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error Styles */
+.report-builder-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* Remove Section Button */
+/* .section-remove-btn-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+} */
+
+/* Spacing between fields */
+.crb-section-fields > *:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .crb-section-fields {
+    gap: 16px;
+  }
+}
+
+/* Rich Text Editor spacing */
+.crb-section-fields .rich-text-editor-container {
+  margin-bottom: 12px;
+}
+
+/* Select input spacing */
+.crb-section-fields .report-select-container {
+  margin-bottom: 12px;
+}
+
+/* Multi-select spacing */
+.crb-section-fields .report-multi-select-container {
+  margin-bottom: 12px;
+}

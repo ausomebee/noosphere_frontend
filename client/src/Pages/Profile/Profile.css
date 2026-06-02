@@ -1,0 +1,475 @@
+.profile-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.profile-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.section {
+  padding: 32px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-section-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.section-description {
+  margin: 0 0 24px;
+  color: #666;
+  font-size: 14px;
+}
+
+.personal-info-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.profile-picture-section {
+  text-align: center;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 20%;
+  overflow: hidden;
+  border: 4px solid #f0f0f0;
+  position: relative;
+}
+
+.profile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.change-picture-btn {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 12px;
+}
+
+.change-picture-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.change-picture-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-image-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.change-image-btn {
+  color: #007bff;
+  border: none;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.change-image-btn:hover:not(:disabled) {
+  color: #0056b3;
+  background: #f8f9fa;
+}
+
+.change-image-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #666;
+}
+
+.password-field-replacement {
+  margin-bottom: 20px;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.disabled-password-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+  font-size: 15px;
+  color: #333;
+}
+
+.password-input-wrapper button {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #007bff;
+}
+
+.password-input-wrapper button:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #007bff;
+}
+
+.password-input-wrapper button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-fields {
+  margin-top: 40px;
+}
+
+.form-fields > div:not(.name-row) {
+  margin-bottom: 20px;
+}
+
+.profile-notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.notification-item.highlight {
+  border-color: #a855f7;
+  background: #f8f0ff;
+}
+
+.notification-item.highlight .notification-label::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #a855f7;
+  border-radius: 50%;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+
+.notification-label {
+  font-size: 15px;
+  color: #333;
+  flex: 1;
+}
+
+.loading-notifications {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.action-buttons {
+  padding: 24px 32px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.password-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.password-modal h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.password-error {
+  color: #dc3545;
+  font-size: 14px;
+  padding: 12px;
+  background: #f8d7da;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-top: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 12px;
+  }
+
+  .personal-info-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .profile-image-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+  }
+
+  .name-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Prevent inputs from overflowing grid cells */
+  .name-row > * {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .section {
+    padding: 20px 16px;
+  }
+
+  .profile-header {
+    padding: 16px;
+  }
+
+  .profile-header h1 {
+    font-size: 20px;
+  }
+
+  .form-fields {
+    margin-top: 24px;
+  }
+
+  /* Stack password field vertically so Change button is accessible */
+  .password-input-wrapper {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .password-input-wrapper button {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  .disabled-password-input {
+    width: 100%;
+  }
+
+  .action-buttons {
+    padding: 16px;
+    flex-direction: column-reverse;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
+
+  .notification-item {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .notification-label {
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .password-modal {
+    padding: 20px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* Responsive Design - Small Mobile */
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 8px;
+  }
+
+  .section {
+    padding: 16px 12px;
+  }
+
+  .profile-header {
+    padding: 14px 12px;
+  }
+
+  .profile-header h1 {
+    font-size: 18px;
+  }
+
+  .profile-section-title {
+    font-size: 16px;
+  }
+
+  .section-description {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .profile-picture {
+    width: 100px;
+    height: 100px;
+  }
+
+  .password-modal {
+    padding: 16px;
+  }
+
+  .password-modal h3 {
+    font-size: 18px;
+  }
+}
+
+/* Animation for modal */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.password-modal {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Loading state for buttons */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Input disabled state */
+input:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}

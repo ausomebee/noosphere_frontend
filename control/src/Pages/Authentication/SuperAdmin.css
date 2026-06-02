@@ -1,0 +1,576 @@
+/* Global CSS for authentication screens background */
+.auth-background {
+    position: relative;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #363F72, #1876C4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  
+  /* Background image container */
+  .auth-background::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-image: url('../../assets/authBG.webp');
+    background-size: cover;
+    background-position: center right;
+    background-repeat: no-repeat;
+    z-index: 0;
+  }
+  
+  /* Ensure the form content stays above the background image */
+  .auth-background > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .auth-background {
+      padding: 15px;
+    }
+  
+    .auth-background::before {
+      width: 100%;
+      opacity: 0.3;
+      background-position: center;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .auth-background {
+      padding: 10px;
+    }
+  
+    .auth-background::before {
+      height: 50%;
+      top: auto;
+      bottom: 0;
+      opacity: 0.2;
+    }
+  }
+  
+  /* Global CSS for authentication forms */
+  .auth-form-container {
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .auth-container{
+    margin-bottom: 1rem;
+  }
+
+  .Auth-logo {
+    width: 100px;
+    margin-bottom: 40px;
+    height: 60px;
+    width: 300px;
+  }
+  
+  .auth-form-container h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .subtitles {
+    font-size: 14px;
+    color: #666;
+    margin-top: 40px;
+    line-height: 1.4;
+  }
+  
+  .input-error {
+    border-color: #ff4d4f !important;
+  }
+  
+  .error-message {
+    color: #ff4d4f;
+    display: flex;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  
+  /* Settings-specific styles for 2FA and similar forms */
+  .settings-group {
+    margin-bottom: 20px;
+  }
+  
+  .settings-item {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .settings-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    position: relative;
+    padding-left: 30px;
+  }
+  
+  .settings-label::before {
+    content: counter(section);
+    counter-increment: section;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  /* Reset counter for settings labels */
+  .settings-group {
+    counter-reset: section;
+  }
+  
+  .settings-note {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 15px;
+    text-align: left;
+    margin-left: 10px;
+  }
+  
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-left: 30px;
+    text-align: left;
+  }
+  
+  .radio-option {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .radio-option .input-radio-group {
+    align-items: center; 
+  }
+  
+  .radio-option .input-radio {
+    margin-top: 2px;
+  }
+  
+  .radio-option .input-radio-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .radio-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .radio-title .recommended {
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
+  }
+  
+  .radio-description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-right: 20px;
+  }
+  
+  /* Adjust switch input alignment */
+  .settings-item .input-switch-group {
+    justify-content: space-between;
+    flex-direction: row-reverse;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 640px) {
+    .auth-form-container {
+      padding: 20px;
+      max-width: 100%;
+    }
+  
+    .Auth-logo {
+      height: 40px;
+      width: 200px;
+    }
+  
+    .auth-form-container h2 {
+      font-size: 20px;
+    }
+  
+    .subtitle {
+      font-size: 12px;
+    }
+  
+    .settings-label {
+      font-size: 13px;
+      padding-left: 25px;
+    }
+  
+    .settings-label::before {
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
+    }
+  
+    .settings-note {
+      font-size: 11px;
+      margin-left: 25px;
+    }
+  
+    .radio-group {
+      margin-left: 25px;
+    }
+  
+    .radio-title {
+      font-size: 13px;
+    }
+  
+    .radio-title .recommended {
+      font-size: 11px;
+    }
+  
+    .radio-description {
+      font-size: 11px;
+    }
+  }
+
+
+  /* Security question styling */
+.security-question {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: left;
+  }
+  
+  /* Input styling */
+  .security-answer-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #d1d5db;
+    margin-bottom: 20px;
+  }
+  
+  /* Forgot answer link */
+  .forgot-answer {
+    text-align: right;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  
+  .forgot-answer a {
+    color: #3b82f6;
+    text-decoration: none;
+  }
+  
+  .forgot-answer a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .security-question {
+      font-size: 13px;
+    }
+  
+    .security-answer-input {
+      font-size: 13px;
+      padding: 8px;
+    }
+  
+    .forgot-answer {
+      font-size: 11px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .security-question {
+      font-size: 12px;
+    }
+  
+    .security-answer-input {
+      font-size: 12px;
+      padding: 6px;
+    }
+  
+    .forgot-answer {
+      font-size: 10px;
+    }
+  }
+  
+
+
+  /* OTP input container */
+.code-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Individual OTP input */
+  .code-input {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    margin: 0 5px;
+    outline: none;
+  }
+  
+  .code-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Separator between the two groups of digits */
+  .code-separator {
+    font-size: 20px;
+    color: #333;
+    margin: 0 5px;
+  }
+  
+  /* Can't access link */
+  .cant-access {
+    text-align: right;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  
+  .cant-access a {
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .cant-accesss {
+    text-align: right;
+    margin-top: 10px;
+    font-size: 12px;
+     color: #3b82f6;
+    text-decoration: none;
+    margin-left: 5px;
+  }
+
+ 
+  
+  .cant-access a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .code-input {
+      width: 35px;
+      height: 35px;
+      font-size: 14px;
+      margin: 0 4px;
+    }
+  
+    .code-separator {
+      font-size: 18px;
+      margin: 0 4px;
+    }
+  
+    .cant-access {
+      font-size: 11px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .code-input {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+      margin: 0 3px;
+    }
+  
+    .code-separator {
+      font-size: 16px;
+      margin: 0 3px;
+    }
+  
+    .cant-access {
+      font-size: 10px;
+    }
+  }
+ 
+
+  /* Confirmation message styling */
+.confirmation-message {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .confirmation-message {
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .confirmation-message {
+      font-size: 12px;
+    }
+  }
+
+  /* No additional specific styles needed for now, as Auth.css handles most styling */
+
+/* Responsive design adjustments if needed */
+
+    .super-input-group {
+        margin-bottom: 20px;
+    }
+
+
+@media (max-width: 992px) {
+    .input-group {
+      margin-bottom: 12px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .input-group {
+      margin-bottom: 10px;
+    }
+  }
+
+  /* Failure icon */
+.failure-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    font-size: 20px;
+    margin: 0 auto 15px;
+  }
+  
+  /* Confirmation message */
+  .confirmation-message {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .failure-icon {
+      width: 35px;
+      height: 35px;
+      font-size: 18px;
+    }
+  
+    .confirmation-message {
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .failure-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+    }
+  
+    .confirmation-message {
+      font-size: 12px;
+    }
+  }
+
+  /* Success icon */
+.success-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    font-size: 20px;
+    margin: 0 auto 15px;
+  }
+  
+  /* Confirmation message */
+  .confirmation-message {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .success-icon {
+      width: 35px;
+      height: 35px;
+      font-size: 18px;
+    }
+  
+    .confirmation-message {
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .success-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+    }
+  
+    .confirmation-message {
+      font-size: 12px;
+    }
+  }

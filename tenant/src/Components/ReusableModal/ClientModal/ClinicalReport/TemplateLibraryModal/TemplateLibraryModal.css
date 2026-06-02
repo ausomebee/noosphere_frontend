@@ -1,0 +1,262 @@
+.template-library-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.template-library-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 880px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.template-library-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.template-close-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.template-close-btn:hover {
+  background: #eff6ff;
+}
+
+.template-library-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+.template-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.template-table-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.template-header-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.template-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.template-table-body {
+  background: white;
+}
+
+.template-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.template-row:last-child {
+  border-bottom: none;
+}
+
+.template-row:hover {
+  background: #f9fafb;
+}
+
+.template-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.template-icon {
+  color: #0066cc;
+}
+
+.template-name {
+  font-size: 14px;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+.use-template-btn {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.use-template-btn:hover {
+  background: #eff6ff;
+}
+
+.template-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-number:hover:not(:disabled):not(.pagination-active) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.pagination-number.pagination-active {
+  background: #0066cc;
+  border-color: #0066cc;
+  color: white;
+}
+
+.pagination-ellipsis {
+  border: none;
+  cursor: default;
+}
+
+.pagination-ellipsis:hover {
+  background: white;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .template-library-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .template-library-header {
+    padding: 14px 16px;
+  }
+
+  .template-library-title {
+    font-size: 16px;
+  }
+
+  .template-library-content {
+    padding: 16px;
+  }
+
+  .template-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px;
+  }
+
+  .template-pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pagination-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pagination-number {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}

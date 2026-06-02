@@ -1,0 +1,468 @@
+
+
+.report-builder {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+.report-builder__title {
+  margin-bottom: 30px;
+  color: #1e293b;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.report-builder-field {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.report-builder-label {
+  min-width: 100px;
+  width: 150px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  padding-top: 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.report-builder-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1e293b;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.report-builder-input::placeholder {
+  color: #94a3b8;
+}
+.report-builder-input:hover {
+  border-color: #cbd5e0;
+}
+.report-builder-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.report-builder-select-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.report-builder-select-button {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1e293b;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.report-builder-select-button .placeholder {
+  color: #94a3b8;
+}
+.report-builder-select-button:hover {
+  border-color: #cbd5e0;
+}
+.report-builder-select-button.open {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.report-builder-select-icon {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.report-builder-select-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.report-builder-select-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.report-builder-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 4px;
+}
+
+.report-builder-select-option {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1e293b;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.report-builder-select-option:hover {
+  background: #f1f5f9;
+}
+.report-builder-select-option.selected {
+  background: #eff6ff;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.report-builder-multi-select-grid {
+  flex: 1;
+  display: grid;
+  gap: 12px;
+}
+
+.report-builder-multi-select-grid.single {
+  grid-template-columns: 1fr;
+}
+.report-builder-multi-select-grid.double {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.report-builder-multi-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 4px;
+}
+
+.report-builder-multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.report-builder-multi-select-option:hover {
+  background: #f1f5f9;
+}
+
+.report-builder-multi-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.report-builder-multi-checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e0;
+  border-radius: 4px;
+  background: white;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.report-builder-multi-checkbox-input:checked
+  + .report-builder-multi-checkbox-custom {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.report-builder-multi-checkbox-input:checked
+  + .report-builder-multi-checkbox-custom::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.report-builder-multi-checkbox-text {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.report-builder-checkbox-grid {
+  flex: 1;
+  display: grid;
+  gap: 12px;
+}
+
+.report-builder-checkbox-grid.single {
+  grid-template-columns: 1fr;
+}
+.report-builder-checkbox-grid.double {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.report-builder-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 0;
+  position: relative;
+}
+
+.report-builder-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.report-builder-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e0;
+  border-radius: 4px;
+  background: white;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.report-builder-checkbox-input:checked + .report-builder-checkbox-custom {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.report-builder-checkbox-input:checked
+  + .report-builder-checkbox-custom::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.report-builder-checkbox-label:hover .report-builder-checkbox-custom {
+  border-color: #94a3b8;
+}
+.report-builder-checkbox-text {
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.report-builder-radio-group {
+  padding-top: 10px;
+  flex: 1;
+  display: flex;
+  gap: 24px;
+}
+
+.report-builder-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.report-builder-radio-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.report-builder-radio-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e0;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.report-builder-radio-input:checked + .report-builder-radio-custom {
+  border-color: #3b82f6;
+}
+.report-builder-radio-input:checked + .report-builder-radio-custom::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+
+.report-builder-radio-label:hover .report-builder-radio-custom {
+  border-color: #94a3b8;
+}
+.report-builder-radio-text {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.report-builder-file-upload-wrapper {
+  flex: 1;
+  cursor: pointer;
+  align-items: center;
+}
+
+.report-builder-file-upload-area {
+  padding: 32px 24px;
+  background: white;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.report-builder-file-upload-area:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.report-builder-upload-icon {
+  width: 40px;
+  height: 40px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.report-builder-upload-text-primary {
+  font-size: 15px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.report-builder-upload-text-secondary {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.report-builder-file-upload-wrapper.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.report-builder-spin {
+  animation: rb-spin 1s linear infinite;
+}
+
+@keyframes rb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.report-builder-uploaded-list {
+  flex: 1;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-builder-uploaded-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.report-builder-uploaded-link {
+  flex: 1;
+  color: #3b82f6;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-builder-uploaded-link:hover {
+  text-decoration: underline;
+}
+
+.report-builder-file-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 2px;
+  display: flex;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.report-builder-file-remove:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+@media (max-width: 768px) {
+  .report-builder-field {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .report-builder-label {
+    min-width: 100%;
+    padding-top: 0;
+  }
+  .report-builder-multi-select-grid.double {
+    grid-template-columns: 1fr;
+  }
+}

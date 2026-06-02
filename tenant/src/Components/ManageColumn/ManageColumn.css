@@ -1,0 +1,183 @@
+.manage-column-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem;
+    font-family: Inter, sans-serif;
+ 
+  
+  }
+  
+  .manage-column-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+  
+  .manage-back-button {
+    display: flex;
+    gap: 4px;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #004ABA;
+  }
+
+  .add-candidate-manage {
+    justify-content: flex-end;
+    display: flex;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 10; /* Ensure button container is above table */
+  }
+  
+  .candidates-tab {
+    padding: 1rem 0;
+    width: 100%;
+  }
+  
+  .manage-column-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    flex: 1; /* Take up remaining space */
+    text-align: center; /* Center the text within the h1 */
+  }
+  
+  /* candidate-count, tab-content → moved to src/styles/Tabs.css */
+
+  .basic-setup {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 600px;
+    width: 100%; /* Ensure it takes the full width up to max-width */
+  }
+  
+  .tasks-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 600px;
+    width: 100%;
+  }
+  
+  .tasks-section, .documents-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .tasks-header, .documents-header {
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  .tasks-title, .documents-title {
+    font-size: 1rem;
+  }
+  
+  .required-title {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  .task-item, .document-items {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+  }
+  
+  .task-name-container, .document-name-container {
+    font-size: 0.875rem;
+    color: #111827;
+  }
+  
+  .toggle-switch-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .no-items-message {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+  
+  .add-button-container {
+    display: flex;
+    justify-content: left;
+  }
+  
+  .candidates-content {
+    color: #6b7280;
+    font-size: 0.875rem;
+    text-align: center;
+    width: 100%;
+    
+  }
+
+  .error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* Responsive: Mobile */
+  @media (max-width: 640px) {
+    .manage-column-container {
+      padding: 0.75rem;
+    }
+
+    .manage-column-header {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .manage-column-header h1 {
+      font-size: 1.2rem;
+      text-align: left;
+    }
+
+    /* Tab content: full width, no centering */
+    .tab-content {
+      padding: 0;
+    }
+
+    .basic-setup,
+    .tasks-requirements {
+      max-width: 100%;
+    }
+
+    /* Candidates tab: table overflow */
+    .candidates-tab {
+      padding: 0.5rem 0;
+    }
+
+    .candidates-content {
+      overflow-x: auto;
+    }
+
+    /* Add candidate button: full width */
+    .add-candidate-manage {
+      justify-content: stretch;
+    }
+  }
+
+  /* Responsive: Tablet */
+  @media (min-width: 641px) and (max-width: 992px) {
+    .manage-column-container {
+      padding: 1rem;
+    }
+
+    .basic-setup,
+    .tasks-requirements {
+      max-width: 100%;
+    }
+
+    .candidates-content {
+      overflow-x: auto;
+    }
+  }

@@ -1,0 +1,667 @@
+import React, { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import Select, { components } from "react-select";
+import { GoCalendar } from "react-icons/go";
+/* =====================  TextInput  ===================== */
+const TextInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  className = "",
+  width,
+  error,
+  ...props
+}) => {
+  const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
+  const inlineStyle =
+    !isNaN(Number(width)) && width !== "full" ? { width: `${width}px` } : {};
+
+  return (
+    <div className="input-group" >
+      {label && <label className="input-group-label">{label}</label>}
+      <input
+        type="text"
+        className={`form-control ${widthClass} ${className}`}
+        style={inlineStyle}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        {...props}
+      />
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+TextInput.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
+  className: PropTypes.string,
+  error: PropTypes.string,
+};
+
+/* =====================  PasswordInput  ===================== */
+const PasswordInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  className = "",
+  error,
+  ...props
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePasswordVisibility = () => setShowPassword((s) => !s);
+
+  return (
+    <div className="input-group">
+      {label && <label className="input-group-label">{label}</label>}
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          className={`form-control ${className}`}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          style={{ paddingRight: "40px" }}
+          {...props}
+        />
+        <svg
+          className="password-toggle-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          onClick={togglePasswordVisibility}
+          role="button"
+          tabIndex={0}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? (
+            <>
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+              <circle cx="12" cy="12" r="3" />
+            </>
+          ) : (
+            <>
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+              <path d="M1 1l22 22" />
+              <circle cx="12" cy="12" r="3" />
+            </>
+          )}
+        </svg>
+      </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+PasswordInput.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+  error: PropTypes.string,
+};
+
+const SelectInput = ({
+  label,
+  value,
+  onChange,
+  options,
+  width,
+  className = "",
+  error,
+  isMulti = false,
+  placeholder = "Select an option…",
+  ...props
+}) => {
+  const selectRef = useRef(null);
+
+  const selected = isMulti
+    ? (value || []).map((v) => options.find((o) => o.value === v))
+    : options.find((o) => o.value === value) || null;
+
+  const handleChange = (newVal) => {
+    const v = isMulti ? newVal.map((i) => i.value) : newVal?.value || "";
+    onChange?.({ target: { name: props.name, value: v } });
+  };
+
+  const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
+
+  const MultiValueContainer = (p) => (
+    <components.MultiValueContainer {...p}>
+      <span className="selected-label-item">{p.children}</span>
+    </components.MultiValueContainer>
+  );
+
+  const Option = isMulti
+    ? (p) => (
+        <components.Option {...p}>
+          <input
+            type="checkbox"
+            checked={p.isSelected}
+            onChange={() => null}
+            style={{ marginRight: 8 }}
+          />
+          <label>{p.label}</label>
+        </components.Option>
+      )
+    : components.Option;
+
+  return (
+    <div className={`input-group ${widthClass}`} ref={selectRef}>
+      {label && <label className="input-group-label">{label}</label>}
+      <div className="select-input-wrapper">
+        <Select
+          className={`input-select ${className}`}
+          classNamePrefix="rs"
+          options={options}
+          value={selected}
+          onChange={handleChange}
+          isMulti={isMulti}
+          menuPosition="fixed"
+          menuPlacement="auto"
+          placeholder={placeholder}
+          components={{
+            Option,
+            MultiValueContainer,
+            IndicatorSeparator: () => null,
+            ClearIndicator: () => null,
+            DropdownIndicator: () => null,
+          }}
+          styles={{
+            control: (base) => ({
+              ...base,
+              border: 0,
+              boxShadow: "none",
+              background: "transparent",
+              minHeight: isMulti ? 20 : 20,
+              borderRadius: 12,
+              padding: "0 6px",
+              cursor: "pointer",
+            }),
+            menu: (base) => ({
+              ...base,
+              margin: 0,
+              width: selectRef.current?.offsetWidth || "auto",
+            }),
+            menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+            valueContainer: (base) => ({
+              ...base,
+              padding: 0,
+              flexWrap: isMulti ? "wrap" : "nowrap",
+              overflow: "hidden",
+            }),
+            multiValue: () => ({ background: "transparent" }),
+            placeholder: (base) => ({ ...base, color: "#999" }),
+          }}
+          menuPortalTarget={document.body}
+          closeMenuOnSelect={!isMulti}
+          hideSelectedOptions={false}
+          {...props}
+        />
+      </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+SelectInput.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string),
+  ]),
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
+  className: PropTypes.string,
+  error: PropTypes.string,
+  isMulti: PropTypes.bool,
+  placeholder: PropTypes.string,
+};
+
+/* =====================  rest of components unchanged  ===================== */
+const SearchableSelectInput = ({
+  label,
+  value,
+  onChange,
+  options,
+  width,
+  className = "",
+  error,
+  placeholder = "Search options…",
+  disabled, // ✅ ADDED
+  ...props
+}) => {
+  const selectRef = useRef(null);
+
+  const selected = options.find((o) => o.value === value) || null;
+
+  const handleChange = (newVal) => {
+    onChange?.({ target: { name: props.name, value: newVal?.value || "" } });
+  };
+
+  const widthClass = width && width !== "full" ? `w-${width}` : "w-full";
+
+  return (
+    <div className={`input-group ${widthClass}`} ref={selectRef}>
+      {label && <label className="input-group-label">{label}</label>}
+      <div className="select-input-wrapper">
+        <Select
+          className={`input-select ${className}`}
+          classNamePrefix="rs"
+          options={options}
+          value={selected}
+          onChange={handleChange}
+          placeholder={placeholder}
+          isSearchable
+          isDisabled={disabled}
+          menuPosition="fixed"
+          menuPlacement="auto"
+          components={{
+            IndicatorSeparator: () => null,
+            ClearIndicator: () => null,
+            DropdownIndicator: () => null,
+          }}
+          styles={{
+            control: (base, state) => ({
+              ...base,
+              border: 0,
+              boxShadow: "none",
+              background: "transparent",
+              minHeight: 36,
+              borderRadius: 12,
+              padding: "0 8px",
+              cursor: state.isDisabled ? "not-allowed" : "pointer",
+              opacity: state.isDisabled ? 0.5 : 1,
+            }),
+            menu: (base) => ({
+              ...base,
+              margin: 0,
+              width: selectRef.current?.offsetWidth || "auto",
+            }),
+            menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+            valueContainer: (base) => ({
+              ...base,
+              padding: 0,
+              overflow: "hidden",
+            }),
+            placeholder: (base) => ({ ...base, color: "#999" }),
+          }}
+          menuPortalTarget={document.body}
+          {...props}
+        />
+      </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+SearchableSelectInput.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
+  className: PropTypes.string,
+  placeholder: PropTypes.string,
+  error: PropTypes.string,
+  disabled: PropTypes.bool, // ✅ ADDED
+};
+
+const CheckboxInput = ({ label, checked, onChange, error, ...props }) => (
+  <div className="flex-col">
+    <div className="form-checkbox-group">
+      <input
+        type="checkbox"
+        className="form-checkbox"
+        checked={checked}
+        onChange={onChange}
+        {...props}
+      />
+      {label && <label className="form-checkbox-label">{label}</label>}
+    </div>
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
+  </div>
+);
+
+CheckboxInput.propTypes = {
+  label: PropTypes.string,
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
+};
+
+const SwitchInput = ({ label, checked, onChange, ...props }) => (
+  <div className="input-switch-group">
+    {label && <label className="input-switch-label">{label}</label>}
+    <label className="switch">
+      <input type="checkbox" checked={checked} onChange={onChange} {...props} />
+      <span className="slider round"></span>
+    </label>
+  </div>
+);
+
+SwitchInput.propTypes = {
+  label: PropTypes.string,
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
+const TextareaInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  row = "5",
+  error,
+  ...props
+}) => (
+  <div className="input-group">
+    {label && <label className="input-group-label">{label}</label>}
+    <textarea
+      className="input-textarea"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      rows={row}
+      {...props}
+    />
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
+  </div>
+);
+
+TextareaInput.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  error: PropTypes.string,
+};
+
+const SearchInput = ({ value, onChange, placeholder, width, ...props }) => (
+  <div className="input-group">
+    <div
+      className={`input-search-wrapper ${width ? `w-${width}` : "w-full"}`}
+      style={!isNaN(width) ? { width: `${width}px` } : {}}
+    >
+      <svg
+        className="search-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--color-muted)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="search"
+        className="input-search"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        {...props}
+      />
+    </div>
+  </div>
+);
+
+SearchInput.propTypes = {
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  width: PropTypes.oneOf(["150", "200", "250", "300", "full"]),
+};
+
+const RadioInput = ({
+  label,
+  name,
+  value,
+  checked,
+  onChange,
+  inputPosition = "before",
+  className = "",
+  error,
+  ...props
+}) => (
+  <div className={`input-radio-group input-position-${inputPosition}`}>
+    {inputPosition === "before" ? (
+      <>
+        <input
+          type="radio"
+          className={`input-radio ${className}`}
+          name={name}
+          value={value}
+          checked={checked}
+          onChange={onChange}
+          {...props}
+        />
+        {label && <label className="input-radio-label">{label}</label>}
+      </>
+    ) : (
+      <>
+        {label && <label className="input-radio-label">{label}</label>}
+        <input
+          type="radio"
+          className={`input-radio ${className}`}
+          name={name}
+          value={value}
+          checked={checked}
+          onChange={onChange}
+          {...props}
+        />
+      </>
+    )}
+    {error && (
+      <div className="auth-error-message text-red-500 text-xs mt-1">
+        {error}
+      </div>
+    )}
+  </div>
+);
+
+RadioInput.propTypes = {
+  label: PropTypes.string,
+  name: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  inputPosition: PropTypes.oneOf(["before", "after"]),
+  className: PropTypes.string,
+  error: PropTypes.string,
+};
+
+const TimeInput = ({
+  value = { hours: 0, minutes: 0, seconds: 0 },
+  onChange,
+  disabled,
+}) => {
+  const [time, setTime] = useState(value);
+
+  useEffect(() => {
+    setTime(value);
+  }, [value]);
+
+  const handleChange = (field, val) => {
+    const newValue = Math.max(
+      0,
+      Math.min(parseInt(val) || 0, field === "hours" ? 23 : 59)
+    );
+    const newTime = { ...time, [field]: newValue };
+    setTime(newTime);
+    onChange(newTime);
+  };
+
+  const formatTime = () => {
+    return `${time.hours.toString().padStart(2, "0")}:${time.minutes
+      .toString()
+      .padStart(2, "0")}:${time.seconds.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="flex items-center space-x-2">
+      <input
+        type="text"
+        value={time.hours}
+        onChange={(e) => handleChange("hours", e.target.value)}
+        min="0"
+        max="23"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span>:</span>
+      <input
+        type="text"
+        value={time.minutes}
+        onChange={(e) => handleChange("minutes", e.target.value)}
+        min="0"
+        max="59"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span>:</span>
+      <input
+        type="text"
+        value={time.seconds}
+        onChange={(e) => handleChange("seconds", e.target.value)}
+        min="0"
+        max="59"
+        disabled={disabled}
+        className="w-50 p-4 border rounded-md text-center"
+      />
+      <span className="ml-2 text-sm text-gray-600">{formatTime()}</span>
+    </div>
+  );
+};
+
+TimeInput.propTypes = {
+  value: PropTypes.shape({
+    hours: PropTypes.number,
+    minutes: PropTypes.number,
+    seconds: PropTypes.number,
+  }),
+  onChange: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
+};
+
+TimeInput.defaultProps = {
+  value: { hours: 0, minutes: 0, seconds: 0 },
+  disabled: false,
+};
+
+const CustomDatePickerInput = ({
+  value,
+  onClick,
+  placeholder,
+  error,
+  onFocus,
+}) => {
+  const inputRef = useRef(null);
+
+  const handleClick = (e) => {
+ 
+    if (onClick) onClick(e);
+    if (inputRef.current) inputRef.current.focus();
+  };
+
+  return (
+    <>
+      <div className="custom-datepicker-input-container">
+        <input
+          type="text"
+          value={value}
+          onClick={handleClick}
+          onFocus={onFocus}
+          placeholder={placeholder}
+          className={`custom-datepicker-input ${
+            error ? "custom-datepicker-input-error" : ""
+          }`}
+          ref={inputRef}
+          readOnly // Explicitly set to read-only
+        />
+        <GoCalendar className="custom-datepicker-icon" aria-hidden="true" />
+      </div>
+      {error && (
+        <div className="auth-error-message text-red-500 text-xs mt-1">
+          {error.message || error} {/* Handle error as object or string */}
+        </div>
+      )}
+    </>
+  );
+};
+
+CustomDatePickerInput.propTypes = {
+  value: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  onFocus: PropTypes.func,
+  placeholder: PropTypes.string,
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+};
+
+export {
+  TextInput,
+  PasswordInput,
+  SelectInput,
+  SearchableSelectInput,
+  CheckboxInput,
+  SwitchInput,
+  TextareaInput,
+  SearchInput,
+  RadioInput,
+  TimeInput,
+  CustomDatePickerInput,
+};

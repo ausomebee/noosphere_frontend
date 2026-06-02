@@ -1,0 +1,79 @@
+import React, { useState, useEffect } from 'react';
+import ReusableModal from "./ReusableModal";
+import { CheckboxInput } from "../Input/Inputs";
+import { planOptions } from "../../Data/selectOptions";
+
+const AssignToPlanModal = ({ isOpen, onClose, onSave, featureId, currentGroupTitle, currentPlans, isLoading }) => {
+  const [selectedPlans, setSelectedPlans] = useState([]);
+
+  // Pre-populate with the feature's current plans
+  useEffect(() => {
+    if (currentPlans) {
+      setSelectedPlans(currentPlans);
+    }
+  }, [currentPlans]);
+
+  const handlePlanChange = (e) => {
+    const { value, checked } = e.target;
+    setSelectedPlans((prevPlans) =>
+      checked
+        ? [...prevPlans, value]
+        : prevPlans.filter((plan) => plan !== value)
+    );
+  };
+
+  const handleSave = () => {
+    if (selectedPlans.length > 0) {
+      onSave({
+        featureId,
+        groupTitle: currentGroupTitle,
+        plans: selectedPlans,
+      });
+    }
+    onClose();
+  };
+
+  const handleClose = () => {
+    setSelectedPlans(currentPlans || []); // Reset to current plans on close
+    onClose();
+  };
+
+  return (
+    <div>
+      <ReusableModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Assign to plan"
+        primaryButtonText={isLoading ? "Saving..." : "Save"}
+        secondaryButtonText="Cancel"
+        primaryButtonColor="#000000"
+        secondaryButtonColor="#ffffff"
+        onPrimaryButtonClick={handleSave}
+        onSecondaryButtonClick={handleClose}
+        primaryButtonDisabled={isLoading}
+        primaryButtonLoading={isLoading}
+      >
+        <div>
+          <p className="text-sm text-gray-600 mb-4">
+            Select the plan(s) you want to assign this feature to
+          </p>
+          <div className="space-y-2">
+            {planOptions.map((plan) => (
+              <CheckboxInput
+                key={plan.value}
+                label={plan.label}
+                name="plans"
+                value={plan.value}
+                checked={selectedPlans.includes(plan.value)}
+                onChange={handlePlanChange}
+                disabled={isLoading}
+              />
+            ))}
+          </div>
+        </div>
+      </ReusableModal>
+    </div>
+  );
+};
+
+export default AssignToPlanModal;

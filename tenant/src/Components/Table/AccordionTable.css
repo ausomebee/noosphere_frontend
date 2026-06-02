@@ -1,0 +1,518 @@
+/* Accordion Table Styles */
+.accordion-table-container {
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding-bottom: 20px;
+}
+
+.accordion-table-wrapper {
+  overflow-x: auto;
+}
+
+.accordion-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.accordion-table th {
+  background: #f9fafb;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+
+}
+
+.accordion-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.progress-bars {
+  flex: 1;
+  height: 8px;
+  background: #f7f7f7;
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+}
+
+.progress-fills {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-fills.high {
+  background-color: #D92D20 !important;
+}
+
+.progress-remaining {
+  height: 100%;
+}
+
+.progress-texts {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 40px;
+}
+
+/* Expand Column */
+.expand-column {
+  width: 50px;
+}
+
+.expand-cell {
+  width: 50px;
+  padding: 0 !important;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+ 
+  height: 100%;
+}
+
+.expand-button {
+ margin-top: 20px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+ 
+  transition: all 0.2s ease;
+}
+
+.expand-button:hover {
+  background: #f3f4f6;
+}
+
+.expand-button svg {
+  transition: transform 0.2s ease;
+}
+
+.expand-button.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* Main Row Styles */
+.accordion-main-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.accordion-main-row:hover {
+  background-color: #f9fafb;
+}
+
+.accordion-main-row.expanded {
+  background-color: #fff;
+  border-left: 3px solid #3b82f6;
+}
+
+.accordion-cell {
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Accordion Content Row */
+.accordion-content-row {
+  background: #fafbfc;
+}
+
+
+
+
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+ 
+}
+
+.service-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Service Codes Table */
+.service-codes-table {
+  padding: 0;
+}
+
+.inner-service-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inner-service-table th {
+
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+
+
+}
+
+.inner-service-table td {
+  padding: 12px 16px;
+
+}
+
+.inner-service-table tr {
+  padding: 8px 16px;
+}
+
+.inner-service-table tr:last-child td {
+  border-bottom: none;
+}
+
+.service-row td {
+  padding: 8px 16px;
+}
+
+/* Input Styles Integration */
+.service-row .select-input-container,
+.service-row .text-input-container {
+  margin: 0;
+  min-width: 120px;
+}
+
+.service-row .select-input__control,
+.service-row .text-input {
+  min-height: 38px;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* Loading State */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Action Column */
+.action-column {
+  width: 80px;
+  text-align: center;
+}
+
+.action-cell {
+  text-align: center;
+  vertical-align: middle;
+
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+    margin-top: 30px;
+}
+
+.delete-btn:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.delete-btn:active {
+  background: #fecaca;
+}
+
+/* Pagination (for pages that only load AccordionTable, not CustomTable) */
+.accordion-table-container .pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 20px 16px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.accordion-table-container .pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.accordion-table-container .pagination-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.accordion-table-container .pagination-button:hover:not(:disabled) {
+  color: #1a202c;
+}
+
+.accordion-table-container .pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.accordion-table-container .pagination-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #4a5568;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.accordion-table-container .pagination-page:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.accordion-table-container .pagination-page.active {
+  background: #004ABA;
+  color: #fff;
+}
+
+.accordion-table-container .pagination-ellipsis {
+  font-size: 14px;
+  color: #666;
+  padding: 0 5px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.empty-content svg {
+  color: #9ca3af;
+}
+
+.empty-content p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .accordion-table th,
+  .accordion-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .accordion-content {
+    padding: 8px;
+  }
+
+  .service-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .service-header h4 {
+    font-size: 14px;
+  }
+
+  /* Stack inner service table vertically on mobile */
+  .inner-service-table,
+  .inner-service-table thead,
+  .inner-service-table tbody,
+  .inner-service-table tr,
+  .inner-service-table td,
+  .inner-service-table th {
+    display: block;
+    width: 100%;
+  }
+
+  .inner-service-table thead {
+    display: none;
+  }
+
+  .service-row {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .service-row td {
+    padding: 6px 0;
+    border-bottom: none;
+  }
+
+  .service-row .select-input-container,
+  .service-row .text-input-container {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .service-row .action-cell {
+    text-align: right;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+    margin-top: 4px;
+  }
+
+  .expand-button {
+    margin-top: 10px;
+  }
+
+  .delete-btn {
+    margin-top: 0;
+    padding: 6px;
+  }
+
+  .service-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 0 0;
+  }
+
+  .empty-state {
+    padding: 30px 12px;
+  }
+
+  /* Pagination: stack on mobile */
+  .accordion-table-container .pagination {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .accordion-table-container .pagination-pages {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .accordion-table-container .pagination-button span {
+    display: none;
+  }
+
+  .accordion-table-container .pagination-page {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+/* Responsive: Tablet */
+@media (min-width: 641px) and (max-width: 992px) {
+  .accordion-table th,
+  .accordion-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .accordion-content {
+    padding: 12px;
+  }
+
+  .service-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  /* 2-column grid for service fields on tablet */
+  .inner-service-table,
+  .inner-service-table thead,
+  .inner-service-table tbody,
+  .inner-service-table tr,
+  .inner-service-table td,
+  .inner-service-table th {
+    display: block;
+    width: 100%;
+  }
+
+  .inner-service-table thead {
+    display: none;
+  }
+
+  .service-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .service-row td {
+    padding: 4px 0;
+    border-bottom: none;
+  }
+
+  .service-row .action-cell {
+    grid-column: 1 / -1;
+    text-align: right;
+  }
+
+  .service-row .select-input-container,
+  .service-row .text-input-container {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .delete-btn {
+    margin-top: 0;
+  }
+}
