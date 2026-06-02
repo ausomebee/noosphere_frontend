@@ -36,6 +36,7 @@ const CustomTable = ({
   onSelectionChange,
   hasStatusDot = false,
   onFilterTypeSelect,
+  onToggleActive,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,11 +199,11 @@ const CustomTable = ({
 
   const handleToggleActive = useCallback(
     (rowIndex) => {
-      const updatedData = [...data];
-      updatedData[startIndex + rowIndex].active =
-        !updatedData[startIndex + rowIndex].active;
+      if (onToggleActive) {
+        onToggleActive(startIndex + rowIndex);
+      }
     },
-    [data, startIndex]
+    [onToggleActive, startIndex]
   );
 
   const handleExportCSV = useCallback(() => {

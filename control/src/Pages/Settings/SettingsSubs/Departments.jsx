@@ -256,10 +256,10 @@ const Departments = () => {
           actions={actions}
           filters={filters}
           onFilterChange={handleFilterChange}
+          onToggleActive={handleToggleActive}
           showCheckbox={false}
           itemsPerPage={10}
           tableName="Departments"
-          onToggleActive={handleToggleActive}
         />
       )}
 
