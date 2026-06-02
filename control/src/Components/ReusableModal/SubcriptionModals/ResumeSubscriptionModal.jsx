@@ -11,7 +11,7 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
   const schema = yup.object().shape({
     resumptionType: yup.string().required("Resumption type is required"),
     reason: yup.string().required("Reason is required"),
-    comment: yup.string().max(1000, "Comment must not exceed 1000 characters"),
+    comment: yup.string().nullable().notRequired().max(1000, "Comment must not exceed 1000 characters"),
     specificDate: yup.string().when("resumptionType", {
       is: "specificDate",
       then: (schema) => schema.required("Specific date is required"),
@@ -45,7 +45,7 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
         items: selectedItems,
         resumptionType: data.resumptionType,
         reason: data.reason,
-        comment: data.comment || "",
+        ...(data.comment ? { comment: data.comment } : {}),
         notifyTenant: data.notifyTenant,
         specificDate: data.specificDate || undefined,
       });

@@ -11,7 +11,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
   const schema = yup.object().shape({
     cancellationType: yup.string().required("Cancellation type is required"),
     reason: yup.string().required("Reason is required"),
-    comment: yup.string().max(1000, "Comment must not exceed 1000 characters"),
+    comment: yup.string().nullable().notRequired().max(1000, "Comment must not exceed 1000 characters"),
     understandIrreversible: yup.bool().oneOf([true], "You must acknowledge this action"),
   });
 
@@ -37,7 +37,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
         items: selectedItems,
         cancellationType: data.cancellationType,
         reason: data.reason,
-        comment: data.comment || "",
+        ...(data.comment ? { comment: data.comment } : {}),
         notifyTenant: data.notifyTenant || false,
       });
       reset();

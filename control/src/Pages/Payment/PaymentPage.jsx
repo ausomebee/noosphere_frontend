@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -178,7 +178,7 @@ const PaymentPage = () => {
         lastFourDigits: result.last4 || "N/A",
         gatewayToken: result.token || "",
         holderName: result.name || "",
-        paymentStatus: "SUCCESS",
+        paymentStatus: "Successful",
         gateway: result.paymentMethod || "stripe",
       });
       showToast("Payment successful! Your subscription is now active.", "success");
@@ -210,7 +210,7 @@ const PaymentPage = () => {
         lastFourDigits: error.last4 || "N/A",
         gatewayToken: error.token || "",
         holderName: error.name || "",
-        paymentStatus: "FAILED",
+        paymentStatus: "Failed",
         gateway: error.paymentMethod || selectedMethod || "unknown",
       });
     } catch (err) {
@@ -310,7 +310,7 @@ const PaymentPage = () => {
     y += 20;
 
     const rows = [
-      ["Status",         paymentResult.status || "SUCCESS"],
+      ["Status",         paymentResult.status || "Successful"],
       ["Transaction ID", paymentResult.transactionId || "—"],
       ["Reference",      paymentResult.transactionRef || "—"],
       ...(paymentResult.last4 ? [["Card", `•••• •••• •••• ${paymentResult.last4}`]] : []),

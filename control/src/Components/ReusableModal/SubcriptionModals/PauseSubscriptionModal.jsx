@@ -11,7 +11,7 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
   const schema = yup.object().shape({
     pauseType: yup.string().required("Pause type is required"),
     reason: yup.string().required("Reason is required"),
-    comment: yup.string().max(1000, "Comment must not exceed 1000 characters"),
+    comment: yup.string().nullable().notRequired().max(1000, "Comment must not exceed 1000 characters"),
     untilDate: yup.string().when("pauseType", {
       is: "until",
       then: (schema) => schema.required("Until date is required"),
@@ -51,7 +51,7 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
         items: selectedItems,
         pauseType: data.pauseType,
         reason: data.reason,
-        comment: data.comment || "",
+        ...(data.comment ? { comment: data.comment } : {}),
         notifyTenant: data.notifyTenant,
         untilDate: data.untilDate || undefined,
         specificDate: data.specificDate || undefined,
