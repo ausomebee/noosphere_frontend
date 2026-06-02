@@ -48,12 +48,15 @@ const RoleConfiguration = () => {
         if (role.roleModuleAccesses?.length) {
           role.roleModuleAccesses.forEach((access) => {
             const configModule = permissionsConfig.find((m) =>
+              m.backendKey === access.module ||
               m.sections.some((s) => s.key === access.module || s.name === access.module)
             );
             if (configModule && !modules.includes(configModule.key)) {
               modules.push(configModule.key);
             }
-            accessMap[access.module] = access.id;
+            if (configModule) {
+              accessMap[configModule.backendKey] = access.id;
+            }
             if (access.permissions) {
               access.permissions.forEach((p) => { perms[p] = true; });
             }
@@ -99,17 +102,15 @@ const RoleConfiguration = () => {
     const accesses = [];
     permissionsConfig.forEach((module) => {
       if (!selectedModules.includes(module.key)) return;
-      module.sections.forEach((section) => {
-        const sectionPerms = section.permissions
-          .filter((p) => permissions[p.key])
-          .map((p) => p.key);
-        if (sectionPerms.length === 0) return;
-        const entry = { module: section.key, permissions: sectionPerms };
-        if (isEditing && existingModuleAccessMap[section.key]) {
-          entry.id = existingModuleAccessMap[section.key];
-        }
-        accesses.push(entry);
-      });
+      const allPerms = module.sections.flatMap((section) =>
+        section.permissions.filter((p) => permissions[p.key]).map((p) => p.key)
+      );
+      if (allPerms.length === 0) return;
+      const entry = { module: module.backendKey, permissions: allPerms };
+      if (isEditing && existingModuleAccessMap[module.backendKey]) {
+        entry.id = existingModuleAccessMap[module.backendKey];
+      }
+      accesses.push(entry);
     });
     return accesses;
   };

@@ -20,6 +20,7 @@ export const permissionsConfig = [
   {
     module: "TENANT",
     key: "tenant",
+    backendKey: "TENANT",
     sections: [
       {
         name: "Pipeline",
@@ -60,6 +61,7 @@ export const permissionsConfig = [
   {
     module: "BILLING & PAYMENTS",
     key: "billing",
+    backendKey: "BILLING",
     sections: [
       {
         name: "Plans & Pricing",
@@ -120,6 +122,7 @@ export const permissionsConfig = [
   {
     module: "ISSUE MANAGEMENT",
     key: "issueManagement",
+    backendKey: "ISSUE_MANAGEMENT",
     sections: [
       {
         name: "Issue Management",
@@ -142,6 +145,7 @@ export const permissionsConfig = [
   {
     module: "FEATURE MANAGEMENT",
     key: "featureManagement",
+    backendKey: "FEATURE_MANAGEMENT",
     sections: [
       {
         name: "Feature Management",
@@ -161,6 +165,7 @@ export const permissionsConfig = [
   {
     module: "PERFORMANCE MONITORING",
     key: "performanceMonitoring",
+    backendKey: "PERFORMANCE_MONITORING",
     sections: [
       {
         name: "Performance Monitoring",
@@ -174,6 +179,7 @@ export const permissionsConfig = [
   {
     module: "SETTINGS",
     key: "settings",
+    backendKey: "SETTINGS",
     sections: [
       {
         name: "Roles & Permissions",

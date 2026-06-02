@@ -56,6 +56,7 @@ const PasswordInput = ({
   placeholder,
   className = "",
   error,
+  type: _type,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
