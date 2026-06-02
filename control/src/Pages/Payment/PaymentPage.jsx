@@ -187,6 +187,8 @@ const PaymentPage = () => {
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to record payment:", err);
       showToast("Payment was processed but failed to record. Please contact support.", "error");
+      setPaymentResult(result);
+      setPaymentError(null);
     } finally {
       setRecording(false);
     }
