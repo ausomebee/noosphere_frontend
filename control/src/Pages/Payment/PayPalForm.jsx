@@ -23,7 +23,7 @@ const PayPalForm = ({ amount, currency, tenantId, email, onSuccess, onError }) =
       order.purchase_units?.[0]?.payments?.captures?.[0]?.id || order.id;
 
     const result = {
-      status: "success",
+      status: "Successful",
       transactionId: order.id,
       transactionRef: captureId,
       last4: null, // PayPal does not expose card last4

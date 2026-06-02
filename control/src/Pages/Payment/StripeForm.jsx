@@ -54,7 +54,7 @@ const StripeForm = ({ amount, currency, tenantId, email, onSuccess, onError }) =
     }
 
     const result = {
-      status: "success",
+      status: "Successful",
       transactionId: `txn_${Date.now()}`,
       transactionRef: `ref_${paymentMethod.id}`,
       last4: paymentMethod.card.last4,
