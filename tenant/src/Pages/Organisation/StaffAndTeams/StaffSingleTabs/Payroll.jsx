@@ -8,6 +8,7 @@ import api from "../../../../api/organisationStaffApis";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 import { showToast } from "../../../../Helper/ShowToast";
+import ErrorFallback from "../../../../Components/ErrorFallback";
 import "../../Organisation.css";
 
 const formatRate = (item) => {
@@ -138,9 +139,7 @@ const Payroll = () => {
   return (
     <div className="p-6">
       {error && (
-        <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded">
-          {error}
-        </div>
+        <ErrorFallback message="Something went wrong loading payroll settings. Please try again." onRetry={() => window.location.reload()} />
       )}
 
       <div className="flex items-center gap-4">

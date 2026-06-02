@@ -236,7 +236,7 @@ const RoleConfiguration = () => {
           <p className="role-permissions-subtitle">Set permissions for this role</p>
 
           <div className="role-permissions-list">
-            {permissionsConfig.map((module) => {
+            {permissionsConfig.filter((module) => selectedModules.includes(module.key)).map((module) => {
               const isExpanded = !!expandedModules[module.key];
               return (
                 <div key={module.key} className="role-accordion">

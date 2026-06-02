@@ -4,6 +4,7 @@ import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
 import "./StartAppointment.css";
 import api from "../../../api/AppointmentApi";
+import ErrorFallback from "../../../Components/ErrorFallback";
 
 // Data Collection Modals
 import FrequencyModal from "../../../Components/ReusableModal/DataCollectionModal/FrequencyModal";
@@ -560,7 +561,7 @@ const StartAppointment = () => {
       <div className="p-10 text-center text-lg">Loading appointment...</div>
     );
   if (error)
-    return <div className="p-10 text-red-600 text-center">Error: {error}</div>;
+    return <ErrorFallback message="Something went wrong loading the appointment. Please try again." onRetry={() => window.location.reload()} />;
   if (!appointment)
     return <div className="p-10 text-center">No appointment found</div>;
 

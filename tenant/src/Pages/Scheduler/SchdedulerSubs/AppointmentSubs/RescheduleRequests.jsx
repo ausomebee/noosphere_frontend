@@ -8,6 +8,7 @@ import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal
 import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
+import ErrorFallback from "../../../../Components/ErrorFallback";
 import api from "../../../../api/AppointmentApi";
 import { formatTime } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
@@ -374,7 +375,7 @@ const RescheduleRequests = ({ counts, setCounts }) => {
         </div>
       )}
 
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+      {error && <ErrorFallback message="Something went wrong loading reschedule requests. Please try again." onRetry={() => window.location.reload()} />}
 
       <CustomTable
         data={appointments}

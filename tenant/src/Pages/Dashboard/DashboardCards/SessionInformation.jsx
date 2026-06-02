@@ -7,6 +7,7 @@ import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
+import ErrorFallback from "../../../Components/ErrorFallback";
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -212,7 +213,7 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">Error: {error}</div>;
+    return <ErrorFallback message="Something went wrong loading sessions. Please try again." onRetry={() => window.location.reload()} />;
   }
 
   return (

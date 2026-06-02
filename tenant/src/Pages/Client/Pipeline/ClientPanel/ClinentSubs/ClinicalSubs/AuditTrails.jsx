@@ -8,6 +8,7 @@ import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 import "./AuditTrails.css";
 import "../../../../../../Components/ManageColumn/ManageColumn.css";
 import api from "../../../../../../api/TemplateAndReportApi";
+import ErrorFallback from "../../../../../../Components/ErrorFallback";
 
 const AuditTrails = () => {
   const location = useLocation();
@@ -238,9 +239,7 @@ const AuditTrails = () => {
           )}
 
           {error && (
-            <div className="approval-item p-6" style={{ textAlign: "center" }}>
-              <p style={{ color: "#ef4444" }}>Error: {error}</p>
-            </div>
+            <ErrorFallback message="Something went wrong loading audit trails. Please try again." onRetry={() => window.location.reload()} />
           )}
 
           {!loading && !error && (

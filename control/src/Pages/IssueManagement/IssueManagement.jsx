@@ -364,8 +364,8 @@ const IssueManagement = () => {
           id: response.data?.id || issueData.length + 1,
           issue_id: `ISS-00${issueData.length + 1}`,
           category: newIssue.category || "N/A",
-          status: formatStatus(issue.status),
-              priority: formatPriority(issue.priority),
+          status: formatStatus(newIssue.status),
+          priority: formatPriority(newIssue.priority),
           logged_by:
             newIssue.createdBy || tenantMap.get(newIssue.tenantId) || "Unknown",
           date_reported: formatDate(new Date()),
@@ -386,7 +386,6 @@ const IssueManagement = () => {
         onSuccess();
       } catch (err) {
         showToast("Failed to add issue.", "error");
-        showToast("Error adding issue: " + err.message, "error");
         if (import.meta.env.DEV) console.error("Error adding issue:", err);
       } finally {
         setIsAddingIssue(false);

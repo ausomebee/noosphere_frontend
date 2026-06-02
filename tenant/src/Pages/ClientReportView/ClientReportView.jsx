@@ -20,6 +20,7 @@ import api from "../../api/TemplateAndReportApi";
 import { formatDate, formatDateTime, formatLabel } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
 import "./ClientReportView.css";
+import ErrorFallback from "../../Components/ErrorFallback";
 
 // ─── Helpers ──────────────────────────────────────────────
 const SKIP_KEYS = ["id", "clinicalReportId"];
@@ -418,14 +419,7 @@ const ClientReportView = () => {
   if (error) {
     return (
       <div className="crv-page">
-        <div className="crv-error-state">
-          <FiAlertCircle size={48} />
-          <h2>Unable to Load Report</h2>
-          <p>{error}</p>
-          <button className="crv-btn crv-btn-primary" onClick={fetchReport}>
-            Try Again
-          </button>
-        </div>
+        <ErrorFallback message="Unable to load this report. The link may be invalid or expired." onRetry={fetchReport} />
       </div>
     );
   }

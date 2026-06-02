@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import Board from "./Board";
 import EmptyState from "./EmptyState";
 import Task from "./Task";
+import ErrorFallback from "../ErrorFallback";
 import Column from "./Column";
 import NewPipelineColumnModal from "../ReusableModal/NewPipelineColumnModal";
 import AddProspectModal from "../ReusableModal/AddProspectModal";
@@ -874,7 +875,7 @@ const JiraBoard = () => {
 
   if (status === "failed") {
     if (import.meta.env.DEV) console.error("Pipeline error:", error);
-    return <div>Error: {error}</div>;
+    return <ErrorFallback message="Something went wrong loading the pipeline. Please try again." onRetry={fetchPipelineData} />;
   }
 
   return (

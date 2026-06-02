@@ -186,14 +186,15 @@ const PaymentPage = () => {
       setPaymentError(null);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to record payment:", err);
-      showToast(err.message || "Payment was processed but failed to record. Please contact support.", "error");
+      showToast("Payment was processed but failed to record. Please contact support.", "error");
     } finally {
       setRecording(false);
     }
   };
 
   const handleError = async (error) => {
-    const errorMsg = error.error || "Payment failed. Please try again.";
+    if (import.meta.env.DEV) console.error("Payment error:", error.error);
+    const errorMsg = "Payment failed. Please try again.";
     setPaymentError(errorMsg);
     showToast(errorMsg, "error");
     try {

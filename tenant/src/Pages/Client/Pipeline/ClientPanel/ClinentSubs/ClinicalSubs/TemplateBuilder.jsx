@@ -498,7 +498,7 @@ const ClinicalReportTemplateBuilder = () => {
   }, [saveSuccess, navigate, dispatch]);
 
   useEffect(() => {
-    if (error) showToast(`Error: ${error}`, "error");
+    if (error) showToast("Something went wrong. Please try again.", "error");
   }, [error]);
 
   const handleAddSection = useCallback(
@@ -786,7 +786,7 @@ const ClinicalReportTemplateBuilder = () => {
             {error && (
               <div className="crb-error-message">
                 <span className="crb-error-icon">⚠️</span>
-                {error}
+                Something went wrong. Please try again.
               </div>
             )}
           </div>

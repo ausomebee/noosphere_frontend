@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import Board from "./Board";
 import EmptyState from "./EmptyState";
 import Task from "./Task";
+import ErrorFallback from "../ErrorFallback";
 import Column from "./Column";
 import NewPipelineColumnModal from "../ReusableModal/PipelineModal/NewPipelineColumnModal";
 import AddClientModal from "../ReusableModal/ClientModal/AddClientModal";
@@ -717,8 +718,8 @@ const JiraBoard = () => {
   }
 
   if (status === "failed") {
-    console.error("Pipeline error:", error);
-    return <div>Error: {error}</div>;
+    if (import.meta.env.DEV) console.error("Pipeline error:", error);
+    return <ErrorFallback message="Something went wrong loading the pipeline. Please try again." onRetry={fetchPipelineData} />;
   }
 
   return (

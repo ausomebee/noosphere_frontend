@@ -13,6 +13,7 @@ import Chart from "react-apexcharts";
 import CustomTable from "../../Components/Table/CustomTable";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/ProgramLibraryApis";
+import ErrorFallback from "../../Components/ErrorFallback";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
 import { formatDate, formatDateTime, formatTime, formatDuration } from "../../Helper/Formatters";
@@ -898,7 +899,7 @@ const TargetSingle = () => {
   };
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <ErrorFallback message="Something went wrong loading the target. Please try again." onRetry={fetchData} />;
   }
 
   return (

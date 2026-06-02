@@ -657,7 +657,7 @@ const ClinicalReportBuilder = () => {
       navigate(-1);
       dispatch(resetSaveStates());
     }
-    if (error) showToast(`Error: ${error}`, "error");
+    if (error) showToast("Something went wrong. Please try again.", "error");
   }, [saveSuccess, publishSuccess, error, navigate, dispatch]);
 
   const handleAddSection = useCallback(
@@ -1294,7 +1294,7 @@ const ClinicalReportBuilder = () => {
             <div className="crb-footer-actions">{renderFooterButtons()}</div>
             {error && (
               <div className="crb-error-message">
-                <span className="crb-error-icon">⚠️</span> {error}
+                <span className="crb-error-icon">⚠️</span> Something went wrong. Please try again.
               </div>
             )}
           </div>
