@@ -10,7 +10,7 @@ import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal
 import CancelModal from "../../../../Components/ReusableModal/SchedulerModal/CancelModal";
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
 import expandForAppointments from "../../../../utils/expandForAppointments";
@@ -311,7 +311,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       fetchAppointments();
       setIsAppointmentModalOpen(false);
     } catch (err) {
-      showToast(err.message || "Update failed", "error");
+      showApiError(err, "UPDATE_APPOINTMENT");
     }
   };
 
@@ -331,7 +331,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       fetchAppointments();
       setIsRescheduleModalOpen(false);
     } catch (err) {
-      showToast(err.message || "Reschedule failed", "error");
+      showApiError(err, "RESCHEDULE_APPOINTMENT");
     }
   };
 
@@ -354,7 +354,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       fetchAppointments();
       setIsCancelModalOpen(false);
     } catch (err) {
-      showToast(err.message || "Cancel failed", "error");
+      showApiError(err, "CANCEL_APPOINTMENT");
     }
   };
 

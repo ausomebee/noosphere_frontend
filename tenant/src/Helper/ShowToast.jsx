@@ -1,5 +1,6 @@
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ERROR_MESSAGES from "./errorMessages";
 
 const baseOptions = {
   position: "top-center",
@@ -42,4 +43,9 @@ export const showToast = (message, type) => {
     default:
       toast(actualMessage, options);
   }
+};
+
+export const showApiError = (err, messageKey = "DEFAULT") => {
+  if (import.meta.env.DEV) console.error(messageKey, err);
+  showToast(ERROR_MESSAGES[messageKey] || ERROR_MESSAGES.DEFAULT, "error");
 };

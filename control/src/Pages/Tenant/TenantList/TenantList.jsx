@@ -5,7 +5,7 @@ import "./TenantList.css";
 import CustomTable from "../../../Components/Table/CustomTable";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { SelectInput, TextareaInput, PasswordInput } from "../../../Components/Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
@@ -53,7 +53,7 @@ const TenantList = () => {
       if (tenantsRes.status === "fulfilled") {
         setTenants(tenantsRes.value.data || []);
       } else {
-        showToast(tenantsRes.reason?.message || "Failed to load tenants", "error");
+        showApiError(tenantsRes.reason, "LOAD_TENANTS");
       }
       if (overviewRes.status === "fulfilled") {
         setOverview(overviewRes.value.data || { totalTenants: 0, totalStaffs: 0, totalClients: 0 });
@@ -61,7 +61,7 @@ const TenantList = () => {
         if (import.meta.env.DEV) console.warn("Overview unavailable:", overviewRes.reason?.message);
       }
     } catch (err) {
-      showToast(err.message || "Failed to load data", "error");
+      showApiError(err, "LOAD_TENANT_DATA");
     } finally {
       setLoading(false);
     }
@@ -197,7 +197,7 @@ const TenantList = () => {
         handleCloseDeactivate();
         fetchData();
       } catch (err) {
-        showToast(err.message || "Failed to deactivate tenant", "error");
+        showApiError(err, "DEACTIVATE_TENANT");
       } finally {
         setIsDeactivating(false);
       }

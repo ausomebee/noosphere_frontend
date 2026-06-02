@@ -6,7 +6,7 @@ import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { FiEdit2 } from "react-icons/fi";
 import api from "../../../../api/customFormsApi";
 import useAuth from "../../../../hooks/useAuth";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 
@@ -40,7 +40,7 @@ const FormDrafts = ({ onCountChange }) => {
         setDrafts(formatted);
         onCountChange(formatted.length); // SEND COUNT UP
       } catch (err) {
-        showToast(err.message || "Failed to load drafts", "error");
+        showApiError(err, "LOAD_DRAFTS");
         onCountChange(0);
       } finally {
         setLoading(false);

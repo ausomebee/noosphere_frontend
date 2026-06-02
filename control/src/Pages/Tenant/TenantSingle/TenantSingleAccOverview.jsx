@@ -6,7 +6,7 @@ import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateShortMonth as formatDate } from "../../../Helper/Formatters";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
@@ -60,14 +60,14 @@ const TenantSingleAccOverview = () => {
         const data = tenantRes.value.data || tenantRes.value;
         setTenant(data || null);
       } else {
-        showToast(tenantRes.reason?.message || "Failed to load tenant", "error");
+        showApiError(tenantRes.reason, "LOAD_TENANT");
       }
       if (adminsRes.status === "fulfilled") {
         const adminData = adminsRes.value.data?.data || adminsRes.value.data || [];
         setAdmins(Array.isArray(adminData) ? adminData : []);
       }
     } catch (err) {
-      showToast(err.message || "Failed to load data", "error");
+      showApiError(err, "LOAD_TENANT_DATA");
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ const TenantSingleAccOverview = () => {
       handleCloseOfficerModal();
       fetchData();
     } catch (err) {
-      showToast(err.message || "Failed to change account officer", "error");
+      showApiError(err, "CHANGE_ACCOUNT_OFFICER");
     } finally {
       setOfficerSaving(false);
     }
@@ -190,7 +190,7 @@ const TenantSingleAccOverview = () => {
       handleCloseEditModal();
       fetchData();
     } catch (err) {
-      showToast(err.message || "Failed to update tenant", "error");
+      showApiError(err, "UPDATE_TENANT");
     } finally {
       setEditSaving(false);
     }
@@ -235,7 +235,7 @@ const TenantSingleAccOverview = () => {
       });
       setShowInvoiceModal(true);
     } catch (err) {
-      showToast(err.message || "Failed to load invoice", "error");
+      showApiError(err, "LOAD_INVOICE");
     } finally {
       setInvoiceLoading(false);
     }

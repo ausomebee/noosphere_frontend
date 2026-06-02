@@ -11,7 +11,7 @@ import ClientPortalSettingsModal from "../../../../../Components/ReusableModal/C
 import AddClientModal from "../../../../../Components/ReusableModal/ClientModal/AddClientModal";
 import NewDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/NewDocumentRequestModal";
 import api from "../../../../../api/TenantApis";
-import { showToast } from "../../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import useAuth from "../../../../../hooks/useAuth";
 import api2 from "../../../../../api/clientPanelApis";
 import api3 from "../../../../../api/customFormsApi";
@@ -1084,7 +1084,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
       showToast("Client updated successfully", "success");
       setIsAddClientOpen(false);
     } catch (err) {
-      showToast(err.message || "Failed to update client", "error");
+      showApiError(err, "UPDATE_CLIENT");
     } finally {
       setIsUpdating(false);
     }

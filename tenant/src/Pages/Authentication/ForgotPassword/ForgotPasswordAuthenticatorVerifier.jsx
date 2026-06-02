@@ -8,7 +8,7 @@ import TenantLogo from "../../../assets/Logo.svg";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 const otpSchema = yup.object().shape({
   code: yup
@@ -82,7 +82,7 @@ const ForgotPasswordAuthenticatorVerifier = () => {
       }
     } catch (error) {
       console.error("2FA verification failed:", error);
-      showToast(error?.response?.data?.message || "Verification failed.", "error");
+      showApiError(error, "DEFAULT");
       setIsVerified(false);
     } finally {
       setLoading(false);

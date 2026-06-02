@@ -11,7 +11,7 @@ import TableFilterDateModal from "../../../Components/ReusableModal/TableFilterD
 import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
@@ -149,7 +149,7 @@ const TenantSingleBilling = () => {
         setPaymentMethods(list);
       }
     } catch (err) {
-      showToast(err.message || "Failed to load billing data", "error");
+      showApiError(err, "LOAD_BILLING_DATA");
     } finally {
       setLoading(false);
     }
@@ -324,7 +324,7 @@ const TenantSingleBilling = () => {
       });
       setShowInvoiceModal(true);
     } catch (err) {
-      showToast(err.message || "Failed to load invoice", "error");
+      showApiError(err, "LOAD_INVOICE");
     } finally {
       setInvoiceLoading(false);
     }
@@ -367,7 +367,7 @@ const TenantSingleBilling = () => {
       setSelectedPayment(payment);
       setShowPaymentView(true);
     } catch (err) {
-      showToast(err.message || "Failed to load payment details", "error");
+      showApiError(err, "LOAD_PAYMENT_DETAILS");
     }
   };
 
@@ -414,7 +414,7 @@ const TenantSingleBilling = () => {
       root.unmount();
       document.body.removeChild(tempContainer);
     } catch (err) {
-      showToast(err.message || "Failed to download invoice", "error");
+      showApiError(err, "DOWNLOAD_INVOICE");
     }
   };
 
@@ -431,7 +431,7 @@ const TenantSingleBilling = () => {
       }
       await handleDownloadInvoice({ id: invoiceId });
     } catch (err) {
-      showToast(err.message || "Failed to load payment invoice", "error");
+      showApiError(err, "LOAD_PAYMENT_INVOICE");
     }
   };
 

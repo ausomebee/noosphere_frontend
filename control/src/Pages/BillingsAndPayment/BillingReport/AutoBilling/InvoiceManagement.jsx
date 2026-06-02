@@ -9,7 +9,7 @@ import {
 import Button from "../../../../Components/Button/Button";
 import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvoice";
 import api from "../../../../api/AutoBillingInvoiceAPIs";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
 
 const InvoiceManagement = () => {
@@ -92,7 +92,7 @@ const InvoiceManagement = () => {
       );
       setReminders([...mappedReminders, ...defaultReminders]);
     } catch (error) {
-      showToast(error.message, "error");
+      showApiError(error, "LOAD_INVOICES");
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +186,7 @@ const InvoiceManagement = () => {
         showToast(`${section} settings updated successfully`, "success");
         await fetchInvoiceSettings();
       } catch (error) {
-        showToast(error.message, "error");
+        showApiError(error, "UPDATE_INVOICE");
       } finally {
         setIsLoading(false);
       }

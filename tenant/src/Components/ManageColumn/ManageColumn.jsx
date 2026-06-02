@@ -20,7 +20,7 @@ import {
   createCandidate,
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
 import { FiEdit2 } from "react-icons/fi";
@@ -182,7 +182,7 @@ const ManageColumn = () => {
         }
       } catch (error) {
         console.error("Failed to add candidate:", error);
-        showToast(error?.message || "Failed to add candidate.", "error");
+        showApiError(error, "ADD_CANDIDATE");
       } finally {
         setIsCreatingCandidate(false);
       }

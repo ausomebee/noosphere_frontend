@@ -5,7 +5,7 @@ import Button from "../../../Components/Button/Button";
 import "./ClientList.css";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast"; // assuming you have this
+import { showToast, showApiError } from "../../../Helper/ShowToast"; // assuming you have this
 import api from "../../../api/TenantApis"; // For Create & Update
 import clientApi from "../../../api/clientPanelApis"; // For GetAll, Activate/Deactivate
 import AddClientModal from "../../../Components/ReusableModal/ClientModal/AddClientModal";
@@ -35,7 +35,7 @@ const ClientList = () => {
       });
       setClients(res.data.data || []);
     } catch (err) {
-      showToast(err.message || "Failed to load clients", "error");
+      showApiError(err, "LOAD_CLIENTS");
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ const ClientList = () => {
       setIsAddClientOpen(false);
       fetchClients();
     } catch (err) {
-      showToast(err.message || "Operation failed", "error");
+      showApiError(err, "CLIENT_OPERATION");
     } finally {
       setIsUpdating(false);
     }
@@ -166,7 +166,7 @@ const ClientList = () => {
 
         fetchClients(); // Refresh
       } catch (err) {
-        showToast(err.message || "Failed to update status", "error");
+        showApiError(err, "UPDATE_CLIENT_STATUS");
       }
     },
     [accessToken, refreshToken, fetchClients]

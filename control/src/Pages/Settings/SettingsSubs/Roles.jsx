@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import roleApi from "../../../api/roleApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
@@ -29,7 +29,7 @@ const Roles = () => {
       }));
       setRoles(mapped);
     } catch (err) {
-      showToast(err.message || "Failed to load roles", "error");
+      showApiError(err, "LOAD_ROLES");
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const Roles = () => {
         "success"
       );
     } catch (err) {
-      showToast(err.message || "Failed to update role status", "error");
+      showApiError(err, "UPDATE_ROLE_STATUS");
     }
   };
 

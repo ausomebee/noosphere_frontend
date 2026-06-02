@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import CustomTable from "../../../Components/Table/CustomTable";
 import useAuth from "../../../hooks/useAuth";
 import reportsApi from "../../../api/reportsApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const toRow = (log) => {
@@ -68,7 +68,7 @@ const LoginLogsReport = () => {
       setMeta(result.meta || { total: 0, totalPages: 1 });
       setPage(p);
     } catch (err) {
-      showToast(err.message || "Failed to fetch login logs", "error");
+      showApiError(err, "LOAD_LOGIN_LOGS");
     } finally {
       setLoading(false);
     }

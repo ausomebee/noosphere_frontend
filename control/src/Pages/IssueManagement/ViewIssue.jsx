@@ -22,7 +22,7 @@ import ContactTenantModal from "../../Components/ReusableModal/IssueViewModals/C
 import MarkAsResolvedModal from "../../Components/ReusableModal/IssueViewModals/MarkAsResolvedModal";
 import useDocumentViewer from "../../hooks/useDocumentViewer";
 import api from "../../api/IssueApi";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDateTimeParenthesized as formatDateTime } from "../../Helper/Formatters";
 import { Skeleton, SkeletonText, SkeletonTable } from "../../Components/LoadingSpinner";
 
@@ -93,7 +93,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         })) || [],
       });
     } catch (err) {
-      showToast(`Failed to refetch issue: ${err.message}`, "error");
+      showApiError(err, "LOAD_ISSUE");
     }
   };
 
@@ -196,7 +196,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Comment added successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to add comment: ${err.message}`, "error");
+      showApiError(err, "ADD_COMMENT");
     }
   };
 
@@ -214,7 +214,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Issue updated successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to edit issue: ${err.message}`, "error");
+      showApiError(err, "EDIT_ISSUE");
     }
   };
 
@@ -234,7 +234,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Attachment added successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to add attachment: ${err.message}`, "error");
+      showApiError(err, "ADD_ATTACHMENT");
     }
   };
 
@@ -251,7 +251,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Category changed successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to change category: ${err.message}`, "error");
+      showApiError(err, "CHANGE_CATEGORY");
     }
   };
 
@@ -268,7 +268,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Priority changed successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to change priority: ${err.message}`, "error");
+      showApiError(err, "CHANGE_PRIORITY");
     }
   };
 
@@ -285,7 +285,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Issue reassigned successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to reassign issue: ${err.message}`, "error");
+      showApiError(err, "REASSIGN_ISSUE");
     }
   };
 
@@ -302,7 +302,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Status changed successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to change status: ${err.message}`, "error");
+      showApiError(err, "CHANGE_STATUS");
     }
   };
 
@@ -324,7 +324,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Email sent successfully", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to send email: ${err.message}`, "error");
+      showApiError(err, "SEND_EMAIL");
     }
   };
 
@@ -346,7 +346,7 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       showToast("Issue marked as resolved", "success");
       setModalOpen(null);
     } catch (err) {
-      showToast(`Failed to mark as resolved: ${err.message}`, "error");
+      showApiError(err, "RESOLVE_ISSUE");
     }
   };
 

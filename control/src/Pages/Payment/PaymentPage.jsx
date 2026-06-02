@@ -8,7 +8,7 @@ import StripeForm from "./StripeForm";
 import PayPalForm from "./PayPalForm";
 import NoosphereLogo from "../../assets/NoosphereLogo-white.png";
 import invoiceApi from "../../api/InvoiceApi";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import "./PaymentPage.css";
 
 const stripePromise = import.meta.env.VITE_STRIPE_PK
@@ -216,7 +216,7 @@ const PaymentPage = () => {
       });
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to record payment failure:", err);
-      showToast(err.message || "Failed to log payment failure.", "error");
+      showApiError(err, "LOG_PAYMENT_FAILURE");
     }
   };
 

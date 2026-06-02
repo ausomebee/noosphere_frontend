@@ -8,7 +8,7 @@ import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 // Yup validation schema for OTP
 const otpSchema = yup.object().shape({
@@ -85,7 +85,7 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("2FA verification failed:", error);
-      showToast(error?.response?.data?.message || "Verification failed.", "error");
+      showApiError(error, "VERIFY_2FA");
     } finally {
       setLoading(false);
     }

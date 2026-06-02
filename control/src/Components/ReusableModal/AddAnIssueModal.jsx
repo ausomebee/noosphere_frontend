@@ -5,7 +5,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "./ReusableModal";
 import { TextInput, SelectInput, TextareaInput } from "../Input/Inputs";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
 import { BsCloudUpload } from "react-icons/bs";
 import { issueCategoryOptions as categoryOptions, basePriorityOptions, enterprisePriorityOptions } from "../../Data/selectOptions";
@@ -233,7 +233,7 @@ const AddIssueModal = ({
         onClose();
       });
     } catch (err) {
-      showToast(`Failed to create issue: ${err.message}`, "error");
+      showApiError(err, "CREATE_ISSUE");
     } finally {
       setIsLoading(false);
     }

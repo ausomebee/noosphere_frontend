@@ -22,7 +22,7 @@ import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/s
 import { createRoot } from "react-dom/client";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
 import debounce from "lodash/debounce";
@@ -754,7 +754,7 @@ const SubscriptionManager = () => {
         }
       } catch (err) {
         showToast("Failed to perform subscription action.", "error");
-        showToast("Error updating subscription: " + err.message, "error");
+        showApiError(err, "UPDATE_SUBSCRIPTION");
         if (import.meta.env.DEV) console.error("Error saving subscription action:", err);
       } finally {
         setLoading(false);

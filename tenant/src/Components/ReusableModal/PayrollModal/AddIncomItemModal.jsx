@@ -5,7 +5,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
 import { addIncomeSchema } from "../../../Data/schemas";
 import payrollApi from "../../../api/payrollApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems, loading = false }) => {
   const [fetchedItems, setFetchedItems] = useState([]);
@@ -37,7 +37,7 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, re
           const data = response?.data || response || [];
           setFetchedItems(Array.isArray(data) ? data : []);
         } catch (error) {
-          showToast(error.message || "Failed to fetch income items", "error");
+          showApiError(error, "LOAD_INCOME_ITEMS");
           setFetchedItems([]);
         } finally {
           setLoadingItems(false);

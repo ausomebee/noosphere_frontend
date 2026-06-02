@@ -9,7 +9,7 @@ import {
 } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import authApis from "../../api/authApis";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { FiSettings, FiEdit2, FiTrash2 } from "react-icons/fi";
 import "./SecuritySettings.css";
 
@@ -133,7 +133,7 @@ const SecuritySettings = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
-      showToast(error.message || "Failed to change password", "error");
+      showApiError(error, "CHANGE_PASSWORD");
     } finally {
       setPasswordSaveLoading(false);
     }
@@ -162,7 +162,7 @@ const SecuritySettings = () => {
       setAdminNewPassword("");
       setAdminConfirmPassword("");
     } catch (error) {
-      showToast(error.message || "Failed to change administrative password", "error");
+      showApiError(error, "CHANGE_ADMIN_PASSWORD");
     } finally {
       setAdminPasswordSaveLoading(false);
     }

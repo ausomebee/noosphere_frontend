@@ -21,7 +21,7 @@ import ViewIssue from "./ViewIssue";
 import api from "../../api/IssueApi";
 import api2 from "../../api/TenantApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
 
 const IssueManagement = () => {
@@ -438,7 +438,7 @@ const IssueManagement = () => {
         setSelectedIssue(issue);
       } catch (err) {
         showToast("Failed to load issue details.", "error");
-        showToast("Error loading issue: " + err.message, "error");
+        showApiError(err, "LOAD_ISSUE");
         if (import.meta.env.DEV) console.error("Error fetching issue:", err);
       } finally {
         setIsIssueLoading(false);

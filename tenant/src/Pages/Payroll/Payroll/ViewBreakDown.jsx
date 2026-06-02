@@ -12,7 +12,7 @@ import AddStaffModal from "../../../Components/ReusableModal/PayrollModal/AddSta
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
@@ -112,7 +112,7 @@ const ViewBreakDown = () => {
       originalEmployeesRef.current = mapped;
       setHasChanges(false);
     } catch (error) {
-      showToast(error.message || "Failed to fetch payroll staff", "error");
+      showApiError(error, "LOAD_PAYROLL_STAFF");
     } finally {
       setLoading(false);
     }
@@ -163,7 +163,7 @@ const ViewBreakDown = () => {
       showToast("Staff removed from payroll", "success");
       fetchCycleStaffs();
     } catch (error) {
-      showToast(error.message || "Failed to remove staff", "error");
+      showApiError(error, "REMOVE_PAYROLL_STAFF");
     } finally {
       setRemovingStaff(false);
     }
@@ -233,7 +233,7 @@ const ViewBreakDown = () => {
       showToast("Staff added to payroll", "success");
       fetchCycleStaffs();
     } catch (error) {
-      showToast(error.message || "Failed to add staff", "error");
+      showApiError(error, "ADD_PAYROLL_STAFF");
     }
   };
 
@@ -310,7 +310,7 @@ const ViewBreakDown = () => {
       setHasChanges(false);
       fetchCycleStaffs();
     } catch (error) {
-      showToast(error.message || "Failed to update payroll breakdown", "error");
+      showApiError(error, "UPDATE_PAYROLL");
     } finally {
       setSubmitting(false);
     }

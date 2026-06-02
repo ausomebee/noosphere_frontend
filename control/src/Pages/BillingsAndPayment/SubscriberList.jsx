@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SkeletonTable } from "../../Components/LoadingSpinner";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate as formatDateStr } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/SubcriptionApis";
@@ -66,7 +66,7 @@ const SubscriberList = () => {
           }))
         );
       } catch (err) {
-        showToast(err.message || "Failed to load subscribers", "error");
+        showApiError(err, "LOAD_SUBSCRIBERS");
       } finally {
         setLoading(false);
       }

@@ -47,7 +47,7 @@ import {
 import api from "../../api/TenantApis";
 import billingApi from "../../api/BillingApis";
 import invoiceApi from "../../api/InvoiceApi";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { v4 as uuidv4 } from "uuid";
 
 const getFrequencyPayload = (freq) => {
@@ -212,7 +212,7 @@ const ProspectPanel = () => {
       setSelectedPlanId("");
       setSelectedPlan(null);
     } catch (err) {
-      showToast(err.message || "Failed to load plans", "error");
+      showApiError(err, "LOAD_PLANS");
       setPlans([]);
     } finally {
       setLoadingPlans(false);
@@ -429,7 +429,7 @@ const ProspectPanel = () => {
       setPaymentModalTab("Payment Link");
       showToast("Payment link generated successfully!", "success");
     } catch (err) {
-      showToast(err.message || "Failed to generate payment link", "error");
+      showApiError(err, "GENERATE_PAYMENT_LINK");
     } finally {
       setIsGeneratingLink(false);
     }
@@ -491,7 +491,7 @@ const ProspectPanel = () => {
       showToast("Payment link regenerated!", "success");
       fetchInvoiceHistory();
     } catch (err) {
-      showToast(err.message || "Failed to regenerate payment link", "error");
+      showApiError(err, "REGENERATE_PAYMENT_LINK");
     } finally {
       setIsGeneratingLink(false);
     }
@@ -823,7 +823,7 @@ const ProspectPanel = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to move candidate:", error);
-      showToast(error?.message || "Failed to move candidate", "error");
+      showApiError(error, "MOVE_CANDIDATE");
     } finally {
       setIsLoading(false);
       setIsMoveCandidateModalOpen(false);
@@ -852,7 +852,7 @@ const ProspectPanel = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to assign staff:", error);
-      showToast(error?.message || "Failed to assign staff", "error");
+      showApiError(error, "ASSIGN_STAFF");
     } finally {
       setIsLoading(false);
       setIsAssignCandidateModalOpen(false);
@@ -876,7 +876,7 @@ const ProspectPanel = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to delete prospect:", error);
-      showToast(error?.message || "Failed to delete prospect", "error");
+      showApiError(error, "DELETE_PROSPECT");
     } finally {
       setIsLoading(false);
     }

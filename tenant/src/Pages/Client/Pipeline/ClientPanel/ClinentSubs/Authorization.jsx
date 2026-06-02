@@ -6,7 +6,7 @@ import useAuth from "../../../../../hooks/useAuth";
 import Button from "../../../../../Components/Button/Button";
 import AccordionTableRobust from "../../../../../Components/Table/AccordionTableRobust";
 import AddAuthorizationModal from "../../../../../Components/ReusableModal/ClientModal/ClientAuthorizationModal";
-import { showToast } from "../../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import api from "../../../../../api/clientPanelApis";
 import api2 from "../../../../../api/billingAndPaymentsApi";
 import { useParams } from "react-router-dom";
@@ -225,7 +225,7 @@ const AuthorizationTab = () => {
       setIsAddModalOpen(false);
     } catch (error) {
       console.error(error);
-      showToast(error?.message || "Failed to add authorization", "error");
+      showApiError(error, "ADD_AUTHORIZATION");
     }
   };
 
@@ -264,7 +264,7 @@ const AuthorizationTab = () => {
       setEditingAuthData(null);
     } catch (error) {
       console.error(error);
-      showToast(error?.message || "Failed to update authorization", "error");
+      showApiError(error, "UPDATE_AUTHORIZATION");
     }
   };
 
@@ -292,7 +292,7 @@ const AuthorizationTab = () => {
       await fetchAuthorizations();
     } catch (error) {
       console.error("Failed to update service codes:", error);
-      showToast(error?.message || "Failed to update service codes", "error");
+      showApiError(error, "UPDATE_SERVICE_CODES");
       throw error;
     }
   };
@@ -314,7 +314,7 @@ const AuthorizationTab = () => {
       fetchAuthorizations();
     } catch (error) {
       console.error(error);
-      showToast(error?.message || "Failed to update authorization status", "error");
+      showApiError(error, "UPDATE_AUTH_STATUS");
     }
   };
 
@@ -331,7 +331,7 @@ const AuthorizationTab = () => {
       fetchAuthorizations();
     } catch (error) {
       console.error(error);
-      showToast(error?.message || "Failed to delete authorization", "error");
+      showApiError(error, "DELETE_AUTHORIZATION");
     }
   };
 

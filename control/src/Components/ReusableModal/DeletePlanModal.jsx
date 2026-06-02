@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import { IoMdAlert } from "react-icons/io";
 import { PasswordInput } from "../../Components/Input/Inputs";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import "./ReusableModal.css";
 
 const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
@@ -37,7 +37,7 @@ const DeletePlanModal = ({ isOpen, onClose, onConfirm, plan }) => {
       await onConfirm({ plan, administratorPassword: password });
       onClose();
     } catch (err) {
-      showToast(err.message || "Invalid administrative password", "error");
+      showApiError(err, "VERIFY_ADMIN_PASSWORD");
     } finally {
       setIsLoading(false);
     }

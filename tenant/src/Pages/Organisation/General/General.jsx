@@ -15,7 +15,7 @@ import UploadOrganizationFileModal from "../../../Components/ReusableModal/Organ
 import DeleteModal from "../../../Components/ReusableModal/OrganizationModal/DeleteModal";
 import { CgDanger } from "react-icons/cg";
 import api from "../../../api/organisationApis";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
@@ -115,7 +115,7 @@ const General = () => {
       }));
       setLicenses(normalizedLicenses);
     } catch (error) {
-      showToast(error.message || "Failed to fetch licenses", "error");
+      showApiError(error, "LOAD_LICENSES");
       console.error("Error fetching licenses:", error);
     } finally {
       setLoadingLicenses(false);
@@ -140,7 +140,7 @@ const General = () => {
       }));
       setFiles(updatedFiles);
     } catch (error) {
-      showToast(error.message || "Failed to fetch files", "error");
+      showApiError(error, "LOAD_FILES");
       console.error("Error fetching files:", error);
       setFiles([]);
     } finally {
@@ -238,7 +238,7 @@ const General = () => {
       }
       setShowLicenseModal(false);
     } catch (error) {
-      showToast(error.message || "Failed to save license", "error");
+      showApiError(error, "SAVE_LICENSE");
       console.error("Error saving license:", error);
       throw error;
     }
@@ -258,7 +258,7 @@ const General = () => {
       setShowFileModal(false);
       showToast("File uploaded successfully", "success");
     } catch (error) {
-      showToast(error.message || "Failed to upload file", "error");
+      showApiError(error, "UPLOAD_FILE");
       console.error("Error uploading file:", error);
       throw error;
     }
@@ -275,7 +275,7 @@ const General = () => {
       closeDelete();
       showToast("License deleted successfully", "success");
     } catch (error) {
-      showToast(error.message || "Failed to delete license", "error");
+      showApiError(error, "DELETE_LICENSE");
       console.error("Error deleting license:", error);
     }
   };
@@ -291,7 +291,7 @@ const General = () => {
       closeDelete();
       showToast("File deleted successfully", "success");
     } catch (error) {
-      showToast(error.message || "Failed to delete file", "error");
+      showApiError(error, "DELETE_FILE");
       console.error("Error deleting file:", error);
     }
   };

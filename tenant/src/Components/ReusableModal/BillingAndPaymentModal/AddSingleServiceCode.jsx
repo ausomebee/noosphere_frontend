@@ -11,7 +11,7 @@ import {
 } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 
 // Validation schema for single service code
@@ -373,7 +373,7 @@ const AddSingleServiceCodeModal = ({
       }
       onClose();
     } catch (error) {
-      showToast(error.message || "Failed to save service code", "error");
+      showApiError(error, "SAVE_SERVICE_CODE");
     }
   };
 

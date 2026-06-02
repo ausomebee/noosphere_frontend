@@ -5,7 +5,7 @@ import Button from "../Button/Button";
 import useAuth from "../../hooks/useAuth";
 import billingApi from "../../api/BillingApis";
 import invoiceApi from "../../api/InvoiceApi";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import "../ProspectPanel/ProspectPanel.css";
 
 const getFrequencyPayload = (freq) => {
@@ -70,7 +70,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
         setSelectedPlanId("");
         setSelectedPlan(null);
       } catch (err) {
-        showToast(err.message || "Failed to load plans", "error");
+        showApiError(err, "LOAD_PLANS");
         setPlans([]);
       } finally {
         setLoadingPlans(false);
@@ -128,7 +128,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
       setActiveTab("Payment Link");
       showToast("Payment link generated successfully!", "success");
     } catch (err) {
-      showToast(err.message || "Failed to generate payment link", "error");
+      showApiError(err, "GENERATE_PAYMENT_LINK");
     } finally {
       setIsGeneratingLink(false);
     }
@@ -190,7 +190,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
       setGeneratedLink(res.data || null);
       showToast("Payment link regenerated!", "success");
     } catch (err) {
-      showToast(err.message || "Failed to regenerate payment link", "error");
+      showApiError(err, "REGENERATE_PAYMENT_LINK");
     } finally {
       setIsGeneratingLink(false);
     }

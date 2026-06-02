@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
 import { addStaffSchema } from "../../../Data/schemas";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import payrollApi from "../../../api/payrollApi";
 
 const AddStaffModal = ({
@@ -53,7 +53,7 @@ const AddStaffModal = ({
             : [];
           setStaffOptions(options);
         } catch (error) {
-          showToast(error.message || "Failed to fetch staff", "error");
+          showApiError(error, "LOAD_PAYROLL_STAFF");
           setStaffOptions([]);
         } finally {
           setLoadingStaff(false);

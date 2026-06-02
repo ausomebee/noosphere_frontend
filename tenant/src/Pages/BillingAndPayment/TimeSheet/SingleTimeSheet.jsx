@@ -17,7 +17,7 @@ import RejectTimeSheetModal from "../../../Components/ReusableModal/BillingAndPa
 import ApproveTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/ApproveTimeSheetModal";
 import api from "../../../api/billingAndPaymentsApi";
 import Modal from "../../../Components/ReusableModal/ReusableModal";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import usePermissions from "../../../hooks/usePermissions";
 import { formatTime, formatDuration, calculateSessionHours, formatDate, formatDateTime } from "../../../Helper/Formatters";
@@ -685,7 +685,7 @@ const SingleTimeSheet = () => {
       showToast("Nudge sent successfully!", "success");
     } catch (error) {
       console.error("Error sending nudge:", error);
-      showToast(error.message || "Failed to send nudge.", "error");
+      showApiError(error, "SEND_NUDGE");
     }
   };
 

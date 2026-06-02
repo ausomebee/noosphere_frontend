@@ -13,7 +13,7 @@ import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import useAuth from "../../../hooks/useAuth";
 import tenantApi from "../../../api/TenantApis";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
 const deactivationReasons = [
@@ -66,7 +66,7 @@ const TenantSingleSecuritySettings = () => {
       setEmail(data.email || "");
       setPhoneNumber(data.phoneNumber || "");
     } catch (err) {
-      showToast(err.message || "Failed to load tenant", "error");
+      showApiError(err, "LOAD_TENANT");
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ const TenantSingleSecuritySettings = () => {
       setEditingEmail(false);
       fetchTenant();
     } catch (err) {
-      showToast(err.message || "Failed to update email", "error");
+      showApiError(err, "UPDATE_TENANT_EMAIL");
     } finally {
       setSavingEmail(false);
     }
@@ -119,7 +119,7 @@ const TenantSingleSecuritySettings = () => {
       setEditingPhone(false);
       fetchTenant();
     } catch (err) {
-      showToast(err.message || "Failed to update phone number", "error");
+      showApiError(err, "UPDATE_TENANT_PHONE");
     } finally {
       setSavingPhone(false);
     }
@@ -132,7 +132,7 @@ const TenantSingleSecuritySettings = () => {
       await tenantApi.ChangeAdminPassword({ tenantId, accessToken, refreshToken });
       showToast("Password reset successfully", "success");
     } catch (err) {
-      showToast(err.message || "Failed to reset password", "error");
+      showApiError(err, "RESET_TENANT_PASSWORD");
     } finally {
       setSavingPassword(false);
     }
@@ -201,7 +201,7 @@ const TenantSingleSecuritySettings = () => {
         handleCloseDeactivate();
         fetchTenant();
       } catch (err) {
-        showToast(err.message || "Failed to deactivate tenant", "error");
+        showApiError(err, "DEACTIVATE_TENANT");
       } finally {
         setIsDeactivating(false);
       }

@@ -9,7 +9,7 @@ import AddDeductionModal from "./AddDeductionModal";
 import { RxCross2 } from "react-icons/rx";
 import { CheckboxInput } from "../../Input/Inputs";
 import payrollApi from "../../../api/payrollApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateRange } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
@@ -83,7 +83,7 @@ const PreviewPayrollModal = ({
       setIncomeItems(Array.isArray(incData) ? incData : []);
       setDeductionItems(Array.isArray(dedData) ? dedData : []);
     } catch (error) {
-      showToast(error.message || "Failed to fetch payroll data", "error");
+      showApiError(error, "LOAD_PAYROLL");
     } finally {
       setLoading(false);
     }
@@ -205,7 +205,7 @@ const PreviewPayrollModal = ({
       showToast("Payroll cycle created successfully", "success");
       onSave();
     } catch (error) {
-      showToast(error.message || "Failed to create payroll cycle", "error");
+      showApiError(error, "SAVE_PAYROLL");
     } finally {
       setSaving(false);
     }

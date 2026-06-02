@@ -7,7 +7,7 @@ import NewPayrollModal from "../../../Components/ReusableModal/PayrollModal/NewP
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import payrollApi from "../../../api/payrollApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate, formatCurrency } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
@@ -46,7 +46,7 @@ const Payroll = () => {
         : [];
       setTableData(rows);
     } catch (error) {
-      showToast(error.message || "Failed to fetch payroll stats", "error");
+      showApiError(error, "LOAD_PAYROLL");
     } finally {
       setLoading(false);
     }

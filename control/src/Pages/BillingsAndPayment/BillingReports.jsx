@@ -139,7 +139,7 @@ import { FaChevronRight, FaArrowLeft } from "react-icons/fa";
 import { FiCreditCard } from "react-icons/fi";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SectionSpinner } from "../../Components/LoadingSpinner";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate, formatTime } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/InvoiceApi";
@@ -359,7 +359,7 @@ const BillingReports = () => {
       }
       setReportData(raw.map(ROW_MAPPERS[reportKey]));
     } catch (err) {
-      showToast(err.message || "Failed to load report", "error");
+      showApiError(err, "LOAD_REPORT");
       setReportData([]);
     } finally {
       setLoading(false);

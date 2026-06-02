@@ -8,7 +8,7 @@ import {
 } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 import api from "../../../../api/AutoBillingPandAApis";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
 
 const PaymentManagement = () => {
@@ -78,7 +78,7 @@ const PaymentManagement = () => {
       setPaymentSettings(settings);
       setOriginalSettings(settings);
     } catch (error) {
-      showToast(error.message, "error");
+      showApiError(error, "LOAD_PAYMENTS");
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +230,7 @@ const PaymentManagement = () => {
         }
         await fetchPaymentSettings();
       } catch (error) {
-        showToast(error.message, "error");
+        showApiError(error, "UPDATE_PAYMENT");
       } finally {
         setIsLoading(false);
       }

@@ -3,7 +3,7 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import { CheckboxInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import api from "../../../api/notificationApi";
 import "./NotificationSettings.css";
 
@@ -138,7 +138,7 @@ const NotificationSettings = () => {
       await api.saveNotificationSettings({ userId, settings, accessToken, refreshToken });
       showToast("Notification settings saved", "success");
     } catch (err) {
-      showToast(err.message || "Failed to save settings", "error");
+      showApiError(err, "SAVE_SETTINGS");
     } finally {
       setSaveLoading(false);
     }

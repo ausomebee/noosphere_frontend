@@ -8,7 +8,7 @@ import { FiEdit2 } from "react-icons/fi";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 
 const TemplatesLibrary = () => {
@@ -46,7 +46,7 @@ const TemplatesLibrary = () => {
         }
       } catch (err) {
         console.error("Fetch templates error:", err);
-        showToast(err.message || "Failed to load templates", "error");
+        showApiError(err, "LOAD_TEMPLATES");
       } finally {
         setLoading(false);
       }

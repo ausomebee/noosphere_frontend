@@ -12,7 +12,7 @@ import ViewIssue from "../../IssueManagement/ViewIssue";
 import useAuth from "../../../hooks/useAuth";
 import issueApi from "../../../api/IssueApi";
 import tenantApi from "../../../api/TenantApis";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
@@ -55,7 +55,7 @@ const TenantSingleIssueManagement = () => {
       });
       setIssues(res.data || []);
     } catch (err) {
-      showToast(err.message || "Failed to load issues", "error");
+      showApiError(err, "LOAD_ISSUES");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -4,7 +4,7 @@ import { FiFile, FiDownload, FiChevronLeft, FiCalendar } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { formatDate, formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
@@ -49,7 +49,7 @@ const FormRenderer = () => {
         setOriginalFields(data.originalFields ?? []);
       } catch (err) {
         console.error(err);
-        showToast(err.message || "Failed to load form response", "error");
+        showApiError(err, "LOAD_FORM");
       } finally {
         setLoading(false);
       }

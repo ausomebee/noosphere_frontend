@@ -7,7 +7,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import staffApi from "../../../api/staffApis";
 import departmentApi from "../../../api/departmentApis";
@@ -65,7 +65,7 @@ const Staff = () => {
       if (staffRes.status === "fulfilled") {
         setStaff(staffRes.value.data || []);
       } else {
-        showToast(staffRes.reason?.message || "Failed to load staff", "error");
+        showApiError(staffRes.reason, "LOAD_STAFF");
       }
       if (deptRes.status === "fulfilled") {
         setDepartments(deptRes.value.data || []);
@@ -78,7 +78,7 @@ const Staff = () => {
         if (import.meta.env.DEV) console.warn("Roles unavailable:", roleRes.reason?.message);
       }
     } catch (err) {
-      showToast(err.message || "Failed to load data", "error");
+      showApiError(err, "LOAD_STAFF");
     } finally {
       setLoading(false);
     }
@@ -206,7 +206,7 @@ const Staff = () => {
             "success"
           );
         } catch (err) {
-          showToast(err.message || "Failed to update status", "error");
+          showApiError(err, "UPDATE_STATUS");
         }
       },
     },
@@ -229,7 +229,7 @@ const Staff = () => {
         )
       );
     } catch (err) {
-      showToast(err.message || "Failed to update status", "error");
+      showApiError(err, "UPDATE_STATUS");
     }
   };
 
@@ -257,7 +257,7 @@ const Staff = () => {
       handleCloseModal();
       fetchData();
     } catch (err) {
-      showToast(err.message || "Failed to save staff", "error");
+      showApiError(err, "SAVE_STAFF");
     } finally {
       setIsSubmitting(false);
     }

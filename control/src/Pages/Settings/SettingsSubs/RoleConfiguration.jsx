@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaArrowLeft, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import roleApi from "../../../api/roleApis";
 import {
@@ -64,7 +64,7 @@ const RoleConfiguration = () => {
         setPermissions(perms);
         setExistingModuleAccessMap(accessMap);
       } catch (err) {
-        showToast(err.message || "Failed to load role", "error");
+        showApiError(err, "LOAD_ROLE");
       } finally {
         setLoadingRole(false);
       }
@@ -136,7 +136,7 @@ const RoleConfiguration = () => {
       }
       navigate("/settings/roles-permissions");
     } catch (err) {
-      showToast(err.message || "Failed to save role", "error");
+      showApiError(err, "SAVE_ROLE");
     } finally {
       setSaving(false);
     }

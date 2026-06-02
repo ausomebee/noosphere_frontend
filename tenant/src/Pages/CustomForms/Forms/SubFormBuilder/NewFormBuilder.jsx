@@ -46,7 +46,7 @@ import {
   loadForm,
   resetForm,
 } from "../../../../ReduxStore/features/formBuilderSlice";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/customFormsApi";
 import "./NewFormBuilder.css";
 
@@ -597,7 +597,7 @@ const NewFormBuilder = () => {
         showToast("Form loaded successfully", "success");
       } catch (err) {
         console.error("Load error:", err);
-        showToast(err.message || "Failed to load form", "error");
+        showApiError(err, "LOAD_FORM");
       } finally {
         setLoading(false);
       }

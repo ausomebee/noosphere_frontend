@@ -10,7 +10,7 @@ import {
 } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import api from "../../../api/generalSettingsApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { FiSettings, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
 import usePermissions from "../../../hooks/usePermissions";
 import { setSettings } from "../../../ReduxStore/features/generalSettingsSlice";
@@ -270,7 +270,7 @@ const GeneralSettings = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
-      showToast(error.message || "Failed to change password", "error");
+      showApiError(error, "CHANGE_PASSWORD");
     } finally {
       setPasswordSaveLoading(false);
     }

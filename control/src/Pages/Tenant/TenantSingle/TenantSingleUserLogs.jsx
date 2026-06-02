@@ -5,7 +5,7 @@ import "./TenantSingle.css";
 import CustomTable from "../../../Components/Table/CustomTable";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
@@ -50,7 +50,7 @@ const TenantSingleUserLogs = () => {
       const data = res?.data?.data || res?.data || {};
       setGrouped(data);
     } catch (err) {
-      showToast(err.message || "Failed to load activity logs", "error");
+      showApiError(err, "LOAD_ACTIVITY_LOGS");
     } finally {
       setLoading(false);
     }

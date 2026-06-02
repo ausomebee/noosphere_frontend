@@ -5,7 +5,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";
 import { addDeductionSchema } from "../../../Data/schemas";
 import payrollApi from "../../../api/payrollApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems, loading = false }) => {
   const [fetchedItems, setFetchedItems] = useState([]);
@@ -37,7 +37,7 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
           const data = response?.data || response || [];
           setFetchedItems(Array.isArray(data) ? data : []);
         } catch (error) {
-          showToast(error.message || "Failed to fetch deductions", "error");
+          showApiError(error, "LOAD_DEDUCTIONS");
           setFetchedItems([]);
         } finally {
           setLoadingItems(false);

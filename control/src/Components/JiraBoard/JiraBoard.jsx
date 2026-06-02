@@ -47,7 +47,7 @@ import {
 import { FaPlus } from "react-icons/fa";
 import { IoWarningOutline } from "react-icons/io5";
 import Button from "../Button/Button";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
 
 const batchPromises = async (items, fn, concurrency = 3) => {
@@ -564,7 +564,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Candidate deletion failed:", error);
-      showToast(error?.message || "Failed to delete candidate(s).", "error");
+      showApiError(error, "DELETE_CANDIDATE");
       setShowErrorModal(true);
     } finally {
       stopLoading();
@@ -630,7 +630,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Column deletion failed:", error);
-      showToast(error?.message || "Failed to delete column.", "error");
+      showApiError(error, "DELETE_COLUMN");
       setShowErrorModal(true);
     } finally {
       stopLoading();
@@ -662,7 +662,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Candidate update failed:", error);
-      showToast(error?.message || "Failed to update candidate.", "error");
+      showApiError(error, "UPDATE_CANDIDATE");
       setShowErrorModal(true);
     } finally {
       stopLoading();
@@ -762,7 +762,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Task move failed:", error);
-      showToast(error?.message || "Failed to move candidate(s).", "error");
+      showApiError(error, "MOVE_CANDIDATE");
       setShowErrorModal(true);
     } finally {
       stopLoading();
@@ -860,7 +860,7 @@ const JiraBoard = () => {
       setAddColumnIndex(null);
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to create pipeline stage:", error);
-      showToast(error?.message || "Failed to create pipeline stage.", "error");
+      showApiError(error, "CREATE_PIPELINE_STAGE");
       throw error;
     } finally {
       stopLoading();

@@ -7,7 +7,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput, MultiSelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import departmentApi from "../../../api/departmentApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
@@ -58,7 +58,7 @@ const Departments = () => {
       if (deptRes.status === "fulfilled") {
         setDepartments(deptRes.value.data || []);
       } else {
-        showToast(deptRes.reason?.message || "Failed to load departments", "error");
+        showApiError(deptRes.reason, "LOAD_DEPARTMENTS");
       }
       if (adminRes.status === "fulfilled") {
         setAdmins(adminRes.value.data || []);
@@ -66,7 +66,7 @@ const Departments = () => {
         if (import.meta.env.DEV) console.warn("Admin list unavailable:", adminRes.reason?.message);
       }
     } catch (err) {
-      showToast(err.message || "Failed to load data", "error");
+      showApiError(err, "LOAD_DEPARTMENTS");
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ const Departments = () => {
           setDepartments((prev) => prev.filter((d) => d.id !== row.id));
           showToast("Department removed", "success");
         } catch (err) {
-          showToast(err.message || "Failed to delete department", "error");
+          showApiError(err, "DELETE_DEPARTMENT");
         }
       },
     },
@@ -190,7 +190,7 @@ const Departments = () => {
         )
       );
     } catch (err) {
-      showToast(err.message || "Failed to update status", "error");
+      showApiError(err, "UPDATE_STATUS");
     }
   };
 
@@ -219,7 +219,7 @@ const Departments = () => {
       handleCloseModal();
       fetchData();
     } catch (err) {
-      showToast(err.message || "Failed to save department", "error");
+      showApiError(err, "SAVE_DEPARTMENT");
     } finally {
       setIsSubmitting(false);
     }

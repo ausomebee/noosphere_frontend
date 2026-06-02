@@ -7,7 +7,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import useAuth from "../../../hooks/useAuth";
 import billingApi from "../../../api/billingAndPaymentsApi";
 import reportsApi from "../../../api/reportsApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const calcDuration = (start, end) => {
@@ -81,7 +81,7 @@ const AttendanceByServiceTypeReport = () => {
       const sessions = await reportsApi.getSessionsByServiceCode({ tenantId, serviceCodeId: codeId, accessToken, refreshToken });
       setTableData(sessions.map(toRow));
     } catch (err) {
-      showToast(err.message || "Failed to fetch sessions", "error");
+      showApiError(err, "LOAD_SESSIONS");
       setTableData([]);
     } finally {
       setLoadingData(false);

@@ -26,7 +26,7 @@ import { LuPrinter } from "react-icons/lu";
 import { CgExport } from "react-icons/cg";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import api from "../../api/AppointmentApi";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import usePermissions from "../../hooks/usePermissions";
 
 // Memoized modals to prevent unnecessary re-renders
@@ -216,7 +216,7 @@ function CalendarScheduler({
       closeAllModals();
       refreshCurrentView();
     } catch (err) {
-      showToast(err.message || "Save failed", "error");
+      showApiError(err, "SAVE_APPOINTMENT");
     }
   };
 
@@ -238,7 +238,7 @@ function CalendarScheduler({
       closeAllModals();
       refreshCurrentView();
     } catch (err) {
-      showToast(err.message || "Reschedule failed", "error");
+      showApiError(err, "RESCHEDULE_APPOINTMENT");
     }
   };
 
@@ -257,7 +257,7 @@ function CalendarScheduler({
       closeAllModals();
       refreshCurrentView();
     } catch (err) {
-      showToast(err.message || "Cancel failed", "error");
+      showApiError(err, "CANCEL_APPOINTMENT");
     }
   };
 

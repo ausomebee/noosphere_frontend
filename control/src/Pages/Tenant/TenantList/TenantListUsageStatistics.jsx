@@ -8,7 +8,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
@@ -48,7 +48,7 @@ const TenantListUsageStatistics = () => {
       const res = await tenantApi.GetTenantUsageStatistics({ accessToken, refreshToken, tenantId });
       setStats(res?.data || res || null);
     } catch (err) {
-      showToast(err.message || "Failed to load usage statistics", "error");
+      showApiError(err, "LOAD_USAGE_STATISTICS");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ const TenantListUsageStatistics = () => {
       setServerRequests(res?.data?.data || res?.data || []);
       setServerMeta(res?.data?.meta || { total: 0, page: 1, totalPages: 1 });
     } catch (err) {
-      showToast(err.message || "Failed to load server requests", "error");
+      showApiError(err, "LOAD_SERVER_REQUESTS");
     } finally {
       setServerLoading(false);
     }

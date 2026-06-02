@@ -5,7 +5,7 @@ import ReusableModal from "../ReusableModal";
 import { SwitchInput, TextInput } from "../../Input/Inputs";
 import { HiOutlineLink } from "react-icons/hi";
 import api2 from "../../../api/clientPanelApis";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { useSelector } from "react-redux";
 
 const ClientPortalSettingsModal = ({
@@ -54,7 +54,7 @@ const ClientPortalSettingsModal = ({
       showToast("Portal settings saved successfully", "success");
       onClose();
     } catch (err) {
-      showToast(err.message || "Failed to save settings", "error");
+      showApiError(err, "SAVE_CLIENT_SETTINGS");
     } finally {
       setLoading(false);
     }

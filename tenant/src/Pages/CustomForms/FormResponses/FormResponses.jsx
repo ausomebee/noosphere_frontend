@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiChevronDown, FiChevronUp, FiFile, FiDownload, FiStar } from "react-icons/fi";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
@@ -37,7 +37,7 @@ const FormResponses = () => {
         setOriginalFields(data.originalFields ?? []);
       } catch (err) {
         console.error(err);
-        showToast(err.message || "Failed to load form responses", "error");
+        showApiError(err, "LOAD_FORM_RESPONSES");
       } finally {
         setLoading(false);
       }

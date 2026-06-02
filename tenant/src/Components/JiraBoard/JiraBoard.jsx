@@ -42,7 +42,7 @@ import {
 } from "../../ReduxStore/features/PipelineSlice";
 import { FaPlus } from "react-icons/fa";
 import Button from "../Button/Button";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
 
 const batchPromises = async (items, fn, concurrency = 3) => {
@@ -527,7 +527,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       console.error("Failed to add candidate:", error);
-      showToast(error?.message || "Failed to add candidate.", "error");
+      showApiError(error, "ADD_CANDIDATE");
     } finally {
       stopLoading();
     }
@@ -576,7 +576,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       console.error("Candidate deletion failed:", error);
-      showToast(error?.message || "Failed to delete candidate(s).", "error");
+      showApiError(error, "DELETE_CANDIDATE");
     } finally {
       stopLoading();
     }
@@ -637,7 +637,7 @@ const JiraBoard = () => {
       setIsDataLoaded(false);
     } catch (error) {
       console.error("Column deletion failed:", error);
-      showToast(error?.message || "Failed to delete column.", "error");
+      showApiError(error, "DELETE_COLUMN");
     } finally {
       stopLoading();
     }
@@ -698,7 +698,7 @@ const JiraBoard = () => {
       }
     } catch (error) {
       console.error("Failed to create stage:", error);
-      showToast(error?.message || "Failed to create stage", "error");
+      showApiError(error, "CREATE_STAGE");
     } finally {
       setShowAddColumnModal(false);
       setAddColumnIndex(null);

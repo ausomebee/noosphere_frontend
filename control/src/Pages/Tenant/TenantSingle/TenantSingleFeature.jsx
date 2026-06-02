@@ -5,7 +5,7 @@ import Button from "../../../Components/Button/Button";
 import { FiArrowUpRight } from "react-icons/fi";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 
@@ -26,7 +26,7 @@ const TenantSingleFeature = () => {
       const sub = Array.isArray(data) ? data[0] : data;
       setSubscription(sub || null);
     } catch (err) {
-      showToast(err.message || "Failed to load features", "error");
+      showApiError(err, "LOAD_FEATURES");
     } finally {
       setLoading(false);
     }
