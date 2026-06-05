@@ -1,7 +1,9 @@
 import { io } from "socket.io-client";
 
 // Strip REST path (/api/v1) — Socket.IO connects to the server origin only
-const SOCKET_URL = new URL(import.meta.env.VITE_API_URL).origin;
+const SOCKET_URL = import.meta.env.VITE_API_URL 
+  ? new URL(import.meta.env.VITE_API_URL).origin 
+  : null;
 
 let socket = null;
 
@@ -16,6 +18,11 @@ if (import.meta.hot) {
 }
 
 export const connectSocket = ({ accessToken, userId, tenantId }) => {
+  if (!SOCKET_URL) {
+    console.error("[Socket] VITE_API_URL environment variable is not set");
+    return null;
+  }
+
   if (socket?.connected) {
     return socket;
   }
