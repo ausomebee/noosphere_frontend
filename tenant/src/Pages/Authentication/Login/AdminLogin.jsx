@@ -61,7 +61,7 @@ const AdminCLogin = () => {
 
         if (user.role.name === "Admin") {
           if (!user.auth2FADone) {
-            navigate("/SA/change-password");
+            navigate("/auth/change-password");
           } else {
             if (user.authType === "AUTHENTICATOR") {
               navigate("/auth/2fa/login-authenticator");
