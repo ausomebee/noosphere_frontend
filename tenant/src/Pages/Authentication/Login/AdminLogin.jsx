@@ -127,7 +127,7 @@ const AdminCLogin = () => {
           <div className="content-wrapper">
             <div className="items-center justify-center flex promo-wrapper">
               <div className="promo-section">
-                <h1>The all-in-one ABA Practice Management Solution</h1>
+                <h1>The all-in-one ABA<br />Practice Management<br />Solution</h1>
               </div>
             </div>
             <div className="login-wrapper">
