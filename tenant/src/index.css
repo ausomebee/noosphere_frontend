@@ -1078,6 +1078,7 @@ select {
   display: inline-block;
   width: 34px;
   height: 20px;
+  flex-shrink: 0; /* never squeeze in tight flex layouts (e.g. table cells) */
 }
 
 .switch input {
@@ -1195,6 +1196,7 @@ input:checked + .slider:before {
   position: relative;
   width: 16px;
   height: 16px;
+  flex-shrink: 0; /* never squeeze in tight flex layouts */
   margin-right: var(--space-2);
   appearance: none;
   border: 1px solid var(--input-border); /* #d1d5db */
