@@ -38,10 +38,12 @@ export default function useReduxFormDraft(
     hydrated.current = true;
     const draft = savedRef.current;
     if (draft?.values && draft.savedAt && Date.now() - draft.savedAt < ttl) {
-      // Defer to the next tick so the draft wins over any reset(defaultValues)
-      // the modal runs on open. (Applying synchronously here interferes with the
-      // modal's close flow when a draft exists.)
-      const t = setTimeout(() => reset(draft.values), 0);
+      // Deep-clone: redux state is frozen (Immer), and react-hook-form mutates
+      // the object it's given (e.g. nested location fields) — passing the frozen
+      // object throws "Cannot assign to read only property". Defer so the draft
+      // wins over any reset(defaultValues) the modal runs on open.
+      const values = JSON.parse(JSON.stringify(draft.values));
+      const t = setTimeout(() => reset(values), 0);
       return () => clearTimeout(t);
     } else if (draft) {
       dispatch(clearFormDraft(key)); // expired — drop it
@@ -60,7 +62,11 @@ export default function useReduxFormDraft(
       if (!info || !info.type) return;
       clearTimeout(timer);
       timer = setTimeout(() => {
-        const v = { ...values };
+        // Deep-clone before storing: redux (Immer) deep-freezes state, and a
+        // shallow copy would share nested objects (e.g. location) with RHF's
+        // live form state — freezing those breaks RHF with "Cannot assign to
+        // read only property". Cloning stores an independent, safe-to-freeze copy.
+        const v = JSON.parse(JSON.stringify(values));
         exclude.forEach((f) => delete v[f]);
         dispatch(setFormDraft({ key, values: v, savedAt: Date.now() }));
       }, 300);

@@ -12,14 +12,19 @@ const makeStore = () =>
   configureStore({ reducer: { formDrafts: formDraftsReducer } });
 
 const Form = ({ isOpen }) => {
-  const { register, reset, watch } = useForm({ defaultValues: { companyName: "" } });
+  // Nested object (like AddProspect's `location`) — redux freezes it, so restore
+  // must deep-clone or RHF throws "Cannot assign to read only property".
+  const { register, reset, watch } = useForm({
+    defaultValues: { companyName: "", location: { city: "" } },
+  });
   useReduxFormDraft("test", { watch, reset, isOpen });
   if (!isOpen) return null;
   return (
     <>
       <input aria-label="company" {...register("companyName")} />
+      <input aria-label="city" {...register("location.city")} />
       {/* mirrors AddProspect Cancel: reset(defaultValues) then close */}
-      <button aria-label="cancel" onClick={() => reset({ companyName: "" })}>
+      <button aria-label="cancel" onClick={() => reset({ companyName: "", location: { city: "" } })}>
         Cancel
       </button>
     </>
@@ -54,8 +59,9 @@ describe("useReduxFormDraft integration", () => {
       </Provider>
     );
     await user.type(screen.getByLabelText("company"), "Acme");
+    await user.type(screen.getByLabelText("city"), "Lagos");
     await waitFor(
-      () => expect(store.getState().formDrafts.test?.values?.companyName).toBe("Acme"),
+      () => expect(store.getState().formDrafts.test?.values?.location?.city).toBe("Lagos"),
       { timeout: 1000 }
     );
 

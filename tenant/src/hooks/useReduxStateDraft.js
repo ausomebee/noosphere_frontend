@@ -41,7 +41,10 @@ export default function useReduxStateDraft(
     hydrated.current = true;
     const draft = savedRef.current;
     if (draft?.values && draft.savedAt && Date.now() - draft.savedAt < ttl) {
-      const t = setTimeout(() => restoreRef.current?.(draft.values), 0);
+      // Deep-clone: redux state is frozen (Immer); the modal may mutate the
+      // restored object, which would throw "Cannot assign to read only property".
+      const values = JSON.parse(JSON.stringify(draft.values));
+      const t = setTimeout(() => restoreRef.current?.(values), 0);
       return () => clearTimeout(t);
     } else if (draft) {
       dispatch(clearFormDraft(key));
@@ -53,7 +56,10 @@ export default function useReduxStateDraft(
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
-      dispatch(setFormDraft({ key, values: valuesRef.current, savedAt: Date.now() }));
+      // Deep-clone before storing so redux (Immer) doesn't freeze objects the
+      // modal still holds/mutates in its own useState.
+      const v = JSON.parse(JSON.stringify(valuesRef.current));
+      dispatch(setFormDraft({ key, values: v, savedAt: Date.now() }));
     }, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
