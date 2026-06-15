@@ -35,14 +35,18 @@ const Authorizations = ({
     if (tenantId && accessToken) {
       fetchAuthorizationMetrics();
     }
-  }, [tenantId, accessToken]);
+    // Token lifecycle is owned by the axios interceptor; depending on it here
+    // causes an infinite refetch loop when a 401 triggers a token refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId]);
 
   // Fetch authorizations when selectedStatus changes
   useEffect(() => {
     if (tenantId && accessToken && selectedStatus) {
       fetchAuthorizationsByStatus(selectedStatus);
     }
-  }, [tenantId, accessToken, selectedStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, selectedStatus]);
 
   const fetchAuthorizationMetrics = async () => {
     try {

@@ -156,7 +156,10 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
     return () => {
       isMounted = false;
     };
-  }, [tenantId, currentStatus, currentPeriod, hasData, accessToken, refreshToken]);
+    // Token lifecycle is owned by the axios interceptor; depending on it here
+    // causes an infinite refetch loop when a 401 triggers a token refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, currentStatus, currentPeriod, hasData]);
 
   const chartOptions = {
     chart: {

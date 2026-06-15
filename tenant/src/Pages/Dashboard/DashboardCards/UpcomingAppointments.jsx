@@ -83,7 +83,10 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, accessToken, refreshToken, hasData, setCount]);
+    // Token lifecycle is owned by the axios interceptor; depending on it here
+    // causes an infinite refetch loop when a 401 triggers a token refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, hasData, setCount]);
 
   useEffect(() => {
     fetchAppointments();
