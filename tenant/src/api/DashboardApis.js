@@ -10,7 +10,7 @@ const GetDashboardIntakeByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/pipeline/overview/${tenantId}`
+      `${PLAIN_API_URL}/pipeline/tenant/overview/${tenantId}`
     );
     return response;
   } catch (error) {
