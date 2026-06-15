@@ -101,6 +101,10 @@ const ReusableModal = ({
   const modalContent = (
     <div
       className="modal-overlay"
+      // Stop key events bubbling through the React tree to ancestor handlers
+      // (e.g. a dnd-kit sortable that rendered this modal) — otherwise Space/
+      // arrows typed in the modal get hijacked as drag commands.
+      onKeyDown={(e) => e.stopPropagation()}
       onDragStart={blockDrag}
       onDrag={blockDrag}
       onDragEnd={blockDrag}
