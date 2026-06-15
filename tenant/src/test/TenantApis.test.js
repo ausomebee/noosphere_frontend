@@ -115,7 +115,7 @@ describe("TenantApis", () => {
       const mockGet = vi.fn().mockResolvedValue({ data: [] });
       AxiosInterceptor.mockReturnValue({ get: mockGet, post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() });
       await api.GetPipelineStage({ pipelineId: "p1", ...tokens });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/stage/pipeline/p1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/stage/pipeline/p1"));
     });
     it("throws on error", async () => {
       const mockGet = vi.fn().mockRejectedValue({ response: { data: { message: "Fail" } } });

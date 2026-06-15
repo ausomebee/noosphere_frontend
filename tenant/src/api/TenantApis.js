@@ -77,7 +77,7 @@ const DeletePipelineItem = async ({ ids, accessToken, refreshToken }) => {
 const GetPipelineStage = async ({ pipelineId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/stage/pipeline/${pipelineId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/tenant/stage/pipeline/${pipelineId}`);
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Get Pipeline Stage failed");

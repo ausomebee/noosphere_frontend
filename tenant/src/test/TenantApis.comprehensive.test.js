@@ -58,7 +58,7 @@ describe("TenantApis comprehensive", () => {
 
     it("GetPipelineStage", async () => {
       await api.GetPipelineStage({ pipelineId: "p1", ...tokens });
-      expect(mockAuthFetch.get).toHaveBeenCalledWith(expect.stringContaining("/pipeline/stage/pipeline/p1"));
+      expect(mockAuthFetch.get).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/stage/pipeline/p1"));
     });
 
     it("ReorderPipelineStage", async () => {
