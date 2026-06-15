@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
 import "./ReusableModal.css";
+import { modalRegistry } from "../../hooks/modalRegistry";
 
 const ReusableModal = ({
   isOpen,
@@ -27,6 +28,13 @@ const ReusableModal = ({
   const modalRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  /* ---------- Register open modal (so the board goes inert) ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    modalRegistry.open();
+    return () => modalRegistry.close();
+  }, [isOpen]);
 
   /* ---------- Focus trap + Escape ---------- */
   useEffect(() => {

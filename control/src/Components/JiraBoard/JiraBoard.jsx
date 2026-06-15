@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import { useAnyModalOpen } from "../../hooks/modalRegistry";
 import {
   DndContext,
   rectIntersection,
@@ -330,10 +331,13 @@ const JiraBoard = () => {
     })
   );
 
-  // When a modal is open, the board behind it must be inert. Otherwise dnd-kit's
-  // KeyboardSensor hijacks Space/Enter to start a drag on a focused card, making
-  // the board shuffle "under" the modal while typing. Drop sensors while open.
+  // When a modal is open, the board behind it must be inert. Otherwise dnd-kit
+  // lets you drag/keyboard-move columns underneath the modal. globalModalOpen
+  // also catches modals opened from a column's own state (e.g. Add candidate),
+  // which this component otherwise can't see.
+  const globalModalOpen = useAnyModalOpen();
   const anyModalOpen =
+    globalModalOpen ||
     showAddColumnModal ||
     showAddProspectModal ||
     showMoveCandidateModal ||

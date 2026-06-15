@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import './ReusableModal.css';
+import { modalRegistry } from '../../hooks/modalRegistry';
 
 // Reusable Modal Component
 const ReusableModal = ({
@@ -24,6 +25,13 @@ const ReusableModal = ({
   const modalRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  /* ---------- Register open modal (so the board goes inert) ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    modalRegistry.open();
+    return () => modalRegistry.close();
+  }, [isOpen]);
 
   /* ---------- Focus trap + Escape ---------- */
   useEffect(() => {
