@@ -51,7 +51,11 @@ export default function useReduxFormDraft(
   useEffect(() => {
     if (!isOpen || typeof watch !== "function") return;
     let timer;
-    const sub = watch((values) => {
+    const sub = watch((values, info) => {
+      // Only persist genuine user edits. Programmatic reset() (e.g. on Cancel or
+      // on open) fires watch with no `type`; ignoring it keeps the saved draft
+      // intact so Cancel closes the modal without wiping what the user typed.
+      if (!info || !info.type) return;
       clearTimeout(timer);
       timer = setTimeout(() => {
         const v = { ...values };
