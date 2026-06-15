@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import './ReusableModal.css';
 
@@ -73,7 +74,7 @@ const ReusableModal = ({
 
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div className="modal-overlay">
       <div ref={modalRef} className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         {/* Modal Title */}
@@ -129,7 +130,8 @@ const ReusableModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

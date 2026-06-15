@@ -37,16 +37,16 @@ describe('ReusableModal', () => {
   });
 
   it('shows spinner when primaryButtonLoading is true', () => {
-    const { container } = render(<ReusableModal {...defaultProps} primaryButtonLoading={true}><p>Content</p></ReusableModal>);
-    const spinner = container.querySelector('.modal-button-spinner');
+    render(<ReusableModal {...defaultProps} primaryButtonLoading={true}><p>Content</p></ReusableModal>);
+    const spinner = document.querySelector('.modal-button-spinner');
     expect(spinner).toBeInTheDocument();
     // Save text should not be visible when loading
     expect(screen.queryByText('Save')).not.toBeInTheDocument();
   });
 
   it('disables primary button when loading', () => {
-    const { container } = render(<ReusableModal {...defaultProps} primaryButtonLoading={true}><p>Content</p></ReusableModal>);
-    const primaryBtn = container.querySelector('.primary-button');
+    render(<ReusableModal {...defaultProps} primaryButtonLoading={true}><p>Content</p></ReusableModal>);
+    const primaryBtn = document.querySelector('.primary-button');
     expect(primaryBtn).toBeDisabled();
   });
 
