@@ -23,6 +23,7 @@ import api2 from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { genderOptions, countryOptions, stateOptions as usStates } from "../../../Data/selectOptions";
 import { formatDateForInput } from "../../../Helper/Formatters";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // ==================== SCHEMA ====================
 const schema = yup.object().shape({
@@ -185,6 +186,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     mode: "onChange",
     defaultValues,
   });
+
+  const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [] });
 
   const documentName = watch("documentName");
 
@@ -514,6 +517,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       await onSubmit(cleaned);
 
       dispatch(resetDraft());
+      clearDraft();
       onClose();
     } catch (err) {
       console.error("Submit error:", err);

@@ -10,6 +10,7 @@ import clinicalReportBuilderReducer from "./features/clinicalReportSlice";
 import clinicalTemplateBuilderReducer from "./features/clinicalReportTemplateSlice";
 import roleDraftReducer from "./features/roleDraftSlice";
 import generalSettingsReducer from "./features/generalSettingsSlice";
+import formDraftsReducer from "./features/formDraftsSlice";
 
 const rootReducer = combineReducers({
   authentication: authReducer,
@@ -23,6 +24,7 @@ clinicalReportTemplate: clinicalTemplateBuilderReducer,
 clinicalReport: clinicalReportBuilderReducer,
 roleDraft: roleDraftReducer,
 generalSettings: generalSettingsReducer,
+formDrafts: formDraftsReducer,
 });
 
 export default rootReducer;

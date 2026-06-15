@@ -13,6 +13,7 @@ import {
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { standardRuleOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // ----------------- schema -----------------
 const roundingRuleSchema = yup.object().shape({
@@ -124,6 +125,8 @@ const AddRoundingRule = ({
     defaultValues: transformRoundingRuleToFormData(initialData),
   });
 
+  const clearDraft = useReduxFormDraft("add-rounding-rule", { watch, reset, isOpen, exclude: [] });
+
   const ruleType = watch("ruleType");
   const parentRole = watch("parentRole");
 
@@ -159,6 +162,7 @@ const AddRoundingRule = ({
       };
 
       await onSave(cleaned);
+      clearDraft();
       reset(transformRoundingRuleToFormData({}));
       onClose();
     } catch (err) {

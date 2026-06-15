@@ -10,6 +10,7 @@ import { updateCandidate } from "../../ReduxStore/features/PipelineSlice";
 import { showToast } from "../../Helper/ShowToast";
 import { useNavigate } from "react-router-dom";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
+import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import "./ReusableModal.css";
 
 const validationSchema = yup.object().shape({
@@ -48,11 +49,14 @@ const EditProspectModal = ({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: initialFormData,
     resolver: yupResolver(validationSchema),
   });
+
+  const clearDraft = useReduxFormDraft("edit-prospect", { watch, reset, isOpen, exclude: [] });
 
   const staffOptions = [
     { value: "", label: staffList.length ? "Select" : "No staff available" },
@@ -106,7 +110,8 @@ const EditProspectModal = ({
 
       if (response.status === "ok") {
         showToast("Candidate updated successfully!", "success");
-    
+
+        clearDraft();
         onSave(updatedData);
         window.location.reload();
         onClose();

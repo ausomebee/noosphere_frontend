@@ -9,6 +9,7 @@ import { showToast, showApiError } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
 import { BsCloudUpload } from "react-icons/bs";
 import { issueCategoryOptions as categoryOptions, basePriorityOptions, enterprisePriorityOptions } from "../../Data/selectOptions";
+import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 
 
 // Yup schema for AddIssueModal
@@ -61,6 +62,8 @@ const AddIssueModal = ({
     resolver: yupResolver(schema),
     defaultValues: { ...defaultFormValues },
   });
+
+  const clearDraft = useReduxFormDraft("add-issue", { watch, reset, isOpen, exclude: ["attachmentUpload"] });
 
   const tenantValue = watch("tenant");
 
@@ -228,6 +231,7 @@ const AddIssueModal = ({
       };
 
       await onSave(issueData, () => {
+        clearDraft();
         reset(defaultFormValues);
         setFiles([]);
         onClose();

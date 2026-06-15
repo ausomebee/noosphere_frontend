@@ -4,6 +4,7 @@ import { TextInput, TextareaInput, SelectInput, RadioInput, CheckboxInput } from
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,8 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
     },
   });
 
+  const clearDraft = useReduxFormDraft("pause-subscription", { watch, reset, isOpen, exclude: [] });
+
   const pauseType = watch("pauseType");
 
   const onSubmit = async (data) => {
@@ -56,6 +59,7 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
         untilDate: data.untilDate || undefined,
         specificDate: data.specificDate || undefined,
       });
+      clearDraft();
       reset();
       onClose();
     } catch {

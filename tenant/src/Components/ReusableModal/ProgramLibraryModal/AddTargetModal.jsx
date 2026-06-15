@@ -18,6 +18,7 @@ import {
 import { showToast } from "../../../Helper/ShowToast";
 import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
 import { addTargetSchema as schema, MASTERY_OPTION_SLOTS } from "./addTargetSchema";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 /* ---------- FileUploadArea Component ---------- */
 const FileUploadArea = ({
@@ -124,6 +125,8 @@ const AddTargetModal = ({
     resolver: yupResolver(schema),
     defaultValues: reduxDraft,
   });
+
+  const clearDraft = useReduxFormDraft("add-target", { watch, reset, isOpen, exclude: ["attachment"] });
 
   const teachingProcedure = watch("teachingProcedure");
   const promptingStrategy = watch("promptingStrategy");
@@ -269,6 +272,7 @@ const AddTargetModal = ({
       const formData = await buildTargetFormData(payload, mode);
       await onSubmit(formData);
       dispatch(resetDraft());
+      clearDraft();
       reset({ programId });
       setName("");
       setDescription("");

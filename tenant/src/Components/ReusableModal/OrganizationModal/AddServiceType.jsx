@@ -15,6 +15,7 @@ import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { stateOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
 const serviceTypeSchema = yup.object({
@@ -47,6 +48,7 @@ const AddServiceType = ({
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(serviceTypeSchema),
@@ -67,10 +69,13 @@ const AddServiceType = ({
           },
   });
 
+  const clearDraft = useReduxFormDraft("add-service-type", { watch, reset, isOpen, exclude: [] });
+
   const handleFormSubmit = async (data) => {
     setSubmitting(true);
     try {
       await onSave(data);
+      clearDraft();
       reset();
       onClose();
     } catch (error) {

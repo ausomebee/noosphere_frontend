@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { locationOptions, modifierOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const AppointmentModal = ({
   isOpen,
@@ -352,6 +353,8 @@ const AppointmentModal = ({
     },
   });
 
+  const clearDraft = useReduxFormDraft("add-appointment", { watch, reset, isOpen, exclude: [] });
+
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "service",
@@ -569,6 +572,7 @@ const AppointmentModal = ({
         setShowConfirmation(true);
       } else {
         await onSave(appointmentData);
+        clearDraft();
         reset({
           date: new Date().toISOString().split("T")[0],
           startTime: "",
@@ -667,6 +671,7 @@ const AppointmentModal = ({
       };
 
       await onSave(appointmentData);
+      clearDraft();
       reset({
         date: new Date().toISOString().split("T")[0],
         startTime: "",

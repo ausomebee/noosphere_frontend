@@ -37,6 +37,7 @@ import roleApi from "../../../api/roleApi";
 import { showToast } from "../../../Helper/ShowToast";
 import { RxCross2 } from "react-icons/rx";
 import { addStaffSchema as schema } from "./addStaffSchema";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const FileUploadArea = React.memo(
   ({
@@ -295,6 +296,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       minimumHours: "",
     },
   });
+
+  const clearDraft = useReduxFormDraft("add-staff", { watch, reset, isOpen, exclude: ["documents"] });
 
   const values = useWatch({ control });
   const paymentSchedule = watch("paymentSchedule");
@@ -831,6 +834,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         await onSubmit(transformedData);
         // reset logic...
         dispatch(resetDraft());
+        clearDraft();
         reset({
           /* your defaults */
         });
@@ -844,7 +848,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         setSubmitting(false);
       }
     },
-    [errors, uploadingFiles, fileResults, onSubmit, dispatch, reset, onClose],
+    [errors, uploadingFiles, fileResults, onSubmit, dispatch, reset, onClose, clearDraft],
   );
 
   const basicInfoTab = useMemo(

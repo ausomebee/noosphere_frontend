@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { stateOptions, countryOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const schema = yup.object({
   name: yup.string().required("Name is required"),
@@ -28,6 +29,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -47,6 +49,8 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     },
   });
 
+  const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [] });
+
   useEffect(() => {
     reset({
       name: initialValues?.name || "",
@@ -65,6 +69,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
 
   const submit = async (data) => {
     await onSave(data);
+    clearDraft();
     onClose();
   };
 

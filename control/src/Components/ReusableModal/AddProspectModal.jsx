@@ -8,6 +8,7 @@ import { TextInput, SelectInput } from "../Input/Inputs";
 import api from "../../api/TenantApis";
 import { showToast } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
+import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
 
 const schema = yup.object().shape({
@@ -69,6 +70,7 @@ const AddProspectModal = ({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -77,6 +79,9 @@ const AddProspectModal = ({
       pipelineStageId,
     },
   });
+
+  // Persist in-progress input so an accidental Cancel/close doesn't lose it.
+  const clearDraft = useReduxFormDraft("add-prospect", { watch, reset, isOpen });
 
   // Set default pipelineStageId when modal opens
   React.useEffect(() => {
@@ -136,6 +141,7 @@ const AddProspectModal = ({
           id: response.data.data.id,
           createdAt: new Date().toISOString(),
         });
+        clearDraft();
         reset(defaultFormValues);
         onClose();
       } else {

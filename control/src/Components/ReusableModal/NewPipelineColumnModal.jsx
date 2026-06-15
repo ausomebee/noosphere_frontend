@@ -28,10 +28,11 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Reset all state when modal opens
+  // Reset transient UI when the modal opens. The form draft is intentionally
+  // NOT reset here so an accidental Cancel/close keeps what the user entered;
+  // it is cleared only after a successful save (see handleSave).
   useEffect(() => {
     if (isOpen) {
-      dispatch(resetDraft());
       setActiveTab("Basic Setup");
       setShowColorPicker(false);
       setShowDocumentModal(false);
@@ -100,6 +101,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
     setIsSaving(true);
     try {
       await onSave(pipelineData);
+      dispatch(resetDraft()); // clear the draft only on a successful save
       handleClose();
     } catch {
       // keep modal open on failure
@@ -109,7 +111,8 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleClose = () => {
-    dispatch(resetDraft());
+    // Note: do NOT reset the draft here — Cancel/close keeps it so reopening
+    // restores the user's input. Only a successful save clears it.
     setActiveTab("Basic Setup");
     setShowColorPicker(false);
     setShowDocumentModal(false);

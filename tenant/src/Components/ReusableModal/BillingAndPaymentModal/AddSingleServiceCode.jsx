@@ -13,6 +13,7 @@ import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema for single service code
 const serviceCodeSchema = yup.object().shape({
@@ -148,6 +149,8 @@ const AddSingleServiceCodeModal = ({
     resolver: yupResolver(serviceCodeSchema),
     defaultValues,
   });
+
+  const clearDraft = useReduxFormDraft("add-service-code", { watch, reset, isOpen, exclude: [] });
 
   const {
     fields: modifierFields,
@@ -353,6 +356,7 @@ const AddSingleServiceCodeModal = ({
             : "",
       };
       await onSave(cleanedData);
+      clearDraft();
       onClose();
     } catch (error) {
       showToast("Failed to save service code", "error");

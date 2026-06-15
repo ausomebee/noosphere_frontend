@@ -46,11 +46,13 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave, loading = false }) =>
       colorCode: draft.colorCode,
     });
 
+    dispatch(resetDraft()); // clear the draft only on a successful save
     handleCloseModal();
   };
 
   const handleCloseModal = () => {
-    dispatch(resetDraft());
+    // Do NOT reset the draft here — Cancel/close keeps the user's input so
+    // reopening restores it. Only a successful save clears it (see handleSave).
     setErrors({});
     setShowColorPicker(false);
     onClose();

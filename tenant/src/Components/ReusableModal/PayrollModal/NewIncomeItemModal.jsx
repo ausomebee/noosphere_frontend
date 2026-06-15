@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { unitTypeOptions, roundingRuleOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Yup validation schema
 const payrollItemSchema = yup.object().shape({
@@ -102,6 +103,8 @@ const PayrollItemModal = ({
     defaultValues: mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues,
   });
 
+  const clearDraft = useReduxFormDraft("new-income-item", { watch, reset, isOpen, exclude: [] });
+
   // Watch the unitType field
   const unitType = watch("unitType");
 
@@ -120,6 +123,7 @@ const PayrollItemModal = ({
     setIsLoading(true);
     try {
       await onSave(data);
+      clearDraft();
       reset(defaultFormValues);
       setIsLoading(false);
       onClose();

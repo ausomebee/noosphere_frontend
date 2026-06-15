@@ -9,6 +9,7 @@ import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import { genderOptions, countryOptions, stateOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema for Basic Information fields
 const schema = yup.object().shape({
@@ -75,6 +76,7 @@ const BasicInfoModal = ({
     register,
     handleSubmit,
     reset,
+    watch,
     control,
     formState: { errors, isDirty },
   } = useForm({
@@ -95,6 +97,8 @@ const BasicInfoModal = ({
       active: true,
     },
   });
+
+  const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [] });
 
   // Initialize form with initialData
   useEffect(() => {
@@ -158,6 +162,7 @@ const BasicInfoModal = ({
         refreshToken,
       };
       await onSave(payload);
+      clearDraft();
       reset(); // Reset form after successful save
       onClose();
     } catch (e) {

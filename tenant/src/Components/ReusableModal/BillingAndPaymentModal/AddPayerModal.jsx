@@ -8,6 +8,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast } from "../../../Helper/ShowToast";
 import { currencyOptions, modifierOptions, stateOptions, countryOptions } from "../../../Data/selectOptions";
 import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const AddPayerModal = ({
   isOpen,
@@ -38,6 +39,8 @@ const AddPayerModal = ({
     context: {mode},
     defaultValues: transformPayerToFormData(initialData, mode),
   });
+
+  const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [] });
 
   const { fields: serviceCodeFields, append: appendServiceCode, remove: removeServiceCode } =
     useFieldArray({
@@ -122,6 +125,7 @@ const AddPayerModal = ({
         })),
       };
       await onSave(cleanedData);
+      clearDraft();
       reset(transformPayerToFormData(initialData, mode));
       onClose();
     } catch (error) {

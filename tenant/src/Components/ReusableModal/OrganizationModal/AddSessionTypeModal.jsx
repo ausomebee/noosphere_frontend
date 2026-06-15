@@ -16,6 +16,7 @@ import roleApi from "../../../api/roleApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { modifierOptions, categoryOptions, locationOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Updated validation schema
 const sessionTypeSchema = yup.object().shape({
@@ -111,6 +112,8 @@ const AddSessionTypeModal = ({
     defaultValues: defaultFormValues,
   });
 
+  const clearDraft = useReduxFormDraft("add-session-type", { watch, reset, isOpen, exclude: [] });
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "services",
@@ -204,6 +207,7 @@ const AddSessionTypeModal = ({
       };
 
       await onSave(payload);
+      clearDraft();
       reset(defaultFormValues);
       onClose();
     } catch (error) {
