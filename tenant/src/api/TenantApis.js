@@ -6,7 +6,7 @@ const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 const GetPipelineByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/tenant/${tenantId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/tenant/tenant/${tenantId}`);
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Get Pipeline by tenant failed");

@@ -30,7 +30,7 @@ describe("TenantApis", () => {
       AxiosInterceptor.mockReturnValue({ get: mockGet, post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() });
 
       const result = await api.GetPipelineByTenantId({ tenantId: "t1", ...tokens });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/t1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/tenant/t1"));
     });
 
     it("throws on error", async () => {

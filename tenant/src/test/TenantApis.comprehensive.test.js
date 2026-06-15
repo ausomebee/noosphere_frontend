@@ -30,7 +30,7 @@ describe("TenantApis comprehensive", () => {
   describe("Pipeline APIs", () => {
     it("GetPipelineByTenantId", async () => {
       await api.GetPipelineByTenantId({ tenantId: "t1", ...tokens });
-      expect(mockAuthFetch.get).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/t1"));
+      expect(mockAuthFetch.get).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/tenant/t1"));
     });
 
     it("CreatePipelineStage", async () => {
