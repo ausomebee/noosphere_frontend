@@ -79,6 +79,7 @@ const SuperChangePassword = () => {
                   label="Password"
                   placeholder="Enter your password"
                   autoComplete="new-password"
+                  showStrength
                   {...register("newPassword")}
                   error={errors.newPassword?.message}
                 />

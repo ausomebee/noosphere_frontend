@@ -147,6 +147,7 @@ const AdminOnboarding = () => {
                     label="Password"
                     id="password"
                     placeholder="Enter a password"
+                    showStrength
                     {...register("password")}
                     className={errors.password ? "input-error" : ""}
                   />

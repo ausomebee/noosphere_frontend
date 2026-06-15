@@ -234,15 +234,57 @@ RadioInput.propTypes = {
 };
 
 // Password Input Component
+// Shared password policy: min 8 + uppercase + lowercase + digit + special char.
+export const PASSWORD_RULES = [
+  { test: (v) => (v || "").length >= 8, label: "At least 8 characters" },
+  { test: (v) => /[A-Z]/.test(v || ""), label: "One uppercase letter" },
+  { test: (v) => /[a-z]/.test(v || ""), label: "One lowercase letter" },
+  { test: (v) => /\d/.test(v || ""), label: "One number" },
+  { test: (v) => /[!@#$%^&*]/.test(v || ""), label: "One special character (!@#$%^&*)" },
+];
+
+const PasswordStrength = ({ value }) => {
+  if (!value) return null;
+  const score = PASSWORD_RULES.filter((r) => r.test(value)).length;
+  const pct = (score / PASSWORD_RULES.length) * 100;
+  const label =
+    score <= 2 ? "Weak" : score < PASSWORD_RULES.length ? "Medium" : "Strong";
+  // Brand-themed via CSS vars (control = black, tenant/client = blue).
+  const brand = "var(--button-primary-color, var(--color-primary, #004aba))";
+  const muted = "var(--color-muted, #98a2b3)";
+  return (
+    <div className="password-strength" style={{ marginTop: 6 }}>
+      <div style={{ height: 6, background: "var(--input-border, #e5e7eb)", borderRadius: 4, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: brand, transition: "width .2s ease" }} />
+      </div>
+      <span style={{ fontSize: 12, color: brand, fontWeight: 600 }}>{label} password</span>
+      <ul style={{ listStyle: "none", padding: 0, margin: "4px 0 0", fontSize: 11 }}>
+        {PASSWORD_RULES.map((r) => {
+          const ok = r.test(value);
+          return (
+            <li key={r.label} style={{ color: ok ? brand : muted }}>
+              {ok ? "✓" : "○"} {r.label}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+PasswordStrength.propTypes = { value: PropTypes.string };
+
 const PasswordInput = ({
   label,
   placeholder,
   className = "",
   error = "",
   type: _type,
+  showStrength = false,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [typedValue, setTypedValue] = useState(props.value || "");
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -255,6 +297,7 @@ const PasswordInput = ({
           className={`input-text ${className} ${error ? "input-error" : ""}`}
           placeholder={placeholder}
           {...props}
+          onInput={(e) => setTypedValue(e.target.value)}
         />
         <button
           type="button"
@@ -300,6 +343,7 @@ const PasswordInput = ({
           )}
         </button>
       </div>
+      {showStrength && <PasswordStrength value={typedValue} />}
       {error && <span className="input-error-message">{error}</span>}
     </div>
   );
@@ -308,6 +352,7 @@ const PasswordInput = ({
 PasswordInput.propTypes = {
   label: PropTypes.string,
   placeholder: PropTypes.string,
+  showStrength: PropTypes.bool,
   className: PropTypes.string,
   error: PropTypes.string,
 };

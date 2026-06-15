@@ -57,6 +57,7 @@ const SetNewPassword = () => {
               label="Password"
               id="password"
               placeholder="Enter password"
+              showStrength
               {...register("password")}
               className={`input-text ${errors.password ? "input-error" : ""}`}
             />

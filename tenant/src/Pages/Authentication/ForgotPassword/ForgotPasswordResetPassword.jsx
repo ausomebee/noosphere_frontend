@@ -118,6 +118,7 @@ const ForgotPasswordResetPassword = () => {
                     id="newPassword"
                     placeholder="Enter new password"
                     autoComplete="new-password"
+                    showStrength
                     {...register("newPassword")}
                     className={errors.newPassword ? "input-error" : ""}
                   />

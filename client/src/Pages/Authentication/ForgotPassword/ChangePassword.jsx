@@ -80,6 +80,7 @@ const ChangePassword = () => {
             placeholder="Enter Password"
             {...register("password")}
             error={errors.password?.message}
+            showStrength
           />
 
           <PasswordInput

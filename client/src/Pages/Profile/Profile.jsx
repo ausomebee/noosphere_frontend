@@ -424,6 +424,7 @@ const Profile = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
+                showStrength
               />
               <PasswordInput
                 label="Confirm New Password"
