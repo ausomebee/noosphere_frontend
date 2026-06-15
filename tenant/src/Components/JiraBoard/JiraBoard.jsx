@@ -732,7 +732,9 @@ const JiraBoard = () => {
   }
 
   return (
-    <div className="jira-board-container">
+    // While a (portaled) modal is open, make the board inert so it can't take
+    // focus or receive keyboard input (Space/arrows leaking to dnd-kit/scroll).
+    <div className="jira-board-container" inert={anyModalOpen ? true : undefined}>
       <div className="apicall">
         <div className="board-header">
           <div className="board-title">
