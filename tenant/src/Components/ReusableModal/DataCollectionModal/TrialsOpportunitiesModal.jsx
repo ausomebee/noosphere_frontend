@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { promptLevelOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
 const createValidationSchema = (trialCount) => {
@@ -43,6 +44,7 @@ const TrialsOpportunities = ({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -55,6 +57,9 @@ const TrialsOpportunities = ({
       overallNotes: null,
     },
   });
+
+  // Persist in-progress trial data so an accidental Cancel/close doesn't lose it.
+  const clearDraft = useReduxFormDraft("trials-opportunities", { watch, reset, isOpen });
 
   // Reset form when modal opens or trialCount changes
   React.useEffect(() => {
@@ -85,6 +90,7 @@ const TrialsOpportunities = ({
     };
     
     onSave(processedData);
+    clearDraft();
   };
 
   return (

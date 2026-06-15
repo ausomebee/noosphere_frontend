@@ -6,6 +6,7 @@ import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
+import useReduxStateDraft from "../../../hooks/useReduxStateDraft";
 
 const AddAuthorizationModal = ({
   isOpen,
@@ -32,6 +33,14 @@ const AddAuthorizationModal = ({
             per: item.per || "",
           }))
         : [{ serviceCodeId: "", modifier: "", units: "", per: "" }],
+  });
+
+  // Persist the in-progress authorization so an accidental Cancel/close keeps it.
+  // Only in "add" mode — edit mode is driven by initialData of a specific record.
+  const clearDraft = useReduxStateDraft("add-authorization", {
+    values: formData,
+    restore: setFormData,
+    isOpen: isOpen && mode === "add",
   });
 
   const [payers, setPayers] = useState([]);
@@ -210,6 +219,7 @@ const AddAuthorizationModal = ({
     };
 
     onSubmit(payload);
+    clearDraft();
     onClose();
   };
 

@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { showToast } from "../../../Helper/ShowToast";
 import { promptLevelOptions } from "../../../Data/selectOptions";
+import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
 const createValidationSchema = (trialCount) => {
@@ -58,6 +59,9 @@ const PercentageCorrect = ({
       overallNotes: "",
     },
   });
+
+  // Persist in-progress data so an accidental Cancel/close doesn't lose it.
+  const clearDraft = useReduxFormDraft("percentage-correct", { watch, reset, isOpen });
 
   // Watch all trials individually to trigger updates
   const watchedTrials = [];
@@ -113,6 +117,7 @@ const PercentageCorrect = ({
         notes: data.overallNotes,
         percentageCorrect: finalPercentage,
       });
+      clearDraft();
     } catch {
       showToast("Failed to save data", "error");
     }
