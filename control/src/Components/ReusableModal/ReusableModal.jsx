@@ -79,7 +79,14 @@ const ReusableModal = ({
     // The modal is DOM-portaled to <body>, but React events still bubble to the
     // component that rendered it (e.g. a dnd-kit sortable column) — without this,
     // Space/arrows typed in the modal get hijacked as drag commands.
-    <div className="modal-overlay" onKeyDown={(e) => e.stopPropagation()}>
+    <div
+      className="modal-overlay"
+      // Shield the board's dnd-kit from Space/arrows typed in the modal, but let
+      // Escape/Tab bubble to the document handler (close + focus trap).
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" && e.key !== "Tab") e.stopPropagation();
+      }}
+    >
       <div ref={modalRef} className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         {/* Modal Title */}
         <h2 id="modal-title" className="modal-title">{title}</h2>
