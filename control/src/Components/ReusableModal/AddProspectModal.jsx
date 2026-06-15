@@ -161,19 +161,13 @@ const AddProspectModal = ({
   return (
     <ReusableModal
       isOpen={isOpen}
-      onClose={() => {
-        reset(defaultFormValues);
-        onClose();
-      }}
+      onClose={onClose}
       title="Add a new candidate"
       primaryButtonText="Save candidate"
       secondaryButtonText="Cancel"
       primaryButtonLoading={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}
-      onSecondaryButtonClick={() => {
-        reset(defaultFormValues);
-        onClose();
-      }}
+      onSecondaryButtonClick={onClose}
     >
       <form className="">
         <TextInput
