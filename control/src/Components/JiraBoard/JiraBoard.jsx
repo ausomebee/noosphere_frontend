@@ -330,6 +330,18 @@ const JiraBoard = () => {
     })
   );
 
+  // When a modal is open, the board behind it must be inert. Otherwise dnd-kit's
+  // KeyboardSensor hijacks Space/Enter to start a drag on a focused card, making
+  // the board shuffle "under" the modal while typing. Drop sensors while open.
+  const anyModalOpen =
+    showAddColumnModal ||
+    showAddProspectModal ||
+    showMoveCandidateModal ||
+    showAssignCandidateModal ||
+    showDeleteCandidateModal ||
+    showDeleteColumnModal ||
+    showErrorModal;
+
   const handleDragStart = (event) => {
     const { active } = event;
     if (active.data.current?.type === "Column") {
@@ -907,7 +919,7 @@ const JiraBoard = () => {
 
       {hasColumns ? (
         <DndContext
-          sensors={sensors}
+          sensors={anyModalOpen ? [] : sensors}
           collisionDetection={rectIntersection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
