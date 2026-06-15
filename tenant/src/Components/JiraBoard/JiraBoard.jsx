@@ -767,6 +767,10 @@ const JiraBoard = () => {
 
       {hasColumns ? (
         <DndContext
+          // Remount when a modal opens so any in-progress keyboard drag is torn
+          // down — otherwise dnd-kit keeps a document keydown listener that eats
+          // Space/arrows even inside the modal.
+          key={anyModalOpen ? "board-modal-open" : "board"}
           sensors={anyModalOpen ? [] : sensors}
           collisionDetection={rectIntersection}
           onDragStart={handleDragStart}
