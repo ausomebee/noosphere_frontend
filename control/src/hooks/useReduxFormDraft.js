@@ -38,7 +38,9 @@ export default function useReduxFormDraft(
     hydrated.current = true;
     const draft = savedRef.current;
     if (draft?.values && draft.savedAt && Date.now() - draft.savedAt < ttl) {
-      // Defer so this wins over any reset(defaultValues) the modal runs on open.
+      // Apply immediately, then re-apply on the next tick so the draft wins even
+      // when the modal runs its own reset(defaultValues) on open.
+      reset(draft.values);
       const t = setTimeout(() => reset(draft.values), 0);
       return () => clearTimeout(t);
     } else if (draft) {
