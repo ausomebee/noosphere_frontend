@@ -119,7 +119,7 @@ const GetTenantCaseloadCount = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/avg-staff/${tenantId}`
+      `${PLAIN_API_URL}/tenant/tenant/avg-staff/${tenantId}`
     );
     return response;
   } catch (error) {
