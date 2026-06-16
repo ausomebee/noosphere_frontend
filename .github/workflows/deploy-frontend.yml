@@ -170,10 +170,10 @@ jobs:
           strip_components: 2
 
       #########################################################
-      # ENSURE HEALTH ENDPOINT + VERIFY CONFIG + RELOAD
+      # CLEAN STALE HEALTH BLOCK + VERIFY CONFIG + RELOAD
       #########################################################
 
-      - name: Ensure health endpoint & reload nginx
+      - name: Fix nginx config & reload
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.env.outputs.host }}
@@ -182,27 +182,16 @@ jobs:
           script: |
             set -e
             CONF=/etc/nginx/conf.d/frontend.conf
-
-            # Idempotently inject the root liveness probe (location = /) if missing.
-            # Anchored after `index index.html;` so each host keeps its own server_name.
-            if ! sudo grep -qF "location = /" "$CONF"; then
-              echo "Adding health endpoint to $CONF"
+            # A previously-injected CI health block (location = /) landed inside a
+            # location block on some hosts, breaking `nginx -t` and failing every
+            # deploy. Strip any such block, then validate and reload.
+            if sudo grep -qF "location = /" "$CONF"; then
+              echo "Removing stale CI health block from $CONF"
               sudo cp "$CONF" "$CONF.bak"
-              sudo tee /tmp/health.snippet >/dev/null <<'EOF'
-
-                # Liveness probe at root - answered directly by nginx (managed by CI)
-                location = / {
-                    access_log off;
-                    add_header Content-Type text/plain;
-                    return 200 "ok\n";
-                }
-            EOF
-              sudo sed -i '/index index.html;/r /tmp/health.snippet' "$CONF"
-              sudo rm -f /tmp/health.snippet
-            else
-              echo "Health endpoint already present in $CONF"
+              sudo awk '/# Liveness probe at root/{next} /location = \/ \{/{inblk=1;next} inblk{if($0 ~ /\}/){inblk=0} next} {print}' "$CONF" > /tmp/frontend.conf.clean
+              sudo cp /tmp/frontend.conf.clean "$CONF"
+              sudo rm -f /tmp/frontend.conf.clean
             fi
-
             sudo nginx -t
             sudo systemctl reload nginx
 
