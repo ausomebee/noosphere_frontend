@@ -129,7 +129,7 @@ const GetClientByTenantId = async ({ tenantId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client/tenant/${tenantId}`
+      `${PLAIN_API_URL}/client/tenant/tenant/${tenantId}`
     );
     return response;
   } catch (error) {
@@ -144,7 +144,7 @@ const GetTenantStaffByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/staff/${tenantId}`
+      `${PLAIN_API_URL}/tenant/tenant/staff/${tenantId}`
     );
     return response;
   } catch (error) {

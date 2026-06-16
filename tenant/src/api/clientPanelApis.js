@@ -6,7 +6,7 @@ const GetAllTenantsClient = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client/tenant/${id}`
+      `${PLAIN_API_URL}/client/tenant/tenant/${id}`
     );
     return response;
   } catch (error) {
