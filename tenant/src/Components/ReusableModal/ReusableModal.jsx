@@ -131,15 +131,11 @@ const ReusableModal = ({
         onSubmit={handleSubmit}
       >
         <div className="re-modal-header">
-          <h1 id="modal-title" className="flex modal-title">
+          <h1 id="modal-title" className="modal-title">
             {titleIcon && <span className="modal-title-icon">{titleIcon}</span>}
-            <div className="text-center">
-              <div className="font-semibold text-lg">{title}</div>
-              {subTitle && (
-                <div className="text-sm text-gray-500 mt-1">{subTitle}</div>
-              )}
-            </div>
+            <span className="modal-title-text">{title}</span>
           </h1>
+          {subTitle && <p className="modal-subtitle">{subTitle}</p>}
 
           {tabs && tabs.length > 0 && (
             <button

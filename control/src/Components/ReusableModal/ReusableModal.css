@@ -25,8 +25,9 @@
 }
 
 .modal-title {
-  font-size: 0.8rem;
-  font-weight: bold;
+  /* 20px on a 1440px screen, scaling down to 16px on small screens, capped at 20px. */
+  font-size: clamp(1rem, 1.39vw, 1.25rem);
+  font-weight: 600;
   margin-bottom: 1rem;
   color: #333333;
   text-align: center;
@@ -793,9 +794,8 @@
     max-height: 95vh;
   }
 
-  /* Modal title — smaller text */
+  /* Modal title — tighter spacing on small screens (size handled by clamp) */
   .modal-title {
-    font-size: 0.8rem;
     margin-bottom: 0.75rem;
   }
 
