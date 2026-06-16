@@ -729,7 +729,7 @@ const GetAllTeamsByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/organization/teams`,
+      `${PLAIN_API_URL}/organization/teams/tenant`,
       { params: { tenantId } },
     );
     return response;
