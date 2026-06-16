@@ -398,7 +398,7 @@ const GetOrganizationInformationByTenantId = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/tenant/${tenantId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/tenant/tenant/${tenantId}`);
     return response;
   } catch (error) {
     throw new Error(

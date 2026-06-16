@@ -54,7 +54,7 @@ describe("TenantApis", () => {
         ...tokens,
       });
       expect(mockPost).toHaveBeenCalledWith(
-        expect.stringContaining("/pipeline/stage"),
+        expect.stringContaining("/pipeline/tenant/stage"),
         expect.objectContaining({ pipelineId: "p1", name: "Stage 1" })
       );
     });

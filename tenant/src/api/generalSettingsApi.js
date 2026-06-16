@@ -220,7 +220,7 @@ const GetTenantById = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/${tenantId}`,
+      `${PLAIN_API_URL}/tenant/tenant/${tenantId}`,
     );
     return response.data;
   } catch (error) {

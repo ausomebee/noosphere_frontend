@@ -45,7 +45,7 @@ const GetHelpAndSupportTicketsByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/issue/tenant/${tenantId}`,
+      `${PLAIN_API_URL}/issue/tenant/tenant/${tenantId}`,
     );
     return response.data;
   } catch (error) {
@@ -101,7 +101,7 @@ const GetHelpAndSupportTicketsOverviewByTenantId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/issue/tenant-overview/${tenantId}`,
+      `${PLAIN_API_URL}/issue/tenant/tenant-overview/${tenantId}`,
     );
     return response.data;
   } catch (error) {

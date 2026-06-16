@@ -30,7 +30,7 @@ const CreatePipelineStage = async ({
       colourCode,
     
     };
-    const response = await authFetch.post(`${PLAIN_API_URL}/pipeline/stage`, payload);
+    const response = await authFetch.post(`${PLAIN_API_URL}/pipeline/tenant/stage`, payload);
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Create Pipeline Stage failed");
@@ -40,7 +40,7 @@ const CreatePipelineStage = async ({
 const UpdatePipelineStage = async ({ id, name, description, colourCode, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.patch(`${PLAIN_API_URL}/pipeline/stage`, {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/pipeline/tenant/stage`, {
       id,
       name,
       description,

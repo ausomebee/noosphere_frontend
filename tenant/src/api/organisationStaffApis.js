@@ -669,7 +669,7 @@ const GetStaffWithTeamAccess = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/staff/team/${tenantId}`,
+      `${PLAIN_API_URL}/tenant/tenant/staff/team/${tenantId}`,
     );
     return response;
   } catch (error) {

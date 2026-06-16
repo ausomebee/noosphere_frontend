@@ -35,12 +35,12 @@ describe("TenantApis comprehensive", () => {
 
     it("CreatePipelineStage", async () => {
       await api.CreatePipelineStage({ pipelineId: "p1", name: "S1", description: "d", colourCode: "#fff", ...tokens });
-      expect(mockAuthFetch.post).toHaveBeenCalledWith(expect.stringContaining("/pipeline/stage"), expect.any(Object));
+      expect(mockAuthFetch.post).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/stage"), expect.any(Object));
     });
 
     it("UpdatePipelineStage", async () => {
       await api.UpdatePipelineStage({ id: "s1", name: "Up", description: "d", colourCode: "#000", ...tokens });
-      expect(mockAuthFetch.patch).toHaveBeenCalledWith(expect.stringContaining("/pipeline/stage"), expect.any(Object));
+      expect(mockAuthFetch.patch).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/stage"), expect.any(Object));
     });
 
     it("DeletePipelineStage", async () => {
