@@ -53,7 +53,7 @@ const PracticeSettings = () => {
         : [];
       setDiagnosisCodes(codes.map((code) => ({ ...code, hasActions: true })));
     } catch (error) {
-      showToast("Failed to fetch diagnosis codes", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ const PracticeSettings = () => {
         : [];
       setSessionTypes(types.map((type) => ({ ...type, hasActions: true })));
     } catch (error) {
-      showToast("Failed to fetch session types", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

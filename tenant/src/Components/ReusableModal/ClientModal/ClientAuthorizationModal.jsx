@@ -68,7 +68,6 @@ const AddAuthorizationModal = ({
       setPayers(payerList);
     } catch (err) {
       console.error("Failed to load payers:", err);
-      showToast("Failed to load payers", "error");
     } finally {
       setLoadingPayers(false);
     }
@@ -99,7 +98,6 @@ const AddAuthorizationModal = ({
       setServiceCodes(serviceCodeList);
     } catch (error) {
       console.error("Failed to load service codes:", error);
-      showToast("Failed to load service codes", "error");
     } finally {
       setLoadingServiceCodes(false);
     }
@@ -124,7 +122,6 @@ const AddAuthorizationModal = ({
       setInsuranceTypes(insuranceTypeList);
     } catch (error) {
       console.error("Failed to load insurance types:", error);
-      showToast("Failed to load insurance types", "error");
     } finally {
       setLoadingInsuranceTypes(false);
     }

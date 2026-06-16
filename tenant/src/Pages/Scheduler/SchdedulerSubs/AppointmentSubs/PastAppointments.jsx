@@ -72,7 +72,6 @@ const PastAppointments = () => {
       }
     } catch (error) {
       console.error("Failed to load past appointments:", error);
-      showToast("Failed to load past appointments", "error");
     } finally {
       setLoading(false);
     }

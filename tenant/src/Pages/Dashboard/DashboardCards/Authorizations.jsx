@@ -69,7 +69,6 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorization metrics:", error);
-      showToast("Failed to load authorization metrics", "error");
     }
   };
 
@@ -101,7 +100,6 @@ const Authorizations = ({
       }
     } catch (error) {
       console.error("Error fetching authorizations:", error);
-      showToast("Failed to load authorizations", "error");
     } finally {
       setLoading(false);
     }

@@ -95,7 +95,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
         setMasters(transformed);
       }
     } catch (error) {
-      showToast("Failed to fetch appointments", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       setClients(clis);
       setStaff(stf);
     } catch (error) {
-      showToast("Failed to load support data", "error");
+      // No toast: empty/unavailable content is not an error.
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 

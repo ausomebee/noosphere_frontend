@@ -34,7 +34,6 @@ const EmployeePaymentSchedules = () => {
       setScheduleData(transformedData);
     } catch (error) {
       console.error("Error fetching compensation types:", error);
-      showToast("Failed to load compensation types", "error");
       setScheduleData([]); // Fallback to empty array
     } finally {
       setLoading(false);

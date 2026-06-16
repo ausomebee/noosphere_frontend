@@ -82,7 +82,6 @@ const MyDocuments = () => {
           })
           .catch((err) => {
             console.error("Folders fetch failed:", err);
-            showToast("Failed to load folders", "error");
           })
           .finally(() => setFoldersLoading(false)),
 
@@ -103,7 +102,6 @@ const MyDocuments = () => {
           })
           .catch((err) => {
             console.error("Recent files fetch failed:", err);
-            showToast("Failed to load recent files", "error");
           })
           .finally(() => setRecentLoading(false)),
 
@@ -123,7 +121,6 @@ const MyDocuments = () => {
           })
           .catch((err) => {
             console.error("All files fetch failed:", err);
-            showToast("Failed to load all files", "error");
           })
           .finally(() => setAllFilesLoading(false)),
       ];

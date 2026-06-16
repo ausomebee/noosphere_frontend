@@ -107,7 +107,6 @@ const Profile = () => {
         setClientData(clientData);
       }
     } catch (error) {
-      showToast("Failed to load client details", "error");
       console.error("Error loading client details:", error);
     } finally {
       setIsLoading(false);

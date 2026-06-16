@@ -56,7 +56,6 @@ const MessageModal = ({ isOpen, onClose }) => {
         setClients(Array.isArray(raw) ? raw : []);
       } else {
         console.error("[MessageModal] Failed to load clients:", clientRes.reason);
-        showToast("Failed to load clients", "error");
       }
 
       if (msgRes.status === "fulfilled") {
@@ -71,7 +70,6 @@ const MessageModal = ({ isOpen, onClose }) => {
         setMessages(grouped);
       } else {
         console.error("[MessageModal] Failed to load messages:", msgRes.reason);
-        showToast("Failed to load messages", "error");
       }
     } finally {
       if (mountedRef.current) {

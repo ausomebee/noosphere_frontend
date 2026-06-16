@@ -256,7 +256,6 @@ const BillingManager = () => {
         });
       } catch (err) {
         if (import.meta.env.DEV) console.error("Error fetching metrics:", err);
-        showToast("Failed to load metrics. Please try again later.", "error");
       } finally {
         setLoading(false);
       }
@@ -377,7 +376,6 @@ const BillingManager = () => {
         }
       } catch (err) {
         if (import.meta.env.DEV) console.error(`Error fetching ${activeTab}:`, err);
-        showToast(`Failed to load ${activeTab}. Please try again later.`, "error");
       } finally {
         setLoading(false);
       }
@@ -450,7 +448,6 @@ const BillingManager = () => {
           setOverviewData(updatedOverviewData);
         } catch (err) {
           if (import.meta.env.DEV) console.error("Error fetching custom metrics:", err);
-          showToast("Failed to load custom metrics.", "error");
         } finally {
           setLoading(false);
         }
@@ -489,7 +486,6 @@ const BillingManager = () => {
       setShowInvoiceModal(true);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
-      showToast("Failed to load invoice details.", "error");
     }
   };
 
@@ -527,7 +523,6 @@ const BillingManager = () => {
       setShowPaymentView(true);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error fetching payment:", err);
-      showToast("Failed to load payment details.", "error");
     }
   };
 

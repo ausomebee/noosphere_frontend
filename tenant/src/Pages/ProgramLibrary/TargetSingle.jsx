@@ -266,7 +266,6 @@ const TargetSingle = () => {
       setSessionData(mapped);
     } catch (err) {
       console.error("Failed to fetch sessions:", err);
-      showToast("Failed to load sessions", "error");
       setSessionData([]);
     } finally {
       setSessionLoading(false);

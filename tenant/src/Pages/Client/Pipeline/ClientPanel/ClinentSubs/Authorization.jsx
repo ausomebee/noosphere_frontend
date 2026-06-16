@@ -56,7 +56,6 @@ const AuthorizationTab = () => {
       setTenantServiceCodes(list);
     } catch (error) {
       console.error("Failed to load service codes:", error);
-      showToast("Failed to load service codes", "error");
     } finally {
       setLoadingTenantServiceCodes(false);
     }
@@ -136,7 +135,6 @@ const AuthorizationTab = () => {
       setServiceData(formattedServiceData);
     } catch (error) {
       console.error("Failed to fetch authorizations:", error);
-      showToast("Failed to load authorizations", "error");
     } finally {
       setLoading(false);
     }
@@ -154,7 +152,6 @@ const AuthorizationTab = () => {
       return response?.data || null;
     } catch (error) {
       console.error("Failed to fetch authorization:", error);
-      showToast("Failed to load details", "error");
       return null;
     } finally {
       setLoadingEditData(false);

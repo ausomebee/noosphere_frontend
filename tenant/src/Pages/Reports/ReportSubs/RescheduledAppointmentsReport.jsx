@@ -61,7 +61,6 @@ const RescheduledAppointmentsReport = () => {
         setAppointments(mapped);
       } catch (err) {
         console.error("Failed to fetch rescheduled appointments:", err);
-        showToast("Failed to load rescheduled appointments", "error");
         setAppointments([]);
       } finally {
         setLoading(false);

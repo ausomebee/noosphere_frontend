@@ -84,7 +84,6 @@ const SingleStaffByAdmin = () => {
       });
     } catch (e) {
       console.error("Failed to fetch staff data:", e.message);
-      showToast("Failed to load staff data", "error");
     }
   };
 
@@ -111,7 +110,6 @@ const SingleStaffByAdmin = () => {
       );
     } catch (e) {
       console.error("Failed to fetch licenses:", e.message);
-      showToast("Failed to load licenses", "error");
     }
   };
 
@@ -138,7 +136,6 @@ const SingleStaffByAdmin = () => {
       );
     } catch (e) {
       console.error("Failed to fetch documents:", e.message);
-      showToast("Failed to load documents", "error");
     }
   };
 

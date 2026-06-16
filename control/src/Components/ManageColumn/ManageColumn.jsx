@@ -90,7 +90,6 @@ const ManageColumn = () => {
       })
       .catch((err) => {
         if (import.meta.env.DEV) console.error("Failed to fetch pipeline items:", err);
-        showToast("Failed to load candidates.", "error");
         setTableDataState([]);
       });
   }, [dispatch, pipelineStageId, authTokens]);
@@ -123,7 +122,6 @@ const ManageColumn = () => {
       );
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
-      showToast("Failed to load staff or stages.", "error");
     }
   }, [authTokens, pipeline?.id]);
 
@@ -158,7 +156,6 @@ const ManageColumn = () => {
         })
         .catch((err) => {
           if (import.meta.env.DEV) console.error("Failed to fetch stage data:", err);
-          showToast("Failed to load stage data.", "error");
         });
 
       fetchPipelineItemsData();

@@ -78,7 +78,6 @@ const StaffsAndTeams = () => {
         setAllTenantStaff(allStaffRes.data?.data || []);
       } catch (err) {
         console.error("Failed to load staff lists:", err);
-        showToast("Failed to load staff lists", "error");
       }
     };
     fetchStaffForTeams();
@@ -100,10 +99,7 @@ const StaffsAndTeams = () => {
       }));
       setStaffData(rows);
     } catch (err) {
-      showToast({
-        message: err.message || "Failed to load staff data",
-        type: "error",
-      });
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }
@@ -117,7 +113,7 @@ const StaffsAndTeams = () => {
       const res = await api.GetAllTeamsByTenantId({ tenantId, accessToken, refreshToken });
       setRawTeams(res.data?.data || []);
     } catch (err) {
-      showToast({ message: err.message || "Failed to load teams", type: "error" });
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setTeamsLoading(false);
     }

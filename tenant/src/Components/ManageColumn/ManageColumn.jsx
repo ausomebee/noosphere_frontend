@@ -84,7 +84,6 @@ const ManageColumn = () => {
       })
       .catch((err) => {
         console.error("Failed to fetch pipeline items:", err);
-        showToast("Failed to load candidates.", "error");
         setTableDataState([]);
       });
   }, [dispatch, pipelineStageId, authTokens, dateFormat]);
@@ -107,7 +106,6 @@ const ManageColumn = () => {
       );
     } catch (err) {
       console.error("Failed to fetch stages:", err);
-      showToast("Failed to load stages.", "error");
     }
   }, [authTokens, pipeline?.id]);
 
@@ -136,7 +134,6 @@ const ManageColumn = () => {
         })
         .catch((err) => {
           console.error("Failed to fetch stage data:", err);
-          showToast("Failed to load stage data.", "error");
         });
 
       fetchPipelineItemsData();

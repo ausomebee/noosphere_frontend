@@ -43,7 +43,6 @@ const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
       );
     } catch (error) {
       console.error("Failed to fetch templates:", error);
-      showToast("Failed to load templates", "error");
       setTemplates([]);
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
       });
     } catch (error) {
       console.error("Failed to fetch template details:", error);
-      showToast("Failed to load template details", "error");
       // Fall back to the list data if full fetch fails
       onSelectTemplate(template);
     } finally {

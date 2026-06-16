@@ -64,7 +64,6 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
       ) {
         createDefaultNotificationSettings();
       } else {
-        showToast("Failed to load notification settings", "error");
         console.error("Error loading notification settings:", error);
       }
     } finally {

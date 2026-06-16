@@ -48,7 +48,6 @@ const Claims = () => {
       setTableData(transformedData);
     } catch (error) {
       console.error("Error fetching claims:", error);
-      showToast("Failed to load claims", "error");
       // Empty table if API fails
       setTableData([]);
     } finally {

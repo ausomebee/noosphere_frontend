@@ -50,7 +50,7 @@ const ServiceCodes = () => {
         }));
       setTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load service codes", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

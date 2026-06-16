@@ -71,7 +71,6 @@ const AppointmentModal = ({
       setServiceCodes(options);
     } catch (error) {
       console.error("Failed to load service codes:", error);
-      showToast("Failed to load service codes", "error");
     } finally {
       setLoadingServiceCodes(false);
     }

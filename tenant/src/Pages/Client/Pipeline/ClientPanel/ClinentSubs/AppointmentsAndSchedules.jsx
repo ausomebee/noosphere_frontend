@@ -64,7 +64,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       setServiceCodes(fullList); // Pass full objects to modal
     } catch (error) {
       console.error("Failed to load service codes:", error);
-      showToast("Failed to load service codes", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -195,12 +194,10 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           }
         } catch (err) {
           console.error("Failed to fetch client:", err);
-          showToast("Failed to fetch client data", "error");
         }
       }
     } catch (err) {
       console.error("Failed to load support data:", err);
-      showToast("Failed to load support data", "error");
     }
   }, [tenantId, accessToken, refreshToken, clientId]);
 
@@ -241,7 +238,6 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       setAppointments(transformed);
     } catch (err) {
       console.error("Failed to fetch appointments:", err);
-      showToast("Failed to fetch appointments", "error");
     } finally {
       setLoading(false);
     }

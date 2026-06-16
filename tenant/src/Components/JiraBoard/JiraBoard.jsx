@@ -269,9 +269,6 @@ const JiraBoard = () => {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      if (isMounted) {
-        showToast("Failed to fetch pipeline data.", "error");
-      }
     } finally {
       if (isMounted) {
         stopLoading();

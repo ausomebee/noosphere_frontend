@@ -55,7 +55,7 @@ const RoleAndPermission = () => {
         })),
       );
     } catch (e) {
-      showToast(e.message || "Failed to fetch roles", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

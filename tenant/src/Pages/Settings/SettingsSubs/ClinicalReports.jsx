@@ -168,7 +168,6 @@ const ClinicalReports = () => {
         setTemplates(formatted);
       } catch (err) {
         console.error("Error fetching templates:", err);
-        showToast("Failed to load templates", "error");
         setTemplates([]);
       } finally {
         setLoading(false);

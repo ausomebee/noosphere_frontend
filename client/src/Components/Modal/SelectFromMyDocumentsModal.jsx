@@ -46,7 +46,6 @@ const SelectFromMyDocumentsModal = ({
         setDocuments(formattedDocs);
       } catch (err) {
         console.error("Failed to load documents:", err);
-        showToast("Could not load your documents", "error");
       } finally {
         setFetching(false);
       }

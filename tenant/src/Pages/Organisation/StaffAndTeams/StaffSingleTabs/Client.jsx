@@ -25,7 +25,6 @@ const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
       setClients(list);
     } catch (error) {
       console.error("Failed to fetch staff clients:", error);
-      showToast("Failed to load staff clients", "error");
     } finally {
       setLoading(false);
     }

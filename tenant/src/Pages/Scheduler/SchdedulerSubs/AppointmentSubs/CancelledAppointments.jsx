@@ -212,7 +212,6 @@ const CancelledAppointments = () => {
         setLocalAppointments(transformed);
       } catch (err) {
         console.error("Error fetching cancelled appointments:", err);
-        showToast("Failed to load cancelled appointments", "error");
         setLocalAppointments([]);
       } finally {
         setLoading(false);

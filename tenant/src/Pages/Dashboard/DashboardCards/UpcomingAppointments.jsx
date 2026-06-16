@@ -77,7 +77,6 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
       }
     } catch (err) {
       console.error("Failed to load upcoming appointments:", err);
-      showToast("Failed to load upcoming appointments", "error");
       setMasters([]);
       if (setCount) setCount(0);
     } finally {

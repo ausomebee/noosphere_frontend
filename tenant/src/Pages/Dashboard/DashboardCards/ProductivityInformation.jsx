@@ -39,7 +39,6 @@ const ProductivityInformation = ({ hasData }) => {
         );
       } catch (err) {
         console.error("Productivity fetch failed", err);
-        showToast("Failed to load productivity data", "error");
       }
     };
 
@@ -59,7 +58,6 @@ const ProductivityInformation = ({ hasData }) => {
         });
       } catch (err) {
         console.error("Availability fetch failed", err);
-        showToast("Failed to load availability data", "error");
       }
     };
 
@@ -74,7 +72,6 @@ const ProductivityInformation = ({ hasData }) => {
         setAverageCaseload(Number(res?.data?.data?.average ?? 0));
       } catch (err) {
         console.error("Caseload fetch failed", err);
-        showToast("Failed to load caseload data", "error");
       }
     };
 

@@ -43,7 +43,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
         })),
       );
     } catch (e) {
-      showToast(e.message || "Could not load targets", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

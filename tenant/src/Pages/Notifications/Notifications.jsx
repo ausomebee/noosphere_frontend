@@ -124,7 +124,7 @@ const Notifications = () => {
         const list = Array.isArray(raw) ? raw : [];
         setNotifications(list);
       })
-      .catch(() => showToast("Failed to load notifications", "error"))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [userId, accessToken]);
 

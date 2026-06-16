@@ -41,7 +41,6 @@ const SingleClaim = () => {
       setClaimData(response?.data ?? response);
     } catch (error) {
       console.error("Error fetching claim:", error);
-      showToast("Failed to load claim details", "error");
     } finally {
       setLoading(false);
     }

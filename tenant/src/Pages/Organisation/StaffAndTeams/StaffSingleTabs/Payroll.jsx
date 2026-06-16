@@ -94,7 +94,6 @@ const Payroll = () => {
       }
     } catch (e) {
       console.error("Failed to fetch payroll history:", e.message);
-      showToast("Failed to load payroll history", "error");
     } finally {
       setHistoryLoading(false);
     }

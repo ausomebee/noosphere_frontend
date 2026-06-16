@@ -75,7 +75,7 @@ const PayersAndInsurance = () => {
       }));
       setInsuranceTypeTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load insurance types", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setInsuranceTypeLoading(false);
     }
@@ -115,9 +115,7 @@ const PayersAndInsurance = () => {
       }));
       setPayerTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load payers", "error");
       console.error("Payers fetch error:", error);
-      showToast("Failed to load payers", "error");
     } finally {
       setPayerLoading(false);
     }
@@ -149,7 +147,7 @@ const PayersAndInsurance = () => {
         }));
       setServiceCodeTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load service codes", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setServiceCodeLoading(false);
     }
@@ -181,7 +179,7 @@ const PayersAndInsurance = () => {
         }));
       setRoundingRuleTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load rounding rules", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setRoundingRuleLoading(false);
     }

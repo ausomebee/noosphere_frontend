@@ -225,7 +225,6 @@ const SubscriptionManager = () => {
         setSelectedPayment(payment);
         setShowPaymentView(true);
       } catch (err) {
-        showToast("Failed to load payment details.", "error");
         if (import.meta.env.DEV) console.error("Error fetching payment:", err);
       } finally {
         setIsPaymentLoading(false);
@@ -275,7 +274,6 @@ const SubscriptionManager = () => {
         setSelectedInvoice(invoice);
         setShowInvoiceModal(true);
       } catch (err) {
-        showToast("Failed to load invoice details.", "error");
         if (import.meta.env.DEV) console.error("Error fetching invoice:", err);
       } finally {
         setIsInvoiceLoading(false);
@@ -535,7 +533,6 @@ const SubscriptionManager = () => {
         throw new Error("Failed to fetch some data.");
       }
     } catch (err) {
-      showToast("Failed to load subscriptions. Please try again later.", "error");
       if (import.meta.env.DEV) console.error("Error fetching subscriptions:", err);
     } finally {
       setLoading(false);

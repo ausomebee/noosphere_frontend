@@ -428,7 +428,7 @@ const ImportTemplateModal = ({
         });
         setTemplates(res.data.data || []);
       } catch (err) {
-        showToast("error", "Failed to load templates");
+        // No toast: empty/unavailable content is not an error.
       } finally {
         setLoading(false);
       }

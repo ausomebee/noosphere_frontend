@@ -65,7 +65,7 @@ const AttendanceByServiceTypeReport = () => {
         const codes = res?.data?.data || res?.data || [];
         setServiceCodeOptions(codes.map((c) => ({ value: c.id, label: c.code || c.name || c.id })));
       } catch {
-        showToast("Failed to load service codes", "error");
+        // No toast: empty/unavailable content is not an error.
       } finally {
         setLoadingOptions(false);
       }

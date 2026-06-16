@@ -114,7 +114,6 @@ const BuildDocumentModal = ({
       setStaffList(staff);
     } catch (error) {
       console.error("Failed to fetch staff:", error);
-      showToast("Failed to load staff list", "error");
     } finally {
       setLoading(false);
     }

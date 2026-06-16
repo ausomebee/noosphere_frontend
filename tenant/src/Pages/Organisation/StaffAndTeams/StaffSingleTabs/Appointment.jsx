@@ -297,7 +297,6 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
       setCalendarAppointments(all);
     } catch (error) {
       console.error("Failed to fetch staff appointments:", error);
-      showToast("Failed to load staff appointments", "error");
     } finally {
       setLoading(false);
     }
@@ -318,7 +317,6 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
       setUpcomingAppointments(list.map(transformAppointment));
     } catch (error) {
       console.error("Failed to fetch upcoming appointments:", error);
-      showToast("Failed to load upcoming appointments", "error");
     } finally {
       setUpcomingLoading(false);
     }
@@ -349,7 +347,6 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
       }
     } catch (error) {
       console.error("Failed to fetch staff availability:", error);
-      showToast("Failed to load staff availability", "error");
     }
   }, [staffId]); // eslint-disable-line react-hooks/exhaustive-deps
 

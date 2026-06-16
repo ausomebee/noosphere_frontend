@@ -73,7 +73,6 @@ const IncomeItems = () => {
       setTableData(transformedData);
     } catch (error) {
       console.error("Error fetching income items:", error);
-      showToast("Failed to load income items", "error");
       setTableData([]);
     } finally {
       setLoading(false);

@@ -72,7 +72,6 @@ const Deductions = () => {
       setTableData(transformedData);
     } catch (error) {
       console.error("Error fetching deductions:", error);
-      showToast("Failed to load deductions", "error");
       setTableData([]);
     } finally {
       setLoading(false);

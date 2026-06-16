@@ -49,7 +49,6 @@ const FolderFilesModal = ({
         });
         setFiles(res?.data?.data || []);
       } catch (err) {
-        showToast("Failed to load files in folder", "error");
         console.error(err);
       } finally {
         setLoading(false);

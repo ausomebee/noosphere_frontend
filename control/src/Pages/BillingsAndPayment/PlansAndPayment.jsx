@@ -109,7 +109,6 @@ const PlansAndPayment = () => {
                 setStandardPlans([]);
                 setEnterprisePlans([]);
                 newErrors.plans = "Invalid plans data received from API";
-                showToast("Failed to load plans: Invalid data format", "error");
                 break;
               }
               const plans = response.data
@@ -242,7 +241,6 @@ const PlansAndPayment = () => {
           const errorMsg =
             result.reason.message || `Failed to fetch ${promiseType}`;
           newErrors[promiseType] = errorMsg;
-          showToast(`Failed to load ${promiseType}: ${errorMsg}`, "error");
           if (import.meta.env.DEV) console.error(`Error in ${promiseType}:`, result.reason);
         }
       });

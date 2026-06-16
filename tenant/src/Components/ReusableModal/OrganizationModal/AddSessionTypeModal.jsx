@@ -141,7 +141,6 @@ const AddSessionTypeModal = ({
       setServiceCodes(options);
     } catch (error) {
       console.error("Failed to load service codes:", error);
-      showToast("Failed to load service codes", "error");
     } finally {
       setLoadingServiceCodes(false);
     }
@@ -164,7 +163,6 @@ const AddSessionTypeModal = ({
       setStaffRoleOptions(options);
     } catch (error) {
       console.error("Failed to load roles:", error);
-      showToast("Failed to load staff roles", "error");
     } finally {
       setLoadingRoles(false);
     }

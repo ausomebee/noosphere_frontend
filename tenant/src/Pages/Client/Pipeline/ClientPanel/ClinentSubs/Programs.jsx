@@ -56,7 +56,7 @@ const ProgramsTab = ({ fullName }) => {
         }))
       );
     } catch (e) {
-      showToast(e.message || "Could not load programs", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ const ProgramsTab = ({ fullName }) => {
         }))
       );
     } catch (e) {
-      showToast(e.message || "Could not load program library", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLibraryLoading(false);
     }

@@ -50,7 +50,7 @@ const SingleViewPayer = () => {
       }));
       setInsuranceTypeTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load insurance types", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setInsuranceTypeLoading(false);
     }
@@ -75,7 +75,7 @@ const SingleViewPayer = () => {
         }));
       setRoundingRuleTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load rounding rules", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setRoundingRuleLoading(false);
     }
@@ -100,7 +100,7 @@ const SingleViewPayer = () => {
         }));
       setServiceCodeTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load service codes", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setServiceCodeLoading(false);
     }
@@ -170,7 +170,7 @@ const SingleViewPayer = () => {
 
       setTableData(transformedServices);
     } catch (error) {
-      showToast("Failed to load payer data", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoadingPayer(false);
     }

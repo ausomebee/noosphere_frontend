@@ -51,7 +51,7 @@ const fetchDomains = async () => {
       }))
     );
   } catch (e) {
-    showToast("error", e.message || "Could not load domains");
+    // No toast: empty/unavailable content is not an error.
   } finally {
     setLoading(false);
   }

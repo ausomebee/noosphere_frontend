@@ -93,7 +93,6 @@ const DocumentRequests = () => {
         setCounts(countsRes.data?.data || { request: {}, overdue: 0 });
       } catch (err) {
         console.error("Documents fetch error:", err);
-        showToast("Failed to load document requests", "error");
       } finally {
         setLoadingDocs(false);
       }
@@ -125,7 +124,6 @@ const DocumentRequests = () => {
         setFormsCounts(formsCountsRes.data?.data || { forms: {}, overdue: 0 });
       } catch (err) {
         console.error("Forms fetch error:", err);
-        showToast("Failed to load forms", "error");
       } finally {
         setLoadingForms(false);
       }

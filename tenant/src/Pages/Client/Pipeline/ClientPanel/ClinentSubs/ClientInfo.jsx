@@ -351,7 +351,7 @@ const DocumentsForms = () => {
         setDocumentsData(transformedData);
       }
     } catch (error) {
-      showToast("Failed to fetch documents", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, documents: false }));
     }
@@ -370,7 +370,7 @@ const DocumentsForms = () => {
         setRequestsData(response.data.data || []); // Adjust based on your API response
       }
     } catch (error) {
-      showToast("Failed to fetch document requests", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, requests: false }));
     }
@@ -399,7 +399,7 @@ const DocumentsForms = () => {
 
       setFormsData(forms);
     } catch (err) {
-      showToast("Failed to load client forms", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, forms: false }));
     }
@@ -423,7 +423,7 @@ const DocumentsForms = () => {
 
       setLibraryForms(library);
     } catch (err) {
-      showToast("Failed to load form library", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, library: false }));
     }
@@ -566,7 +566,7 @@ const DocumentsForms = () => {
       );
       navigate(`/custom-forms/forms/renderer/${row.formId}`);
     } catch (err) {
-      showToast("Failed to load form", "error");
+      // No toast: empty/unavailable content is not an error.
     }
   };
 

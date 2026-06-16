@@ -65,7 +65,7 @@ const AttendanceBySessionTypeReport = () => {
         const types = res?.data?.data || res?.data || [];
         setSessionTypeOptions(types.map((t) => ({ value: t.id, label: t.name || t.id })));
       } catch {
-        showToast("Failed to load session types", "error");
+        // No toast: empty/unavailable content is not an error.
       } finally {
         setLoadingOptions(false);
       }

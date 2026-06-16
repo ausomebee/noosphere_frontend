@@ -53,7 +53,7 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
         }))
       );
     } catch (e) {
-      showToast(e.message || "Could not load programs", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

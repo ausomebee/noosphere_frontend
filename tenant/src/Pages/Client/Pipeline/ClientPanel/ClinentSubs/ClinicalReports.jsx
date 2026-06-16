@@ -436,7 +436,6 @@ const ClinicalReportsTab = ({ clientData }) => {
       }
     } catch (error) {
       console.error("Error fetching reports:", error);
-      showToast("Failed to load reports", "error");
       setReports([]);
     } finally {
       setLoading(false);

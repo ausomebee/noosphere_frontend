@@ -307,12 +307,8 @@ const IssueManagement = () => {
         );
       }
 
-      if (errors.length > 0) {
-        showToast(errors.join(" "), "error");
-      }
     } catch (err) {
       if (err.name !== "AbortError") {
-        showToast("Unexpected error occurred while loading data.", "error");
         if (import.meta.env.DEV) console.error("Fetch error:", err);
       }
     } finally {
@@ -437,7 +433,6 @@ const IssueManagement = () => {
         cache.current.set(cacheKey, issue);
         setSelectedIssue(issue);
       } catch (err) {
-        showToast("Failed to load issue details.", "error");
         showApiError(err, "LOAD_ISSUE");
         if (import.meta.env.DEV) console.error("Error fetching issue:", err);
       } finally {

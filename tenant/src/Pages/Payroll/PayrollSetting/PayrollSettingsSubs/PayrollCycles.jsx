@@ -72,7 +72,6 @@ const PayrollCycles = () => {
       setTableData(transformedData);
     } catch (error) {
       console.error("Error fetching payroll cycles:", error);
-      showToast("Failed to load payroll cycles", "error");
       setTableData([]);
     } finally {
       setLoading(false);

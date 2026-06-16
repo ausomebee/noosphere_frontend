@@ -39,7 +39,6 @@ const Forms = () => {
         setForms(apiForms);
       } catch (err) {
         console.error(err);
-        showToast( err.message || "Failed to load forms", "error");
       } finally {
         setLoading(false);
       }

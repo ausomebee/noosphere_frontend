@@ -66,7 +66,6 @@ const CancelledAppointmentsReport = () => {
         setAppointments(transformAppointments(response?.data?.data || []));
       } catch (err) {
         console.error("Failed to fetch cancelled appointments:", err);
-        showToast("Failed to load cancelled appointments", "error");
         setAppointments([]);
       } finally {
         setLoading(false);

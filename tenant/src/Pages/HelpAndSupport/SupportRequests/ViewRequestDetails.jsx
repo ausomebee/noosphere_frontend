@@ -36,7 +36,6 @@ const ViewRequestDetails = () => {
       setRequest(response?.data || null);
     } catch (error) {
       console.error("Failed to fetch ticket:", error);
-      showToast("Failed to load request details", "error");
     } finally {
       setLoading(false);
     }

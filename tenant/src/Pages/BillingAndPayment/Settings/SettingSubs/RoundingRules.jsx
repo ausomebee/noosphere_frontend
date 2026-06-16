@@ -56,7 +56,7 @@ const RoundingRules = () => {
 
       setTableData(transformedData);
     } catch (error) {
-      showToast("Failed to load rounding rules", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }

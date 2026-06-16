@@ -108,7 +108,6 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch general settings:", error);
-      showToast("Failed to load general settings", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -131,7 +130,6 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch security questions:", error);
-      showToast("Failed to load security questions", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -163,7 +161,6 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch tenant admin choices:", error);
-      showToast("Failed to load admin choices", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -182,7 +179,6 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch tenant info:", error);
-      showToast("Failed to load tenant information", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 

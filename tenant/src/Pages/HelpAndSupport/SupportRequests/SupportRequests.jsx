@@ -83,7 +83,6 @@ const SupportRequests = () => {
       setRequests(response?.data || []);
     } catch (error) {
       console.error("Failed to fetch support requests:", error);
-      showToast("Failed to load support requests", "error");
     } finally {
       setLoading(false);
     }
@@ -108,7 +107,6 @@ const SupportRequests = () => {
       }
     } catch (error) {
       console.error("Failed to fetch overview:", error);
-      showToast("Failed to load support overview", "error");
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 

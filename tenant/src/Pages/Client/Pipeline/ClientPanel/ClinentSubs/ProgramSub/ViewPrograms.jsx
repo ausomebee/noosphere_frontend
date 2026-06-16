@@ -58,7 +58,7 @@ const ViewPrograms = () => {
         }))
       );
     } catch (e) {
-      showToast(e.message || "Failed to load targets", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ const ViewPrograms = () => {
         }))
       );
     } catch (e) {
-      showToast(e.message || "Failed to load target library", "error");
+      // No toast: empty/unavailable content is not an error.
     } finally {
       setLibraryLoading(false);
     }
