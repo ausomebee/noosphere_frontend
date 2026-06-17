@@ -189,7 +189,7 @@ const Authenticator2FA = () => {
         <div className="main-container">
           <div className="content-wrapper">
             <div className="promo-section">
-              <h1>The all-in-one ABA<br />Practice Management<br />Solution</h1>
+              <h1><span className="hero-line">The all-in-one ABA</span><span className="hero-line">Practice Management</span><span className="hero-line">Solution</span></h1>
             </div>
             <div className="login-section">
               {step === 1 && (

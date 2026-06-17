@@ -91,6 +91,13 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Force the headline to exactly 3 lines: each line is its own block and
+   never wraps internally, regardless of font size or screen width. */
+.promo-section h1 .hero-line {
+  display: block;
+  white-space: nowrap;
+}
+
 .login-wrapper {
   width: 100%;
   display: flex;
