@@ -174,7 +174,7 @@ const CreateCandidate = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/client`, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/tenant/client`, {
       firstName,
       lastName,
       preferredName,
@@ -244,7 +244,7 @@ const UpdateCandidate = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client`, {
+    const response = await authFetch.put(`${PLAIN_API_URL}/tenant/client`, {
       id,
       firstName,
       lastName,
