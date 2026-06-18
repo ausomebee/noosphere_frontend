@@ -388,7 +388,8 @@ const AppointmentModal = ({
     }
 
     const mappedServices = selectedSession.sessionTypeServices.map((svc) => {
-      let defaultModifier = svc.modifiers?.modifier || "";
+      let defaultModifier =
+        svc.modifiers?.modifier1 || svc.modifiers?.modifier || "";
       if (!defaultModifier && svc.serviceCode?.modifiers?.modifier1) {
         defaultModifier = svc.serviceCode.modifiers.modifier1;
       }

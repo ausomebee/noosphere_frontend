@@ -58,13 +58,22 @@ const transformSessionTypeToFormData = (data) => {
     hours,
     minutes,
     status: data.isActive !== undefined ? data.isActive : true,
-    services:
-      data.service && Array.isArray(data.service)
-        ? data.service.map((s) => ({
+    services: (() => {
+      // API returns the configured services under `sessionTypeServices`
+      // (fall back to `service` for older shapes). Modifiers come back as
+      // { modifier1: "UB", ... } so read modifier1 first.
+      const svcArray = Array.isArray(data.sessionTypeServices)
+        ? data.sessionTypeServices
+        : Array.isArray(data.service)
+        ? data.service
+        : [];
+      return svcArray.length > 0
+        ? svcArray.map((s) => ({
             serviceCodeId: s.serviceCodeId || "",
-            modifier: s.modifiers?.modifier || "",
+            modifier: s.modifiers?.modifier1 || s.modifiers?.modifier || "",
           }))
-        : [{ serviceCodeId: "", modifier: "" }],
+        : [{ serviceCodeId: "", modifier: "" }];
+    })(),
     location: Array.isArray(data.locationsAllowed) ? data.locationsAllowed : [],
     staffRole: Array.isArray(data.staffRolesAllowed)
       ? data.staffRolesAllowed[0] || ""
