@@ -10,6 +10,7 @@ import {
 import { CgChevronRight } from "react-icons/cg";
 import { formatHour } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
+import { getContrastTextColor } from "../../Helper/colorContrast";
 import "./Scheduler.css";
 
 // Parse time (e.g., "01:30") with date (e.g., "2025-09-27") to create a Date object
@@ -197,6 +198,7 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
               onClick={(e) => onAppointmentClick(appt, e)}
               style={{
                 backgroundColor: appt.colorCode || "#ffcccb",
+                color: getContrastTextColor(appt.colorCode || "#ffcccb"),
                 top: `${top}px`,
                 height: `${height}px`,
                 left: `calc(${left}% + var(--day-hour-col-width, 80px) + 2px)`,

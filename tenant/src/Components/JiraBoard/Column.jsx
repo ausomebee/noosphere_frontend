@@ -14,6 +14,7 @@ import { FaEllipsisV } from "react-icons/fa";
 import { Menu } from "@headlessui/react";
 import "./DragAndDrop.css";
 import { useNavigate } from "react-router-dom";
+import { getContrastTextColor } from "../../Helper/colorContrast";
 
 const Column = ({
   column,
@@ -171,7 +172,10 @@ const Column = ({
           {columnTitle}{" "}
           <span
             className="task-count"
-            style={{ backgroundColor: column.colorCode || "#000000" }}
+            style={{
+              backgroundColor: column.colorCode || "#000000",
+              color: getContrastTextColor(column.colorCode || "#000000"),
+            }}
           >
             {candidateCount}
           </span>

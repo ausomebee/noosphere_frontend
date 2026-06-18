@@ -12,6 +12,7 @@ import {
 import { CgChevronRight } from "react-icons/cg";
 import { formatHour } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
+import { getContrastTextColor } from "../../Helper/colorContrast";
 import "./Scheduler.css";
 
 const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
@@ -223,6 +224,7 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
                 onClick={(e) => handleAppointmentClick(appt, e)}
                 style={{
                   backgroundColor: appt.colorCode || "#ffcccb",
+                  color: getContrastTextColor(appt.colorCode || "#ffcccb"),
                   top,
                   height,
                   left: `${left}px`,

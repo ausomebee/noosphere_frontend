@@ -58,6 +58,7 @@ function CalendarScheduler({
   setSelectedClients,
   setSelectedStaff,
   fetchAppointmentsByFilter,
+  refetchAppointments,
 }) {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [view, setView] = useState(getDefaultView);
@@ -113,12 +114,21 @@ function CalendarScheduler({
   }, [appointments, searchTerm, clients, staff]);
 
   const refreshCurrentView = useCallback(() => {
+    // Silently refetch appointments from the server so newly created/updated
+    // appointments appear without a page reload. The parent re-applies the
+    // active filter once the fresh data arrives.
+    if (refetchAppointments) {
+      refetchAppointments();
+      return;
+    }
+    // Fallback: re-filter the already-loaded list.
     const payload = {
       clientIds: effectiveActiveTab === "client" ? selectedClients : [],
       staffIds: effectiveActiveTab === "staff" ? selectedStaff : [],
     };
     fetchAppointmentsByFilter(payload);
   }, [
+    refetchAppointments,
     effectiveActiveTab,
     selectedClients,
     selectedStaff,

@@ -13,6 +13,7 @@ import {
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import "./Scheduler.css";
 import { CgChevronRight } from "react-icons/cg";
+import { getContrastTextColor } from "../../Helper/colorContrast";
 
 const MonthView = ({ date, appointments, onAppointmentClick }) => {
   const monthStart = startOfMonth(date);
@@ -112,7 +113,10 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
                         key={appt.id}
                         onClick={(e) => handleAppointmentClick(appt, e)}
                         className="month-view-appointment"
-                        style={{ backgroundColor: appt.colorCode || "#ffcccb" }}
+                        style={{
+                          backgroundColor: appt.colorCode || "#ffcccb",
+                          color: getContrastTextColor(appt.colorCode || "#ffcccb"),
+                        }}
                       >
                         <span className="month-view-appointment-text flex justify-between">
                           {formatTime(appt.startTime)} {appt.clientName} <CgChevronRight />
@@ -177,6 +181,7 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
                 cursor: "pointer",
                  borderRadius: "20px",
                 backgroundColor: appt.colorCode || "#ffcccb",
+                color: getContrastTextColor(appt.colorCode || "#ffcccb"),
                 transition: "background-color 0.2s",
                 ":hover": {
                   backgroundColor: appt.colorCode ? darkenColor(appt.colorCode, 0.1) : "#ffb3b3",

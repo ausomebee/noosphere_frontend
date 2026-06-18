@@ -328,6 +328,18 @@ const Calendar = () => {
     }
   }, [canFilter, userId, allAppointments.length, fetchAppointmentsByFilter]);
 
+  // Re-apply the active filter whenever the appointment source changes (e.g.
+  // after a silent refetch following create/update), so newly created
+  // appointments show up without a full page reload.
+  useEffect(() => {
+    if (selectedClients.length === 0 && selectedStaff.length === 0) return;
+    fetchAppointmentsByFilter({
+      clientIds: selectedClients,
+      staffIds: selectedStaff,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allAppointments]);
+
   const viewWindow = useMemo(
     () => ({
       start: addDays(new Date(), -30),
@@ -377,6 +389,7 @@ const Calendar = () => {
         setSelectedClients={setSelectedClients}
         setSelectedStaff={setSelectedStaff}
         fetchAppointmentsByFilter={fetchAppointmentsByFilter}
+        refetchAppointments={fetchInitialData}
         loading={loading}
       />
     </>

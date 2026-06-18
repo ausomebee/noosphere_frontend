@@ -173,10 +173,19 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave }) => {
               <label style={{ marginRight: "10px" }}>Colour code</label>
               <div
                 className="color-preview inline-block rounded-full"
+                role="button"
+                tabIndex={0}
+                onClick={handleOpenColorPicker}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    handleOpenColorPicker();
+                }}
+                title="Change colour"
                 style={{
                   backgroundColor: draft.colorCode || "#000000",
                   width: "24px",
                   height: "24px",
+                  cursor: "pointer",
                 }}
               ></div>
               <button

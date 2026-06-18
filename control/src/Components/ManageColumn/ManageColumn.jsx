@@ -447,10 +447,19 @@ const ManageColumn = () => {
                   <label style={{ marginRight: "10px" }}>Colour code</label>
                   <div
                     className="color-preview inline-block rounded-full"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setShowColorPicker(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        setShowColorPicker(true);
+                    }}
+                    title="Change colour"
                     style={{
                       backgroundColor: draft.colorCode || "#000000",
                       width: "24px",
                       height: "24px",
+                      cursor: "pointer",
                     }}
                   />
                   <button

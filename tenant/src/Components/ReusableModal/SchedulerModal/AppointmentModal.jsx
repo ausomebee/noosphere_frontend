@@ -761,8 +761,9 @@ const AppointmentModal = ({
   };
 
   const handleColorChange = (color) => {
+    // ChromePicker fires live while dragging; keep the picker open and let
+    // Confirm/Cancel close it (matches the control color picker behaviour).
     setValue("colorCode", color);
-    setShowColorPicker(false);
   };
 
   const handleRecurrenceDaysChange = (e) => {
@@ -1347,12 +1348,20 @@ const AppointmentModal = ({
           <label style={{ marginRight: "10px" }}>Colour code</label>
           <div
             className="color-preview"
+            role="button"
+            tabIndex={0}
+            onClick={handleColorPickerToggle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") handleColorPickerToggle();
+            }}
+            title="Change colour"
             style={{
               backgroundColor: watch("colorCode") || "#000000",
               width: "24px",
               height: "24px",
               borderRadius: "50%",
               display: "inline-block",
+              cursor: "pointer",
             }}
           ></div>
           <button

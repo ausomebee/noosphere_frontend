@@ -558,12 +558,21 @@ const usePricingForm = ({
               <label style={{ marginRight: "10px" }}>Colour code</label>
               <div
                 className="color-preview"
+                role="button"
+                tabIndex={0}
+                onClick={handleOpenColorPicker}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    handleOpenColorPicker();
+                }}
+                title="Change colour"
                 style={{
                   backgroundColor: formData.colorCode || "#000000",
                   width: "24px",
                   height: "24px",
                   borderRadius: "50%",
                   display: "inline-block",
+                  cursor: "pointer",
                 }}
               ></div>
               <button
