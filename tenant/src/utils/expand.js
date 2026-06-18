@@ -77,6 +77,7 @@ const expand = (master, viewWindow) => {
         parentId: master.id,
         client: related.client || master.client,
         tenant: related.tenant || master.tenant,
+        isCanceled: related.isCanceled ?? master.isCanceled,
       };
     }
 
@@ -116,6 +117,7 @@ const expand = (master, viewWindow) => {
         tenant: related.tenant || master.tenant,
         isRecurring: master.isRecurring,
         recurrence: master.recurrence,
+        isCanceled: related.isCanceled ?? master.isCanceled,
       };
     } else {
       instance = {
@@ -170,6 +172,7 @@ const expand = (master, viewWindow) => {
           tenant: ra.tenant || master.tenant,
           isRecurring: master.isRecurring,
           recurrence: master.recurrence,
+          isCanceled: ra.isCanceled ?? master.isCanceled,
         });
       }
     });

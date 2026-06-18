@@ -1491,3 +1491,30 @@ Appointments Css
   }
 }
 
+
+/* ===== Cancelled appointments ===== */
+/* Muted + slightly blurred with a strike-through and a hatch overlay so
+   cancelled appointments (recurring or one-off) are clearly distinguishable. */
+.appt-cancelled {
+  opacity: 0.55;
+  filter: grayscale(45%) blur(0.4px);
+}
+.appt-cancelled,
+.appt-cancelled * {
+  text-decoration: line-through !important;
+  text-decoration-thickness: 2px;
+}
+.appt-cancelled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 6px,
+    rgba(0, 0, 0, 0.18) 6px,
+    rgba(0, 0, 0, 0.18) 8px
+  );
+}

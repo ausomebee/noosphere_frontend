@@ -112,7 +112,9 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
                       <div
                         key={appt.id}
                         onClick={(e) => handleAppointmentClick(appt, e)}
-                        className="month-view-appointment"
+                        className={`month-view-appointment${
+                          appt.isCanceled ? " appt-cancelled" : ""
+                        }`}
                         style={{
                           backgroundColor: appt.colorCode || "#ffcccb",
                           color: getContrastTextColor(appt.colorCode || "#ffcccb"),
@@ -183,6 +185,14 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
                 backgroundColor: appt.colorCode || "#ffcccb",
                 color: getContrastTextColor(appt.colorCode || "#ffcccb"),
                 transition: "background-color 0.2s",
+                ...(appt.isCanceled
+                  ? {
+                      opacity: 0.55,
+                      filter: "grayscale(45%) blur(0.4px)",
+                      textDecoration: "line-through",
+                      textDecorationThickness: "2px",
+                    }
+                  : {}),
                 ":hover": {
                   backgroundColor: appt.colorCode ? darkenColor(appt.colorCode, 0.1) : "#ffb3b3",
                 },

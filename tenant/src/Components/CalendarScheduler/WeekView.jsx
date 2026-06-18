@@ -220,7 +220,9 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
             return (
               <div
                 key={`${appt.id}-${appt.date}-${gIdx}-${aIdx}`}
-                className="week-view-appt-card"
+                className={`week-view-appt-card${
+                  appt.isCanceled ? " appt-cancelled" : ""
+                }`}
                 onClick={(e) => handleAppointmentClick(appt, e)}
                 style={{
                   backgroundColor: appt.colorCode || "#ffcccb",

@@ -194,7 +194,9 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
           return (
             <div
               key={`${appt.id}-${appt.date}-${gIdx}-${aIdx}`}
-              className="day-view-appt-card"
+              className={`day-view-appt-card${
+                appt.isCanceled ? " appt-cancelled" : ""
+              }`}
               onClick={(e) => onAppointmentClick(appt, e)}
               style={{
                 backgroundColor: appt.colorCode || "#ffcccb",
