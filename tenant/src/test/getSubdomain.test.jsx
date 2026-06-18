@@ -6,16 +6,25 @@ describe('getSubdomain', () => {
 
   beforeEach(() => {
     originalLocation = window.location;
-    delete window.location;
     localStorage.clear();
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    // Restore via defineProperty so this works on Node 20 (CI) and Node 26+,
+    // where window.location can't be deleted/reassigned directly.
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    });
   });
 
   const setHostname = (hostname) => {
-    window.location = { hostname };
+    Object.defineProperty(window, "location", {
+      value: { hostname },
+      writable: true,
+      configurable: true,
+    });
   };
 
   it('returns null for plain localhost', () => {
