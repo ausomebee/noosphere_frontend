@@ -368,6 +368,53 @@ const AppointmentModal = ({
   const sessionType = watch("sessionType");
   const clinicians = watch("clinicians");
 
+  // The fetched tenant service codes don't always include the seeded codes a
+  // session type references, so react-select can't render a selected value
+  // that isn't in its options. Merge in the serviceCode objects embedded in
+  // the selected session type (and the appointment being edited) so the
+  // dropdown can always display what was auto-populated.
+  const serviceCodeOptions = useMemo(() => {
+    const merged = [...serviceCodes];
+    const seen = new Set(merged.map((o) => o.value));
+    const addCode = (sc) => {
+      if (sc?.id && !seen.has(sc.id)) {
+        seen.add(sc.id);
+        merged.push({
+          value: sc.id,
+          label: `${sc.code} - ${sc.description || "No description"}`,
+        });
+      }
+    };
+    const selected = sessionTypes.find((st) => st.id === sessionType);
+    (selected?.sessionTypeServices || []).forEach((svc) =>
+      addCode(svc.serviceCode)
+    );
+    (initialData?.service || []).forEach((svc) => addCode(svc.serviceCode));
+    return merged;
+  }, [serviceCodes, sessionTypes, sessionType, initialData]);
+
+  // Same problem for modifiers: values like "UB"/"Group" aren't in the static
+  // modifier list, so merge any populated modifier values in as options.
+  const modifierSelectOptions = useMemo(() => {
+    const merged = [...modifierOptions];
+    const seen = new Set(merged.map((o) => o.value));
+    const addMod = (m) => {
+      if (m && !seen.has(m)) {
+        seen.add(m);
+        merged.push({ value: m, label: m });
+      }
+    };
+    const selected = sessionTypes.find((st) => st.id === sessionType);
+    (selected?.sessionTypeServices || []).forEach((svc) => {
+      addMod(svc.modifiers?.modifier1);
+      addMod(svc.modifiers?.modifier);
+    });
+    (initialData?.service || []).forEach((svc) =>
+      addMod(svc.modifier || svc.modifierType)
+    );
+    return merged;
+  }, [sessionTypes, sessionType, initialData]);
+
   // Auto-populate service codes and modifiers when session type changes
   useEffect(() => {
     if (isEditMode && initialData) return;
@@ -816,7 +863,7 @@ const AppointmentModal = ({
                 render={({ field }) => (
                   <SelectInput
                     label={index === 0 ? "Service Code (CPT/HCPCS) *" : ""}
-                    options={serviceCodes}
+                    options={serviceCodeOptions}
                     isLoading={loadingServiceCodes}
                     placeholder={
                       loadingServiceCodes
@@ -838,7 +885,7 @@ const AppointmentModal = ({
                 render={({ field }) => (
                   <SelectInput
                     label={index === 0 ? "Modifier" : ""}
-                    options={modifierOptions}
+                    options={modifierSelectOptions}
                     placeholder="Select modifier (optional)"
                     value={field.value}
                     onChange={field.onChange}

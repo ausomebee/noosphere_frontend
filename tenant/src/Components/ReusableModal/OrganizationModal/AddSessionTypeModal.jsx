@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -129,6 +129,44 @@ const AddSessionTypeModal = ({
   });
 
   const services = watch("services");
+
+  // Seeded service codes referenced by a session type may not be in the
+  // fetched list, so merge in the serviceCode objects embedded in the record
+  // being edited; otherwise the select can't render the populated value.
+  const serviceCodeOptions = useMemo(() => {
+    const merged = [...serviceCodes];
+    const seen = new Set(merged.map((o) => o.value));
+    (initialData?.sessionTypeServices || initialData?.service || []).forEach(
+      (svc) => {
+        const sc = svc.serviceCode;
+        if (sc?.id && !seen.has(sc.id)) {
+          seen.add(sc.id);
+          merged.push({
+            value: sc.id,
+            label: `${sc.code} - ${sc.description || "No description"}`,
+          });
+        }
+      }
+    );
+    return merged;
+  }, [serviceCodes, initialData]);
+
+  // Merge populated modifier values (e.g. "UB"/"Group") that aren't in the
+  // static modifier list so the select can render them on edit.
+  const modifierSelectOptions = useMemo(() => {
+    const merged = [...modifierOptions];
+    const seen = new Set(merged.map((o) => o.value));
+    (initialData?.sessionTypeServices || initialData?.service || []).forEach(
+      (svc) => {
+        const m = svc.modifiers?.modifier1 || svc.modifiers?.modifier;
+        if (m && !seen.has(m)) {
+          seen.add(m);
+          merged.push({ value: m, label: m });
+        }
+      }
+    );
+    return merged;
+  }, [initialData]);
 
   // Fetch service codes when modal opens
   const fetchServiceCodes = useCallback(async () => {
@@ -288,7 +326,7 @@ const AddSessionTypeModal = ({
                 render={({ field }) => (
                   <SelectInput
                     label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
-                    options={serviceCodes}
+                    options={serviceCodeOptions}
                     isLoading={loadingServiceCodes}
                     placeholder="Select a service code"
                     error={errors.services?.[index]?.serviceCodeId?.message}
@@ -305,7 +343,7 @@ const AddSessionTypeModal = ({
                 render={({ field }) => (
                   <SelectInput
                     label={index === 0 ? "Modifier" : ""}
-                    options={modifierOptions}
+                    options={modifierSelectOptions}
                     placeholder="Select a modifier (optional)"
                     error={errors.services?.[index]?.modifier?.message}
                     {...field}
