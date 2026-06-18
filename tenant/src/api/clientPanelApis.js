@@ -38,7 +38,7 @@ const GetSingleClientByClientId = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client/client/${id}`
+      `${PLAIN_API_URL}/client/tenant/client/${id}`
     );
     return response;
   } catch (error) {
