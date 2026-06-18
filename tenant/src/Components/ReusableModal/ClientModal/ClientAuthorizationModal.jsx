@@ -372,10 +372,11 @@ const AddAuthorizationModal = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveService(index)}
-                        className="text-red-600 hover:text-red-800 mt-6"
+                        className="modal-row-delete-btn"
                         title="Remove"
+                        aria-label="Remove service"
                       >
-                        <FaTrash className="w-5 h-5" />
+                        <FaTrash />
                       </button>
                     )}
                   </div>

@@ -1030,6 +1030,26 @@ select {
   box-shadow: 0 0 0 2px rgba(var(--input-focus-shadow));
 }
 
+/* Delete/trash button used at the end of a modal input row. Matches the 44px
+   input height so, in an items-end row, it lines up with the input fields. */
+.modal-row-delete-btn {
+  flex: 0 0 auto;
+  height: 44px;
+  width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0;
+}
+.modal-row-delete-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+
 /* Select Input */
 .input-select {
   width: 100%;

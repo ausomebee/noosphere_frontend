@@ -131,7 +131,7 @@ const AddServiceCodeModal = ({
         <p className="text-base text-gray-600 font-semibold">Modifiers</p>
 
         {fields.map((item, index) => (
-          <div key={item.id} className="flex gap-4 items-center mb-2">
+          <div key={item.id} className="flex gap-4 items-end mb-2">
             <div className="flex-1">
               <Controller
                 name={`modifiers[${index}].modifier`}
@@ -149,7 +149,7 @@ const AddServiceCodeModal = ({
             {fields.length > 1 && (
               <button
                 type="button"
-                className="text-red-500 hover:text-red-700"
+                className="modal-row-delete-btn"
                 onClick={() => remove(index)}
                 aria-label="Remove Modifier"
               >

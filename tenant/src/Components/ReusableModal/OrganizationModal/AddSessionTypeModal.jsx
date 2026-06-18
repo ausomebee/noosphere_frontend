@@ -353,13 +353,14 @@ const AddSessionTypeModal = ({
             </div>
 
             {fields.length > 1 && (
-              <Button
+              <button
                 type="button"
-                variant="danger"
-                icon={<FaTrash />}
+                className="modal-row-delete-btn"
                 onClick={() => removeServiceRow(index)}
-                className="mb-1"
-              />
+                aria-label="Remove service code"
+              >
+                <FaTrash />
+              </button>
             )}
           </div>
         ))}

@@ -380,7 +380,7 @@ const AddPayerModal = ({
                   return (
                     <div>
                       {modifierFields.map((modField, modIndex) => (
-                        <div key={modField.id} className="flex gap-4 items-center mb-2">
+                        <div key={modField.id} className="flex gap-4 items-end mb-2">
                           <div className="flex-1">
                             <Controller
                               name={`serviceCodes[${index}].modifiers[${modIndex}].modifier`}
@@ -409,7 +409,7 @@ const AddPayerModal = ({
                           {mode !== "view" && modifierFields.length > 1 && (
                             <button
                               type="button"
-                              className="text-red-500 hover:text-red-700"
+                              className="modal-row-delete-btn"
                               onClick={() => removeModifier(modIndex)}
                               aria-label="Remove Modifier"
                             >

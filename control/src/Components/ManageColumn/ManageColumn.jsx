@@ -528,7 +528,7 @@ const ManageColumn = () => {
                         >
                           <span>{task.name}</span>
                           <button
-                            className="delete-btn ml-2 border-0 cursor-pointer p-0"
+                            className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
                             onClick={() =>
                               dispatch(removeTaskFromDraft(task.id))
                             }
@@ -608,7 +608,7 @@ const ManageColumn = () => {
                         >
                           <span>{doc.name}</span>
                           <button
-                            className="delete-btn ml-2 border-0 cursor-pointer p-0"
+                            className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
                             onClick={() =>
                               dispatch(removeDocumentFromDraft(doc.id))
                             }
