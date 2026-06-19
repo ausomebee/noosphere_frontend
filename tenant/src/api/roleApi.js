@@ -12,7 +12,7 @@ const CreateRole = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/role/`, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/role/tenant/`, {
       name,
       dataAccessLevel,
       systemModule: "TENANT",
@@ -57,7 +57,7 @@ const UpdateRole = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.patch(`${PLAIN_API_URL}/role`, {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/role/tenant`, {
       id,
       name,
       dataAccessLevel,
