@@ -23,6 +23,22 @@ const TableBody = ({
   hasStatusDot,
   startIndex,
 }) => {
+  // If a row action opens a "view"/"edit" route, make the name (first plain
+  // text column) clickable so users don't have to open the action menu.
+  const primaryAction = React.useMemo(() => {
+    if (!Array.isArray(actions)) return null;
+    return (
+      actions.find((a) => /view|profile|details/i.test(a?.label || "")) ||
+      actions.find((a) => /edit/i.test(a?.label || "")) ||
+      null
+    );
+  }, [actions]);
+
+  const nameColIndex = React.useMemo(
+    () => columns.findIndex((c) => !c.type && !c.hasColumnActions),
+    [columns]
+  );
+
   return (
     <div
       className="table-container no-scrollbar::-webkit-scrollbar no-scrollbar"
@@ -217,6 +233,20 @@ const TableBody = ({
                       >
                         {row[col.key]}
                       </span>
+                    ) : colIndex === nameColIndex &&
+                      primaryAction &&
+                      row.hasActions ? (
+                      <button
+                        type="button"
+                        className="table-link-cell"
+                        title={primaryAction.label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          primaryAction.onClick(row);
+                        }}
+                      >
+                        {row[col.key]}
+                      </button>
                     ) : (
                       row[col.key]
                     )}

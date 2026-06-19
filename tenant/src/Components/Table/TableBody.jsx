@@ -52,6 +52,32 @@ const TableBody = ({
     "Template Name",
   ];
 
+  // The "name" column = first primary text column (falls back to the first
+  // column). Used to make the name clickable to open the row's view route.
+  const nameColumn =
+    columns.find((c) => primaryColumns.includes(c.header)) || columns[0];
+
+  // Returns a click handler that opens the row's view/edit route, or null.
+  const getRowViewHandler = (row) => {
+    if (typeof onActionClick === "function") return () => onActionClick(row);
+    const list = getActionsForRow(row) || [];
+    const flat = [];
+    list.forEach((a) => {
+      if (a?.type === "dropdown") {
+        (getActionItems(a, row) || []).forEach((it) => flat.push(it));
+      } else {
+        flat.push(a);
+      }
+    });
+    const match =
+      flat.find((a) => /view|profile|details/i.test(getItemLabel(a, row) || "")) ||
+      flat.find((a) => /edit/i.test(getItemLabel(a, row) || ""));
+    if (match && typeof match.onClick === "function") {
+      return () => match.onClick(row);
+    }
+    return null;
+  };
+
   const getFileIcon = (fileName) => {
     const extension = fileName?.split(".").pop()?.toLowerCase();
     switch (extension) {
@@ -246,10 +272,33 @@ const TableBody = ({
 
       // 4. Fallback render
       const value = row[col.key];
-      if (value === null || value === undefined || typeof value === "boolean")
-        return String(value ?? "N/A");
-      if (typeof value === "object") return JSON.stringify(value);
-      return value || "N/A";
+      const display =
+        value === null || value === undefined || typeof value === "boolean"
+          ? String(value ?? "N/A")
+          : typeof value === "object"
+          ? JSON.stringify(value)
+          : value || "N/A";
+
+      // Make the name column clickable when the row has a view/edit route.
+      if (col === nameColumn && row.hasActions) {
+        const onName = getRowViewHandler(row);
+        if (onName) {
+          return (
+            <button
+              type="button"
+              className="table-link-cell"
+              onClick={(e) => {
+                e.stopPropagation();
+                onName();
+              }}
+            >
+              {display}
+            </button>
+          );
+        }
+      }
+
+      return display;
     } catch (error) {
       console.error(`Error rendering cell (${col.header}):`, error);
       return "N/A";

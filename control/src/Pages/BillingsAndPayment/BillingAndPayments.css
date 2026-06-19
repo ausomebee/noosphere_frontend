@@ -131,7 +131,9 @@
 .plan-header h3 {
   margin: 0;
   font-size: 20px;
-  color: #000;
+  /* Inherit the header's computed contrast colour (from the picked plan
+     colour) instead of forcing black. */
+  color: inherit;
   font-weight: 800;
 }
 
@@ -316,7 +318,8 @@
 .subscriber-count {
   margin-top: 10px;
   font-size: 14px;
-  color: #333539;
+  /* Inherit the header's contrast colour from the picked plan colour. */
+  color: inherit;
   margin-bottom: 10px;
   font-weight: 600;
 }

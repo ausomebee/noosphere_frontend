@@ -299,6 +299,7 @@ const TenantList = () => {
         itemsPerPage={10}
         tableName="Tenant List"
         hasStatusDot={true}
+        showCheckbox={false}
       />
 
       {/* Deactivation Modal — multi-step */}
