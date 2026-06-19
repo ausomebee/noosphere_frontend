@@ -1286,15 +1286,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
   const documentsTab = (
     <div>
-      <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
-        <pre>
-          {JSON.stringify(
-            errors,
-            (k, v) => (v instanceof HTMLElement ? "[DOM]" : v),
-            2,
-          )}
-        </pre>
-      </div>
       <FileUploadArea
         onFiles={(fileObjects) => {
           setValue("documents", [...(values.documents || []), ...fileObjects], {
