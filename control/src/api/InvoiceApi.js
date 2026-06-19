@@ -209,7 +209,7 @@ const GetReportInvoices = async ({ page = 1, pageSize = 100, accessToken, refres
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/invoice/control/?page=${page}&pageSize=${pageSize}`
+      `${PLAIN_API_URL}/invoice/control?page=${page}&pageSize=${pageSize}`
     );
     return response.data;
   } catch (error) {
