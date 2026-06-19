@@ -427,3 +427,35 @@ html {
   font-size: 1.125rem;
   flex-shrink: 0;
 }
+
+/* Always-visible "add pipeline stage" hot-box (mimics a column). */
+.add-column-card {
+  width: 19.625rem;
+  min-height: 40rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  border: 0.125rem dashed #c4c4c4;
+  border-radius: 1rem;
+  background: rgba(236, 236, 236, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.add-column-card-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.add-column-card-button svg {
+  font-size: 1.75rem;
+}
+.add-column-card-button:hover {
+  color: #004aba;
+}

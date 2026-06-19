@@ -99,6 +99,20 @@ const Board = ({
           );
         })}
       </SortableContext>
+
+      {/* Always-visible affordance: a column-shaped box to add a new stage at
+          the end (the hover "+" insertion points still work between columns). */}
+      <div className="add-column-card">
+        <button
+          type="button"
+          className="add-column-card-button"
+          onClick={() => onAddColumn(columnOrder.length)}
+          aria-label="Add pipeline stage"
+        >
+          <FaCirclePlus />
+          <span>Add pipeline stage</span>
+        </button>
+      </div>
     </div>
   );
 };
