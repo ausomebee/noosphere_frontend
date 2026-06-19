@@ -64,10 +64,30 @@ const Payroll = () => {
         });
         setError("");
       } else {
-        setError(res?.data?.message || "No payroll data found");
+        // No payroll configured yet is a valid empty state, not an error.
+        setPayrollSettings({
+          id: null,
+          paymentSchedule: "",
+          ratePerHour: "0",
+          minimumHours: "0",
+          incomeItems: [],
+          deductions: [],
+        });
+        setError("");
       }
     } catch (e) {
-      setError(e.message || "Failed to fetch payroll settings");
+      // A staff with no payroll yet is a valid empty state — show the empty
+      // card rather than a scary "something went wrong" banner.
+      if (import.meta.env.DEV) console.error("Failed to fetch payroll settings:", e.message);
+      setPayrollSettings({
+        id: null,
+        paymentSchedule: "",
+        ratePerHour: "0",
+        minimumHours: "0",
+        incomeItems: [],
+        deductions: [],
+      });
+      setError("");
     } finally {
       setLoading(false);
     }
