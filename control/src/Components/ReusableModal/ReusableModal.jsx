@@ -19,6 +19,9 @@ const ReusableModal = ({
   onPrimaryButtonClick,
   onSecondaryButtonClick,
   primaryButtonLoading = false,
+  showPrimaryButton = true,
+  showSecondaryButton = true,
+  footerClassName = "",
   children,
 }) => {
   const [scrollPosition, setScrollPosition] = React.useState(0);
@@ -121,8 +124,9 @@ const ReusableModal = ({
             : children}
         </div>
 
-        {/* Buttons */}
-        <div className="modal-buttons">
+        {/* Buttons — a single visible button (flex:1) fills the full width. */}
+        <div className={`modal-buttons ${footerClassName}`}>
+          {showSecondaryButton && (
           <button
             onClick={onSecondaryButtonClick || onClose}
             className="modal-button secondary-button"
@@ -130,6 +134,8 @@ const ReusableModal = ({
           >
             {secondaryButtonText || 'Cancel'}
           </button>
+          )}
+          {showPrimaryButton && (
           <button
             onClick={onPrimaryButtonClick || onClose}
             className="modal-button primary-button"
@@ -147,6 +153,7 @@ const ReusableModal = ({
               primaryButtonText || 'Save'
             )}
           </button>
+          )}
         </div>
       </div>
     </div>,

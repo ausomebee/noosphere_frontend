@@ -646,8 +646,10 @@ const JiraBoard = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Column deletion failed:", error);
+      // Generic failures show a toast only. The "can't delete because of
+      // candidates" modal is reserved for the first-stage block above.
       showApiError(error, "DELETE_COLUMN");
-      setShowErrorModal(true);
+      setShowDeleteColumnModal(false);
     } finally {
       stopLoading();
     }
