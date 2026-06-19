@@ -112,7 +112,11 @@ const getHeaderClass = () => "plan-header";
             aria-label="Plan options"
             aria-expanded={isDropdownOpen}
           >
-            <HiOutlineCog6Tooth className="gear-icon" size={30} />
+            <HiOutlineCog6Tooth
+              className="gear-icon"
+              size={30}
+              color={headerStyle.color}
+            />
           </button>
         </div>
       </div>
