@@ -170,10 +170,10 @@ jobs:
           strip_components: 2
 
       #########################################################
-      # CLEAN STALE HEALTH BLOCK + VERIFY CONFIG + RELOAD
+      # ADD ROOT HEALTH ROUTE + VERIFY CONFIG + RELOAD
       #########################################################
 
-      - name: Fix nginx config & reload
+      - name: Fix nginx config & add health route
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.env.outputs.host }}
@@ -182,16 +182,15 @@ jobs:
           script: |
             set -e
             CONF=/etc/nginx/conf.d/frontend.conf
-            # A previously-injected CI health block (location = /) landed inside a
-            # location block on some hosts, breaking `nginx -t` and failing every
-            # deploy. Strip any such block, then validate and reload.
-            if sudo grep -qF "location = /" "$CONF"; then
-              echo "Removing stale CI health block from $CONF"
-              sudo cp "$CONF" "$CONF.bak"
-              sudo awk '/# Liveness probe at root/{next} /location = \/ \{/{inblk=1;next} inblk{if($0 ~ /\}/){inblk=0} next} {print}' "$CONF" > /tmp/frontend.conf.clean
-              sudo cp /tmp/frontend.conf.clean "$CONF"
-              sudo rm -f /tmp/frontend.conf.clean
-            fi
+            sudo cp "$CONF" "$CONF.bak"
+            # 1) Remove any existing health block (single- or multi-line) so this
+            #    step is idempotent and never stacks duplicate "location = /" blocks.
+            sudo awk '/# Liveness probe at root/{next} /location[[:space:]]*=[[:space:]]*\/[[:space:]]*\{/{ if($0 ~ /\}/){next} inblk=1; next } inblk{ if($0 ~ /\}/){inblk=0} next } {print}' "$CONF" > /tmp/frontend.noh.conf
+            # 2) Insert a server-level "/" health route right after the first
+            #    `server {` (valid placement, not inside another location block).
+            awk '!done && /^[[:space:]]*server[[:space:]]*\{/ { print; print "    # Liveness probe at root"; print "    location = / {"; print "        return 200 \"OK\";"; print "        add_header Content-Type text/plain;"; print "    }"; done=1; next } {print}' /tmp/frontend.noh.conf > /tmp/frontend.h.conf
+            sudo cp /tmp/frontend.h.conf "$CONF"
+            sudo rm -f /tmp/frontend.noh.conf /tmp/frontend.h.conf
             sudo nginx -t
             sudo systemctl reload nginx
 
