@@ -208,7 +208,13 @@ const Column = React.memo(({
         </div>
       ) : (
         <SortableContext items={validTaskIds} strategy={verticalListSortingStrategy}>
-          <div className="task-list">{renderTasks}</div>
+          <div
+            className={`task-list ${
+              candidateCount >= 10 ? "task-list-scroll" : ""
+            }`}
+          >
+            {renderTasks}
+          </div>
         </SortableContext>
       )}
       <AddProspectModal

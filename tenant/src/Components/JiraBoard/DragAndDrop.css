@@ -551,3 +551,18 @@ html {
 .board-scroll-right {
   right: 0.25rem;
 }
+
+/* When a stage has many candidates (>=10), scroll the list inside the column
+   instead of letting the column grow unbounded. */
+.task-list-scroll {
+  max-height: 34rem;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.task-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.task-list-scroll::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 3px;
+}
