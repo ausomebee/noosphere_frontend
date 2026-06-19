@@ -33,20 +33,11 @@ const SendEmailModal = ({ isOpen, onClose, recipientEmail, recipientName }) => {
     return Object.keys(next).length === 0;
   };
 
-  const openMailto = () => {
-    const url = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-    // Use location.href (not window.open) so it hands off to the mail client
-    // without leaving a blank browser tab open.
-    window.location.href = url;
-  };
-
   const handleSend = async () => {
     if (!validate()) return;
     setIsSending(true);
     try {
-      // Wire to the (dummy) backend endpoint...
+      // Send the composed email to the backend (no mail client involved).
       await api.SendProspectEmail({
         to: recipientEmail,
         subject,
@@ -54,8 +45,6 @@ const SendEmailModal = ({ isOpen, onClose, recipientEmail, recipientName }) => {
         accessToken,
         refreshToken,
       });
-      // ...and open the user's mail client addressed to the prospect.
-      openMailto();
       showToast("Email sent", "success");
       onClose();
     } catch (error) {
