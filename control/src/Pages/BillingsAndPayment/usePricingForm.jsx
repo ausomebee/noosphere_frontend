@@ -30,7 +30,6 @@ const usePricingForm = ({
   initialPlanType = "Standard",
   features = [],
   admins = [],
-  tenants = [],
   isEditMode = false,
   onSave,
 }) => {
@@ -55,7 +54,6 @@ const usePricingForm = ({
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     type: initialData.type || initialPlanType,
-    assignedTo: initialData.assignedTo || "",
     accountManager: initialData.accountManager || "",
     colorCode: initialData.colourCode || "#000000",
     pricing: {
@@ -116,7 +114,6 @@ const usePricingForm = ({
     const newFormData = {
       name: initialData.name || "",
       type: initialData.type || initialPlanType,
-      assignedTo: initialData.assignedTo || "",
       accountManager: initialData.accountManager || "",
       colorCode: initialData.colourCode || "#000000",
       pricing: {
@@ -258,16 +255,8 @@ const usePricingForm = ({
     { value: "staffs", label: "Staffs" },
   ];
 
-  const tenantOptions = [
-    { value: "", label: "Select Client" },
-    ...tenants.map((tenant) => ({
-      value: tenant.id,
-      label: tenant.name || tenant.id,
-    })),
-  ];
-
   const adminOptions = [
-    { value: "", label: "Select Account Manager" },
+    { value: "", label: "Select Manager" },
     ...admins.map((admin) => ({
       value: admin.id,
       label: admin.name || admin.id,
@@ -278,8 +267,6 @@ const usePricingForm = ({
     const msgs = [];
     if (tabName === "General") {
       if (!formData.name?.trim()) msgs.push("Plan name is required.");
-      if (formData.type === "Enterprise" && !formData.assignedTo)
-        msgs.push("Client assignment is required for Enterprise plans.");
       if (!formData.colorCode || !/^#[0-9A-Fa-f]{6}$/.test(formData.colorCode))
         msgs.push("A valid hex color code is required.");
     } else if (tabName === "Setting & Pricing") {
@@ -420,7 +407,6 @@ const usePricingForm = ({
     const planData = {
       name: formData.name,
       type: formData.type,
-      assignedTo: formData.assignedTo,
       accountManager: formData.accountManager,
       colourCode: formData.colorCode,
       pricing: {
@@ -454,7 +440,6 @@ const usePricingForm = ({
     setFormData({
       name: "",
       type: initialPlanType,
-      assignedTo: "",
       accountManager: "",
       colorCode: "#000000",
       pricing: {
@@ -516,35 +501,19 @@ const usePricingForm = ({
 
           />
           {formData.type === "Enterprise" && (
-            <>
-              <SelectInput
-                label="Assigned to"
-                id="assignedTo"
-                value={formData.assignedTo}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    assignedTo: e.target.value,
-                  }))
-                }
-                options={tenantOptions}
-                placeholder="Select Client"
-
-              />
-              <SelectInput
-                label="Account Manager"
-                id="accountManager"
-                value={formData.accountManager}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    accountManager: e.target.value,
-                  }))
-                }
-                options={adminOptions}
-                placeholder="Select Account Manager"
-              />
-            </>
+            <SelectInput
+              label="Manager"
+              id="accountManager"
+              value={formData.accountManager}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  accountManager: e.target.value,
+                }))
+              }
+              options={adminOptions}
+              placeholder="Select Manager"
+            />
           )}
           <div className="color-picker-container">
             <div

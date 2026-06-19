@@ -3,9 +3,9 @@ import CustomTable from "../../Components/Table/CustomTable";
 
 const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete, onViewProfile }) => {
   const columns = [
-    { key: "organization", header: "Organization" },
+    { key: "enterpriseName", header: "Enterprise Name" },
     { key: "dateAdded", header: "Date Added" },
-    { key: "accountManager", header: "Account Manager" },
+    { key: "accountManager", header: "Manager" },
     { key: "active", header: "Active", type: "active" },
   ];
 
@@ -13,7 +13,7 @@ const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete, onViewProfil
     () =>
       plans.map((plan) => ({
         ...plan,
-        organization: plan.tenantName || plan.organization || "—",
+        enterpriseName: plan.name || plan.organization || "—",
         accountManager: plan.accountManagerName || "—",
         active: plan.status === "active",
         hasActions: true,

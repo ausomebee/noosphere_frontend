@@ -324,7 +324,6 @@ const handleSavePlan = async (planData) => {
           : parseFloat(planData.pricing?.storage) || 0,
       extraFeaturesEnabled:
         Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
-      tenantId: planData.assignedTo || null,
       adminId: planData.accountManager || null,
       accessToken,
       refreshToken,
@@ -407,7 +406,6 @@ const handleSavePlan = async (planData) => {
           : parseFloat(planData.pricing?.storage) || 0,
       extraFeaturesEnabled:
         Array.isArray(planData.extraPricing) && planData.extraPricing.length > 0,
-      tenantId: planData.assignedTo || null,
       adminId: planData.accountManager || null,
       accessToken,
       refreshToken,
