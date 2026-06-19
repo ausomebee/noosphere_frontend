@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import CustomTable from "../../Components/Table/CustomTable";
 
-const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete, onViewProfile }) => {
+const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete }) => {
   const columns = [
     { key: "enterpriseName", header: "Enterprise Name" },
     { key: "dateAdded", header: "Date Added" },
@@ -23,10 +23,6 @@ const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete, onViewProfil
   );
 
   const actions = [
-    {
-      label: "View Organization Profile",
-      onClick: (row) => onViewProfile(row._raw),
-    },
     {
       label: "Edit Plan",
       onClick: (row) => onEdit(row._raw, "enterprise"),
