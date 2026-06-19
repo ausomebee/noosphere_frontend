@@ -610,7 +610,10 @@ const JiraBoard = () => {
           ...column.taskIds,
         ];
 
-        const response = await dispatch(
+        // .unwrap() already throws if the move fails. (The thunk returns the
+        // raw axios response, whose .status is the HTTP code 200 — not "ok" —
+        // so an explicit status check here would wrongly abort before delete.)
+        await dispatch(
           updatePipelineItemActivity({
             ids: column.taskIds,
             pipelineStageId: firstColumnId,
@@ -618,9 +621,6 @@ const JiraBoard = () => {
             refreshToken,
           })
         ).unwrap();
-        if (response.status !== "ok") {
-          throw new Error("Failed to move candidates.");
-        }
         dispatch(
           updateColumnTaskIds({
             columnId: firstColumnId,
@@ -629,21 +629,19 @@ const JiraBoard = () => {
         );
       }
 
-      const response = await dispatch(
+      // .unwrap() throws on any non-2xx, so reaching here means success
+      // regardless of the response body shape (some DELETEs return no body).
+      await dispatch(
         deletePipelineStage({
           id: selectedColumnId,
           accessToken,
           refreshToken,
         })
       ).unwrap();
-      if (response.status === "ok") {
-        dispatch(deleteColumn(selectedColumnId));
-        setShowDeleteColumnModal(false);
-        setSelectedColumnId(null);
-        showToast("Column deleted successfully!", "success");
-      } else {
-        throw new Error("Failed to delete column.");
-      }
+      dispatch(deleteColumn(selectedColumnId));
+      setShowDeleteColumnModal(false);
+      setSelectedColumnId(null);
+      showToast("Column deleted successfully!", "success");
     } catch (error) {
       if (import.meta.env.DEV) console.error("Column deletion failed:", error);
       // Generic failures show a toast only. The "can't delete because of
