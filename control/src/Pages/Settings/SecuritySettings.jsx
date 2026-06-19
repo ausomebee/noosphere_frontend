@@ -101,6 +101,9 @@ const SecuritySettings = () => {
             isDefault: !!data.Authenticator2FA,
           },
         ]);
+        // Reflect the fetched "set for all" flag on the toggles.
+        setSqEnableAll(!!data.setForAll);
+        setAuthenticatorEnableAll(!!data.setForAll);
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to fetch admin choices:", error);
