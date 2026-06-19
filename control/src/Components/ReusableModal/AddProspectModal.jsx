@@ -19,18 +19,37 @@ const schema = yup.object().shape({
     .email("Invalid email format")
     .required("Email is required")
     .trim(),
-  phone: yup.string().optional(),
+  phone: yup
+    .string()
+    .matches(/^[0-9+()\-\s]{7,}$/, {
+      message: "Enter a valid phone number (digits only)",
+      excludeEmptyString: true,
+    })
+    .optional(),
   companySize: yup.string().optional(),
   organizationType: yup.string().optional(),
   location: yup.object().shape({
     address: yup.string().optional(),
     city: yup.string().optional(),
     stateProvince: yup.string().optional(),
-    zip: yup.string().optional(),
+    zip: yup
+      .string()
+      .matches(/^[0-9]{3,10}$/, {
+        message: "Zip code must be digits only",
+        excludeEmptyString: true,
+      })
+      .optional(),
     country: yup.string().optional(),
   }),
   leadSource: yup.string().optional(),
-  subdomain: yup.string().optional(),
+  subdomain: yup
+    .string()
+    .matches(/^[a-z]+(?:-[a-z]+)*$/, {
+      message:
+        "Subdomain may only contain lowercase letters and hyphens (no numbers or spaces)",
+      excludeEmptyString: true,
+    })
+    .optional(),
   assignToStaff: yup.string().required("Assign to Staff is required"),
   pipelineStageId: yup.string().required("Onboarding Stage is required"),
 });

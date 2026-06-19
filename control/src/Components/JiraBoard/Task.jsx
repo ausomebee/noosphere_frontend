@@ -38,21 +38,28 @@ const Task = React.memo(({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, cursor: 'pointer' }}
       className={`task ${isDragging ? 'dragging' : ''} ${selected ? 'selected' : ''}`}
       {...attributes}
       {...listeners}
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey) {
           toggleSelection();
+          return;
         }
+        // Whole card opens the candidate profile (not just the chevron menu).
+        onViewCandidate(columnId, id);
       }}
     >
       <div className="task-content">
         <p>{task.company || 'Unnamed Candidate'}</p>
         <span>{task.progress} task done</span>
       </div>
-      <Menu as="div" className="dropdown-container">
+      <Menu
+        as="div"
+        className="dropdown-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Menu.Button className="dropdown-icon" aria-label="Task menu">
           <FiChevronDown />
         </Menu.Button>

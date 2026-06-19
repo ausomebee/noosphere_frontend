@@ -20,13 +20,25 @@ const validationSchema = yup.object().shape({
     .string()
     .email("Invalid email address")
     .required("Email is required"),
-  phone: yup.string().required("Phone number is required"),
+  phone: yup
+    .string()
+    .required("Phone number is required")
+    .matches(/^[0-9+()\-\s]{7,}$/, {
+      message: "Enter a valid phone number (digits only)",
+      excludeEmptyString: true,
+    }),
   companySize: yup.string().nullable(),
   organizationType: yup.string().nullable(),
   location: yup.string().required("Address is required"),
   city: yup.string().nullable(),
   state: yup.string().nullable(),
-  zipCode: yup.string().nullable(),
+  zipCode: yup
+    .string()
+    .nullable()
+    .matches(/^[0-9]{3,10}$/, {
+      message: "Zip code must be digits only",
+      excludeEmptyString: true,
+    }),
   country: yup.string().nullable(),
   leadSource: yup.string().nullable(),
   assignToStaff: yup.string().nullable(),

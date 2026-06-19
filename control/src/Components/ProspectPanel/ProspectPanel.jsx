@@ -23,6 +23,8 @@ import UploadDocumentModal from "../ReusableModal/UploadDocumentModal";
 import MoveCandidateModal from "../ReusableModal/MoveCandidateModal";
 import AssignCandidateModal from "../ReusableModal/AssignCandidateModal";
 import ReusableModal from "../ReusableModal/ReusableModal";
+import DeleteConfirmationModal from "../ReusableModal/DeleteConfirmationModal";
+import SendEmailModal from "../ReusableModal/SendEmailModal";
 import { FaArrowLeft, FaDollarSign } from "react-icons/fa";
 import Alert from "../Alert/Alert";
 import { useDispatch, useSelector } from "react-redux";
@@ -128,6 +130,8 @@ const ProspectPanel = () => {
     useState(false);
   const [isAssignCandidateModalOpen, setIsAssignCandidateModalOpen] =
     useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [hasGeneratedPaymentBefore, setHasGeneratedPaymentBefore] =
     useState(false);
   const [selectedPlanType, setSelectedPlanType] = useState("STANDARD");
@@ -877,6 +881,7 @@ const ProspectPanel = () => {
       showApiError(error, "DELETE_PROSPECT");
     } finally {
       setIsLoading(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -1072,6 +1077,7 @@ const ProspectPanel = () => {
                   icon={<FiMail size={20} />}
                   variant="action"
                   iconPosition="left"
+                  onClick={() => setIsEmailModalOpen(true)}
                   disabled={isLoading}
                 />
               </div>
@@ -1092,7 +1098,7 @@ const ProspectPanel = () => {
                   variant="action-danger"
                   iconPosition="left"
                   iconSize={24}
-                  onClick={handleDeleteProspect}
+                  onClick={() => setIsDeleteModalOpen(true)}
                   disabled={isLoading}
                 />
               </div>
@@ -1520,6 +1526,23 @@ const ProspectPanel = () => {
           taskIds={[pipelineItemId]}
           tasks={{ [pipelineItemId]: candidate }}
           staffList={staffList}
+        />
+
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteProspect}
+          title="Delete prospect?"
+          message="This will permanently remove this prospect and all of its data. This action cannot be undone."
+          confirmButtonText={isLoading ? "Deleting..." : "Delete"}
+          confirmButtonColor="#dc2626"
+        />
+
+        <SendEmailModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          recipientEmail={candidate.email}
+          recipientName={candidate.company}
         />
       </div>
   );

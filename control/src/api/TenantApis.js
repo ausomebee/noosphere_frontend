@@ -857,7 +857,24 @@ const DeleteCustomDocument = async ({ id, accessToken, refreshToken }) => {
   }
 };
 
+// DUMMY ENDPOINT — placeholder for sending an email to a prospect.
+// Swap the URL for the real backend route once it exists.
+const SendProspectEmail = async ({ to, subject, body, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(`${PLAIN_API_URL}/prospect/send-email`, {
+      to,
+      subject,
+      body,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Send prospect email failed");
+  }
+};
+
 export default {
+  SendProspectEmail,
   getAllAdmins,
   getAllTenants,
   GetPipelineByModule,

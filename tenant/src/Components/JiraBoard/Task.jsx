@@ -75,7 +75,7 @@ const Task = ({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, cursor: "pointer" }}
       className={`task ${isDragging ? "dragging" : ""} ${
         selected ? "selected" : ""
       }`}
@@ -84,14 +84,21 @@ const Task = ({
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey) {
           toggleSelection && toggleSelection();
+          return;
         }
+        // Whole card opens the client profile (not just the chevron menu).
+        handleViewCandidate();
       }}
     >
       <div className="task-content">
         <p>{task.fullName || "Unnamed Candidate"}</p>
         <span>{task.email || "No email"}</span>
       </div>
-      <Menu as="div" className="dropdown-container">
+      <Menu
+        as="div"
+        className="dropdown-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Menu.Button className="dropdown-icon">
           <FiChevronDown />
         </Menu.Button>
