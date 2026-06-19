@@ -37,7 +37,9 @@ const SendEmailModal = ({ isOpen, onClose, recipientEmail, recipientName }) => {
     const url = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
-    window.open(url, "_blank");
+    // Use location.href (not window.open) so it hands off to the mail client
+    // without leaving a blank browser tab open.
+    window.location.href = url;
   };
 
   const handleSend = async () => {
