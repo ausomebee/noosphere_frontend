@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Column from './Column';
 import { FaCirclePlus } from 'react-icons/fa6';
 import './DragAndDrop.css';
@@ -31,8 +32,65 @@ const Board = ({
 
   const [hoverIndex, setHoverIndex] = useState(null);
 
+  // Horizontal scroll affordance for boards wider than the viewport.
+  const boardRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateScroll = useCallback(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    updateScroll();
+    el.addEventListener('scroll', updateScroll, { passive: true });
+    window.addEventListener('resize', updateScroll);
+    return () => {
+      el.removeEventListener('scroll', updateScroll);
+      window.removeEventListener('resize', updateScroll);
+    };
+  }, [updateScroll, columnOrder.length]);
+
+  const scrollByAmount = (dir) => {
+    const el = boardRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: dir * Math.max(el.clientWidth * 0.8, 320),
+      behavior: 'smooth',
+    });
+  };
+
   return (
-    <div className="board no-scrollbar::-webkit-scrollbar no-scrollbar">
+    <div className="board-viewport">
+      {canLeft && (
+        <button
+          type="button"
+          className="board-scroll-btn board-scroll-left"
+          onClick={() => scrollByAmount(-1)}
+          aria-label="Scroll left"
+        >
+          <FiChevronLeft />
+        </button>
+      )}
+      {canRight && (
+        <button
+          type="button"
+          className="board-scroll-btn board-scroll-right"
+          onClick={() => scrollByAmount(1)}
+          aria-label="Scroll right"
+        >
+          <FiChevronRight />
+        </button>
+      )}
+      <div
+        className="board no-scrollbar::-webkit-scrollbar no-scrollbar"
+        ref={boardRef}
+      >
       <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
         {columnOrder.map((columnId, index) => {
           const column = columns[columnId];
@@ -108,6 +166,7 @@ const Board = ({
           <FaCirclePlus />
           <span>Add pipeline stage</span>
         </button>
+      </div>
       </div>
     </div>
   );

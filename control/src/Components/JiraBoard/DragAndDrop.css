@@ -459,3 +459,35 @@ html {
 .add-column-card-button:hover {
   color: #004aba;
 }
+
+/* Horizontal scroll affordance for the board (left/right buttons). */
+.board-viewport {
+  position: relative;
+}
+.board-scroll-btn {
+  position: absolute;
+  top: 1.5rem;
+  z-index: 20;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #344054;
+  font-size: 1.25rem;
+}
+.board-scroll-btn:hover {
+  background: #f9fafb;
+  color: #004aba;
+}
+.board-scroll-left {
+  left: 0.25rem;
+}
+.board-scroll-right {
+  right: 0.25rem;
+}
