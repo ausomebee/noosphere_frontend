@@ -10,6 +10,8 @@ import NotFound from "./NotFound";
 ============================ */
 const SuperAdminLogin = lazy(() => import("../Pages/Authentication/SuperAdminLogin"));
 const SuperAdminChangePassword = lazy(() => import("../Pages/Authentication/SuperAdminChangePassword"));
+const AdministrativePassword = lazy(() => import("../Pages/Authentication/AdministrativePassword"));
+const Admin2FAChoice = lazy(() => import("../Pages/Authentication/Admin2FAChoice"));
 const SuperAdmin2FASettings = lazy(() => import("../Pages/Authentication/SuperAdmin2FASettings"));
 const SuperAdmin2FAMicrosoftAuthenticator = lazy(() => import("../Pages/Authentication/MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator"));
 const SuperAdmin2FAQuestion = lazy(() => import("../Pages/Authentication/2FAQuestion/SuperAdmin2FAQuestion"));
@@ -58,7 +60,9 @@ const AllRoutes = () => {
         {/* Authentication (no layout) */}
         <Route path="/" element={<SuperAdminLogin />} />
         <Route path="/SA/change-password" element={<SuperAdminChangePassword />} />
+        <Route path="/SA/administrative-password" element={<AdministrativePassword />} />
         <Route path="/SA/2fa-settings" element={<SuperAdmin2FASettings />} />
+        <Route path="/2fa/choice" element={<Admin2FAChoice />} />
         <Route path="/2fa/authenticator" element={<SuperAdmin2FAMicrosoftAuthenticator />} />
         <Route path="/2fa/security-question" element={<SuperAdmin2FAQuestion />} />
         <Route path="/SA/2fa-question/login" element={<SuperAdmin2FAQuestionLogin />} />

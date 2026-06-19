@@ -70,6 +70,9 @@ const QuestionAndAnswer2FA = React.lazy(() =>
     "../Pages/Authentication/AuthOnboarding/SuperAdmin/Admin2FAs/QuestionAndAnswer2FA"
   )
 );
+const Admin2FAChoice = React.lazy(() =>
+  import("../Pages/Authentication/AuthOnboarding/Admin/Admin2FAChoice")
+);
 const AdminOnboarding = React.lazy(() =>
   import("../Pages/Authentication/AuthOnboarding/Admin/AdminOnboarding")
 );
@@ -224,6 +227,7 @@ const AllRoutes = () => {
       <Route path="/auth/initial-login" element={<Lazy><InitialSuperLogin /></Lazy>} />
       <Route path="/auth/change-password" element={<Lazy><SuperChangePassword /></Lazy>} />
       <Route path="/auth/2fa-settings" element={<Lazy><SuperAdmin2FAChoice /></Lazy>} />
+      <Route path="/auth/2fa/choice" element={<Lazy><Admin2FAChoice /></Lazy>} />
       <Route path="/auth/2fa/authenticator" element={<Lazy><Authenticator2FA /></Lazy>} />
       <Route path="/auth/2fa/security-question" element={<Lazy><QuestionAndAnswer2FA /></Lazy>} />
       <Route path="/auth/staff/onboarding/:email/:userId" element={<Lazy><AdminOnboarding /></Lazy>} />

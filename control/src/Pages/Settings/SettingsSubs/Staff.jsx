@@ -15,13 +15,51 @@ import roleApi from "../../../api/roleApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
 import { formatDate } from "../../../Helper/Formatters";
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const schema = yup.object().shape({
-  firstName: yup.string().required("First name is required").trim(),
-  lastName: yup.string().required("Last name is required").trim(),
-  email: yup.string().email("Invalid email").required("Email is required").trim(),
-  phoneNumber: yup.string().optional(),
-  departmentId: yup.string().required("Department is required"),
-  roleId: yup.string().required("Role is required"),
+  firstName: yup
+    .string()
+    .trim()
+    .required("First name is required")
+    .min(3, "First name must be at least 3 characters")
+    .max(20, "First name must be at most 20 characters"),
+  lastName: yup
+    .string()
+    .trim()
+    .required("Last name is required")
+    .min(3, "Last name must be at least 3 characters")
+    .max(20, "Last name must be at most 20 characters"),
+  email: yup
+    .string()
+    .trim()
+    .lowercase()
+    .required("Email is required")
+    .email("Invalid email")
+    .matches(/\.(com|net)$/, "Email must end in .com or .net"),
+  phoneNumber: yup
+    .string()
+    .trim()
+    .optional()
+    .test(
+      "phone-length",
+      "Phone number must be between 10 and 15 characters",
+      (v) => !v || (v.length >= 10 && v.length <= 15)
+    ),
+  departmentId: yup
+    .string()
+    .trim()
+    .optional()
+    .matches(UUID_REGEX, {
+      message: "Invalid department",
+      excludeEmptyString: true,
+    }),
+  roleId: yup
+    .string()
+    .trim()
+    .required("Role is required")
+    .matches(UUID_REGEX, "Invalid role"),
 });
 
 const defaultValues = {

@@ -69,11 +69,9 @@ const AdminCLogin = () => {
           ? "SECRETMESSAGE"
           : null;
         const isPrivileged = user.role?.name === "Admin";
-        const effectiveType = setForAll
-          ? choiceType
-          : isPrivileged
-          ? user.authType || null
-          : null;
+        // When "set for all" is on, everyone uses the org's chosen type;
+        // otherwise each user falls back to their own (self-chosen) type.
+        const effectiveType = setForAll ? choiceType : user.authType || null;
 
         const goDashboard = () => {
           connectSocket({
@@ -95,7 +93,9 @@ const AdminCLogin = () => {
             // Brand-new admin, no type chosen yet → password onboarding.
             navigate("/auth/change-password");
           } else {
-            goDashboard();
+            // setForAll is off and this user has no type yet → let them pick
+            // their own 2FA method.
+            navigate("/auth/2fa/choice");
           }
         } else {
           // Already set up → verify with the chosen method.

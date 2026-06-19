@@ -51,7 +51,8 @@ const SuperAdminChangePassword = () => {
 
       const successMessage = response?.data?.message || "Password updated successfully!";
       showToast(successMessage, "success");
-      navigate("/SA/2fa-settings");
+      // Onboarding chain: set the administrative password before choosing 2FA.
+      navigate("/SA/administrative-password");
     } catch (error) {
       const message =
         error?.response?.data?.message || "Failed to update password.";

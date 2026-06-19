@@ -64,11 +64,9 @@ const AdminsLogin = () => {
           ? "SECRETMESSAGE"
           : null;
         const isPrivileged = !!user.superAdmin;
-        const effectiveType = setForAll
-          ? choiceType
-          : isPrivileged
-          ? user.authType || null
-          : null;
+        // When "set for all" is on, everyone uses the global chosen type;
+        // otherwise each user falls back to their own (self-chosen) type.
+        const effectiveType = setForAll ? choiceType : user.authType || null;
 
         if (!user.auth2FADone) {
           // Forced (re)setup: a type is set but the user hasn't completed 2FA
@@ -81,7 +79,8 @@ const AdminsLogin = () => {
             // Brand-new super admin, no type chosen yet → password onboarding.
             navigate("/SA/change-password");
           } else {
-            navigate("/tenants/pipeline");
+            // setForAll is off and this admin has no type yet → let them pick.
+            navigate("/2fa/choice");
           }
         } else {
           // Already set up → verify with the chosen method.

@@ -1,39 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import QRCode from "react-qr-code";
 import Button from "../../../Components/Button/Button";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "./SuperAdmin2FAMicrosoftAuthenticator.css";
-import { PasswordInput } from "../../../Components/Input/Inputs";
-import shieldLogo from "../../../assets/shield.svg";
 import "../SuperAdmin.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
-
-// Yup validation schema for password setup
-const passwordSchema = yup.object().shape({
-  oldAdministratorPassword: yup.string().required("Password is required"),
-  newAdministratorPassword: yup
-    .string()
-    .required("New password is required")
-    .min(12, "New password must be at least 12 characters")
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/,
-      "Password must be strong. At least one upper case letter, one lower case letter, one digit, one special character, and at least 8 characters long."
-    ),
-
-  confirmNewAdministratorPassword: yup
-    .string()
-    .required("Please confirm your new password")
-    .oneOf(
-      [yup.ref("confirmNewAdministratorPassword")],
-      "Passwords must match"
-    ),
-});
 
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const { userId, user } = useAuth();
@@ -98,36 +72,6 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
     }
   };
 
-  const handleAdministrativePassword = async (data) => {
-    setLoading(true);
-
-    try {
-      await api.SuperAdministrativePassword({
-        id: userId,
-        oldAdministratorPassword: data.oldAdministratorPassword,
-        newAdministratorPassword: data.newAdministratorPassword,
-      });
-
-      showToast("Password updated successfully!", "success");
-      setStep(5);
-    } catch (error) {
-      if (import.meta.env.DEV) console.error("Could not set password:", error);
-      showToast(
-        error?.response?.data?.message || "Failed to set password.",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(passwordSchema),
-  });
 
   const handleCodeChange = (index, value, isSecondPhase = false) => {
     const currentCode = isSecondPhase ? [...secondCode] : [...code];
@@ -206,24 +150,13 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
     }
   };
 
-  const handleContinue = async () => {
-    setLoading(true);
-    try {
-      if (step === 3) {
-        if (superAdmin) {
-          setStep(4);
-        } else {
-          navigate("/");
-          
-        }
-      } else {
-        setStep(step + 1);
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) console.error("Error:", error);
-      showToast("An error occurred. Please try again.", "error");
-    } finally {
-      setLoading(false);
+  const handleContinue = () => {
+    // 2FA (authenticator) is set; the administrative password is handled
+    // separately during onboarding, so finish here.
+    if (step === 3) {
+      setStep(5);
+    } else {
+      setStep(step + 1);
     }
   };
 
@@ -240,10 +173,6 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const handleNavBack = () => {
     navigate("/SA/2fa-settings");
     
-  };
-
-  const onPasswordSubmit = async (data) => {
-    await handleAdministrativePassword(data);
   };
 
   const handleProceedToLogin = () => {
@@ -375,107 +304,6 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
               onClick={handleContinue}
               loading={loading}
             />
-          </>
-        )}
-
-        {step === 4 && (
-          <>
-            <h2>Set Administrator Password</h2>
-            <p className="subtitle">
-              Finish your sign on process by setting your administrative
-              password.
-            </p>
-            <form onSubmit={handleSubmit(onPasswordSubmit)}>
-              <div className="form-groups">
-                <div className="password-info">
-                  <span className="shield-icon">
-                    <img
-                      src={shieldLogo}
-                      alt="shield Logo"
-                      className="shield-logo"
-                    />
-                  </span>
-                  <p className="subtitles">
-                    You received an Administrator Password by email. This
-                    password will only be required to authorize high-level
-                    platform actions.
-                  </p>
-                  <p className="subtitles">
-                    Please enter the one-time password and create a new, secure
-                    Administrator Password.
-                  </p>
-                  <p className="support-note">
-                    Didn't get the passcode?{" "}
-                    <a href="mailto:support@noosphere.com">
-                      Contact support@noosphere.com
-                    </a>
-                  </p>
-                </div>
-                <div className="password-inputs">
-                  <div>
-                    <PasswordInput
-                      label="Old Administrator Password"
-                      id="oldAdministratorPassword"
-                      placeholder="Enter password"
-                      {...register("oldAdministratorPassword")}
-                      className={`input-text ${
-                        errors.oldAdministratorPassword ? "input-error" : ""
-                      }`}
-                    />
-                    {errors.oldAdministratorPassword && (
-                      <p className="error-message">
-                        {errors.oldAdministratorPassword.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <PasswordInput
-                      label="New Administrator Password"
-                      id="newAdministratorPassword"
-                      placeholder="Enter new password"
-                      {...register("newAdministratorPassword")}
-                      className={`input-text ${
-                        errors.newAdministratorPassword ? "input-error" : ""
-                      }`}
-                    />
-                    {errors.newAdministratorPassword && (
-                      <p className="error-message">
-                        {errors.newAdministratorPassword.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="input-group">
-                    <PasswordInput
-                      label="Confirm New Administrator Password"
-                      id="confirmNewAdministratorPassword"
-                      placeholder="Confirm new password"
-                      {...register("confirmNewAdministratorPassword")}
-                      className={`input-text ${
-                        errors.confirmNewAdministratorPassword
-                          ? "input-error"
-                          : ""
-                      }`}
-                    />
-                    {errors.confirmNewAdministratorPassword && (
-                      <p className="error-message">
-                        {errors.confirmNewAdministratorPassword.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                label="Continue"
-                variant="primary"
-                className="auth-button"
-                loading={loading}
-              />
-              <p className="password-policy">
-                Please note: You will be required to change this password every
-                90 days
-              </p>
-            </form>
           </>
         )}
 
