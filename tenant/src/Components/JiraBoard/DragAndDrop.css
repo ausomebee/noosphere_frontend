@@ -479,3 +479,11 @@ html {
     font-size: 1.2rem;
   }
 }
+/* "Opens →" indicator on pipeline item cards (replaces the old dropdown). */
+.task-open-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: #6b7280;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
