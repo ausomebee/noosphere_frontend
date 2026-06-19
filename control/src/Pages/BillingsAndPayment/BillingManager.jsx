@@ -148,14 +148,12 @@ const BillingManager = () => {
     } else if (absValue >= 1_000) {
       formattedValue = (absValue / 1_000).toFixed(2);
       suffix = "k";
-    } else if (absValue >= 100) {
-      formattedValue = absValue.toString();
-      suffix = "h";
     } else {
+      // Under 1,000: show the full figure (no abbreviation).
       formattedValue = absValue.toString();
     }
 
-    if (suffix !== "h" && formattedValue.endsWith(".00")) {
+    if (suffix && formattedValue.endsWith(".00")) {
       formattedValue = formattedValue.slice(0, -3);
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useAuth from "../../../hooks/useAuth";
 import { createPortal } from "react-dom";
-import { SwitchInput, CheckboxInput } from "../../../Components/Input/Inputs";
+import { SwitchInput } from "../../../Components/Input/Inputs";
 import { FiMoreVertical } from "react-icons/fi";
 import MoveToFeatureGroupModal from "../../../Components/ReusableModal/MoveFeatureModal";
 import AssignToPlanModal from "../../../Components/ReusableModal/AssignPlanModal";
@@ -10,7 +10,6 @@ import DeleteConfirmationModal from "../../../Components/ReusableModal/SecondDel
 import ToggleActiveModal from "../../../Components/ReusableModal/ToggleActiveModal";
 import EditFeatureModal from "../../../Components/ReusableModal/EditFeatureModal";
 import {
-  toggleSelectFeature,
   asyncMoveFeatureToAnotherGroup,
   asyncEnableOrDisableFeature,
   asyncAssignFeatureToPlan,
@@ -40,10 +39,6 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const rowDropdownRef = useRef(null);
-
-  const handleSelectFeature = () => {
-    dispatch(toggleSelectFeature({ groupTitle, featureId: feature.id }));
-  };
 
   const handleMoveFeature = ({ featureId, fromGroupTitle, toGroupTitle }) => {
     const toGroup = featureGroups.find((g) => g.title === toGroupTitle);
@@ -221,9 +216,6 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   return (
     <>
       <tr className="feature-row">
-        <td>
-          <CheckboxInput checked={feature.selected} onChange={handleSelectFeature} />
-        </td>
         <td>{feature.name}</td>
         <td>{feature.dateAdded}</td>
         <td>{feature.managedBy}</td>
