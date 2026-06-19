@@ -255,12 +255,15 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
             {isRowDropdownOpen && (
               <div className="dropdown-menu dropdown-menu-row">
                 <div className="dropdown-items">
+                  {/* Hidden for now: Feature Statistics page shows dummy data
+                      and the graph table view is unresponsive.
                   <button
                     onClick={handleViewStatisticsClick}
                     className="dropdown-item"
                   >
                     View Feature Statistics
                   </button>
+                  */}
                   <button
                     onClick={() => {
                       setModalState({ ...modalState, moveFeature: true });
