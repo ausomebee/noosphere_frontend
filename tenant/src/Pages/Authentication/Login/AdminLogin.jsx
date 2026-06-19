@@ -59,48 +59,52 @@ const AdminCLogin = () => {
         const user = resultAction.payload.data;
         showToast("Login successful", "success");
 
-        if (user.role.name === "Admin") {
-          if (!user.auth2FADone) {
+        // Determine the effective auth type: the admin's global choice when
+        // "set for all" is on, otherwise the privileged user's own auth type.
+        const { setForAll, Authenticator2FA, securityQuestion } =
+          await handleGetSuperAdminChoice(user.tenantId);
+        const choiceType = Authenticator2FA
+          ? "AUTHENTICATOR"
+          : securityQuestion
+          ? "SECRETMESSAGE"
+          : null;
+        const isPrivileged = user.role?.name === "Admin";
+        const effectiveType = setForAll
+          ? choiceType
+          : isPrivileged
+          ? user.authType || null
+          : null;
+
+        const goDashboard = () => {
+          connectSocket({
+            accessToken: user.accessToken,
+            userId: user.id,
+            tenantId: user.tenantId,
+          });
+          navigate("/dashboard");
+        };
+
+        if (!user.auth2FADone) {
+          // Forced (re)setup: a type is set but 2FA isn't complete (first time,
+          // or the admin just changed the type for all).
+          if (effectiveType === "AUTHENTICATOR") {
+            navigate("/auth/2fa/authenticator");
+          } else if (effectiveType === "SECRETMESSAGE") {
+            navigate("/auth/2fa/security-question");
+          } else if (isPrivileged) {
+            // Brand-new admin, no type chosen yet → password onboarding.
             navigate("/auth/change-password");
           } else {
-            if (user.authType === "AUTHENTICATOR") {
-              navigate("/auth/2fa/login-authenticator");
-            } else if (user.authType === "SECRETMESSAGE") {
-              navigate("/auth/2fa/login-question");
-            } else {
-              showToast("Unknown authentication type", "error");
-            }
+            goDashboard();
           }
         } else {
-          // Non-admin users: Check super admin choices
-          const { setForAll, Authenticator2FA, securityQuestion } =
-            await handleGetSuperAdminChoice(user.tenantId);
-
-          if (setForAll && !user.auth2FADone) {
-            const authType = Authenticator2FA
-              ? "AUTHENTICATOR"
-              : securityQuestion
-              ? "SECRETMESSAGE"
-              : null;
-
-            if (authType === "AUTHENTICATOR") {
-              navigate("/auth/2fa/authenticator");
-            } else if (authType === "SECRETMESSAGE") {
-              navigate("/auth/2fa/security-question");
-            } else {
-              showToast("Unknown authentication type", "error");
-            }
-          } else if (!setForAll && !user.auth2FADone) {
-            connectSocket({ accessToken: user.accessToken, userId: user.id, tenantId: user.tenantId });
-            navigate("/dashboard");
+          // Already set up → verify with the chosen method.
+          if (effectiveType === "AUTHENTICATOR") {
+            navigate("/auth/2fa/login-authenticator");
+          } else if (effectiveType === "SECRETMESSAGE") {
+            navigate("/auth/2fa/login-question");
           } else {
-            if (user.authType === "AUTHENTICATOR") {
-              navigate("/auth/2fa/login-authenticator");
-            } else if (user.authType === "SECRETMESSAGE") {
-              navigate("/auth/2fa/login-question");
-            } else {
-              showToast("Unknown authentication type", "error");
-            }
+            goDashboard();
           }
         }
       } else {

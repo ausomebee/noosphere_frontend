@@ -54,48 +54,43 @@ const AdminsLogin = () => {
         const user = resultAction.payload.data;
         showToast("Login successful", "success");
 
-        if (user.superAdmin) {
-          if (!user.auth2FADone) {
+        // Determine the effective auth type: the super-admin's global choice
+        // when "set for all" is on, otherwise the user's own auth type.
+        const { setForAll, Authenticator2FA, securityQuestion } =
+          await handleGetSuperAdminChoice();
+        const choiceType = Authenticator2FA
+          ? "AUTHENTICATOR"
+          : securityQuestion
+          ? "SECRETMESSAGE"
+          : null;
+        const isPrivileged = !!user.superAdmin;
+        const effectiveType = setForAll
+          ? choiceType
+          : isPrivileged
+          ? user.authType || null
+          : null;
+
+        if (!user.auth2FADone) {
+          // Forced (re)setup: a type is set but the user hasn't completed 2FA
+          // (first time, or the super admin just changed the type for all).
+          if (effectiveType === "AUTHENTICATOR") {
+            navigate("/2fa/authenticator");
+          } else if (effectiveType === "SECRETMESSAGE") {
+            navigate("/2fa/security-question");
+          } else if (isPrivileged) {
+            // Brand-new super admin, no type chosen yet → password onboarding.
             navigate("/SA/change-password");
           } else {
-            if (user.authType === "AUTHENTICATOR") {
-              navigate("/SA/2fa-authentication/login");
-            } else if (user.authType === "SECRETMESSAGE") {
-              navigate("/SA/2fa-question/login");
-            } else {
-              if (import.meta.env.DEV) console.error("Unknown authType:", user.authType);
-              showToast("Unknown authentication type", "error");
-            }
+            navigate("/tenants/pipeline");
           }
         } else {
-          const { setForAll, Authenticator2FA, securityQuestion } = await handleGetSuperAdminChoice();
-
-          if (setForAll && !user.auth2FADone) {
-            const authType = Authenticator2FA
-              ? "AUTHENTICATOR"
-              : securityQuestion
-              ? "SECRETMESSAGE"
-              : null;
-
-            if (authType === "AUTHENTICATOR") {
-              navigate("/2fa/authenticator");
-            } else if (authType === "SECRETMESSAGE") {
-              navigate("/2fa/security-question");
-            } else {
-              if (import.meta.env.DEV) console.error("Unknown authType:", authType);
-              showToast("Unknown authentication type", "error");
-            }
-          } else if (!setForAll && !user.auth2FADone) {
-            navigate("/tenants/pipeline");
+          // Already set up → verify with the chosen method.
+          if (effectiveType === "AUTHENTICATOR") {
+            navigate("/SA/2fa-authentication/login");
+          } else if (effectiveType === "SECRETMESSAGE") {
+            navigate("/SA/2fa-question/login");
           } else {
-            if (user.authType === "AUTHENTICATOR") {
-              navigate("/SA/2fa-authentication/login");
-            } else if (user.authType === "SECRETMESSAGE") {
-              navigate("/SA/2fa-question/login");
-            } else {
-              if (import.meta.env.DEV) console.error("Unknown authType:", user.authType);
-              showToast("Unknown authentication type", "error");
-            }
+            navigate("/tenants/pipeline");
           }
         }
       } else {
