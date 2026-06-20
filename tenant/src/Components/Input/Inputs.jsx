@@ -178,14 +178,22 @@ const SelectInput = ({
   className = "",
   error,
   isMulti = false,
-  placeholder = "Select an option…",
+  placeholder = typeof label === "string" && label
+    ? `-- Select ${label} --`
+    : "Select an option…",
   ...props
 }) => {
   const selectRef = useRef(null);
 
+  // Drop any manually-added empty/placeholder option (value === "") so the
+  // component's own "-- Select {label} --" placeholder is shown consistently.
+  const cleanOptions = Array.isArray(options)
+    ? options.filter((o) => o && o.value !== "")
+    : [];
+
   const selected = isMulti
-    ? (value || []).map((v) => options.find((o) => o.value === v))
-    : options.find((o) => o.value === value) || null;
+    ? (value || []).map((v) => cleanOptions.find((o) => o.value === v))
+    : cleanOptions.find((o) => o.value === value) || null;
 
   const handleChange = (newVal) => {
     const v = isMulti ? newVal.map((i) => i.value) : newVal?.value || "";
@@ -221,7 +229,7 @@ const SelectInput = ({
         <Select
           className={`input-select ${className}`}
           classNamePrefix="rs"
-          options={options}
+          options={cleanOptions}
           value={selected}
           onChange={handleChange}
           isMulti={isMulti}
@@ -305,13 +313,19 @@ const SearchableSelectInput = ({
   width,
   className = "",
   error,
-  placeholder = "Search options…",
+  placeholder = typeof label === "string" && label
+    ? `-- Select ${label} --`
+    : "Search options…",
   disabled, // ✅ ADDED
   ...props
 }) => {
   const selectRef = useRef(null);
 
-  const selected = options.find((o) => o.value === value) || null;
+  const cleanOptions = Array.isArray(options)
+    ? options.filter((o) => o && o.value !== "")
+    : [];
+
+  const selected = cleanOptions.find((o) => o.value === value) || null;
 
   const handleChange = (newVal) => {
     onChange?.({ target: { name: props.name, value: newVal?.value || "" } });
@@ -326,7 +340,7 @@ const SearchableSelectInput = ({
         <Select
           className={`input-select ${className}`}
           classNamePrefix="rs"
-          options={options}
+          options={cleanOptions}
           value={selected}
           onChange={handleChange}
           placeholder={placeholder}

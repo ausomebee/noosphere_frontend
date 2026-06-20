@@ -43,11 +43,19 @@ const SelectInput = ({
   <div className="input-group">
     {label && <label className="input-label">{label}</label>}
     <select className={`input-select ${className} ${error ? "input-error" : ""}`} {...props}>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
+      {/* Always show the placeholder; drop any manually-added empty option. */}
+      <option value="">
+        {typeof label === "string" && label
+          ? `-- Select ${label} --`
+          : "-- Select --"}
+      </option>
+      {(options || [])
+        .filter((option) => option.value !== "")
+        .map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
     </select>
     {error && <span className="input-error-message">{error}</span>}
   </div>
