@@ -177,6 +177,7 @@ const SelectInput = ({
   className = "",
   error,
   isMulti = false,
+  emptyHint,
   placeholder = typeof label === "string" && label
     ? `-- Select ${label} --`
     : "Select an option…",
@@ -268,6 +269,7 @@ const SelectInput = ({
           menuPosition="absolute"
           menuPlacement={menuPlacement}
           placeholder={placeholder}
+          noOptionsMessage={() => emptyHint || "No options"}
           components={{
             Option,
             MultiValueContainer,
@@ -347,6 +349,7 @@ const SearchableSelectInput = ({
   width,
   className = "",
   error,
+  emptyHint,
   placeholder = typeof label === "string" && label
     ? `-- Select ${label} --`
     : "Search options…",
@@ -407,6 +410,7 @@ const SearchableSelectInput = ({
           value={selected}
           onChange={handleChange}
           placeholder={placeholder}
+          noOptionsMessage={() => emptyHint || "No options"}
           isSearchable
           isDisabled={disabled} // ✅ ADDED
           menuPosition="absolute"

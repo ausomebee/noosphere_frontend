@@ -238,6 +238,7 @@ const BuildDocumentModal = ({
           value={formData.approverId}
           onChange={(e) => handleChange("approverId", e.target.value)}
           options={approverOptions}
+          emptyHint="No staff found. Create one in Organisation → Staff & Teams."
           required
           disabled={loading}
         />

@@ -65,6 +65,7 @@ const AddClaimModal = ({ isOpen, onClose, onSave, isLoading }) => {
               value={field.value}
               onChange={(value) => field.onChange(value)}
               options={timesheets}
+              emptyHint="No timesheets found. Create one in Payroll."
               className="rounded-20px"
               width="full"
               error={errors.timeSheet?.message}

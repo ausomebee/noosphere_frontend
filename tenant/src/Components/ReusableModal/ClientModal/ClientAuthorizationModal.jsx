@@ -291,6 +291,7 @@ const AddAuthorizationModal = ({
           label="Payer *"
           placeholder="Select payer"
           options={payers}
+          emptyHint="No payers found. Create one in Billing & Payments → Settings → Payers & Insurance."
           value={formData.payer}
           onChange={(e) => handleChange("payer", e.target.value)}
           required
@@ -300,6 +301,7 @@ const AddAuthorizationModal = ({
           label="Insurance Type"
           placeholder="Select type"
           options={insuranceTypes}
+          emptyHint="No insurance types found. Create one in Billing & Payments → Settings → Payers & Insurance."
           value={formData.insuranceType}
           onChange={(e) => handleChange("insuranceType", e.target.value)}
           isLoading={loadingInsuranceTypes}
@@ -318,6 +320,7 @@ const AddAuthorizationModal = ({
                       label="Service Code *"
                       placeholder="Select service code"
                       options={serviceCodes}
+                      emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                       value={serviceItem.serviceCodeId}
                       onChange={(e) =>
                         handleServiceChange(

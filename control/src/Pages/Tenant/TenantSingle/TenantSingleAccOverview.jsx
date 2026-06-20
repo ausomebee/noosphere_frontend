@@ -424,12 +424,14 @@ const TenantSingleAccOverview = () => {
           options={adminOptions}
           value={officerFrom}
           onChange={(e) => setOfficerFrom(e.target.value)}
+          emptyHint="No account officers found. Create one in Settings → Staff."
         />
         <SelectInput
           label="Change to"
           options={adminOptions}
           value={officerTo}
           onChange={(e) => setOfficerTo(e.target.value)}
+          emptyHint="No account officers found. Create one in Settings → Staff."
         />
       </ReusableModal>
 

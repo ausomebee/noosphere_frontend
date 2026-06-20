@@ -107,6 +107,7 @@ const AttendanceBySessionTypeReport = () => {
             value={selectedType}
             onChange={(e) => handleSelect(e.target.value)}
             options={sessionTypeOptions}
+            emptyHint="No session types found. Create one in Organisation → Practice Settings."
             placeholder={loadingOptions ? "Loading..." : "Select a session type"}
           />
         </div>

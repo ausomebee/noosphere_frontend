@@ -108,6 +108,7 @@ const AssignCandidateModal = ({
           value={selectedStaff}
           onChange={(e) => setSelectedStaff(e.target.value)}
           options={staffOptions}
+          emptyHint="No staff found. Create one in Settings → Staff."
         />
       </div>
     </ReusableModal>

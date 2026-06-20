@@ -271,6 +271,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 <SelectInput
                   label="Primary Payer"
                   options={payers}
+                  emptyHint="No payers found. Create one in Billing & Payments → Settings → Payers & Insurance."
                   placeholder={loadingPayers ? "Loading..." : "Select payer"}
                   disabled={loadingPayers}
                   {...field}
@@ -311,6 +312,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 <SelectInput
                   label="Assign To Clinician(s)"
                   options={clinicians}
+                  emptyHint="No clinicians found. Create one in Organisation → Staff & Teams."
                   isMulti
                   placeholder={
                     loadingClinicians ? "Loading..." : "Select clinicians"

@@ -108,6 +108,7 @@ const AddStaffModal = ({
               <SelectInput
                 label="Select Employees"
                 options={staffOptions}
+                emptyHint="No staff found. Create one in Organisation → Staff & Teams."
                 value={field.value}
                 onChange={(value) => field.onChange(value)}
                 placeholder="Select employees"

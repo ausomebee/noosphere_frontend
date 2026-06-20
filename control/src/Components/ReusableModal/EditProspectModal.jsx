@@ -236,6 +236,7 @@ const EditProspectModal = ({
           options={staffOptions}
           error={errors.assignToStaff?.message}
           disabled={staffList.length === 0}
+          emptyHint="No staff found. Create one in Settings → Staff."
         />
         <SelectInput
           label="Select Onboarding Stage"
@@ -243,6 +244,7 @@ const EditProspectModal = ({
           options={stageOptions}
           error={errors.onboardStage?.message}
           disabled={stages.length === 0}
+          emptyHint="No onboarding stages found. Create one in Settings → Pipeline Stages."
         />
       </form>
     </ReusableModal>

@@ -38,28 +38,32 @@ const SelectInput = ({
   options,
   className = "",
   error = "",
+  emptyHint,
   ...props
-}) => (
+}) => {
+  const realOptions = (options || []).filter((option) => option.value !== "");
+  const placeholderText =
+    realOptions.length === 0 && emptyHint
+      ? emptyHint
+      : typeof label === "string" && label
+      ? `-- Select ${label} --`
+      : "-- Select --";
+  return (
   <div className="input-group">
     {label && <label className="input-label">{label}</label>}
     <select className={`input-select ${className} ${error ? "input-error" : ""}`} {...props}>
-      {/* Always show the placeholder; drop any manually-added empty option. */}
-      <option value="">
-        {typeof label === "string" && label
-          ? `-- Select ${label} --`
-          : "-- Select --"}
-      </option>
-      {(options || [])
-        .filter((option) => option.value !== "")
-        .map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+      {/* Placeholder (or empty-state hint); manual empty options are dropped. */}
+      <option value="">{placeholderText}</option>
+      {realOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
     </select>
     {error && <span className="input-error-message">{error}</span>}
   </div>
-);
+  );
+};
 
 SelectInput.propTypes = {
   label: PropTypes.string,

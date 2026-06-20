@@ -801,6 +801,7 @@ const AppointmentModal = ({
           <SearchableSelectInput
             label="Client *"
             options={clientOptions}
+            emptyHint="No clients found. Create one in Clients."
             placeholder="Select Client"
             className="rounded-12px"
             error={errors.client?.message}
@@ -816,6 +817,7 @@ const AppointmentModal = ({
           <SearchableSelectInput
             label="Session Type *"
             options={sessionTypeOptions}
+            emptyHint="No session types found. Create one in Organisation → Practice Settings."
             placeholder="Select Session Type"
             className="rounded-12px"
             error={errors.sessionType?.message}
@@ -830,6 +832,7 @@ const AppointmentModal = ({
           <SelectInput
             label="Clinician(s) *"
             options={clinicianOptions}
+            emptyHint="No clinicians found. Create one in Organisation → Staff & Teams."
             placeholder="Select Clinician(s)"
             className="rounded-12px"
             isMulti={true}
@@ -865,6 +868,7 @@ const AppointmentModal = ({
                   <SelectInput
                     label={index === 0 ? "Service Code (CPT/HCPCS) *" : ""}
                     options={serviceCodeOptions}
+                    emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                     isLoading={loadingServiceCodes}
                     placeholder={
                       loadingServiceCodes

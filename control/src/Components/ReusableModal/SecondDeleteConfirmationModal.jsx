@@ -134,6 +134,7 @@ const DeleteConfirmationModal = ({
                 onChange={(e) => setSelectedGroup(e.target.value)}
                 options={featureGroupOptions}
                 placeholder="Select ..."
+                emptyHint="No feature groups found. Create one in Feature Management."
               />
             </>
           ) : (

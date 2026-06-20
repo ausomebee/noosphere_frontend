@@ -264,6 +264,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
                   ...plans.map((p) => ({ value: p.id, label: p.name })),
                 ]}
                 disabled={loadingPlans}
+                emptyHint="No plans found. Create one in Billing & Payments → Plans & Pricing."
               />
 
               {selectedPlan && (

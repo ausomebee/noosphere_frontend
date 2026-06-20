@@ -387,6 +387,7 @@ const AccordionTable = ({
                                                   <SelectInput
                                                     label="Service Code"
                                                     options={serviceCodes}
+                                                    emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                                                     value={field.value}
                                                     onChange={(e) => {
                                                       if (isEditMode) {

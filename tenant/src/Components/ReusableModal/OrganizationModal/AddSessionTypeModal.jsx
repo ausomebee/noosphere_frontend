@@ -327,6 +327,7 @@ const AddSessionTypeModal = ({
                   <SelectInput
                     label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
                     options={serviceCodeOptions}
+                    emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                     isLoading={loadingServiceCodes}
                     placeholder="Select a service code"
                     error={errors.services?.[index]?.serviceCodeId?.message}
@@ -380,6 +381,7 @@ const AddSessionTypeModal = ({
               <SelectInput
                 label="Staff Role(s) Allowed"
                 options={staffRoleOptions}
+                emptyHint="No roles found. Create one in Organisation → Role & Permissions."
                 isLoading={loadingRoles}
                 error={errors.staffRole?.message}
                 placeholder="Select staff role"

@@ -285,6 +285,7 @@ const Departments = () => {
             options={adminOptions}
             error={errors.teamLeadId?.message}
             {...register("teamLeadId")}
+            emptyHint="No staff found. Create one in Settings → Staff."
           />
           <MultiSelectInput
             label="Members"

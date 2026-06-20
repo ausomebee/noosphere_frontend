@@ -67,6 +67,7 @@ const ChangePlanModal = ({ isOpen, onClose, onSave, currentPlanId, plans = [] })
           value={selectedToPlan}
           onChange={(e) => setSelectedToPlan(e.target.value)}
           options={[{ value: "", label: "Select a plan" }, ...planOptions]}
+          emptyHint="No plans found. Create one in Billing & Payments → Plans & Pricing."
         />
       </div>
     </ReusableModal>

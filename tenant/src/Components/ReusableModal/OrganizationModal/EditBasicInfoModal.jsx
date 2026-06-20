@@ -262,6 +262,7 @@ const BasicInfoModal = ({
               label="Staff Role"
               placeholder="Select staff role"
               options={staffRoleOptions}
+              emptyHint="No roles found. Create one in Organisation → Role & Permissions."
               width="full"
               isSearchable={false}
               error={errors.staffRole?.message}

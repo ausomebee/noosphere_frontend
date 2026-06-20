@@ -107,6 +107,7 @@ const AttendanceByServiceTypeReport = () => {
             value={selectedCode}
             onChange={(e) => handleSelect(e.target.value)}
             options={serviceCodeOptions}
+            emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
             placeholder={loadingOptions ? "Loading..." : "Select a service code"}
           />
         </div>

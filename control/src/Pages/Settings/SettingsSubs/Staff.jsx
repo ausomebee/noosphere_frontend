@@ -380,12 +380,14 @@ const Staff = () => {
             options={departmentOptions}
             error={errors.departmentId?.message}
             {...register("departmentId")}
+            emptyHint="No departments found. Create one in Settings → Departments."
           />
           <SelectInput
             label="Role"
             options={roleOptions}
             error={errors.roleId?.message}
             {...register("roleId")}
+            emptyHint="No roles found. Create one in Settings → Roles & Permissions."
           />
         </form>
       </ReusableModal>

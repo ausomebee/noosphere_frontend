@@ -107,6 +107,7 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, re
               <SelectInput
                 label="Select Income Item"
                 options={incomeOptions}
+                emptyHint="No income items found. Create one in Payroll → Payroll Settings."
                 value={field.value}
                 onChange={(value) => field.onChange(value)}
                 placeholder="Select income item"

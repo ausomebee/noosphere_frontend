@@ -513,6 +513,7 @@ const usePricingForm = ({
               }
               options={adminOptions}
               placeholder="Select Manager"
+              emptyHint="No staff found. Create one in Settings → Staff."
             />
           )}
           <div className="color-picker-container">

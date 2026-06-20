@@ -291,6 +291,7 @@ const MessageModal = ({ isOpen, onClose }) => {
               width="full"
               value={selectedClientId || ""}
               options={clients.map((c) => ({ value: c.id, label: getClientName(c) }))}
+              emptyHint="No clients found. Create one in Clients."
               onChange={(e) => handleSelectClient(e.target.value)}
               disabled={loadingClients}
             />

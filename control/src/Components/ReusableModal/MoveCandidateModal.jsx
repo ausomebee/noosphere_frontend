@@ -101,6 +101,7 @@ const MoveCandidateModal = ({
           value={targetColumnId}
           onChange={(e) => setTargetColumnId(e.target.value)}
           options={[{ value: "", label: "Select a column" }, ...columnOptions]}
+          emptyHint="No other stages found. Create one in Settings → Pipeline Stages."
         />
       </div>
     </ReusableModal>

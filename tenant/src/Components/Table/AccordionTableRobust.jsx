@@ -351,6 +351,7 @@ const AccordionTableRobust = ({
                                           label="Service code"
                                           {...field}
                                           options={serviceCodes}
+                                          emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                                           placeholder="Select service code"
                                           isDisabled={!isEditMode || used}
                                           isLoading={loadingServiceCodes}

@@ -188,6 +188,7 @@ const AddPayerModal = ({
                       label="Insurance Type"
                       placeholder="Select Insurance Type"
                       options={insuranceTypeOptions}
+                      emptyHint="No insurance types found. Create one in Billing & Payments → Settings → Payers & Insurance."
                       width="full"
                       isSearchable={false}
                       error={errors.insuranceType?.message}
@@ -332,6 +333,7 @@ const AddPayerModal = ({
                   <SelectInput
                     label="Rounding Rule"
                     options={roundingRuleOptions}
+                    emptyHint="No rounding rules found. Create one in Billing & Payments → Settings."
                     error={errors.serviceCodes?.[index]?.roundingRule?.message}
                     placeholder="Select rounding rule"
                     disabled={mode === "view"}

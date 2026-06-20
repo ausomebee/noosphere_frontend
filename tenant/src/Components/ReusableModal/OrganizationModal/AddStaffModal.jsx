@@ -909,6 +909,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
               label="Staff Role"
               placeholder="Select staff role"
               options={staffRoleOptions}
+              emptyHint="No roles found. Create one in Organisation → Role & Permissions."
               width="full"
               isSearchable={false}
               error={errors.staffRole?.message}
@@ -1157,6 +1158,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                     <SelectInput
                       label="Pay Type"
                       options={incomeOptions}
+                      emptyHint="No income items found. Create one in Payroll → Payroll Settings."
                       error={errors.otherPays?.[idx]?.type?.message}
                       placeholder="Select pay type"
                       {...field}
@@ -1220,6 +1222,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                     <SelectInput
                       label="Deduction Type"
                       options={deductionOptions}
+                      emptyHint="No deductions found. Create one in Payroll → Payroll Settings."
                       error={errors.deductions?.[idx]?.type?.message}
                       placeholder="Select deduction type"
                       {...field}

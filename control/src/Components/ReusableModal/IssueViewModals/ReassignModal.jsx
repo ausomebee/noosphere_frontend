@@ -90,6 +90,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
           {...register("newAssignee")}
           options={staffOptions}
           error={errors.newAssignee?.message}
+          emptyHint="No staff found. Create one in Settings → Staff."
         />
       </form>
     </ReusableModal>

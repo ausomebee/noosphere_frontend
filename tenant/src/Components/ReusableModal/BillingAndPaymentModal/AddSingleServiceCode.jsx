@@ -456,6 +456,7 @@ const AddSingleServiceCodeModal = ({
             <SelectInput
               label="Rounding Rule"
               options={roundingRuleOptions}
+              emptyHint="No rounding rules found. Create one in Billing & Payments → Settings."
               error={errors.roundingRule?.message}
               placeholder="Select rounding rule"
               disabled={mode === "view"}

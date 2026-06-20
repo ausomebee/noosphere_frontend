@@ -74,6 +74,7 @@ const EditFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading  }) => {
             options={featureGroupOptions}
             placeholder="Select a feature group"
             disabled={isLoading}
+            emptyHint="No feature groups found. Create one in Feature Management."
           />
           <TextInput
             label="Feature Group Title"

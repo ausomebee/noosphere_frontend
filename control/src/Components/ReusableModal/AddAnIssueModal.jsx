@@ -302,6 +302,7 @@ const AddIssueModal = ({
           options={staffOptions}
           error={errors.assignToStaff?.message}
           disabled={staffList.length === 0}
+          emptyHint="No staff found. Create one in Settings → Staff."
         />
         <div className="resolution-time">
           <h3>Estimated Time to Resolution (SLA)</h3>
