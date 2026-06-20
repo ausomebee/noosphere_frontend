@@ -22,6 +22,26 @@ export const CreateNewFolder = async ({
   }
 };
 
+export const UpdateFolderName = async ({
+  folderId,
+  name,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/client-folders/${folderId}`,
+      { name },
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Rename folder failed",
+    );
+  }
+};
+
 export const CreateNewFile = async ({
   clientTenantId,
   name,
@@ -310,6 +330,7 @@ const PrepareResponsePayload = async (responses, files, signatures) => {
 
 export default {
   CreateNewFolder,
+  UpdateFolderName,
   CreateNewFile,
   GetRecentFiles,
   GetAllFilesInFolder,

@@ -13,6 +13,7 @@ const ClientPortalSettingsModal = ({
   onClose,
   clientTenantId,
   initialData = {}, // contains: clientPortalAccess, documentAccess, requestAppointment
+  onSaved,
 }) => {
   const [enablePortal, setEnablePortal] = useState(false);
   const [allowReschedule, setAllowReschedule] = useState(true);
@@ -52,6 +53,7 @@ const ClientPortalSettingsModal = ({
       });
 
       showToast("Portal settings saved successfully", "success");
+      onSaved?.(); // refresh the client panel with the new portal settings
       onClose();
     } catch (err) {
       showApiError(err, "SAVE_CLIENT_SETTINGS");

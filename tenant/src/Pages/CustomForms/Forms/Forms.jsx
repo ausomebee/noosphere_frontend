@@ -21,6 +21,8 @@ const Forms = () => {
   // ---- Local state -------------------------------------------
   const [forms, setForms] = useState([]);       // raw API data
   const [loading, setLoading] = useState(true); // table loading flag
+  const [reloadKey, setReloadKey] = useState(0);
+  const refreshForms = () => setReloadKey((k) => k + 1);
 
   // ---- Load forms on mount ------------------------------------
   useEffect(() => {
@@ -45,7 +47,7 @@ const Forms = () => {
     };
 
     load();
-  }, [tenantId, accessToken, refreshToken]);
+  }, [tenantId, accessToken, refreshToken, reloadKey]);
 
   // ---- Table-ready data (with DD-MM-YYYY) --------------------
   const tableData = useMemo(
@@ -113,6 +115,7 @@ const Forms = () => {
                 refreshToken,
               });
               showToast( "Form duplicated", "success");
+              refreshForms(); // re-fetch so the duplicate appears in the table
             } catch (e) {
               showToast( e.message || "Duplicate failed", "error");
             }

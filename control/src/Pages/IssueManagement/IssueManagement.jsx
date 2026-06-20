@@ -107,9 +107,9 @@ const IssueManagement = () => {
     return priorityMap[priority] || priority || "N/A";
   };
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     const controller = new AbortController();
-    setLoading(true);
+    if (!silent) setLoading(true);
     const errors = [];
     try {
       const status =
@@ -312,7 +312,7 @@ const IssueManagement = () => {
         if (import.meta.env.DEV) console.error("Fetch error:", err);
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
     return () => controller.abort();
   }, [accessToken, refreshToken, activeTab, formatDate]);
@@ -380,6 +380,7 @@ const IssueManagement = () => {
         cache.current.clear();
         showToast("Issue added successfully", "success");
         onSuccess();
+        fetchData(true); // silently re-sync the list + metric counts with the real record
       } catch (err) {
         showToast("Failed to add issue.", "error");
         if (import.meta.env.DEV) console.error("Error adding issue:", err);
@@ -387,7 +388,7 @@ const IssueManagement = () => {
         setIsAddingIssue(false);
       }
     },
-    [accessToken, refreshToken, issueData, staffMap, tenantMap, formatDate]
+    [accessToken, refreshToken, issueData, staffMap, tenantMap, formatDate, fetchData]
   );
 
   const handleViewIssue = useCallback(

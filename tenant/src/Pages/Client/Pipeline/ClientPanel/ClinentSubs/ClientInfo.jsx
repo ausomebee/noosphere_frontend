@@ -988,7 +988,7 @@ const DocumentsForms = () => {
 };
 
 // Main Tab Component - ONLY THE PAYLOAD IS CLEANED (empty values excluded)
-const ClientInformationTab = ({ clientData, isViewMode = false }) => {
+const ClientInformationTab = ({ clientData, isViewMode = false, onUpdated }) => {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
@@ -1083,6 +1083,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
 
       showToast("Client updated successfully", "success");
       setIsAddClientOpen(false);
+      onUpdated?.(); // refresh the client panel with the saved data
     } catch (err) {
       showApiError(err, "UPDATE_CLIENT");
     } finally {
@@ -1146,6 +1147,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false }) => {
           documentAccess: clientData?.documentAccess || false,
           requestAppointment: clientData?.requestAppointment !== false,
         }}
+        onSaved={onUpdated}
       />
 
       <AddClientModal

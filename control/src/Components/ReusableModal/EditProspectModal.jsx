@@ -124,8 +124,8 @@ const EditProspectModal = ({
         showToast("Candidate updated successfully!", "success");
 
         clearDraft();
+        // onSave updates the prospect panel in place — no full reload needed.
         onSave(updatedData);
-        window.location.reload();
         onClose();
       } else {
         throw new Error("Failed to update candidate.");

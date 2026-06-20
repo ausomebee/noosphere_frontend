@@ -190,6 +190,7 @@ const SecuritySettings = () => {
       }
       setIsSecurityQuestionModalOpen(false);
       showToast("Security question settings saved", "success");
+      fetchAdminChoices(); // re-sync the toggles with the saved server state
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to save security question settings:", error);
       showToast("Failed to save settings", "error");
@@ -217,6 +218,7 @@ const SecuritySettings = () => {
       }
       setIsAuthenticatorModalOpen(false);
       showToast("Authenticator settings saved", "success");
+      fetchAdminChoices(); // re-sync the toggles with the saved server state
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to set 2FA default:", error);
       showToast("Failed to save authenticator settings", "error");

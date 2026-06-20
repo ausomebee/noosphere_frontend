@@ -41,6 +41,8 @@ const MyDocuments = () => {
   const [foldersData, setFoldersData] = useState([]);
   const [recentFiles, setRecentFiles] = useState([]);
   const [allFilesData, setAllFilesData] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const refreshFiles = () => setReloadKey((k) => k + 1);
 
   // Isolated loading states
   const [foldersLoading, setFoldersLoading] = useState(true);
@@ -129,7 +131,7 @@ const MyDocuments = () => {
     };
 
     loadAllData();
-  }, [clientTenantId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clientTenantId, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateFolder = async (folderData) => {
     try {
@@ -180,7 +182,7 @@ const MyDocuments = () => {
         });
       }
       showToast("File(s) uploaded successfully", "success");
-      // Tip: you could trigger a refresh of recent/all files here
+      refreshFiles(); // re-fetch recent/all files so the upload appears
     } catch (err) {
       showToast("Failed to upload file", "error");
     }

@@ -807,6 +807,16 @@ const NewFormBuilder = () => {
             : "saved as draft";
 
       showToast(`Form ${action} successfully!`, "success");
+
+      // After a fresh create, switch the route to the edit URL so the new id
+      // becomes the active formId — subsequent saves update this form instead
+      // of creating a duplicate, and the builder reflects the saved record.
+      if (!formId) {
+        const newId = res?.id || res?.data?.id || res?.formId;
+        if (newId) {
+          navigate(`/custom-forms/forms/create/${newId}`, { replace: true });
+        }
+      }
     } catch (err) {
       console.error("Save error:", err);
       showToast(

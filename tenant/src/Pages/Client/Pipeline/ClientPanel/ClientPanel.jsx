@@ -21,6 +21,7 @@ const ClientPanel = () => {
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const { accessToken, refreshToken } = useAuth();
 
@@ -47,7 +48,9 @@ const ClientPanel = () => {
     };
 
     fetchClient();
-  }, [clientId, accessToken, refreshToken]);
+  }, [clientId, accessToken, refreshToken, reloadKey]);
+
+  const refreshClient = () => setReloadKey((k) => k + 1);
 
   const renderTabContent = () => {
     if (loading)
@@ -63,6 +66,7 @@ const ClientPanel = () => {
           <ClientInformationTab
             clientData={clientData}
             isViewMode={isViewMode}
+            onUpdated={refreshClient}
           />
         );
       case "programs":
@@ -78,6 +82,7 @@ const ClientPanel = () => {
           <ClientInformationTab
             clientData={clientData}
             isViewMode={isViewMode}
+            onUpdated={refreshClient}
           />
         );
     }

@@ -137,6 +137,7 @@ const NotificationSettings = () => {
     try {
       await api.saveNotificationSettings({ userId, settings, accessToken, refreshToken });
       showToast("Notification settings saved", "success");
+      fetchSettings(); // re-fetch so the panel reflects the saved settings
     } catch (err) {
       showApiError(err, "SAVE_SETTINGS");
     } finally {
