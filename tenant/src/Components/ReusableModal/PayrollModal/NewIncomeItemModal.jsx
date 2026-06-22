@@ -100,7 +100,8 @@ const PayrollItemModal = ({
     formState: { errors },
   } = useForm({
     resolver: yupResolver(payrollItemSchema),
-    defaultValues: mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues,
+    defaultValues:
+      mode === "add" ? defaultFormValues : transformInitialData(initialData, mode),
   });
 
   // Only persist/hydrate a draft for NEW items. In view/edit the draft's
@@ -117,7 +118,10 @@ const PayrollItemModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      reset(mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues);
+      // Pre-fill for both view and edit; only a brand-new "add" starts empty.
+      reset(
+        mode === "add" ? defaultFormValues : transformInitialData(initialData, mode)
+      );
     }
   }, [isOpen, mode, initialData, reset]);
 
@@ -161,9 +165,17 @@ const PayrollItemModal = ({
         reset(defaultFormValues);
         onClose();
       }}
-      title={mode === "edit" ? `Edit ${isDeduction ? "Deduction" : "Income Item"}` : `Add ${isDeduction ? "Deduction" : "Income Item"}`}
-      primaryButtonText={isLoading ? "Saving..." : `Save ${isDeduction ? "Deduction" : "Income Item"}`}
-      secondaryButtonText="Cancel"
+      title={`${
+        mode === "view" ? "View" : mode === "edit" ? "Edit" : "Add"
+      } ${isDeduction ? "Deduction" : "Income Item"}`}
+      primaryButtonText={
+        mode === "view"
+          ? undefined
+          : isLoading
+            ? "Saving..."
+            : `Save ${isDeduction ? "Deduction" : "Income Item"}`
+      }
+      secondaryButtonText={mode === "view" ? "Close" : "Cancel"}
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={() => {

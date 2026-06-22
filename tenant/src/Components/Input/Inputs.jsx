@@ -179,6 +179,7 @@ const SelectInput = ({
   error,
   isMulti = false,
   emptyHint,
+  disabled = false,
   placeholder = typeof label === "string" && label
     ? `-- Select ${label} --`
     : "Select an option…",
@@ -234,6 +235,7 @@ const SelectInput = ({
           value={selected}
           onChange={handleChange}
           isMulti={isMulti}
+          isDisabled={disabled}
           menuPosition="fixed"
           menuPlacement="auto"
           placeholder={placeholder}

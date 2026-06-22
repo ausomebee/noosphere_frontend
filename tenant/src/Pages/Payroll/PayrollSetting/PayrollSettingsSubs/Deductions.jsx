@@ -48,7 +48,7 @@ const Deductions = () => {
             setIsModalOpen(true);
           },
         },
-        hasPermission("delete_deductions") && {
+        hasPermission("edit_deductions") && {
           label: "Delete",
           onClick: (row) => setRowToDelete(row),
           className: "remove",

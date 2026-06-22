@@ -48,7 +48,7 @@ const IncomeItems = () => {
             setIsModalOpen(true);
           },
         },
-        hasPermission("delete_income_item") && {
+        hasPermission("edit_income_item") && {
           label: "Delete",
           onClick: (row) => setRowToDelete(row),
           className: "remove",
