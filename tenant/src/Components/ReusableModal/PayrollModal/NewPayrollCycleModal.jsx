@@ -35,7 +35,11 @@ const COMPENSATION_TYPE_OPTIONS = [
 const transformInitialData = (initialData) => {
   return {
     name: initialData.name || "",
-    appliesTo: initialData.compensationTypeId || initialData.appliesTo || "",
+    appliesTo:
+      initialData.appliesTo ||
+      initialData.compensationType ||
+      initialData.compensationTypeId ||
+      "",
     intervals:
       initialData.intervals != null ? Number(initialData.intervals) : 1,
     startDate: initialData.startDate || "",
@@ -74,6 +78,9 @@ const PayrollCycleModal = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Clear any stale loading state from a previous save so reopening the
+      // modal doesn't show a permanently-spinning button.
+      setIsLoading(false);
       reset(
         mode === "edit" ? transformInitialData(initialData) : defaultFormValues,
       );
@@ -88,6 +95,7 @@ const PayrollCycleModal = ({
       onClose();
     } catch {
       showToast("Failed to save payroll cycle", "error");
+    } finally {
       setIsLoading(false);
     }
   };

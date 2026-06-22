@@ -103,7 +103,14 @@ const PayrollItemModal = ({
     defaultValues: mode === "edit" ? transformInitialData(initialData, mode) : defaultFormValues,
   });
 
-  const clearDraft = useReduxFormDraft("new-income-item", { watch, reset, isOpen, exclude: [] });
+  // Only persist/hydrate a draft for NEW items. In view/edit the draft's
+  // deferred reset() would otherwise clobber the clicked item's values.
+  const clearDraft = useReduxFormDraft("new-income-item", {
+    watch,
+    reset,
+    isOpen: isOpen && mode === "add",
+    exclude: [],
+  });
 
   // Watch the unitType field
   const unitType = watch("unitType");

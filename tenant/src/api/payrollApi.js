@@ -316,7 +316,7 @@ const UpdatePayrollCycles = async ({
   id,
   tenantId,
   name,
-  compensationTypeId,
+  compensationType,
   interval,
   startDate,
   autoRun,
@@ -331,7 +331,7 @@ const UpdatePayrollCycles = async ({
       id,
       tenantId,
       name,
-      compensationTypeId,
+      compensationType,
       interval,
       startDate,
       autoRun,
@@ -524,6 +524,34 @@ const CreateManualPayrollCycle = async ({
   }
 };
 
+const DeleteIncomeItem = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(
+      `${PLAIN_API_URL}/income-items/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Delete income item failed"
+    );
+  }
+};
+
+const DeleteDeduction = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.delete(
+      `${PLAIN_API_URL}/deductions/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Delete deduction failed"
+    );
+  }
+};
+
 export default {
   GetCompensationTypeByTenantId,
   UpdateCompensationTypeActiveness,
@@ -531,10 +559,12 @@ export default {
   UpdateIncomeItems,
   GetIncomeItemsByTenantId,
   UpdateIncomeItemsActiveness,
+  DeleteIncomeItem,
   CreateDeductions,
   UpdateDeductions,
   GetDeductionsByTenantId,
   UpdateDeductionsActiveness,
+  DeleteDeduction,
   CreatePayrollCycles,
   UpdatePayrollCycles,
   GetPayrollCycleByTenantId,

@@ -5,6 +5,7 @@ import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollItemModal from "../../../../Components/ReusableModal/PayrollModal/NewIncomeItemModal";
+import DeleteConfirmationModal from "../../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
@@ -16,6 +17,8 @@ const Deductions = () => {
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const Columns = [
     { header: "Name", key: "name", type: "text" },
@@ -44,6 +47,11 @@ const Deductions = () => {
             setMode("edit");
             setIsModalOpen(true);
           },
+        },
+        hasPermission("delete_deductions") && {
+          label: "Delete",
+          onClick: (row) => setRowToDelete(row),
+          className: "remove",
         },
       ].filter(Boolean),
       className: "more-dropdown",
@@ -154,6 +162,27 @@ const Deductions = () => {
     [tenantId, accessToken, refreshToken, mode, selectedRow, fetchDeductions],
   );
 
+  // Handle delete
+  const handleDelete = useCallback(async () => {
+    if (!rowToDelete) return;
+    setDeleting(true);
+    try {
+      await api.DeleteDeduction({
+        id: rowToDelete.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Deduction deleted successfully", "success");
+      setRowToDelete(null);
+      fetchDeductions(); // refresh the list
+    } catch (error) {
+      console.error("Error deleting deduction:", error);
+      showToast(error.message || "Failed to delete deduction", "error");
+    } finally {
+      setDeleting(false);
+    }
+  }, [rowToDelete, accessToken, refreshToken, fetchDeductions]);
+
   const formatRateDisplay = (data, items) => {
     if (data.type === "Flat Rate") {
       return `$${data.rate.rate || 0}`;
@@ -213,6 +242,16 @@ const Deductions = () => {
         initialData={selectedRow || {}}
         isDeduction={true}
         existingItems={tableData}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!rowToDelete}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Deduction"
+        message={`Are you sure you want to delete "${rowToDelete?.name || "this deduction"}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        confirmButtonColor="#dc2626"
+        loading={deleting}
       />
     </div>
   );

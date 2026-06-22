@@ -5,6 +5,7 @@ import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollItemModal from "../../../../Components/ReusableModal/PayrollModal/NewIncomeItemModal";
+import DeleteConfirmationModal from "../../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
@@ -16,6 +17,8 @@ const IncomeItems = () => {
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const Columns = [
     { header: "Name", key: "name", type: "text" },
@@ -44,6 +47,11 @@ const IncomeItems = () => {
             setMode("edit");
             setIsModalOpen(true);
           },
+        },
+        hasPermission("delete_income_item") && {
+          label: "Delete",
+          onClick: (row) => setRowToDelete(row),
+          className: "remove",
         },
       ].filter(Boolean),
       className: "more-dropdown",
@@ -152,6 +160,27 @@ const IncomeItems = () => {
     [tenantId, accessToken, refreshToken, mode, selectedRow, fetchIncomeItems]
   );
 
+  // Handle delete
+  const handleDelete = useCallback(async () => {
+    if (!rowToDelete) return;
+    setDeleting(true);
+    try {
+      await api.DeleteIncomeItem({
+        id: rowToDelete.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Income item deleted successfully", "success");
+      setRowToDelete(null);
+      fetchIncomeItems(); // refresh the list
+    } catch (error) {
+      console.error("Error deleting income item:", error);
+      showToast(error.message || "Failed to delete income item", "error");
+    } finally {
+      setDeleting(false);
+    }
+  }, [rowToDelete, accessToken, refreshToken, fetchIncomeItems]);
+
   const formatRateDisplay = (data, items) => {
     if (data.type === "Flat Rate") {
       return `$${data.rate.rate || 0}`;
@@ -209,6 +238,16 @@ const IncomeItems = () => {
         initialData={selectedRow || {}}
         isDeduction={false}
         existingItems={tableData}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!rowToDelete}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Income Item"
+        message={`Are you sure you want to delete "${rowToDelete?.name || "this income item"}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        confirmButtonColor="#dc2626"
+        loading={deleting}
       />
     </div>
   );
