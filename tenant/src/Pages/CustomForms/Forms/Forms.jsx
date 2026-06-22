@@ -183,6 +183,12 @@ const Forms = () => {
           tableName="Forms"
           loading={loading}
           enableSearch={true}
+          // Clicking a form row opens the builder (edit). Without this the table
+          // falls back to the first "View"-labelled action — "View Responses" —
+          // and routes to responses instead.
+          onActionClick={(row) =>
+            navigate(`/custom-forms/forms/create/${row.id}`)
+          }
         />
       </div>
     </>
