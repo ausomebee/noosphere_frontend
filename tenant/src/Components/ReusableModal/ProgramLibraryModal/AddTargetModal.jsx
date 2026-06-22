@@ -17,7 +17,7 @@ import {
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
-import { addTargetSchema as schema, MASTERY_OPTION_SLOTS, OPTION_CRITERIA_FIELDS } from "./addTargetSchema";
+import { addTargetSchema as schema, MASTERY_OPTION_SLOTS, MASTERY_FIELDS } from "./addTargetSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 /* ---------- FileUploadArea Component ---------- */
@@ -134,11 +134,6 @@ const AddTargetModal = ({
   const masteryMetric = watch("masteryMetric");
   const trialOrOpportunitiesSession = watch("trialOrOpportunitiesSession");
   const masteryCriteriaOption = watch("masteryCriteriaOption");
-  const customRecurrenceDay = watch("customRecurrenceDay");
-  const consecutiveSessions = watch("consecutiveSessions");
-  const totalSessions = watch("totalSessions");
-  const sessionCount = watch("sessionCount");
-  const customRecurrencePosition = watch("customRecurrencePosition");
 
   /* ---------- Auto-save to Redux and Track Changes ---------- */
   useEffect(() => {
@@ -193,13 +188,23 @@ const AddTargetModal = ({
       reset({ ...source, programId });
       if (source.masteryCriteria) {
         const mc = source.masteryCriteria;
-        setValue("masteryMetric", mc.metric || "");
-        setValue("masteryCriteriaOption", mc.optionOne || mc.optionTwo || mc.optionThree || "");
-        setValue("customRecurrenceDay", mc.value || "");
-        setValue("consecutiveSessions", mc.sessions || "");
-        setValue("totalSessions", mc.totalSessions || "");
-        setValue("sessionCount", mc.sessionCount || "");
-        setValue("customRecurrencePosition", mc.unit || "");
+        const metric = mc.metric || "";
+        const option = mc.optionOne || mc.optionTwo || mc.optionThree || "";
+        setValue("masteryMetric", metric);
+        setValue("masteryCriteriaOption", option);
+        // Load saved values into the SELECTED option's own unique inputs so the
+        // numbers appear in the correct boxes when editing.
+        const fields = (MASTERY_FIELDS[metric] || {})[option] || {};
+        const criteriaValues = {
+          value: mc.value,
+          sessions: mc.sessions,
+          totalSessions: mc.totalSessions,
+          sessionCount: mc.sessionCount,
+          unit: mc.unit,
+        };
+        Object.entries(fields).forEach(([key, fieldName]) => {
+          setValue(fieldName, criteriaValues[key] ?? "");
+        });
       }
     } else {
       reset({ programId });
@@ -212,49 +217,29 @@ const AddTargetModal = ({
     setHasChanges(false);
   }, [isOpen, mode, initialData, programId, reduxDraft, reset, setValue, dispatch]);
 
-  /* ---------- Mastery Criteria Logic ---------- */
-  useEffect(() => {
+  /* ---------- Mastery Criteria Builder ---------- */
+  // Build the backend-shaped masteryCriteria object from the SELECTED option's
+  // own unique inputs. Each option has independent field names, so only its
+  // values are read — no cross-contamination. Output shape is unchanged:
+  // { metric, optionOne|optionTwo|optionThree, value?, sessions?, totalSessions?,
+  //   sessionCount?, unit? }. Computed at submit (and for the load round-trip).
+  const buildMasteryCriteria = (values) => {
+    const metric = values.masteryMetric;
+    const option = values.masteryCriteriaOption;
     const criteria = {};
-    if (masteryMetric) criteria.metric = masteryMetric;
-
-    // Map selected radio option to the correct slot (optionOne/optionTwo/optionThree)
-    if (masteryCriteriaOption) {
-      const slots = MASTERY_OPTION_SLOTS[masteryMetric] || {};
-      const slot = slots[masteryCriteriaOption];
-      if (slot) criteria[slot] = masteryCriteriaOption;
+    if (metric) criteria.metric = metric;
+    if (option) {
+      const slot = (MASTERY_OPTION_SLOTS[metric] || {})[option];
+      if (slot) criteria[slot] = option;
     }
-
-    // Only persist the value fields that belong to the SELECTED option. The
-    // mastery inputs reuse the same form field names across a metric's options,
-    // so without this scoping a value left in another option's input would leak
-    // into the saved criteria. Output keys (value/sessions/totalSessions/
-    // sessionCount/unit) are unchanged — the backend contract is preserved.
-    const allowedFields =
-      (OPTION_CRITERIA_FIELDS[masteryMetric] || {})[masteryCriteriaOption] || [];
-    const fieldValues = {
-      value: customRecurrenceDay,
-      sessions: consecutiveSessions,
-      totalSessions,
-      sessionCount,
-      unit: customRecurrencePosition,
-    };
-    allowedFields.forEach((key) => {
-      const raw = fieldValues[key];
+    const fields = (MASTERY_FIELDS[metric] || {})[option] || {};
+    Object.entries(fields).forEach(([key, fieldName]) => {
+      const raw = values[fieldName];
       if (raw === "" || raw === undefined || raw === null) return;
       criteria[key] = key === "unit" ? raw : Number(raw);
     });
-
-    setValue("masteryCriteria", criteria);
-  }, [
-    masteryMetric,
-    masteryCriteriaOption,
-    customRecurrenceDay,
-    consecutiveSessions,
-    totalSessions,
-    sessionCount,
-    customRecurrencePosition,
-    setValue,
-  ]);
+    return criteria;
+  };
 
   /* ---------- Task Steps Logic ---------- */
   useEffect(() => {
@@ -277,6 +262,7 @@ const AddTargetModal = ({
     try {
       const payload = {
         ...data,
+        masteryCriteria: buildMasteryCriteria(data),
         name,
         description,
         sd,
@@ -657,22 +643,22 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcPaPctValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0%"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcPaPctValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">For</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcPaPctSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcPaPctSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -689,33 +675,33 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcPaPofValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0%"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcPaPofValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">For</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("totalSessions")}
+                    {...register("mcPaPofTotal")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.totalSessions?.message}
+                    error={errors.mcPaPofTotal?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">of</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("sessionCount")}
+                    {...register("mcPaPofCount")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.sessionCount?.message}
+                    error={errors.mcPaPofCount?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -733,22 +719,22 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcPaAvgValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0%"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcPaAvgValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">across</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("sessionCount")}
+                    {...register("mcPaAvgCount")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.sessionCount?.message}
+                    error={errors.mcPaAvgCount?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -770,11 +756,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcTcConValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcTcConValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -783,11 +769,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcTcConSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcTcConSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -804,11 +790,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcTcPofValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcTcPofValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -817,22 +803,22 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("totalSessions")}
+                    {...register("mcTcPofTotal")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.totalSessions?.message}
+                    error={errors.mcTcPofTotal?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">of</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("sessionCount")}
+                    {...register("mcTcPofCount")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.sessionCount?.message}
+                    error={errors.mcTcPofCount?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -857,11 +843,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcIrConSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcIrConSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -881,22 +867,22 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("totalSessions")}
+                    {...register("mcIrPofTotal")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.totalSessions?.message}
+                    error={errors.mcIrPofTotal?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">out of</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("sessionCount")}
+                    {...register("mcIrPofCount")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.sessionCount?.message}
+                    error={errors.mcIrPofCount?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -921,11 +907,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcFcGtValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcFcGtValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -934,11 +920,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcFcGtSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcFcGtSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -963,22 +949,22 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcRtGtValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcRtGtValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">rate for</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcRtGtSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcRtGtSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -1005,19 +991,17 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcDurValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcDurValue?.message}
                   />
                 </div>
                 <div style={{ marginBottom: "-14px" }}>
                   <SelectInput
-                    value={watch("customRecurrencePosition")}
-                    onChange={(e) =>
-                      setValue("customRecurrencePosition", e.target.value)
-                    }
+                    value={watch("mcDurUnit")}
+                    onChange={(e) => setValue("mcDurUnit", e.target.value)}
                     options={[
                       { value: "seconds", label: "Seconds" },
                       { value: "minutes", label: "Minutes" },
@@ -1025,18 +1009,18 @@ const AddTargetModal = ({
                     ]}
                     className="rounded-20px"
                     width="100"
-                    error={errors.customRecurrencePosition?.message}
+                    error={errors.mcDurUnit?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">over</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcDurSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcDurSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -1063,19 +1047,17 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcLatValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcLatValue?.message}
                   />
                 </div>
                 <div style={{ marginBottom: "-14px" }}>
                   <SelectInput
-                    value={watch("customRecurrencePosition")}
-                    onChange={(e) =>
-                      setValue("customRecurrencePosition", e.target.value)
-                    }
+                    value={watch("mcLatUnit")}
+                    onChange={(e) => setValue("mcLatUnit", e.target.value)}
                     options={[
                       { value: "seconds", label: "Seconds" },
                       { value: "minutes", label: "Minutes" },
@@ -1083,18 +1065,18 @@ const AddTargetModal = ({
                     ]}
                     className="rounded-20px"
                     width="100"
-                    error={errors.customRecurrencePosition?.message}
+                    error={errors.mcLatUnit?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">for</p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcLatSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcLatSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -1118,11 +1100,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("customRecurrenceDay")}
+                    {...register("mcPsiValue")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.customRecurrenceDay?.message}
+                    error={errors.mcPsiValue?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">
@@ -1131,11 +1113,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcPsiSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcPsiSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">sessions</p>
@@ -1171,11 +1153,11 @@ const AddTargetModal = ({
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
                     type="number"
-                    {...register("consecutiveSessions")}
+                    {...register("mcFtcSessions")}
                     width="100"
                     className="rounded-20px"
                     placeholder="0"
-                    error={errors.consecutiveSessions?.message}
+                    error={errors.mcFtcSessions?.message}
                   />
                 </div>
                 <p className="text-sm text-gray-700 font-semibold">

@@ -56,36 +56,33 @@ export const MASTERY_OPTION_SLOTS = {
   "Full Task Completion": { completion: "optionOne" },
 };
 
-// Which criteria value fields belong to each metric+option. The mastery inputs
-// share form field names across the radio options of a metric, so without this
-// scoping a value typed for one option leaks into the saved criteria of another
-// (cross-contamination). Keys map to the unchanged backend shape:
-//   value          ← customRecurrenceDay
-//   sessions       ← consecutiveSessions
-//   totalSessions  ← totalSessions
-//   sessionCount   ← sessionCount
-//   unit           ← customRecurrencePosition
-export const OPTION_CRITERIA_FIELDS = {
+// Per metric+option, maps each criteria key in the (unchanged) backend shape to
+// the UNIQUE react-hook-form field name used by that option's input. Each option
+// gets its own field names so the rows are independent — typing in one option
+// doesn't affect another, edits load into the correct box, and no value leaks
+// across options. The saved masteryCriteria still uses the original keys:
+//   value | sessions | totalSessions | sessionCount | unit  (+ metric, optionX)
+export const MASTERY_FIELDS = {
   "Percentage Accuracy": {
-    percentage: ["value", "sessions"],
-    percentageOf: ["value", "totalSessions", "sessionCount"],
-    average: ["value", "sessionCount"],
+    percentage: { value: "mcPaPctValue", sessions: "mcPaPctSessions" },
+    percentageOf: { value: "mcPaPofValue", totalSessions: "mcPaPofTotal", sessionCount: "mcPaPofCount" },
+    average: { value: "mcPaAvgValue", sessionCount: "mcPaAvgCount" },
   },
   "Trials Correct": {
-    consecutive: ["value", "sessions"],
-    percentageOf: ["value", "totalSessions", "sessionCount"],
+    consecutive: { value: "mcTcConValue", sessions: "mcTcConSessions" },
+    percentageOf: { value: "mcTcPofValue", totalSessions: "mcTcPofTotal", sessionCount: "mcTcPofCount" },
   },
   "Independent Responses": {
-    consecutive: ["sessions"],
-    percentageOf: ["totalSessions", "sessionCount"],
+    consecutive: { sessions: "mcIrConSessions" },
+    percentageOf: { totalSessions: "mcIrPofTotal", sessionCount: "mcIrPofCount" },
   },
-  "Frequency Count": { greaterThan: ["value", "sessions"] },
-  "Rate": { greaterThan: ["value", "sessions"] },
-  "Duration": { duration: ["value", "unit", "sessions"] },
-  "Latency": { latency: ["value", "unit", "sessions"] },
+  "Frequency Count": { greaterThan: { value: "mcFcGtValue", sessions: "mcFcGtSessions" } },
+  "Rate": { greaterThan: { value: "mcRtGtValue", sessions: "mcRtGtSessions" } },
+  "Duration": { duration: { value: "mcDurValue", unit: "mcDurUnit", sessions: "mcDurSessions" } },
+  "Latency": { latency: { value: "mcLatValue", unit: "mcLatUnit", sessions: "mcLatSessions" } },
   "Percentage of Steps Independent": {
-    percentageSteps: ["value", "sessions"],
-    allSteps: [],
+    percentageSteps: { value: "mcPsiValue", sessions: "mcPsiSessions" },
+    allSteps: {},
   },
-  "Full Task Completion": { completion: ["sessions"] },
+  "Full Task Completion": { completion: { sessions: "mcFtcSessions" } },
 };
