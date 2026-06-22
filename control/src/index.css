@@ -628,3 +628,23 @@ a:hover { color: var(--color-primary); }
   text-decoration: none;
   outline: 2px solid #fff;
 }
+
+/* Back/return controls must keep their arrow icon and label on one line and
+   never get squeezed (fold) inside a flex header. */
+.back-button,
+.back-link,
+.report-back-btn,
+.pp-back,
+.role-back-button {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.back-button svg,
+.back-link svg,
+.report-back-btn svg,
+.pp-back svg,
+.role-back-button svg {
+  flex-shrink: 0;
+}

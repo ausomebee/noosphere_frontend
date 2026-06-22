@@ -2056,8 +2056,38 @@ input:checked + .slider:before {
   font-size: 1rem;
   cursor: pointer;
   color: #111827;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Back buttons must never wrap their icon + label onto two lines, even when the
+   header is cramped. Applied globally so pages that don't import the component
+   CSS (e.g. the form builder) still get it. */
+.back-button,
+.manage-back-button,
+.report-back-btn,
+.crb-back-btn,
+.fr-back,
+.fr-back-btn,
+.sa-back-btn,
+.view-request-back {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.back-button svg,
+.manage-back-button svg,
+.report-back-btn svg,
+.crb-back-btn svg,
+.fr-back svg,
+.fr-back-btn svg,
+.sa-back-btn svg,
+.view-request-back svg {
+  flex-shrink: 0;
 }
 
 .manage-column-header {
