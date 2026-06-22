@@ -26,7 +26,7 @@ const CreateHelpAndSupportTicket = async ({
       });
     }
 
-    const response = await authFetch.post(`${PLAIN_API_URL}/issue`, formData, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/issue/tenant`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -136,7 +136,7 @@ const GetHelpAndSupportTicketsOverviewByTenantId = async ({
 const GetSingleTicketById = async ({ ticketId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/issue/${ticketId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/issue/tenant/${ticketId}`);
     return response.data;
   } catch (error) {
     throw new Error(error.message || "Get single ticket failed");
