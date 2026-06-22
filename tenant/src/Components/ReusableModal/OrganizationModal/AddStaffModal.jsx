@@ -282,9 +282,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      licenses: [
-        { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
-      ],
+      licenses: [],
       otherPays: [],
       deductions: [],
       documents: [],
@@ -541,9 +539,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     if (!isOpen) {
       dispatch(resetDraft());
       reset({
-        licenses: [
-          { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
-        ],
+        licenses: [],
         otherPays: [],
         deductions: [],
         documents: [],
@@ -571,14 +567,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       clone.licenses =
         Array.isArray(clone.licenses) && clone.licenses.length
           ? clone.licenses
-          : [
-              {
-                licenseName: "",
-                licenseNumber: "",
-                expiryDate: "",
-                state: "",
-              },
-            ];
+          : [];
       clone.otherPays =
         Array.isArray(clone.payroll?.otherPays) &&
         clone.payroll.otherPays.length
@@ -622,9 +611,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       );
     } else {
       reset({
-        licenses: [
-          { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
-        ],
+        licenses: [],
         otherPays: [],
         deductions: [],
         documents: [],
@@ -721,9 +708,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   const handleClose = useCallback(() => {
     dispatch(resetDraft());
     reset({
-      licenses: [
-        { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
-      ],
+      licenses: [],
       otherPays: [{ type: "" }],
       deductions: [{ type: "" }],
       documents: [],
@@ -1056,24 +1041,22 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                 />
               </div>
             </div>
-            {idx > 0 && (
-              <div className="justify-end flex">
-                <Button
-                  type="button"
-                  variant="danger"
-                  label="Remove License"
-                  onClick={() => {
-                    setValue(
-                      "licenses",
-                      values.licenses.filter((_, i) => i !== idx),
-                      { shouldDirty: true },
-                    );
-                    showToast({ message: "License removed", type: "info" });
-                  }}
-                  className="mt-2"
-                />
-              </div>
-            )}
+            <div className="justify-end flex">
+              <Button
+                type="button"
+                variant="danger"
+                label="Remove License"
+                onClick={() => {
+                  setValue(
+                    "licenses",
+                    values.licenses.filter((_, i) => i !== idx),
+                    { shouldDirty: true },
+                  );
+                  showToast({ message: "License removed", type: "info" });
+                }}
+                className="mt-2"
+              />
+            </div>
           </div>
         ))}
         <Button

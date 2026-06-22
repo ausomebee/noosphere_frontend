@@ -10,33 +10,37 @@ export const addStaffSchema = yup.object().shape({
     .string()
     .matches(/^\+?[\d\s-]{10,}$/, "Invalid phone number")
     .required("Phone Number is required"),
+  // DOB, Gender and Address are optional (not mandatory).
   DOB: yup
     .date()
-    .required("Date of Birth is required")
-    .max(new Date(), "Date of Birth cannot be in the future"),
-  gender: yup.string().required("Gender is required"),
+    .nullable()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue == null ? null : value,
+    )
+    .max(new Date(), "Date of Birth cannot be in the future")
+    .optional(),
+  gender: yup.string().optional(),
   practiceNPI: yup
     .string()
     .matches(/^\d{10}$/, "NPI must be a 10-digit number")
     .optional(),
   staffRole: yup.string().required("Staff Role is required"),
-  address: yup.string().required("Address is required"),
+  address: yup.string().optional(),
   city: yup.string().required("City is required"),
   state: yup.string().required("State is required"),
   zip: yup.string().required("ZIP code is required"),
   country: yup.string().required("Country is required"),
   active: yup.boolean().required("Active status is required"),
-  licenses: yup
-    .array()
-    .of(
-      yup.object().shape({
-        licenseName: yup.string().required("License Name is required"),
-        licenseNumber: yup.string().required("License Number is required"),
-        expiryDate: yup.date().required("Expiration Date is required"),
-        state: yup.string().required("State is required"),
-      }),
-    )
-    .min(1, "At least one license is required"),
+  // Licenses are optional. If a license row is added it must be complete, but
+  // creating a staff member with no licenses is allowed.
+  licenses: yup.array().of(
+    yup.object().shape({
+      licenseName: yup.string().required("License Name is required"),
+      licenseNumber: yup.string().required("License Number is required"),
+      expiryDate: yup.date().required("Expiration Date is required"),
+      state: yup.string().required("State is required"),
+    }),
+  ),
   paymentSchedule: yup
     .string()
     .oneOf(["HOURLY", "DAILY", "SALARIED"])
@@ -76,8 +80,6 @@ export const addStaffSchema = yup.object().shape({
       type: yup.string(),
     }),
   ),
-  documents: yup
-    .array()
-    .min(1, "At least one document is required")
-    .required("At least one document is required"),
+  // Documents are optional (not mandatory).
+  documents: yup.array().optional(),
 });
