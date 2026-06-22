@@ -1,14 +1,22 @@
 // FormBuilder.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NewFormBuilder from "./SubFormBuilder/NewFormBuilder";
 import FormDrafts from "./SubFormBuilder/FormDrafts";
 
 const FormBuilder = () => {
   const navigate = useNavigate();
+  const { formId } = useParams();
   const [activeTab, setActiveTab] = useState("newForm");
   const [draftCount, setDraftCount] = useState(0); // REAL COUNT FROM CHILD
+
+  // Editing a draft navigates to /create/:formId while this page is already
+  // mounted (e.g. from the Drafts tab). The route changes but the tab wouldn't,
+  // so force the builder tab whenever a formId is present so the editor opens.
+  useEffect(() => {
+    if (formId) setActiveTab("newForm");
+  }, [formId]);
 
   return (
     <>
