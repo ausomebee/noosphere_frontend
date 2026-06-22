@@ -229,7 +229,7 @@ const QuestionAndAnswer2FA = () => {
                   <form onSubmit={handleSecuritySubmit(onSecuritySubmit)}>
                     <div className="security-question-container">
                       <Controller
-                        name="securityQuestions"
+                        name="securityQuestion"
                         control={control}
                         render={({ field }) => (
                           <SelectInput
@@ -240,8 +240,8 @@ const QuestionAndAnswer2FA = () => {
                                 ? "input-error"
                                 : ""
                             }`}
-                            {...registerSecurity("securityQuestion")}
-                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value)}
                           />
                         )}
                       />
