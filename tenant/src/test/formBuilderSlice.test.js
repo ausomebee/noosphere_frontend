@@ -17,6 +17,7 @@ const initialState = {
   formName: 'Untitled Form',
   elements: [],
   status: 'draft',
+  dirty: false,
 };
 
 describe('formBuilderSlice', () => {

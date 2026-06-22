@@ -765,9 +765,36 @@
 }
 
 .action-icon {
-  cursor: pointer;  
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  line-height: 0;
+}
 
- 
+/* Keep table action icons a clear, fixed size. Without this the react-icons
+   SVGs fall back to 1em and shrink with the responsive cell font-size (12–13px
+   on tablet/mobile), making them too small to see/tap. */
+.action-cell .action-icon svg,
+.action-cell .action-button svg {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 992px) {
+  .action-cell .action-icon svg,
+  .action-cell .action-button svg {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+  }
 }
 
 

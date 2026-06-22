@@ -45,6 +45,7 @@ import {
   setStatus,
   loadForm,
   resetForm,
+  markSaved,
 } from "../../../../ReduxStore/features/formBuilderSlice";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/customFormsApi";
@@ -390,8 +391,14 @@ const FieldRenderer = ({ field, errors = {} }) => {
               type="number"
               min="1"
               max="10"
-              value={field.maxStars || 5}
-              onChange={(e) => update({ maxStars: +e.target.value })}
+              placeholder="5"
+              value={field.maxStars ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                // Allow the field to be cleared/typed freely; coercing "" to a
+                // number here is what made it feel un-typeable (it snapped back).
+                update({ maxStars: v === "" ? undefined : Number(v) });
+              }}
               className="small-input force-br"
               error={errors.maxStars}
             />
@@ -519,7 +526,7 @@ const NewFormBuilder = () => {
   const { formId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { formName, elements, status } = useSelector(
+  const { formName, elements, status, dirty } = useSelector(
     (state) => state.formBuilder,
   );
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -540,7 +547,10 @@ const NewFormBuilder = () => {
   /* ────── LOAD FORM (EDIT MODE) ────── */
   useEffect(() => {
     if (!formId) {
-      dispatch(resetForm());
+      // Only clear for a genuinely fresh form. If there's unsaved work (dirty),
+      // keep it so leaving the builder — even after a save error — doesn't lose
+      // progress. It's cleared only once a save action completes.
+      if (!dirty) dispatch(resetForm());
       return;
     }
 
@@ -739,8 +749,10 @@ const NewFormBuilder = () => {
         ];
       }
 
-      if (el.type === "starRating" && el.maxStars) {
-        base.starRating = [el.maxStars];
+      if (el.type === "starRating") {
+        // Always send a valid number (default 5) so the payload never contains
+        // NaN/null — a malformed star value can make the backend reject (500).
+        base.starRating = [Number(el.maxStars) || 5];
       }
 
       if (el.type === "signature") {
@@ -807,6 +819,10 @@ const NewFormBuilder = () => {
             : "saved as draft";
 
       showToast(`Form ${action} successfully!`, "success");
+
+      // Save completed — clear the "unsaved work" flag so the persisted buffer
+      // isn't restored as a new draft next time a blank form is opened.
+      dispatch(markSaved());
 
       // After a fresh create, switch the route to the edit URL so the new id
       // becomes the active formId — subsequent saves update this form instead
