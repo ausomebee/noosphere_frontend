@@ -26,10 +26,10 @@ export const addStaffSchema = yup.object().shape({
     .optional(),
   staffRole: yup.string().required("Staff Role is required"),
   address: yup.string().optional(),
-  city: yup.string().required("City is required"),
-  state: yup.string().required("State is required"),
-  zip: yup.string().required("ZIP code is required"),
-  country: yup.string().required("Country is required"),
+  city: yup.string().optional(),
+  state: yup.string().optional(),
+  zip: yup.string().optional(),
+  country: yup.string().optional(),
   active: yup.boolean().required("Active status is required"),
   // Licenses are optional. If a license row is added it must be complete, but
   // creating a staff member with no licenses is allowed.
