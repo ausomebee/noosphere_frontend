@@ -17,7 +17,7 @@ import {
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
-import { addTargetSchema as schema, MASTERY_OPTION_SLOTS } from "./addTargetSchema";
+import { addTargetSchema as schema, MASTERY_OPTION_SLOTS, OPTION_CRITERIA_FIELDS } from "./addTargetSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 /* ---------- FileUploadArea Component ---------- */
@@ -224,11 +224,25 @@ const AddTargetModal = ({
       if (slot) criteria[slot] = masteryCriteriaOption;
     }
 
-    if (customRecurrenceDay) criteria.value = Number(customRecurrenceDay);
-    if (consecutiveSessions) criteria.sessions = Number(consecutiveSessions);
-    if (totalSessions) criteria.totalSessions = Number(totalSessions);
-    if (sessionCount) criteria.sessionCount = Number(sessionCount);
-    if (customRecurrencePosition) criteria.unit = customRecurrencePosition;
+    // Only persist the value fields that belong to the SELECTED option. The
+    // mastery inputs reuse the same form field names across a metric's options,
+    // so without this scoping a value left in another option's input would leak
+    // into the saved criteria. Output keys (value/sessions/totalSessions/
+    // sessionCount/unit) are unchanged — the backend contract is preserved.
+    const allowedFields =
+      (OPTION_CRITERIA_FIELDS[masteryMetric] || {})[masteryCriteriaOption] || [];
+    const fieldValues = {
+      value: customRecurrenceDay,
+      sessions: consecutiveSessions,
+      totalSessions,
+      sessionCount,
+      unit: customRecurrencePosition,
+    };
+    allowedFields.forEach((key) => {
+      const raw = fieldValues[key];
+      if (raw === "" || raw === undefined || raw === null) return;
+      criteria[key] = key === "unit" ? raw : Number(raw);
+    });
 
     setValue("masteryCriteria", criteria);
   }, [

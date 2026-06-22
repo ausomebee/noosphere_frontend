@@ -55,3 +55,37 @@ export const MASTERY_OPTION_SLOTS = {
   "Percentage of Steps Independent": { percentageSteps: "optionOne", allSteps: "optionTwo" },
   "Full Task Completion": { completion: "optionOne" },
 };
+
+// Which criteria value fields belong to each metric+option. The mastery inputs
+// share form field names across the radio options of a metric, so without this
+// scoping a value typed for one option leaks into the saved criteria of another
+// (cross-contamination). Keys map to the unchanged backend shape:
+//   value          ← customRecurrenceDay
+//   sessions       ← consecutiveSessions
+//   totalSessions  ← totalSessions
+//   sessionCount   ← sessionCount
+//   unit           ← customRecurrencePosition
+export const OPTION_CRITERIA_FIELDS = {
+  "Percentage Accuracy": {
+    percentage: ["value", "sessions"],
+    percentageOf: ["value", "totalSessions", "sessionCount"],
+    average: ["value", "sessionCount"],
+  },
+  "Trials Correct": {
+    consecutive: ["value", "sessions"],
+    percentageOf: ["value", "totalSessions", "sessionCount"],
+  },
+  "Independent Responses": {
+    consecutive: ["sessions"],
+    percentageOf: ["totalSessions", "sessionCount"],
+  },
+  "Frequency Count": { greaterThan: ["value", "sessions"] },
+  "Rate": { greaterThan: ["value", "sessions"] },
+  "Duration": { duration: ["value", "unit", "sessions"] },
+  "Latency": { latency: ["value", "unit", "sessions"] },
+  "Percentage of Steps Independent": {
+    percentageSteps: ["value", "sessions"],
+    allSteps: [],
+  },
+  "Full Task Completion": { completion: ["sessions"] },
+};
