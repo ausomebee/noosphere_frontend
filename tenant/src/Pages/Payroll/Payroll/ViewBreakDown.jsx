@@ -128,10 +128,19 @@ const ViewBreakDown = () => {
           netPay: item.netPay || 0,
           paymentSchedule: item.paymentSchedule || "",
           hourlyRate: Number(staffPayroll.ratePerHour) || 0,
-          monthlyRate: Number(staffPayroll.monthlyRate) || 0,
-          minHoursPerMonth: Number(staffPayroll.minHoursPerMonth) || 0,
-          basicPay: Number(staffPayroll.monthlyRate) || 0,
-          numberOfHours: Number(staffPayroll.minHoursPerMonth) || 0,
+          // The API returns `ratePerHour` + `minimumHours`; for SALARIED staff
+          // the monthly salary is stored in `ratePerHour`. Fall back to those
+          // when the explicit monthlyRate/minHoursPerMonth fields are absent.
+          monthlyRate:
+            Number(staffPayroll.monthlyRate ?? staffPayroll.ratePerHour) || 0,
+          minHoursPerMonth:
+            Number(staffPayroll.minHoursPerMonth ?? staffPayroll.minimumHours) ||
+            0,
+          basicPay:
+            Number(staffPayroll.monthlyRate ?? staffPayroll.ratePerHour) || 0,
+          numberOfHours:
+            Number(staffPayroll.minHoursPerMonth ?? staffPayroll.minimumHours) ||
+            0,
           additionalIncomes: staffPayroll.incomeItems || [],
           additionalDeductions: staffPayroll.deductions || [],
         };
