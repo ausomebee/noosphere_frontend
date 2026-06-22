@@ -394,7 +394,7 @@ const StaffsAndTeams = () => {
         zip: data.zip || "",
         country: data.country || "",
         active: data.active ?? true,
-        roleId: "2da05342-993a-414c-a660-c7382d2a823d",
+        roleId: data.staffRole,
         tenantId: modalMode === "add" ? tenantId : selectedRow?.tenantId,
         documents: data.documents
           .filter((f) => !f.error)

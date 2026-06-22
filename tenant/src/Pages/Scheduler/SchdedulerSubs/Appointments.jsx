@@ -7,6 +7,7 @@ import CancelledAppointments from "./AppointmentSubs/CancelledAppointments";
 import usePermissions from "../../../hooks/usePermissions";
 import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/AppointmentApi";
+import expandForAppointments from "../../../utils/expandForAppointments";
 
 const ALL_TABS = [
   { key: "upcomingAppointments", label: "Upcoming Appointments", permissionKey: "view_upcoming_appointments" },
@@ -37,6 +38,13 @@ const Appointments = () => {
     if (!tenantId && !userId) return;
     let cancelled = false;
     const lengthOf = (res) => res?.data?.data?.length ?? 0;
+    // Upcoming expands recurring masters into individual occurrences, so its
+    // badge counts the expanded single appointments (matching the table rows).
+    const expandedUpcomingCount = (res) =>
+      (res?.data?.data ?? []).reduce(
+        (sum, master) => sum + expandForAppointments(master, "future").length,
+        0
+      );
 
     const fetchCounts = async () => {
       const upcomingP =
@@ -61,7 +69,8 @@ const Appointments = () => {
 
       setCounts((prev) => ({
         ...prev,
-        upcomingAppointments: up.status === "fulfilled" ? lengthOf(up.value) : 0,
+        upcomingAppointments:
+          up.status === "fulfilled" ? expandedUpcomingCount(up.value) : 0,
         rescheduleRequests: re.status === "fulfilled" ? lengthOf(re.value) : 0,
         cancelledAppointments:
           ca.status === "fulfilled" && ca.value ? lengthOf(ca.value) : 0,

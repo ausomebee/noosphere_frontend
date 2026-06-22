@@ -277,6 +277,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     reset,
     setValue,
     control,
+    trigger,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -284,8 +285,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       licenses: [
         { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
       ],
-      otherPays: [{ type: "" }],
-      deductions: [{ type: "" }],
+      otherPays: [],
+      deductions: [],
       documents: [],
       programId: "",
       staffId: "",
@@ -543,8 +544,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         licenses: [
           { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
         ],
-        otherPays: [{ type: "" }],
-        deductions: [{ type: "" }],
+        otherPays: [],
+        deductions: [],
         documents: [],
         programId: "",
         staffId: "",
@@ -584,14 +585,14 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           ? clone.payroll.otherPays.map((p) => ({
               type: p.type || p || "",
             }))
-          : [{ type: "" }];
+          : [];
       clone.deductions =
         Array.isArray(clone.payroll?.deductions) &&
         clone.payroll.deductions.length
           ? clone.payroll.deductions.map((d) => ({
               type: d.type || d || "",
             }))
-          : [{ type: "" }];
+          : [];
       clone.documents = Array.isArray(clone.documents)
         ? clone.documents.map((d) => ({
             id: d.id,
@@ -624,8 +625,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         licenses: [
           { licenseName: "", licenseNumber: "", expiryDate: "", state: "" },
         ],
-        otherPays: [{ type: "" }],
-        deductions: [{ type: "" }],
+        otherPays: [],
+        deductions: [],
         documents: [],
         programId: "",
         staffId: "",
@@ -645,36 +646,35 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     [],
   );
 
+  const tabFieldMap = useMemo(
+    () => ({
+      "Basic Information": [
+        "fullName",
+        "email",
+        "phoneNumber",
+        "DOB",
+        "gender",
+        "staffRole",
+        "address",
+        "city",
+        "state",
+        "zip",
+        "country",
+        "active",
+      ],
+      Licenses: ["licenses"],
+      "Payroll Settings": ["paymentSchedule", "ratePerHour", "minimumHours"],
+      Documents: ["documents"],
+    }),
+    [],
+  );
+
+  // Actively run validation for the tab's fields (trigger) instead of reading
+  // the stale `errors` object — otherwise required fields can be skipped past.
   const validateTab = useCallback(
-    (tabName) => {
-      const fields = {
-        "Basic Information": [
-          "fullName",
-          "email",
-          "phoneNumber",
-          "DOB",
-          "gender",
-          "staffRole",
-          "address",
-          "city",
-          "state",
-          "zip",
-          "country",
-          "active",
-        ],
-        Licenses: ["licenses"],
-        "Payroll Settings": ["paymentSchedule", "ratePerHour", "minimumHours"],
-        Documents: ["documents"],
-      };
-      const tabFields = fields[tabName];
-      const invalid = tabFields.find((field) => {
-        if (field === "licenses")
-          return values.licenses?.some((l, i) => errors.licenses?.[i]);
-        if (field === "documents")
-          return errors.documents?.some((d, i) => errors.documents?.[i]);
-        return errors[field];
-      });
-      if (invalid) {
+    async (tabName) => {
+      const valid = await trigger(tabFieldMap[tabName]);
+      if (!valid) {
         setSubmitError(`Please fix errors in the ${tabName} tab`);
         showToast({
           message: `Please fix errors in the ${tabName} tab`,
@@ -685,15 +685,31 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       setSubmitError("");
       return true;
     },
-    [errors, values.licenses],
+    [trigger, tabFieldMap],
   );
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     const idx = tabsList.indexOf(activeTab);
-    if (idx < tabsList.length - 1 && validateTab(activeTab)) {
+    if (idx < tabsList.length - 1 && (await validateTab(activeTab))) {
       setActiveTab(tabsList[idx + 1]);
     }
   }, [activeTab, tabsList, validateTab]);
+
+  // On a failed final submit, jump to the first tab that has an error and tell
+  // the user — instead of silently doing nothing while errors sit off-screen.
+  const handleInvalidSubmit = useCallback(
+    (formErrors) => {
+      const firstTab = tabsList.find((tab) =>
+        tabFieldMap[tab].some((field) => formErrors[field]),
+      );
+      if (firstTab) setActiveTab(firstTab);
+      showToast({
+        message: "Please fix the highlighted errors before submitting",
+        type: "error",
+      });
+    },
+    [tabsList, tabFieldMap],
+  );
 
   const handlePrevious = useCallback(() => {
     const idx = tabsList.indexOf(activeTab);
@@ -1171,18 +1187,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
               <button
                 type="button"
                 onClick={() => {
-                  if (values.otherPays.length === 1) {
-                    // Optional: clear instead of remove last one
-                    setValue(`otherPays.${idx}.type`, "", {
-                      shouldDirty: true,
-                    });
-                  } else {
-                    setValue(
-                      "otherPays",
-                      values.otherPays.filter((_, i) => i !== idx),
-                      { shouldDirty: true },
-                    );
-                  }
+                  setValue(
+                    "otherPays",
+                    values.otherPays.filter((_, i) => i !== idx),
+                    { shouldDirty: true },
+                  );
                   showToast({ message: "Other pay removed", type: "info" });
                 }}
                 className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-full hover:bg-red-50"
@@ -1235,18 +1244,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
               <button
                 type="button"
                 onClick={() => {
-                  if (values.deductions.length === 1) {
-                    // Optional: clear instead of remove last one
-                    setValue(`deductions.${idx}.type`, "", {
-                      shouldDirty: true,
-                    });
-                  } else {
-                    setValue(
-                      "deductions",
-                      values.deductions.filter((_, i) => i !== idx),
-                      { shouldDirty: true },
-                    );
-                  }
+                  setValue(
+                    "deductions",
+                    values.deductions.filter((_, i) => i !== idx),
+                    { shouldDirty: true },
+                  );
                   showToast({ message: "Deduction removed", type: "info" });
                 }}
                 className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-full hover:bg-red-50"
@@ -1330,8 +1332,10 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
   const getPrimaryButtonAction = useCallback(
     () =>
-      activeTab === "Documents" ? handleSubmit(handleFormSubmit) : handleNext,
-    [activeTab, handleSubmit, handleFormSubmit, handleNext],
+      activeTab === "Documents"
+        ? handleSubmit(handleFormSubmit, handleInvalidSubmit)
+        : handleNext,
+    [activeTab, handleSubmit, handleFormSubmit, handleInvalidSubmit, handleNext],
   );
 
   useEffect(() => () => debouncedUpdateRef.current.cancel(), []);

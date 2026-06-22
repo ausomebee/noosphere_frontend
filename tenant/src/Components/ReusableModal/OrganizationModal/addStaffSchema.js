@@ -26,14 +26,17 @@ export const addStaffSchema = yup.object().shape({
   zip: yup.string().required("ZIP code is required"),
   country: yup.string().required("Country is required"),
   active: yup.boolean().required("Active status is required"),
-  licenses: yup.array().of(
-    yup.object().shape({
-      licenseName: yup.string().required("License Name is required"),
-      licenseNumber: yup.string().required("License Number is required"),
-      expiryDate: yup.date().required("Expiration Date is required"),
-      state: yup.string().required("State is required"),
-    }),
-  ),
+  licenses: yup
+    .array()
+    .of(
+      yup.object().shape({
+        licenseName: yup.string().required("License Name is required"),
+        licenseNumber: yup.string().required("License Number is required"),
+        expiryDate: yup.date().required("Expiration Date is required"),
+        state: yup.string().required("State is required"),
+      }),
+    )
+    .min(1, "At least one license is required"),
   paymentSchedule: yup
     .string()
     .oneOf(["HOURLY", "DAILY", "SALARIED"])
@@ -60,15 +63,21 @@ export const addStaffSchema = yup.object().shape({
         ),
       otherwise: (schema) => schema.notRequired().nullable(),
     }),
+  // Other Pay & Deductions are optional. Empty rows are ignored on submit, so
+  // the item `type` is not required — this prevents a blank row from blocking
+  // the form when the section is left empty.
   otherPays: yup.array().of(
     yup.object().shape({
-      type: yup.string().required("Pay type is required"),
+      type: yup.string(),
     }),
   ),
   deductions: yup.array().of(
     yup.object().shape({
-      type: yup.string().required("Deduction type is required"),
+      type: yup.string(),
     }),
   ),
-  documents: yup.array().optional(),
+  documents: yup
+    .array()
+    .min(1, "At least one document is required")
+    .required("At least one document is required"),
 });
