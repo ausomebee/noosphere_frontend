@@ -504,7 +504,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("percentageCorrectTrialSession")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     error={errors.percentageCorrectTrialSession?.message}
                   />
@@ -525,7 +525,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("percentageCorrectTrialSession")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     error={errors.percentageCorrectTrialSession?.message}
                   />
@@ -546,7 +546,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("trialOrOpportunitiesSession")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     error={errors.trialOrOpportunitiesSession?.message}
                   />
@@ -568,7 +568,7 @@ const AddTargetModal = ({
                     <TextInput
                       type="number"
                       {...register("trialOrOpportunitiesSession")}
-                      width="50"
+                      width="100"
                       className="rounded-20px"
                       error={errors.trialOrOpportunitiesSession?.message}
                     />
@@ -644,7 +644,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0%"
                     error={errors.customRecurrenceDay?.message}
@@ -655,7 +655,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -676,7 +676,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0%"
                     error={errors.customRecurrenceDay?.message}
@@ -687,7 +687,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("totalSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.totalSessions?.message}
@@ -698,7 +698,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("sessionCount")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.sessionCount?.message}
@@ -720,7 +720,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0%"
                     error={errors.customRecurrenceDay?.message}
@@ -731,7 +731,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("sessionCount")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.sessionCount?.message}
@@ -757,7 +757,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -770,7 +770,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -791,7 +791,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -804,7 +804,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("totalSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.totalSessions?.message}
@@ -815,7 +815,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("sessionCount")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.sessionCount?.message}
@@ -844,7 +844,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -868,7 +868,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("totalSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.totalSessions?.message}
@@ -879,7 +879,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("sessionCount")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.sessionCount?.message}
@@ -908,7 +908,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -921,7 +921,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -950,7 +950,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -961,7 +961,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -992,7 +992,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -1019,7 +1019,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -1050,7 +1050,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -1077,7 +1077,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -1105,7 +1105,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("customRecurrenceDay")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.customRecurrenceDay?.message}
@@ -1118,7 +1118,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
@@ -1158,7 +1158,7 @@ const AddTargetModal = ({
                   <TextInput
                     type="number"
                     {...register("consecutiveSessions")}
-                    width="50"
+                    width="100"
                     className="rounded-20px"
                     placeholder="0"
                     error={errors.consecutiveSessions?.message}
