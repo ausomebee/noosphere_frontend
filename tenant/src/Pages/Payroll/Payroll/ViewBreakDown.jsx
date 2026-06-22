@@ -64,6 +64,36 @@ const ViewBreakDown = () => {
     fetchItems();
   }, [tenantId, accessToken, refreshToken]);
 
+  // Load the cycle's own metadata (compensation type + date) independent of its
+  // staff. Without this, an empty cycle has no compensationType, which leaves
+  // the header blank and breaks the Add-Staff modal (it needs compensationType
+  // to look up eligible staff).
+  useEffect(() => {
+    if (!tenantId || !id) return;
+    const fetchCycleMeta = async () => {
+      try {
+        const res = await payrollApi.GetPayrollCycleByTenantId({
+          tenantId,
+          accessToken,
+          refreshToken,
+        });
+        const list = res?.data || res || [];
+        const cycle = Array.isArray(list)
+          ? list.find((c) => c.id === id)
+          : null;
+        if (cycle) {
+          setCompensationType((prev) => prev || cycle.compensationType || "");
+          if (cycle.startDate) {
+            setPayrollDate((prev) => prev || formatDate(cycle.startDate, dateFormat));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load payroll cycle metadata:", error);
+      }
+    };
+    fetchCycleMeta();
+  }, [tenantId, id, accessToken, refreshToken, dateFormat]);
+
   const fetchCycleStaffs = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -111,7 +141,13 @@ const ViewBreakDown = () => {
       originalEmployeesRef.current = mapped;
       setHasChanges(false);
     } catch (error) {
-      showApiError(error, "LOAD_PAYROLL_STAFF");
+      // A cycle with no staff yet (common right after an automatic cycle runs)
+      // shouldn't read as a failure — fall back to the empty state so the user
+      // can still add staff and build the breakdown.
+      console.error("Failed to load payroll cycle staff:", error);
+      setEmployees([]);
+      originalEmployeesRef.current = [];
+      setHasChanges(false);
     } finally {
       setLoading(false);
     }
@@ -429,7 +465,8 @@ const ViewBreakDown = () => {
               {currentEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "#6b7280" }}>
-                    No employees found.
+                    No staff in this payroll yet. Use “Add Staff to Payroll” to
+                    build the breakdown.
                   </td>
                 </tr>
               ) : (
