@@ -121,7 +121,11 @@ const ViewRequestDetails = () => {
             <tr>
               <td className="field-label">Logged by</td>
               <td className="field-value">
-                {request.loggedBy?.fullName || "N/A"}
+                {[request.loggedBy?.firstName, request.loggedBy?.lastName]
+                  .filter(Boolean)
+                  .join(" ") ||
+                  request.loggedBy?.fullName ||
+                  "N/A"}
               </td>
             </tr>
             <tr>

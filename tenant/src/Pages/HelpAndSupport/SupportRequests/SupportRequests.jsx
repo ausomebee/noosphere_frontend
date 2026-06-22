@@ -124,7 +124,12 @@ const SupportRequests = () => {
         req.description?.length > 30
           ? req.description.substring(0, 30) + "..."
           : req.description || "N/A",
-      loggedBy: req.loggedBy?.fullName || "N/A",
+      loggedBy:
+        [req.loggedBy?.firstName, req.loggedBy?.lastName]
+          .filter(Boolean)
+          .join(" ") ||
+        req.loggedBy?.fullName ||
+        "N/A",
       dateReported: formatDate(req.createdAt, dateFormat),
       status: req.status || "Not Started",
       hasActions: true,
