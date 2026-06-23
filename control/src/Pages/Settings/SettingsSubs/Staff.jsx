@@ -278,12 +278,16 @@ const Staff = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phoneNumber: formData.phoneNumber || "",
         roleId: formData.roleId,
-        departmentId: formData.departmentId,
         accessToken,
         refreshToken,
       };
+
+      // Only send optional fields when the user actually provided them.
+      const phoneNumber = formData.phoneNumber?.trim();
+      if (phoneNumber) payload.phoneNumber = phoneNumber;
+      const departmentId = formData.departmentId?.trim();
+      if (departmentId) payload.departmentId = departmentId;
 
       if (editingStaff) {
         await staffApi.UpdateAdmin({ id: editingStaff.id, ...payload });
