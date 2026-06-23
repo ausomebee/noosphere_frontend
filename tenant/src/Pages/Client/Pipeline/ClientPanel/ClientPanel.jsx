@@ -15,13 +15,14 @@ import LoadingSpinner from "../../../../Components/LoadingSpinner";
 
 const ClientPanel = () => {
   const navigate = useNavigate();
-  const { clientId } = useParams(); // <-- get the ID from URL
+  const { clientId, tenantClientId } = useParams(); // <-- get the IDs from URL
   const location = useLocation();
   const [view, setView] = useState("clientInformation");
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [authCount, setAuthCount] = useState(0);
 
   const { accessToken, refreshToken } = useAuth();
 
@@ -49,6 +50,31 @@ const ClientPanel = () => {
 
     fetchClient();
   }, [clientId, accessToken, refreshToken, reloadKey]);
+
+  // Fetch the real authorization count so the tab badge reflects actual data
+  // (and hides when there are none) instead of a hardcoded number.
+  useEffect(() => {
+    if (!tenantClientId) return;
+    let cancelled = false;
+    const fetchAuthCount = async () => {
+      try {
+        const res = await api.GetAllClientAuthorizationByTenantClientId({
+          tenantClientId,
+          accessToken,
+          refreshToken,
+        });
+        if (cancelled) return;
+        const list = res?.data?.data || [];
+        setAuthCount(Array.isArray(list) ? list.length : 0);
+      } catch {
+        if (!cancelled) setAuthCount(0);
+      }
+    };
+    fetchAuthCount();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantClientId, accessToken, refreshToken, reloadKey]);
 
   const refreshClient = () => setReloadKey((k) => k + 1);
 
@@ -156,6 +182,7 @@ const ClientPanel = () => {
             }`}
           >
             Authorization
+            {authCount > 0 && <span className="auth-badge">{authCount}</span>}
           </button>
           <button
             onClick={() => setView("clinicalReports")}
