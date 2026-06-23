@@ -2594,12 +2594,19 @@ input:checked + .slider:before {
   width: 150px;
 }
 
+.manage-dropdown-wrapper {
+  position: relative;
+  z-index: 1000;
+}
+
 .timesheet-dropdown {
   position: absolute;
-  background: white;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  /* Sit clearly above the table below (table uses lower stacking). */
+  z-index: 1000;
   top: 100%;
   left: -60px;
   margin-top: 4px;

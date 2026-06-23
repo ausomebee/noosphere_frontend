@@ -124,16 +124,6 @@ const UploadDocumentModal = ({
             hint="PDF, JPG, PNG — Max 10MB"
           />
         </div>
-
-        {/* Preview */}
-        {file && documentName && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm font-medium text-blue-900">Will be saved as:</p>
-            <p className="text-sm text-blue-800 mt-1">
-              "{documentName}" — {file.fileUrl.split("/").pop().split("?")[0]}
-            </p>
-          </div>
-        )}
       </div>
     </ReusableModal>
   );

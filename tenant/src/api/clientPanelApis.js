@@ -84,7 +84,7 @@ const CreateClientDocuments = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/client-documents`, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/client-documents/tenant`, {
       createdBy,
       tenantClientId,
       name,
@@ -106,7 +106,7 @@ const UpdateClientDocuments = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client-documents`, {
+    const response = await authFetch.put(`${PLAIN_API_URL}/client-documents/tenant`, {
       id,
       name,
       documentDetails,
@@ -144,7 +144,7 @@ const CreateClientDocumentsRequest = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(
-      `${PLAIN_API_URL}/client-requested-documents`,
+      `${PLAIN_API_URL}/client-requested-documents/tenant`,
       {
         tenantClientId,
         name,
@@ -592,7 +592,7 @@ const AttachFormToClient = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/client-forms`, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/client-forms/tenant`, {
       tenantClientId,
       formId,
     });

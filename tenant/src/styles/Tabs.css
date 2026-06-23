@@ -189,6 +189,13 @@
   font-weight: 600;
 }
 
+/* Balance tabs evenly across the width (flex) without changing the underline
+   style — used where tabs were tiling to the left. */
+.appointment-sched-view-switcher.appointment-tabs-balanced .appointment-sched-view-button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* ---- Segmented (pill) variant — used by Scheduler → Appointments to match
    Figma. A grey rounded track with an evenly-balanced tab per item; the active
    tab is a white pill. Scoped to this modifier so the other (underline) tab

@@ -731,7 +731,7 @@ const DocumentsForms = () => {
                     <button
                       onClick={() => {
                         setFormDropdownOpen(false);
-                        navigate("/custom-forms/forms");
+                        navigate("/custom-forms/forms/create");
                       }}
                       className="timesheet-dropdown-item"
                     >
@@ -743,9 +743,12 @@ const DocumentsForms = () => {
             )}
           </div>
 
-          {/* Table Container — no overflow-hidden so the Documents/Forms tables
-              (CustomTable) aren't clipped and scroll like the Requests tab. */}
-          <div className="bg-white rounded-lg">
+          {/* Table Container — capped height with its own vertical scroll so all
+              three tabs (Documents, Document Requests, Forms) can be scrolled. */}
+          <div
+            className="bg-white rounded-lg"
+            style={{ maxHeight: "60vh", overflowY: "auto" }}
+          >
             {/* DOCUMENTS TAB */}
             {activeTab === "documents" && (
               <CustomTable

@@ -116,7 +116,7 @@ const ClientPanel = () => {
         </div>
 
         {/* Tabs */}
-        <div className="appointment-sched-view-switcher">
+        <div className="appointment-sched-view-switcher appointment-tabs-balanced">
           <button
             onClick={() => setView("clientInformation")}
             className={`appointment-sched-view-button ${
