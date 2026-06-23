@@ -291,7 +291,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="zipCode Code" {...register("zipCode")} />
+              <TextInput label="Zip Code" {...register("zipCode")} />
               <Controller
                 name="country"
                 control={control}
@@ -372,7 +372,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="zipCode" {...register("caregiverzipCode")} />
+              <TextInput label="Zip Code" {...register("caregiverzipCode")} />
               <Controller
                 name="caregiverCountry"
                 control={control}

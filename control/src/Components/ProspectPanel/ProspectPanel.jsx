@@ -106,6 +106,7 @@ const ProspectPanel = () => {
     zipCode: "",
     country: "",
     leadSource: "",
+    subdomain: "",
     staff: null,
     progress: "0/0",
     paymentVerified: false,
@@ -343,6 +344,7 @@ const ProspectPanel = () => {
         zipCode: pipelineItem?.tenant?.location?.zip || "",
         country: pipelineItem?.tenant?.location?.country || "",
         leadSource: pipelineItem?.tenant?.leadSource || "N/A",
+        subdomain: pipelineItem?.tenant?.subdomain || "",
         staff: pipelineItem?.admin
           ? {
               staffId: pipelineItem.admin.id,
@@ -519,6 +521,7 @@ const ProspectPanel = () => {
       zipCode: updatedCandidate.zipCode || prev.zipCode,
       country: updatedCandidate.country || prev.country,
       leadSource: updatedCandidate.leadSource || prev.leadSource,
+      subdomain: updatedCandidate.subdomain || prev.subdomain,
     }));
     setIsEditModalOpen(false);
   };

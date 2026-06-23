@@ -41,9 +41,22 @@ const validationSchema = yup.object().shape({
     }),
   country: yup.string().nullable(),
   leadSource: yup.string().nullable(),
+  subdomain: yup
+    .string()
+    .nullable()
+    .matches(/^[a-z]+(?:-[a-z]+)*$/, {
+      message:
+        "Subdomain may only contain lowercase letters and hyphens (no numbers or spaces)",
+      excludeEmptyString: true,
+    }),
   assignToStaff: yup.string().nullable(),
   onboardStage: yup.string().nullable(),
 });
+
+// Keep only lowercase letters and hyphens as the user types — strips ".,<>",
+// digits, spaces, etc. before the value reaches the form state.
+const sanitizeSubdomain = (value) =>
+  (value || "").toLowerCase().replace(/[^a-z-]/g, "");
 
 const EditProspectModal = ({
   isOpen,
@@ -105,6 +118,7 @@ const EditProspectModal = ({
           country: data.country,
         },
         leadSource: data.leadSource,
+        subdomain: data.subdomain,
         assignToAdmin: data.assignToStaff,
         pipelineStageId: data.onboardStage,
         createdBy: adminId,
@@ -229,6 +243,16 @@ const EditProspectModal = ({
           {...register("leadSource")}
           error={errors.leadSource?.message}
           placeholder="Type something"
+        />
+        <TextInput
+          label="Subdomain"
+          {...register("subdomain")}
+          onChange={(e) => {
+            e.target.value = sanitizeSubdomain(e.target.value);
+            register("subdomain").onChange(e);
+          }}
+          error={errors.subdomain?.message}
+          placeholder="e.g. mycompany"
         />
         <SelectInput
           label="Assign to Staff"
