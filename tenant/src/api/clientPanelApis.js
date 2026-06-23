@@ -122,7 +122,7 @@ const GetAllClientDocument = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-documents/client/${id}`
+      `${PLAIN_API_URL}/client-documents/client/tenant/${id}`
     );
     return response;
   } catch (error) {
@@ -168,7 +168,7 @@ const GetAllClientDocumentRequested = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-requested-documents/client/${id}`
+      `${PLAIN_API_URL}/client-requested-documents/client/tenant/${id}`
     );
     return response;
   } catch (error) {
@@ -612,7 +612,7 @@ const GetAllFormsByTenantClientId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/client-forms/${tenantClientId}`
+      `${PLAIN_API_URL}/client-forms/tenant/${tenantClientId}`
     );
     return res;
   } catch (e) {
