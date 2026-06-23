@@ -6,6 +6,7 @@ import { LuEye } from "react-icons/lu";
 import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { FiEdit2 } from "react-icons/fi";
 import CustomTable from "../../../Components/Table/CustomTable";
+import DeleteConfirmationModal from "../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
@@ -18,6 +19,8 @@ const TemplatesLibrary = () => {
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch Templates on Mount
   useEffect(() => {
@@ -96,26 +99,30 @@ const TemplatesLibrary = () => {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
-      onClick: async (row) => {
-        if (!window.confirm(`Delete "${row.name}"?`)) return;
-
-        try {
-          await api.DeleteFormsByFormId({
-            formId: row.id,
-            active: "delete",
-            accessToken,
-            refreshToken,
-          });
-
-          showToast("Template deleted successfully", "success");
-          setTableData((prev) => prev.filter((item) => item.id !== row.id));
-        } catch (e) {
-          showToast(e.message || "Failed to delete template", "error");
-        }
-      },
+      onClick: (row) => setRowToDelete(row),
       className: "remove",
     },
   ].filter(Boolean);
+
+  const handleDeleteTemplate = async () => {
+    if (!rowToDelete) return;
+    setDeleting(true);
+    try {
+      await api.DeleteFormsByFormId({
+        formId: rowToDelete.id,
+        active: "delete",
+        accessToken,
+        refreshToken,
+      });
+      showToast("Template deleted successfully", "success");
+      setTableData((prev) => prev.filter((item) => item.id !== rowToDelete.id));
+      setRowToDelete(null);
+    } catch (e) {
+      showToast(e.message || "Failed to delete template", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -151,6 +158,16 @@ const TemplatesLibrary = () => {
           enableSearch={true}
         />
       </div>
+      <DeleteConfirmationModal
+        isOpen={!!rowToDelete}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleDeleteTemplate}
+        title="Delete Template"
+        message={`Are you sure you want to delete "${rowToDelete?.name || "this template"}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        confirmButtonColor="#dc2626"
+        loading={deleting}
+      />
     </>
   );
 };

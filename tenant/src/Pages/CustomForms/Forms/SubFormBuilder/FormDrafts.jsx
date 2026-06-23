@@ -1,6 +1,7 @@
 // FormDrafts.jsx
 import React, { useState, useEffect } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import DeleteConfirmationModal from "../../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { FiEdit2 } from "react-icons/fi";
@@ -17,6 +18,8 @@ const FormDrafts = ({ onCountChange }) => {
 
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // FETCH DRAFTS + SEND COUNT TO PARENT
   useEffect(() => {
@@ -99,26 +102,30 @@ const FormDrafts = ({ onCountChange }) => {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
-      onClick: async (row) => {
-        if (!window.confirm(`Delete "${row.name}"?`)) return;
-
-        try {
-          await api.DeleteFormsByFormId({
-            formId: row.id,
-            active: "delete",
-            accessToken,
-            refreshToken,
-          });
-
-          setDrafts((prev) => prev.filter((d) => d.id !== row.id));
-          showToast("Draft deleted successfully", "success");
-        } catch (e) {
-          showToast(e.message || "Failed to delete draft", "error");
-        }
-      },
+      onClick: (row) => setRowToDelete(row),
       className: "remove",
     },
   ];
+
+  const handleDeleteDraft = async () => {
+    if (!rowToDelete) return;
+    setDeleting(true);
+    try {
+      await api.DeleteFormsByFormId({
+        formId: rowToDelete.id,
+        active: "delete",
+        accessToken,
+        refreshToken,
+      });
+      setDrafts((prev) => prev.filter((d) => d.id !== rowToDelete.id));
+      showToast("Draft deleted successfully", "success");
+      setRowToDelete(null);
+    } catch (e) {
+      showToast(e.message || "Failed to delete draft", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="mt-6">
@@ -131,6 +138,16 @@ const FormDrafts = ({ onCountChange }) => {
         itemsPerPage={10}
         tableName="Draft Forms"
         loading={loading}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!rowToDelete}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleDeleteDraft}
+        title="Delete Draft"
+        message={`Are you sure you want to delete "${rowToDelete?.name || "this draft"}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        confirmButtonColor="#dc2626"
+        loading={deleting}
       />
     </div>
   );
