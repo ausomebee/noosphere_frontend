@@ -222,7 +222,8 @@ const AuthorizationTab = () => {
       setIsAddModalOpen(false);
     } catch (error) {
       console.error(error);
-      showApiError(error, "ADD_AUTHORIZATION");
+      // Re-throw so the modal surfaces the error and stays open instead of closing.
+      throw error;
     }
   };
 
@@ -261,7 +262,8 @@ const AuthorizationTab = () => {
       setEditingAuthData(null);
     } catch (error) {
       console.error(error);
-      showApiError(error, "UPDATE_AUTHORIZATION");
+      // Re-throw so the modal surfaces the error and stays open instead of closing.
+      throw error;
     }
   };
 
