@@ -743,8 +743,9 @@ const DocumentsForms = () => {
             )}
           </div>
 
-          {/* Table Container */}
-          <div className="bg-white rounded-lg overflow-hidden">
+          {/* Table Container — no overflow-hidden so the Documents/Forms tables
+              (CustomTable) aren't clipped and scroll like the Requests tab. */}
+          <div className="bg-white rounded-lg">
             {/* DOCUMENTS TAB */}
             {activeTab === "documents" && (
               <CustomTable
