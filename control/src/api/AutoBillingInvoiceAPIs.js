@@ -49,7 +49,7 @@ const UpdateDayBeforeDueNumber = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/invoice/invoice/management/days-before-due-date`,
+      `${PLAIN_API_URL}/invoice/invoice/management/days-before-due-date/admin`,
       {
         id,
         daysBeforeDueDate,
@@ -72,7 +72,7 @@ const UpcomingInvoiceEmail = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/invoice/invoice/management/upcoming-invoice`,
+      `${PLAIN_API_URL}/invoice/invoice/management/upcoming-invoice/admin`,
       {
         id,
         upcomingInvoiceHeader,
