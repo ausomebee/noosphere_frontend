@@ -26,11 +26,9 @@ const CreateHelpAndSupportTicket = async ({
       });
     }
 
-    const response = await authFetch.post(`${PLAIN_API_URL}/issue/tenant`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    // Don't set Content-Type manually — let axios add the multipart boundary,
+    // otherwise the attachment can't be parsed by the server.
+    const response = await authFetch.post(`${PLAIN_API_URL}/issue/tenant`, formData);
     return response.data;
   } catch (error) {
     throw new Error(error.message || "Create Help and Support ticket failed");
