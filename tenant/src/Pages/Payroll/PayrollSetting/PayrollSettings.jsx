@@ -3,6 +3,7 @@ import IncomeItems from "./PayrollSettingsSubs/IncomeItems";
 import Deductions from "./PayrollSettingsSubs/Deductions";
 import PayrollCycles from "./PayrollSettingsSubs/PayrollCycles";
 import usePermissions from "../../../hooks/usePermissions";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const ALL_TABS = [
   { key: "incomeItems", label: "Income Items", permissionKey: "view_income_items_list" },
@@ -18,7 +19,7 @@ const PayrollSettings = () => {
     [hasPermission]
   );
 
-  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:payrollSettings", visibleTabs[0]?.key || "");
 
   const renderActiveTab = () => {
     switch (activeTab) {

@@ -11,6 +11,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 import "../../../Components/CalendarScheduler/Scheduler.css";
 
 const ALL_TABS = [
@@ -29,7 +30,7 @@ const StaffsAndTeams = () => {
     [hasPermission]
   );
 
-  const [view, setView] = useState(visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:staffsAndTeams", visibleTabs[0]?.key || "");
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

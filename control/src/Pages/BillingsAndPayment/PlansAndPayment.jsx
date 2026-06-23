@@ -18,10 +18,11 @@ import api2 from "../../api/TenantApis";
 import api from "../../api/BillingApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { formatDate } from "../../Helper/Formatters";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 const PlansAndPayment = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("standard");
+  const [activeTab, setActiveTab] = usePersistedTab("control:plansAndPayment", "standard");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

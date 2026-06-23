@@ -15,6 +15,7 @@ import tenantApi from "../../../api/TenantApis";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const TenantSingleIssueManagement = () => {
   const { tenantId } = useParams();
@@ -24,7 +25,7 @@ const TenantSingleIssueManagement = () => {
   const [overview, setOverview] = useState(null);
   const [issues, setIssues] = useState([]);
   const [tenant, setTenant] = useState(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = usePersistedTab("control:tenantIssueManagement", "all");
   const [viewIssue, setViewIssue] = useState(null);
   const [breakdownModal, setBreakdownModal] = useState(false);
 

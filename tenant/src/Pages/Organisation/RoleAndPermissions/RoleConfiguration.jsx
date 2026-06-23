@@ -4,6 +4,7 @@ import { FaArrowLeft, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import { SelectInput, TextInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 import {
   MODULE_OPTIONS,
   DATA_ACCESS_LEVELS,
@@ -20,7 +21,7 @@ const RoleConfiguration = ({ mode, onCancel, onSubmit, submitting }) => {
   const dispatch = useDispatch();
   const draft = useSelector((state) => state.roleDraft);
 
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:roleConfig", "basic");
 
   // Local state for Basic Settings (synced to Redux on Next)
   const [roleName, setRoleName] = useState(draft.roleName || "");

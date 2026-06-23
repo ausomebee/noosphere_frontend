@@ -2,12 +2,13 @@ import React, { useState, Suspense, lazy } from "react";
 
 import "../../BillingAndPayments.css";
 import { SectionSpinner } from "../../../../Components/LoadingSpinner";
+import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 const InvoiceManagement = lazy(() => import("./InvoiceManagement"));
 const PaymentManagement = lazy(() => import("./PaymentManagement"));
 
 const AutoBilling = () => {
-  const [activeTab, setActiveTab] = useState("invoice");
+  const [activeTab, setActiveTab] = usePersistedTab("control:autoBilling", "invoice");
 
   const subscriptionStats = [
     { key: "invoice", label: "INVOICE MANAGEMENT" },

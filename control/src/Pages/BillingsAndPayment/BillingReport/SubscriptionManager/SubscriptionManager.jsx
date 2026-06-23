@@ -26,12 +26,13 @@ import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
 import debounce from "lodash/debounce";
+import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 const SubscriptionManager = () => {
   const navigate = useNavigate();
   const { accessToken, refreshToken, userId: adminId } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = usePersistedTab("control:subscriptionManager", "all");
   const [filterValue, setFilterValue] = useState("");
   const [checkboxSelectedRows, setCheckboxSelectedRows] = useState([]);
   const [selectSelectedNames, setSelectSelectedNames] = useState([]);

@@ -12,12 +12,13 @@ import ClinicalReportsTab from "./ClinentSubs/ClinicalReports";
 import api from "../../../../api/clientPanelApis"; // adjust path
 import useAuth from "../../../../hooks/useAuth";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
+import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 const ClientPanel = () => {
   const navigate = useNavigate();
   const { clientId, tenantClientId } = useParams(); // <-- get the IDs from URL
   const location = useLocation();
-  const [view, setView] = useState("clientInformation");
+  const [view, setView] = usePersistedTab(`tenant:clientPanel:${clientId}`, "clientInformation");
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

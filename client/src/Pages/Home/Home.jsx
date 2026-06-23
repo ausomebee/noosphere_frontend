@@ -18,6 +18,7 @@ import SuccessModal from "../../Components/Modal/SuccessModal";
 // API Functions
 import api from "../../api/homeApis";
 import ErrorFallback from "../../Components/ErrorFallback";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
@@ -78,7 +79,7 @@ const LoadingSpinner = ({ size = "medium", message = "Loading..." }) => {
 // ============================================================================
 const Home = () => {
   usePageTitle("Dashboard");
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeTab, setActiveTab] = usePersistedTab("client:home", "upcoming");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState({
     overview: false,

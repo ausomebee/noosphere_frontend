@@ -9,12 +9,13 @@ import useAuth from "../../hooks/useAuth";
 import api from "../../api/programsApis";
 import Button from "../../Components/Button/Button";
 import ErrorFallback from "../../Components/ErrorFallback";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 const Programs = () => {
   const { clientId, accessToken, refreshToken } = useAuth();
 
   usePageTitle("Programs");
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = usePersistedTab("client:programs", "all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 

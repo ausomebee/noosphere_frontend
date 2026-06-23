@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const LIMIT = 20;
 
@@ -35,7 +36,7 @@ const TenantSingleUserLogs = () => {
   const [loading, setLoading] = useState(true);
   const [tenantName, setTenantName] = useState("");
   const [grouped, setGrouped] = useState({});
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = usePersistedTab("control:tenantUserLogs", "All");
 
   const fetchLogs = useCallback(async () => {
     try {

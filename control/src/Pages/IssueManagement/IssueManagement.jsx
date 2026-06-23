@@ -23,6 +23,7 @@ import api2 from "../../api/TenantApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
@@ -32,7 +33,7 @@ const IssueManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddIssueModalOpen, setIsAddIssueModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = usePersistedTab("control:issueManagement", "all");
   const [filterValue, setFilterValue] = useState("");
   const [staffList, setStaffList] = useState([]);
   const [tenantList, setTenantList] = useState([]);

@@ -9,6 +9,7 @@ import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import usePermissions from "../../../../hooks/usePermissions";
+import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 const SUB_TABS = [
   { key: "payers", label: "Payers", permissionKey: "view_payers_list" },
@@ -25,7 +26,7 @@ const PayersAndInsurance = () => {
     [hasPermission]
   );
 
-  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:payersAndInsurance", visibleTabs[0]?.key || "");
   const [payerModalOpen, setPayerModalOpen] = useState(false);
   const [insuranceTypeModalOpen, setInsuranceTypeModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);

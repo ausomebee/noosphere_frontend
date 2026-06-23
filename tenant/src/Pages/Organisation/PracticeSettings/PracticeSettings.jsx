@@ -8,6 +8,7 @@ import api from "../../../api/organisationApis";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import { showToast } from "../../../Helper/ShowToast";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const ALL_TABS = [
   { key: "diagnosisCodes", label: "Diagnosis Codes", permissionKey: "view_diagnosis_codes" },
@@ -23,7 +24,7 @@ const PracticeSettings = () => {
     [hasPermission]
   );
 
-  const [view, setView] = useState(visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:practiceSettings", visibleTabs[0]?.key || "");
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

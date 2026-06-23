@@ -14,6 +14,7 @@ import api from "../../../api/organisationStaffApis";
 import { showToast } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 import "../Organisation.css";
 
 const SingleStaffByAdmin = () => {
@@ -27,7 +28,7 @@ const SingleStaffByAdmin = () => {
   const [staff, setStaff] = useState(null);
   const [licenses, setLicenses] = useState([]);
   const [files, setFiles] = useState([]);
-  const [view, setView] = useState("staffProfile");
+  const [view, setView] = usePersistedTab("tenant:singleStaff", "staffProfile");
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [licenseToEdit, setLicenseToEdit] = useState(null);
   const [licenseView, setLicenseView] = useState("card");

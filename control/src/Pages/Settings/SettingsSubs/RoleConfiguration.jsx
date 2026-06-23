@@ -12,6 +12,7 @@ import {
   dataAccessLevelOptions,
 } from "../../../Data/permissionsConfig";
 import { Skeleton } from "../../../Components/LoadingSpinner";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 import "./RoleConfiguration.css";
 
 const RoleConfiguration = () => {
@@ -20,7 +21,7 @@ const RoleConfiguration = () => {
   const { accessToken, refreshToken, userId } = useAuth();
   const isEditing = Boolean(roleId);
 
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = usePersistedTab("control:roleConfig", "basic");
   const [saving, setSaving] = useState(false);
   const [loadingRole, setLoadingRole] = useState(false);
 

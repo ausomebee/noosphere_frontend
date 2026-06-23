@@ -8,6 +8,7 @@ import usePermissions from "../../../hooks/usePermissions";
 import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/AppointmentApi";
 import expandForAppointments from "../../../utils/expandForAppointments";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const ALL_TABS = [
   { key: "upcomingAppointments", label: "Upcoming Appointments", permissionKey: "view_upcoming_appointments" },
@@ -27,7 +28,7 @@ const Appointments = () => {
     [hasPermission]
   );
 
-  const [view, setView] = useState(visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:appointments", visibleTabs[0]?.key || "");
   // No seeded mock counts — badges derive from real data and stay hidden at 0.
   const [counts, setCounts] = useState({});
 

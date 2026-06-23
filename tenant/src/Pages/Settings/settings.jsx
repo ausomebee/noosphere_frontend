@@ -4,6 +4,7 @@ import GeneralSettings from "./SettingsSubs/GeneralSettings";
 import NotificationSettings from "./SettingsSubs/NotificationSettings";
 import ClinicalReports from "./SettingsSubs/ClinicalReports";
 import usePermissions from "../../hooks/usePermissions";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 const ALL_TABS = [
   { key: "generalSettings", label: "General Settings", permissionKey: "view_general_settings" },
@@ -20,7 +21,7 @@ const Settings = () => {
   );
 
   usePageTitle("Settings");
-  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:settings", visibleTabs[0]?.key || "");
 
   const renderActiveTab = () => {
     switch (activeTab) {

@@ -3,6 +3,7 @@ import ServiceCodes from "./SettingSubs/ServiceCodes";
 import RoundingRules from "./SettingSubs/RoundingRules";
 import PayersAndInsurance from "./SettingSubs/PayersAndInsurance";
 import usePermissions from "../../../hooks/usePermissions";
+import usePersistedTab from "../../../hooks/usePersistedTab";
 
 const ALL_TABS = [
   { key: "serviceCodes", label: "Service Codes", permissionKey: "view_service_codes_list" },
@@ -18,7 +19,7 @@ const BillingSettings = () => {
     [hasPermission]
   );
 
-  const [view, setView] = useState(visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:billingSettings", visibleTabs[0]?.key || "");
 
   const renderContent = () => {
     switch (view) {

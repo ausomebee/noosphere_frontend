@@ -11,6 +11,7 @@ import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewP
 import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
 import { showToast } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
+import usePersistedTab from "../../hooks/usePersistedTab";
 import "./BillingAndPayments.css";
 
 const statusMap = {
@@ -28,7 +29,7 @@ const statusMap = {
 const BillingManager = () => {
   const { accessToken, refreshToken } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("invoices");
+  const [activeTab, setActiveTab] = usePersistedTab("control:billingManager", "invoices");
   const [activeSubTab, setActiveSubTab] = useState("all");
   const [filterValues, setFilterValues] = useState({
     totalBilled: "all_time",

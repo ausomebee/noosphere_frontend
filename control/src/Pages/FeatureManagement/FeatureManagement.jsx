@@ -22,6 +22,7 @@ import {
 import { showToast } from "../../Helper/ShowToast";
 import "./FeatureManagement.css";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import usePersistedTab from "../../hooks/usePersistedTab";
 
 const FeatureManagement = () => {
   const dispatch = useDispatch();
@@ -42,7 +43,7 @@ const FeatureManagement = () => {
   const [isUpdatingGroup, setIsUpdatingGroup] = useState(false);
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
   const [isCreatingFeature, setIsCreatingFeature] = useState(false);
-  const [viewMode, setViewMode] = useState("management");
+  const [viewMode, setViewMode] = usePersistedTab("control:featureManagement", "management");
   const [selectedFeature, setSelectedFeature] = useState(null);
 
   const headerDropdownRef = useRef(null);

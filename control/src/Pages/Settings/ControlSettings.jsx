@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Staff from "./SettingsSubs/Staff";
 import Departments from "./SettingsSubs/Departments";
 import Roles from "./SettingsSubs/Roles";
+import usePersistedTab from "../../hooks/usePersistedTab";
 import "./Settings.css";
 
 const tabs = [
@@ -13,7 +14,7 @@ const tabs = [
 
 const ControlSettings = () => {
   usePageTitle("Settings");
-  const [activeTab, setActiveTab] = useState("staff");
+  const [activeTab, setActiveTab] = usePersistedTab("control:controlSettings", "staff");
 
   return (
     <div className="settings-page">

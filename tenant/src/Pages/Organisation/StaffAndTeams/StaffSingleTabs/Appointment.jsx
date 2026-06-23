@@ -17,6 +17,7 @@ import { SearchInput } from "../../../../Components/Input/Inputs";
 import DatePickerModal from "../../../../Components/ReusableModal/SchedulerModal/DatePickerModal";
 import api from "../../../../api/organisationStaffApis";
 import { showToast } from "../../../../Helper/ShowToast";
+import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 // View-only Appointment Details Modal (just close button)
 const StaffAppointmentDetailsModal = ({ isOpen, onClose, appointment, position }) => {
@@ -250,7 +251,7 @@ const transformAppointment = (appt) => {
 
 const Appointment = ({ staffId, accessToken, refreshToken }) => {
   const { hasPermission } = usePermissions();
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:staffAppointment", "calendar");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("month");
   const [isSidebarVisible] = useState(false);
