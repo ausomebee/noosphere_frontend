@@ -100,14 +100,26 @@ const AddProspectModal = ({
   });
 
   // Persist in-progress input so an accidental Cancel/close doesn't lose it.
-  const clearDraft = useReduxFormDraft("add-prospect", { watch, reset, isOpen });
+  const clearDraft = useReduxFormDraft("add-prospect", {
+    watch,
+    reset,
+    isOpen,
+    // Never persist/restore the stage from a draft — the stage the user opened
+    // the modal from should win, not whatever a previous draft held.
+    exclude: ["pipelineStageId"],
+  });
 
-  // Set default pipelineStageId when modal opens
+  // Preselect the stage the modal was opened from. Deferred so it runs after the
+  // draft restore (which fires on a 0ms timeout) and therefore wins.
   React.useEffect(() => {
-    if (pipelineStageId) {
-      setValue("pipelineStageId", pipelineStageId);
+    if (isOpen && pipelineStageId) {
+      const t = setTimeout(
+        () => setValue("pipelineStageId", pipelineStageId),
+        0
+      );
+      return () => clearTimeout(t);
     }
-  }, [pipelineStageId, setValue]);
+  }, [isOpen, pipelineStageId, setValue]);
 
   const staffOptions = useMemo(
     () => [

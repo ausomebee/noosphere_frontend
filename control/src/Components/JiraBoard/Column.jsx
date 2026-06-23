@@ -224,6 +224,7 @@ const Column = React.memo(({
         pipelineId={pipelineId}
         staffList={staffList}
         stages={stages}
+        pipelineStageId={columnId}
       />
     </div>
   );
