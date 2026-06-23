@@ -46,7 +46,7 @@ const STATUS_CLASS_MAP = {
 
 const SupportRequests = () => {
   const navigate = useNavigate();
-  const { tenantId, accessToken, refreshToken } = useAuth();
+  const { tenantId, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
 
@@ -193,6 +193,28 @@ const SupportRequests = () => {
     ];
   }, [tableData]);
 
+  // Withdraw a support request via the change-status endpoint, then refresh.
+  const handleWithdraw = useCallback(
+    async (row) => {
+      try {
+        await api.ChangeSupportRequestStatus({
+          id: row.id,
+          status: "Withdrawn",
+          updatedBy: userId,
+          accessToken,
+          refreshToken,
+        });
+        showToast("Support request withdrawn", "success");
+        fetchTickets();
+        fetchOverview();
+      } catch (error) {
+        console.error("Failed to withdraw request:", error);
+        showToast(error.message || "Failed to withdraw request", "error");
+      }
+    },
+    [userId, accessToken, refreshToken, fetchTickets, fetchOverview]
+  );
+
   // Actions
   const actions = useCallback(
     () => [
@@ -206,15 +228,13 @@ const SupportRequests = () => {
           },
           hasPermission("withdraw_support_request") && {
             label: "Withdraw Request",
-            onClick: (row) => {
-              setRequests((prev) => prev.filter((r) => r.id !== row.id));
-            },
+            onClick: (row) => handleWithdraw(row),
             className: "remove",
           },
         ].filter(Boolean),
       },
     ],
-    [navigate, hasPermission]
+    [navigate, hasPermission, handleWithdraw]
   );
 
   // File handlers

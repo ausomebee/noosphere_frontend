@@ -16,7 +16,8 @@ import "./SupportRequests.css";
 const ViewRequestDetails = () => {
   const navigate = useNavigate();
   const { requestId } = useParams();
-  const { accessToken, refreshToken } = useAuth();
+  const { userId, accessToken, refreshToken } = useAuth();
+  const [withdrawing, setWithdrawing] = useState(false);
   const { dateFormat, timeFormat } = useFormatSettings();
   const { openDocument } = useDocumentViewer();
 
@@ -45,8 +46,24 @@ const ViewRequestDetails = () => {
     fetchTicket();
   }, [fetchTicket]);
 
-  const handleWithdraw = () => {
-    navigate("/help/support-requests");
+  const handleWithdraw = async () => {
+    setWithdrawing(true);
+    try {
+      await api.ChangeSupportRequestStatus({
+        id: requestId,
+        status: "Withdrawn",
+        updatedBy: userId,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Support request withdrawn", "success");
+      navigate("/help/support-requests");
+    } catch (error) {
+      console.error("Failed to withdraw request:", error);
+      showToast(error.message || "Failed to withdraw request", "error");
+    } finally {
+      setWithdrawing(false);
+    }
   };
 
   if (loading) {
@@ -91,8 +108,12 @@ const ViewRequestDetails = () => {
             </button>
             <h2>View issue details</h2>
           </div>
-          <button className="withdraw-btn cursor-pointer" onClick={handleWithdraw}>
-            Withdraw Request
+          <button
+            className="withdraw-btn cursor-pointer"
+            onClick={handleWithdraw}
+            disabled={withdrawing}
+          >
+            {withdrawing ? "Withdrawing..." : "Withdraw Request"}
           </button>
         </div>
 

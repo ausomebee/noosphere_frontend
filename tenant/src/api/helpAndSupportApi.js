@@ -178,9 +178,31 @@ const GetSingleTicketById = async ({ ticketId, accessToken, refreshToken }) => {
 //     "Logs": []
 //   }
 // }
+const ChangeSupportRequestStatus = async ({
+  id,
+  status,
+  updatedBy,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/issue/issue/change-status/tenant`,
+      { id, status, updatedBy }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Change support request status failed"
+    );
+  }
+};
+
 export default {
   CreateHelpAndSupportTicket,
   GetHelpAndSupportTicketsByTenantId,
-    GetHelpAndSupportTicketsOverviewByTenantId,
-    GetSingleTicketById,
+  GetHelpAndSupportTicketsOverviewByTenantId,
+  GetSingleTicketById,
+  ChangeSupportRequestStatus,
 };
