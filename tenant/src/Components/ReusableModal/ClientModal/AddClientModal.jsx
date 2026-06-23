@@ -20,7 +20,7 @@ import { SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { genderOptions, countryOptions, stateOptions as usStates } from "../../../Data/selectOptions";
 import { formatDateForInput } from "../../../Helper/Formatters";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
@@ -516,12 +516,15 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
       await onSubmit(cleaned);
 
+      // Only clear the draft + close once the API call actually succeeded.
       dispatch(resetDraft());
       clearDraft();
       onClose();
     } catch (err) {
-      console.error("Submit error:", err);
-      showToast("Failed to save client", "error");
+      // Log + surface the real API error and KEEP the modal open so the user
+      // can fix and retry (the draft is preserved).
+      console.error("Create client error:", err);
+      showApiError(err, "SAVE_CLIENT");
     } finally {
       setSubmitting(false);
     }

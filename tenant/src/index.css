@@ -2596,17 +2596,18 @@ input:checked + .slider:before {
 
 .manage-dropdown-wrapper {
   position: relative;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .timesheet-dropdown {
   position: absolute;
-  background: #ffffff;
+  /* Force an opaque white panel that sits above the table below it. */
+  background-color: #ffffff !important;
+  opacity: 1 !important;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  /* Sit clearly above the table below (table uses lower stacking). */
-  z-index: 1000;
+  z-index: 9999 !important;
   top: 100%;
   left: -60px;
   margin-top: 4px;

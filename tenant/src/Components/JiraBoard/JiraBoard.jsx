@@ -537,8 +537,8 @@ const JiraBoard = () => {
         throw new Error("Failed to create candidate");
       }
     } catch (error) {
-      console.error("Failed to add candidate:", error);
-      showApiError(error, "ADD_CANDIDATE");
+      // Re-throw so the AddClientModal surfaces the API error and stays open.
+      throw error;
     } finally {
       stopLoading();
     }
@@ -825,10 +825,9 @@ const JiraBoard = () => {
       <AddClientModal
         isOpen={showAddClientModal}
         onClose={() => setShowAddClientModal(false)}
-        onSubmit={(clientData) => {
-          handleAddTask(currentPipelineStageId, clientData);
-          setShowAddClientModal(false);
-        }}
+        onSubmit={(clientData) =>
+          handleAddTask(currentPipelineStageId, clientData)
+        }
         initialData={null}
       />
       <DeleteConfirmationModal

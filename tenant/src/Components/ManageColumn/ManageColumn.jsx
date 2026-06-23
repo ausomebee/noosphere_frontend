@@ -20,7 +20,7 @@ import {
   createCandidate,
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast } from "../../Helper/ShowToast";
 import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
 import { FiEdit2 } from "react-icons/fi";
@@ -173,13 +173,13 @@ const ManageColumn = () => {
         if (result.data) {
           showToast("Candidate added successfully!", "success");
           fetchPipelineItemsData(); // Refresh the table data
-          setShowAddClientModal(false);
+          // Modal closes itself via onClose on success.
         } else {
           throw new Error("Failed to create candidate");
         }
       } catch (error) {
-        console.error("Failed to add candidate:", error);
-        showApiError(error, "ADD_CANDIDATE");
+        // Re-throw so the AddClientModal shows the error and stays open.
+        throw error;
       } finally {
         setIsCreatingCandidate(false);
       }

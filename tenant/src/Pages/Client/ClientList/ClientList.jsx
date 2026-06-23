@@ -88,10 +88,11 @@ const ClientList = () => {
         });
         showToast("Client created successfully", "success");
       }
-      setIsAddClientOpen(false);
       fetchClients();
+      // Modal closes itself via onClose on success.
     } catch (err) {
-      showApiError(err, "CLIENT_OPERATION");
+      // Re-throw so the AddClientModal shows the error and stays open.
+      throw err;
     } finally {
       setIsUpdating(false);
     }

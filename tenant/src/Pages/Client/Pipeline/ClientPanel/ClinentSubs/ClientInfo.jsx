@@ -6,6 +6,7 @@ import { HiOutlineCog6Tooth, HiOutlineTrash } from "react-icons/hi2";
 import { LuEye } from "react-icons/lu";
 import Button from "../../../../../Components/Button/Button";
 import CustomTable from "../../../../../Components/Table/CustomTable";
+import Pagination from "../../../../../Components/Table/Pagination";
 import { useNavigate, useParams } from "react-router-dom";
 import ClientPortalSettingsModal from "../../../../../Components/ReusableModal/ClientModal/ClientAccessModal";
 import AddClientModal from "../../../../../Components/ReusableModal/ClientModal/AddClientModal";
@@ -239,6 +240,8 @@ const DocumentsForms = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
   const [expandedRows, setExpandedRows] = useState([]);
+  const [reqPage, setReqPage] = useState(1);
+  const REQ_PER_PAGE = 10;
 
   // Modal States
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -728,6 +731,7 @@ const DocumentsForms = () => {
                     >
                       Import from Library
                     </button>
+                    {/* Create Custom Form hidden for now per request
                     <button
                       onClick={() => {
                         setFormDropdownOpen(false);
@@ -737,6 +741,7 @@ const DocumentsForms = () => {
                     >
                       Create Custom Form
                     </button>
+                    */}
                   </div>
                 )}
               </div>
@@ -786,7 +791,12 @@ const DocumentsForms = () => {
                           </td>
                         </tr>
                       ) : (
-                        transformedRequestsData.map((req) => {
+                        transformedRequestsData
+                          .slice(
+                            (reqPage - 1) * REQ_PER_PAGE,
+                            reqPage * REQ_PER_PAGE
+                          )
+                          .map((req) => {
                           const isExpanded = expandedRows.includes(req.id);
                           return (
                             <React.Fragment key={req.id}>
@@ -947,6 +957,15 @@ const DocumentsForms = () => {
                     </tbody>
                   </table>
                 </div>
+                {Math.ceil(transformedRequestsData.length / REQ_PER_PAGE) > 1 && (
+                  <Pagination
+                    currentPage={reqPage}
+                    totalPages={Math.ceil(
+                      transformedRequestsData.length / REQ_PER_PAGE
+                    )}
+                    onPageChange={setReqPage}
+                  />
+                )}
               </div>
             )}
 

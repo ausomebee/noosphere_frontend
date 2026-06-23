@@ -107,10 +107,9 @@ const Column = ({
   }, []);
 
   const handleSaveClient = useCallback(
-    (clientData) => {
-      onAddTask(columnId, clientData);
-      setShowAddClientModal(false);
-    },
+    // Return the promise (and don't self-close) so the AddClientModal can stay
+    // open and show the error if the API call fails.
+    (clientData) => onAddTask(columnId, clientData),
     [onAddTask, columnId]
   );
 
