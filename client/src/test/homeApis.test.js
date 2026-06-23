@@ -21,7 +21,7 @@ describe("homeApis", () => {
     it("calls correct endpoint with clientId", async () => {
       mockGet.mockResolvedValue({ data: { data: {} } });
       await api.GetClientSessionOverview({ clientId: "c1", ...authParams });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/overview/c1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/overview/client/c1"));
     });
 
     it("returns response on success", async () => {

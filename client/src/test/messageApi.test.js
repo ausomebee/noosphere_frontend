@@ -68,7 +68,7 @@ describe("messageApi", () => {
     it("calls correct endpoint", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetNotifications({ userId: "u1", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/notifications/user/u1/CLIENT"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/notifications/user/client/u1/CLIENT"));
     });
   });
 

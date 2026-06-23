@@ -56,7 +56,7 @@ const GetNotifications = async ({ userId, userType = "CLIENT", accessToken, refr
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/notifications/user/${userId}/${userType}`
+      `${PLAIN_API_URL}/notifications/user/client/${userId}/${userType}`
     );
     return response;
   } catch (error) {

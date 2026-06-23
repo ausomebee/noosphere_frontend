@@ -12,7 +12,7 @@ const GetClientSessionOverview = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/client/overview/${clientId}`,
+      `${PLAIN_API_URL}/sessions/client/overview/client/${clientId}`,
     );
     return response;
   } catch (error) {

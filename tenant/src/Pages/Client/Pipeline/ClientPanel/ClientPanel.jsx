@@ -156,7 +156,6 @@ const ClientPanel = () => {
             }`}
           >
             Authorization
-            <span className="auth-badge">1</span>
           </button>
           <button
             onClick={() => setView("clinicalReports")}
