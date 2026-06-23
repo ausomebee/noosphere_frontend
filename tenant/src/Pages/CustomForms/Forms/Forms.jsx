@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
+import DeleteConfirmationModal from "../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
@@ -22,6 +23,8 @@ const Forms = () => {
   const [forms, setForms] = useState([]);       // raw API data
   const [loading, setLoading] = useState(true); // table loading flag
   const [reloadKey, setReloadKey] = useState(0);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const refreshForms = () => setReloadKey((k) => k + 1);
 
   // ---- Load forms on mount ------------------------------------
@@ -123,27 +126,33 @@ const Forms = () => {
         },
         hasPermission("delete_form") && {
           label: (row) => (row._raw?.isDraft ? "Delete" : "Delete"),
-          onClick: async (row) => {
-            const action = "delete";
-            try {
-              await api.DeleteFormsByFormId({
-                formId: row.id,
-                active: action,
-                accessToken,
-                refreshToken,
-              });
-              showToast( `Form ${action}d`, "success");
-              setForms((prev) => prev.filter((f) => f.id !== row.id));
-            } catch (e) {
-              showToast( e.message || "Operation failed", "error");
-            }
-          },
+          onClick: (row) => setRowToDelete(row),
           className: "remove",
         },
       ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
+
+  const handleDeleteForm = async () => {
+    if (!rowToDelete) return;
+    setDeleting(true);
+    try {
+      await api.DeleteFormsByFormId({
+        formId: rowToDelete.id,
+        active: "delete",
+        accessToken,
+        refreshToken,
+      });
+      showToast("Form deleted", "success");
+      setForms((prev) => prev.filter((f) => f.id !== rowToDelete.id));
+      setRowToDelete(null);
+    } catch (e) {
+      showToast(e.message || "Operation failed", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // ---- Create new form ----------------------------------------
   const handleAddForm = () => {
@@ -191,6 +200,16 @@ const Forms = () => {
           }
         />
       </div>
+      <DeleteConfirmationModal
+        isOpen={!!rowToDelete}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleDeleteForm}
+        title="Delete Form"
+        message={`Are you sure you want to delete "${rowToDelete?.name || "this form"}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        confirmButtonColor="#dc2626"
+        loading={deleting}
+      />
     </>
   );
 };
