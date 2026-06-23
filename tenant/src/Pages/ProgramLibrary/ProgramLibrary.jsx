@@ -200,7 +200,7 @@ const handleDeleteConfirm = async () => {
             <h1 className="appointment-sched-title">Program Library</h1>
             <h3 className="text-xl text-gray-700 font-500">Setup and manage treatment programs here</h3>
 
-            <div className="appointment-sched-view-switcher">
+            <div className="appointment-sched-view-switcher appointment-tabs-segmented">
               <button
                 onClick={() => setView("skillAcquisition")}
                 className={`appointment-sched-view-button flex items-center ${

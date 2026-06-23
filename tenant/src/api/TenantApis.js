@@ -110,7 +110,7 @@ const GetSinglePipelineStage = async ({ pipelineStageId, accessToken, refreshTok
 const GetPipelineItem = async ({ stageId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/item/stage/client/${stageId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/pipeline/item/stage/client/tenant/${stageId}`);
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Get Pipeline Stage Item failed");

@@ -90,7 +90,7 @@ const Appointments = () => {
       <div>
         <h1 className="appointment-sched-title">Appointments</h1>
         <div>
-          <div className="appointment-sched-view-switcher">
+          <div className="appointment-sched-view-switcher appointment-tabs-segmented">
             {visibleTabs.map((tab) => (
               <button
                 key={tab.key}

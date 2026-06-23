@@ -152,7 +152,7 @@ describe("TenantApis", () => {
       const mockGet = vi.fn().mockResolvedValue({ data: [] });
       AxiosInterceptor.mockReturnValue({ get: mockGet, post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() });
       await api.GetPipelineItem({ stageId: "s1", ...tokens });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/item/stage/client/s1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/item/stage/client/tenant/s1"));
     });
   });
 
