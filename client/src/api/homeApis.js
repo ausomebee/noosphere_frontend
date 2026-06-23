@@ -32,7 +32,7 @@ const GetClientSessionChart = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/client/overview-chart/${clientId}/${groupBy}`,
+      `${PLAIN_API_URL}/sessions/client/overview-chart/client/${clientId}/${groupBy}`,
     );
     return response;
   } catch (error) {

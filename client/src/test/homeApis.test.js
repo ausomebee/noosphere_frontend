@@ -46,7 +46,7 @@ describe("homeApis", () => {
     it("calls correct endpoint with clientId and groupBy", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetClientSessionChart({ clientId: "c1", groupBy: "month", ...authParams });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/overview-chart/c1/month"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/overview-chart/client/c1/month"));
     });
 
     it("throws on failure", async () => {
