@@ -225,11 +225,6 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
         {totalSessions} Session{totalSessions !== 1 ? "s" : ""} {currentPeriod === "year" ? "this year" : currentPeriod === "month" ? "this month" : "last 30 days"}
       </p>
 
-      <div className="flex gap-2 mb-4">
-        <p className="text-red-500 bg-white-2 rounded-12px px-4">-25%</p>
-        <p className="text-gray-4B4E54 text-sm font-500">from last period</p>
-      </div>
-
       <Chart
         options={chartOptions}
         series={chartData.series}

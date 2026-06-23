@@ -163,7 +163,8 @@
 }
 
 .appointment-sched-view-button {
-  flex: 0 0 auto;
+  /* Balance tabs evenly across the available width instead of tiling left. */
+  flex: 1 1 0;
   min-width: 0;
   padding: 0.5rem 0.25rem;
   font-size: 0.875rem;
@@ -312,9 +313,9 @@
   }
 
   .appointment-sched-view-button {
-    flex: none;
-    min-width: auto;
-    flex-shrink: 0;
+    /* Keep tabs balanced across the width on tablet too. */
+    flex: 1 1 0;
+    min-width: 0;
     overflow: visible;
     text-overflow: unset;
     white-space: nowrap;
