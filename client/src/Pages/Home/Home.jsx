@@ -17,6 +17,7 @@ import SuccessModal from "../../Components/Modal/SuccessModal";
 
 // API Functions
 import api from "../../api/homeApis";
+import ErrorFallback from "../../Components/ErrorFallback";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
@@ -732,10 +733,10 @@ const Home = () => {
   if (error) {
     return (
       <DashboardLayout>
-        <div className="home-content error">
-          <p>Error: {error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
+        <ErrorFallback
+          message="Something went wrong loading your dashboard. Please try again."
+          onRetry={() => window.location.reload()}
+        />
       </DashboardLayout>
     );
   }

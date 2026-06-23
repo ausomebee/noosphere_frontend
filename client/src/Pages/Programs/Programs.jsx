@@ -8,6 +8,7 @@ import DashboardLayout from "../../layouts/ClientLayout";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/programsApis";
 import Button from "../../Components/Button/Button";
+import ErrorFallback from "../../Components/ErrorFallback";
 
 const Programs = () => {
   const { clientId, accessToken, refreshToken } = useAuth();
@@ -576,7 +577,7 @@ const TargetPerformanceModal = ({ modalState, onClose }) => {
           {loading ? (
             <div className="chart-loading">Loading performance data...</div>
           ) : error ? (
-            <div className="chart-error">{error}</div>
+            <ErrorFallback message="Something went wrong loading performance data. Please try again." />
           ) : performanceData ? (
             <div className="chart-wrapper">
               <Chart

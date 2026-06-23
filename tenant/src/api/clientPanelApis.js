@@ -200,7 +200,7 @@ const GetClientsProgramByClientId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-programs/${id}`
+      `${PLAIN_API_URL}/client-programs/tenant/${id}`
     );
     return response;
   } catch (error) {
@@ -469,7 +469,7 @@ const GetAllClientAuthorizationByTenantClientId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/client-authorization/tenant-client/${tenantClientId}`
+      `${PLAIN_API_URL}/client-authorization/tenant-client/tenant/${tenantClientId}`
     );
     return res;
   } catch (e) {
