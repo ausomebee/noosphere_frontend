@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 const UploadDocumentModal = ({
   isOpen,
@@ -42,7 +42,7 @@ const UploadDocumentModal = ({
     }
   }, [documentName]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) {
       showToast("Please upload a file", "error");
       return;
@@ -52,19 +52,25 @@ const UploadDocumentModal = ({
       return;
     }
 
-    onUpload({
-      name: documentName.trim(),
-      documentDetails: {
-        fileUrl: file.fileUrl,
-        fileType: file.fileType,
-        uploadedAt: file.uploadedAt,
-      },
-    });
+    try {
+      // Only reset/close once the upload actually succeeds; on error keep the
+      // modal open and show the message.
+      await onUpload({
+        name: documentName.trim(),
+        documentDetails: {
+          fileUrl: file.fileUrl,
+          fileType: file.fileType,
+          uploadedAt: file.uploadedAt,
+        },
+      });
 
-    // Reset & close
-    setFile(null);
-    setDocumentName("");
-    onClose();
+      setFile(null);
+      setDocumentName("");
+      onClose();
+    } catch (err) {
+      console.error("Document upload error:", err);
+      showApiError(err, "UPLOAD_DOCUMENT");
+    }
   };
 
   const handleClose = () => {

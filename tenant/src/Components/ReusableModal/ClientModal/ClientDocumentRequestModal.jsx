@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SwitchInput, CheckboxInput, TextareaInput } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 
 const NewDocumentRequestModal = ({
   isOpen,
@@ -16,26 +16,33 @@ const NewDocumentRequestModal = ({
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [dueDate, setDueDate] = useState("");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       showToast("Name of document is required", "error");
       return;
     }
 
-    onSubmit({
-      name: name.trim(),
-      description: description.trim() || null,
-      allowMultipleFiles: allowMultiple,
-      dueDate: dueDate || null,
-      status: "Pending upload",
-      createdAt: new Date().toISOString(),
-    });
+    try {
+      // Wait for the API to succeed before clearing/closing — on error keep the
+      // modal open and show the message instead of closing on a failed save.
+      await onSubmit({
+        name: name.trim(),
+        description: description.trim() || null,
+        allowMultipleFiles: allowMultiple,
+        dueDate: dueDate || null,
+        status: "Pending upload",
+        createdAt: new Date().toISOString(),
+      });
 
-    setName("");
-    setDescription("");
-    setAllowMultiple(false);
-    setDueDate("");
-    onClose();
+      setName("");
+      setDescription("");
+      setAllowMultiple(false);
+      setDueDate("");
+      onClose();
+    } catch (err) {
+      console.error("Document request error:", err);
+      showApiError(err, "DOCUMENT_REQUEST");
+    }
   };
 
   const handleClose = () => {

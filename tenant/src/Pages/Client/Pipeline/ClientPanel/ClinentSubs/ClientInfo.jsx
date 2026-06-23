@@ -610,10 +610,10 @@ const DocumentsForms = () => {
         refreshToken,
       });
       showToast("Document uploaded successfully", "success");
-      setIsUploadModalOpen(false);
-      fetchDocuments(); // Refresh the documents list
+      fetchDocuments(); // Refresh the documents list — modal closes itself on success
     } catch (err) {
-      showToast("Upload failed", "error");
+      // Re-throw so the upload modal shows the error and stays open.
+      throw err;
     }
   };
 
@@ -629,10 +629,10 @@ const DocumentsForms = () => {
         refreshToken,
       });
       showToast("Document request created", "success");
-      setIsRequestModalOpen(false);
-      fetchDocumentRequests(); // Refresh the requests list
+      fetchDocumentRequests(); // Refresh the requests list — modal closes itself on success
     } catch (err) {
-      showToast("Failed to create request", "error");
+      // Re-throw so the request modal shows the error and stays open.
+      throw err;
     }
   };
 
@@ -957,7 +957,7 @@ const DocumentsForms = () => {
                     </tbody>
                   </table>
                 </div>
-                {Math.ceil(transformedRequestsData.length / REQ_PER_PAGE) > 1 && (
+                {transformedRequestsData.length > 0 && (
                   <Pagination
                     currentPage={reqPage}
                     totalPages={Math.ceil(

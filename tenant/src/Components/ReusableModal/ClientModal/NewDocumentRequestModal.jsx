@@ -4,22 +4,30 @@ import ReusableModal from "../../ReusableModal/ReusableModal";
 import { TextInput, TextareaInput, CheckboxInput } from "../../Input/Inputs";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import { showApiError } from "../../../Helper/ShowToast";
 
 const NewDocumentRequestModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
   const { dateFormat } = useFormatSettings();
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [dueDate, setDueDate] = useState("");
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    onSubmit({
-      name: e.target.documentName.value,
-      description: e.target.description.value,
-      allowMultiple,
-      dueDate,
-    });
-    // Here you would send to API / create the request
-    onClose();
+    const form = e.target.closest?.("form") || e.target;
+    try {
+      // Only close once the request is actually created; on error keep the
+      // modal open and show the message.
+      await onSubmit({
+        name: form.documentName?.value,
+        description: form.description?.value,
+        allowMultiple,
+        dueDate,
+      });
+      onClose();
+    } catch (err) {
+      console.error("Document request error:", err);
+      showApiError(err, "DOCUMENT_REQUEST");
+    }
   };
 
   return (

@@ -1041,22 +1041,24 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                 />
               </div>
             </div>
-            <div className="justify-end flex">
-              <Button
-                type="button"
-                variant="danger"
-                label="Remove License"
-                onClick={() => {
-                  setValue(
-                    "licenses",
-                    values.licenses.filter((_, i) => i !== idx),
-                    { shouldDirty: true },
-                  );
-                  showToast({ message: "License removed", type: "info" });
-                }}
-                className="mt-2"
-              />
-            </div>
+            {idx > 0 && (
+              <div className="justify-end flex">
+                <Button
+                  type="button"
+                  variant="danger"
+                  label="Remove License"
+                  onClick={() => {
+                    setValue(
+                      "licenses",
+                      values.licenses.filter((_, i) => i !== idx),
+                      { shouldDirty: true },
+                    );
+                    showToast({ message: "License removed", type: "info" });
+                  }}
+                  className="mt-2"
+                />
+              </div>
+            )}
           </div>
         ))}
         <Button

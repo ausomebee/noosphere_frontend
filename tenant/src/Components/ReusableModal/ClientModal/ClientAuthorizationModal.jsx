@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../Helper/ShowToast";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
@@ -170,7 +170,7 @@ const AddAuthorizationModal = ({
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation
     if (
       !formData.title ||
@@ -215,9 +215,16 @@ const AddAuthorizationModal = ({
       })),
     };
 
-    onSubmit(payload);
-    clearDraft();
-    onClose();
+    try {
+      // Only clear the draft + close after a successful save; on error keep the
+      // modal open and surface the message.
+      await onSubmit(payload);
+      clearDraft();
+      onClose();
+    } catch (err) {
+      console.error("Authorization save error:", err);
+      showApiError(err, "SAVE_AUTHORIZATION");
+    }
   };
 
   // Hardcoded options (can be made dynamic later)

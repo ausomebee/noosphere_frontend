@@ -242,6 +242,8 @@ function CalendarScheduler({
       refreshCurrentView();
     } catch (err) {
       showApiError(err, "SAVE_APPOINTMENT");
+      // Re-throw so the AppointmentModal stays open on a failed save.
+      throw err;
     }
   };
 
