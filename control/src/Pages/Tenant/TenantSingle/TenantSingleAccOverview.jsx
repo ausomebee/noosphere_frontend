@@ -508,7 +508,13 @@ const TenantSingleAccOverview = () => {
           label="Subdomain"
           placeholder="e.g. mycompany"
           value={editForm.subdomain || ""}
-          onChange={(e) => handleEditChange("subdomain", e.target.value)}
+          onChange={(e) =>
+            handleEditChange(
+              "subdomain",
+              // Only lowercase letters and hyphens — block ".,<>", digits, etc.
+              (e.target.value || "").toLowerCase().replace(/[^a-z-]/g, "")
+            )
+          }
         />
         <TextInput
           label="Street Address"

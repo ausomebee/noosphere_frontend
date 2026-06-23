@@ -75,6 +75,7 @@ const EditProspectModal = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: initialFormData,
@@ -247,10 +248,12 @@ const EditProspectModal = ({
         <TextInput
           label="Subdomain"
           {...register("subdomain")}
-          onChange={(e) => {
-            e.target.value = sanitizeSubdomain(e.target.value);
-            register("subdomain").onChange(e);
-          }}
+          onChange={(e) =>
+            setValue("subdomain", sanitizeSubdomain(e.target.value), {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
           error={errors.subdomain?.message}
           placeholder="e.g. mycompany"
         />

@@ -267,14 +267,15 @@ const AddProspectModal = ({
         <TextInput
           label="Subdomain"
           {...register("subdomain")}
-          onChange={(e) => {
+          onChange={(e) =>
             // Allow only lowercase letters and hyphens — block ".,<>", digits,
             // spaces, etc. as the user types.
-            e.target.value = (e.target.value || "")
-              .toLowerCase()
-              .replace(/[^a-z-]/g, "");
-            register("subdomain").onChange(e);
-          }}
+            setValue(
+              "subdomain",
+              (e.target.value || "").toLowerCase().replace(/[^a-z-]/g, ""),
+              { shouldValidate: true, shouldDirty: true }
+            )
+          }
           error={errors.subdomain?.message}
           placeholder="e.g. mycompany"
         />
