@@ -30,6 +30,23 @@ const deactivationReasons = [
   { value: "Repeated Policy Violations Despite Warnings", label: "Repeated Policy Violations Despite Warnings" },
 ];
 
+// Base domain for tenant portal URLs, derived from the host the control app is
+// actually running on so the URL always matches the current environment
+// (prod/staging). Falls back to the production root on localhost, raw IPs and
+// EC2 hosts where there is no real apex to read.
+const getTenantBaseDomain = () => {
+  const host = (window.location.hostname || "").toLowerCase();
+  const isLocalOrRaw =
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".amazonaws.com") ||
+    /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  if (isLocalOrRaw) return "nooshere.org";
+  const parts = host.split(".");
+  // apex = last two labels, e.g. admin.nooshere.org -> nooshere.org
+  return parts.length >= 2 ? parts.slice(-2).join(".") : host;
+};
+
 const TenantSingleSecuritySettings = () => {
   const { tenantId } = useParams();
   const { userId, accessToken, refreshToken } = useAuth();
@@ -77,7 +94,9 @@ const TenantSingleSecuritySettings = () => {
   }, [fetchTenant]);
 
   const tenantName = tenant?.companyName || tenant?.contactPerson || "Tenant";
-  const portalUrl = tenant?.subdomain ? `${tenant.subdomain}.noospherehub.net` : "—";
+  const portalUrl = tenant?.subdomain
+    ? `${tenant.subdomain}.${getTenantBaseDomain()}`
+    : "—";
 
   // --- Change Email ---
   const handleEmailToggle = async () => {
