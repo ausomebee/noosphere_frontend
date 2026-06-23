@@ -70,7 +70,7 @@ const GetClientUpcomingAppointments = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/appointments/client/upcoming/${clientId}`,
+      `${PLAIN_API_URL}/appointments/client/upcoming/client/${clientId}`,
     );
     return res;
   } catch (e) {
