@@ -34,6 +34,7 @@ const AppointmentModal = ({
   onClose,
   initialData,
   isEditMode = false,
+  presetSlot,
   onSave,
   clients,
   sessionTypes,
@@ -462,6 +463,14 @@ const AppointmentModal = ({
       setValue("serviceLocation", selectedSession.locationsAllowed[0]);
     }
   }, [sessionType, sessionTypes, setValue, replace, isEditMode, initialData]);
+
+  // Create mode opened from a calendar slot: pre-fill only the DATE (the time
+  // is left blank and handled by the session-type logic / the user).
+  useEffect(() => {
+    if (isOpen && !isEditMode && presetSlot?.date) {
+      setValue("date", presetSlot.date);
+    }
+  }, [isOpen, isEditMode, presetSlot, setValue]);
 
   // Edit mode: populate from initialData
   useEffect(() => {

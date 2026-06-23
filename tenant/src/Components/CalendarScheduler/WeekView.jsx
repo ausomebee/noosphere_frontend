@@ -15,7 +15,7 @@ import useFormatSettings from "../../hooks/useFormatSettings";
 import { getContrastTextColor } from "../../Helper/colorContrast";
 import "./Scheduler.css";
 
-const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
+const WeekView = ({ date, appointments, clients, onAppointmentClick, onSlotClick }) => {
   const { timeFormat } = useFormatSettings();
   const viewDate = useMemo(() => startOfDay(date ? new Date(date) : new Date()), [date]);
 
@@ -181,6 +181,13 @@ const WeekView = ({ date, appointments, clients, onAppointmentClick }) => {
                     borderRight: dayIndex < 6 ? "1px solid #e0e0e0" : "none",
                     height: `${rowHeightPx}px`,
                     backgroundColor: isTodayDate ? "#f5f9ff" : "transparent",
+                    cursor: onSlotClick ? "pointer" : "default",
+                  }}
+                  onClick={() => onSlotClick?.(day)}
+                  onContextMenu={(e) => {
+                    if (!onSlotClick) return;
+                    e.preventDefault();
+                    onSlotClick(day);
                   }}
                 />
               );

@@ -81,7 +81,7 @@ const processAppointments = (appointments) => {
   return groups;
 };
 
-const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
+const DayView = ({ date, appointments, clients, onAppointmentClick, onSlotClick }) => {
   const { timeFormat } = useFormatSettings();
 
   // Normalize viewDate to start of day
@@ -165,6 +165,13 @@ const DayView = ({ date, appointments, clients, onAppointmentClick }) => {
               height: `${rowHeightPx}px`,
               minHeight: `${rowHeightPx}px`,
               backgroundColor: isToday(viewDate) ? "#f5f9ff" : "transparent",
+              cursor: onSlotClick ? "pointer" : "default",
+            }}
+            onClick={() => onSlotClick?.(viewDate)}
+            onContextMenu={(e) => {
+              if (!onSlotClick) return;
+              e.preventDefault();
+              onSlotClick(viewDate);
             }}
           />
         ))}

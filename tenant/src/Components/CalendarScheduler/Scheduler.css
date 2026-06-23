@@ -880,6 +880,16 @@
   position: relative;
 }
 
+/* Hover affordance for clickable empty slots (click → New Appointment).
+   !important overrides the inline today-highlight background. */
+.day-view-hour-slot:hover,
+.week-view-hour-slot:hover {
+  background-color: #eef4ff !important;
+}
+.month-view-day:hover {
+  background-color: #f5f9ff;
+}
+
 /* Day view appointment card */
 .day-view-appt-card {
   position: absolute;

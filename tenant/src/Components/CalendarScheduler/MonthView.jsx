@@ -15,7 +15,7 @@ import "./Scheduler.css";
 import { CgChevronRight } from "react-icons/cg";
 import { getContrastTextColor } from "../../Helper/colorContrast";
 
-const MonthView = ({ date, appointments, onAppointmentClick }) => {
+const MonthView = ({ date, appointments, onAppointmentClick, onSlotClick }) => {
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(monthStart);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -26,6 +26,7 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
   const [dropdown, setDropdown] = useState({ visible: false, day: null, position: { x: 0, y: 0 }, appointments: [] });
 
   const handleAppointmentClick = (appt, event) => {
+    event.stopPropagation();
     const rect = event.currentTarget.getBoundingClientRect();
     const calendarRect = calendarRef.current.getBoundingClientRect();
     onAppointmentClick(appt, {
@@ -37,6 +38,7 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
   };
 
   const handleMoreClick = (day, event) => {
+    event.stopPropagation();
     if (dropdown.visible && dropdown.day && isSameDay(dropdown.day, day)) {
       // Close dropdown if clicking the same day's "+X more" button
       setDropdown({ visible: false, day: null, position: { x: 0, y: 0 }, appointments: [] });
@@ -103,6 +105,17 @@ const MonthView = ({ date, appointments, onAppointmentClick }) => {
               className={`month-view-day ${
                 isCurrentMonth ? "month-view-day-current" : "month-view-day-outside"
               } ${isTodayDate ? "month-view-day-today" : ""}`}
+              style={day && onSlotClick ? { cursor: "pointer" } : undefined}
+              onClick={day ? () => onSlotClick?.(day) : undefined}
+              onContextMenu={
+                day
+                  ? (e) => {
+                      if (!onSlotClick) return;
+                      e.preventDefault();
+                      onSlotClick(day);
+                    }
+                  : undefined
+              }
             >
               {day && (
                 <>

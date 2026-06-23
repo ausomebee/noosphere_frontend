@@ -65,6 +65,9 @@ function CalendarScheduler({
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Date pre-filled into the New Appointment modal when a calendar slot is
+  // clicked (only the date is preset — the time is left blank).
+  const [presetSlot, setPresetSlot] = useState(null);
   const [appointmentPosition, setAppointmentPosition] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("client");
@@ -145,6 +148,7 @@ function CalendarScheduler({
   const closeAllModals = useCallback(() => {
     setSelectedAppointment(null);
     setAppointmentPosition(null);
+    setPresetSlot(null);
     setIsAppointmentModalOpen(false);
     setIsRescheduleModalOpen(false);
     setRescheduleAppointment(null);
@@ -174,6 +178,17 @@ function CalendarScheduler({
     setSelectedAppointment(appt);
     setAppointmentPosition(position);
   };
+
+  // Clicking (or right-clicking) an empty calendar slot opens the New
+  // Appointment modal pre-filled with that slot's DATE only (time left blank).
+  const handleSlotClick = useCallback((date) => {
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return;
+    const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    setSelectedAppointment(null);
+    setPresetSlot({ date: ymd });
+    setIsAppointmentModalOpen(true);
+  }, []);
 
   const handleEditAppointment = (appt) => {
     setSelectedAppointment(appt);
@@ -346,6 +361,7 @@ function CalendarScheduler({
           variant="primary"
           onClick={() => {
             setSelectedAppointment(null);
+            setPresetSlot(null);
             setIsAppointmentModalOpen(true);
           }}
           icon={<FaPlus />}
@@ -481,6 +497,7 @@ function CalendarScheduler({
                   appointments={filteredAppointments}
                   clients={clients}
                   onAppointmentClick={handleAppointmentClick}
+                  onSlotClick={handleSlotClick}
                 />
               )}
               {view === "week" && (
@@ -489,6 +506,7 @@ function CalendarScheduler({
                   appointments={filteredAppointments}
                   clients={clients}
                   onAppointmentClick={handleAppointmentClick}
+                  onSlotClick={handleSlotClick}
                 />
               )}
               {view === "month" && (
@@ -497,6 +515,7 @@ function CalendarScheduler({
                   appointments={filteredAppointments}
                   clients={clients}
                   onAppointmentClick={handleAppointmentClick}
+                  onSlotClick={handleSlotClick}
                 />
               )}
 
@@ -522,6 +541,7 @@ function CalendarScheduler({
         onClose={closeAllModals}
         initialData={memoizedSelectedAppointment}
         isEditMode={!!memoizedSelectedAppointment}
+        presetSlot={presetSlot}
         onSave={handleSaveAppointment}
         clients={clients}
         sessionTypes={sessionTypes}
