@@ -19,7 +19,7 @@ const BillingSettings = () => {
     [hasPermission]
   );
 
-  const [view, setView] = usePersistedTab("tenant:billingSettings", visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:billingSettings", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
 
   const renderContent = () => {
     switch (view) {

@@ -26,7 +26,7 @@ const PayersAndInsurance = () => {
     [hasPermission]
   );
 
-  const [activeTab, setActiveTab] = usePersistedTab("tenant:payersAndInsurance", visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:payersAndInsurance", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
   const [payerModalOpen, setPayerModalOpen] = useState(false);
   const [insuranceTypeModalOpen, setInsuranceTypeModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);

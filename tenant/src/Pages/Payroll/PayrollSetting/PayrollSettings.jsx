@@ -19,7 +19,7 @@ const PayrollSettings = () => {
     [hasPermission]
   );
 
-  const [activeTab, setActiveTab] = usePersistedTab("tenant:payrollSettings", visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:payrollSettings", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
 
   const renderActiveTab = () => {
     switch (activeTab) {

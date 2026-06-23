@@ -28,7 +28,7 @@ const Appointments = () => {
     [hasPermission]
   );
 
-  const [view, setView] = usePersistedTab("tenant:appointments", visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:appointments", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
   // No seeded mock counts — badges derive from real data and stay hidden at 0.
   const [counts, setCounts] = useState({});
 

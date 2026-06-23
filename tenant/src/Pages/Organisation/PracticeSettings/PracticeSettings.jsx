@@ -24,7 +24,7 @@ const PracticeSettings = () => {
     [hasPermission]
   );
 
-  const [view, setView] = usePersistedTab("tenant:practiceSettings", visibleTabs[0]?.key || "");
+  const [view, setView] = usePersistedTab("tenant:practiceSettings", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

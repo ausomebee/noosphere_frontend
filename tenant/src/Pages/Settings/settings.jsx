@@ -21,7 +21,7 @@ const Settings = () => {
   );
 
   usePageTitle("Settings");
-  const [activeTab, setActiveTab] = usePersistedTab("tenant:settings", visibleTabs[0]?.key || "");
+  const [activeTab, setActiveTab] = usePersistedTab("tenant:settings", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
 
   const renderActiveTab = () => {
     switch (activeTab) {
