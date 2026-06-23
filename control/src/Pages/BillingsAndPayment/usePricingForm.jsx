@@ -201,6 +201,29 @@ const usePricingForm = ({
       })
     : [];
 
+  // Main-feature pool: features not yet chosen in the Main Features list.
+  // Extra features have their own independent flow and are intentionally NOT
+  // considered here, so picking a main feature never removes it from the extra
+  // selectors (and vice-versa).
+  const availableMainFeatures = Array.isArray(normalizedFeatures)
+    ? normalizedFeatures.filter(
+        (feature) =>
+          feature?.id &&
+          feature?.name &&
+          !formData.features.some((f) => String(f.id) === String(feature.id))
+      )
+    : [];
+
+  // Options for a given main-feature row: every still-available feature plus the
+  // row's own current selection (so the picked value stays visible/selectable in
+  // that row but is omitted from the other rows).
+  const getMainFeatureOptions = (currentId) =>
+    normalizedFeatures.filter(
+      (f) =>
+        String(f.id) === String(currentId) ||
+        availableMainFeatures.some((a) => String(a.id) === String(f.id))
+    );
+
   // Handle extra pricing addition only if needed
   useEffect(() => {
     if (
@@ -589,8 +612,8 @@ const usePricingForm = ({
                   style={{ flex: 1, marginRight: "8px" }}
                 >
                   <option value="">Select Feature</option>
-                  {normalizedFeatures.length > 0 ? (
-                    normalizedFeatures.map((f) => (
+                  {getMainFeatureOptions(feature.id).length > 0 ? (
+                    getMainFeatureOptions(feature.id).map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.name}
                       </option>
@@ -615,13 +638,17 @@ const usePricingForm = ({
                 label="Add Feature"
                 variant="outline"
                 iconPosition="left"
-                onClick={() => handleAddFeature(normalizedFeatures[0]?.id || "")}
+                onClick={() => handleAddFeature(availableMainFeatures[0]?.id || "")}
                 width="auto"
-                disabled={!normalizedFeatures.length}
+                disabled={!availableMainFeatures.length}
               />
               {!normalizedFeatures.length ? (
                 <p style={{ color: "red", fontSize: "12px", marginTop: "8px" }}>
                   No features available.
+                </p>
+              ) : !availableMainFeatures.length ? (
+                <p style={{ color: "red", fontSize: "12px", marginTop: "8px" }}>
+                  All features have been added.
                 </p>
               ) : null}
             </div>
