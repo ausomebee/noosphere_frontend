@@ -219,7 +219,12 @@ const SupportRequests = () => {
 
   // File handlers
   const handleFilesSelected = (newFiles) => {
-    setSelectedFiles((prev) => [...prev, ...Array.from(newFiles)]);
+    // Snapshot the FileList into a real array NOW. The input's onChange clears
+    // `e.target.value` right after this call, which empties the live FileList —
+    // so converting inside the async state updater would capture nothing.
+    const filesArray = Array.from(newFiles || []);
+    if (!filesArray.length) return;
+    setSelectedFiles((prev) => [...prev, ...filesArray]);
   };
 
   const handleRemoveFile = (idx) => {
