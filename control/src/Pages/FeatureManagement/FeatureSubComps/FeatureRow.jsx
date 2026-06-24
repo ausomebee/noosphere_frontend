@@ -20,6 +20,12 @@ import {
 import { showToast } from "../../../Helper/ShowToast";
 import "../FeatureManagement.css";
 
+// The thunks reject via rejectWithValue(error.message), so unwrap() throws a
+// plain string (not an Error). Read the message from either shape so backend
+// errors (e.g. a 500 explaining why a feature can't be deleted) reach the toast.
+const getErrorMessage = (err) =>
+  typeof err === "string" ? err : err?.message || "";
+
 const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const dispatch = useDispatch();
   const { accessToken, refreshToken } = useAuth();
@@ -62,10 +68,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
           );
         })
         .catch((err) => {
-          showToast(
-            `Failed to move feature: ${err.message || "Unknown error"}`,
-            "error"
-          );
+          showToast(getErrorMessage(err) || "Failed to move feature", "error");
         })
         .finally(() => {
           setIsMoving(false);
@@ -97,10 +100,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
         );
       })
       .catch((err) => {
-        showToast(
-          `Failed to toggle feature: ${err.message || "Unknown error"}`,
-          "error"
-        );
+        showToast(getErrorMessage(err) || "Failed to toggle feature", "error");
       })
       .finally(() => {
         setIsToggling(false);
@@ -127,10 +127,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
         );
       })
       .catch((err) => {
-        showToast(
-          `Failed to assign plans: ${err.message || "Unknown error"}`,
-          "error"
-        );
+        showToast(getErrorMessage(err) || "Failed to assign plans", "error");
       })
       .finally(() => {
         setIsAssigning(false);
@@ -154,10 +151,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
         showToast(`Feature "${feature.name}" deleted successfully`, "success");
       })
       .catch((err) => {
-        showToast(
-          `Failed to delete feature: ${err.message || "Unknown error"}`,
-          "error"
-        );
+        showToast(getErrorMessage(err) || "Failed to delete feature", "error");
       })
       .finally(() => {
         setIsDeleting(false);
@@ -188,10 +182,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
         );
       })
       .catch((err) => {
-        showToast(
-          `Failed to edit feature: ${err.message || "Unknown error"}`,
-          "error"
-        );
+        showToast(getErrorMessage(err) || "Failed to edit feature", "error");
       })
       .finally(() => {
         setIsEditing(false);

@@ -24,6 +24,11 @@ import "./FeatureManagement.css";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
+// Thunks reject via rejectWithValue(error.message), so unwrap() throws a plain
+// string. Read the message from either shape so backend errors reach the toast.
+const getErrorMessage = (err) =>
+  typeof err === "string" ? err : err?.message || "";
+
 const FeatureManagement = () => {
   const dispatch = useDispatch();
   const { featureGroups, loading, error } = useSelector(
@@ -70,7 +75,7 @@ const FeatureManagement = () => {
       })
       .catch((err) =>
         showToast(
-          `Failed to create feature group: ${err.message || "Unknown error"}`,
+          getErrorMessage(err) || "Failed to create feature group",
           "error"
         )
       )
@@ -103,7 +108,7 @@ const FeatureManagement = () => {
         })
         .catch((err) =>
           showToast(
-            `Failed to update feature group: ${err.message || "Unknown error"}`,
+            getErrorMessage(err) || "Failed to update feature group",
             "error"
           )
         )
@@ -137,7 +142,7 @@ const FeatureManagement = () => {
         })
         .catch((err) =>
           showToast(
-            `Failed to delete feature group: ${err.message || "Unknown error"}`,
+            getErrorMessage(err) || "Failed to delete feature group",
             "error"
           )
         )
@@ -171,7 +176,7 @@ const FeatureManagement = () => {
         })
         .catch((err) =>
           showToast(
-            `Failed to create feature: ${err.message || "Unknown error"}`,
+            getErrorMessage(err) || "Failed to create feature",
             "error"
           )
         )
