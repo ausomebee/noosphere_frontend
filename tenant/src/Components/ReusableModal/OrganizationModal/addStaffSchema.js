@@ -43,7 +43,10 @@ export const addStaffSchema = yup.object().shape({
   ),
   paymentSchedule: yup
     .string()
-    .oneOf(["HOURLY", "DAILY", "SALARIED"])
+    // Treat the empty default as "not chosen" so the friendly required message
+    // shows instead of yup's confusing "must be one of HOURLY, DAILY, SALARIED".
+    .transform((value) => (value === "" ? undefined : value))
+    .oneOf(["HOURLY", "DAILY", "SALARIED"], "Invalid compensation type")
     .required("Compensation type is required"),
   ratePerHour: yup
     .number()
