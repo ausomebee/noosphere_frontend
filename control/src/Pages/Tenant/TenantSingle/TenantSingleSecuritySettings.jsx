@@ -95,7 +95,7 @@ const TenantSingleSecuritySettings = () => {
 
   const tenantName = tenant?.companyName || tenant?.contactPerson || "Tenant";
   const portalUrl = tenant?.subdomain
-    ? `${tenant.subdomain}.${getTenantBaseDomain()}`
+    ? `${tenant.subdomain}.${getTenantBaseDomain()}/tenant/`
     : "—";
 
   // --- Change Email ---
