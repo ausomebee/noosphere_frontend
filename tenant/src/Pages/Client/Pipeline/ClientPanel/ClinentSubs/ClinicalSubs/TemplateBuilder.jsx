@@ -1,5 +1,5 @@
 // ClinicalReportTemplateBuilder.jsx
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
 import { GrDrag } from "react-icons/gr";
@@ -391,12 +391,38 @@ const ClinicalReportTemplateBuilder = () => {
 
   const { tenantId, accessToken, refreshToken } = useAuth();
 
+  // The builder is entered via navigate(..., { state }) so its context (which
+  // template, what mode) lives only in router state — which a page refresh
+  // wipes, dropping the user back out of the template. Snapshot the entry
+  // context to sessionStorage and restore it when location.state is gone so a
+  // refresh keeps you on the same template instead of redirecting away.
+  const NAV_KEY = "clinical-template-builder:nav";
+  const navContext = useMemo(() => {
+    if (location.state) return location.state;
+    try {
+      const saved = sessionStorage.getItem(NAV_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (location.state) {
+      try {
+        sessionStorage.setItem(NAV_KEY, JSON.stringify(location.state));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+  }, [location.state]);
+
   const {
     id: templateId,
     initialTitle,
     sections: initialSections,
     mode = "newTemplate",
-  } = location.state || {};
+  } = navContext || {};
 
   const templateMetadata = useSelector(selectTemplateMetadata);
   const activeSections = useSelector(selectActiveSections);
