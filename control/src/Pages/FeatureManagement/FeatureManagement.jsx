@@ -267,7 +267,7 @@ const FeatureManagement = () => {
             </div>
           </div>
 
-          {loading ? (
+          {loading && featureGroups.length === 0 ? (
             <div
               style={{
                 display: "flex",
