@@ -52,9 +52,10 @@ const INVOICE_SUB_TABS = [
 ];
 
 const PAYMENT_SUB_TABS = [
-  { name: "All",     label: "All" },
-  { name: "SUCCESS", label: "Paid" },
-  { name: "FAILED",  label: "Failed" },
+  { name: "All",        label: "All" },
+  { name: "Successful", label: "Successful" },
+  { name: "Failed",     label: "Failed" },
+  { name: "InProgress", label: "In Progress" },
 ];
 
 const INVOICE_FILTERS = [
