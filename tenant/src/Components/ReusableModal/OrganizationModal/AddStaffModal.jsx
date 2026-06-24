@@ -804,21 +804,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         return;
       }
 
-      const payroll = {
-        paymentSchedule: data.paymentSchedule,
-        ratePerHour: Number(data.ratePerHour),
-        // Only include minimumHours if it's Monthly
-        ...(data.paymentSchedule === "SALARIED" && data.minimumHours != null
-          ? { minimumHours: Number(data.minimumHours) }
-          : {}),
-        otherPays: (data.otherPays || [])
-          .filter((p) => p.type && p.type.trim() !== "")
-          .map((p) => p.type),
-        deductions: (data.deductions || [])
-          .filter((d) => d.type && d.type.trim() !== "")
-          .map((d) => d.type),
-      };
-
       // Optional fields the backend rejects when sent empty ("not allowed to be
       // empty"). Drop any that the user left blank so they're simply omitted.
       const OPTIONAL_FIELDS = [
