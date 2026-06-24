@@ -37,6 +37,9 @@ const CustomTable = ({
   hasStatusDot = false,
   onFilterTypeSelect,
   onToggleActive,
+  // When the data is paginated by the server, hide the table's own client-side
+  // pagination and let the parent render <Pagination> driven by server pages.
+  hidePagination = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -520,11 +523,13 @@ const CustomTable = ({
         startIndex={startIndex}
       />
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      {!hidePagination && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 };

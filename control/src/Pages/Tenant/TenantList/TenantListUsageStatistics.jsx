@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import Chart from "react-apexcharts";
 import "./TenantList.css";
 import CustomTable from "../../../Components/Table/CustomTable";
+import Pagination from "../../../Components/Table/Pagination";
 import Button from "../../../Components/Button/Button";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 
@@ -370,35 +371,14 @@ const TenantListUsageStatistics = () => {
             showCheckbox={false}
             itemsPerPage={LIMIT}
             tableName="Server Requests"
+            hidePagination
           />
           {serverMeta.totalPages > 1 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginTop: 16,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <button
-                className="btn btn-outline"
-                disabled={serverPage <= 1}
-                onClick={() => setServerPage((p) => p - 1)}
-              >
-                Previous
-              </button>
-              <span style={{ fontSize: 14, color: "#6b7280" }}>
-                Page {serverMeta.page} of {serverMeta.totalPages}
-              </span>
-              <button
-                className="btn btn-outline"
-                disabled={serverPage >= serverMeta.totalPages}
-                onClick={() => setServerPage((p) => p + 1)}
-              >
-                Next
-              </button>
-            </div>
+            <Pagination
+              currentPage={serverPage}
+              totalPages={serverMeta.totalPages}
+              onPageChange={setServerPage}
+            />
           )}
         </>
       )}
