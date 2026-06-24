@@ -293,10 +293,18 @@ const usePricingForm = ({
       if (!formData.colorCode || !/^#[0-9A-Fa-f]{6}$/.test(formData.colorCode))
         msgs.push("A valid hex color code is required.");
     } else if (tabName === "Setting & Pricing") {
-      if (!pricePerMonth || !/^\d*\.?\d+$/.test(pricePerMonth))
-        msgs.push("Valid monthly price is required.");
-      if (!pricePerYear || !/^\d*\.?\d+$/.test(pricePerYear))
-        msgs.push("Valid yearly price is required.");
+      if (
+        !pricePerMonth ||
+        !/^\d*\.?\d+$/.test(pricePerMonth) ||
+        parseFloat(pricePerMonth) <= 0
+      )
+        msgs.push("Monthly price must be a positive number.");
+      if (
+        !pricePerYear ||
+        !/^\d*\.?\d+$/.test(pricePerYear) ||
+        parseFloat(pricePerYear) <= 0
+      )
+        msgs.push("Yearly price must be a positive number.");
       if (!clients) msgs.push("Number of clients is required.");
       if (!storage) msgs.push("Storage amount is required.");
       if (formData.features.some((f) => !f.id || f.id.startsWith("temp-")))
@@ -421,10 +429,10 @@ const usePricingForm = ({
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm(activeTab)) {
       showToast("Please correct the errors before saving.", "error");
-      return;
+      throw new Error("Validation failed");
     }
 
     const planData = {
@@ -456,7 +464,8 @@ const usePricingForm = ({
       })),
     };
 
-    onSave(planData);
+    // Await so a failing save propagates to the caller (keeping the modal open).
+    await onSave(planData);
   };
 
   const resetForm = () => {

@@ -360,6 +360,8 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to create plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Create plan error:", err);
+    // Re-throw so the modal stays open on failure instead of closing.
+    throw err;
   } finally {
     setLoading(false);
   }

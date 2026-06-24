@@ -65,6 +65,9 @@ const PricingPlanModal = ({
       try {
         await handleSave();
         handleClose();
+      } catch {
+        // Save failed (validation or API error). The error is already surfaced
+        // via toast; keep the modal open so the user can correct and retry.
       } finally {
         setIsSaving(false);
       }
