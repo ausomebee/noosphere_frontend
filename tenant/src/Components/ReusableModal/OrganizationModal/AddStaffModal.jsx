@@ -296,6 +296,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     },
   });
 
+  // Keep the freshest errors so validateTab can name the failing fields right
+  // after an async trigger() (the closure's `errors` would otherwise be stale).
+  const errorsRef = useRef(errors);
+  errorsRef.current = errors;
+
   const clearDraft = useReduxFormDraft("add-staff", { watch, reset, isOpen, exclude: ["documents"] });
 
   const values = useWatch({ control });
@@ -662,11 +667,16 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     async (tabName) => {
       const valid = await trigger(tabFieldMap[tabName]);
       if (!valid) {
-        setSubmitError(`Please fix errors in the ${tabName} tab`);
-        showToast({
-          message: `Please fix errors in the ${tabName} tab`,
-          type: "error",
-        });
+        // Name the specific fields that failed (e.g. "Staff Role is required")
+        // instead of a generic "fix the errors in this tab" message.
+        const messages = tabFieldMap[tabName]
+          .map((f) => errorsRef.current?.[f]?.message)
+          .filter(Boolean);
+        const detail = messages.length
+          ? messages.join(", ")
+          : `Please fix errors in the ${tabName} tab`;
+        setSubmitError(detail);
+        showToast({ message: detail, type: "error" });
         return false;
       }
       setSubmitError("");
@@ -809,8 +819,28 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           .map((d) => d.type),
       };
 
+      // Optional fields the backend rejects when sent empty ("not allowed to be
+      // empty"). Drop any that the user left blank so they're simply omitted.
+      const OPTIONAL_FIELDS = [
+        "DOB",
+        "gender",
+        "practiceNPI",
+        "address",
+        "city",
+        "state",
+        "zip",
+        "country",
+      ];
+      const cleanedData = { ...data };
+      OPTIONAL_FIELDS.forEach((field) => {
+        const value = cleanedData[field];
+        if (value === "" || value === null || value === undefined) {
+          delete cleanedData[field];
+        }
+      });
+
       const transformedData = {
-        ...data,
+        ...cleanedData,
         payroll: {
           paymentSchedule: data.paymentSchedule,
           ratePerHour: Number(data.ratePerHour),
