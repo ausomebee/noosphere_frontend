@@ -301,7 +301,15 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   const errorsRef = useRef(errors);
   errorsRef.current = errors;
 
-  const clearDraft = useReduxFormDraft("add-staff", { watch, reset, isOpen, exclude: ["documents"] });
+  // Exclude documents and licenses from the draft so the Licenses tab always
+  // starts empty (a row only appears via the "Add License" button), and file
+  // uploads aren't persisted across reopens.
+  const clearDraft = useReduxFormDraft("add-staff", {
+    watch,
+    reset,
+    isOpen,
+    exclude: ["documents", "licenses"],
+  });
 
   const values = useWatch({ control });
   const paymentSchedule = watch("paymentSchedule");
@@ -569,8 +577,12 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     const src = mode === "edit" && initialData ? initialData : reduxDraft;
     if (src && Object.keys(src).length) {
       const clone = JSON.parse(JSON.stringify(src));
+      // Only restore licenses when editing an existing staff member. For new
+      // staff the Licenses tab starts empty — rows are added via "Add License".
       clone.licenses =
-        Array.isArray(clone.licenses) && clone.licenses.length
+        mode === "edit" &&
+        Array.isArray(clone.licenses) &&
+        clone.licenses.length
           ? clone.licenses
           : [];
       clone.otherPays =
