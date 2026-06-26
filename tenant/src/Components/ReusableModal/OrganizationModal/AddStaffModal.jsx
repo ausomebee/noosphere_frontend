@@ -824,24 +824,37 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         }
       });
 
-      const transformedData = {
-        ...cleanedData,
-        payroll: {
-          paymentSchedule: data.paymentSchedule,
-          ratePerHour: Number(data.ratePerHour),
-          // minimumHours conditional (your previous logic)
-          ...(data.paymentSchedule === "SALARIED" && data.minimumHours != null
-            ? { minimumHours: Number(data.minimumHours) }
-            : {}),
-          otherPays: (data.otherPays || [])
-            .filter((p) => p.type && p.type.trim() !== "")
-            .map((p) => ({ id: p.type })), // ← changed to { id: ... }
-          deductions: (data.deductions || [])
-            .filter((d) => d.type && d.type.trim() !== "")
-            .map((d) => ({ id: d.type })), // ← changed to { id: ... }
-        },
-        documents: fileResults,
+      const payroll = {
+        paymentSchedule: data.paymentSchedule,
+        ratePerHour: Number(data.ratePerHour),
+        ...(data.paymentSchedule === "SALARIED" && data.minimumHours != null
+          ? { minimumHours: Number(data.minimumHours) }
+          : {}),
       };
+      // Only include the optional pay collections when they actually have rows.
+      const otherPays = (data.otherPays || [])
+        .filter((p) => p.type && p.type.trim() !== "")
+        .map((p) => ({ id: p.type }));
+      const deductions = (data.deductions || [])
+        .filter((d) => d.type && d.type.trim() !== "")
+        .map((d) => ({ id: d.type }));
+      if (otherPays.length) payroll.otherPays = otherPays;
+      if (deductions.length) payroll.deductions = deductions;
+
+      const transformedData = { ...cleanedData, payroll };
+
+      // Optional collections — omit entirely when empty instead of sending [].
+      if (Array.isArray(fileResults) && fileResults.length > 0) {
+        transformedData.documents = fileResults;
+      } else {
+        delete transformedData.documents;
+      }
+      if (
+        !Array.isArray(transformedData.licenses) ||
+        transformedData.licenses.length === 0
+      ) {
+        delete transformedData.licenses;
+      }
 
       setSubmitting(true);
       setSubmitError("");
@@ -1056,24 +1069,24 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                 />
               </div>
             </div>
-            {idx > 0 && (
-              <div className="justify-end flex">
-                <Button
-                  type="button"
-                  variant="danger"
-                  label="Remove License"
-                  onClick={() => {
-                    setValue(
-                      "licenses",
-                      values.licenses.filter((_, i) => i !== idx),
-                      { shouldDirty: true },
-                    );
-                    showToast({ message: "License removed", type: "info" });
-                  }}
-                  className="mt-2"
-                />
-              </div>
-            )}
+            {/* Licenses are optional — every row (including the first) can be
+                removed so a staff member can have no licenses at all. */}
+            <div className="justify-end flex">
+              <Button
+                type="button"
+                variant="danger"
+                label="Remove License"
+                onClick={() => {
+                  setValue(
+                    "licenses",
+                    values.licenses.filter((_, i) => i !== idx),
+                    { shouldDirty: true },
+                  );
+                  showToast({ message: "License removed", type: "info" });
+                }}
+                className="mt-2"
+              />
+            </div>
           </div>
         ))}
         <Button
