@@ -131,6 +131,10 @@
 
 /* Used in ReusableModal */
 .tab-button {
+  /* Spread tabs evenly across the full width instead of tiling to the left. */
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
   padding: 10px 20px;
   font-size: 0.875rem;
   font-weight: 500;
@@ -163,7 +167,8 @@
 }
 
 .appointment-sched-view-button {
-  flex: 0 0 auto;
+  /* Spread tabs evenly across the full width instead of tiling to the left. */
+  flex: 1 1 0;
   min-width: 0;
   padding: 0.5rem 0.25rem;
   font-size: 0.875rem;

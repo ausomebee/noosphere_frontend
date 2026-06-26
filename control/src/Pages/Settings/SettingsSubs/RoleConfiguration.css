@@ -39,6 +39,10 @@
 }
 
 .role-config-tab {
+  /* Spread tabs evenly across the full width instead of tiling to the left. */
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
   background: none;
   border: none;
   padding: 12px 4px;
