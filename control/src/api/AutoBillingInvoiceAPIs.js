@@ -211,7 +211,7 @@ const ReminderEmail = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/invoice/invoice/management/reminder-email`,
+      `${PLAIN_API_URL}/invoice/invoice/management/reminder-email/admin`,
       {
         id,
         reminderEmail,
