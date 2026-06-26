@@ -5,6 +5,27 @@ import ProtectedRoute from "./ProtectedRoute";
 import FullPageLoader from "./FullPageLoader";
 import NotFound from "./NotFound";
 
+// Recover from stale chunk references after a deploy: if a lazily-imported route
+// chunk fails to load (its hashed filename no longer exists on the server),
+// reload once to pull the fresh index.html. A sessionStorage guard prevents an
+// infinite reload loop when the failure is genuine.
+const lazyWithReload = (factory) =>
+  React.lazy(() =>
+    factory()
+      .then((module) => {
+        sessionStorage.removeItem("chunkReloadAttempted");
+        return module;
+      })
+      .catch((error) => {
+        if (!sessionStorage.getItem("chunkReloadAttempted")) {
+          sessionStorage.setItem("chunkReloadAttempted", "1");
+          window.location.reload();
+          return new Promise(() => {});
+        }
+        throw error;
+      })
+  );
+
 /* ============================
    Authentication (public, no layout) — keep lazy since they're a separate flow
 ============================ */
@@ -52,28 +73,6 @@ import IssueManagement from "../Pages/IssueManagement/IssueManagement";
 import ControlSettings from "../Pages/Settings/ControlSettings";
 import SecuritySettings from "../Pages/Settings/SecuritySettings";
 import RoleConfiguration from "../Pages/Settings/SettingsSubs/RoleConfiguration";
-
-// Recover from stale chunk references after a deploy: if a lazily-imported route
-// chunk fails to load (its hashed filename no longer exists on the server),
-// reload once to pull the fresh index.html. A sessionStorage guard prevents an
-// infinite reload loop when the failure is genuine.
-const lazyWithReload = (factory) =>
-  React.lazy(() =>
-    factory()
-      .then((module) => {
-        sessionStorage.removeItem("chunkReloadAttempted");
-        return module;
-      })
-      .catch((error) => {
-        if (!sessionStorage.getItem("chunkReloadAttempted")) {
-          sessionStorage.setItem("chunkReloadAttempted", "1");
-          window.location.reload();
-          return new Promise(() => {});
-        }
-        throw error;
-      })
-  );
-
 
 const AllRoutes = () => {
   return (
