@@ -1271,11 +1271,14 @@ async function buildTargetFormData(data, mode) {
   fd.append("dataCollectionType", data.dataCollectionType || "");
   fd.append("baselineDataRequired", Boolean(data.baselineDataRequired));
   fd.append("initialStatus", data.statusAndAdmin || "");
-  fd.append("notes", data.note || "");
+  // Notes are optional — only send when the user actually typed something.
+  if (data.note && data.note.trim()) fd.append("notes", data.note.trim());
   fd.append("masteryMetric", data.masteryMetric || "");
 
+  // Use the array-form key so a single selection still arrives as an array
+  // (the backend requires promptingStrategy to be an array).
   (data.promptingStrategy || []).forEach((str) =>
-    fd.append("promptingStrategy", JSON.stringify({ label: str, value: str }))
+    fd.append("promptingStrategy[]", JSON.stringify({ label: str, value: str }))
   );
   if (data.promptOthers) fd.append("promptOthers", data.promptOthers);
 
@@ -1311,10 +1314,9 @@ async function buildTargetFormData(data, mode) {
 
   fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria || {}));
 
+  // Attachment is optional — only send when a real file was chosen.
   if (data.attachment instanceof File) {
     fd.append("attachment", data.attachment, data.attachment.name);
-  } else {
-    fd.append("attachment", "");
   }
 
   return fd;

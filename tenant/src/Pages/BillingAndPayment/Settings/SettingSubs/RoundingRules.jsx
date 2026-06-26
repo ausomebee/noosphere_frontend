@@ -115,6 +115,25 @@ const RoundingRules = () => {
     },
   ];
 
+  // Toggle the Status switch in the table (mirrors the dropdown Activate/Deactivate).
+  const handleToggleActive = async (row) => {
+    try {
+      await api.UpdateRoundingRuleActiveness({
+        id: row.id,
+        isActive: !row.isActive,
+        accessToken,
+        refreshToken,
+      });
+      await fetchRoundingRules();
+      showToast(
+        `Rounding rule ${row.isActive ? "deactivated" : "activated"} successfully`,
+        "success",
+      );
+    } catch {
+      showToast("Failed to update rounding rule status", "error");
+    }
+  };
+
   const handleSave = async (formData) => {
     if (mode === "view") {
       setIsModalOpen(false);
@@ -218,6 +237,11 @@ const RoundingRules = () => {
           showActions={true}
           showCheckbox={false}
           loading={loading}
+          onToggleActive={
+            hasPermission("deactivate_rounding_rule")
+              ? handleToggleActive
+              : undefined
+          }
         />
       </div>
 

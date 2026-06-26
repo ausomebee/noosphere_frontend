@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -34,11 +34,16 @@ const AddPayerModal = ({
     formState: { errors },
     watch,
     setValue,
+    trigger,
   } = useForm({
     resolver: yupResolver(payerSchema),
     context: {mode},
     defaultValues: transformPayerToFormData(initialData, mode),
   });
+
+  // Freshest errors so handleNext can name the failing field right after trigger().
+  const errorsRef = useRef(errors);
+  errorsRef.current = errors;
 
   const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [] });
 
@@ -67,12 +72,16 @@ const AddPayerModal = ({
   const roundingRuleOptions = roundingRules
     .map((rr) => ({ value: rr.id, label: rr.ruleName }));
 
-  // ✅ Reset when modal opens
+  // ✅ Reset only when the modal transitions to open. Keying on isOpen alone
+  // (not initialData, whose identity can change on parent re-renders) prevents
+  // wiping the user's in-progress input while the modal is open.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
       reset(transformPayerToFormData(initialData, mode));
       setHasChanges(false);
     }
+    wasOpenRef.current = isOpen;
   }, [isOpen, mode, initialData, reset]);
 
   // ✅ Watch service code selection
@@ -146,7 +155,32 @@ const AddPayerModal = ({
     reset(transformPayerToFormData(initialData, mode));
     onClose();
   };
-  const handleNext = () => setActiveTab("Service Code");
+  // Validate the Payer Info tab before advancing so the user sees which field is
+  // missing here, instead of hitting a backend validation error on save.
+  const PAYER_INFO_FIELDS = [
+    "payerName",
+    "email",
+    "phoneNumber",
+    "insuranceType",
+    "tplCode",
+    "carrierPayerId",
+    "address",
+    "city",
+    "state",
+    "zip",
+    "country",
+  ];
+  const handleNext = async () => {
+    const valid = await trigger(PAYER_INFO_FIELDS);
+    if (!valid) {
+      const firstMessage = PAYER_INFO_FIELDS.map(
+        (f) => errorsRef.current?.[f]?.message,
+      ).find(Boolean);
+      showToast(firstMessage || "Please fill in all required fields", "error");
+      return;
+    }
+    setActiveTab("Service Code");
+  };
   const handlePrevious = () => setActiveTab("Payer Info");
 
 

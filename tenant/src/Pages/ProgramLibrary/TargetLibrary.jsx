@@ -155,9 +155,11 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
       label: "More",
       items: [
         {
+          // In the Program Library, viewing a target opens the setup modal
+          // (prefilled, editable) rather than the target data page. The data
+          // page is only shown when viewing a target from a client profile.
           label: "View",
-          onClick: (row) =>
-            (window.location.href = `/tenant/target-single/${encodeURIComponent(domainName)}/${encodeURIComponent(programName)}/${encodeURIComponent(row.targetName)}?targetId=${row.id}`),
+          onClick: handleEditTarget,
         },
         hasPermission("edit_target") && { label: "Edit", onClick: handleEditTarget },
         hasPermission("create_target") && {

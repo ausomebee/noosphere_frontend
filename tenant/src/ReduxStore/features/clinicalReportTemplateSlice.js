@@ -236,6 +236,22 @@ const clinicalReportTemplateSlice = createSlice({
         existingSectionIds = {},
       } = action.payload;
 
+      // A brand-new template must start from a clean slate. The slice is
+      // redux-persisted, so without this the previously-built template's
+      // sections and data bleed into the new template builder.
+      if (mode === "newTemplate") {
+        state.activeSections = [];
+        state.expandedSections = [];
+        state.actionMenuOpen = null;
+        state.activeDragId = null;
+        state.sectionData = JSON.parse(JSON.stringify(initialState.sectionData));
+        state.templateMetadata = JSON.parse(
+          JSON.stringify(initialState.templateMetadata),
+        );
+        state.saveSuccess = false;
+        state.error = null;
+      }
+
       state.templateId = id;
       state.mode = mode;
       state.templateMetadata.tenantId = tenantId;
