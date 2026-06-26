@@ -8,6 +8,28 @@ import { LayoutRoute } from "../Layout/TenantLayout";
 import usePermissions from "../hooks/usePermissions";
 import { showToast } from "../Helper/ShowToast";
 
+// Recover from stale chunk references after a deploy: if a lazily-imported route
+// chunk fails to load (its hashed filename no longer exists on the server),
+// reload once to pull the fresh index.html. A sessionStorage guard prevents an
+// infinite reload loop when the failure is genuine.
+const lazyWithReload = (factory) =>
+  React.lazy(() =>
+    factory()
+      .then((module) => {
+        sessionStorage.removeItem("chunkReloadAttempted");
+        return module;
+      })
+      .catch((error) => {
+        if (!sessionStorage.getItem("chunkReloadAttempted")) {
+          sessionStorage.setItem("chunkReloadAttempted", "1");
+          window.location.reload();
+          return new Promise(() => {});
+        }
+        throw error;
+      })
+  );
+
+
 /** Wraps a lazy component in Suspense so route transitions show the branded loader */
 const Lazy = ({ children }) => (
   <Suspense fallback={<FullPageLoader />}>{children}</Suspense>
@@ -27,190 +49,190 @@ const ModuleGuard = ({ moduleKey }) => {
   if (!allowed) return null;
   return <Outlet />;
 };
-const ClinicalReportBuilder = React.lazy(() =>
+const ClinicalReportBuilder = lazyWithReload(() =>
   import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/ClinicalReportBuilder")
 );
-const TemplateBuilder = React.lazy(() =>
+const TemplateBuilder = lazyWithReload(() =>
   import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/TemplateBuilder")
 );
-const AuditTrails = React.lazy(() =>
+const AuditTrails = lazyWithReload(() =>
   import("../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ClinicalSubs/AuditTrails")
 );
 
 // Lazy load all your pages
-const AdminLogin = React.lazy(() =>
+const AdminLogin = lazyWithReload(() =>
   import("../Pages/Authentication/Login/AdminLogin")
 );
-const Admin2FAAuthenticatorLogin = React.lazy(() =>
+const Admin2FAAuthenticatorLogin = lazyWithReload(() =>
   import("../Pages/Authentication/Login/Admin2FAAuthenticatorLogin.")
 );
-const Admin2FAQuestionLogin = React.lazy(() =>
+const Admin2FAQuestionLogin = lazyWithReload(() =>
   import("../Pages/Authentication/Login/Admin2FAQuestionLogin")
 );
-const InitialSuperLogin = React.lazy(() =>
+const InitialSuperLogin = lazyWithReload(() =>
   import("../Pages/Authentication/AuthOnboarding/SuperAdmin/InitialSuperLogin")
 );
-const SuperChangePassword = React.lazy(() =>
+const SuperChangePassword = lazyWithReload(() =>
   import(
     "../Pages/Authentication/AuthOnboarding/SuperAdmin/SuperChangePassword"
   )
 );
-const SuperAdmin2FAChoice = React.lazy(() =>
+const SuperAdmin2FAChoice = lazyWithReload(() =>
   import(
     "../Pages/Authentication/AuthOnboarding/SuperAdmin/SuperAdmin2FAChoice"
   )
 );
-const Authenticator2FA = React.lazy(() =>
+const Authenticator2FA = lazyWithReload(() =>
   import(
     "../Pages/Authentication/AuthOnboarding/SuperAdmin/Admin2FAs/Authenticator2FA"
   )
 );
-const QuestionAndAnswer2FA = React.lazy(() =>
+const QuestionAndAnswer2FA = lazyWithReload(() =>
   import(
     "../Pages/Authentication/AuthOnboarding/SuperAdmin/Admin2FAs/QuestionAndAnswer2FA"
   )
 );
-const Admin2FAChoice = React.lazy(() =>
+const Admin2FAChoice = lazyWithReload(() =>
   import("../Pages/Authentication/AuthOnboarding/Admin/Admin2FAChoice")
 );
-const AdminOnboarding = React.lazy(() =>
+const AdminOnboarding = lazyWithReload(() =>
   import("../Pages/Authentication/AuthOnboarding/Admin/AdminOnboarding")
 );
-const ForgetPassword = React.lazy(() =>
+const ForgetPassword = lazyWithReload(() =>
   import("../Pages/Authentication/ForgotPassword/ForgotPassword")
 );
-const ForgotPasswordResetPassword = React.lazy(() =>
+const ForgotPasswordResetPassword = lazyWithReload(() =>
   import("../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword")
 );
-const ForgotPasswordAuthenticatorVerifier = React.lazy(() =>
+const ForgotPasswordAuthenticatorVerifier = lazyWithReload(() =>
   import(
     "../Pages/Authentication/ForgotPassword/ForgotPasswordAuthenticatorVerifier"
   )
 );
-const ForgotPasswordQuestionVerifier = React.lazy(() =>
+const ForgotPasswordQuestionVerifier = lazyWithReload(() =>
   import(
     "../Pages/Authentication/ForgotPassword/ForgotPasswordQuestionVerifier"
   )
 );
 
-const Dashboard = React.lazy(() =>
+const Dashboard = lazyWithReload(() =>
   import("../Pages/Dashboard/TenantDashboard")
 );
-const Calendar = React.lazy(() =>
+const Calendar = lazyWithReload(() =>
   import("../Pages/Scheduler/SchdedulerSubs/Calendar")
 );
-const Appointments = React.lazy(() =>
+const Appointments = lazyWithReload(() =>
   import("../Pages/Scheduler/SchdedulerSubs/Appointments")
 );
-const StartAppointment = React.lazy(() =>
+const StartAppointment = lazyWithReload(() =>
   import("../Pages/Scheduler/StartAppointment/StartAppointment")
 );
 
-const Pipeline = React.lazy(() => import("../Pages/Client/Pipeline/Pipeline"));
-const ManageColumn = React.lazy(() =>
+const Pipeline = lazyWithReload(() => import("../Pages/Client/Pipeline/Pipeline"));
+const ManageColumn = lazyWithReload(() =>
   import("./ManageColumn/ManageColumn")
 );
-const ClientPanel = React.lazy(() =>
+const ClientPanel = lazyWithReload(() =>
   import("../Pages/Client/Pipeline/ClientPanel/ClientPanel")
 );
-const ClientList = React.lazy(() =>
+const ClientList = lazyWithReload(() =>
   import("../Pages/Client/ClientList/ClientList")
 );
-const ViewPrograms = React.lazy(() =>
+const ViewPrograms = lazyWithReload(() =>
   import(
     "../Pages/Client/Pipeline/ClientPanel/ClinentSubs/ProgramSub/ViewPrograms"
   )
 );
 
-const ProgramLibrary = React.lazy(() =>
+const ProgramLibrary = lazyWithReload(() =>
   import("../Pages/ProgramLibrary/ProgramLibrary")
 );
-const TargetSingle = React.lazy(() =>
+const TargetSingle = lazyWithReload(() =>
   import("../Pages/ProgramLibrary/TargetSingle")
 );
 
-const General = React.lazy(() =>
+const General = lazyWithReload(() =>
   import("../Pages/Organisation/General/General")
 );
-const PracticeSettings = React.lazy(() =>
+const PracticeSettings = lazyWithReload(() =>
   import("../Pages/Organisation/PracticeSettings/PracticeSettings")
 );
-const StaffsAndTeams = React.lazy(() =>
+const StaffsAndTeams = lazyWithReload(() =>
   import("../Pages/Organisation/StaffAndTeams/StaffsAndTeams")
 );
-const SingleStaffByAdmin = React.lazy(() =>
+const SingleStaffByAdmin = lazyWithReload(() =>
   import("../Pages/Organisation/StaffAndTeams/SingleStaffByAdmin")
 );
-const RoleAndPermission = React.lazy(() =>
+const RoleAndPermission = lazyWithReload(() =>
   import("../Pages/Organisation/RoleAndPermissions/RoleAndPermission")
 );
 
-const TimeSheet = React.lazy(() =>
+const TimeSheet = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/TimeSheet/TimeSheet")
 );
-const SingleTimeSheet = React.lazy(() =>
+const SingleTimeSheet = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/TimeSheet/SingleTimeSheet")
 );
-const Claims = React.lazy(() =>
+const Claims = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Claims/Claims")
 );
-const SingleClaim = React.lazy(() =>
+const SingleClaim = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Claims/SingleClaim")
 );
-const BillingSettings = React.lazy(() =>
+const BillingSettings = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Settings/BillingSettings")
 );
-const SingleViewPayer = React.lazy(() =>
+const SingleViewPayer = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Settings/SettingSubs/SingleViewPayer")
 );
 
-const Payroll = React.lazy(() => import("../Pages/Payroll/Payroll/Payroll"));
-const PayrollSettings = React.lazy(() =>
+const Payroll = lazyWithReload(() => import("../Pages/Payroll/Payroll/Payroll"));
+const PayrollSettings = lazyWithReload(() =>
   import("../Pages/Payroll/PayrollSetting/PayrollSettings")
 );
-const ViewBreakDown = React.lazy(() =>
+const ViewBreakDown = lazyWithReload(() =>
   import("../Pages/Payroll/Payroll/ViewBreakDown")
 );
 
-const Forms = React.lazy(() => import("../Pages/CustomForms/Forms/Forms"));
-const FormBuilder = React.lazy(() =>
+const Forms = lazyWithReload(() => import("../Pages/CustomForms/Forms/Forms"));
+const FormBuilder = lazyWithReload(() =>
   import("../Pages/CustomForms/Forms/FormBuilder")
 );
-const FormRenderer = React.lazy(() =>
+const FormRenderer = lazyWithReload(() =>
   import("../Pages/CustomForms/FormRender/FormRenderer")
 );
-const FormResponses = React.lazy(() =>
+const FormResponses = lazyWithReload(() =>
   import("../Pages/CustomForms/FormResponses/FormResponses")
 );
-const TemplatesLibrary = React.lazy(() =>
+const TemplatesLibrary = lazyWithReload(() =>
   import("../Pages/CustomForms/TemplatesLibrary/TemplatesLibrary")
 );
 
-const Reports = React.lazy(() => import("../Pages/Reports/Reports"));
-const CancelledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/CancelledAppointmentsReport"));
-const RescheduledAppointmentsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/RescheduledAppointmentsReport"));
-const AttendanceByServiceTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceByServiceTypeReport"));
-const AttendanceBySessionTypeReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AttendanceBySessionTypeReport"));
-const AuditLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/AuditLogsReport"));
-const LoginLogsReport = React.lazy(() => import("../Pages/Reports/ReportSubs/LoginLogsReport"));
+const Reports = lazyWithReload(() => import("../Pages/Reports/Reports"));
+const CancelledAppointmentsReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/CancelledAppointmentsReport"));
+const RescheduledAppointmentsReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/RescheduledAppointmentsReport"));
+const AttendanceByServiceTypeReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/AttendanceByServiceTypeReport"));
+const AttendanceBySessionTypeReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/AttendanceBySessionTypeReport"));
+const AuditLogsReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/AuditLogsReport"));
+const LoginLogsReport = lazyWithReload(() => import("../Pages/Reports/ReportSubs/LoginLogsReport"));
 
-const SupportRequests = React.lazy(() =>
+const SupportRequests = lazyWithReload(() =>
   import("../Pages/HelpAndSupport/SupportRequests/SupportRequests")
 );
-const KnowledgeBase = React.lazy(() =>
+const KnowledgeBase = lazyWithReload(() =>
   import("../Pages/HelpAndSupport/KnowledgeBase/KnowledgeBase")
 );
-const ViewRequestDetails = React.lazy(() =>
+const ViewRequestDetails = lazyWithReload(() =>
   import("../Pages/HelpAndSupport/SupportRequests/ViewRequestDetails")
 );
 
-const Settings = React.lazy(() => import("../Pages/Settings/settings"));
+const Settings = lazyWithReload(() => import("../Pages/Settings/settings"));
 
-const Notifications = React.lazy(() =>
+const Notifications = lazyWithReload(() =>
   import("../Pages/Notifications/Notifications")
 );
 
-const ClientReportView = React.lazy(() =>
+const ClientReportView = lazyWithReload(() =>
   import("../Pages/ClientReportView/ClientReportView")
 );
 

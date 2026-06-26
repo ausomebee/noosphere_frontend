@@ -5,36 +5,58 @@ import ProtectedRoute from "./ProtectedRoute";
 import NotFound from "./NotFound";
 import FormRenderer from "./FormRender/FormRenderer";
 
+// Recover from stale chunk references after a deploy: if a lazily-imported route
+// chunk fails to load (its hashed filename no longer exists on the server),
+// reload once to pull the fresh index.html. A sessionStorage guard prevents an
+// infinite reload loop when the failure is genuine.
+const lazyWithReload = (factory) =>
+  React.lazy(() =>
+    factory()
+      .then((module) => {
+        sessionStorage.removeItem("chunkReloadAttempted");
+        return module;
+      })
+      .catch((error) => {
+        if (!sessionStorage.getItem("chunkReloadAttempted")) {
+          sessionStorage.setItem("chunkReloadAttempted", "1");
+          window.location.reload();
+          return new Promise(() => {});
+        }
+        throw error;
+      })
+  );
+
+
 // Lazy load all page components
-const ClientLogin = React.lazy(() =>
+const ClientLogin = lazyWithReload(() =>
   import("../Pages/Authentication/Login/ClientLogin")
 );
-const IntialLogin = React.lazy(() =>
+const IntialLogin = lazyWithReload(() =>
   import("../Pages/Authentication/NewClientLogin/IntialLogin")
 );
-const InitialResetPassword = React.lazy(() =>
+const InitialResetPassword = lazyWithReload(() =>
   import("../Pages/Authentication/NewClientLogin/IntialResetPassword")
 );
-const InitialResetSuccessful = React.lazy(() =>
+const InitialResetSuccessful = lazyWithReload(() =>
   import("../Pages/Authentication/NewClientLogin/IntialResetSuccessful")
 );
-const ForgotPassword = React.lazy(() =>
+const ForgotPassword = lazyWithReload(() =>
   import("../Pages/Authentication/ForgotPassword/ForgotPassword")
 );
-const CheckEmail = React.lazy(() =>
+const CheckEmail = lazyWithReload(() =>
   import("../Pages/Authentication/ForgotPassword/CheckEmail")
 );
-const ChangePassword = React.lazy(() =>
+const ChangePassword = lazyWithReload(() =>
   import("../Pages/Authentication/ForgotPassword/ChangePassword")
 );
 
-const Home = React.lazy(() => import("../Pages/Home/Home"));
-const Profile = React.lazy(() => import("../Pages/Profile/Profile"));
-const Notifications = React.lazy(() =>
+const Home = lazyWithReload(() => import("../Pages/Home/Home"));
+const Profile = lazyWithReload(() => import("../Pages/Profile/Profile"));
+const Notifications = lazyWithReload(() =>
   import("../Pages/Notification/Notifications")
 );
-const Programs = React.lazy(() => import("../Pages/Programs/Programs"));
-const DocumentsAndForms = React.lazy(() =>
+const Programs = lazyWithReload(() => import("../Pages/Programs/Programs"));
+const DocumentsAndForms = lazyWithReload(() =>
   import("../Pages/DocumentsAndForms/DocumentsAndForms")
 );
 

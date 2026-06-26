@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import LayoutRoute from "./LayoutRoute";
 import ProtectedRoute from "./ProtectedRoute";
@@ -8,23 +8,23 @@ import NotFound from "./NotFound";
 /* ============================
    Authentication (public, no layout) — keep lazy since they're a separate flow
 ============================ */
-const SuperAdminLogin = lazy(() => import("../Pages/Authentication/SuperAdminLogin"));
-const SuperAdminChangePassword = lazy(() => import("../Pages/Authentication/SuperAdminChangePassword"));
-const AdministrativePassword = lazy(() => import("../Pages/Authentication/AdministrativePassword"));
-const Admin2FAChoice = lazy(() => import("../Pages/Authentication/Admin2FAChoice"));
-const SuperAdmin2FASettings = lazy(() => import("../Pages/Authentication/SuperAdmin2FASettings"));
-const SuperAdmin2FAMicrosoftAuthenticator = lazy(() => import("../Pages/Authentication/MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator"));
-const SuperAdmin2FAQuestion = lazy(() => import("../Pages/Authentication/2FAQuestion/SuperAdmin2FAQuestion"));
-const SuperAdmin2FAQuestionLogin = lazy(() => import("../Pages/Authentication/SuperAdmin2FAQuestionLogin"));
-const SuperAdmin2FAAuthenticatorLogin = lazy(() => import("../Pages/Authentication/MicrosoftAuth/SuperAdmin2FAAuthenticatorLogin"));
-const ForgetPassword = lazy(() => import("../Pages/Authentication/ForgotPassword/ForgotPassword"));
-const PasswordResetConfirmation = lazy(() => import("../Pages/Authentication/ForgotPassword/ForgotPasswordConfirmation"));
-const SetNewPassword = lazy(() => import("../Pages/Authentication/ForgotPassword/SetNewPassword"));
-const PasswordResetSuccess = lazy(() => import("../Pages/Authentication/ForgotPassword/PasswordResetSuccessful"));
-const PasswordResetFailure = lazy(() => import("../Pages/Authentication/ForgotPassword/PasswordResetFailed"));
-const ForgotPasswordResetPassword = lazy(() => import("../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword"));
-const AdminOnboarding = lazy(() => import("../Pages/Authentication/AdminAuth/AdminOnboarding"));
-const PaymentPage = lazy(() => import("../Pages/Payment/PaymentPage"));
+const SuperAdminLogin = lazyWithReload(() => import("../Pages/Authentication/SuperAdminLogin"));
+const SuperAdminChangePassword = lazyWithReload(() => import("../Pages/Authentication/SuperAdminChangePassword"));
+const AdministrativePassword = lazyWithReload(() => import("../Pages/Authentication/AdministrativePassword"));
+const Admin2FAChoice = lazyWithReload(() => import("../Pages/Authentication/Admin2FAChoice"));
+const SuperAdmin2FASettings = lazyWithReload(() => import("../Pages/Authentication/SuperAdmin2FASettings"));
+const SuperAdmin2FAMicrosoftAuthenticator = lazyWithReload(() => import("../Pages/Authentication/MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator"));
+const SuperAdmin2FAQuestion = lazyWithReload(() => import("../Pages/Authentication/2FAQuestion/SuperAdmin2FAQuestion"));
+const SuperAdmin2FAQuestionLogin = lazyWithReload(() => import("../Pages/Authentication/SuperAdmin2FAQuestionLogin"));
+const SuperAdmin2FAAuthenticatorLogin = lazyWithReload(() => import("../Pages/Authentication/MicrosoftAuth/SuperAdmin2FAAuthenticatorLogin"));
+const ForgetPassword = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/ForgotPassword"));
+const PasswordResetConfirmation = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/ForgotPasswordConfirmation"));
+const SetNewPassword = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/SetNewPassword"));
+const PasswordResetSuccess = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/PasswordResetSuccessful"));
+const PasswordResetFailure = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/PasswordResetFailed"));
+const ForgotPasswordResetPassword = lazyWithReload(() => import("../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword"));
+const AdminOnboarding = lazyWithReload(() => import("../Pages/Authentication/AdminAuth/AdminOnboarding"));
+const PaymentPage = lazyWithReload(() => import("../Pages/Payment/PaymentPage"));
 
 /* ============================
    Dashboard (protected, with layout) — eager imports for instant navigation
@@ -52,6 +52,28 @@ import IssueManagement from "../Pages/IssueManagement/IssueManagement";
 import ControlSettings from "../Pages/Settings/ControlSettings";
 import SecuritySettings from "../Pages/Settings/SecuritySettings";
 import RoleConfiguration from "../Pages/Settings/SettingsSubs/RoleConfiguration";
+
+// Recover from stale chunk references after a deploy: if a lazily-imported route
+// chunk fails to load (its hashed filename no longer exists on the server),
+// reload once to pull the fresh index.html. A sessionStorage guard prevents an
+// infinite reload loop when the failure is genuine.
+const lazyWithReload = (factory) =>
+  React.lazy(() =>
+    factory()
+      .then((module) => {
+        sessionStorage.removeItem("chunkReloadAttempted");
+        return module;
+      })
+      .catch((error) => {
+        if (!sessionStorage.getItem("chunkReloadAttempted")) {
+          sessionStorage.setItem("chunkReloadAttempted", "1");
+          window.location.reload();
+          return new Promise(() => {});
+        }
+        throw error;
+      })
+  );
+
 
 const AllRoutes = () => {
   return (
