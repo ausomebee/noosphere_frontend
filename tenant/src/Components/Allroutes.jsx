@@ -1,6 +1,6 @@
 // src/Components/Allroutes.jsx
 import React, { useEffect, Suspense } from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import NotFound from "./NotFound";
 import FullPageLoader from "./FullPageLoader";
 import ProtectedRoute from "./ProtectedRoute";
@@ -179,9 +179,6 @@ const Claims = lazyWithReload(() =>
 const SingleClaim = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Claims/SingleClaim")
 );
-const BillingSettings = lazyWithReload(() =>
-  import("../Pages/BillingAndPayment/Settings/BillingSettings")
-);
 const SingleViewPayer = lazyWithReload(() =>
   import("../Pages/BillingAndPayment/Settings/SettingSubs/SingleViewPayer")
 );
@@ -307,8 +304,9 @@ const AllRoutes = () => {
           <Route path="/billing/timesheets/:timesheetId" element={<Lazy><SingleTimeSheet /></Lazy>} />
           <Route path="/billing/claims" element={<Lazy><Claims /></Lazy>} />
           <Route path="/billing/claims/view/:claimId" element={<Lazy><SingleClaim /></Lazy>} />
-          <Route path="/billing/settings" element={<Lazy><BillingSettings /></Lazy>} />
-          <Route path="/billing/settings/view-payer/:id/:payerName" element={<Lazy><SingleViewPayer /></Lazy>} />
+          {/* Billing settings moved under My Organization → Practice Settings. */}
+          <Route path="/billing/settings" element={<Navigate to="/organization/practice-settings" replace />} />
+          <Route path="/organization/practice-settings/view-payer/:id/:payerName" element={<Lazy><SingleViewPayer /></Lazy>} />
         </Route>
 
         {/* Payroll */}

@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       children: [
         { name: "General", path: "/organization/general", permissionKey: "view_organization_information" },
         { name: "Staff & Teams", path: "/organization/staff-and-teams", permissionKey: "view_staff_list" },
-        { name: "Practice Settings", path: "/organization/practice-settings", permissionKey: "view_diagnosis_codes" },
+        { name: "Practice Settings", path: "/organization/practice-settings", permissionKeys: ["view_diagnosis_codes", "view_session_types", "view_service_codes_list", "view_rounding_rules_list", "view_payers_list"] },
         { name: "Role & Permissions", path: "/organization/role-and-permissions", permissionKey: "view_roles_list" },
       ],
     },
@@ -85,7 +85,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       children: [
         { name: "Timesheets", path: "/billing/timesheets", permissionKey: "view_timesheets_list" },
         { name: "Claims", path: "/billing/claims", permissionKey: "can_view_claims" },
-        { name: "Settings", path: "/billing/settings", permissionKey: "view_service_codes_list" },
+        // Service Codes / Rounding Rules / Payers moved to My Organization → Practice Settings.
       ],
     },
     {
@@ -128,9 +128,14 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
     .filter((item) => !item.moduleKey || hasModule(item.moduleKey))
     .map((item) => {
       if (!item.children) return item;
-      const filteredChildren = item.children.filter(
-        (child) => !child.permissionKey || hasPermission(child.permissionKey)
-      );
+      const filteredChildren = item.children.filter((child) => {
+        // Support an any-of `permissionKeys` array (e.g. a page that merges
+        // several permission-gated tabs) alongside the single `permissionKey`.
+        if (child.permissionKeys) {
+          return child.permissionKeys.some((key) => hasPermission(key));
+        }
+        return !child.permissionKey || hasPermission(child.permissionKey);
+      });
       return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
     })
     .filter(Boolean);

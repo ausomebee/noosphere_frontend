@@ -252,7 +252,7 @@ const PayersAndInsurance = () => {
         hasPermission("view_payer_information") && {
           label: "View",
           onClick: () => {
-            navigate(`/billing/settings/view-payer/${row.id}/${row.payerName}`);
+            navigate(`/organization/practice-settings/view-payer/${row.id}/${row.payerName}`);
           },
         },
         hasPermission("edit_payer") && {

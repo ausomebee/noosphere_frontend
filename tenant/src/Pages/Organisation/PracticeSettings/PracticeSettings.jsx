@@ -9,10 +9,17 @@ import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import { showToast } from "../../../Helper/ShowToast";
 import usePersistedTab from "../../../hooks/usePersistedTab";
+// Billing settings moved here as additional Practice Settings tabs.
+import ServiceCodes from "../../BillingAndPayment/Settings/SettingSubs/ServiceCodes";
+import RoundingRules from "../../BillingAndPayment/Settings/SettingSubs/RoundingRules";
+import PayersAndInsurance from "../../BillingAndPayment/Settings/SettingSubs/PayersAndInsurance";
 
 const ALL_TABS = [
   { key: "diagnosisCodes", label: "Diagnosis Codes", permissionKey: "view_diagnosis_codes" },
   { key: "sessionTypes", label: "Session Types", permissionKey: "view_session_types" },
+  { key: "serviceCodes", label: "Service Codes", permissionKey: "view_service_codes_list" },
+  { key: "roundingRules", label: "Rounding Rules", permissionKey: "view_rounding_rules_list" },
+  { key: "payersInsurance", label: "Payers & Insurance", permissionKey: "view_payers_list" },
 ];
 
 const PracticeSettings = () => {
@@ -386,57 +393,67 @@ const PracticeSettings = () => {
           ))}
         </div>
 
-        {((view === "diagnosisCodes" && hasPermission("add_diagnosis_codes")) ||
-          (view === "sessionTypes" && hasPermission("add_session_types"))) && (
-          <div className="justify-end flex mt-6">
-            <Button
-              label={`Add ${
-                view === "diagnosisCodes" ? "Diagnosis Code" : "Session Type"
-              }`}
-              variant="secondary"
-              icon={<FaPlus />}
-              onClick={handleAdd}
-              disabled={loading}
+        {view === "serviceCodes" ? (
+          <ServiceCodes />
+        ) : view === "roundingRules" ? (
+          <RoundingRules />
+        ) : view === "payersInsurance" ? (
+          <PayersAndInsurance />
+        ) : (
+          <>
+            {((view === "diagnosisCodes" && hasPermission("add_diagnosis_codes")) ||
+              (view === "sessionTypes" && hasPermission("add_session_types"))) && (
+              <div className="justify-end flex mt-6">
+                <Button
+                  label={`Add ${
+                    view === "diagnosisCodes" ? "Diagnosis Code" : "Session Type"
+                  }`}
+                  variant="secondary"
+                  icon={<FaPlus />}
+                  onClick={handleAdd}
+                  disabled={loading}
+                />
+              </div>
+            )}
+
+            <CustomTable
+              data={tableConfig[view].data}
+              columns={tableConfig[view].columns}
+              actions={tableConfig[view].actions}
+              filters={filters}
+              showActions={true}
+              showCheckbox={false}
+              itemsPerPage={10}
+              loading={loading}
+              tableName={tableConfig[view].tableName}
             />
-          </div>
-        )}
 
-        <CustomTable
-          data={tableConfig[view].data}
-          columns={tableConfig[view].columns}
-          actions={tableConfig[view].actions}
-          filters={filters}
-          showActions={true}
-          showCheckbox={false}
-          itemsPerPage={10}
-          loading={loading}
-          tableName={tableConfig[view].tableName}
-        />
+            {modalType === "sessionTypes" && (
+              <AddSessionTypeModal
+                isOpen={isAddModalOpen}
+                onClose={() => {
+                  setIsAddModalOpen(false);
+                  setSelectedRow(null);
+                }}
+                onSave={handleSaveSessionType}
+                mode={modalMode}
+                initialData={selectedRow || {}}
+              />
+            )}
 
-        {modalType === "sessionTypes" && (
-          <AddSessionTypeModal
-            isOpen={isAddModalOpen}
-            onClose={() => {
-              setIsAddModalOpen(false);
-              setSelectedRow(null);
-            }}
-            onSave={handleSaveSessionType}
-            mode={modalMode}
-            initialData={selectedRow || {}}
-          />
-        )}
-
-        {modalType === "diagnosisCodes" && (
-          <AddDiagnosisCode
-            isOpen={isAddModalOpen}
-            onClose={() => {
-              setIsAddModalOpen(false);
-              setSelectedRow(null);
-            }}
-            onSave={handleSaveDiagnosisCode}
-            mode={modalMode}
-            initialData={selectedRow || {}}
-          />
+            {modalType === "diagnosisCodes" && (
+              <AddDiagnosisCode
+                isOpen={isAddModalOpen}
+                onClose={() => {
+                  setIsAddModalOpen(false);
+                  setSelectedRow(null);
+                }}
+                onSave={handleSaveDiagnosisCode}
+                mode={modalMode}
+                initialData={selectedRow || {}}
+              />
+            )}
+          </>
         )}
       </div>
     </>
