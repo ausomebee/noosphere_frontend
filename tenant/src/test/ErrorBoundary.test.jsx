@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ErrorBoundary from '../Helper/ErrorBoundary';
 
 // Component that throws
@@ -34,15 +34,16 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByText('Something went wrong.')).toBeInTheDocument();
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
   });
 
-  it('displays error details in fallback', () => {
+  it('offers Try Again and Reload Page buttons in the fallback', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByText(/Test crash/)).toBeInTheDocument();
+    expect(screen.getByText('Try Again').tagName).toBe('BUTTON');
+    expect(screen.getByText('Reload Page').tagName).toBe('BUTTON');
   });
 });

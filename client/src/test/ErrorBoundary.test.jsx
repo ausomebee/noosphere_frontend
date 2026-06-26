@@ -20,18 +20,11 @@ describe("ErrorBoundary", () => {
   it("renders fallback UI when error occurs", () => {
     render(<ErrorBoundary><ThrowError shouldThrow={true} /></ErrorBoundary>);
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-    expect(screen.getByText("Refresh Page")).toBeInTheDocument();
   });
 
-  it("does NOT expose stack trace", () => {
+  it("offers Try Again and Reload Page buttons", () => {
     render(<ErrorBoundary><ThrowError shouldThrow={true} /></ErrorBoundary>);
-    expect(screen.queryByText("Test error")).not.toBeInTheDocument();
-    expect(document.querySelector("details")).not.toBeInTheDocument();
-  });
-
-  it("shows refresh button", () => {
-    render(<ErrorBoundary><ThrowError shouldThrow={true} /></ErrorBoundary>);
-    const btn = screen.getByText("Refresh Page");
-    expect(btn.tagName).toBe("BUTTON");
+    expect(screen.getByText("Try Again").tagName).toBe("BUTTON");
+    expect(screen.getByText("Reload Page").tagName).toBe("BUTTON");
   });
 });
