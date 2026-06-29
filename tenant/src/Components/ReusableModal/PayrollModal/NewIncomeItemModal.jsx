@@ -19,8 +19,8 @@ const payrollItemSchema = yup.object().shape({
       .typeError("Rate must be a number")
       .when("unitType", {
         is: (unitType) => unitType === "Flat Rate",
-        then: () => yup.number().required("Rate is required").min(0, "Rate cannot be negative"),
-        otherwise: () => yup.number().nullable().notRequired(),
+        then: (schema) => schema.required("Rate is required").min(0, "Rate cannot be negative"),
+        otherwise: (schema) => schema.nullable().notRequired(),
       }),
     unit: yup
       .number()
@@ -28,8 +28,8 @@ const payrollItemSchema = yup.object().shape({
       .typeError("Unit must be a number")
       .when("unitType", {
         is: (unitType) => unitType === "Time based" || unitType === "Percentage based",
-        then: () => yup.number().required("Unit is required").min(0, "Unit cannot be negative"),
-        otherwise: () => yup.number().nullable().notRequired(),
+        then: (schema) => schema.required("Unit is required").min(0, "Unit cannot be negative"),
+        otherwise: (schema) => schema.nullable().notRequired(),
       }),
     unitMinutes: yup
       .number()
@@ -37,15 +37,15 @@ const payrollItemSchema = yup.object().shape({
       .typeError("Unit minutes must be a number")
       .when("unitType", {
         is: (unitType) => unitType === "Time based",
-        then: () => yup.number().required("Unit minutes is required").min(1, "Unit minutes must be at least 1"),
-        otherwise: () => yup.number().nullable().notRequired(),
+        then: (schema) => schema.required("Unit minutes is required").min(1, "Unit minutes must be at least 1"),
+        otherwise: (schema) => schema.nullable().notRequired(),
       }),
     duration: yup
       .string()
       .when("unitType", {
         is: (unitType) => unitType === "Time based" || unitType === "Percentage based",
-        then: () => yup.string().required("Duration is required"),
-        otherwise: () => yup.string().nullable().notRequired(),
+        then: (schema) => schema.required("Duration is required"),
+        otherwise: (schema) => schema.nullable().notRequired(),
       }),
   }),
   status: yup.boolean().required("Status is required"),
