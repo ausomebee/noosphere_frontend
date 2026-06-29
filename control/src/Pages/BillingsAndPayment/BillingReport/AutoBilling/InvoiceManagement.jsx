@@ -307,8 +307,9 @@ const InvoiceManagement = () => {
         i === index ? { ...reminder, saved: true, editMode: false } : reminder
       );
       if (saveMode === "individual") {
-        // Send only the current reminder
-        debouncedSave(invoiceSettings, [updatedReminders[index]], "reminder", index);
+        // Always send the full set of reminders (with the edited one updated),
+        // not just the single edited reminder, so none are dropped server-side.
+        debouncedSave(invoiceSettings, updatedReminders, "reminder", index);
       } else {
         // Batch mode: Send all when all are saved or for single reminder
         const allSaved = updatedReminders.every((r) => r.saved);
