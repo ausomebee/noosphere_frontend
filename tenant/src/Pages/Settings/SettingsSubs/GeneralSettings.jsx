@@ -11,14 +11,13 @@ import {
 import Button from "../../../Components/Button/Button";
 import api from "../../../api/generalSettingsApi";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import { FiSettings, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import { FiSettings } from "react-icons/fi";
 import usePermissions from "../../../hooks/usePermissions";
 import { setSettings } from "../../../ReduxStore/features/generalSettingsSlice";
 import {
   DATE_FORMAT_OPTIONS,
   TIME_FORMAT_OPTIONS,
   CURRENCY_OPTIONS,
-  SECURITY_QUESTION_OPTIONS,
 } from "../../../Data/selectOptions";
 import "./GeneralSettings.css";
 
@@ -42,30 +41,19 @@ const GeneralSettings = () => {
     { id: 2, name: "Authenticator App", isDefault: false },
   ]);
 
-  // Security questions — each record has its own { id, question } from the API
-  const [securityQuestions, setSecurityQuestions] = useState([]);
-
   // Loading states
   const [saveLoading, setSaveLoading] = useState(false);
-  const [sqSaveLoading, setSqSaveLoading] = useState(false);
   const [tfaSaveLoading, setTfaSaveLoading] = useState(false);
 
   // Modals
   const [isAuthenticatorModalOpen, setIsAuthenticatorModalOpen] = useState(false);
   const [isSecurityQuestionModalOpen, setIsSecurityQuestionModalOpen] = useState(false);
-  const [isAddQuestionModalOpen, setIsAddQuestionModalOpen] = useState(false);
 
   // Authenticator modal state
   const [authenticatorDefault, setAuthenticatorDefault] = useState(false);
 
   // Security question modal state
   const [securityQuestionDefault, setSecurityQuestionDefault] = useState(true);
-
-  // Add question modal state
-  const [newQuestion, setNewQuestion] = useState("");
-
-  // Edit question state
-  const [editingQuestion, setEditingQuestion] = useState(null);
 
   // Change password modal state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -108,28 +96,6 @@ const GeneralSettings = () => {
       }
     } catch (error) {
       console.error("Failed to fetch general settings:", error);
-    }
-  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Fetch security questions — API returns an array of { id, question } records
-  const fetchSecurityQuestions = useCallback(async () => {
-    if (!tenantId) return;
-    try {
-      const response = await api.GetTenantSecurityQuestionsByTenantId({
-        tenantId,
-        accessToken,
-        refreshToken,
-      });
-      const data = response?.data;
-      if (Array.isArray(data)) {
-        setSecurityQuestions(
-          data.map((q) => ({ id: q.id, question: q.question }))
-        );
-      } else if (data) {
-        setSecurityQuestions([{ id: data.id, question: data.question }]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch security questions:", error);
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -184,10 +150,9 @@ const GeneralSettings = () => {
 
   useEffect(() => {
     fetchGeneralSettings();
-    fetchSecurityQuestions();
     fetchTenantAdminChoices();
     fetchTenantInfo();
-  }, [fetchGeneralSettings, fetchSecurityQuestions, fetchTenantAdminChoices, fetchTenantInfo]);
+  }, [fetchGeneralSettings, fetchTenantAdminChoices, fetchTenantInfo]);
 
   // Save general settings (create or update)
   const saveGeneralSettings = async (newDateFormat, newTimeFormat, newCurrency) => {
@@ -329,63 +294,6 @@ const GeneralSettings = () => {
     } finally {
       setTfaSaveLoading(false);
     }
-  };
-
-  // Add or edit a single security question
-  const handleAddQuestion = async () => {
-    if (!newQuestion.trim()) return;
-    setSqSaveLoading(true);
-    try {
-      if (editingQuestion) {
-        // Update existing question record
-        await api.UpdateTenantSecurityQuestions({
-          id: editingQuestion.id,
-          question: newQuestion,
-          accessToken,
-          refreshToken,
-        });
-        setSecurityQuestions((prev) =>
-          prev.map((q) =>
-            q.id === editingQuestion.id ? { ...q, question: newQuestion } : q
-          )
-        );
-        setEditingQuestion(null);
-        showToast("Security question updated", "success");
-      } else {
-        // Create new question record
-        const response = await api.TenantSecurityQuestions({
-          tenantId,
-          question: newQuestion,
-          accessToken,
-          refreshToken,
-        });
-        const created = response?.data;
-        if (created?.id) {
-          setSecurityQuestions((prev) => [
-            ...prev,
-            { id: created.id, question: created.question || newQuestion },
-          ]);
-        }
-        showToast("Security question added", "success");
-      }
-      setNewQuestion("");
-      setIsAddQuestionModalOpen(false);
-    } catch (error) {
-      console.error("Failed to save security question:", error);
-      showToast("Failed to save security question", "error");
-    } finally {
-      setSqSaveLoading(false);
-    }
-  };
-
-  const handleDeleteQuestion = (id) => {
-    setSecurityQuestions((prev) => prev.filter((q) => q.id !== id));
-  };
-
-  const handleEditQuestion = (question) => {
-    setEditingQuestion(question);
-    setNewQuestion(question.question);
-    setIsAddQuestionModalOpen(true);
   };
 
   const openAuthMethodSettings = (method) => {
@@ -669,74 +577,7 @@ const GeneralSettings = () => {
             checked={securityQuestionDefault}
             onChange={(e) => setSecurityQuestionDefault(e.target.checked)}
           />
-
-          <div className="security-questions-list">
-            {securityQuestions.map((q) => (
-              <div key={q.id} className="security-question-item">
-                <span className="security-question-text">{q.question}</span>
-                <div className="security-question-actions">
-                  <button
-                    className="sq-action-btn edit"
-                    onClick={() => handleEditQuestion(q)}
-                    title="Edit"
-                  >
-                    <FiEdit2 size={18} />
-                  </button>
-                  <button
-                    className="sq-action-btn delete"
-                    onClick={() => handleDeleteQuestion(q.id)}
-                    title="Delete"
-                  >
-                    <FiTrash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <Button
-            label="Add a question"
-            variant="secondary"
-            size="small"
-            width="auto"
-            icon={<FiPlus />}
-            iconSize={14}
-            onClick={() => {
-              setEditingQuestion(null);
-              setNewQuestion("");
-              setIsAddQuestionModalOpen(true);
-            }}
-          />
         </div>
-      </ReusableModal>
-
-      {/* Add / Edit Security Question Modal */}
-      <ReusableModal
-        isOpen={isAddQuestionModalOpen}
-        onClose={() => {
-          setIsAddQuestionModalOpen(false);
-          setEditingQuestion(null);
-          setNewQuestion("");
-        }}
-        title={editingQuestion ? "Edit Security Question" : "Add a Security Question"}
-        primaryButtonText="Save"
-        secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleAddQuestion}
-        onSecondaryButtonClick={() => {
-          setIsAddQuestionModalOpen(false);
-          setEditingQuestion(null);
-          setNewQuestion("");
-        }}
-        primaryButtonLoading={sqSaveLoading}
-        size="sm"
-      >
-        <SelectInput
-          label="Question"
-          value={newQuestion}
-          onChange={(e) => setNewQuestion(e.target.value)}
-          placeholder="Select a security question"
-          options={SECURITY_QUESTION_OPTIONS}
-        />
       </ReusableModal>
 
       {/* Change Password Modal */}

@@ -3,39 +3,14 @@ import useAuth from "../../hooks/useAuth";
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import {
   TextInput,
-  SelectInput,
   CheckboxInput,
   SwitchInput,
 } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import authApis from "../../api/authApis";
 import { showToast, showApiError } from "../../Helper/ShowToast";
-import { FiSettings, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiSettings } from "react-icons/fi";
 import "./SecuritySettings.css";
-
-const SECURITY_QUESTION_OPTIONS = [
-  { value: "", label: "Select a security question" },
-  { value: "What is the name of your first pet?", label: "What is the name of your first pet?" },
-  { value: "What was the make of your first car?", label: "What was the make of your first car?" },
-  { value: "What is your mother's maiden name?", label: "What is your mother's maiden name?" },
-  { value: "What was the name of your elementary school?", label: "What was the name of your elementary school?" },
-  { value: "What is your favorite book?", label: "What is your favorite book?" },
-  { value: "In what city were you born?", label: "In what city were you born?" },
-  { value: "What was your childhood nickname?", label: "What was your childhood nickname?" },
-  { value: "What is the name of your favorite teacher?", label: "What is the name of your favorite teacher?" },
-  { value: "What was the first concert you attended?", label: "What was the first concert you attended?" },
-  { value: "What is your favorite vacation destination?", label: "What is your favorite vacation destination?" },
-  { value: "What was the name of your first best friend?", label: "What was the name of your first best friend?" },
-  { value: "What is the name of the street you grew up on?", label: "What is the name of the street you grew up on?" },
-  { value: "What was your favorite childhood game?", label: "What was your favorite childhood game?" },
-  { value: "What is the name of your favorite movie?", label: "What is the name of your favorite movie?" },
-  { value: "What was the first job you ever had?", label: "What was the first job you ever had?" },
-  { value: "What is your favorite hobby?", label: "What is your favorite hobby?" },
-  { value: "What was the model of your first phone?", label: "What was the model of your first phone?" },
-  { value: "What is the name of your favorite restaurant?", label: "What is the name of your favorite restaurant?" },
-  { value: "What was the name of your high school mascot?", label: "What was the name of your high school mascot?" },
-  { value: "What is your favorite historical figure?", label: "What is your favorite historical figure?" },
-];
 
 const SecuritySettings = () => {
   const { user, userId } = useAuth();
@@ -46,9 +21,6 @@ const SecuritySettings = () => {
     { id: 1, name: "Security Question", isDefault: true },
     { id: 2, name: "Authenticator App", isDefault: false },
   ]);
-
-  // Security questions
-  const [securityQuestions, setSecurityQuestions] = useState([]);
 
   // Authenticator modal
   const [isAuthenticatorModalOpen, setIsAuthenticatorModalOpen] = useState(false);
@@ -61,11 +33,6 @@ const SecuritySettings = () => {
   const [sqEnableAll, setSqEnableAll] = useState(false);
   const [sqDefault, setSqDefault] = useState(true);
   const [sqSaveLoading, setSqSaveLoading] = useState(false);
-
-  // Add/Edit Question modal
-  const [isAddQuestionModalOpen, setIsAddQuestionModalOpen] = useState(false);
-  const [newQuestion, setNewQuestion] = useState("");
-  const [editingQuestion, setEditingQuestion] = useState(null);
 
   // Password modal state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -227,38 +194,6 @@ const SecuritySettings = () => {
     }
   };
 
-  // Add or edit a security question
-  const handleAddQuestion = () => {
-    if (!newQuestion.trim()) return;
-    if (editingQuestion) {
-      setSecurityQuestions((prev) =>
-        prev.map((q) =>
-          q.id === editingQuestion.id ? { ...q, question: newQuestion } : q
-        )
-      );
-      setEditingQuestion(null);
-      showToast("Security question updated", "success");
-    } else {
-      setSecurityQuestions((prev) => [
-        ...prev,
-        { id: String(Date.now()), question: newQuestion },
-      ]);
-      showToast("Security question added", "success");
-    }
-    setNewQuestion("");
-    setIsAddQuestionModalOpen(false);
-  };
-
-  const handleDeleteQuestion = (id) => {
-    setSecurityQuestions((prev) => prev.filter((q) => q.id !== id));
-  };
-
-  const handleEditQuestion = (question) => {
-    setEditingQuestion(question);
-    setNewQuestion(question.question);
-    setIsAddQuestionModalOpen(true);
-  };
-
   const openAuthMethodSettings = (method) => {
     if (method.name === "Authenticator App") {
       setAuthenticatorDefault(method.isDefault);
@@ -411,72 +346,7 @@ const SecuritySettings = () => {
             checked={sqDefault}
             onChange={(e) => setSqDefault(e.target.checked)}
           />
-
-          <div className="sq-section">
-            <span className="sq-section-title">SECURITY QUESTIONS</span>
-            <div className="sq-list">
-              {securityQuestions.map((q) => (
-                <div key={q.id} className="sq-item">
-                  <span className="sq-text">{q.question}</span>
-                  <div className="sq-actions">
-                    <button
-                      className="sq-action-btn edit"
-                      onClick={() => handleEditQuestion(q)}
-                      title="Edit"
-                    >
-                      <FiEdit2 size={16} />
-                    </button>
-                    <button
-                      className="sq-action-btn delete"
-                      onClick={() => handleDeleteQuestion(q.id)}
-                      title="Delete"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              className="sq-add-btn"
-              onClick={() => {
-                setEditingQuestion(null);
-                setNewQuestion("");
-                setIsAddQuestionModalOpen(true);
-              }}
-            >
-              Add a question
-            </button>
-          </div>
         </div>
-      </ReusableModal>
-
-      {/* Add / Edit Security Question Modal */}
-      <ReusableModal
-        isOpen={isAddQuestionModalOpen}
-        onClose={() => {
-          setIsAddQuestionModalOpen(false);
-          setEditingQuestion(null);
-          setNewQuestion("");
-        }}
-        title={editingQuestion ? "Edit security question" : "Add a security question"}
-        primaryButtonText="Save"
-        secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleAddQuestion}
-        onSecondaryButtonClick={() => {
-          setIsAddQuestionModalOpen(false);
-          setEditingQuestion(null);
-          setNewQuestion("");
-        }}
-        size="sm"
-      >
-        <SelectInput
-          label="Question"
-          value={newQuestion}
-          onChange={(e) => setNewQuestion(e.target.value)}
-          options={SECURITY_QUESTION_OPTIONS}
-        />
       </ReusableModal>
 
       {/* Authenticator App Modal */}
