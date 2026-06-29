@@ -51,6 +51,19 @@ const payrollItemSchema = yup.object().shape({
   status: yup.boolean().required("Status is required"),
 });
 
+// Find the first real (leaf) validation message, digging into nested field
+// errors like rate.unit / rate.duration so the toast names the actual field
+// instead of a generic "all fields" message.
+const findFirstErrorMessage = (errs) => {
+  if (!errs || typeof errs !== "object") return null;
+  if (typeof errs.message === "string" && errs.message) return errs.message;
+  for (const value of Object.values(errs)) {
+    const message = findFirstErrorMessage(value);
+    if (message) return message;
+  }
+  return null;
+};
+
 // Transform initial data to form data
 const transformInitialData = (initialData, mode) => {
   const rate = initialData.rate || {};
@@ -97,6 +110,7 @@ const PayrollItemModal = ({
     handleSubmit,
     reset,
     watch,
+    clearErrors,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(payrollItemSchema),
@@ -116,6 +130,13 @@ const PayrollItemModal = ({
   // Watch the unitType field
   const unitType = watch("unitType");
 
+  // Clear stale rate errors when the unit type changes so switching to (or
+  // selecting) a type doesn't flash "required" errors on fields the user
+  // hasn't touched yet. Clear-only — it doesn't wipe any entered values.
+  useEffect(() => {
+    clearErrors("rate");
+  }, [unitType, clearErrors]);
+
   useEffect(() => {
     if (isOpen) {
       // Pre-fill for both view and edit; only a brand-new "add" starts empty.
@@ -125,9 +146,9 @@ const PayrollItemModal = ({
     }
   }, [isOpen, mode, initialData, reset]);
 
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
+  const onValidationError = (formErrors) => {
+    const message = findFirstErrorMessage(formErrors);
+    showToast(message || "Please fill in all required fields", "error");
   };
 
   const handleSave = async (data) => {
