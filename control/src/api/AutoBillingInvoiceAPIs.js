@@ -45,6 +45,7 @@ const UpdateDayBeforeDueNumber = async ({
   refreshToken,
   id,
   daysBeforeDueDate,
+  isDaysBeforeDueDate,
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -53,6 +54,8 @@ const UpdateDayBeforeDueNumber = async ({
       {
         id,
         daysBeforeDueDate,
+        // Only include the on/off flag when the caller provides it.
+        ...(isDaysBeforeDueDate !== undefined ? { isDaysBeforeDueDate } : {}),
       }
     );
     return response.data;

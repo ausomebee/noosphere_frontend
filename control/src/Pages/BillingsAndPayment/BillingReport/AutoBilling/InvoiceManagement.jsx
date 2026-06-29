@@ -57,7 +57,7 @@ const InvoiceManagement = () => {
       setInvoiceSettings({
         id: data.id,
         autoGenerateInvoice: data.onPlanPurchase,
-        sendUpcomingInvoices: false,
+        sendUpcomingInvoices: data.isDaysBeforeDueDate ?? false,
         upcomingDaysBefore: data.daysBeforeDueDate.toString(),
         upcomingEmailHeader: data.upcomingInvoiceHeader,
         upcomingEmailBody: data.upcomingInvoiceBody,
@@ -120,6 +120,7 @@ const InvoiceManagement = () => {
             refreshToken,
             id,
             daysBeforeDueDate: parseInt(settings.upcomingDaysBefore, 10),
+            isDaysBeforeDueDate: settings.sendUpcomingInvoices,
           });
         } else if (section === "upcomingInvoices") {
           await api.UpcomingInvoiceEmail({
@@ -261,7 +262,9 @@ const InvoiceManagement = () => {
           reminders,
           "autoGenerateInvoice"
         );
-      } else if (key === "upcomingDaysBefore") {
+      } else if (key === "upcomingDaysBefore" || key === "sendUpcomingInvoices") {
+        // Both the day count and the on/off toggle persist via the same
+        // days-before-due-date endpoint.
         debouncedSave(
           { ...invoiceSettings, [key]: value },
           reminders,
