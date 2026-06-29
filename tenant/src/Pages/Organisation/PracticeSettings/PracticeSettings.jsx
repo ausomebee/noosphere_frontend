@@ -377,12 +377,12 @@ const PracticeSettings = () => {
       <div className="p-6">
         <h1 className="appointment-sched-title mb-4">Practice Settings</h1>
 
-        <div className="appointment-sched-view-switcher">
+        <div className="appointment-sched-view-switcher appointment-tabs-segmented">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setView(tab.key)}
-              className={`appointment-sched-view-button ${
+              className={`appointment-sched-view-button flex items-center ${
                 view === tab.key
                   ? "appointment-sched-view-button-active"
                   : "appointment-sched-view-button-inactive"
