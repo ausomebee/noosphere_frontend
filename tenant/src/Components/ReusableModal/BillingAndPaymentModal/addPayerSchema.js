@@ -67,20 +67,26 @@ export const payerSchema = yup.object().shape({
         roundingRule: yup.string().when("mode", ([mode], schema) => {
           return mode === "view" ? schema.optional() : schema.required("Rounding Rule is required");
         }),
-        modifiers: yup.array().of(
-          yup.object().shape({
-            modifier: yup.string().when("mode", ([mode], schema) => {
-              return mode === "view" ? schema.optional() : schema.required("Modifier is required");
-            }),
-            ratePerUnit: yup
-              .number()
-              .typeError("Must be a number")
-              .min(0, "Must be 0 or greater")
-              .when("mode", ([mode], schema) => {
-                return mode === "view" ? schema.optional() : schema.required("Rate per Unit is required");
-              }),
-          })
-        ),
+        // Modifiers are optional — a service code can have none.
+        modifiers: yup
+          .array()
+          .of(
+            yup.object().shape({
+              modifier: yup.string().optional(),
+              ratePerUnit: yup
+                .number()
+                .transform((value, originalValue) =>
+                  typeof originalValue === "string" && originalValue === ""
+                    ? undefined
+                    : value
+                )
+                .typeError("Must be a number")
+                .min(0, "Must be 0 or greater")
+                .nullable()
+                .optional(),
+            })
+          )
+          .optional(),
         billable: yup.boolean().when("mode", ([mode], schema) => {
           return mode === "view" ? schema.optional() : schema.required("Billable is required");
         }),

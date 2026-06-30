@@ -129,7 +129,8 @@ const AddPayerModal = ({
           unitCurrency: sc.unitCurrency,
           ratePerUnit: sc.ratePerUnit,
           roundingRuleId: sc.roundingRule,
-          modifiers: sc.modifiers,
+          // Modifiers are optional — drop empty rows so blanks aren't sent.
+          modifiers: (sc.modifiers || []).filter((m) => m && m.modifier),
           billable: sc.billable,
         })),
       };
@@ -442,7 +443,7 @@ const AddPayerModal = ({
                               disabled={mode === "view"}
                             />
                           </div>
-                          {mode !== "view" && modifierFields.length > 1 && (
+                          {mode !== "view" && (
                             <button
                               type="button"
                               className="modal-row-delete-btn"
