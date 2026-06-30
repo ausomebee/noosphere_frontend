@@ -70,22 +70,29 @@ const CreateTenantStaff = async ({
       country,
       phoneNumber,
       active,
-      documents:
-        documents?.map((doc) => ({
-          documentsUrl: {
-            filename: doc.documentsUrl?.filename || "",
-            url: doc.documentsUrl?.url || "",
-          },
-        })) || [],
-      licenses:
-        licenses?.map((license) => ({
-          licenseName: license.licenseName,
-          licenseNumber: license.licenseNumber,
-          issueState: license.issueState,
-          expiryDate: license.expiryDate
-            ? new Date(license.expiryDate).toISOString()
-            : undefined,
-        })) || [],
+      // Only include documents/licenses when there's actually something to send.
+      ...(documents?.length
+        ? {
+            documents: documents.map((doc) => ({
+              documentsUrl: {
+                filename: doc.documentsUrl?.filename || "",
+                url: doc.documentsUrl?.url || "",
+              },
+            })),
+          }
+        : {}),
+      ...(licenses?.length
+        ? {
+            licenses: licenses.map((license) => ({
+              licenseName: license.licenseName,
+              licenseNumber: license.licenseNumber,
+              issueState: license.issueState,
+              expiryDate: license.expiryDate
+                ? new Date(license.expiryDate).toISOString()
+                : undefined,
+            })),
+          }
+        : {}),
       payroll: payrollPayload,
       tenantId,
     };
