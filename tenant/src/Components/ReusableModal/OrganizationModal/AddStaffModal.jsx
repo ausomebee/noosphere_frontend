@@ -1318,9 +1318,10 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     <div>
       <FileUploadArea
         onFiles={(fileObjects) => {
-          setValue("documents", [...(values.documents || []), ...fileObjects], {
-            shouldDirty: true,
-          });
+          // Upload only. handleFileUpload writes the uploaded results (which
+          // have filename/url) into `documents`. Writing the raw selected
+          // objects here would be filtered out by FileUploadArea's
+          // initialFiles effect and wipe the just-added file from the list.
           handleFileUpload(fileObjects);
         }}
         accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov"
