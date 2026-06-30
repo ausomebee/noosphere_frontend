@@ -408,8 +408,10 @@ async function buildTargetFormData(data, mode) {
   fd.append("notes", data.note || "");
   fd.append("masteryMetric", data.masteryMetric || "");
 
+  // Use the array-form key so a single selection still arrives as an array
+  // (the backend requires promptingStrategy to be an array).
   (data.promptingStrategy || []).forEach((str) =>
-    fd.append("promptingStrategy", JSON.stringify({ label: str, value: str }))
+    fd.append("promptingStrategy[]", JSON.stringify({ label: str, value: str }))
   );
   if (data.promptOthers) fd.append("promptOthers", data.promptOthers);
 
