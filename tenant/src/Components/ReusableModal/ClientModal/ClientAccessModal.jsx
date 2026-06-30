@@ -33,7 +33,11 @@ const ClientPortalSettingsModal = ({
     }
   }, [isOpen, initialData]);
 
-  const portalUrl = `https://noosphere/client-org.com/${clientTenantId || "login"}`;
+  // The client portal is served at /client/ on the same host the tenant admin
+  // is on (e.g. https://acme.nooshere.org/client/), and the client app resolves
+  // the tenant from the subdomain. Derive it from the current origin so it
+  // adapts across environments/TLDs.
+  const portalUrl = `${window.location.origin}/client/`;
 
   const handleSave = async () => {
     if (!clientTenantId) {
