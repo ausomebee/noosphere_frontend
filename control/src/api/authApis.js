@@ -129,6 +129,19 @@ const GetSuperAdminChoices = async () => {
   }
 };
 
+// Toggle the master 2FA switch on/off.
+const SetSuperAdminEnabled = async ({ isEnabled }) => {
+  try {
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/admin/superadminchoices/enabled`,
+      { isEnabled }
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "error updating 2FA status");
+  }
+};
+
 
 const Admin2FACreateSecretMessage = async ({ userId, secret, authQuestion, module }) => {
   try {
@@ -199,6 +212,7 @@ export default {
   Admin2FAVerify,
   SuperAdminChoices,
   GetSuperAdminChoices,
+  SetSuperAdminEnabled,
   Admin2FACreateSecretMessage,
   Admin2FAVerifySecretMessage,
   AdminOnboarding,

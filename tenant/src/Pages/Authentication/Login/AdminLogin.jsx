@@ -38,15 +38,17 @@ const AdminCLogin = () => {
   const handleGetSuperAdminChoice = async (id) => {
     try {
       const response = await api.GetSuperAdminChoices({ id });
-      const { setForAll, Authenticator2FA, securityQuestion } =
+      const { setForAll, Authenticator2FA, securityQuestion, isEnabled } =
         response.data.data;
-      return { setForAll, Authenticator2FA, securityQuestion };
+      return { setForAll, Authenticator2FA, securityQuestion, isEnabled };
     } catch (error) {
       console.error("Error fetching SuperAdmin choices:", error);
       return {
         setForAll: false,
         Authenticator2FA: false,
         securityQuestion: false,
+        // Default isEnabled to true on failure so 2FA is never silently skipped.
+        isEnabled: true,
       };
     }
   };
@@ -61,7 +63,7 @@ const AdminCLogin = () => {
 
         // Determine the effective auth type: the admin's global choice when
         // "set for all" is on, otherwise the privileged user's own auth type.
-        const { setForAll, Authenticator2FA, securityQuestion } =
+        const { setForAll, Authenticator2FA, securityQuestion, isEnabled } =
           await handleGetSuperAdminChoice(user.tenantId);
         const choiceType = Authenticator2FA
           ? "AUTHENTICATOR"
@@ -81,6 +83,12 @@ const AdminCLogin = () => {
           });
           navigate("/dashboard");
         };
+
+        // Master switch: when 2FA is disabled, skip it and go to the dashboard.
+        if (isEnabled === false) {
+          goDashboard();
+          return;
+        }
 
         if (!user.auth2FADone) {
           // Forced (re)setup: a type is set but 2FA isn't complete (first time,

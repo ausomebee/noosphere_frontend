@@ -212,6 +212,25 @@ const GetTenantAdminChoices = async ({
   }
 };
 
+// Toggle the master 2FA switch on/off for the tenant.
+const SetTenantAdminEnabled = async ({
+  tenantId,
+  isEnabled,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/tenant/tenantadminchoices/enabled`,
+      { tenantId, isEnabled },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || "Update 2FA status failed");
+  }
+};
+
 const GetTenantById = async ({
   tenantId,
   accessToken,
@@ -239,5 +258,6 @@ export default {
   GetTenantSecurityQuestionsById,
   ChangePassword,
   GetTenantAdminChoices,
+  SetTenantAdminEnabled,
   GetTenantById,
 };

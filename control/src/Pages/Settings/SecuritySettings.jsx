@@ -54,8 +54,8 @@ const SecuritySettings = () => {
       const response = await authApis.GetSuperAdminChoices();
       const data = response?.data?.data;
       if (data) {
-        const has2FA = data.Authenticator2FA || data.securityQuestion;
-        setTwoFactorEnabled(!!has2FA);
+        // The master 2FA switch is driven by isEnabled.
+        setTwoFactorEnabled(!!data.isEnabled);
         setAuthMethods([
           {
             id: 1,
@@ -76,6 +76,21 @@ const SecuritySettings = () => {
       if (import.meta.env.DEV) console.error("Failed to fetch admin choices:", error);
     }
   }, []);
+
+  // Toggle the master 2FA switch and persist it.
+  const handleToggle2FA = async (checked) => {
+    setTwoFactorEnabled(checked); // optimistic
+    try {
+      await authApis.SetSuperAdminEnabled({ isEnabled: checked });
+      showToast(
+        `Two-factor authentication ${checked ? "enabled" : "disabled"}`,
+        "success",
+      );
+    } catch (error) {
+      setTwoFactorEnabled(!checked); // revert on failure
+      showApiError(error, "TOGGLE_2FA");
+    }
+  };
 
   useEffect(() => {
     fetchAdminChoices();
@@ -289,7 +304,7 @@ const SecuritySettings = () => {
             </div>
             <SwitchInput
               checked={twoFactorEnabled}
-              onChange={(e) => setTwoFactorEnabled(e.target.checked)}
+              onChange={(e) => handleToggle2FA(e.target.checked)}
             />
           </div>
         </div>

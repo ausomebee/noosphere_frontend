@@ -38,11 +38,12 @@ const AdminsLogin = () => {
   const handleGetSuperAdminChoice = async () => {
     try {
       const response = await api.GetSuperAdminChoices();
-      const { setForAll, Authenticator2FA, securityQuestion } = response.data.data;
-      return { setForAll, Authenticator2FA, securityQuestion };
+      const { setForAll, Authenticator2FA, securityQuestion, isEnabled } = response.data.data;
+      return { setForAll, Authenticator2FA, securityQuestion, isEnabled };
     } catch (error) {
       if (import.meta.env.DEV) console.error("Error fetching SuperAdmin choices:", error);
-      return { setForAll: false, Authenticator2FA: false, securityQuestion: false };
+      // Default isEnabled to true on failure so 2FA is never silently skipped.
+      return { setForAll: false, Authenticator2FA: false, securityQuestion: false, isEnabled: true };
     }
   };
 
@@ -56,8 +57,15 @@ const AdminsLogin = () => {
 
         // Determine the effective auth type: the super-admin's global choice
         // when "set for all" is on, otherwise the user's own auth type.
-        const { setForAll, Authenticator2FA, securityQuestion } =
+        const { setForAll, Authenticator2FA, securityQuestion, isEnabled } =
           await handleGetSuperAdminChoice();
+
+        // Master switch: when 2FA is disabled, skip it and go to the dashboard.
+        if (isEnabled === false) {
+          navigate("/tenants/pipeline");
+          return;
+        }
+
         const choiceType = Authenticator2FA
           ? "AUTHENTICATOR"
           : securityQuestion

@@ -110,8 +110,8 @@ const GeneralSettings = () => {
       });
       const data = response?.data;
       if (data) {
-        const has2FA = data.Authenticator2FA || data.securityQuestion;
-        setTwoFactorEnabled(has2FA);
+        // The master 2FA switch is driven by isEnabled.
+        setTwoFactorEnabled(!!data.isEnabled);
         setAuthMethods([
           {
             id: 1,
@@ -306,6 +306,26 @@ const GeneralSettings = () => {
     }
   };
 
+  // Toggle the master 2FA switch and persist it.
+  const handleToggle2FA = async (checked) => {
+    setTwoFactorEnabled(checked); // optimistic
+    try {
+      await api.SetTenantAdminEnabled({
+        tenantId,
+        isEnabled: checked,
+        accessToken,
+        refreshToken,
+      });
+      showToast(
+        `Two-factor authentication ${checked ? "enabled" : "disabled"}`,
+        "success",
+      );
+    } catch (error) {
+      setTwoFactorEnabled(!checked); // revert on failure
+      showApiError(error, "TOGGLE_2FA");
+    }
+  };
+
   return (
     <div className="general-settings-container">
       {/* General Settings Section */}
@@ -435,7 +455,7 @@ const GeneralSettings = () => {
             {hasPermission("edit_security_settings") ? (
               <SwitchInput
                 checked={twoFactorEnabled}
-                onChange={(e) => setTwoFactorEnabled(e.target.checked)}
+                onChange={(e) => handleToggle2FA(e.target.checked)}
               />
             ) : (
               <SwitchInput
