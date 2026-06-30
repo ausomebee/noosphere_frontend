@@ -693,7 +693,14 @@ const IssueManagement = () => {
                 <h4>Assigned Issues</h4>
                 <div className="issue-mgmt-overview-value-container">
                   <p className="issue-mgmt-overview-value">
-                    {formatNumber(metrics.All - metrics.Unassigned)}
+                    {/* Active assigned only — exclude resolved so a resolved
+                        assigned issue drops out of this count. */}
+                    {formatNumber(
+                      Math.max(
+                        0,
+                        metrics.All - metrics.Unassigned - metrics.Resolved
+                      )
+                    )}
                   </p>
                 </div>
               </div>
