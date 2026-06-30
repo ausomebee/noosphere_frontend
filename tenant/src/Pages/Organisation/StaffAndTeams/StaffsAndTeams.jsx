@@ -362,7 +362,14 @@ const StaffsAndTeams = () => {
   const handleStaffSubmit = async (data) => {
     setLoading(true);
     try {
-      // Build payroll object conditionally
+      // Optional pay collections — only include when they actually have rows.
+      const otherPays = (data.otherPays || [])
+        .filter((p) => p.type && p.type.trim() !== "")
+        .map((p) => p.type);
+      const deductions = (data.deductions || [])
+        .filter((d) => d.type && d.type.trim() !== "")
+        .map((d) => d.type);
+
       const payroll = {
         id: selectedRow?.payroll?.id,
         paymentSchedule: data.paymentSchedule || "",
@@ -373,13 +380,31 @@ const StaffsAndTeams = () => {
         !isNaN(Number(data.minimumHours))
           ? { minimumHours: String(data.minimumHours) }
           : {}),
-        otherPays: (data.otherPays || [])
-          .filter((p) => p.type && p.type.trim() !== "")
-          .map((p) => p.type),
-        deductions: (data.deductions || [])
-          .filter((d) => d.type && d.type.trim() !== "")
-          .map((d) => d.type),
+        ...(otherPays.length ? { otherPays } : {}),
+        ...(deductions.length ? { deductions } : {}),
       };
+
+      // Optional collections — guard against undefined (they're omitted from the
+      // modal payload when empty) and omit them here when there are no rows.
+      const documents = (data.documents || [])
+        .filter((f) => !f.error)
+        .map((f) => ({
+          id: f.id,
+          documentsUrl: { filename: f.filename, url: f.url },
+          tenantStaffId: selectedRow?.id,
+        }));
+      const licenses = (data.licenses || [])
+        .filter(
+          (l) => l.licenseName && l.licenseNumber && l.expiryDate && l.state,
+        )
+        .map((l) => ({
+          id: l.id,
+          licenseName: l.licenseName,
+          licenseNumber: l.licenseNumber,
+          issueState: l.state,
+          expiryDate: new Date(l.expiryDate).toISOString(),
+          tenantStaffId: selectedRow?.id,
+        }));
 
       const payload = {
         id: modalMode === "edit" ? selectedRow?.id : undefined,
@@ -397,25 +422,8 @@ const StaffsAndTeams = () => {
         active: data.active ?? true,
         roleId: data.staffRole,
         tenantId: modalMode === "add" ? tenantId : selectedRow?.tenantId,
-        documents: data.documents
-          .filter((f) => !f.error)
-          .map((f) => ({
-            id: f.id,
-            documentsUrl: { filename: f.filename, url: f.url },
-            tenantStaffId: selectedRow?.id,
-          })),
-        licenses: (data.licenses || [])
-          .filter(
-            (l) => l.licenseName && l.licenseNumber && l.expiryDate && l.state,
-          )
-          .map((l) => ({
-            id: l.id,
-            licenseName: l.licenseName,
-            licenseNumber: l.licenseNumber,
-            issueState: l.state,
-            expiryDate: new Date(l.expiryDate).toISOString(),
-            tenantStaffId: selectedRow?.id,
-          })),
+        ...(documents.length ? { documents } : {}),
+        ...(licenses.length ? { licenses } : {}),
         payroll,
       };
 
