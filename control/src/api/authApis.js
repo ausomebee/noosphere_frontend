@@ -1,4 +1,5 @@
 import axios from "axios";
+import AxiosInterceptor from "../Helper/AxiosInterceptor";
 // Define your API endpoints
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -129,10 +130,12 @@ const GetSuperAdminChoices = async () => {
   }
 };
 
-// Toggle the master 2FA switch on/off.
-const SetSuperAdminEnabled = async ({ isEnabled }) => {
+// Toggle the master 2FA switch on/off. Uses the auth interceptor so the
+// request carries the bearer token (this is a protected endpoint).
+const SetSuperAdminEnabled = async ({ isEnabled, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await axios.patch(
+    const response = await authFetch.patch(
       `${PLAIN_API_URL}/admin/superadminchoices/enabled`,
       { isEnabled }
     );

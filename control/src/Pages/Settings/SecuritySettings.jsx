@@ -13,7 +13,7 @@ import { FiSettings } from "react-icons/fi";
 import "./SecuritySettings.css";
 
 const SecuritySettings = () => {
-  const { user, userId } = useAuth();
+  const { user, userId, accessToken, refreshToken } = useAuth();
 
   // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -81,7 +81,11 @@ const SecuritySettings = () => {
   const handleToggle2FA = async (checked) => {
     setTwoFactorEnabled(checked); // optimistic
     try {
-      await authApis.SetSuperAdminEnabled({ isEnabled: checked });
+      await authApis.SetSuperAdminEnabled({
+        isEnabled: checked,
+        accessToken,
+        refreshToken,
+      });
       showToast(
         `Two-factor authentication ${checked ? "enabled" : "disabled"}`,
         "success",
