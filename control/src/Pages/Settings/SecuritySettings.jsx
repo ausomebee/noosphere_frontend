@@ -5,6 +5,7 @@ import {
   TextInput,
   CheckboxInput,
   SwitchInput,
+  PasswordInput,
 } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import authApis from "../../api/authApis";
@@ -451,9 +452,9 @@ const SecuritySettings = () => {
             onChange={(e) => setAdminCurrentPassword(e.target.value)}
             placeholder="Enter current administrative password"
           />
-          <TextInput
+          <PasswordInput
             label="New Password"
-            type="password"
+            showStrength
             value={adminNewPassword}
             onChange={(e) => setAdminNewPassword(e.target.value)}
             placeholder="Enter new administrative password"
