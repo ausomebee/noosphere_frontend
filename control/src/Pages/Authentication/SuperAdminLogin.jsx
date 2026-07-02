@@ -101,7 +101,10 @@ const AdminsLogin = () => {
           }
         }
       } else {
-        const errorMessage = resultAction.payload?.message || "Login failed";
+        // The thunk rejects with the backend message string, so read the
+        // payload directly; fall back to a generic message.
+        const errorMessage =
+          resultAction.payload?.message || resultAction.payload || "Login failed";
         showToast(errorMessage, "error");
       }
     } catch (error) {
