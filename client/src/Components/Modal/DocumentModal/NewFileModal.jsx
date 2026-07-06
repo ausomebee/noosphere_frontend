@@ -141,14 +141,6 @@ const NewFileModal = ({ isOpen, onClose, onCreate, folders = [] }) => {
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx"
           />
 
-          {uploadedFiles.length > 0 && !isUploading && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-              <p className="text-sm font-medium text-green-800">
-                {uploadedFiles.length} file
-                {uploadedFiles.length !== 1 ? "s" : ""} ready for upload
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </ReusableModal>
