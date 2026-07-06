@@ -379,14 +379,6 @@ const Profile = () => {
             </div>
           </section>
 
-          {/* Isolated Notification Settings Component */}
-          <NotificationSettings
-            notifications={notifications}
-            isLoading={isLoadingNotifications}
-            loadingKeys={notificationLoadingKeys}
-            onToggle={toggleNotification}
-          />
-
           {/* Action Buttons */}
           <div className="action-buttons">
             <Button
@@ -403,6 +395,14 @@ const Profile = () => {
               disabled={isLoading || isLoadingProfile || isLoadingNotifications}
             />
           </div>
+
+          {/* Isolated Notification Settings Component */}
+          <NotificationSettings
+            notifications={notifications}
+            isLoading={isLoadingNotifications}
+            loadingKeys={notificationLoadingKeys}
+            onToggle={toggleNotification}
+          />
         </div>
       </div>
 
