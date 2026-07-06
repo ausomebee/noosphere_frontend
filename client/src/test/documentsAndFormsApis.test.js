@@ -130,7 +130,7 @@ describe("documentsAndFormsApis", () => {
     it("calls correct endpoint", async () => {
       mockGet.mockResolvedValue({ data: { id: "form1", fields: [] } });
       const result = await api.GetFormWithItsFields({ formId: "form1", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/forms/form1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/forms/client/form1"));
       expect(result).toEqual({ id: "form1", fields: [] });
     });
   });

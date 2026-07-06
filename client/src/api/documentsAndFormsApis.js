@@ -228,7 +228,7 @@ const AttachDocumentsToRequest = async ({
  const GetFormWithItsFields = async ({ formId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/forms/${formId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/forms/client/${formId}`);
     return response.data;
   } catch (error) {
     throw new Error(
