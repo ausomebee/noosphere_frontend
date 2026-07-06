@@ -1,7 +1,7 @@
 import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import ReusableTable from "../../Components/Table/ReuseableTable";
-import { FiEye } from "react-icons/fi";
+import { FiEye, FiX } from "react-icons/fi";
 import Chart from "react-apexcharts";
 import "./Programs.css";
 import DashboardLayout from "../../layouts/ClientLayout";
@@ -572,6 +572,23 @@ const TargetPerformanceModal = ({ modalState, onClose }) => {
               <option value="custom">Custom</option>
             </select>
           </div>
+          <button
+            type="button"
+            className="modal-close-unique"
+            aria-label="Close"
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              color: "#64748b",
+            }}
+          >
+            <FiX size={22} />
+          </button>
         </div>
 
         <div className="modal-chart-container-unique">
