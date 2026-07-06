@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { FiChevronRight } from "react-icons/fi";
@@ -42,6 +42,11 @@ const Task = ({
     }
   };
 
+  // Record where the pointer went down so onClick can tell a genuine click from
+  // the trailing click that fires at the end of a drag. Capture phase is used so
+  // it runs without overriding dnd-kit's own pointer listeners.
+  const pointerDownPos = useRef(null);
+
   return (
     <div
       ref={setNodeRef}
@@ -51,9 +56,22 @@ const Task = ({
       }`}
       {...attributes}
       {...listeners}
+      onPointerDownCapture={(e) => {
+        pointerDownPos.current = { x: e.clientX, y: e.clientY };
+      }}
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey) {
           toggleSelection && toggleSelection();
+          return;
+        }
+        // If the pointer moved noticeably between down and up, this was a drag —
+        // don't navigate to the profile.
+        const start = pointerDownPos.current;
+        if (
+          start &&
+          (Math.abs(e.clientX - start.x) > 6 ||
+            Math.abs(e.clientY - start.y) > 6)
+        ) {
           return;
         }
         // The whole card opens the client profile.
