@@ -1130,12 +1130,6 @@ const ClientInformationTab = ({ clientData, isViewMode = false, onUpdated }) => 
 
           {isManageOpen && (
             <div className="timesheet-dropdown">
-              {!isViewMode && (
-                <div className="timesheet-dropdown-item">
-                  Move intake candidate
-                </div>
-              )}
-
               <div
                 className="timesheet-dropdown-item"
                 onClick={() => {

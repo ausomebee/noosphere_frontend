@@ -142,8 +142,8 @@ const ClientPanel = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="appointment-sched-view-switcher appointment-tabs-balanced">
+        {/* Tabs — segmented (pill) style, matching Program Library */}
+        <div className="appointment-sched-view-switcher appointment-tabs-segmented">
           <button
             onClick={() => setView("clientInformation")}
             className={`appointment-sched-view-button ${
