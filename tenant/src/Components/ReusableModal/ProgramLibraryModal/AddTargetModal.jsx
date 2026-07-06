@@ -8,6 +8,7 @@ import {
 } from "../../../ReduxStore/features/AddTargetDraftSlice";
 import ReusableModal from "../ReusableModal";
 import { BsCloudUpload } from "react-icons/bs";
+import { RiDeleteBin6Line } from "react-icons/ri";
 import {
   RadioInput,
   SelectInput,
@@ -23,11 +24,50 @@ import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 /* ---------- FileUploadArea Component ---------- */
 const FileUploadArea = ({
   onFiles,
+  onRemove = () => {},
+  initialFile = null,
   accept = ".pdf,.jpg,.jpeg,.png,.gif",
   maxSizeMB = 50,
 }) => {
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
+
+  // Show an already-saved attachment (edit mode) until the user replaces it.
+  useEffect(() => {
+    if (!initialFile) {
+      setFile(null);
+      return;
+    }
+    if (initialFile instanceof File) {
+      setFile(initialFile);
+      setProgress(100);
+      return;
+    }
+    if (typeof initialFile === "string") {
+      setFile({
+        name: initialFile.split("/").pop() || "Attachment",
+        url: initialFile,
+        existing: true,
+      });
+      setProgress(100);
+      return;
+    }
+    const url =
+      initialFile.url || initialFile.fileUrl || initialFile.documentsUrl?.url;
+    const nm =
+      initialFile.filename ||
+      initialFile.name ||
+      initialFile.documentsUrl?.filename ||
+      (url ? url.split("/").pop() : "Attachment");
+    setFile({ name: nm || "Attachment", url, existing: true });
+    setProgress(100);
+  }, [initialFile]);
+
+  const handleRemove = () => {
+    setFile(null);
+    setProgress(0);
+    onRemove();
+  };
 
   const handleChange = (e) => {
     const selected = e.target.files?.[0];
@@ -76,12 +116,49 @@ const FileUploadArea = ({
 
       {file && (
         <div className="file-list mt-3">
-          <div className="file-item">
+          <div
+            className="file-item"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "8px",
+            }}
+          >
             <span>
-              {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
+              {file.url ? (
+                <a href={file.url} target="_blank" rel="noreferrer">
+                  {file.name}
+                </a>
+              ) : (
+                file.name
+              )}
+              {typeof file.size === "number"
+                ? ` (${(file.size / 1024 / 1024).toFixed(1)} MB)`
+                : ""}
             </span>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: `${progress}%` }} />
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              {!file.existing && (
+                <div className="progress-bar">
+                  <div className="progress" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="remove-file"
+                aria-label="Remove file"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#dc2626",
+                }}
+              >
+                <RiDeleteBin6Line size={16} />
+              </button>
             </div>
           </div>
         </div>
@@ -1191,6 +1268,8 @@ const AddTargetModal = ({
           />
           <FileUploadArea
             onFiles={(files) => setValue("attachment", files[0])}
+            onRemove={() => setValue("attachment", null)}
+            initialFile={mode === "edit" ? initialData?.attachment : null}
             accept=".pdf,.jpg,.jpeg,.png,.gif"
             maxSizeMB={50}
           />
