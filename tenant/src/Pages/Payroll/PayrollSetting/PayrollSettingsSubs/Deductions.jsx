@@ -187,6 +187,11 @@ const Deductions = () => {
     if (data.type === "Flat Rate") {
       return `$${data.rate.rate || 0}`;
     } else if (data.type === "Percentage based") {
+      // "basic_pay" is the base-pay reference, which isn't a listed item — label
+      // it directly instead of falling through to "Unknown Item".
+      if (data.rate.duration === "basic_pay") {
+        return `${data.rate.unit || 0}% of Basic Pay`;
+      }
       const referencedItem = items.find(
         (item) => item.id === (data.rate.duration || ""),
       );
