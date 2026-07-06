@@ -203,7 +203,15 @@ const AddTargetModal = ({
     defaultValues: reduxDraft,
   });
 
-  const clearDraft = useReduxFormDraft("add-target", { watch, reset, isOpen, exclude: ["attachment"] });
+  // Only run the recovery draft while CREATING. In edit mode the form must
+  // always reflect the saved target, so the persisted draft is disabled there
+  // (passing isOpen:false switches the hook off without hydrating/persisting).
+  const clearDraft = useReduxFormDraft("add-target", {
+    watch,
+    reset,
+    isOpen: isOpen && mode !== "edit",
+    exclude: ["attachment"],
+  });
 
   const teachingProcedure = watch("teachingProcedure");
   const promptingStrategy = watch("promptingStrategy");
@@ -218,7 +226,9 @@ const AddTargetModal = ({
     const subscription = watch((values) => {
       const clone = { ...values };
       clone.attachment = values.attachment?.name || null;
-      dispatch(setDraftField(clone));
+      // Only keep a recovery draft while creating — editing must never persist
+      // a partial draft that could overwrite the saved target on reopen.
+      if (mode !== "edit") dispatch(setDraftField(clone));
 
       // Check for changes in edit mode
       if (mode === "edit" && initialData) {
@@ -407,9 +417,36 @@ const AddTargetModal = ({
     }
   };
 
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
+  // Which tab each field lives on, so a validation error can jump the user to
+  // the right tab (the modal stays open so nothing they entered is lost).
+  const fieldToTab = {
+    name: "Basic Info",
+    teachingProcedure: "Teaching Details",
+    teachingOthers: "Teaching Details",
+    promptingStrategy: "Teaching Details",
+    promptOthers: "Teaching Details",
+    dataCollectionType: "Data Collection",
+    percentageCorrectTrialSession: "Data Collection",
+    trialOrOpportunitiesSession: "Data Collection",
+    taskSteps: "Data Collection",
+    masteryMetric: "Mastery Criteria",
+    masteryCriteria: "Mastery Criteria",
+    statusAndAdmin: "Status & Admin",
+    note: "Status & Admin",
+    attachment: "Status & Admin",
+  };
+
+  const onValidationError = (formErrors) => {
+    const firstField = Object.keys(formErrors)[0];
+    const firstError = formErrors[firstField];
+    const tab = fieldToTab[firstField];
+    // Keep the modal open and move to the tab holding the first error so the
+    // user can fix it in place instead of re-entering everything.
+    if (tab) setActiveTab(tab);
+    showToast(
+      firstError?.message || "Please fix the highlighted fields",
+      "error",
+    );
   };
 
   const handlePrevious = () => {
@@ -420,7 +457,11 @@ const AddTargetModal = ({
   };
 
   const handleClose = () => {
+    // Explicit Cancel/close discards the in-progress draft from BOTH stores so
+    // the next "create" opens blank. An accidental refresh never calls this, so
+    // the draft survives there for recovery.
     dispatch(resetDraft());
+    clearDraft();
     reset({ programId });
     setName("");
     setDescription("");
