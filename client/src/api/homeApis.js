@@ -87,7 +87,7 @@ const GetClientCompletedAppointments = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/client/${clientId}`,
+      `${PLAIN_API_URL}/sessions/client/client/${clientId}`,
     );
     return res;
   } catch (e) {

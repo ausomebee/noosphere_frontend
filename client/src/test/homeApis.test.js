@@ -75,7 +75,7 @@ describe("homeApis", () => {
     it("calls correct endpoint", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetClientCompletedAppointments({ clientId: "c1", ...authParams });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/c1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/client/c1"));
     });
   });
 
