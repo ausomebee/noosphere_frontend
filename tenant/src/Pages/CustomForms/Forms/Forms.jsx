@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { resetForm } from "../../../ReduxStore/features/formBuilderSlice";
 import { FaPlus } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
@@ -13,6 +15,7 @@ import useFormatSettings from "../../../hooks/useFormatSettings";
 
 const Forms = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { hasPermission } = usePermissions();
 
   // ---- Redux -------------------------------------------------
@@ -156,6 +159,9 @@ const Forms = () => {
 
   // ---- Create new form ----------------------------------------
   const handleAddForm = () => {
+    // Clear any persisted builder state so a brand-new form starts blank
+    // instead of inheriting the previously-saved form's fields.
+    dispatch(resetForm());
     navigate("/custom-forms/forms/create");
   };
 
