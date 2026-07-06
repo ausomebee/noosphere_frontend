@@ -6,7 +6,7 @@ const GetAssignedClinicians = async ({ clientId, tenantId, accessToken, refreshT
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/appointments/clinician/${clientId}/${tenantId}`,
+      `${PLAIN_API_URL}/appointments/client/clinician/${clientId}/${tenantId}`,
     );
     return response;
   } catch (error) {

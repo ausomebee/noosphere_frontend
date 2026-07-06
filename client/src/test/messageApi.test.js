@@ -17,7 +17,7 @@ describe("messageApi", () => {
     it("calls correct endpoint", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetAssignedClinicians({ clientId: "c1", tenantId: "t1", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/appointments/clinician/c1/t1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/appointments/client/clinician/c1/t1"));
     });
 
     it("throws on failure", async () => {
