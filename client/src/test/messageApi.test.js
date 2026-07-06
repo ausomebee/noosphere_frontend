@@ -41,13 +41,13 @@ describe("messageApi", () => {
     it("calls with userId and userType", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetUserMessages({ userId: "u1", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/messages/user/u1/CLIENT"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/messages/user/client/u1/CLIENT"));
     });
 
     it("uses custom userType", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetUserMessages({ userId: "u1", userType: "STAFF", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/messages/user/u1/STAFF"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/messages/user/client/u1/STAFF"));
     });
   });
 

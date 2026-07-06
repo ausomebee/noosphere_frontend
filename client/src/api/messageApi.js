@@ -44,7 +44,7 @@ const GetUserMessages = async ({ userId, userType = "CLIENT", accessToken, refre
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/messages/user/${userId}/${userType}`
+      `${PLAIN_API_URL}/messages/user/client/${userId}/${userType}`
     );
     return response;
   } catch (error) {
