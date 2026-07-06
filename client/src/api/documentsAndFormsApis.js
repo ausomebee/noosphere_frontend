@@ -247,7 +247,7 @@ const AttachDocumentsToRequest = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/form-responses`, {
+    const response = await authFetch.post(`${PLAIN_API_URL}/form-responses/client`, {
       formId,
       tenantId,
       submittedBy,
