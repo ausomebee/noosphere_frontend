@@ -40,7 +40,7 @@ describe("programsApis", () => {
     it("calls correct endpoint with targetId and clientId", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetClientTargetPerformance({ clientId: "c1", targetId: "t1", ...auth });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/performance/t1/c1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/performance/client/t1/c1"));
     });
 
     it("throws on failure", async () => {

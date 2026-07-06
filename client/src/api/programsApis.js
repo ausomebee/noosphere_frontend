@@ -32,7 +32,7 @@ const GetClientTargetPerformance = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/performance/${targetId}/${clientId}`
+      `${PLAIN_API_URL}/sessions/performance/client/${targetId}/${clientId}`
     );
     return response;
   } catch (error) {
