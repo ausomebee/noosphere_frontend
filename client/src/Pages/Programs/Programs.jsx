@@ -216,7 +216,10 @@ const Programs = () => {
         });
 
 
-        const monthlyData = response.data?.data || [];
+        // The array may arrive either directly as `data` or nested as
+        // `data.data` — support both shapes.
+        const body = response.data;
+        const monthlyData = Array.isArray(body) ? body : body?.data || [];
         
         // Extract values and handle nulls
         const values = monthlyData.map(item => 
