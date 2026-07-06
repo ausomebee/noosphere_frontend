@@ -7,7 +7,7 @@ const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 const UploadImage = async ({ formData, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.post(`${PLAIN_API_URL}/images/upload`, formData, {
+    const res = await authFetch.post(`${PLAIN_API_URL}/images/client/upload`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

@@ -405,6 +405,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
             <FileUploadArea
               onUploadComplete={handleFileUpload}
+              onRemove={() => setUploadedDocument(null)}
               initialFiles={
                 initialData?.client?.documents?.[0]
                   ? [
@@ -450,6 +451,9 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     if (!isOpen) {
       hasInitialized.current = false;
       setActiveTab("Basic Information");
+      // Clear the staged upload too — it's local state that would otherwise
+      // survive close/reopen and get sent on the next submit.
+      setUploadedDocument(null);
       dispatch(resetDraft());
       return;
     }

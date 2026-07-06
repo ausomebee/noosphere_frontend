@@ -18,7 +18,7 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave, loading = false }) =>
   const validateForm = () => {
     const newErrors = {};
     if (!draft.name?.trim()) newErrors.name = "Column name is required.";
-    if (!draft.description?.trim()) newErrors.description = "Description is required.";
+    // Description is optional.
     if (!draft.colorCode || !/^#[0-9A-Fa-f]{6}$/.test(draft.colorCode)) {
       newErrors.colorCode = "A valid color code (e.g., #RRGGBB) is required.";
     }
@@ -42,7 +42,10 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave, loading = false }) =>
 
     onSave({
       name: draft.name.trim(),
-      description: draft.description.trim(),
+      // Only include description when the user actually entered one.
+      ...(draft.description?.trim()
+        ? { description: draft.description.trim() }
+        : {}),
       colorCode: draft.colorCode,
     });
 

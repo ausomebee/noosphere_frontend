@@ -42,6 +42,7 @@ import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 const FileUploadArea = React.memo(
   ({
     onFiles,
+    onRemove = () => {},
     accept = ".pdf,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov",
     maxSizeMB = 50,
     initialFiles = [],
@@ -146,6 +147,10 @@ const FileUploadArea = React.memo(
           message: `File ${removedFile.name} removed`,
           type: "info",
         });
+        // Let the parent drop this file from the submit sources (fileResults +
+        // the documents form value). Without this the file lingers in
+        // fileResults and gets sent even though it was removed from view.
+        onRemove(removedFile);
         return prev.filter((_, i) => i !== idx);
       });
     };
@@ -1323,6 +1328,32 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           // objects here would be filtered out by FileUploadArea's
           // initialFiles effect and wipe the just-added file from the list.
           handleFileUpload(fileObjects);
+        }}
+        onRemove={(removed) => {
+          // Keep the submit sources in sync with what the user sees: drop the
+          // removed file from both fileResults (used to build the payload) and
+          // the documents form value (used to render the list).
+          const removedUrl = removed?.url;
+          const removedName = removed?.name;
+          setFileResults((prev) =>
+            prev.filter(
+              (r) =>
+                (removedUrl ? r.url !== removedUrl : true) &&
+                (removedName ? r.filename !== removedName : true),
+            ),
+          );
+          setValue(
+            "documents",
+            (values.documents || []).filter((d) => {
+              const dUrl = d.documentsUrl?.url || d.url;
+              const dName = d.documentsUrl?.filename || d.filename;
+              return (
+                (removedUrl ? dUrl !== removedUrl : true) &&
+                (removedName ? dName !== removedName : true)
+              );
+            }),
+            { shouldDirty: true },
+          );
         }}
         accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov"
         maxSizeMB={50}

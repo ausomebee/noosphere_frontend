@@ -31,16 +31,35 @@ export const addStaffSchema = yup.object().shape({
   zip: yup.string().optional(),
   country: yup.string().optional(),
   active: yup.boolean().required("Active status is required"),
-  // Licenses are optional. If a license row is added it must be complete, but
-  // creating a staff member with no licenses is allowed.
-  licenses: yup.array().of(
-    yup.object().shape({
-      licenseName: yup.string().required("License Name is required"),
-      licenseNumber: yup.string().required("License Number is required"),
-      expiryDate: yup.date().required("Expiration Date is required"),
-      state: yup.string().required("State is required"),
-    }),
-  ),
+  // Licenses are optional. A completely blank row (e.g. an "Add License" click
+  // the user never filled in) is dropped before validation, so it neither
+  // blocks submit nor reaches the payload. Any row the user actually started
+  // must be completed.
+  licenses: yup
+    .array()
+    .transform((rows) =>
+      Array.isArray(rows)
+        ? rows.filter(
+            (r) =>
+              r &&
+              (r.licenseName || r.licenseNumber || r.expiryDate || r.state),
+          )
+        : rows,
+    )
+    .of(
+      yup.object().shape({
+        licenseName: yup.string().required("License Name is required"),
+        licenseNumber: yup.string().required("License Number is required"),
+        expiryDate: yup
+          .date()
+          .transform((value, originalValue) =>
+            originalValue === "" || originalValue == null ? undefined : value,
+          )
+          .typeError("Expiration Date is required")
+          .required("Expiration Date is required"),
+        state: yup.string().required("State is required"),
+      }),
+    ),
   paymentSchedule: yup
     .string()
     // Treat the empty default as "not chosen" so the friendly required message

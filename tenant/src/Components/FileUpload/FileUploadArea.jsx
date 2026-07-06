@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 const FileUploadArea = memo(
   ({
     onUploadComplete,
+    onRemove = () => {},
     initialFiles = [],
     accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4",
     maxSizeMB = 50,
@@ -161,6 +162,10 @@ const FileUploadArea = memo(
           message: `File ${removedFile.name} removed`,
           type: "info",
         });
+        // Notify the parent so it can drop this file from whatever state it
+        // uses to build the submit payload — otherwise a removed file lingers
+        // there and gets sent even though it's gone from the UI.
+        onRemove(removedFile);
         return prev.filter((_, i) => i !== idx);
       });
     };
