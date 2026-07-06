@@ -302,7 +302,7 @@ const AddTargetModal = ({
   const validateTab = (tabName) => {
     const fields =
       tabName === "Basic Info"
-        ? ["name", "description"]
+        ? ["name"]
         : tabName === "Teaching Details"
         ? ["teachingProcedure", "promptingStrategy"]
         : tabName === "Data Collection"
