@@ -91,7 +91,7 @@ describe("homeApis", () => {
     it("calls correct endpoint", async () => {
       mockGet.mockResolvedValue({ data: { data: [] } });
       await api.GetClientAwaitingApprovals({ clientId: "c1", ...authParams });
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/awaiting-feedback/c1"));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/sessions/client/awaiting-feedback/client/c1"));
     });
   });
 

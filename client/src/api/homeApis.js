@@ -122,7 +122,7 @@ const GetClientAwaitingApprovals = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/client/awaiting-feedback/${clientId}`,
+      `${PLAIN_API_URL}/sessions/client/awaiting-feedback/client/${clientId}`,
     );
     return res;
   } catch (e) {
