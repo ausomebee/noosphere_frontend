@@ -8,8 +8,9 @@ import { showToast } from "../../../Helper/ShowToast";
 
 const schema = yup.object().shape({
   teamName: yup.string().required("Team Name is required"),
-  teamMember: yup.array().min(1, "At least one Team Member is required"),
-  teamLead: yup.string().required("Team Lead is required"),
+  // Team members and team lead are optional — a team can be created without them.
+  teamMember: yup.array().optional(),
+  teamLead: yup.string().optional(),
 });
 
 const defaultValues = {

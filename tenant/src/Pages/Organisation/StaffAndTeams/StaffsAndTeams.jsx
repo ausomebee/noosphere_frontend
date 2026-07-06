@@ -45,10 +45,12 @@ const StaffsAndTeams = () => {
   const [teamAccessStaff, setTeamAccessStaff] = useState([]);
   const [allTenantStaff, setAllTenantStaff] = useState([]);
 
-  // Team Lead options – only staff with team-level access
+  // Team Lead options – any tenant staff member (the team-access endpoint
+  // filters out the tenant admin, so use the full staff list so he — and
+  // everyone else — can be picked as lead).
   const teamLeadOptions = useMemo(
-    () => teamAccessStaff.map((s) => ({ value: s.id, label: s.fullName })),
-    [teamAccessStaff],
+    () => allTenantStaff.map((s) => ({ value: s.id, label: s.fullName })),
+    [allTenantStaff],
   );
 
   // Team Member options – all tenant staff
