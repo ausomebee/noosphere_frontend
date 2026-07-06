@@ -60,8 +60,9 @@ export const CreateNewFile = async ({
       url,
       size,
       fileType,
-      folderId,
-    
+      // Only send folderId for files created inside a folder — a standalone
+      // file must not carry a folderId at all.
+      ...(folderId ? { folderId } : {}),
     });
     return response;
   } catch (error) {
