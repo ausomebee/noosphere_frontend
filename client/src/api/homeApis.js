@@ -105,7 +105,7 @@ const GetClientCancelAppointments = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/appointments/client/canceled/${clientId}`,
+      `${PLAIN_API_URL}/appointments/client/canceled/client/${clientId}`,
     );
     return res;
   } catch (e) {
