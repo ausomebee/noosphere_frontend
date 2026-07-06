@@ -722,9 +722,16 @@ const NewFormBuilder = () => {
 
   /* ────── BUILD PAYLOAD ────── */
   const buildPayload = useCallback(() => {
+    const isGuid = (v) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        String(v),
+      );
     const formFields = validElements.map((el, idx) => {
       const base = {
-        ...(formId && { id: el.id }),
+        // Only send an id for fields that came from the backend (real GUIDs).
+        // Client-generated ids (e.g. "field-172…") aren't GUIDs and trigger a
+        // "must be a valid GUID" 400, so omit them and let the backend assign.
+        ...(formId && isGuid(el.id) ? { id: el.id } : {}),
         fieldType: el.type,
         label: el.label || "",
         placeholder:
@@ -794,6 +801,39 @@ const NewFormBuilder = () => {
 
     setSaving(true);
     try {
+      // Form names must be unique within the published form list (drafts and
+      // templates are exempt). Check before saving so we surface a clear error
+      // instead of silently creating a duplicate.
+      if (type === "publish") {
+        try {
+          const listRes = await api.GetFormsByTenantId({
+            tenantId,
+            accessToken,
+            refreshToken,
+          });
+          const existing =
+            listRes?.data?.data || listRes?.data || listRes || [];
+          const nameLc = (formName || "Untitled Form").trim().toLowerCase();
+          const dup =
+            Array.isArray(existing) &&
+            existing.find(
+              (f) =>
+                (f?.name || "").trim().toLowerCase() === nameLc &&
+                f?.id !== formId,
+            );
+          if (dup) {
+            showToast(
+              "A form with this name already exists. Please choose a unique name.",
+              "error",
+            );
+            return;
+          }
+        } catch (e) {
+          // Don't block saving if the uniqueness lookup itself fails.
+          console.error("Form name uniqueness check failed:", e);
+        }
+      }
+
       let res;
       if (formId) {
         await api.UpdateCustomForm({
