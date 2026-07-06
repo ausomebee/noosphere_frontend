@@ -228,19 +228,13 @@ const Programs = () => {
         
         const labels = monthlyData.map(item => item.monthName);
         
-        // Check if we have any non-zero data
-        const hasData = monthlyData.some(item => item.average !== null && item.average > 0);
-
-        if (!hasData) {
-          // Show message for no data
-          setPerformanceModal((prev) => ({
-            ...prev,
-            performanceData: null,
-            loading: false,
-            error: "No session data available for this target"
-          }));
-          return;
-        }
+        // A target with no recorded sessions returns all months as
+        // sessionCount:0 / average:null. That's not an error — still render the
+        // 12-month chart (flat at 0) so the modal shows the performance view
+        // instead of the generic error fallback.
+        const hasData = monthlyData.some(
+          (item) => item.average !== null && item.average > 0,
+        );
 
         // Get the data type from the first month with data
         const firstDataMonth = monthlyData.find(item => item.rawData?.length > 0);
@@ -250,6 +244,7 @@ const Programs = () => {
         setPerformanceModal((prev) => ({
           ...prev,
           performanceData: chartData,
+          isEmpty: !hasData,
           loading: false,
           error: null,
         }));
@@ -552,7 +547,7 @@ const Programs = () => {
 };
 
 const TargetPerformanceModal = ({ modalState, onClose }) => {
-  const { isOpen, targetName, programName, dataCollectionType, performanceData, loading, error } =
+  const { isOpen, targetName, programName, dataCollectionType, performanceData, isEmpty, loading, error } =
     modalState;
 
   if (!isOpen) return null;
@@ -601,6 +596,18 @@ const TargetPerformanceModal = ({ modalState, onClose }) => {
             <ErrorFallback message="Something went wrong loading performance data. Please try again." />
           ) : performanceData ? (
             <div className="chart-wrapper">
+              {isEmpty && (
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#64748b",
+                    fontSize: "13px",
+                    margin: "0 0 8px",
+                  }}
+                >
+                  No sessions recorded for this target yet.
+                </p>
+              )}
               <Chart
                 options={performanceData.options}
                 series={performanceData.series}
