@@ -120,7 +120,7 @@ export const UpdateClientDetails = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client`, {
+    const response = await authFetch.put(`${PLAIN_API_URL}/client/client`, {
       id: clientId,
       firstName,
       lastName,
