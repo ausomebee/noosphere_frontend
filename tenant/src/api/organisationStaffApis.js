@@ -71,36 +71,32 @@ const CreateTenantStaff = async ({
       country,
       phoneNumber,
       active,
-      // Only include documents/licenses when there's actually something to send.
-      ...(documents?.length
-        ? {
-            documents: documents.map((doc) => ({
-              documentsUrl: {
-                filename: doc.documentsUrl?.filename || "",
-                url: doc.documentsUrl?.url || "",
-              },
-            })),
-          }
-        : {}),
-      ...(licenses?.length
-        ? {
-            licenses: licenses.map((license) => ({
-              licenseName: license.licenseName,
-              licenseNumber: license.licenseNumber,
-              issueState: license.issueState,
-              expiryDate: license.expiryDate
-                ? new Date(license.expiryDate).toISOString()
-                : undefined,
-            })),
-          }
-        : {}),
       payroll: payrollPayload,
       tenantId,
     };
 
+    // Always send documents/licenses as arrays (empty when none) so the backend
+    // can safely iterate them. These are added AFTER omitEmpty, which would
+    // otherwise strip an empty array.
     const response = await authFetch.post(
       `${PLAIN_API_URL}/organization-staff/staff`,
-      omitEmpty(payload),
+      {
+        ...omitEmpty(payload),
+        documents: (documents || []).map((doc) => ({
+          documentsUrl: {
+            filename: doc.documentsUrl?.filename || "",
+            url: doc.documentsUrl?.url || "",
+          },
+        })),
+        licenses: (licenses || []).map((license) => ({
+          licenseName: license.licenseName,
+          licenseNumber: license.licenseNumber,
+          issueState: license.issueState,
+          expiryDate: license.expiryDate
+            ? new Date(license.expiryDate).toISOString()
+            : undefined,
+        })),
+      },
     );
     return response.data;
   } catch (error) {
