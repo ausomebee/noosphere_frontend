@@ -254,19 +254,30 @@ const DocumentRequests = () => {
     },
   ];
 
-  const getFormsActions = (row) => {
-    if (row.status === "FILLED") {
-      return []; // No actions for filled forms
-    }
-
-    return [
-      {
-        menu: true,
-        label: "Fill form",
-        onClick: () => navigate(`/forms/renderer/${row.formId}`),
-      },
-    ];
-  };
+  // Actions column for the forms table: a "Fill form" link for pending forms,
+  // nothing for ones already filled. Passed as the ReusableTable `actions` prop.
+  const formsActions = [
+    {
+      render: (row) =>
+        row.status === "FILLED" ? null : (
+          <button
+            type="button"
+            className="fill-form-link"
+            onClick={() => navigate(`/forms/renderer/${row.formId}`)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#004aba",
+              fontWeight: 500,
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Fill form
+          </button>
+        ),
+    },
+  ];
 
   const renderExpandedDocument = (row) => {
     const hasUploaded = row.clientDocuments?.length > 0;
@@ -587,10 +598,8 @@ const DocumentRequests = () => {
         ) : (
           <ReusableTable
             columns={formsColumns}
-            data={formsData.map((form) => ({
-              ...form,
-              actions: getFormsActions(form),
-            }))}
+            data={formsData}
+            actions={formsActions}
             searchPlaceholder="Search forms"
             showFilters={false}
             showViewToggle={false}
