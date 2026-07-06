@@ -262,7 +262,6 @@ const FileUploadArea = React.memo(
 const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   const [activeTab, setActiveTab] = useState("Basic Information");
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [fileResults, setFileResults] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -488,7 +487,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       }
 
       if (!accessToken || !refreshToken) {
-        setSubmitError("Authentication tokens missing.");
+        showToast({ message: "Authentication tokens missing.", type: "error" });
         setUploadingFiles(false);
         return;
       }
@@ -572,7 +571,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       });
       setActiveTab("Basic Information");
       setHasChanges(false);
-      setSubmitError("");
       setFileResults([]);
       setIncomeOptions([]);
       setDeductionOptions([]);
@@ -692,11 +690,9 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         const detail = messages.length
           ? messages.join(", ")
           : `Please fix errors in the ${tabName} tab`;
-        setSubmitError(detail);
         showToast({ message: detail, type: "error" });
         return false;
       }
-      setSubmitError("");
       return true;
     },
     [trigger, tabFieldMap],
@@ -750,7 +746,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       minimumHours: "",
     });
     setActiveTab("Basic Information");
-    setSubmitError("");
     setHasChanges(false);
     setFileResults([]);
     setIncomeOptions([]);
@@ -889,7 +884,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         setFileResults([]);
         onClose();
       } catch (e) {
-        setSubmitError(e.message || "Save failed");
+        showToast({ message: e.message || "Save failed", type: "error" });
       } finally {
         setSubmitting(false);
       }
@@ -1359,11 +1354,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         maxSizeMB={50}
         initialFiles={values.documents || []}
       />
-      {submitError && (
-        <div className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded">
-          {submitError}
-        </div>
-      )}
     </div>
   );
 
