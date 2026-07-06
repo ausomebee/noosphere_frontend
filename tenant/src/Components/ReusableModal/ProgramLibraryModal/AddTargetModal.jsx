@@ -1263,17 +1263,21 @@ async function buildTargetFormData(data, mode) {
     fd.append("id", data.id.toString());
   }
   fd.append("name", data.name || "");
-  fd.append("description", data.description || "");
+  // Optional text fields — only send when the user actually entered something.
+  if (data.description?.trim())
+    fd.append("description", data.description.trim());
   fd.append("programId", data.programId);
-  fd.append("sd", data.sd || "");
-  fd.append("expectedResponse", data.expectedResponse || "");
+  if (data.sd?.trim()) fd.append("sd", data.sd.trim());
+  if (data.expectedResponse?.trim())
+    fd.append("expectedResponse", data.expectedResponse.trim());
   fd.append("teachingProcedure", data.teachingProcedure || "");
   fd.append("dataCollectionType", data.dataCollectionType || "");
   fd.append("baselineDataRequired", Boolean(data.baselineDataRequired));
   fd.append("initialStatus", data.statusAndAdmin || "");
   // Notes are optional — only send when the user actually typed something.
   if (data.note && data.note.trim()) fd.append("notes", data.note.trim());
-  fd.append("masteryMetric", data.masteryMetric || "");
+  if (data.masteryMetric?.trim())
+    fd.append("masteryMetric", data.masteryMetric.trim());
 
   // Use the array-form key so a single selection still arrives as an array
   // (the backend requires promptingStrategy to be an array).
@@ -1312,7 +1316,10 @@ async function buildTargetFormData(data, mode) {
     fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
   }
 
-  fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria || {}));
+  // Only send mastery criteria when the user actually configured some.
+  if (data.masteryCriteria && Object.keys(data.masteryCriteria).length > 0) {
+    fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria));
+  }
 
   // Attachment is optional — only send when a real file was chosen.
   if (data.attachment instanceof File) {

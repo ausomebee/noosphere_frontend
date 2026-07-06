@@ -1,5 +1,6 @@
 
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import omitEmpty from "../Helper/omitEmpty";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
@@ -332,7 +333,10 @@ const CreatePayer = async ({
       isActive,
     };
 
-    const response = await authFetch.post(`${PLAIN_API_URL}/payers`, payload);
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/payers`,
+      omitEmpty(payload),
+    );
     return response.data;
   } catch (error) {
     throw new Error(error.message || "Create Payer failed");

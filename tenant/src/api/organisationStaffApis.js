@@ -1,5 +1,6 @@
 import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import omitEmpty from "../Helper/omitEmpty";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
@@ -99,7 +100,7 @@ const CreateTenantStaff = async ({
 
     const response = await authFetch.post(
       `${PLAIN_API_URL}/organization-staff/staff`,
-      payload,
+      omitEmpty(payload),
     );
     return response.data;
   } catch (error) {
@@ -700,7 +701,7 @@ const CreateTeam = async ({
   try {
     const response = await authFetch.post(
       `${PLAIN_API_URL}/organization/teams`,
-      { name, tenantId, teamLeadId, members },
+      omitEmpty({ name, tenantId, teamLeadId, members }),
     );
     return response;
   } catch (error) {
