@@ -293,6 +293,18 @@
   gap: 20px;
 }
 
+/* The password modal's form container reuses the generic `.modal-content`
+   class, which globally carries a background, radius and shadow — that renders
+   an awkward boxed panel inside the modal. Neutralise it here so the fields sit
+   cleanly within the modal. */
+.password-modal .modal-content {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  max-height: none;
+  overflow: visible;
+}
+
 .password-error {
   color: #dc3545;
   font-size: 14px;
