@@ -222,9 +222,11 @@ const CreateInsuranceType = async ({
       isActive,
     };
 
+    // Description is optional — omit it entirely when empty so the backend
+    // doesn't reject an empty string.
     const response = await authFetch.post(
       `${PLAIN_API_URL}/insurance-types`,
-      payload
+      omitEmpty(payload)
     );
     return response.data;
   } catch (error) {

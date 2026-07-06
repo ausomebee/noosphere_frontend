@@ -125,7 +125,8 @@ const AddPayerModal = ({
         serviceCodes: data.serviceCodes.map((sc) => ({
           serviceCodeId: sc.serviceCodeId || "",
           code: sc.code,
-          description: sc.description,
+          // Description is optional — only include it when non-empty.
+          ...(sc.description?.trim() ? { description: sc.description } : {}),
           unitCurrency: sc.unitCurrency,
           ratePerUnit: sc.ratePerUnit,
           roundingRuleId: sc.roundingRule,

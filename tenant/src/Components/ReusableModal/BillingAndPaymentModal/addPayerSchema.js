@@ -51,9 +51,8 @@ export const payerSchema = yup.object().shape({
         code: yup.string().when("mode", ([mode], schema) => {
           return mode === "view" ? schema.optional() : schema.required("Code is required");
         }),
-        description: yup.string().when("mode", ([mode], schema) => {
-          return mode === "view" ? schema.optional() : schema.required("Description is required");
-        }),
+        // Description is optional on a service code row.
+        description: yup.string().optional(),
         unitCurrency: yup.string().when("mode", ([mode], schema) => {
           return mode === "view" ? schema.optional() : schema.required("Unit Currency is required");
         }),

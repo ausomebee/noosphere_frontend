@@ -19,9 +19,10 @@ import { showToast } from "../../../Helper/ShowToast";
 const serviceCodeSchema = yup.object().shape({
   code: yup.string().required("Service code is required"),
   description: yup.string().required("Description is required"),
+  // Modifiers are optional — a service code need not carry any.
   modifiers: yup.array().of(
     yup.object().shape({
-      modifier: yup.string().required("Modifier is required"),
+      modifier: yup.string().optional(),
     })
   ),
   status: yup.boolean().default(true),
