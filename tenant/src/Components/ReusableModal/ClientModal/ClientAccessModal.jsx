@@ -23,6 +23,7 @@ const ClientPortalSettingsModal = ({
   const { accessToken, refreshToken } = useSelector(
     (s) => s.authentication?.user || {}
   );
+  const subdomain = useSelector((s) => s.subDomain?.subdomain);
 
   // Sync with backend data when modal opens
   useEffect(() => {
@@ -33,11 +34,27 @@ const ClientPortalSettingsModal = ({
     }
   }, [isOpen, initialData]);
 
-  // The client portal is served at /client/ on the same host the tenant admin
-  // is on (e.g. https://acme.nooshere.org/client/), and the client app resolves
-  // the tenant from the subdomain. Derive it from the current origin so it
-  // adapts across environments/TLDs.
-  const portalUrl = `${window.location.origin}/client/`;
+  // The client portal is served at https://{tenant-subdomain}.{apex}/client/,
+  // and the client app resolves the tenant from that subdomain. Build it from
+  // the tenant's own subdomain (from redux) plus the apex of the current host,
+  // so the URL always carries the correct subdomain regardless of the host the
+  // admin happens to be on. Fall back to the current origin if the subdomain
+  // isn't known (e.g. non-subdomain/local hosts).
+  const getApexDomain = () => {
+    const host = (window.location.hostname || "").toLowerCase();
+    const isLocalOrRaw =
+      host === "localhost" ||
+      host.endsWith(".localhost") ||
+      host.endsWith(".amazonaws.com") ||
+      /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+    if (isLocalOrRaw) return "nooshere.org";
+    const parts = host.split(".");
+    // apex = last two labels, e.g. acme.nooshere.org -> nooshere.org
+    return parts.length >= 2 ? parts.slice(-2).join(".") : host;
+  };
+  const portalUrl = subdomain
+    ? `https://${subdomain}.${getApexDomain()}/client/`
+    : `${window.location.origin}/client/`;
 
   const handleSave = async () => {
     if (!clientTenantId) {
