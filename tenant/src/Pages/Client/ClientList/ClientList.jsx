@@ -90,9 +90,7 @@ const ClientList = () => {
       }
       fetchClients();
       // Modal closes itself via onClose on success.
-    } catch (err) {
-      // Re-throw so the AddClientModal shows the error and stays open.
-      throw err;
+      // The error propagates so AddClientModal shows it and stays open.
     } finally {
       setIsUpdating(false);
     }

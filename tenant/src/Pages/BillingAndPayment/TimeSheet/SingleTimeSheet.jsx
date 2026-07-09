@@ -1149,6 +1149,7 @@ const SingleTimeSheet = () => {
               break;
 
             case "Frequency":
+            {
               checkPageBreak(10);
               doc.setFont("helvetica", "bold");
               doc.text("Frequency Data:", margin, yPos);
@@ -1174,6 +1175,7 @@ const SingleTimeSheet = () => {
               yPos += 5;
               break;
 
+            }
             default:
               // Fallback for unknown data types
               if (sessionData.data) {

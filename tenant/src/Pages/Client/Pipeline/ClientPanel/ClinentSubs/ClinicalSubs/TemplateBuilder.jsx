@@ -563,6 +563,7 @@ const ClinicalReportTemplateBuilder = () => {
           dispatch(toggleSectionExpand(sectionId));
           break;
         case "remove":
+        {
           const baseId = sectionId.split("_")[0];
           const label =
             SECTIONS_CONFIG.find((s) => s.id === baseId)?.label ||
@@ -570,6 +571,7 @@ const ClinicalReportTemplateBuilder = () => {
           setSectionToRemove({ id: sectionId, label });
           setRemoveModalOpen(true);
           break;
+        }
         default:
           break;
       }

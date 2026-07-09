@@ -89,13 +89,13 @@ const formBuilderSlice = createSlice({
       const stringId = String(id);
       const el = state.elements.find((e) => String(e.id) === stringId);
       if (el) {
-        if (updates.hasOwnProperty("required")) {
+        if (Object.prototype.hasOwnProperty.call(updates, "required")) {
           updates.isRequired = updates.required;
         }
-        if (updates.hasOwnProperty("isRequired")) {
+        if (Object.prototype.hasOwnProperty.call(updates, "isRequired")) {
           updates.required = updates.isRequired;
         }
-        if (updates.hasOwnProperty("type")) {
+        if (Object.prototype.hasOwnProperty.call(updates, "type")) {
           updates.fieldType = updates.type;
         }
         Object.assign(el, updates);

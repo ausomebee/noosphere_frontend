@@ -595,45 +595,37 @@ const DocumentsForms = () => {
   ];
 
   // ENDPOINT HANDLERS - UPDATED
+  // Errors propagate so the upload modal shows them and stays open.
   const handleUploadDocument = async (doc) => {
-    try {
-      await api2.CreateClientDocuments({
-        tenantClientId,
-        name: doc.name,
-        createdBy: userId,
-        documentDetails: {
-          size: doc.documentDetails.size,
-          type: doc.documentDetails.fileType,
-          fileUrl: doc.documentDetails.fileUrl,
-        },
-        accessToken,
-        refreshToken,
-      });
-      showToast("Document uploaded successfully", "success");
-      fetchDocuments(); // Refresh the documents list — modal closes itself on success
-    } catch (err) {
-      // Re-throw so the upload modal shows the error and stays open.
-      throw err;
-    }
+    await api2.CreateClientDocuments({
+      tenantClientId,
+      name: doc.name,
+      createdBy: userId,
+      documentDetails: {
+        size: doc.documentDetails.size,
+        type: doc.documentDetails.fileType,
+        fileUrl: doc.documentDetails.fileUrl,
+      },
+      accessToken,
+      refreshToken,
+    });
+    showToast("Document uploaded successfully", "success");
+    fetchDocuments(); // Refresh the documents list — modal closes itself on success
   };
 
+  // Errors propagate so the request modal shows them and stays open.
   const handleCreateRequest = async (request) => {
-    try {
-      await api2.CreateClientDocumentsRequest({
-        tenantClientId,
-        name: request.name,
-        description: request.description,
-        allowMultiple: request.allowMultiple,
-        dueDate: request.dueDate,
-        accessToken,
-        refreshToken,
-      });
-      showToast("Document request created", "success");
-      fetchDocumentRequests(); // Refresh the requests list — modal closes itself on success
-    } catch (err) {
-      // Re-throw so the request modal shows the error and stays open.
-      throw err;
-    }
+    await api2.CreateClientDocumentsRequest({
+      tenantClientId,
+      name: request.name,
+      description: request.description,
+      allowMultiple: request.allowMultiple,
+      dueDate: request.dueDate,
+      accessToken,
+      refreshToken,
+    });
+    showToast("Document request created", "success");
+    fetchDocumentRequests(); // Refresh the requests list — modal closes itself on success
   };
 
 

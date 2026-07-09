@@ -420,6 +420,7 @@ const StartAppointment = () => {
             },
           ];
         case "Rate":
+        {
           const rate =
             data.duration > 0
               ? (data.numberOfOccurrence / (data.duration / 60)).toFixed(2) +
@@ -433,6 +434,7 @@ const StartAppointment = () => {
               notes: data.notes || "N/A",
             },
           ];
+        }
         case "Percentage Correct":
         case "Trials/Opportunities":
           return (data.trials || []).map((trial, i) => ({

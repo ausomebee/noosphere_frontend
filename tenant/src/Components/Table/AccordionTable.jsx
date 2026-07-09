@@ -66,8 +66,8 @@ const AccordionTable = ({
       }));
 
       setServiceCodes(serviceCodeList);
-    } catch (error) {
-      
+    } catch {
+      // Service codes are optional context here; leave the list empty.
     } finally {
       setLoadingServiceCodes(false);
     }

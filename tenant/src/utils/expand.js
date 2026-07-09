@@ -326,7 +326,7 @@ const expand = (master, viewWindow) => {
       ? r.days
           .map((d) => {
             const dayKey = typeof d === "string" ? d.toLowerCase() : null;
-            if (!daysMap.hasOwnProperty(dayKey)) {
+            if (!Object.prototype.hasOwnProperty.call(daysMap, dayKey)) {
               return null;
             }
             return daysMap[dayKey];

@@ -536,9 +536,7 @@ const JiraBoard = () => {
       } else {
         throw new Error("Failed to create candidate");
       }
-    } catch (error) {
-      // Re-throw so the AddClientModal surfaces the API error and stays open.
-      throw error;
+      // The error propagates so AddClientModal surfaces it and stays open.
     } finally {
       stopLoading();
     }

@@ -106,6 +106,7 @@ const PlansAndPayment = () => {
           const { type, response } = result.value;
           switch (type) {
             case "plans":
+            {
               if (!Array.isArray(response?.data)) {
                 setStandardPlans([]);
                 setEnterprisePlans([]);
@@ -181,7 +182,9 @@ const PlansAndPayment = () => {
                 showToast("No valid plans found in the response", "error");
               }
               break;
+            }
             case "features":
+            {
               if (!response?.data || !Array.isArray(response?.data?.data)) {
                 setFeatures([]);
                 newErrors.features = "Invalid features data received from API";
@@ -203,7 +206,9 @@ const PlansAndPayment = () => {
               }
               setFeatures(featuresData);
               break;
+            }
             case "admins":
+            {
               if (!Array.isArray(response.data?.data)) {
                 setAdmins([]);
                 newErrors.admins = "Invalid admins data received from API";
@@ -219,7 +224,9 @@ const PlansAndPayment = () => {
               }));
               setAdmins(adminsData);
               break;
+            }
             case "tenants":
+            {
               if (!Array.isArray(response.data?.data)) {
                 setTenants([]);
                 newErrors.tenants = "Invalid tenants data received from API";
@@ -235,6 +242,7 @@ const PlansAndPayment = () => {
               }));
               setTenants(tenantsData);
               break;
+            }
             default:
               break;
           }

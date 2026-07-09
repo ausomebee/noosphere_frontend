@@ -177,9 +177,7 @@ const ManageColumn = () => {
         } else {
           throw new Error("Failed to create candidate");
         }
-      } catch (error) {
-        // Re-throw so the AddClientModal shows the error and stays open.
-        throw error;
+        // The error propagates so AddClientModal shows it and stays open.
       } finally {
         setIsCreatingCandidate(false);
       }
