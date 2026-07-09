@@ -121,6 +121,9 @@ const DeleteReportConfirmModal = ({
 // Signed PDFs Modal - lists all signed PDF versions
 const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
   const { openDocument } = useDocumentViewer();
+  // Read the tenant's date/time formats here — this modal formats version
+  // timestamps itself and has no access to the parent's values.
+  const { dateFormat, timeFormat } = useFormatSettings();
   if (!isOpen) return null;
 
   const sortedVersions = [...(versions || [])].sort(
@@ -309,7 +312,7 @@ const SignedPdfsModal = ({ isOpen, onClose, versions, reportTitle }) => {
 const ClinicalReportsTab = ({ clientData }) => {
   const { tenantClientId, clientId } = useParams();
   const navigate = useNavigate();
-  const { dateFormat, timeFormat } = useFormatSettings();
+  const { dateFormat } = useFormatSettings();
 
   const [activeTab, setActiveTab] = useState("drafts");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -504,7 +507,7 @@ const ClinicalReportsTab = ({ clientData }) => {
 
   const handleDuplicateReport = async (row) => {
     try {
-      const response = await api.DuplicateClinicalReport({
+      await api.DuplicateClinicalReport({
         Id: row.id,
         accessToken,
         refreshToken,
