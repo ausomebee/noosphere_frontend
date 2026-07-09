@@ -139,7 +139,7 @@ const GetClientRescheduledAppointments = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const res = await authFetch.get(
-      `${PLAIN_API_URL}/appointments/client/rescheduled/${clientId}`,
+      `${PLAIN_API_URL}/appointments/client/rescheduled/client/${clientId}`,
     );
     return res;
   } catch (e) {
