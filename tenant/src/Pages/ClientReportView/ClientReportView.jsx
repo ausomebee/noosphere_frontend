@@ -15,6 +15,8 @@ import {
   FiCalendar,
   FiUser,
   FiLoader,
+  FiClock,
+  FiMail,
 } from "react-icons/fi";
 import api from "../../api/TemplateAndReportApi";
 import { formatDate, formatLabel } from "../../Helper/Formatters";
@@ -276,13 +278,19 @@ const ClientReportView = () => {
   //   /report/client-view/<jwt>
   // The report id is the token's `id` claim, so it never appears in the URL.
   const { token = "" } = useParams();
-  const reportId = useMemo(() => decodeJwtPayload(token)?.id || "", [token]);
+  const tokenPayload = useMemo(() => decodeJwtPayload(token), [token]);
+  const reportId = tokenPayload?.id || "";
+  // `exp` is in seconds. A link that has already lapsed is a normal, expected
+  // state — not an error — so it gets its own screen instead of a failure toast.
+  const expiresAt = tokenPayload?.exp ? new Date(tokenPayload.exp * 1000) : null;
+  const isTokenExpired = expiresAt ? expiresAt.getTime() <= Date.now() : false;
   const { dateFormat } = useFormatSettings();
 
   // Report state
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expired, setExpired] = useState(false);
 
   // Signature state
   const [signatureType, setSignatureType] = useState("type");
@@ -325,15 +333,35 @@ const ClientReportView = () => {
         );
       }
     } catch (err) {
-      setError("Unable to load this report. The link may be invalid or expired.");
+      // The backend is the source of truth on expiry — surface the friendly
+      // expired screen rather than a generic failure when it says so.
+      if (/expir/i.test(err?.message || "")) {
+        setExpired(true);
+      } else {
+        setError(
+          "Unable to load this report. The link may be invalid or expired.",
+        );
+      }
     } finally {
       setLoading(false);
     }
   }, [reportId, token]);
 
   useEffect(() => {
-    if (reportId && token) fetchReport();
-  }, [reportId, token, fetchReport]);
+    // Malformed link (not a JWT, or no report id inside it).
+    if (!token || !reportId) {
+      setError("This link is not valid. Please check the link in your email.");
+      setLoading(false);
+      return;
+    }
+    // Already lapsed — don't bother the server, just show the expired screen.
+    if (isTokenExpired) {
+      setExpired(true);
+      setLoading(false);
+      return;
+    }
+    fetchReport();
+  }, [reportId, token, isTokenExpired, fetchReport]);
 
   // ─── Toast ───────────────────────────────
   const showToast = useCallback((message, type = "success") => {
@@ -457,11 +485,44 @@ const ClientReportView = () => {
     );
   }
 
+  // ─── Render: Expired Link ────────────────
+  // Expiry is expected, not a fault: explain plainly and tell the client exactly
+  // what to do next. Retrying can never help, so no retry button is offered.
+  if (expired) {
+    return (
+      <div className="crv-page">
+        <div className="crv-expired">
+          <div className="crv-expired-icon">
+            <FiClock size={32} />
+          </div>
+          <h1 className="crv-expired-title">This signing link has expired</h1>
+          <p className="crv-expired-text">
+            For your security, links to sign a clinical report are only valid for
+            a limited time
+            {expiresAt
+              ? ` — this one expired on ${formatDate(expiresAt, dateFormat)}.`
+              : "."}
+          </p>
+          <div className="crv-expired-next">
+            <div className="crv-expired-next-header">
+              <FiMail size={16} />
+              <span>What to do next</span>
+            </div>
+            <p>
+              Please contact your provider and ask them to send a new signing
+              link. Your document is safe and nothing you entered has been lost.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Render: Error ───────────────────────
   if (error) {
     return (
       <div className="crv-page">
-        <ErrorFallback message="Unable to load this report. The link may be invalid or expired." onRetry={fetchReport} />
+        <ErrorFallback message={error} onRetry={fetchReport} />
       </div>
     );
   }
