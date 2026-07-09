@@ -486,7 +486,7 @@ SearchableSelectInput.propTypes = {
   disabled: PropTypes.bool, // ✅ ADDED
 };
 
-const CheckboxInput = ({ label, checked, onChange, error, ...props }) => (
+const CheckboxInput = ({ label, checked, onChange, error, required = false, ...props }) => (
   <div className="flex-col">
     <div className="form-checkbox-group">
       <input
@@ -494,9 +494,15 @@ const CheckboxInput = ({ label, checked, onChange, error, ...props }) => (
         className="form-checkbox"
         checked={checked}
         onChange={onChange}
+        aria-required={required || undefined}
         {...props}
       />
-      {label && <label className="form-checkbox-label">{label}</label>}
+      {label && (
+        <label className="form-checkbox-label">
+          {label}
+          <RequiredMark required={required} />
+        </label>
+      )}
     </div>
     {error && (
       <div className="auth-error-message text-red-500 text-xs mt-1">
@@ -511,13 +517,25 @@ CheckboxInput.propTypes = {
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
+  required: PropTypes.bool,
 };
 
-const SwitchInput = ({ label, checked, onChange, ...props }) => (
+const SwitchInput = ({ label, checked, onChange, required = false, ...props }) => (
   <div className="input-switch-group">
-    {label && <label className="input-switch-label">{label}</label>}
+    {label && (
+      <label className="input-switch-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
+    )}
     <label className="switch">
-      <input type="checkbox" checked={checked} onChange={onChange} {...props} />
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        aria-required={required || undefined}
+        {...props}
+      />
       <span className="slider round"></span>
     </label>
   </div>
@@ -527,6 +545,7 @@ SwitchInput.propTypes = {
   label: PropTypes.string,
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
+  required: PropTypes.bool,
 };
 
 const TextareaInput = ({
@@ -794,6 +813,7 @@ CustomDatePickerInput.propTypes = {
 };
 
 export {
+  RequiredMark,
   TextInput,
   PasswordInput,
   SelectInput,

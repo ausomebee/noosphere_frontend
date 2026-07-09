@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
-import { TextInput } from "../../Input/Inputs";
+import { TextInput, RequiredMark } from "../../Input/Inputs";
 import { BsCloudUpload } from "react-icons/bs";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
@@ -159,6 +159,10 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
           placeholder="Enter document name"
         />
 
+        <label className="input-group-label">
+          Document
+          <RequiredMark required />
+        </label>
         <Controller
           name="document"
           control={control}

@@ -1,6 +1,6 @@
 import React from "react";
 import ReusableModal from "../ReusableModal";
-import { TextareaInput, CheckboxInput, SelectInput } from "../../Input/Inputs";
+import { TextareaInput, CheckboxInput, SelectInput, RequiredMark } from "../../Input/Inputs";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -111,8 +111,14 @@ const TrialsOpportunities = ({
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 text-left font-semibold">Trial Count</th>
-                <th className="p-2 text-left font-semibold">Performance</th>
-                <th className="p-2 text-left font-semibold">Prompt Level</th>
+                <th className="p-2 text-left font-semibold">
+                  Performance
+                  <RequiredMark required />
+                </th>
+                <th className="p-2 text-left font-semibold">
+                  Prompt Level
+                  <RequiredMark required />
+                </th>
                 <th className="p-2 text-left font-semibold">Notes</th>
               </tr>
             </thead>

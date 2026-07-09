@@ -103,27 +103,45 @@ const CheckboxInput = ({
   label,
   className = "",
   inputPosition = "before",
+  required = false,
   ...props
-}) => (
-  <div className={`input-checkbox-group input-position-${inputPosition}`}>
-    {inputPosition === "before" ? (
-      <>
-        <input type="checkbox" className={`input-checkbox ${className}`} {...props} />
-        {label && <label className="input-checkbox-label">{label}</label>}
-      </>
-    ) : (
-      <>
-        {label && <label className="input-checkbox-label">{label}</label>}
-        <input type="checkbox" className={`input-checkbox ${className}`} {...props} />
-      </>
-    )}
-  </div>
-);
+}) => {
+  const box = (
+    <input
+      type="checkbox"
+      className={`input-checkbox ${className}`}
+      aria-required={required || undefined}
+      {...props}
+    />
+  );
+  const text = label && (
+    <label className="input-checkbox-label">
+      {label}
+      <RequiredMark required={required} />
+    </label>
+  );
+  return (
+    <div className={`input-checkbox-group input-position-${inputPosition}`}>
+      {inputPosition === "before" ? (
+        <>
+          {box}
+          {text}
+        </>
+      ) : (
+        <>
+          {text}
+          {box}
+        </>
+      )}
+    </div>
+  );
+};
 
 CheckboxInput.propTypes = {
   label: PropTypes.string,
   className: PropTypes.string,
   inputPosition: PropTypes.oneOf(["before", "after"]),
+  required: PropTypes.bool,
 };
 
 // Switch Input Component (with position control)
@@ -131,33 +149,48 @@ const SwitchInput = ({
   label,
   className = "",
   inputPosition = "after",
+  required = false,
   ...props
-}) => (
-  <div className={`input-switch-group input-position-${inputPosition}`}>
-    {inputPosition === "before" ? (
-      <>
-        <label className="switch">
-          <input type="checkbox" className={className} {...props} />
-          <span className="slider round"></span>
-        </label>
-        {label && <label className="input-switch-label">{label}</label>}
-      </>
-    ) : (
-      <>
-        {label && <label className="input-switch-label">{label}</label>}
-        <label className="switch">
-          <input type="checkbox" className={className} {...props} />
-          <span className="slider round"></span>
-        </label>
-      </>
-    )}
-  </div>
-);
+}) => {
+  const toggle = (
+    <label className="switch">
+      <input
+        type="checkbox"
+        className={className}
+        aria-required={required || undefined}
+        {...props}
+      />
+      <span className="slider round"></span>
+    </label>
+  );
+  const text = label && (
+    <label className="input-switch-label">
+      {label}
+      <RequiredMark required={required} />
+    </label>
+  );
+  return (
+    <div className={`input-switch-group input-position-${inputPosition}`}>
+      {inputPosition === "before" ? (
+        <>
+          {toggle}
+          {text}
+        </>
+      ) : (
+        <>
+          {text}
+          {toggle}
+        </>
+      )}
+    </div>
+  );
+};
 
 SwitchInput.propTypes = {
   label: PropTypes.string,
   className: PropTypes.string,
   inputPosition: PropTypes.oneOf(["before", "after"]),
+  required: PropTypes.bool,
 };
 
 // Textarea Input Component
@@ -611,6 +644,7 @@ MultiSelectInput.propTypes = {
 
 // Exports
 export {
+  RequiredMark,
   TextInput,
   SelectInput,
   CheckboxInput,

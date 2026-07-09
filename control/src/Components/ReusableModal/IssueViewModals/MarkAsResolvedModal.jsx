@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
-import { TextareaInput, SwitchInput } from "../../Input/Inputs";
+import { TextareaInput, SwitchInput, RequiredMark } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -189,7 +189,10 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, access
           )}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px" }}>
-          <label>Confirm tenant’s approval</label>
+          <label>
+            Confirm tenant’s approval
+            <RequiredMark required />
+          </label>
           <SwitchInput
             {...register("tenantApproval")}
             error={errors.tenantApproval?.message}

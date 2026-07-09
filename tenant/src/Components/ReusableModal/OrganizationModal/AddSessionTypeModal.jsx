@@ -327,6 +327,7 @@ const AddSessionTypeModal = ({
                 control={control}
                 render={({ field }) => (
                   <SelectInput
+                    required={index === 0}
                     label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
                     options={serviceCodeOptions}
                     emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."

@@ -17,6 +17,7 @@ import {
   SelectInput,
   TextInput,
   CustomDatePickerInput,
+  RequiredMark,
 } from "../../Input/Inputs";
 import ColorPicker from "../../ColorPicker";
 import Button from "../../Button/Button";
@@ -877,7 +878,8 @@ const AppointmentModal = ({
                 control={control}
                 render={({ field }) => (
                   <SelectInput
-                    label={index === 0 ? "Service Code (CPT/HCPCS) *" : ""}
+                    required={index === 0}
+                    label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
                     options={serviceCodeOptions}
                     emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                     isLoading={loadingServiceCodes}
@@ -1228,7 +1230,10 @@ const AppointmentModal = ({
                 )}
               </div>
             )}
-            <p className="text-sm text-gray-400 font-semibold">End On</p>
+            <p className="text-sm text-gray-400 font-semibold">
+              End On
+              <RequiredMark required />
+            </p>
             <div className="flex gap-4 mt-2">
               <RadioInput
                 label="Never"

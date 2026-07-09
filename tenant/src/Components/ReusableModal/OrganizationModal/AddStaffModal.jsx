@@ -1048,12 +1048,14 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         {values.licenses?.map((l, idx) => (
           <div key={idx} className="p-4 border-b mb-6">
             <TextInput
+              required
               label="License Name"
               {...register(`licenses.${idx}.licenseName`)}
               error={errors.licenses?.[idx]?.licenseName?.message}
               placeholder="Enter license name"
             />
             <TextInput
+              required
               label="License Number"
               {...register(`licenses.${idx}.licenseNumber`)}
               error={errors.licenses?.[idx]?.licenseNumber?.message}
@@ -1062,6 +1064,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
             <div className="flex gap-4">
               <div className="flex-1">
                 <TextInput
+                  required
                   label="Expiration Date"
                   type="date"
                   {...register(`licenses.${idx}.expiryDate`)}
@@ -1074,6 +1077,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
                   control={control}
                   render={({ field }) => (
                     <SelectInput
+                      required
                       label="State"
                       options={stateOptions}
                       error={errors.licenses?.[idx]?.state?.message}
@@ -1145,6 +1149,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           control={control}
           render={({ field }) => (
             <SelectInput
+              required
               label="Compensation Type"
               options={compensationTypeOptions}
               error={errors.paymentSchedule?.message}

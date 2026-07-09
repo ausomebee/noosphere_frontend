@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
-import { TextInput, TextareaInput, SelectInput, RadioInput, CheckboxInput } from "../../Input/Inputs";
+import { TextInput, TextareaInput, SelectInput, RadioInput, CheckboxInput, RequiredMark } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -80,7 +80,10 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       }}
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
-        <label>Resumption Options</label>
+        <label>
+          Resumption Options
+          <RequiredMark required />
+        </label>
         <div style={{display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px", marginBottom: "20px"}}>
           <RadioInput
             name="resumptionType"

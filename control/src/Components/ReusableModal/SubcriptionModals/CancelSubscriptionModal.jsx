@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
-import { TextareaInput, SelectInput, RadioInput, CheckboxInput } from "../../Input/Inputs";
+import { TextareaInput, SelectInput, RadioInput, CheckboxInput, RequiredMark } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -68,7 +68,10 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       }}
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
-        <label>Cancellation Options</label>
+        <label>
+          Cancellation Options
+          <RequiredMark required />
+        </label>
         <div style={{display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px", marginBottom: "20px"}}>
           <RadioInput
             name="cancellationType"
@@ -110,6 +113,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
 
 
         <CheckboxInput
+          required
           name="understandIrreversible"
           label="I understand that this action is irreversible"
           {...register("understandIrreversible")}

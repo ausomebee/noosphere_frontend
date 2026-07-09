@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
-import { TextInput, TextareaInput } from "../../Input/Inputs";
+import { TextInput, TextareaInput, RequiredMark } from "../../Input/Inputs";
 import { FiRefreshCcw } from "react-icons/fi";
 import Button from "../../Button/Button";
 import { formatTimerDisplay } from "../../../Helper/Formatters";
@@ -172,7 +172,8 @@ const RateModal = ({
             <div className="flex-1">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-xl font-medium" aria-live="polite">
-                  Duration: {formatTimerDisplay(seconds)}
+                  Duration
+                  <RequiredMark required />: {formatTimerDisplay(seconds)}
                 </div>
                 <div className="space-x-3">
                   {!started ? (

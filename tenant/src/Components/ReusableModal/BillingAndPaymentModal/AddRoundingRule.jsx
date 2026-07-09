@@ -10,6 +10,7 @@ import {
   TextInput,
   RadioInput,
   SwitchInput,
+  RequiredMark,
 } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import { standardRuleOptions } from "../../../Data/selectOptions";
@@ -201,7 +202,10 @@ const AddRoundingRule = ({
       <div className="mt-5 space-y-6 flex flex-col gap-6">
         {/* Rule Type */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-700">Rule Type</label>
+          <label className="text-sm font-medium text-gray-700">
+            Rule Type
+            <RequiredMark required />
+          </label>
           <div className="flex flex-row gap-4 items-center">
             <Controller
               name="ruleType"
