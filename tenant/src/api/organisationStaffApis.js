@@ -483,7 +483,6 @@ const GetAllStaffPayrollById = async ({ id, accessToken, refreshToken }) => {
 };
 
 const UpdateTenantStaffPayroll = async ({
-  id,
   payroll,
   accessToken,
   refreshToken,
@@ -491,8 +490,6 @@ const UpdateTenantStaffPayroll = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const payload = {
-      id,
-
       id: payroll?.id || undefined,
       paymentSchedule: payroll?.paymentSchedule || "",
       ratePerHour: payroll?.ratePerHour ? String(payroll.ratePerHour) : "",

@@ -1,10 +1,17 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { FaArrowLeft } from "react-icons/fa";
 
+// Unfinished: nothing imports this screen, and the table has no data source or
+// column definitions yet. The declarations below keep it from throwing if it is
+// ever mounted.
 const BillingReportTable = () => {
-  const handleFilterChange = (key, value) => {
-  };
+  const navigate = useNavigate();
+  const tableDataState = [];
+  const columns = [];
+
+  const handleFilterChange = () => {};
 
   const filters = [
     {

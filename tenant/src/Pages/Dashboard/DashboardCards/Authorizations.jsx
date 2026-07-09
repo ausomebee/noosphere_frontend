@@ -86,8 +86,12 @@ const Authorizations = ({
         const formattedData = response.data.data.rows.map((auth) => ({
           id: auth.id,
           name:
-            `${auth.tenantClient?.client?.firstName} ${auth.tenantClient?.client?.lastName}` ||
-            "Unknown Client",
+            [
+              auth.tenantClient?.client?.firstName,
+              auth.tenantClient?.client?.lastName,
+            ]
+              .filter(Boolean)
+              .join(" ") || "Unknown Client",
           details: `${auth.title} - ${auth.authorizationNumber}`,
           date: formatDate(auth.startDate, dateFormat),
           endDate: auth.endDate,

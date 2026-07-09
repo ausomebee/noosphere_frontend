@@ -208,6 +208,7 @@ const DuplicateBillingPlan = async ({ planId, accessToken, refreshToken }) => {
 
 const CreateSubscription = async ({
   planId,
+  organizationId,
   tenantId,
   transactionId,
   status,
