@@ -5,26 +5,20 @@ import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../../Helper/passwordValidation";
 import api from "../../../../api/authApis";
 import "../../Auth.css";
 import TenantLogo from "../../../../assets/Logo.svg";
 import { PasswordInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 
-// Validation schema
+// Validation schema. Confirm is held to the same strength rules as the new password.
 const schema = yup.object().shape({
-  newPassword: yup
-    .string()
-    .required("New password is required")
-    .min(8, "Password must be at least 8 characters")
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/,
-      "Password must be strong. At least one upper case letter, one lower case letter, one digit, one special character, and at least 8 characters long."
-    ),
-  confirmPassword: yup
-    .string()
-    .required("Confirm password is required")
-    .oneOf([yup.ref("newPassword"), null], "Passwords must match"),
+  newPassword: passwordSchema("New password"),
+  confirmPassword: confirmPasswordSchema("newPassword"),
 });
 
 const SuperChangePassword = () => {
@@ -33,6 +27,7 @@ const SuperChangePassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -88,6 +83,7 @@ const SuperChangePassword = () => {
                   placeholder="Enter your password"
                   autoComplete="new-password"
                   {...register("confirmPassword")}
+                  matchValue={watch("newPassword") || ""}
                   error={errors.confirmPassword?.message}
                 />
                 <Button

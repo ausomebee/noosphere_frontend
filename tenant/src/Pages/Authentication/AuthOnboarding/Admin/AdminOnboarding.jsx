@@ -10,24 +10,20 @@ import { useDispatch } from "react-redux";
 import useAuth from "../../../../hooks/useAuth";
 import { OnboardAdmin } from "../../../../ReduxStore/features/authentication";
 import { showToast } from "../../../../Helper/ShowToast";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../../Helper/passwordValidation";
 import api from "../../../../api/authApis";
 import "../../../Authentication/Auth.css";
 
 // Yup validation schema
+// Both password fields share one rule set, so the confirm field is held to the
+// identical strength policy — not just "must match".
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/,
-      "Password must be strong. At least one upper case letter, one lower case letter, one digit, one special character, and at least 8 characters long."
-    ),
-  confirmPassword: yup
-    .string()
-    .required("Please confirm your password")
-    .oneOf([yup.ref("password"), null], "Passwords must match"),
+  password: passwordSchema(),
+  confirmPassword: confirmPasswordSchema("password"),
 });
 
 const AdminOnboarding = () => {
@@ -40,6 +36,7 @@ const AdminOnboarding = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -161,6 +158,7 @@ const AdminOnboarding = () => {
                     id="confirmPassword"
                     placeholder="Enter a password"
                     {...register("confirmPassword")}
+                    matchValue={watch("password") || ""}
                     className={`input-text ${
                       errors.confirmPassword ? "input-error" : ""
                     }`}
