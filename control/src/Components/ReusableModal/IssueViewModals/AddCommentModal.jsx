@@ -57,6 +57,7 @@ const AddCommentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToke
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <TextareaInput
+          required
           label="Comment"
           {...register("comment")}
           error={errors.comment?.message}

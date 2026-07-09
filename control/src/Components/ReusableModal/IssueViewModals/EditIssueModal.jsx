@@ -61,12 +61,14 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <TextInput
+          required
           label="Issue Title"
           {...register("issueTitle")}
           error={errors.issueTitle?.message}
           placeholder="Type something"
         />
         <TextareaInput
+          required
           label="Issue Description"
           {...register("description")}
           error={errors.description?.message}

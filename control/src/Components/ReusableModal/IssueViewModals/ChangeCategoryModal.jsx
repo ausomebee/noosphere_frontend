@@ -93,6 +93,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <SelectInput
+          required
           label="Change from"
           {...register("categoryFrom")}
           options={categoryOptions}
@@ -100,6 +101,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
           disabled={!!initialCategory}
         />
         <SelectInput
+          required
           label="Change To"
           {...register("categoryTo")}
           options={categoryOptions}

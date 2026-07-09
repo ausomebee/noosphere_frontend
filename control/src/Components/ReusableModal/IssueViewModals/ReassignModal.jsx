@@ -79,6 +79,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <SelectInput
+          required
           label="Current Assignee"
           {...register("currentAssignee")}
           options={staffOptions}
@@ -86,6 +87,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
           disabled={!!initialAssignee}
         />
         <SelectInput
+          required
           label="New Assignee"
           {...register("newAssignee")}
           options={staffOptions}

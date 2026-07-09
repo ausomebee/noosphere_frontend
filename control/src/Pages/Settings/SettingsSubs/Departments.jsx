@@ -275,12 +275,14 @@ const Departments = () => {
       >
         <form>
           <TextInput
+            required
             label="Department name"
             placeholder="Enter department name"
             error={errors.name?.message}
             {...register("name")}
           />
           <SelectInput
+            required
             label="Department Lead"
             options={adminOptions}
             error={errors.teamLeadId?.message}

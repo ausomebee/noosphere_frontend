@@ -142,6 +142,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, access
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <TextareaInput
+          required
           label="Resolution Description"
           {...register("resolution")}
           error={errors.resolution?.message}

@@ -56,6 +56,7 @@ const SetNewPassword = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="input-group">
             <PasswordInput
+              required
               label="Password"
               id="password"
               placeholder="Enter password"
@@ -69,6 +70,7 @@ const SetNewPassword = () => {
           </div>
           <div className="input-group">
             <PasswordInput
+              required
               label="Confirm password"
               id="confirmPassword"
               placeholder="Enter password"

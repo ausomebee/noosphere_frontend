@@ -128,6 +128,7 @@ const AdminsLogin = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group">
             <TextInput
+              required
               label="Email"
               id="email"
               type="email"
@@ -142,6 +143,7 @@ const AdminsLogin = () => {
 
           <div className="form-group">
             <PasswordInput
+              required
               label="Password"
               id="password"
               placeholder="Enter password"

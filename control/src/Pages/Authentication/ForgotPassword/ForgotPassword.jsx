@@ -68,6 +68,7 @@ const ForgetPassword = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="auth-container">
             <TextInput
+              required
               label="Email"
               id="email"
               placeholder="olivia@therapyco.com"

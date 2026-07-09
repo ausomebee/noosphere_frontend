@@ -99,6 +99,7 @@ const AdministrativePassword = () => {
             <div className="password-inputs">
               <div>
                 <PasswordInput
+                  required
                   label="Old Administrator Password"
                   id="oldAdministratorPassword"
                   placeholder="Enter password"
@@ -115,6 +116,7 @@ const AdministrativePassword = () => {
               </div>
               <div>
                 <PasswordInput
+                  required
                   label="New Administrator Password"
                   id="newAdministratorPassword"
                   placeholder="Enter new password"
@@ -131,6 +133,7 @@ const AdministrativePassword = () => {
               </div>
               <div className="input-group">
                 <PasswordInput
+                  required
                   label="Confirm New Administrator Password"
                   id="confirmNewAdministratorPassword"
                   placeholder="Confirm new password"

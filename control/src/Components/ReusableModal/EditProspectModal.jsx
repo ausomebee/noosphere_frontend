@@ -169,18 +169,21 @@ const EditProspectModal = ({
     >
       <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
         <TextInput
+          required
           label="Company Name"
           {...register("company")}
           error={errors.company?.message}
           placeholder="Type something"
         />
         <TextInput
+          required
           label="Contact person"
           {...register("contactPerson")}
           error={errors.contactPerson?.message}
           placeholder="Type something"
         />
         <TextInput
+          required
           label="Email"
           type="email"
           {...register("email")}
@@ -188,6 +191,7 @@ const EditProspectModal = ({
           placeholder="Type something"
         />
         <TextInput
+          required
           label="Phone"
           {...register("phone")}
           error={errors.phone?.message}
@@ -208,6 +212,7 @@ const EditProspectModal = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <TextInput
+            required
             label="Address"
             {...register("location")}
             error={errors.location?.message}

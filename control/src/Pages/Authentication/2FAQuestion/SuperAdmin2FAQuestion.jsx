@@ -214,6 +214,7 @@ const SuperAdmin2FAQuestion = () => {
             <form onSubmit={handleSecuritySubmit(onSecuritySubmit)}>
               <div className="security-question-container">
                 <SelectInput
+                  required
                   label="Please select a security question"
                   options={securityQuestions}
                   className={securityErrors.securityQuestion ? "input-error" : ""}
@@ -225,6 +226,7 @@ const SuperAdmin2FAQuestion = () => {
                   </p>
                 )}
                 <TextInput
+                  required
                   label="Your answer"
                   placeholder="Type your answer"
                   className={securityErrors.answer ? "input-error" : ""}
@@ -236,6 +238,7 @@ const SuperAdmin2FAQuestion = () => {
                   </p>
                 )}
                 <TextInput
+                  required
                   label="Confirm Your answer"
                   placeholder="Confirm your answer"
                   className={securityErrors.confirmAnswer ? "input-error" : ""}

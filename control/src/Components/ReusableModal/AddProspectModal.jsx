@@ -202,6 +202,7 @@ const AddProspectModal = ({
     >
       <form className="">
         <TextInput
+          required
           label="Company Name"
           {...register("companyName")}
           error={errors.companyName?.message}
@@ -214,6 +215,7 @@ const AddProspectModal = ({
           placeholder="Type something"
         />
         <TextInput
+          required
           label="Email"
           type="email"
           {...register("email")}
@@ -292,6 +294,7 @@ const AddProspectModal = ({
           placeholder="e.g. mycompany"
         />
         <SelectInput
+          required
           label="Assign to Staff"
           {...register("assignToStaff")}
           options={staffOptions}
@@ -300,6 +303,7 @@ const AddProspectModal = ({
           emptyHint="No staff found. Create one in Settings → Staff."
         />
         <SelectInput
+          required
           label="Select Onboarding Stage"
           {...register("pipelineStageId")}
           options={stageOptions}

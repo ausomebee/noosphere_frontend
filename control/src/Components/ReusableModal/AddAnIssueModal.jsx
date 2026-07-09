@@ -352,6 +352,7 @@ const AddIssueModal = ({
     >
       <form className="modal-form">
         <SelectInput
+          required
           label="Tenant"
           {...register("tenant")}
           options={tenantOptions}
@@ -359,24 +360,28 @@ const AddIssueModal = ({
           disabled={tenantList.length === 0}
         />
         <TextInput
+          required
           label="Issue Title"
           {...register("title")}
           error={errors.title?.message}
           placeholder="Type something"
         />
         <TextareaInput
+          required
           label="Issue Description"
           {...register("description")}
           error={errors.description?.message}
           placeholder="Enter a detailed description of the issue"
         />
         <SelectInput
+          required
           label="Category"
           {...register("category")}
           options={categoryOptions}
           error={errors.category?.message}
         />
         <SelectInput
+          required
           label="Priority"
           {...register("priority")}
           options={priorityOptions}
@@ -396,6 +401,7 @@ const AddIssueModal = ({
             <h4>For</h4>
             <div className="resolution-selects-one">
               <SelectInput
+                required
                 {...register("resolutionTime.value")}
                 options={[
                   { value: "", label: "Select" },
@@ -410,6 +416,7 @@ const AddIssueModal = ({
             </div>
             <div className="resolution-selects">
               <SelectInput
+                required
                 {...register("resolutionTime.duration")}
                 options={[
                   { value: "", label: "Select" },
@@ -426,6 +433,7 @@ const AddIssueModal = ({
           {/* Timezone the deadline is calculated in. Defaults to the viewer's
               own zone. Client-side only — never sent to the backend. */}
           <SelectInput
+            required
             label="Timezone"
             {...register("timezone")}
             options={TIME_ZONE_OPTIONS}

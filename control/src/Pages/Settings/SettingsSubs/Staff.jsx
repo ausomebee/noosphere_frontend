@@ -355,18 +355,21 @@ const Staff = () => {
       >
         <form>
           <TextInput
+            required
             label="First name"
             placeholder="Enter first name"
             error={errors.firstName?.message}
             {...register("firstName")}
           />
           <TextInput
+            required
             label="Last name"
             placeholder="Enter last name"
             error={errors.lastName?.message}
             {...register("lastName")}
           />
           <TextInput
+            required
             label="Email"
             type="email"
             placeholder="Enter email address"
@@ -387,6 +390,7 @@ const Staff = () => {
             emptyHint="No departments found. Create one in Settings → Departments."
           />
           <SelectInput
+            required
             label="Role"
             options={roleOptions}
             error={errors.roleId?.message}

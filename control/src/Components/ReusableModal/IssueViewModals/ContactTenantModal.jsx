@@ -134,12 +134,14 @@ const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, ref
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <label>Header</label>
         <TextInput
+          required
           {...register("header")}
           error={errors.header?.message}
           placeholder="Type something"
         />
         <label>Body</label>
         <TextareaInput
+          required
           {...register("body")}
           error={errors.body?.message}
           placeholder="Type something"

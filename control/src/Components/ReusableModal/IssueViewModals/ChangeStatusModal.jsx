@@ -71,6 +71,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <SelectInput
+          required
           label="Change from"
           {...register("statusFrom")}
           options={statusOptions}
@@ -78,6 +79,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
           disabled={!!initialStatus}
         />
         <SelectInput
+          required
           label="Change To"
           {...register("statusTo")}
           options={statusOptions}

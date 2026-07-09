@@ -98,6 +98,7 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
         <SelectInput
+          required
           label="Current Priority"
           {...register("priorityFrom")}
           options={[{ value: "", label: "Select current priority" }, ...priorityOptions]}
@@ -105,6 +106,7 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
           disabled={true}
         />
         <SelectInput
+          required
           label="New Priority"
           {...register("priorityTo")}
           options={[{ value: "", label: "Select a new priority" }, ...priorityOptions.filter((opt) => opt.value !== initialPriority)]}

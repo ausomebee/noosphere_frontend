@@ -88,6 +88,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
 
         <label>Select Reason</label>
         <SelectInput
+          required
           {...register("reason")}
           error={errors.reason?.message}
           options={[
