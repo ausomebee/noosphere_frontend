@@ -247,12 +247,17 @@ RadioInput.propTypes = {
 
 // Password Input Component
 // Shared password policy: min 8 + uppercase + lowercase + digit + special char.
+// "Special" is any non-alphanumeric character. This must stay in lockstep with
+// `passwordSchema` in src/Helper/passwordValidation.js — if the two drift, this
+// checklist can mark a rule unmet for a password the schema happily accepts.
+export const SPECIAL_CHAR_REGEX = /[^A-Za-z0-9]/;
+
 export const PASSWORD_RULES = [
   { test: (v) => (v || "").length >= 8, label: "At least 8 characters" },
   { test: (v) => /[A-Z]/.test(v || ""), label: "One uppercase letter" },
   { test: (v) => /[a-z]/.test(v || ""), label: "One lowercase letter" },
   { test: (v) => /\d/.test(v || ""), label: "One number" },
-  { test: (v) => /[!@#$%^&*]/.test(v || ""), label: "One special character (!@#$%^&*)" },
+  { test: (v) => SPECIAL_CHAR_REGEX.test(v || ""), label: "One special character" },
 ];
 
 const PasswordStrength = ({ value }) => {
@@ -286,6 +291,35 @@ const PasswordStrength = ({ value }) => {
 
 PasswordStrength.propTypes = { value: PropTypes.string };
 
+// Confirm-password indicator. The confirm field enforces the SAME strength rules
+// as the password field (see confirmPasswordSchema), so repeating the whole
+// checklist here would just be noise — all that's left to tell the user is
+// whether the two entries match.
+const PasswordMatch = ({ value, matchValue }) => {
+  if (!value) return null;
+  const ok = value === matchValue;
+  const good = "var(--button-primary-color, var(--color-primary, #004aba))";
+  const bad = "var(--color-danger, #ef4444)";
+  return (
+    <div
+      className="password-match"
+      style={{
+        marginTop: 6,
+        fontSize: 12,
+        fontWeight: 600,
+        color: ok ? good : bad,
+      }}
+    >
+      {ok ? "✓ Passwords match" : "✕ Passwords do not match"}
+    </div>
+  );
+};
+
+PasswordMatch.propTypes = {
+  value: PropTypes.string,
+  matchValue: PropTypes.string,
+};
+
 const PasswordInput = ({
   label,
   placeholder,
@@ -293,10 +327,17 @@ const PasswordInput = ({
   error = "",
   type: _type,
   showStrength = false,
+  // Pass the password field's current value to render a "passwords match"
+  // indicator under a confirm-password field.
+  matchValue,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [typedValue, setTypedValue] = useState(props.value || "");
+  // Controlled usage (a `value` prop) is the source of truth — `typedValue` only
+  // tracks uncontrolled inputs (react-hook-form `register`) and wouldn't reset
+  // when the parent clears the field.
+  const currentValue = props.value !== undefined ? props.value : typedValue;
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -355,7 +396,10 @@ const PasswordInput = ({
           )}
         </button>
       </div>
-      {showStrength && <PasswordStrength value={typedValue} />}
+      {showStrength && <PasswordStrength value={currentValue} />}
+      {matchValue !== undefined && (
+        <PasswordMatch value={currentValue} matchValue={matchValue} />
+      )}
       {error && <span className="input-error-message">{error}</span>}
     </div>
   );
@@ -365,6 +409,7 @@ PasswordInput.propTypes = {
   label: PropTypes.string,
   placeholder: PropTypes.string,
   showStrength: PropTypes.bool,
+  matchValue: PropTypes.string,
   className: PropTypes.string,
   error: PropTypes.string,
 };

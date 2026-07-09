@@ -9,21 +9,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./../SuperAdmin.css";
 import api from "../../../api/authApis";
 import { showToast } from "../../../Helper/ShowToast";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../Helper/passwordValidation";
 
-// Yup schema
+// Yup schema. Confirm is held to the same strength rules as the new password.
 const schema = yup.object().shape({
-  newPassword: yup
-    .string()
-    .required("New password is required")
-    .min(8, "Password must be at least 8 characters")
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
-      "Password must contain upper/lowercase, number, and special character"
-    ),
-  confirmPassword: yup
-    .string()
-    .required("Confirm password is required")
-    .oneOf([yup.ref("newPassword"), null], "Passwords must match"),
+  newPassword: passwordSchema("New password"),
+  confirmPassword: confirmPasswordSchema("newPassword"),
 });
 
 const ForgotPasswordResetPassword = () => {
@@ -34,6 +28,7 @@ const ForgotPasswordResetPassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -123,6 +118,7 @@ const ForgotPasswordResetPassword = () => {
               placeholder="Confirm new password"
               autoComplete="new-password"
               {...register("confirmPassword")}
+              matchValue={watch("newPassword") || ""}
               className={errors.confirmPassword ? "input-error" : ""}
             />
             {errors.confirmPassword && (

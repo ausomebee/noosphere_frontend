@@ -15,6 +15,9 @@ import { showToast } from "../../Helper/ShowToast";
 
 // Standalone onboarding step: set the administrator password. Kept separate
 // from the 2FA setup flow so changing the 2FA type never re-triggers it.
+// The administrative password deliberately keeps its own, stricter 12-character
+// policy rather than the shared 8-character one. The confirm field is held to
+// the same rule as the password it confirms — not just "must match".
 const passwordSchema = yup.object().shape({
   oldAdministratorPassword: yup.string().required("Password is required"),
   newAdministratorPassword: yup
@@ -24,6 +27,7 @@ const passwordSchema = yup.object().shape({
   confirmNewAdministratorPassword: yup
     .string()
     .required("Please confirm your new password")
+    .min(12, "New password must be at least 12 characters")
     .oneOf([yup.ref("newAdministratorPassword")], "Passwords must match"),
 });
 
@@ -36,6 +40,7 @@ const AdministrativePassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({ resolver: yupResolver(passwordSchema) });
 
@@ -130,6 +135,7 @@ const AdministrativePassword = () => {
                   id="confirmNewAdministratorPassword"
                   placeholder="Confirm new password"
                   {...register("confirmNewAdministratorPassword")}
+                  matchValue={watch("newAdministratorPassword") || ""}
                   className={`input-text ${
                     errors.confirmNewAdministratorPassword ? "input-error" : ""
                   }`}

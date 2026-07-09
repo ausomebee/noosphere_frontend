@@ -10,6 +10,7 @@ import {
 import Button from "../../Components/Button/Button";
 import authApis from "../../api/authApis";
 import { showToast, showApiError } from "../../Helper/ShowToast";
+import { firstUnmetPasswordRule } from "../../Helper/passwordValidation";
 import { FiSettings } from "react-icons/fi";
 import "./SecuritySettings.css";
 
@@ -107,6 +108,13 @@ const SecuritySettings = () => {
       showToast("Please fill in all fields", "error");
       return;
     }
+    // Enforce the same rules the strength checklist displays, otherwise it can
+    // mark a rule unmet on a password this handler still accepts.
+    const unmetRule = firstUnmetPasswordRule(newPassword);
+    if (unmetRule) {
+      showToast(`Password must have: ${unmetRule.toLowerCase()}`, "error");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       showToast("New password and confirm password do not match", "error");
       return;
@@ -133,6 +141,11 @@ const SecuritySettings = () => {
   const handleChangeAdminPassword = async () => {
     if (!adminCurrentPassword.trim() || !adminNewPassword.trim()) {
       showToast("Please fill in all fields", "error");
+      return;
+    }
+    const unmetAdminRule = firstUnmetPasswordRule(adminNewPassword);
+    if (unmetAdminRule) {
+      showToast(`Password must have: ${unmetAdminRule.toLowerCase()}`, "error");
       return;
     }
     if (adminNewPassword !== adminConfirmPassword) {
@@ -415,19 +428,19 @@ const SecuritySettings = () => {
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
           />
-          <TextInput
+          <PasswordInput
             label="New Password"
-            type="password"
+            showStrength
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password"
           />
-          <TextInput
+          <PasswordInput
             label="Confirm New Password"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm new password"
+            matchValue={newPassword}
           />
         </div>
       </ReusableModal>
@@ -459,12 +472,12 @@ const SecuritySettings = () => {
             onChange={(e) => setAdminNewPassword(e.target.value)}
             placeholder="Enter new administrative password"
           />
-          <TextInput
+          <PasswordInput
             label="Confirm New Password"
-            type="password"
             value={adminConfirmPassword}
             onChange={(e) => setAdminConfirmPassword(e.target.value)}
             placeholder="Confirm new administrative password"
+            matchValue={adminNewPassword}
           />
         </div>
       </ReusableModal>

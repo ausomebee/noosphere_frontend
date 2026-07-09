@@ -7,17 +7,18 @@ import Button from "../../../Components/Button/Button";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../Helper/passwordValidation";
 
-// Yup validation schema for setting new password
+// Yup validation schema for setting new password. This form renders the strength
+// checklist, so it must enforce every rule that checklist displays — previously
+// it only required 8 characters, letting through passwords the checklist marked
+// as failing. Confirm is held to the same rules.
 const setPasswordSchema = yup.object().shape({
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters"),
-  confirmPassword: yup
-    .string()
-    .required("Please confirm your password")
-    .oneOf([yup.ref("password"), null], "Passwords must match"),
+  password: passwordSchema(),
+  confirmPassword: confirmPasswordSchema("password"),
 });
 
 const SetNewPassword = () => {
@@ -33,6 +34,7 @@ const SetNewPassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(setPasswordSchema),
@@ -71,6 +73,7 @@ const SetNewPassword = () => {
               id="confirmPassword"
               placeholder="Enter password"
               {...register("confirmPassword")}
+              matchValue={watch("password") || ""}
               className={`input-text ${errors.confirmPassword ? "input-error" : ""}`}
             />
             {errors.confirmPassword && (
