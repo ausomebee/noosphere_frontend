@@ -170,7 +170,7 @@ const usePricingForm = ({
 
   // Log formData changes for debugging with debouncing
   const debouncedLog = useRef(
-    debounce((data) => {
+    debounce(() => {
     }, 500)
   ).current;
 

@@ -118,7 +118,6 @@ const AddSessionTypeModal = ({
     handleSubmit,
     reset,
     watch,
-    setValue,
     formState: { errors },
   } = useForm({
     mode: "onTouched",

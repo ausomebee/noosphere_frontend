@@ -28,9 +28,6 @@ const Column = ({
   onEditCandidate,
   onDeleteColumn,
   columns,
-  pipelineId,
-  staffList = [],
-  stages = [],
   onOpenAddClientModal, // New prop to handle opening the modal from parent
 }) => {
   // Early return if column is invalid

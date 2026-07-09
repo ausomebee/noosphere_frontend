@@ -240,13 +240,13 @@ const FeatureUsageStatistic = ({ featureName, groupTitle, onBack }) => {
   const actions = [
     {
       label: "View Details",
-      onClick: (row) => {
+      onClick: () => {
       },
     },
     {
       label: "Delete Request",
       className: "remove",
-      onClick: (row) => {
+      onClick: () => {
       },
     },
   ];

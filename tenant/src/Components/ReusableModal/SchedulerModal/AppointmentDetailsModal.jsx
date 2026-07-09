@@ -16,8 +16,6 @@ const AppointmentDetailsModal = ({
   onClose,
   appointment,
   position,
-  clients,
-  staff,
   onEdit,
   onReschedule,
   onCancel,

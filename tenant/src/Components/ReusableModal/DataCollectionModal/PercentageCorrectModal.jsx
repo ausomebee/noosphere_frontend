@@ -9,7 +9,7 @@ import { promptLevelOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
-const createValidationSchema = (trialCount) => {
+const createValidationSchema = () => {
   return yup.object().shape({
     trials: yup.array().of(
       yup.object().shape({

@@ -185,7 +185,7 @@ const AppointmentModal = ({
         schema
           .required("Recurrence type is required")
           .oneOf(["day", "week", "month", "custom"]),
-      otherwise: (schema) => Yup.string(),
+      otherwise: () => Yup.string(),
     }),
     recurrenceDays: Yup.array().when(
       ["isRecurring", "recurrenceType", "customRecurrenceUnit"],

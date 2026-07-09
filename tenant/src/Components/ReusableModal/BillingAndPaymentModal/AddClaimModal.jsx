@@ -40,7 +40,7 @@ const AddClaimModal = ({ isOpen, onClose, onSave, isLoading }) => {
     onSave(data);
   };
 
-  const onError = (errors) => {
+  const onError = () => {
   };
 
   return (

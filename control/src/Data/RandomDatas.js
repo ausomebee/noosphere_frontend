@@ -233,38 +233,38 @@ export const columns = [
 export const actions = [
   {
     label: "Move Prospect",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to move prospect
     },
   },
   {
     label: "Reassign Prospect to staff",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to reassign prospect
     },
   },
   {
     label: "View Prospect Information",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to view prospect information
     },
   },
   {
     label: "Edit Prospect Information",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to edit prospect information
     },
   },
   {
     label: "Contact prospect",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to contact prospect
     },
   },
   {
     label: "Remove prospect",
     className: "remove",
-    onClick: (row) => {
+    onClick: () => {
       // Add logic to remove prospect
     },
   },

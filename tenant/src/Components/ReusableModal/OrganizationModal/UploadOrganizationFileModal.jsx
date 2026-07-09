@@ -168,7 +168,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
         <Controller
           name="document"
           control={control}
-          render={({ field }) => (
+          render={() => (
             <FileUploadArea
               onFiles={(files) => {
                 setValue("document", files[0], { shouldValidate: true });

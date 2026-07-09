@@ -33,7 +33,6 @@ const AddDiagnosisCode = ({
     control,
     reset,
     watch,
-    setValue,
     formState: { errors },
   } = useForm({
     mode: "onTouched",

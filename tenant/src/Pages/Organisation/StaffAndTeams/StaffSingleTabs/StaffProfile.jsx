@@ -22,8 +22,6 @@ const Profile = ({
   setLicenseToEdit,
   setFileToEdit,
   openDelete,
-  saveLicense,
-  saveFile,
   deleteLicense,
   deleteFile,
   openBasicInfoModal, // New prop for opening Basic Info modal

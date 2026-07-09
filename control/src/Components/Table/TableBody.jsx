@@ -21,7 +21,6 @@ const TableBody = ({
   tableContainerRef,
   tableName,
   hasStatusDot,
-  startIndex,
 }) => {
   // If a row action opens a "view"/"edit" route, make the name (first plain
   // text column) clickable so users don't have to open the action menu.

@@ -51,10 +51,10 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     console.error("[Socket] Connection error:", err.message);
   });
 
-  socket.on("reconnect_attempt", (attempt) => {
+  socket.on("reconnect_attempt", () => {
   });
 
-  socket.on("reconnect", (attempt) => {
+  socket.on("reconnect", () => {
   });
 
   socket.on("reconnect_failed", () => {

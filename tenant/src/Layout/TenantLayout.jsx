@@ -253,7 +253,7 @@ const DashboardLayout = ({ children }) => {
   useIdleTimeout();
 
   // Wire socket: register + listen for notifications and new messages
-  const { isConnected } = useSocket({
+  useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
     onNotification: (notif) => {
       setAlerts((prev) => [

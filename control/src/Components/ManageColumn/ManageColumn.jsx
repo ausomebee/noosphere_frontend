@@ -167,7 +167,7 @@ const ManageColumn = () => {
 
   // Handle candidate addition
   const handleAddCandidate = useCallback(
-    (candidateData) => {
+    () => {
       fetchPipelineItemsData();
       setShowAddProspectModal(false);
     },
@@ -352,7 +352,7 @@ const ManageColumn = () => {
     }
   };
 
-  const handleFilterChange = (key) => {
+  const handleFilterChange = () => {
   };
 
   const filters = [

@@ -250,7 +250,7 @@ const ManageColumn = () => {
     }
   };
 
-  const handleFilterChange = (key) => {
+  const handleFilterChange = () => {
   };
 
   const filters = [

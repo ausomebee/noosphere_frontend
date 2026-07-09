@@ -6,7 +6,6 @@ const ToggleActiveModal = ({
   isOpen,
   onClose,
   onConfirm,
-  featureName,
   currentState,
   isLoading,
 }) => {

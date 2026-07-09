@@ -110,7 +110,6 @@ const AddSingleServiceCodeModal = ({
   onSave,
   mode = "add",
   initialData = {},
-  onDelete,
   serviceCodes = [],
   roundingRules = [],
 }) => {

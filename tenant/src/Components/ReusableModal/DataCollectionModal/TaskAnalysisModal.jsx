@@ -7,7 +7,7 @@ import * as yup from "yup";
 import { performanceOptions, promptLevelOptions } from "../../../Data/selectOptions";
 
 // Validation schema
-const createValidationSchema = (steps) => {
+const createValidationSchema = () => {
   return yup.object().shape({
     steps: yup.array().of(
       yup.object().shape({

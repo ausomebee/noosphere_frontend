@@ -22,7 +22,6 @@ const AddPayerModal = ({
   onSave,
   mode = "add",
   initialData = {},
-  onDelete,
   insuranceTypes = [],
   serviceCodes = [],
   roundingRules = [],
@@ -449,7 +448,7 @@ const AddPayerModal = ({
               <Controller
                 name={`serviceCodes[${index}].modifiers`}
                 control={control}
-                render={({ field }) => {
+                render={() => {
                   const { fields: modifierFields, append: appendModifier, remove: removeModifier } = useFieldArray({
                     control,
                     name: `serviceCodes[${index}].modifiers`,

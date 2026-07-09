@@ -18,7 +18,6 @@ const AddProgramModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm({
     mode: "onTouched",
     reValidateMode: "onBlur",
