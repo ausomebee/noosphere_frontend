@@ -489,7 +489,7 @@ const GetClientProgramAndTargetsDetails = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client-programs/target/${clientId}`
+      `${PLAIN_API_URL}/client-programs/target/tenant/${clientId}`
     );
     return response;
   } catch (error) {
