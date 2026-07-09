@@ -21,6 +21,7 @@ import {
   getStateOptions,
   normalizeCountry,
   normalizeState,
+  withCustomOption,
 } from "../../../Helper/geoOptions";
 
 const getInitials = (name) => {
@@ -168,17 +169,10 @@ const TenantSingleAccOverview = () => {
     setEditForm({});
   };
 
-  const stateOptions = useMemo(() => {
-    const options = getStateOptions(editForm.country);
-    // This field used to be free text, so a saved tenant may hold a value the
-    // library has never heard of ("Lagos State"). Offer it as an option rather
-    // than drop it, which would wipe the field on the next save.
-    const current = editForm.stateProvince;
-    if (current && !options.some((o) => o.value === current)) {
-      return [...options, { value: current, label: current }];
-    }
-    return options;
-  }, [editForm.country, editForm.stateProvince]);
+  const stateOptions = useMemo(
+    () => withCustomOption(getStateOptions(editForm.country), editForm.stateProvince),
+    [editForm.country, editForm.stateProvince],
+  );
 
   const handleEditChange = (field, value) => {
     setEditForm((prev) => ({ ...prev, [field]: value }));

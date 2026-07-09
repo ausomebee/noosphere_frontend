@@ -8,6 +8,7 @@ import { TextInput, SelectInput } from "../Input/Inputs";
 import api from "../../api/TenantApis";
 import { showToast } from "../../Helper/ShowToast";
 import useAuth from "../../hooks/useAuth";
+import { countryOptions, getStateOptions } from "../../Helper/geoOptions";
 import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
 
@@ -122,6 +123,10 @@ const AddProspectModal = ({
       return () => clearTimeout(t);
     }
   }, [isOpen, pipelineStageId, setValue]);
+
+  const countryField = register("location.country");
+  const country = watch("location.country");
+  const stateOptions = useMemo(() => getStateOptions(country), [country]);
 
   const staffOptions = useMemo(
     () => [
@@ -255,23 +260,34 @@ const AddProspectModal = ({
             error={errors.location?.city?.message}
             placeholder="City"
           />
-          <TextInput
+          <SelectInput
+            label="Country"
+            options={countryOptions}
+            {...countryField}
+            onChange={(e) => {
+              countryField.onChange(e);
+              // The old state belongs to the old country.
+              setValue("location.stateProvince", "");
+            }}
+            error={errors.location?.country?.message}
+          />
+          <SelectInput
             label="State / Province"
+            options={stateOptions}
             {...register("location.stateProvince")}
+            disabled={!country}
+            emptyHint={
+              country
+                ? "This country has no states/provinces."
+                : "Select a country first."
+            }
             error={errors.location?.stateProvince?.message}
-            placeholder="State or Province"
           />
           <TextInput
             label="ZIP / Postal Code"
             {...register("location.zip")}
             error={errors.location?.zip?.message}
             placeholder="ZIP or Postal Code"
-          />
-          <TextInput
-            label="Country"
-            {...register("location.country")}
-            error={errors.location?.country?.message}
-            placeholder="Country"
           />
         </div>
         <TextInput

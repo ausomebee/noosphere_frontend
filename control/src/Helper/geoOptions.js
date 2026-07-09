@@ -61,3 +61,13 @@ export const normalizeState = (value, country) => {
 
 /** Display name for a stored country value (accepts legacy codes/abbrevs). */
 export const getCountryLabel = normalizeCountry;
+
+/*
+ * Country and state were free text on some forms, so saved records hold values
+ * the library has never heard of ("Lagos State", "USA"). Keep such a value
+ * selectable instead of dropping it, which would wipe the field on next save.
+ */
+export const withCustomOption = (options, value) =>
+  value && !options.some((o) => o.value === value)
+    ? [...options, { value, label: value }]
+    : options;

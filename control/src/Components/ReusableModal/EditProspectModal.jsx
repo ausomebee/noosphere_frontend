@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -10,6 +10,13 @@ import { updateCandidate } from "../../ReduxStore/features/PipelineSlice";
 import { showToast } from "../../Helper/ShowToast";
 import { useNavigate } from "react-router-dom";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountry,
+  normalizeState,
+  withCustomOption,
+} from "../../Helper/geoOptions";
 import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import "./ReusableModal.css";
 
@@ -86,6 +93,21 @@ const EditProspectModal = ({
 
   const clearDraft = useReduxFormDraft("edit-prospect", { watch, reset, isOpen, exclude: [] });
 
+  const country = watch("country");
+  const state = watch("state");
+  // Both fields were free text before, so a saved prospect may hold "USA" or
+  // "Lagos State"; keep whatever is stored selectable.
+  const countryChoices = useMemo(
+    () => withCustomOption(countryOptions, country),
+    [country],
+  );
+  const stateChoices = useMemo(
+    () => withCustomOption(getStateOptions(country), state),
+    [country, state],
+  );
+
+  const countryField = register("country");
+
   const staffOptions = [
     { value: "", label: staffList.length ? "Select" : "No staff available" },
     ...staffList.map((staff) => ({ value: staff.staffId, label: staff.name })),
@@ -99,7 +121,16 @@ const EditProspectModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      reset(initialFormData);
+      const resolvedCountry =
+        normalizeCountry(initialFormData?.country) || initialFormData?.country || "";
+      reset({
+        ...initialFormData,
+        country: resolvedCountry,
+        state:
+          normalizeState(initialFormData?.state, resolvedCountry) ||
+          initialFormData?.state ||
+          "",
+      });
     }
   }, [isOpen, initialFormData, reset]);
 
@@ -226,23 +257,34 @@ const EditProspectModal = ({
             error={errors.city?.message}
             placeholder="City"
           />
-          <TextInput
+          <SelectInput
+            label="Country"
+            options={countryChoices}
+            {...countryField}
+            onChange={(e) => {
+              countryField.onChange(e);
+              // The old state belongs to the old country.
+              setValue("state", "");
+            }}
+            error={errors.country?.message}
+          />
+          <SelectInput
             label="State / Province"
+            options={stateChoices}
             {...register("state")}
+            disabled={!country}
+            emptyHint={
+              country
+                ? "This country has no states/provinces."
+                : "Select a country first."
+            }
             error={errors.state?.message}
-            placeholder="State or Province"
           />
           <TextInput
             label="ZIP / Postal Code"
             {...register("zipCode")}
             error={errors.zipCode?.message}
             placeholder="ZIP or Postal Code"
-          />
-          <TextInput
-            label="Country"
-            {...register("country")}
-            error={errors.country?.message}
-            placeholder="Country"
           />
         </div>
 

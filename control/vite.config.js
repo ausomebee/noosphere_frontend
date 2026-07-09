@@ -25,6 +25,10 @@ export default defineConfig({
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'yup'],
           'vendor-ui': ['react-select', 'react-toastify', 'react-icons'],
           'vendor-payments': ['@stripe/stripe-js', '@stripe/react-stripe-js', '@paypal/react-paypal-js'],
+          // Only the address forms need this, and they are lazily routed.
+          // Left unnamed it gets hoisted into the entry chunk, because three
+          // separate lazy chunks import it.
+          'vendor-geo': ['country-region-data'],
         },
       },
     },
