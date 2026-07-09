@@ -8,8 +8,8 @@ import Button from "../../Button/Button";
 import {
   countryOptions,
   getStateOptions,
-  normalizeCountryCode,
-  normalizeStateCode,
+  normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -58,11 +58,11 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
   });
 
   const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [],
-    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
-      country: normalizeCountryCode(draft.country),
-      stateProvince: normalizeStateCode(draft.stateProvince, normalizeCountryCode(draft.country)),
+      country: normalizeCountry(draft.country),
+      stateProvince: normalizeState(draft.stateProvince, normalizeCountry(draft.country)),
     }),
   });
 
@@ -78,11 +78,11 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
       practiceNPI: initialValues?.practiceNPI || "",
       street: initialValues?.streetAddress || "",
       city: initialValues?.city || "",
-      stateProvince: normalizeStateCode(
+      stateProvince: normalizeState(
         initialValues?.state,
-        normalizeCountryCode(initialValues?.country),
+        normalizeCountry(initialValues?.country),
       ),
-      country: normalizeCountryCode(initialValues?.country),
+      country: normalizeCountry(initialValues?.country),
       zip: initialValues?.zipCode || "",
       active: initialValues?.active !== undefined ? initialValues.active : true,
     });

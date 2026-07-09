@@ -40,8 +40,8 @@ import { addStaffSchema as schema } from "./addStaffSchema";
 import {
   countryOptions,
   getStateOptions,
-  normalizeCountryCode,
-  normalizeStateCode,
+  normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -321,11 +321,11 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     reset,
     isOpen,
     exclude: ["documents", "licenses"],
-    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
-      country: normalizeCountryCode(draft.country),
-      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+      country: normalizeCountry(draft.country),
+      state: normalizeState(draft.state, normalizeCountry(draft.country)),
     }),
   });
 
@@ -574,8 +574,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       clone.DOB = clone.DOB
         ? new Date(clone.DOB).toISOString().split("T")[0]
         : "";
-      clone.country = normalizeCountryCode(clone.country);
-      clone.state = normalizeStateCode(clone.state, clone.country);
+      clone.country = normalizeCountry(clone.country);
+      clone.state = normalizeState(clone.state, clone.country);
       clone.paymentSchedule = clone.payroll?.paymentSchedule || "";
       clone.ratePerHour = clone.payroll?.ratePerHour || "";
       clone.minimumHours = clone.payroll?.minimumHours || "";

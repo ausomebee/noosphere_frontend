@@ -18,7 +18,7 @@ import { orgTypeOptions, companySizeOptions } from "../../../Data/selectOptions"
 import {
   countryOptions,
   getCountryLabel,
-  normalizeCountryCode,
+  normalizeCountry,
 } from "../../../Helper/geoOptions";
 
 const getInitials = (name) => {
@@ -149,7 +149,7 @@ const TenantSingleAccOverview = () => {
       city: loc.city || "",
       stateProvince: loc.stateProvince || loc.state || "",
       zip: loc.zip || "",
-      country: normalizeCountryCode(loc.country),
+      country: normalizeCountry(loc.country),
     });
     setEditModal(true);
   };

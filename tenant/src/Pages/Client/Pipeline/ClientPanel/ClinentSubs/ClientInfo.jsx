@@ -1086,7 +1086,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false, onUpdated }) => 
     addIfValue("streetAddress", data.streetAddress);
     addIfValue("city", data.city);
     addIfValue("state", data.state);
-    addIfValue("country", data.country || "US");
+    addIfValue("country", data.country || "United States");
     addIfValue("zipCode", data.zip);
     addIfValue("assignToClinicians", data.assignToClinicians);
     addIfValue("clientPortalAccess", data.clientPortalAccess);
@@ -1097,7 +1097,7 @@ const ClientInformationTab = ({ clientData, isViewMode = false, onUpdated }) => 
     addIfValue("caregiverStreetAddress", data.caregiverStreetAddress);
     addIfValue("caregiverCity", data.caregiverCity);
     addIfValue("caregiverState", data.caregiverState);
-    addIfValue("caregiverCountry", data.caregiverCountry || "US");
+    addIfValue("caregiverCountry", data.caregiverCountry || "United States");
     addIfValue("caregiverZip", data.caregiverZip);
     addIfValue("documents", data.documents);
 

@@ -7,36 +7,35 @@ import { countryTuples } from "country-region-data";
  * latter carries every region on earth and would add ~40 kB gzipped to the
  * entry bundle, which this app loads eagerly.
  *
- * Values are ISO 3166 codes ("US", "GB", "CA"). Note the United Kingdom is
- * "GB", not "UK" — see `normalizeCountryCode` for the legacy values these
- * forms used to store.
+ * Option values are the display names ("United States"), because that is what
+ * the API stores. `normalizeCountry` still accepts the ISO codes and
+ * abbreviations older records hold, so nothing opens with a blank field.
  */
 
-export const countryOptions = countryTuples.map(([name, code]) => ({
-  value: code,
+export const countryOptions = countryTuples.map(([name]) => ({
+  value: name,
   label: name,
 }));
 
 const NAME_BY_CODE = new Map(countryTuples.map(([name, code]) => [code, name]));
-const CODE_BY_NAME = new Map(
-  countryTuples.map(([name, code]) => [name.toLowerCase(), code]),
-);
+const NAME_BY_LOWER = new Map(countryTuples.map(([name]) => [name.toLowerCase(), name]));
 
 /*
- * Records saved before this switch hold a full country name ("United States")
- * or a non-ISO abbreviation ("UK"). Map those onto ISO codes so editing an
- * existing record doesn't open with a blank country. "Other" had no ISO
- * equivalent and resolves to "" — the user must re-pick.
+ * Records saved earlier hold a full name ("United States"), an ISO code, or a
+ * non-ISO abbreviation ("UK" — the ISO code is "GB"). "Other" has no country
+ * behind it and resolves to "" so the user must re-pick.
  */
-const LEGACY_COUNTRY_ALIASES = new Map([["UK", "GB"], ["Other", ""]]);
+const LEGACY_COUNTRY_ALIASES = new Map([["UK", "United Kingdom"], ["Other", ""]]);
 
-export const normalizeCountryCode = (value) => {
+/** Resolve any stored country value to its display name. */
+export const normalizeCountry = (value) => {
   if (!value) return "";
   if (LEGACY_COUNTRY_ALIASES.has(value)) return LEGACY_COUNTRY_ALIASES.get(value);
-  if (NAME_BY_CODE.has(value)) return value;
-  return CODE_BY_NAME.get(String(value).toLowerCase()) || "";
+  if (NAME_BY_LOWER.has(String(value).toLowerCase())) {
+    return NAME_BY_LOWER.get(String(value).toLowerCase());
+  }
+  return NAME_BY_CODE.get(value) || "";
 };
 
-/** Display name for a stored country value (accepts legacy names/abbrevs). */
-export const getCountryLabel = (value) =>
-  NAME_BY_CODE.get(normalizeCountryCode(value)) || "";
+/** Display name for a stored country value (accepts legacy codes/abbrevs). */
+export const getCountryLabel = normalizeCountry;

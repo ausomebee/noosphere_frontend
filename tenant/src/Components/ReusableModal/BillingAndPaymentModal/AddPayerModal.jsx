@@ -10,8 +10,8 @@ import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 import {
   countryOptions,
   getStateOptions,
-  normalizeCountryCode,
-  normalizeStateCode,
+  normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
@@ -57,11 +57,11 @@ const AddPayerModal = ({
   errorsRef.current = errors;
 
   const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [],
-    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
-      country: normalizeCountryCode(draft.country),
-      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+      country: normalizeCountry(draft.country),
+      state: normalizeState(draft.state, normalizeCountry(draft.country)),
     }),
   });
 

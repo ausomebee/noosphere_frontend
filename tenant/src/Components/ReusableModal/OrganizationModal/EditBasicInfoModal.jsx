@@ -12,8 +12,8 @@ import { genderOptions } from "../../../Data/selectOptions";
 import {
   countryOptions,
   getStateOptions,
-  normalizeCountryCode,
-  normalizeStateCode,
+  normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -111,11 +111,11 @@ const BasicInfoModal = ({
   const stateOptions = useMemo(() => getStateOptions(country), [country]);
 
   const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [],
-    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
-      country: normalizeCountryCode(draft.country),
-      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+      country: normalizeCountry(draft.country),
+      state: normalizeState(draft.state, normalizeCountry(draft.country)),
     }),
   });
 
@@ -134,12 +134,12 @@ const BasicInfoModal = ({
         staffRole: initialData.staffRole || "",
         address: initialData.address || "",
         city: initialData.city || "",
-        state: normalizeStateCode(
+        state: normalizeState(
           initialData.state,
-          normalizeCountryCode(initialData.country),
+          normalizeCountry(initialData.country),
         ),
         zip: initialData.zip || "",
-        country: normalizeCountryCode(initialData.country),
+        country: normalizeCountry(initialData.country),
         active: initialData.active ?? true,
       });
       setSubmitError("");

@@ -25,8 +25,8 @@ import { genderOptions } from "../../../Data/selectOptions";
 import {
   countryOptions,
   getStateOptions,
-  normalizeCountryCode,
-  normalizeStateCode,
+  normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 import { formatDateForInput } from "../../../Helper/Formatters";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
@@ -155,12 +155,12 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       primaryPayer: initialData?.client?.primaryPayer || "",
       streetAddress: initialData?.client?.streetAddress || "",
       city: initialData?.client?.city || "",
-      state: normalizeStateCode(
+      state: normalizeState(
         initialData?.client?.state,
-        normalizeCountryCode(initialData?.client?.country || "US"),
+        normalizeCountry(initialData?.client?.country || "United States"),
       ),
       zipCode: initialData?.client?.zipCodeCode || "",
-      country: normalizeCountryCode(initialData?.client?.country || "US"),
+      country: normalizeCountry(initialData?.client?.country || "United States"),
       assignToClinician: initialData?.clinicians?.map((c) => c.id) || [],
       clientPortalAccess: initialData?.dbAccess ?? false,
       caregiverName: initialData?.client?.caregiverName || "",
@@ -169,13 +169,13 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       caregiverEmail: initialData?.client?.caregiverEmail || "",
       caregiverStreetAddress: initialData?.client?.caregiverStreetAddress || "",
       caregiverCity: initialData?.client?.caregiverCity || "",
-      caregiverState: normalizeStateCode(
+      caregiverState: normalizeState(
         initialData?.client?.caregiverState,
-        normalizeCountryCode(initialData?.client?.caregiverCountry || "US"),
+        normalizeCountry(initialData?.client?.caregiverCountry || "United States"),
       ),
       caregiverzipCode: initialData?.client?.caregiverzipCode || "",
-      caregiverCountry: normalizeCountryCode(
-        initialData?.client?.caregiverCountry || "US",
+      caregiverCountry: normalizeCountry(
+        initialData?.client?.caregiverCountry || "United States",
       ),
 
       documentName: hasDoc ? docs.name : "",
@@ -213,13 +213,13 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   );
 
   const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [],
-    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
-      country: normalizeCountryCode(draft.country),
-      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
-      caregiverCountry: normalizeCountryCode(draft.caregiverCountry),
-      caregiverState: normalizeStateCode(draft.caregiverState, normalizeCountryCode(draft.caregiverCountry)),
+      country: normalizeCountry(draft.country),
+      state: normalizeState(draft.state, normalizeCountry(draft.country)),
+      caregiverCountry: normalizeCountry(draft.caregiverCountry),
+      caregiverState: normalizeState(draft.caregiverState, normalizeCountry(draft.caregiverCountry)),
     }),
   });
 
