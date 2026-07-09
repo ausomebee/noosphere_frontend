@@ -444,7 +444,7 @@ const ValidateClientReportToken = async ({ token }) => {
 
 const SignClinicalReport = async ({ id, content }) => {
   try {
-    const response = await axios.post(
+    const response = await axios.patch(
       `${PLAIN_API_URL}/clinical-reports/submit-signature`,
       { id, content },
     );
