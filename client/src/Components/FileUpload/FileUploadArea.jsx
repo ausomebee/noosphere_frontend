@@ -166,7 +166,7 @@ const FileUploadArea = memo(
     return (
       <div className="w-full space-y-6">
         <div
-          className="upload-area"
+          className={`upload-area ${disabled ? "is-disabled" : ""}`}
           onClick={() => !disabled && fileInputRef.current?.click()}
           onDrop={(e) => {
             e.preventDefault();

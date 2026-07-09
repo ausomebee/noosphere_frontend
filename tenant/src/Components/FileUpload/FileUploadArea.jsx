@@ -209,7 +209,7 @@ const FileUploadArea = memo(
             if (!disabled) handleFiles(Array.from(e.dataTransfer.files));
           }}
           onDragOver={(e) => e.preventDefault()}
-          className="upload-area"
+          className={`upload-area ${disabled ? "is-disabled" : ""}`}
         >
           <div className="text-gray-400 mb-3 flex justify-center">
             <BsCloudUpload size={48} />

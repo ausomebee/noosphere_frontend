@@ -199,6 +199,15 @@
   text-align: center;
   position: relative;
   background: #f9fafb;
+  /* The whole dropzone is clickable. Some pickers overlay a transparent
+     `.upload-input` (which carries its own pointer), but others hide the input
+     and click it via a ref — those would otherwise show the default arrow. */
+  cursor: pointer;
+}
+
+/* A disabled dropzone isn't clickable, so it must not advertise that it is. */
+.upload-area.is-disabled {
+  cursor: not-allowed;
 }
 
 .upload-area svg {
