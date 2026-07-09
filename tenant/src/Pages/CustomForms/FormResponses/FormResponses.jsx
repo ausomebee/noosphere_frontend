@@ -272,7 +272,7 @@ const FormResponses = () => {
                           <label className="fr-field-label">
                             {field.formField.label}
                             {field.formField.isRequired && (
-                              <span className="fr-required">*</span>
+                              <span className="required-indicator">*</span>
                             )}
                           </label>
                           {renderFieldValue(field)}

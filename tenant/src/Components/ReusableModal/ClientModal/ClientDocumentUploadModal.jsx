@@ -95,7 +95,7 @@ const UploadDocumentModal = ({
         {/* Document Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Document Name <span className="text-red-500">*</span>
+            Document Name <span className="required-indicator">*</span>
           </label>
           <TextInput
             placeholder="e.g. National ID, Passport, Birth Certificate, Insurance Card"
@@ -111,7 +111,7 @@ const UploadDocumentModal = ({
         {/* File Upload Area */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            File <span className="text-red-500">*</span>
+            File <span className="required-indicator">*</span>
           </label>
           <FileUploadArea
             onUploadComplete={handleFileUpload}

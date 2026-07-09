@@ -2123,6 +2123,13 @@ input:checked + .slider:before {
   color: #374151;
 }
 
+/* The single convention for marking a compulsory field. Replaces the ad-hoc
+   `text-red-500`, `fr-req` and `fr-required` spans that used to do this. */
+.required-indicator {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
 .upload-area {
   border: 2px dashed #e5e7eb;
   border-radius: 0.5rem;

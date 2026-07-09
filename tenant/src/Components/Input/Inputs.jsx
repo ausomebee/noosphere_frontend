@@ -2,9 +2,27 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Select, { components } from "react-select";
 import { GoCalendar } from "react-icons/go";
+
+/* =====================  RequiredMark  =====================
+ * The single convention for marking a compulsory field. Purely visual +
+ * `aria-required` on the control; it deliberately does NOT set the native
+ * `required` attribute, because these inputs live inside forms validated by yup
+ * — a native attribute would make the browser block submission with its own
+ * bubble before yup could surface its message.
+ */
+const RequiredMark = ({ required }) =>
+  required ? (
+    <span className="required-indicator" aria-hidden="true">
+      *
+    </span>
+  ) : null;
+
+RequiredMark.propTypes = { required: PropTypes.bool };
+
 /* =====================  TextInput  ===================== */
 const TextInput = ({
   label,
+  required = false,
   value,
   onChange,
   placeholder,
@@ -19,7 +37,7 @@ const TextInput = ({
 
   return (
     <div className="input-group" >
-      {label && <label className="input-group-label">{label}</label>}
+      {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <input
         type="text"
         className={`form-control ${widthClass} ${className}`}
@@ -27,6 +45,7 @@ const TextInput = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        aria-required={required || undefined}
         {...props}
       />
       {error && (
@@ -39,6 +58,7 @@ const TextInput = ({
 };
 
 TextInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
@@ -125,6 +145,7 @@ PasswordMatch.propTypes = {
 
 const PasswordInput = ({
   label,
+  required = false,
   value,
   onChange,
   placeholder,
@@ -147,7 +168,7 @@ const PasswordInput = ({
 
   return (
     <div className="input-group">
-      {label && <label className="input-group-label">{label}</label>}
+      {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
@@ -157,6 +178,7 @@ const PasswordInput = ({
           onInput={(e) => setTypedValue(e.target.value)}
           placeholder={placeholder}
           style={{ paddingRight: "40px" }}
+          aria-required={required || undefined}
           {...props}
         />
         <svg
@@ -204,6 +226,7 @@ const PasswordInput = ({
 };
 
 PasswordInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
@@ -216,6 +239,7 @@ PasswordInput.propTypes = {
 
 const SelectInput = ({
   label,
+  required = false,
   value,
   onChange,
   options,
@@ -271,7 +295,7 @@ const SelectInput = ({
 
   return (
     <div className={`input-group ${widthClass}`} ref={selectRef}>
-      {label && <label className="input-group-label">{label}</label>}
+      {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <div className="select-input-wrapper">
         <Select
           className={`input-select ${className}`}
@@ -334,6 +358,7 @@ const SelectInput = ({
 };
 
 SelectInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   value: PropTypes.oneOfType([
     PropTypes.string,
@@ -356,6 +381,7 @@ SelectInput.propTypes = {
 /* =====================  rest of components unchanged  ===================== */
 const SearchableSelectInput = ({
   label,
+  required = false,
   value,
   onChange,
   options,
@@ -385,7 +411,7 @@ const SearchableSelectInput = ({
 
   return (
     <div className={`input-group ${widthClass}`} ref={selectRef}>
-      {label && <label className="input-group-label">{label}</label>}
+      {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <div className="select-input-wrapper">
         <Select
           className={`input-select ${className}`}
@@ -443,6 +469,7 @@ const SearchableSelectInput = ({
 };
 
 SearchableSelectInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
@@ -504,6 +531,7 @@ SwitchInput.propTypes = {
 
 const TextareaInput = ({
   label,
+  required = false,
   value,
   onChange,
   placeholder,
@@ -512,13 +540,14 @@ const TextareaInput = ({
   ...props
 }) => (
   <div className="input-group">
-    {label && <label className="input-group-label">{label}</label>}
+    {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
     <textarea
       className="input-textarea"
       value={value}
       onChange={onChange}
       placeholder={placeholder}
       rows={row}
+      aria-required={required || undefined}
       {...props}
     />
     {error && (
@@ -530,6 +559,7 @@ const TextareaInput = ({
 );
 
 TextareaInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,

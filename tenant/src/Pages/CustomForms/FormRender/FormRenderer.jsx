@@ -724,7 +724,7 @@ const FormRenderer = () => {
                       <span className="fr-q-num">{qNum}</span>
                       <label className="fr-label">
                         {label}
-                        {isRequired && <span className="fr-req">*</span>}
+                        {isRequired && <span className="required-indicator">*</span>}
                       </label>
                     </div>
                     {matchedFields.length === 0 ? (
@@ -762,7 +762,7 @@ const FormRenderer = () => {
                     <span className="fr-q-num">{qNum}</span>
                     <label className="fr-label">
                       {label}
-                      {isRequired && <span className="fr-req">*</span>}
+                      {isRequired && <span className="required-indicator">*</span>}
                     </label>
                   </div>
                   {!value ? (

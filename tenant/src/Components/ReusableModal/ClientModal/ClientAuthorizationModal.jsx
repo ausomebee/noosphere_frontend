@@ -264,14 +264,14 @@ const AddAuthorizationModal = ({
     >
       <div className="space-y-6">
         <TextInput
-          label="Authorization Title *"
+          label="Authorization Title"
           placeholder="Enter title"
           value={formData.title}
           onChange={(e) => handleChange("title", e.target.value)}
           required
         />
         <TextInput
-          label="Authorization Number *"
+          label="Authorization Number"
           placeholder="Enter number"
           value={formData.authNumber}
           onChange={(e) => handleChange("authNumber", e.target.value)}
@@ -280,7 +280,7 @@ const AddAuthorizationModal = ({
 
         <div className="grid grid-cols-2 gap-4">
           <TextInput
-            label="Start Date *"
+            label="Start Date"
             type="date"
             value={formData.startDate}
             onChange={(e) => handleChange("startDate", e.target.value)}
@@ -295,7 +295,7 @@ const AddAuthorizationModal = ({
         </div>
 
         <SelectInput
-          label="Payer *"
+          label="Payer"
           placeholder="Select payer"
           options={payers}
           emptyHint="No payers found. Create one in Billing & Payments → Settings → Payers & Insurance."
@@ -324,7 +324,8 @@ const AddAuthorizationModal = ({
                 <div className="flex gap-4 items-end">
                   <div className="flex-2">
                     <SelectInput
-                      label="Service Code *"
+                      label="Service Code"
+                      required
                       placeholder="Select service code"
                       options={serviceCodes}
                       emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
@@ -354,7 +355,8 @@ const AddAuthorizationModal = ({
 
                   <div className="flex-1">
                     <TextInput
-                      label="Units *"
+                      label="Units"
+                      required
                       type="number"
                       min="1"
                       placeholder="e.g. 10"
