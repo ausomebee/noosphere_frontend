@@ -227,7 +227,7 @@ const RescheduleAppointments = async ({
 
 
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/appointments/reschedule`,
+      `${PLAIN_API_URL}/appointments/reschedule/client`,
       payload,
     );
     return response.data;
