@@ -1,5 +1,6 @@
 import React from "react";
 import CustomTable from "../../../Components/Table/CustomTable";
+import { FaArrowLeft } from "react-icons/fa";
 
 const BillingReportTable = () => {
   const handleFilterChange = (key, value) => {

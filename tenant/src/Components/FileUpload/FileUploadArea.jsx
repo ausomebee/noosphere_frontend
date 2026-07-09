@@ -7,6 +7,7 @@ import {
 } from "react-icons/bs";
 import { FaImage, FaPhotoVideo, FaCheckCircle } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { IoMdRefresh } from "react-icons/io";
 import uploadApi from "../../api/ImageUpload";
 import { showToast } from "../../Helper/ShowToast";
 import { formatFileSize } from "../../Helper/Formatters";
