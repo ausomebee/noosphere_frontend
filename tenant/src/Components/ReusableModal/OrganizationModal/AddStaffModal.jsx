@@ -869,7 +869,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       }
 
       setSubmitting(true);
-      setSubmitError("");
 
       try {
         await onSubmit(transformedData);
