@@ -4,10 +4,12 @@ import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import {
   TextInput,
+  PasswordInput,
   SelectInput,
   CheckboxInput,
   SwitchInput,
 } from "../../../Components/Input/Inputs";
+import { firstUnmetPasswordRule } from "../../../Helper/passwordValidation";
 import Button from "../../../Components/Button/Button";
 import api from "../../../api/generalSettingsApi";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
@@ -210,6 +212,11 @@ const GeneralSettings = () => {
   const handleChangePassword = async () => {
     if (!currentPassword.trim() || !newPassword.trim()) {
       showToast("Please fill in all fields", "error");
+      return;
+    }
+    const unmetRule = firstUnmetPasswordRule(newPassword);
+    if (unmetRule) {
+      showToast(`Password must contain: ${unmetRule}`, "error");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -620,19 +627,19 @@ const GeneralSettings = () => {
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
           />
-          <TextInput
+          <PasswordInput
             label="New Password"
-            type="password"
+            showStrength
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password"
           />
-          <TextInput
+          <PasswordInput
             label="Confirm New Password"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm new password"
+            matchValue={newPassword}
           />
         </div>
       </ReusableModal>

@@ -1,5 +1,5 @@
 import * as yup from "yup";
-import { SPECIAL_CHAR_REGEX } from "../Components/Input/Inputs";
+import { PASSWORD_RULES, SPECIAL_CHAR_REGEX } from "../Components/Input/Inputs";
 
 /**
  * The single source of truth for password validation.
@@ -31,3 +31,12 @@ export const confirmPasswordSchema = (passwordField) =>
     [yup.ref(passwordField)],
     "Passwords must match",
   );
+
+/**
+ * The first rule a password fails, for handlers that validate outside yup.
+ * Returns null when the password satisfies every rule.
+ */
+export const firstUnmetPasswordRule = (password) => {
+  const unmet = PASSWORD_RULES.find((rule) => !rule.test(password));
+  return unmet ? unmet.label : null;
+};
