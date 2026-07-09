@@ -580,10 +580,12 @@ const ClinicalReportsTab = ({ clientData }) => {
         },
       ],
     },
-    approved: {
-      label: "Approved",
-      actions: [],
-    },
+    // Approved tab hidden for now. Tabs render from Object.keys(tabConfig), so
+    // commenting this entry out removes the tab from the bar.
+    // approved: {
+    //   label: "Approved",
+    //   actions: [],
+    // },
     awaitingSignature: {
       label: "Awaiting Signature",
       actions: [
