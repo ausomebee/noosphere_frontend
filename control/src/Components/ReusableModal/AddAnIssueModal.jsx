@@ -24,8 +24,73 @@ const schema = yup.object().shape({
     value: yup.string().required("Resolution Time is required"),
     duration: yup.string().required("Duration is required"),
   }),
+  timezone: yup.string().required("Timezone is required"),
   attachmentUpload: yup.string().optional(),
 });
+
+// The viewer's own zone, used as the default so the picker starts somewhere sane.
+const BROWSER_TIME_ZONE =
+  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+const TIME_ZONE_OPTIONS = (() => {
+  const zones =
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : ["UTC"];
+  const unique = Array.from(new Set([BROWSER_TIME_ZONE, "UTC", ...zones]));
+  return unique.map((zone) => ({
+    value: zone,
+    label: zone.replace(/_/g, " "),
+  }));
+})();
+
+// ─── Timezone-aware date helpers ─────────────────────────
+// Wall-clock parts of `date` as they read in `timeZone`.
+const getZonedParts = (date, timeZone) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const read = (type) => Number(parts.find((p) => p.type === type)?.value);
+  return {
+    year: read("year"),
+    month: read("month"),
+    day: read("day"),
+    // hourCycle h23 can report 24 for midnight in some engines.
+    hour: read("hour") % 24,
+    minute: read("minute"),
+    second: read("second"),
+  };
+};
+
+// Offset of `timeZone` (ms east of UTC) at the instant `date`.
+const getZoneOffsetMs = (date, timeZone) => {
+  const p = getZonedParts(date, timeZone);
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return asUtc - (date.getTime() - date.getMilliseconds());
+};
+
+// Interpret wall-clock parts as a time in `timeZone` and return the real instant.
+// Applied twice because the offset can differ across a DST boundary.
+const zonedPartsToDate = (parts, timeZone) => {
+  const guess = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+  let offset = getZoneOffsetMs(new Date(guess), timeZone);
+  offset = getZoneOffsetMs(new Date(guess - offset), timeZone);
+  return new Date(guess - offset);
+};
 
 const defaultFormValues = {
   tenant: "",
@@ -35,6 +100,7 @@ const defaultFormValues = {
   priority: "",
   assignToStaff: "",
   resolutionTime: { value: "", duration: "" },
+  timezone: BROWSER_TIME_ZONE,
   attachmentUpload: "",
 };
 
@@ -170,40 +236,60 @@ const AddIssueModal = ({
     setValue("attachmentUpload", newFiles.map((file) => file.name).join(", "));
   };
 
+  // The deadline is exactly `now + N <duration>` — it is NOT snapped to the end
+  // of the day. Calendar arithmetic (days / business days) is done in the
+  // timezone the user picked, since day boundaries, weekends and DST all depend
+  // on it. Only the resulting absolute instant (ISO/UTC) is sent to the backend;
+  // the timezone itself never leaves the client.
   const calculateResolutionDeadline = () => {
     const { value, duration } = watch("resolutionTime");
+    const timeZone = watch("timezone") || BROWSER_TIME_ZONE;
     if (!value || !duration) return { iso: null, display: null };
 
-    const now = new Date();
-    let resolutionDate = new Date(now);
     const numValue = parseInt(value, 10);
-
-    if (duration === "hours") {
-      resolutionDate.setHours(now.getHours() + numValue);
-    } else if (duration === "days") {
-      resolutionDate.setDate(now.getDate() + numValue);
-    } else if (duration === "business days") {
-      let daysAdded = 0;
-      while (daysAdded < numValue) {
-        resolutionDate.setDate(resolutionDate.getDate() + 1);
-        if (resolutionDate.getDay() !== 0 && resolutionDate.getDay() !== 6) {
-          daysAdded++;
-        }
-      }
+    if (!Number.isFinite(numValue) || numValue <= 0) {
+      return { iso: null, display: null };
     }
 
-    // Set time to 23:59:59 for consistency
-    resolutionDate.setHours(23, 59, 59, 0);
+    const now = new Date();
+    let resolutionDate;
+
+    if (duration === "hours") {
+      // Elapsed time — an absolute offset, so it's timezone-independent and
+      // stays N hours even across a DST change.
+      resolutionDate = new Date(now.getTime() + numValue * 60 * 60 * 1000);
+    } else if (duration === "days" || duration === "business days") {
+      const parts = getZonedParts(now, timeZone);
+      if (duration === "days") {
+        parts.day += numValue;
+      } else {
+        let daysAdded = 0;
+        while (daysAdded < numValue) {
+          parts.day += 1;
+          // Date.UTC normalises day overflow, so this is the real weekday.
+          const weekday = new Date(
+            Date.UTC(parts.year, parts.month - 1, parts.day),
+          ).getUTCDay();
+          if (weekday !== 0 && weekday !== 6) daysAdded++;
+        }
+      }
+      resolutionDate = zonedPartsToDate(parts, timeZone);
+    } else {
+      return { iso: null, display: null };
+    }
 
     const isoString = resolutionDate.toISOString();
-    const displayString = `Expected resolution: ${resolutionDate.toLocaleString("en-US", {
+    const formatted = resolutionDate.toLocaleString("en-US", {
+      timeZone,
       month: "long",
       day: "numeric",
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    })} (within ${value} ${duration})`;
+      timeZoneName: "short",
+    });
+    const displayString = `Expected resolution: ${formatted} · ${timeZone} (within ${value} ${duration})`;
 
     return { iso: isoString, display: displayString };
   };
@@ -336,6 +422,15 @@ const AddIssueModal = ({
               />
             </div>
           </div>
+
+          {/* Timezone the deadline is calculated in. Defaults to the viewer's
+              own zone. Client-side only — never sent to the backend. */}
+          <SelectInput
+            label="Timezone"
+            {...register("timezone")}
+            options={TIME_ZONE_OPTIONS}
+            error={errors.timezone?.message}
+          />
           {calculateResolutionDeadline().display && (
             <p className="resolution-date">{calculateResolutionDeadline().display}</p>
           )}
