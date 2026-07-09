@@ -730,10 +730,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
   const handleClose = useCallback(() => {
     dispatch(resetDraft());
-    // Explicit Cancel/close discards the persisted draft too. Without this the
-    // values typed before cancelling are rehydrated on the next open and get
-    // sent to the backend even though the user never re-entered them.
-    clearDraft();
     reset({
       licenses: [],
       otherPays: [{ type: "" }],
@@ -755,7 +751,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     setIncomeOptions([]);
     setDeductionOptions([]);
     onClose();
-  }, [dispatch, reset, onClose, clearDraft]);
+  }, [dispatch, reset, onClose]);
 
   // const handleFormSubmit = useCallback(
   //   async (data) => {
