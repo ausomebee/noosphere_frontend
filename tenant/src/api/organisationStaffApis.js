@@ -71,32 +71,29 @@ const CreateTenantStaff = async ({
       country,
       phoneNumber,
       active,
+      // Optional collections. omitEmpty drops empty arrays, so when the user
+      // added no documents/licenses the key never reaches the backend at all.
+      documents: (documents || []).map((doc) => ({
+        documentsUrl: {
+          filename: doc.documentsUrl?.filename || "",
+          url: doc.documentsUrl?.url || "",
+        },
+      })),
+      licenses: (licenses || []).map((license) => ({
+        licenseName: license.licenseName,
+        licenseNumber: license.licenseNumber,
+        issueState: license.issueState,
+        expiryDate: license.expiryDate
+          ? new Date(license.expiryDate).toISOString()
+          : undefined,
+      })),
       payroll: payrollPayload,
       tenantId,
     };
 
-    // Always send documents/licenses as arrays (empty when none) so the backend
-    // can safely iterate them. These are added AFTER omitEmpty, which would
-    // otherwise strip an empty array.
     const response = await authFetch.post(
       `${PLAIN_API_URL}/organization-staff/staff`,
-      {
-        ...omitEmpty(payload),
-        documents: (documents || []).map((doc) => ({
-          documentsUrl: {
-            filename: doc.documentsUrl?.filename || "",
-            url: doc.documentsUrl?.url || "",
-          },
-        })),
-        licenses: (licenses || []).map((license) => ({
-          licenseName: license.licenseName,
-          licenseNumber: license.licenseNumber,
-          issueState: license.issueState,
-          expiryDate: license.expiryDate
-            ? new Date(license.expiryDate).toISOString()
-            : undefined,
-        })),
-      },
+      omitEmpty(payload),
     );
     return response.data;
   } catch (error) {
