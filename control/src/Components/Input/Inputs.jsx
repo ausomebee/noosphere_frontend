@@ -403,26 +403,38 @@ const MultiSelectInput = ({
   const updateDropdownPosition = React.useCallback(() => {
     if (!usePortal || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
+    // The stylesheet positions the dropdown for the non-portal case with
+    // `position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px`.
+    // When portalled we switch to `position: fixed`, so those leftovers must be
+    // cleared explicitly — otherwise `top: 100%` (now 100% of the viewport)
+    // fights the `bottom`/`top` we set here and the dropdown collapses to zero
+    // height, which makes it look like it never opens.
+    const base = {
+      position: "fixed",
+      left: rect.left,
+      right: "auto",
+      top: "auto",
+      bottom: "auto",
+      marginTop: 0,
+      width: rect.width,
+      zIndex: 99999,
+    };
     if (dropDirection === "up") {
       setDropdownPos({
-        position: "fixed",
-        left: rect.left,
+        ...base,
         bottom: window.innerHeight - rect.top + 4,
-        width: rect.width,
-        zIndex: 99999,
       });
     } else {
       setDropdownPos({
-        position: "fixed",
-        left: rect.left,
+        ...base,
         top: rect.bottom + 4,
-        width: rect.width,
-        zIndex: 99999,
       });
     }
   }, [usePortal, dropDirection]);
 
-  React.useEffect(() => {
+  // Measure before paint so the dropdown never flashes at its unpositioned
+  // (stylesheet) location before the fixed coordinates are applied.
+  React.useLayoutEffect(() => {
     if (isOpen && usePortal) {
       updateDropdownPosition();
     }
@@ -499,7 +511,9 @@ const MultiSelectInput = ({
           <span className="multi-select-placeholder">{placeholder}</span>
         )}
       </div>
-      {usePortal ? createPortal(dropdownContent, document.body) : dropdownContent}
+      {usePortal
+        ? dropdownPos && createPortal(dropdownContent, document.body)
+        : dropdownContent}
       {error && <span className="input-error-message">{error}</span>}
     </div>
   );
