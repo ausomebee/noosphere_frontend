@@ -64,6 +64,7 @@ const InitialResetPassword = () => {
 
         <div className="py-24 space-y-5">
           <PasswordInput
+            required
             label="Enter password"
             placeholder="Enter Password"
             {...register("password")}
@@ -72,6 +73,7 @@ const InitialResetPassword = () => {
           />
 
           <PasswordInput
+            required
             label="Confirm Password"
             placeholder="Confirm Password"
             {...register("confirmPassword")}

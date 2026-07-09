@@ -67,6 +67,7 @@ const Login = () => {
 
         <div className="py-24 space-y-5">
           <TextInput
+            required
             label="Email"
             placeholder="Enter email"
             type="email"
@@ -75,6 +76,7 @@ const Login = () => {
           />
 
           <PasswordInput
+            required
             label="Password"
             placeholder="Password"
             {...register("password")}

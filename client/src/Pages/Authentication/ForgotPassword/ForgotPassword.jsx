@@ -69,6 +69,7 @@ const ForgotPassword = () => {
 
         <div className="py-24 space-y-5">
           <TextInput
+            required
             label="Email"
             placeholder="Enter your email"
             type="email"
