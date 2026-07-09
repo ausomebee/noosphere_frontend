@@ -4,8 +4,25 @@ import PropTypes from "prop-types";
 import "./Inputs.css";
 
 // Text Input Component
+/* =====================  RequiredMark  =====================
+ * The single convention for marking a compulsory field. Purely visual +
+ * `aria-required` on the control; it deliberately does NOT set the native
+ * `required` attribute, because these inputs live inside forms validated by yup
+ * — a native attribute would make the browser block submission with its own
+ * bubble before yup could surface its message.
+ */
+const RequiredMark = ({ required }) =>
+  required ? (
+    <span className="required-indicator" aria-hidden="true">
+      *
+    </span>
+  ) : null;
+
+RequiredMark.propTypes = { required: PropTypes.bool };
+
 const TextInput = ({
   label,
+  required = false,
   placeholder,
   type = "text",
   className = "",
@@ -13,11 +30,12 @@ const TextInput = ({
   ...props
 }) => (
   <div className="input-group">
-    {label && <label className="input-label">{label}</label>}
+    {label && <label className="input-label">{label}<RequiredMark required={required} /></label>}
     <input
       type={type}
       className={`input-text ${className} ${error ? "input-error" : ""}`}
       placeholder={placeholder}
+      aria-required={required || undefined}
       {...props}
     />
     {error && <span className="input-error-message">{error}</span>}
@@ -25,6 +43,7 @@ const TextInput = ({
 );
 
 TextInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   placeholder: PropTypes.string,
   type: PropTypes.string,
@@ -35,6 +54,7 @@ TextInput.propTypes = {
 // Select Input Component
 const SelectInput = ({
   label,
+  required = false,
   options,
   className = "",
   error = "",
@@ -50,8 +70,8 @@ const SelectInput = ({
       : "-- Select --";
   return (
   <div className="input-group">
-    {label && <label className="input-label">{label}</label>}
-    <select className={`input-select ${className} ${error ? "input-error" : ""}`} {...props}>
+    {label && <label className="input-label">{label}<RequiredMark required={required} /></label>}
+    <select className={`input-select ${className} ${error ? "input-error" : ""}`} aria-required={required || undefined} {...props}>
       {/* Placeholder (or empty-state hint); manual empty options are dropped. */}
       <option value="">{placeholderText}</option>
       {realOptions.map((option) => (
@@ -66,6 +86,7 @@ const SelectInput = ({
 };
 
 SelectInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   options: PropTypes.arrayOf(
     PropTypes.shape({
@@ -142,16 +163,18 @@ SwitchInput.propTypes = {
 // Textarea Input Component
 const TextareaInput = ({
   label,
+  required = false,
   placeholder,
   className = "",
   error = "",
   ...props
 }) => (
   <div className="input-group">
-    {label && <label className="input-label">{label}</label>}
+    {label && <label className="input-label">{label}<RequiredMark required={required} /></label>}
     <textarea
       className={`input-textarea ${className} ${error ? "input-error" : ""}`}
       placeholder={placeholder}
+      aria-required={required || undefined}
       {...props}
     />
     {error && <span className="input-error-message">{error}</span>}
@@ -159,6 +182,7 @@ const TextareaInput = ({
 );
 
 TextareaInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   placeholder: PropTypes.string,
   className: PropTypes.string,
@@ -322,6 +346,7 @@ PasswordMatch.propTypes = {
 
 const PasswordInput = ({
   label,
+  required = false,
   placeholder,
   className = "",
   error = "",
@@ -343,12 +368,13 @@ const PasswordInput = ({
 
   return (
     <div className="input-group">
-      {label && <label className="input-label">{label}</label>}
+      {label && <label className="input-label">{label}<RequiredMark required={required} /></label>}
       <div className="password-input-wrapper">
         <input
           type={showPassword ? "text" : "password"}
           className={`input-text ${className} ${error ? "input-error" : ""}`}
           placeholder={placeholder}
+          aria-required={required || undefined}
           {...props}
           onInput={(e) => setTypedValue(e.target.value)}
         />
@@ -406,6 +432,7 @@ const PasswordInput = ({
 };
 
 PasswordInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   placeholder: PropTypes.string,
   showStrength: PropTypes.bool,
@@ -417,6 +444,7 @@ PasswordInput.propTypes = {
 // Multi-Select Input Component
 const MultiSelectInput = ({
   label,
+  required = false,
   options = [],
   value = [],
   onChange,
@@ -523,7 +551,7 @@ const MultiSelectInput = ({
 
   return (
     <div className="input-group" ref={containerRef}>
-      {label && <label className="input-label">{label}</label>}
+      {label && <label className="input-label">{label}<RequiredMark required={required} /></label>}
       <div
         ref={triggerRef}
         className={`multi-select-trigger ${error ? "input-error" : ""}`}
@@ -565,6 +593,7 @@ const MultiSelectInput = ({
 };
 
 MultiSelectInput.propTypes = {
+  required: PropTypes.bool,
   label: PropTypes.string,
   options: PropTypes.arrayOf(
     PropTypes.shape({

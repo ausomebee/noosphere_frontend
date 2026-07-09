@@ -69,6 +69,12 @@ a {
 }
 a:hover { color: var(--color-primary); }
 
+/* The single convention for marking a compulsory field. */
+.required-indicator {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
 /* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
