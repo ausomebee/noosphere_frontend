@@ -36,6 +36,8 @@ const AddPayerModal = ({
     setValue,
     trigger,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(payerSchema),
     context: {mode},
     defaultValues: transformPayerToFormData(initialData, mode),

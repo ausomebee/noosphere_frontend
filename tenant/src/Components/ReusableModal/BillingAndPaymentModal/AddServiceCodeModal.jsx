@@ -61,6 +61,8 @@ const AddServiceCodeModal = ({
     reset,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(serviceCodeSchema),
     defaultValues: defaultFormValues,
   });

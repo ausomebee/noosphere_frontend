@@ -20,6 +20,8 @@ const AddProgramModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     reset,
     watch,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
   });
 

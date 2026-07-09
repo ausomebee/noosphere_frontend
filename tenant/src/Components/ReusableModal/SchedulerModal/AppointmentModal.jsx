@@ -327,6 +327,8 @@ const AppointmentModal = ({
     reset,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(validationSchema),
     defaultValues: {
       date: new Date().toISOString().split("T")[0],

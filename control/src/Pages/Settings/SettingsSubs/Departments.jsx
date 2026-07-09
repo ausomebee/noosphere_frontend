@@ -42,6 +42,8 @@ const Departments = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues,
   });

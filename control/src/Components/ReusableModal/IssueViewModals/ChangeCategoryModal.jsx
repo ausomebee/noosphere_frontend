@@ -19,6 +19,8 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId
     reset,
     setValue,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       categoryFrom: "",

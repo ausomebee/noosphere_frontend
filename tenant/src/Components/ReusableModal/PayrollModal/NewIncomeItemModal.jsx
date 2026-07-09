@@ -113,6 +113,8 @@ const PayrollItemModal = ({
     clearErrors,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(payrollItemSchema),
     defaultValues:
       mode === "add" ? defaultFormValues : transformInitialData(initialData, mode),

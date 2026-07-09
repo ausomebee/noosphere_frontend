@@ -26,6 +26,8 @@ const SuperAdmin2FASettings = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       enable2FA: true,

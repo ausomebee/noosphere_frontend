@@ -104,6 +104,8 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
     setValue,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(documentSchema),
     defaultValues: {
       documentName: "",

@@ -37,6 +37,8 @@ const AddTeamsModal = ({
     control,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: mode === "edit" && initialData
       ? { teamName: initialData.teamName || "", teamMember: initialData.teamMember || [], teamLead: initialData.teamLead || "" }

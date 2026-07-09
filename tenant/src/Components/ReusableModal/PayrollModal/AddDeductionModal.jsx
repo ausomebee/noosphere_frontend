@@ -17,6 +17,8 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(addDeductionSchema),
     defaultValues: {
       deductionItem: "",

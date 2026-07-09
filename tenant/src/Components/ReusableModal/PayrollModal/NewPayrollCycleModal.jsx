@@ -71,6 +71,8 @@ const PayrollCycleModal = ({
     reset,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(payrollCycleSchema),
     defaultValues:
       mode === "edit" ? transformInitialData(initialData) : defaultFormValues,

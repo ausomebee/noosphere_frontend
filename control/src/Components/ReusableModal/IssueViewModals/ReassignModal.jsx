@@ -19,6 +19,8 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     reset,
     setValue,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       currentAssignee: "",

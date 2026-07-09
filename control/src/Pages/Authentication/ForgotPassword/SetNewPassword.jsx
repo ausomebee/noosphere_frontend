@@ -37,6 +37,8 @@ const SetNewPassword = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(setPasswordSchema),
     defaultValues: {
       password: "",

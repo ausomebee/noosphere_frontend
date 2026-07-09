@@ -31,6 +31,8 @@ const Admin2FAQuestionLogin = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(answerSchema),
   });
 

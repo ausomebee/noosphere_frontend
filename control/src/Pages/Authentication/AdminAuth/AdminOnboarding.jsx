@@ -37,6 +37,8 @@ const AdminOnboarding = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: { email: decodeURIComponent(email || "") }, // Set email from params
   });

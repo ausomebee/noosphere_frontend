@@ -284,6 +284,8 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     trigger,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       licenses: [],

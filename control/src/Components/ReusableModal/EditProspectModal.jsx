@@ -78,6 +78,8 @@ const EditProspectModal = ({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: initialFormData,
     resolver: yupResolver(validationSchema),
   });

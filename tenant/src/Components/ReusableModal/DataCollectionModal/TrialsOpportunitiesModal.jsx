@@ -46,6 +46,8 @@ const TrialsOpportunities = ({
     reset,
     watch,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(validationSchema),
     defaultValues: {
       trials: Array.from({ length: trialCount }, (_, i) => ({

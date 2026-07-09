@@ -150,6 +150,8 @@ const QuestionAndAnswer2FA = () => {
     control,
     formState: { errors: securityErrors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(securityQuestionSchema),
   });
 

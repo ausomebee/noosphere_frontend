@@ -30,6 +30,8 @@ const SuperChangePassword = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
   });
   const [loading, setLoading] = useState(false);

@@ -20,6 +20,8 @@ const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, ref
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       header: "",

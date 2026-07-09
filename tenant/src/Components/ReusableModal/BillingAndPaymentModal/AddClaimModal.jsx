@@ -7,6 +7,8 @@ import { SelectInput } from "../../Input/Inputs";
 
 const AddClaimModal = ({ isOpen, onClose, onSave, isLoading }) => {
   const { control, handleSubmit, formState: { errors } } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: {
       timeSheet: "",
     },

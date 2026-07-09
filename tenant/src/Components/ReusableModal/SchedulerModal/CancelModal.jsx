@@ -18,6 +18,8 @@ const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(validationSchema),
     defaultValues: { reason: "" },
   });

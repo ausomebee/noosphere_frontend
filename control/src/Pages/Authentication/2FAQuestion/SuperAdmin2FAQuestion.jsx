@@ -151,6 +151,8 @@ const SuperAdmin2FAQuestion = () => {
     handleSubmit: handleSecuritySubmit,
     formState: { errors: securityErrors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(securityQuestionSchema),
   });
 

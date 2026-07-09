@@ -31,6 +31,8 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
     setValue,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(otpSchema),
     defaultValues: {
       code: "",

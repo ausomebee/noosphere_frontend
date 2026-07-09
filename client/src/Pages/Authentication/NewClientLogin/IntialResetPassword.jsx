@@ -30,6 +30,8 @@ const InitialResetPassword = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(resetPasswordSchema),
     defaultValues: {
       password: "",

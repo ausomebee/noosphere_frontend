@@ -92,6 +92,8 @@ const AddProspectModal = ({
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       ...defaultFormValues,

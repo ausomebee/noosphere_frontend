@@ -32,6 +32,8 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       name: "",

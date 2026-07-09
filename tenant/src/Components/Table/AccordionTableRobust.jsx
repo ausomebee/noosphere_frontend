@@ -40,6 +40,8 @@ const AccordionTableRobust = ({
   const actionButtonRefs = useRef({});
 
   const { control, watch, setValue, getValues, reset } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: { services: initialServiceData },
   });
 

@@ -30,6 +30,8 @@ const ChangePassword = () => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(changePasswordSchema),
     defaultValues: {
       password: "",

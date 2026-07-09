@@ -20,6 +20,8 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, ad
     reset,
     setValue,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       statusFrom: "",

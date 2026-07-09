@@ -45,6 +45,8 @@ const TaskAnalysisModal = ({
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(validationSchema),
     defaultValues: {
       steps: steps.map(step => ({

@@ -14,6 +14,8 @@ const insuranceTypeSchema = yup.object().shape({
 
 const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialData = {}, isLoading }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(insuranceTypeSchema),
     defaultValues: {
       name: initialData.name || "",

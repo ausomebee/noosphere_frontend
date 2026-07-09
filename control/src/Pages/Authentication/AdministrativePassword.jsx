@@ -42,7 +42,10 @@ const AdministrativePassword = () => {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm({ resolver: yupResolver(passwordSchema) });
+  } = useForm({
+ mode: "onTouched",
+ reValidateMode: "onBlur",
+ resolver: yupResolver(passwordSchema) });
 
   const onSubmit = async (data) => {
     setLoading(true);

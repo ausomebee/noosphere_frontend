@@ -27,6 +27,8 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
     reset,
     watch,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       resumptionType: "now",

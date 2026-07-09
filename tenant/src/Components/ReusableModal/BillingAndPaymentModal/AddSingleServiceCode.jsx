@@ -146,6 +146,8 @@ const AddSingleServiceCodeModal = ({
     setValue,
     getValues,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(serviceCodeSchema),
     defaultValues,
   });

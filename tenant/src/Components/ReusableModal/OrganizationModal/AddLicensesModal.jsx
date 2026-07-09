@@ -30,6 +30,8 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
     reset,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(licenseSchema),
     defaultValues: {
       licenseName: "",

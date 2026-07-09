@@ -17,6 +17,8 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, re
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(addIncomeSchema),
     defaultValues: {
       incomeItem: "",

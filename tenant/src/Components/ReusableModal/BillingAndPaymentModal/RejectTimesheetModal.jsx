@@ -12,6 +12,8 @@ const RejectTimeSheetModal = ({ isOpen, onClose, onSave }) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: {
       reason: "",
     },

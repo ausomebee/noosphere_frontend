@@ -122,6 +122,8 @@ const AddRoundingRule = ({
     setValue,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(roundingRuleSchema),
     defaultValues: transformRoundingRuleToFormData(initialData),
   });

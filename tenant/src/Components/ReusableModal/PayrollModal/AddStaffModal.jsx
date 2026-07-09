@@ -27,6 +27,8 @@ const AddStaffModal = ({
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(addStaffSchema),
     defaultValues: {
       selectedStaff: [],

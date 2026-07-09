@@ -18,6 +18,8 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       issueTitle: initialTitle || "",

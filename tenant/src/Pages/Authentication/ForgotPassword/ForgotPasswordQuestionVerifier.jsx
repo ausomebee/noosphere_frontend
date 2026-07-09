@@ -33,6 +33,8 @@ const ForgotPasswordQuestionVerifier = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(answerSchema),
   });
 

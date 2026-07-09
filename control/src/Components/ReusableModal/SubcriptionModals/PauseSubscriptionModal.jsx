@@ -32,6 +32,8 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
     reset,
     watch,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       pauseType: "indefinitely",

@@ -199,6 +199,8 @@ const AddTargetModal = ({
     watch,
     getValues,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: reduxDraft,
   });

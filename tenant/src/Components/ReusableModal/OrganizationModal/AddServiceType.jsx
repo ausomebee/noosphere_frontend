@@ -51,6 +51,8 @@ const AddServiceType = ({
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(serviceTypeSchema),
     defaultValues:
       mode === "edit"

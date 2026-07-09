@@ -180,8 +180,9 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
-    mode: "onChange",
     defaultValues,
   });
 

@@ -24,6 +24,8 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
     reset,
     setValue,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       priorityFrom: initialPriority || "",

@@ -80,6 +80,8 @@ const BasicInfoModal = ({
     control,
     formState: { errors, isDirty },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: {
       fullName: "",

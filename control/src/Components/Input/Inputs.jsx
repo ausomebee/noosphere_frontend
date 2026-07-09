@@ -352,9 +352,12 @@ PasswordStrength.propTypes = { value: PropTypes.string };
 // as the password field (see confirmPasswordSchema), so repeating the whole
 // checklist here would just be noise — all that's left to tell the user is
 // whether the two entries match.
-const PasswordMatch = ({ value, matchValue }) => {
+const PasswordMatch = ({ value, matchValue, showMismatch = false }) => {
   if (!value) return null;
   const ok = value === matchValue;
+  // A ✓ is welcome the moment the two agree, but don't nag with a ✕ while the
+  // user is still typing the confirmation — hold it until they leave the field.
+  if (!ok && !showMismatch) return null;
   const good = "var(--button-primary-color, var(--color-primary, #004aba))";
   const bad = "var(--color-danger, #ef4444)";
   return (
@@ -375,11 +378,13 @@ const PasswordMatch = ({ value, matchValue }) => {
 PasswordMatch.propTypes = {
   value: PropTypes.string,
   matchValue: PropTypes.string,
+  showMismatch: PropTypes.bool,
 };
 
 const PasswordInput = ({
   label,
   required = false,
+  onBlur,
   placeholder,
   className = "",
   error = "",
@@ -391,6 +396,7 @@ const PasswordInput = ({
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [blurred, setBlurred] = useState(false);
   const [typedValue, setTypedValue] = useState(props.value || "");
   // Controlled usage (a `value` prop) is the source of truth — `typedValue` only
   // tracks uncontrolled inputs (react-hook-form `register`) and wouldn't reset
@@ -410,6 +416,10 @@ const PasswordInput = ({
           aria-required={required || undefined}
           {...props}
           onInput={(e) => setTypedValue(e.target.value)}
+          onBlur={(e) => {
+            setBlurred(true);
+            onBlur?.(e);
+          }}
         />
         <button
           type="button"
@@ -457,7 +467,11 @@ const PasswordInput = ({
       </div>
       {showStrength && <PasswordStrength value={currentValue} />}
       {matchValue !== undefined && (
-        <PasswordMatch value={currentValue} matchValue={matchValue} />
+        <PasswordMatch
+          value={currentValue}
+          matchValue={matchValue}
+          showMismatch={blurred}
+        />
       )}
       {error && <span className="input-error-message">{error}</span>}
     </div>
@@ -467,6 +481,7 @@ const PasswordInput = ({
 PasswordInput.propTypes = {
   required: PropTypes.bool,
   label: PropTypes.string,
+  onBlur: PropTypes.func,
   placeholder: PropTypes.string,
   showStrength: PropTypes.bool,
   matchValue: PropTypes.string,

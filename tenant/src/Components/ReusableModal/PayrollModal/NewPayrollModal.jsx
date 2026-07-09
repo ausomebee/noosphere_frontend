@@ -24,6 +24,8 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
     watch,
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(newPayrollSchema),
     defaultValues: {
       compensationType: "",

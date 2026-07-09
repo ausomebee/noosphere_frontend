@@ -30,6 +30,8 @@ const FrequencyModal = ({
     watch,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(frequencySchema),
     defaultValues: {
       numberOfOccurrence: initialData.numberOfOccurrence || 1,

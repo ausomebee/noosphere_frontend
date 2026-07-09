@@ -35,6 +35,8 @@ const AccordionTable = ({
   const { tenantId, accessToken, refreshToken } = useAuth();
 
   const { control, watch, setValue, getValues, reset } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: {
       services: {},
     },

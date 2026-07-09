@@ -88,6 +88,8 @@ const Staff = () => {
     reset,
     formState: { errors },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues,
   });

@@ -17,6 +17,8 @@ const AddCommentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToke
     formState: { errors },
     reset,
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     resolver: yupResolver(schema),
     defaultValues: { comment: "" },
   });

@@ -130,6 +130,8 @@ const AvailabilityModal = ({
     setValue,
     formState: { isDirty },
   } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
     defaultValues: {
       availability: { ...defaultAvailability, ...memoizedInitialValues },
     },
