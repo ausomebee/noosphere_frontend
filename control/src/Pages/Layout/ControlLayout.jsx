@@ -281,9 +281,9 @@ const Layout = ({ children }) => {
         </div>
       )}
       <aside
-        className={`sidebar no-scrollbar::-webkit-scrollbar no-scrollbar ${
-          isSidebarOpen ? "open" : ""
-        } ${isSidebarCollapsed ? "collapsed" : ""}`}
+        className={`sidebar ${isSidebarOpen ? "open" : ""} ${
+          isSidebarCollapsed ? "collapsed" : ""
+        }`}
       >
         <div className="logo">
           <img
@@ -372,7 +372,7 @@ const Layout = ({ children }) => {
       </button>
 
       {showSecondarySidebar && (
-        <aside className="secondary-sidebar no-scrollbar::-webkit-scrollbar no-scrollbar">
+        <aside className="secondary-sidebar">
           <div className="secondary-sidebar-header">
             <h1>{tenantName || "..."}</h1>
           </div>

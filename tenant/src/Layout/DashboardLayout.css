@@ -94,12 +94,28 @@
   transition: transform var(--transition-speed) ease, width var(--transition-speed) ease;
   z-index: 100;
   overflow-y: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  /* Firefox: a thin, light scrollbar rather than none. */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
+/* Light scrollbar, matching the `.sidebar-scroll` treatment used elsewhere
+   (6px, transparent track, slate-300 thumb, slate-400 on hover). */
 .sidebar::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .sidebar.open {

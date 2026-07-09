@@ -54,12 +54,15 @@
     top: 0;
     left: 0;
     height: 100vh;
+    /* Firefox: a thin, light scrollbar rather than none. */
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
   }
-  
+
   .sidebar.collapsed {
     width: 70px;
   }
-  
+
   /* Secondary Sidebar Styles */
   .secondary-sidebar {
     width: 240px;
@@ -74,8 +77,33 @@
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
   }
-  
+
+  /* Visible but unobtrusive scrollbar: 6px, transparent track, and a light grey
+     thumb keyed to the #e0e0e0 borders, darkening slightly on hover. */
+  .sidebar::-webkit-scrollbar,
+  .secondary-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-track,
+  .secondary-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb,
+  .secondary-sidebar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb:hover,
+  .secondary-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
   .sidebar.collapsed ~ .secondary-sidebar {
     margin-left: 70px;
   }
