@@ -392,3 +392,8 @@
     margin-bottom: 15px;
   }
 }
+.code-input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

@@ -9,6 +9,8 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 
+const TOTP_PERIOD_MS = 30_000;
+
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const { userId, user } = useAuth();
   const superAdmin = user?.superAdmin;
@@ -20,7 +22,27 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const [qrCodeValue, setQrCodeValue] = useState("");
   const [otpPhase, setOtpPhase] = useState(1);
   const [firstOtp, setFirstOtp] = useState(""); // Store first OTP for comparison
+  // The authenticator app rolls its code every 30 seconds and the backend
+  // rejects a code that was already spent, so the second phase has to use the
+  // *next* code. Remember which 30s window the first code came from and hold
+  // the user until that window has rolled over.
+  const [firstOtpWindow, setFirstOtpWindow] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
   const inputRefs = useRef([]);
+
+  const currentWindow = Math.floor(now / TOTP_PERIOD_MS);
+  const awaitingNewCode =
+    otpPhase === 2 && firstOtpWindow !== null && currentWindow === firstOtpWindow;
+  const secondsUntilNewCode = awaitingNewCode
+    ? Math.max(1, Math.ceil(((firstOtpWindow + 1) * TOTP_PERIOD_MS - now) / 1000))
+    : 0;
+
+  // Only tick while phase 2 is actually waiting for the code to refresh.
+  useEffect(() => {
+    if (!awaitingNewCode) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [awaitingNewCode]);
 
   // Fetch QR code on component mount
   useEffect(() => {
@@ -112,6 +134,15 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
         return;
       }
 
+      if (awaitingNewCode) {
+        showToast(
+          `Wait ${secondsUntilNewCode}s for your app to show a new code, then enter it.`,
+          "error"
+        );
+        setLoading(false);
+        return;
+      }
+
       // Check if second OTP matches first OTP in otpPhase 2
       if (otpPhase === 2 && currentCode === firstOtp) {
         showToast(
@@ -132,6 +163,8 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
 
       if (otpPhase === 1) {
         setFirstOtp(currentCode); // Store first OTP
+        setFirstOtpWindow(Math.floor(Date.now() / TOTP_PERIOD_MS));
+        setNow(Date.now());
         setOtpPhase(2);
         setCode(["", "", "", "", "", ""]); // Reset first code
         setSecondCode(["", "", "", "", "", ""]); // Ensure second code is cleared
@@ -139,6 +172,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
         setStep(3);
         setOtpPhase(1); // Reset for future attempts
         setFirstOtp(""); // Clear stored OTP
+        setFirstOtpWindow(null);
         setCode(["", "", "", "", "", ""]);
         setSecondCode(["", "", "", "", "", ""]);
       }
@@ -165,6 +199,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
       setStep(step - 1);
       setOtpPhase(1);
       setFirstOtp(""); // Clear stored OTP
+      setFirstOtpWindow(null);
       setCode(["", "", "", "", "", ""]);
       setSecondCode(["", "", "", "", "", ""]);
     }
@@ -248,8 +283,15 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
             <p className="subtitle">
               {otpPhase === 1
                 ? "Enter the code currently showing in your app to confirm the setup."
-                : "Enter the new code from your app to complete the verification."}
+                : "This second code must be a different one. Your app refreshes its code every 30 seconds \u2014 wait for it to change, then enter the new code."}
             </p>
+            {otpPhase === 2 && (
+              <p className="otp-wait-notice" role="status" aria-live="polite">
+                {awaitingNewCode
+                  ? `Your app is still showing the code you just used. A new code appears in ${secondsUntilNewCode}s.`
+                  : "Your app is now showing a new code \u2014 enter it below."}
+              </p>
+            )}
             <div className="code-input-container">
               {(otpPhase === 1 ? code : secondCode).map((digit, index) => (
                 <React.Fragment key={index}>
@@ -263,6 +305,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
                     }
                     onKeyDown={(e) => handleKeyDown(index, e, otpPhase === 2)}
                     onPaste={(e) => handlePaste(e, otpPhase === 2)}
+                    disabled={awaitingNewCode}
                     className="code-input"
                     ref={(el) => (inputRefs.current[index] = el)}
                   />
@@ -283,6 +326,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
                 className="auth-button"
                 onClick={handleOTPSubmit}
                 loading={loading}
+                disabled={awaitingNewCode}
               />
             </div>
           </>

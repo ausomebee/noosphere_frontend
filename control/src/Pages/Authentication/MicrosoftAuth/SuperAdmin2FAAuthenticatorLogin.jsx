@@ -29,6 +29,7 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
   const {
     handleSubmit,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm({
     mode: "onTouched",
@@ -45,7 +46,11 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
     if (/^\d?$/.test(value)) {
       newCode[index] = value;
       setCode(newCode);
-      setValue("code", newCode.join(""), { shouldValidate: true });
+      // Only judge the code once every box is filled — validating mid-entry
+      // told the user "OTP must be a 6-digit number" after their first digit.
+      const complete = newCode.every((d) => d !== "");
+      setValue("code", newCode.join(""), { shouldValidate: complete });
+      if (!complete) clearErrors("code");
 
       // Auto-focus next input
       if (value && index < 5) {
@@ -67,7 +72,9 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
     const newCode = pastedData.split("");
     while (newCode.length < 6) newCode.push("");
     setCode(newCode);
-    setValue("code", newCode.join(""), { shouldValidate: true });
+    const complete = newCode.every((d) => d !== "");
+    setValue("code", newCode.join(""), { shouldValidate: complete });
+    if (!complete) clearErrors("code");
     inputRefs.current[pastedData.length - 1]?.focus();
   };
 

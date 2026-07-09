@@ -574,3 +574,15 @@
       font-size: 12px;
     }
   }
+/* Phase-2 of authenticator setup: the app must roll a fresh code before the
+   second one can be entered. */
+.otp-wait-notice {
+  margin: 8px 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 500;
+}
