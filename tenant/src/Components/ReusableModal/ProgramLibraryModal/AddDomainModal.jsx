@@ -69,6 +69,7 @@ const AddDomainModal = ({
       <div className="space-y-4">
         <div>
           <TextInput
+            required
             label="Domain Name"
             {...register("domainName")}
             placeholder="Enter domain name"

@@ -109,6 +109,7 @@ const ForgotPasswordResetPassword = () => {
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="form-group">
                   <PasswordInput
+                    required
                     label="Password"
                     id="newPassword"
                     placeholder="Enter new password"
@@ -126,6 +127,7 @@ const ForgotPasswordResetPassword = () => {
 
                 <div className="form-group">
                   <PasswordInput
+                    required
                     label="Confirm password"
                     id="confirmPassword"
                     placeholder="Confirm new password"

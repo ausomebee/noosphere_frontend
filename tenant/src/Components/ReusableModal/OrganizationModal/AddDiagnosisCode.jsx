@@ -101,6 +101,7 @@ const AddDiagnosisCode = ({
         )}
 
         <TextInput
+          required
           label="Diagnosis Code"
           placeholder="Enter code"
           error={errors.diagnosisCode?.message}
@@ -108,6 +109,7 @@ const AddDiagnosisCode = ({
         />
 
         <TextareaInput
+          required
           label="Description"
           placeholder="Enter description"
           error={errors.description?.message}

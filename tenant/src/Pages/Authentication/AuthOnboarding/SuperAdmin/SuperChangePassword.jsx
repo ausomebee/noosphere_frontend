@@ -71,6 +71,7 @@ const SuperChangePassword = () => {
               <p>Before proceeding, you need to set a new password</p>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <PasswordInput
+                  required
                   label="Password"
                   placeholder="Enter your password"
                   autoComplete="new-password"
@@ -79,6 +80,7 @@ const SuperChangePassword = () => {
                   error={errors.newPassword?.message}
                 />
                 <PasswordInput
+                  required
                   label="Confirm Password"
                   placeholder="Enter your password"
                   autoComplete="new-password"

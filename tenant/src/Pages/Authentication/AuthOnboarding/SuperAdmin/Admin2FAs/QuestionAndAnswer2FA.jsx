@@ -233,6 +233,7 @@ const QuestionAndAnswer2FA = () => {
                         control={control}
                         render={({ field }) => (
                           <SelectInput
+                            required
                             label="Please select a security question"
                             options={securityQuestions}
                             className={`rounded-12px ${
@@ -251,6 +252,7 @@ const QuestionAndAnswer2FA = () => {
                         </p>
                       )}
                       <TextInput
+                        required
                         label="Your answer"
                         placeholder="Type your answer"
                         className={securityErrors.answer ? "input-error" : ""}
@@ -262,6 +264,7 @@ const QuestionAndAnswer2FA = () => {
                         </p>
                       )}
                       <TextInput
+                        required
                         label="Confirm Your answer"
                         placeholder="Confirm your answer"
                         className={

@@ -208,6 +208,7 @@ const PayrollItemModal = ({
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Name"
           {...register("name")}
           error={errors.name?.message}
@@ -222,6 +223,7 @@ const PayrollItemModal = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Unit Type"
                   options={unitTypeOptions}
                   error={errors.unitType?.message}

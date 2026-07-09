@@ -86,6 +86,7 @@ const InitialSuperLogin = () => {
                 <p>Please enter the details sent to you via email.</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <TextInput
+                    required
                     label="Email"
                     placeholder="Enter your mail"
                     className="p-4"
@@ -93,6 +94,7 @@ const InitialSuperLogin = () => {
                     error={errors.email?.message}
                   />
                   <PasswordInput
+                    required
                     label="Password"
                     placeholder="Enter your Password"
                     {...register("password")}

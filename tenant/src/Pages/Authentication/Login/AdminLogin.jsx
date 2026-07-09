@@ -152,6 +152,7 @@ const AdminCLogin = () => {
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="mb-24">
                   <TextInput
+                    required
                     label="Email"
                     placeholder="Enter your mail"
                     className="p-4"
@@ -160,6 +161,7 @@ const AdminCLogin = () => {
                   />
                   </div>
                   <PasswordInput
+                    required
                     label="Password"
                     placeholder="Enter your Password"
                     {...register("password")}

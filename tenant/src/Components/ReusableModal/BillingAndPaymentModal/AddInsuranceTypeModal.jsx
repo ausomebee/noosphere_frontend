@@ -71,7 +71,8 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
     >
       <div className="flex flex-col gap-4">
         <TextInput
-          label="Name *"
+          required
+          label="Name"
           {...register("name")}
           error={errors.name?.message}
           placeholder="Enter Insurance Type Name"

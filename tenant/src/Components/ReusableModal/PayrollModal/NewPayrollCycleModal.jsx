@@ -126,6 +126,7 @@ const PayrollCycleModal = ({
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Name"
           {...register("name")}
           error={errors.name?.message}
@@ -140,6 +141,7 @@ const PayrollCycleModal = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Applies To"
                   options={COMPENSATION_TYPE_OPTIONS}
                   error={errors.appliesTo?.message}
@@ -153,6 +155,7 @@ const PayrollCycleModal = ({
         </div>
 
         <TextInput
+          required
           label="Interval (in Days)"
           type="number"
           {...register("intervals")}
@@ -164,6 +167,7 @@ const PayrollCycleModal = ({
         <div className="flex gap-4 items-center">
           <div className="flex-1">
             <TextInput
+              required
               label="Start Date"
               type="date"
               {...register("startDate")}

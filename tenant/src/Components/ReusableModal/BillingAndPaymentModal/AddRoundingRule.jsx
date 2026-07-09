@@ -262,6 +262,7 @@ const AddRoundingRule = ({
           {ruleType === "custom" && (
         <div>
           <TextInput
+            required
             label="Rule Name"
             {...register("ruleName")}
             error={errors.ruleName?.message}

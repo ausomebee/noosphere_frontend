@@ -293,6 +293,7 @@ const AddSessionTypeModal = ({
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Name"
           {...register("name")}
           error={errors.name?.message}
@@ -304,6 +305,7 @@ const AddSessionTypeModal = ({
           control={control}
           render={({ field }) => (
             <SelectInput
+              required
               label="Category"
               options={categoryOptions}
               error={errors.category?.message}

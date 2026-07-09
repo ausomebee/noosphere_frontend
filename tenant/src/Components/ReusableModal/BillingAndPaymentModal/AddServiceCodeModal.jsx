@@ -116,6 +116,7 @@ const AddServiceCodeModal = ({
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Service Code"
           {...register("code")}
           error={errors.code?.message}
@@ -123,6 +124,7 @@ const AddServiceCodeModal = ({
         />
 
         <TextareaInput
+          required
           label="Description"
           {...register("description")}
           error={errors.description?.message}

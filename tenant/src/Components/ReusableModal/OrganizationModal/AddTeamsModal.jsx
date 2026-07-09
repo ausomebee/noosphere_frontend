@@ -101,6 +101,7 @@ const AddTeamsModal = ({
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Team Name"
           {...register("teamName")}
           error={errors.teamName?.message}

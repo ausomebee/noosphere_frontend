@@ -76,6 +76,7 @@ const AddProgramModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     >
       <div className="space-y-4">
         <TextInput
+          required
           label="Program Name"
           {...register("programName")}
           placeholder="Enter program name"

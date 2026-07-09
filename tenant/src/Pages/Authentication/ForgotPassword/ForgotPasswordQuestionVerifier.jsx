@@ -95,6 +95,7 @@ const ForgotPasswordQuestionVerifier = () => {
                   <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="auth-container">
                       <TextInput
+                        required
                         label="Your Answer"
                         id="security-answer"
                         placeholder="Enter your answer"

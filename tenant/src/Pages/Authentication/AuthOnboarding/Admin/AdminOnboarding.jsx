@@ -126,6 +126,7 @@ const AdminOnboarding = () => {
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="form-group">
                   <TextInput
+                    required
                     label="Email"
                     id="email"
                     type="email"
@@ -141,6 +142,7 @@ const AdminOnboarding = () => {
 
                 <div className="form-group">
                   <PasswordInput
+                    required
                     label="Password"
                     id="password"
                     placeholder="Enter a password"
@@ -154,6 +156,7 @@ const AdminOnboarding = () => {
                 </div>
                 <div className="form-group">
                   <PasswordInput
+                    required
                     label="Confirm password"
                     id="confirmPassword"
                     placeholder="Enter a password"

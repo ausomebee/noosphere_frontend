@@ -208,12 +208,14 @@ const BasicInfoModal = ({
           </div>
         )}
         <TextInput
+          required
           label="Full Name"
           {...register("fullName")}
           error={errors.fullName?.message}
           placeholder="Enter Full Name"
         />
         <TextInput
+          required
           label="Email"
           type="email"
           {...register("email")}
@@ -221,6 +223,7 @@ const BasicInfoModal = ({
           placeholder="Enter Email"
         />
         <TextInput
+          required
           label="Phone Number"
           type="tel"
           {...register("phoneNumber")}
@@ -228,6 +231,7 @@ const BasicInfoModal = ({
           placeholder="Enter Phone Number"
         />
         <TextInput
+          required
           label="Date of Birth"
           type="date"
           {...register("DOB")}
@@ -238,6 +242,7 @@ const BasicInfoModal = ({
           control={control}
           render={({ field }) => (
             <SelectInput
+              required
               label="Gender"
               placeholder="Select gender"
               options={genderOptions}
@@ -259,6 +264,7 @@ const BasicInfoModal = ({
           control={control}
           render={({ field }) => (
             <SelectInput
+              required
               label="Staff Role"
               placeholder="Select staff role"
               options={staffRoleOptions}
@@ -273,6 +279,7 @@ const BasicInfoModal = ({
         <div className="flex gap-4">
           <div className="flex-1">
             <TextInput
+              required
               label="Address"
               {...register("address")}
               error={errors.address?.message}
@@ -280,6 +287,7 @@ const BasicInfoModal = ({
             />
           </div>
           <TextInput
+            required
             label="City"
             {...register("city")}
             error={errors.city?.message}
@@ -293,6 +301,7 @@ const BasicInfoModal = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="State"
                   options={stateOptions}
                   error={errors.state?.message}
@@ -304,6 +313,7 @@ const BasicInfoModal = ({
           </div>
           <div className="flex-1">
             <TextInput
+              required
               label="ZIP"
               {...register("zip")}
               error={errors.zip?.message}
@@ -316,6 +326,7 @@ const BasicInfoModal = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Country"
                   options={countryOptions}
                   error={errors.country?.message}

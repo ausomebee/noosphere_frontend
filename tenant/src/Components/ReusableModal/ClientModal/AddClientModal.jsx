@@ -227,25 +227,29 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         content: (
           <div className="space-y-6">
             <TextInput
-              label="First Name *"
+              required
+              label="First Name"
               {...register("firstName")}
               error={errors.firstName?.message}
             />
             <TextInput
-              label="Last Name *"
+              required
+              label="Last Name"
               {...register("lastName")}
               error={errors.lastName?.message}
             />
 
             <TextInput label="Preferred Name" {...register("preferredName")} />
             <TextInput
-              label="Email *"
+              required
+              label="Email"
               type="email"
               {...register("email")}
               error={errors.email?.message}
             />
             <TextInput
-              label="Phone *"
+              required
+              label="Phone"
               {...register("phone")}
               error={errors.phone?.message}
             />
@@ -256,7 +260,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               control={control}
               render={({ field }) => (
                 <SelectInput
-                  label="Gender *"
+                  required
+                  label="Gender"
                   options={genderOptions}
                   {...field}
                   error={errors.gender?.message}
@@ -310,6 +315,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Assign To Clinician(s)"
                   options={clinicians}
                   emptyHint="No clinicians found. Create one in Organisation → Staff & Teams."
