@@ -11,7 +11,7 @@ import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 
-const FormDrafts = ({ onCountChange }) => {
+const FormDrafts = ({ onCountChange, onEditDraft }) => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { dateFormat } = useFormatSettings();
@@ -68,7 +68,13 @@ const FormDrafts = ({ onCountChange }) => {
       type: "icon",
       label: "Edit",
       icon: <FiEdit2 className="w-5 h-5" />,
-      onClick: (row) => navigate(`/custom-forms/forms/create/${row.id}`),
+      onClick: (row) => {
+        navigate(`/custom-forms/forms/create/${row.id}`);
+        // The Drafts tab lives inside the builder page. If we're already on
+        // /create/<same id> the route param doesn't change, so the parent's
+        // formId effect never fires — switch to the builder tab explicitly.
+        onEditDraft?.();
+      },
     },
     {
       type: "icon",

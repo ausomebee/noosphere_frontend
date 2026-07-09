@@ -60,7 +60,10 @@ const FormBuilder = () => {
       <div className="appointment-content">
         {activeTab === "newForm" && <NewFormBuilder />}
         {activeTab === "drafts" && (
-          <FormDrafts onCountChange={setDraftCount} />
+          <FormDrafts
+            onCountChange={setDraftCount}
+            onEditDraft={() => setActiveTab("newForm")}
+          />
         )}
       </div>
     </>
