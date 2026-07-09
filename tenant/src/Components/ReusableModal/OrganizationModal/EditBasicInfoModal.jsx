@@ -110,7 +110,14 @@ const BasicInfoModal = ({
   const country = watch("country");
   const stateOptions = useMemo(() => getStateOptions(country), [country]);
 
-  const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [] });
+  const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [],
+    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    transform: (draft) => ({
+      ...draft,
+      country: normalizeCountryCode(draft.country),
+      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+    }),
+  });
 
   // Initialize form with initialData
   useEffect(() => {

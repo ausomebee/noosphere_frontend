@@ -212,7 +212,16 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     [caregiverCountry],
   );
 
-  const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [] });
+  const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [],
+    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    transform: (draft) => ({
+      ...draft,
+      country: normalizeCountryCode(draft.country),
+      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+      caregiverCountry: normalizeCountryCode(draft.caregiverCountry),
+      caregiverState: normalizeStateCode(draft.caregiverState, normalizeCountryCode(draft.caregiverCountry)),
+    }),
+  });
 
   const documentName = watch("documentName");
 

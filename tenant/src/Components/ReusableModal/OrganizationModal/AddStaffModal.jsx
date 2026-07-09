@@ -321,6 +321,12 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     reset,
     isOpen,
     exclude: ["documents", "licenses"],
+    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    transform: (draft) => ({
+      ...draft,
+      country: normalizeCountryCode(draft.country),
+      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+    }),
   });
 
   const values = useWatch({ control });

@@ -16,17 +16,23 @@ const DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
  * @param {boolean}  opts.isOpen  whether the modal is open (controls hydrate/save)
  * @param {string[]} opts.exclude field names never to persist (passwords, files)
  * @param {number}   opts.ttl     draft lifetime in ms (default 7 days)
+ * @param {function} opts.transform  migrate a saved draft before it is applied,
+ *                                   for values whose encoding has since changed
  * @returns {function} clearDraft — call after a successful submit
  */
 export default function useReduxFormDraft(
   key,
-  { watch, reset, isOpen = true, exclude = [], ttl = DEFAULT_TTL } = {}
+  { watch, reset, isOpen = true, exclude = [], ttl = DEFAULT_TTL, transform } = {}
 ) {
   const dispatch = useDispatch();
   const saved = useSelector((s) => s.formDrafts?.[key]);
   const savedRef = useRef(saved);
   savedRef.current = saved;
   const hydrated = useRef(false);
+  // Read through a ref so callers can pass an inline function without
+  // re-triggering the hydrate effect.
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
 
   // Hydrate from a saved draft when the modal opens.
   useEffect(() => {
@@ -43,7 +49,10 @@ export default function useReduxFormDraft(
       // object throws "Cannot assign to read only property". Defer so the draft
       // wins over any reset(defaultValues) the modal runs on open.
       const values = JSON.parse(JSON.stringify(draft.values));
-      const t = setTimeout(() => reset(values), 0);
+      const migrated = transformRef.current
+        ? transformRef.current(values)
+        : values;
+      const t = setTimeout(() => reset(migrated), 0);
       return () => clearTimeout(t);
     } else if (draft) {
       dispatch(clearFormDraft(key)); // expired — drop it

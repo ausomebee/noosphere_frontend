@@ -7,7 +7,12 @@ import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast } from "../../../Helper/ShowToast";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
-import { countryOptions, getStateOptions } from "../../../Helper/geoOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountryCode,
+  normalizeStateCode,
+} from "../../../Helper/geoOptions";
 import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -51,7 +56,14 @@ const AddPayerModal = ({
   const errorsRef = useRef(errors);
   errorsRef.current = errors;
 
-  const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [] });
+  const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [],
+    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    transform: (draft) => ({
+      ...draft,
+      country: normalizeCountryCode(draft.country),
+      state: normalizeStateCode(draft.state, normalizeCountryCode(draft.country)),
+    }),
+  });
 
   const { fields: serviceCodeFields, append: appendServiceCode, remove: removeServiceCode } =
     useFieldArray({

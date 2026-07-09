@@ -57,7 +57,14 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     },
   });
 
-  const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [] });
+  const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [],
+    // Drafts saved before the ISO-code switch hold "UK" / "United States".
+    transform: (draft) => ({
+      ...draft,
+      country: normalizeCountryCode(draft.country),
+      stateProvince: normalizeStateCode(draft.stateProvince, normalizeCountryCode(draft.country)),
+    }),
+  });
 
   const country = watch("country");
   const stateOptions = useMemo(() => getStateOptions(country), [country]);
