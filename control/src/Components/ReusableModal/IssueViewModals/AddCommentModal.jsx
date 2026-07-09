@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const AddCommentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
+const AddCommentModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     comment: yup.string().trim().required("Comment is required").max(500, "Comment must not exceed 500 characters"),
   });

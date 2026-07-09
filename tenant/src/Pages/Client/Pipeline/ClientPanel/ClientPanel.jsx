@@ -21,7 +21,7 @@ const ClientPanel = () => {
   const [view, setView] = usePersistedTab(`tenant:clientPanel:${clientId}`, "clientInformation");
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [authCount, setAuthCount] = useState(0);
 

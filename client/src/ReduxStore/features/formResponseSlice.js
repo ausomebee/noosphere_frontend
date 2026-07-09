@@ -24,7 +24,7 @@ const initialState = {
 const serializeFileInfo = (fileItems) => {
   if (!Array.isArray(fileItems)) return [];
   return fileItems.map((item) => {
-    const { file, previewUrl, ...rest } = item;
+    const { previewUrl, ...rest } = item;
 
     // Revoke preview URL if it was created (cleanup)
     if (previewUrl && !item.url) { // only revoke if not yet uploaded

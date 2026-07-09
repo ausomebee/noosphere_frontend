@@ -589,7 +589,7 @@ const SingleTimeSheet = () => {
   const { timesheetId } = useParams();
 
   // Auth state
-  const { tenantId, role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
+  const { role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
   const { hasPermission } = usePermissions();
   const { dateFormat, timeFormat } = useFormatSettings();
   const role = roleObj?.name ?? "Client";

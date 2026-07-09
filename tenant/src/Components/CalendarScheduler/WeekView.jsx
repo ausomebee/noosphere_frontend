@@ -15,7 +15,7 @@ import useFormatSettings from "../../hooks/useFormatSettings";
 import { getContrastTextColor } from "../../Helper/colorContrast";
 import "./Scheduler.css";
 
-const WeekView = ({ date, appointments, clients, onAppointmentClick, onSlotClick }) => {
+const WeekView = ({ date, appointments, onAppointmentClick, onSlotClick }) => {
   const { timeFormat } = useFormatSettings();
   const viewDate = useMemo(() => startOfDay(date ? new Date(date) : new Date()), [date]);
 

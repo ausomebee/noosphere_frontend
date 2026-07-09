@@ -1003,12 +1003,12 @@ const DocumentsForms = () => {
 };
 
 // Main Tab Component - ONLY THE PAYLOAD IS CLEANED (empty values excluded)
-const ClientInformationTab = ({ clientData, isViewMode = false, onUpdated }) => {
+const ClientInformationTab = ({ clientData, onUpdated }) => {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const { clientId, tenantClientId } = useParams();
+  const { tenantClientId } = useParams();
   const { accessToken, refreshToken } = useAuth();
 
   // WITH THIS REAL ONE:

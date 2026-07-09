@@ -34,7 +34,7 @@ const IssueManagement = () => {
   const [isAddIssueModalOpen, setIsAddIssueModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = usePersistedTab("control:issueManagement", "all");
-  const [filterValue, setFilterValue] = useState("");
+  const [, setFilterValue] = useState("");
   const [staffList, setStaffList] = useState([]);
   const [tenantList, setTenantList] = useState([]);
   const [issueData, setIssueData] = useState([]);

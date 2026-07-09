@@ -493,7 +493,7 @@ const slice = createSlice({
         s.publishSuccess = false;
         s.error = null;
       })
-      .addCase(publishReport.fulfilled, (s, a) => {
+      .addCase(publishReport.fulfilled, (s) => {
         s.isPublishing = false;
         s.publishSuccess = true;
         s.metadata.status = "SUBMITTED"; // or "Pending Approval" — adjust as needed

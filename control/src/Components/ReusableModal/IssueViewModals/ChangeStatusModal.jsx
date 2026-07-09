@@ -7,7 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { issueStatusOptions as statusOptions } from "../../../Data/selectOptions";
 
-const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus, issueId, adminId, accessToken, refreshToken }) => {
+const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
   const schema = yup.object().shape({
     statusFrom: yup.string().trim().required("Current status is required"),
     statusTo: yup.string().trim().required("New status is required").notOneOf([yup.ref("statusFrom")], "New status must be different from the current status"),

@@ -15,7 +15,7 @@ const TimeSheet = () => {
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   // Fetch sessions on mount
   useEffect(() => {

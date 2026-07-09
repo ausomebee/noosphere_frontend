@@ -193,7 +193,7 @@ const AvailabilityModal = ({
 
   // Enforce time range
   const enforceTimeRange = useCallback((time, isStart) => {
-    const [hours, minutes] = time.split(":").map(Number);
+    const [hours] = time.split(":").map(Number);
     if (isStart) {
       if (hours >= 12) return "11:59";
     } else {

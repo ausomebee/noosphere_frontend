@@ -185,7 +185,7 @@ const AddTargetModal = ({
   const [description, setDescription] = useState("");
   const [sd, setSd] = useState("");
   const [expectedResponse, setExpectedResponse] = useState("");
-  const [submitError, setSubmitError] = useState("");
+  const [, setSubmitError] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const dispatch = useDispatch();
   const reduxDraft = useSelector((s) => s.targetDraft);

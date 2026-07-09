@@ -52,7 +52,7 @@ const securityQuestionSchema = yup.object().shape({
 });
 
 const QuestionAndAnswer2FA = () => {
-  const { userId, superAdmin } = useAuth();
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

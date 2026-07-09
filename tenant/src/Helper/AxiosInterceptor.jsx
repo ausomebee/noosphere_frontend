@@ -20,7 +20,7 @@ function addSubscriber(callback) {
   refreshSubscribers.push(callback);
 }
 
-const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
+const AxiosInterceptor = (accessToken, refreshToken) => {
   const authFetch = axios.create({
     withCredentials: true,
     timeout: 30000,

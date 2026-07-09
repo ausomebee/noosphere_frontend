@@ -443,7 +443,7 @@ const Programs = () => {
               return formatTooltipValue(val, monthData);
             }
           },
-          custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+          custom: ({ dataPointIndex }) => {
             const monthData = monthlyData[dataPointIndex];
             return getCustomTooltip(monthData);
           }

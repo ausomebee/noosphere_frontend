@@ -82,7 +82,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 // Helper function to handle "other" selection logic for single selects
-const handleOtherSelectionSingle = (currentValue, newValue, field) => {
+const handleOtherSelectionSingle = (currentValue, newValue) => {
   // If "other" is being selected
   if (newValue === "other") {
     return "other";
@@ -97,7 +97,7 @@ const handleOtherSelectionSingle = (currentValue, newValue, field) => {
 };
 
 // Helper function to handle "other" selection logic for multi-selects
-const handleOtherSelectionMulti = (currentValues, newValue, field) => {
+const handleOtherSelectionMulti = (currentValues, newValue) => {
   // If "other" is being selected and it's not already in the array
   if (newValue.includes("other") && !currentValues.includes("other")) {
     // Clear all other values and keep only "other"

@@ -65,7 +65,7 @@ const findFirstErrorMessage = (errs) => {
 };
 
 // Transform initial data to form data
-const transformInitialData = (initialData, mode) => {
+const transformInitialData = (initialData) => {
   const rate = initialData.rate || {};
   const formData = {
     name: initialData.name || "",

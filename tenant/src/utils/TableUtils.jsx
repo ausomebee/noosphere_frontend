@@ -1,5 +1,5 @@
 // Export table data as CSV
-export const exportTableData = (data, columns = [], filename = 'export.csv', tableName = '') => {
+export const exportTableData = (data, columns = [], filename = 'export.csv') => {
   let headers = 'S/N';
   let rows = [];
 

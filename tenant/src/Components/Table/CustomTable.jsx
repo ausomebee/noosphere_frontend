@@ -255,7 +255,7 @@ if (
     return { totalItems, totalPages, startIndex, endIndex, currentData };
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const { totalItems, totalPages, currentData } = pagination;
+  const { totalPages, currentData } = pagination;
 
   const handlePageChange = useCallback(
     (page) => {

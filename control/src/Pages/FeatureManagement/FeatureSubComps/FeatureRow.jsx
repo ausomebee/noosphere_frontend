@@ -46,7 +46,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
 
   const rowDropdownRef = useRef(null);
 
-  const handleMoveFeature = ({ featureId, fromGroupTitle, toGroupTitle }) => {
+  const handleMoveFeature = ({ featureId, toGroupTitle }) => {
     const toGroup = featureGroups.find((g) => g.title === toGroupTitle);
     if (toGroup) {
       setIsMoving(true);
@@ -134,7 +134,7 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
       });
   };
 
-  const handleDeleteFeature = ({ groupTitle, featureId, administratorPassword }) => {
+  const handleDeleteFeature = ({ featureId, administratorPassword }) => {
     setIsDeleting(true);
     dispatch(
       asyncDeleteFeature({

@@ -8,7 +8,7 @@ import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
 import { showApiError } from "../../../Helper/ShowToast";
 
-const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, refreshToken }) => {
+const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     header: yup.string().trim().required("Header is required").max(100, "Header must not exceed 100 characters"),
     body: yup.string().trim().required("Body is required").max(1000, "Body must not exceed 1000 characters"),

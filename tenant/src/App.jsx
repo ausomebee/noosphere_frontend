@@ -26,7 +26,7 @@ const AllRoutes = React.lazy(() => import("./Components/Allroutes"));
 
 const AppContent = () => {
   const dispatch = useDispatch();
-  const { subdomain, loading } = useSelector((state) => state.subDomain);
+  const { loading } = useSelector((state) => state.subDomain);
 
   useEffect(() => {
     const detected = getSubdomain();

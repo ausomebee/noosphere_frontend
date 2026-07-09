@@ -6,10 +6,10 @@ import { errorChartCategories } from "../../Data/selectOptions";
 
 const ErrorTypesChart = () => {
   // State for chart series data (proportions of error types)
-  const [chartSeries, setChartSeries] = useState([30, 25, 20, 15, 10]); // Placeholder proportions
+  const [chartSeries] = useState([30, 25, 20, 15, 10]); // Placeholder proportions
 
   // State for chart options
-  const [chartOptions, setChartOptions] = useState({
+  const [chartOptions] = useState({
     chart: {
       type: "pie",
       toolbar: {

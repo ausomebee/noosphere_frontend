@@ -12,7 +12,7 @@ import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
 
 const PaymentManagement = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState({
     id: "",
     chargeOnDueDate: false,

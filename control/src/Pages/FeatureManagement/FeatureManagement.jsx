@@ -31,7 +31,7 @@ const getErrorMessage = (err) =>
 
 const FeatureManagement = () => {
   const dispatch = useDispatch();
-  const { featureGroups, loading, error } = useSelector(
+  const { featureGroups, loading } = useSelector(
     (state) => state.featureManagement
   );
 

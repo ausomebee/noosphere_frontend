@@ -31,7 +31,7 @@ const ManageColumn = () => {
   const { pipelineStageId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, draft, status, error } = useSelector(
+  const { pipeline, draft, status } = useSelector(
     (state) => state.pipeline,
   );
   const { tenantId, accessToken, refreshToken, userId } = useAuth();
@@ -46,7 +46,7 @@ const ManageColumn = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [tableDataState, setTableDataState] = useState([]);
-  const [stages, setStages] = useState([]);
+  const [, setStages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingCandidate, setIsCreatingCandidate] = useState(false);
 
@@ -250,7 +250,7 @@ const ManageColumn = () => {
     }
   };
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key) => {
   };
 
   const filters = [

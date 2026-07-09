@@ -24,7 +24,7 @@ const FormResponses = () => {
   const { openDocument } = useDocumentViewer();
 
   const [responses, setResponses] = useState([]);
-  const [originalFields, setOriginalFields] = useState([]);
+  const [, setOriginalFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedResponse, setExpandedResponse] = useState(null);
 

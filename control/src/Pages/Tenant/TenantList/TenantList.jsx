@@ -152,7 +152,7 @@ const TenantList = () => {
     },
   ];
 
-  const [filterValues, setFilterValues] = useState({});
+  const [, setFilterValues] = useState({});
   const handleFilterChange = (key, value) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
   };

@@ -65,7 +65,7 @@ const batchPromises = async (items, fn, concurrency = 3) => {
 const JiraBoard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } = useSelector(
+  const { pipeline, columns, columnOrder, status, error, pipelineItem } = useSelector(
     (state) => state.pipeline
   );
   const { accessToken, refreshToken } = useAuth();

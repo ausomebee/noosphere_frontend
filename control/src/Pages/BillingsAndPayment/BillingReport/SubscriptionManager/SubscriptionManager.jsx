@@ -33,7 +33,7 @@ const SubscriptionManager = () => {
   const { accessToken, refreshToken, userId: adminId } = useAuth();
 
   const [activeTab, setActiveTab] = usePersistedTab("control:subscriptionManager", "all");
-  const [filterValue, setFilterValue] = useState("");
+  const [, setFilterValue] = useState("");
   const [checkboxSelectedRows, setCheckboxSelectedRows] = useState([]);
   const [selectSelectedNames, setSelectSelectedNames] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set());

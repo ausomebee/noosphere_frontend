@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescription, issueId, adminId, accessToken, refreshToken }) => {
+const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescription }) => {
   const schema = yup.object().shape({
     issueTitle: yup.string().trim().required("Issue title is required").max(100, "Title must not exceed 100 characters"),
     description: yup.string().trim().required("Description is required").max(1000, "Description must not exceed 1000 characters"),

@@ -13,7 +13,7 @@ const AddClaimModal = ({ isOpen, onClose, onSave, isLoading }) => {
       timeSheet: "",
     },
   });
-  const [timesheets, setTimesheets] = useState([]);
+  const [timesheets] = useState([]);
 
   // Fetch timesheets for SelectInput options
 //   useEffect(() => {

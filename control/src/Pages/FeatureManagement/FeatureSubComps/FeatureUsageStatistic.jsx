@@ -6,7 +6,7 @@ import { IoIosArrowForward } from "react-icons/io";
 import CustomTable from "../../../Components/Table/CustomTable";
 import { FaArrowLeft } from "react-icons/fa";
 
-const FeatureUsageStatistic = ({ featureId, featureName, groupTitle, onBack }) => {
+const FeatureUsageStatistic = ({ featureName, groupTitle, onBack }) => {
   const breadcrumb = `${groupTitle}/${featureName}`;
 
   // State to toggle graph visibility for Total Active Sessions and Number of Server Requests

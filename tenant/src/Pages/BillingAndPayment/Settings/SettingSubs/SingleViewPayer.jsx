@@ -24,7 +24,7 @@ const SingleViewPayer = () => {
   const [roundingRuleTableData, setRoundingRuleTableData] = useState([]);
   const [serviceCodeTableData, setServiceCodeTableData] = useState([]);
   const [loadingPayer, setLoadingPayer] = useState(true);
-  const [insuranceTypeLoading, setInsuranceTypeLoading] = useState(true);
+  const [, setInsuranceTypeLoading] = useState(true);
   const [roundingRuleLoading, setRoundingRuleLoading] = useState(true);
   const [serviceCodeLoading, setServiceCodeLoading] = useState(true);
   const [showPayerModal, setShowPayerModal] = useState(false);

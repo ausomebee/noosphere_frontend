@@ -17,7 +17,7 @@ import {
 } from "../../../ReduxStore/features/roleDraftSlice";
 import "../../Organisation/Organisation.css";
 
-const RoleConfiguration = ({ mode, onCancel, onSubmit, submitting }) => {
+const RoleConfiguration = ({ onCancel, onSubmit, submitting }) => {
   const dispatch = useDispatch();
   const draft = useSelector((state) => state.roleDraft);
 

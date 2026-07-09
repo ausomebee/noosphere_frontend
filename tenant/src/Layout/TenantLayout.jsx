@@ -237,7 +237,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 };
 
 const DashboardLayout = ({ children }) => {
-  const { user, userId, accessToken, refreshToken } = useAuth();
+  const { user } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [messageCount, setMessageCount] = useState(0);

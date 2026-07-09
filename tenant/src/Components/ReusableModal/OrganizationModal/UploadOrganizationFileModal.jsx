@@ -92,7 +92,7 @@ const FileUploadArea = ({
   );
 };
 
-const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
+const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 

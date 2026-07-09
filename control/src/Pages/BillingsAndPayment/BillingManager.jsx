@@ -60,7 +60,7 @@ const BillingManager = () => {
       custom: "0",
     },
   });
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);

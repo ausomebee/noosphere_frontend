@@ -8,9 +8,9 @@ import { configureStore } from '@reduxjs/toolkit';
 const createMockStore = (preloadedState = {}) =>
   configureStore({
     reducer: {
-      auth: (state = { accessToken: 'test-token', refreshToken: 'test-refresh', userId: 'test-user-id', user: { email: 'test@test.com' } }, action) => state,
-      pipeline: (state = { pipeline: null, pipelineItem: null, draft: null, status: 'idle', stages: [], columns: {} }, action) => state,
-      featureManagement: (state = { featureGroups: [], features: [] }, action) => state,
+      auth: (state = { accessToken: 'test-token', refreshToken: 'test-refresh', userId: 'test-user-id', user: { email: 'test@test.com' } }) => state,
+      pipeline: (state = { pipeline: null, pipelineItem: null, draft: null, status: 'idle', stages: [], columns: {} }) => state,
+      featureManagement: (state = { featureGroups: [], features: [] }) => state,
     },
     preloadedState,
   });

@@ -357,7 +357,7 @@ const AppointmentModal = ({
 
   const clearDraft = useReduxFormDraft("add-appointment", { watch, reset, isOpen, exclude: [] });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, replace } = useFieldArray({
     control,
     name: "service",
   });

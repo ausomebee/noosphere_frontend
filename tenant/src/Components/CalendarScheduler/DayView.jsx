@@ -81,7 +81,7 @@ const processAppointments = (appointments) => {
   return groups;
 };
 
-const DayView = ({ date, appointments, clients, onAppointmentClick, onSlotClick }) => {
+const DayView = ({ date, appointments, onAppointmentClick, onSlotClick }) => {
   const { timeFormat } = useFormatSettings();
 
   // Normalize viewDate to start of day

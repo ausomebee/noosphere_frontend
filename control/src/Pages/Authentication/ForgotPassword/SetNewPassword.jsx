@@ -24,7 +24,7 @@ const setPasswordSchema = yup.object().shape({
 const SetNewPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
 
   // Extract reset token from URL query parameters
   const query = new URLSearchParams(location.search);

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [], issueId, adminId, accessToken, refreshToken }) => {
+const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [] }) => {
   const schema = yup.object().shape({
     currentAssignee: yup.string().trim().required("Current assignee is required"),
     newAssignee: yup.string().trim().required("New assignee is required").notOneOf([yup.ref("currentAssignee")], "New assignee must be different from the current assignee"),

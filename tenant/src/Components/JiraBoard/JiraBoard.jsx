@@ -60,7 +60,7 @@ const batchPromises = async (items, fn, concurrency = 3) => {
 const JiraBoard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, columns, columnOrder, status, draft, error, pipelineItem } =
+  const { pipeline, columns, columnOrder, status, error } =
     useSelector((state) => state.pipeline);
   const { userId, tenantId, accessToken, refreshToken } = useAuth();
   const [loadingCount, setLoadingCount] = useState(0);
@@ -75,7 +75,7 @@ const JiraBoard = () => {
   const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
   const [selectedColumnId, setSelectedColumnId] = useState(null);
-  const [addColumnIndex, setAddColumnIndex] = useState(null);
+  const [, setAddColumnIndex] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [stages, setStages] = useState([]);
   const [currentPipelineStageId, setCurrentPipelineStageId] = useState(null);

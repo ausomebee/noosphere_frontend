@@ -28,7 +28,7 @@ const schema = yup.object({
 });
 
 const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
   const {
     register,
     handleSubmit,

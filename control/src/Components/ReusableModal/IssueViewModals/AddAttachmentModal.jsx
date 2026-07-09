@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import ReusableModal from "../ReusableModal";
 import { BsCloudUpload } from "react-icons/bs";
 
-const AddAttachmentModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
+const AddAttachmentModal = ({ isOpen, onClose, onSave }) => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);

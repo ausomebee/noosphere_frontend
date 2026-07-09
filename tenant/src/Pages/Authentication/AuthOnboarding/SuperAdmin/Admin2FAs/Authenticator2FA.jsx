@@ -11,7 +11,7 @@ import { showToast } from "../../../../../Helper/ShowToast";
 const TOTP_PERIOD_MS = 30_000;
 
 const Authenticator2FA = () => {
-  const { userId, superAdmin } = useAuth();
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

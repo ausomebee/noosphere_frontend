@@ -42,7 +42,7 @@ const ManageColumn = () => {
   const { pipelineStageId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pipeline, draft, status, error } = useSelector((state) => state.pipeline);
+  const { pipeline, draft, status } = useSelector((state) => state.pipeline);
   const { accessToken, refreshToken } = useAuth();
 
   // State management
@@ -352,7 +352,7 @@ const ManageColumn = () => {
     }
   };
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key) => {
   };
 
   const filters = [

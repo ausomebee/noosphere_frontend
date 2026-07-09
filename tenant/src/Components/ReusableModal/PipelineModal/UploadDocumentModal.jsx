@@ -10,7 +10,7 @@ import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa"
 import { RiDeleteBin6Line } from "react-icons/ri";
 import "../ReusableModal.css";
 
-const UploadDocumentModal = ({ isOpen, onClose, onUpload, pipelineItemId, pipelineStageId, accessToken, refreshToken, loading = false }) => {
+const UploadDocumentModal = ({ isOpen, onClose, onUpload, loading = false }) => {
   const [files, setFiles] = useState([]);
 
   const getFileIcon = (fileName) => {
@@ -58,7 +58,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload, pipelineItemId, pipeli
 
   const handleAttachFiles = () => {
     const validFiles = files.filter((file) => !file.error).map((file) => {
-      const { name, size, progress, error, errorMessage, ...rest } = file;
+      const { name, ...rest } = file;
       return new File([file], name, { type: file.type || "application/octet-stream" }); // Reconstruct File object
     });
     onUpload(validFiles);

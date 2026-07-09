@@ -129,7 +129,7 @@ const Calendar = () => {
   const canFilter = canViewStaff || canViewClients;
 
   const [sessionTypes, setSessionTypes] = useState([]);
-  const [staff, setStaff] = useState([]);
+  const [, setStaff] = useState([]);
   const [allAppointments, setAllAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(true);

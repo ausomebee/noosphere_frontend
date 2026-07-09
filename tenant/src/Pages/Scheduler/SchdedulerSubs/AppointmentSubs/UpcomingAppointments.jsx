@@ -15,7 +15,7 @@ import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
 import expandForAppointments from "../../../../utils/expandForAppointments";
 
-const UpcomingAppointments = ({ counts, setCounts }) => {
+const UpcomingAppointments = ({ setCounts }) => {
   const navigate = useNavigate();
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();

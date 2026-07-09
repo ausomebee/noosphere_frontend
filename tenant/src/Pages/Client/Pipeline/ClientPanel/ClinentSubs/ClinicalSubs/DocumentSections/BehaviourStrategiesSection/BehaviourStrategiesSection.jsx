@@ -69,7 +69,7 @@ const DATA_COLLECTED_OPTIONS = [
 ];
 
 // Helper function to handle "other" selection logic
-const handleOtherSelection = (currentValues, newValue, field) => {
+const handleOtherSelection = (currentValues, newValue) => {
   // If "other" is being selected and it's not already in the array
   if (newValue.includes("other") && !currentValues.includes("other")) {
     // Clear all other values and keep only "other"

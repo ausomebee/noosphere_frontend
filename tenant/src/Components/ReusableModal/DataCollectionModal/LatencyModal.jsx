@@ -17,7 +17,7 @@ const LatencyModal = ({
   const [isRunning, setIsRunning] = useState(false);
   const [notes, setNotes] = useState("");
   const [behaviorTime, setBehaviorTime] = useState("00:00:00"); // For real-time display
-  const [renderTrigger, setRenderTrigger] = useState(0); // Force re-render
+  const [, setRenderTrigger] = useState(0); // Force re-render
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(0);

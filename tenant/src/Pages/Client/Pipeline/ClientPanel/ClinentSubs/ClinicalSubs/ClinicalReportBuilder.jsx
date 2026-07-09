@@ -503,7 +503,7 @@ const ClinicalReportBuilder = () => {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const { tenantId, accessToken, refreshToken } = useAuth();
+  const { accessToken, refreshToken } = useAuth();
   const { dateFormat, timeFormat } = useFormatSettings();
 
   const {

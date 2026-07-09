@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory, issueId, adminId, accessToken, refreshToken }) => {
+const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
   const schema = yup.object().shape({
     categoryFrom: yup.string().trim().required("Current category is required"),
     categoryTo: yup.string().trim().required("New category is required").notOneOf([yup.ref("categoryFrom")], "New category must be different from the current category"),

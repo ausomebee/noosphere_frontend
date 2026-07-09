@@ -7,7 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { basePriorityOptions, enterprisePriorityOptions } from "../../../Data/selectOptions";
 
-const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selectedTenant, issueId, adminId, accessToken, refreshToken }) => {
+const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selectedTenant }) => {
   const schema = yup.object().shape({
     priorityFrom: yup.string().trim().required("Current priority is required"),
     priorityTo: yup

@@ -14,7 +14,7 @@ import useAuth from "../../../../hooks/useAuth";
 
 const InvoiceManagement = () => {
   const [showModal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [saveMode, setSaveMode] = useState("batch"); // "batch" or "individual"
   const [invoiceSettings, setInvoiceSettings] = useState({
     id: "",
@@ -103,7 +103,7 @@ const InvoiceManagement = () => {
   }, [fetchInvoiceSettings]);
 
   const debouncedSave = useCallback(
-    debounce(async (settings, reminders, section, index = null) => {
+    debounce(async (settings, reminders, section) => {
       setIsLoading(true);
       try {
         const { id } = settings;

@@ -8,7 +8,7 @@ import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
 import { showApiError } from "../../../Helper/ShowToast";
 
-const MarkAsResolvedModal = ({ isOpen, onClose, onSave, issueId, adminId, accessToken, refreshToken }) => {
+const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     resolution: yup
       .string()

@@ -13,7 +13,7 @@ import api from "../../../../api/AppointmentApi";
 import { formatTime } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 
-const RescheduleRequests = ({ counts, setCounts }) => {
+const RescheduleRequests = ({ setCounts }) => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const { timeFormat } = useFormatSettings();

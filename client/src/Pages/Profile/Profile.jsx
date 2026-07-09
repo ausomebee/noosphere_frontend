@@ -45,10 +45,10 @@ const Profile = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [gender, setGender] = useState("");
+  const [, setPhoneNumber] = useState("");
+  const [, setGender] = useState("");
   const [DOB, setDOB] = useState("");
-  const [preferredName, setPreferredName] = useState("");
+  const [, setPreferredName] = useState("");
   const [profileImage, setProfileImage] = useState(DEFAULT_AVATAR);
   const [avatarUrl, setAvatarUrl] = useState(""); // Store the actual avatar URL
   const fileInputRef = useRef(null);

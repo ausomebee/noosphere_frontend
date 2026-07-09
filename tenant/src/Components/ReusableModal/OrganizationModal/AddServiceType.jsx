@@ -43,8 +43,8 @@ const AddServiceType = ({
   initialData = {},
 }) => {
   const [submitting, setSubmitting] = useState(false);
-  const [serviceCodes, setServiceCodes] = useState([]);
-  const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+  const [, setServiceCodes] = useState([]);
+  const [, setLoadingServiceCodes] = useState(false);
   const { tenantId, accessToken, refreshToken } = useAuth();
 
   const {
