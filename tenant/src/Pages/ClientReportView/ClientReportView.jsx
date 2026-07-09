@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import {
   FiType,
@@ -230,11 +230,31 @@ const SignaturePad = ({ onSignatureChange, onClear }) => {
   );
 };
 
+// Read the payload of a JWT without verifying it (verification happens on the
+// backend). Returns null for anything that isn't a well-formed JWT.
+const decodeJwtPayload = (value) => {
+  try {
+    const part = String(value || "").split(".")[1];
+    if (!part) return null;
+    const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const payload = JSON.parse(atob(padded));
+    return payload && typeof payload === "object" ? payload : null;
+  } catch {
+    return null;
+  }
+};
+
 // ─── Main Component ───────────────────────────────────────
 const ClientReportView = () => {
-  const { reportId } = useParams();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
+  // The link emailed to clients carries the signing JWT as the path segment:
+  //   /report/client-view/<jwt>
+  // The report id is the token's `id` claim, so it never appears in the URL.
+  const { token = "" } = useParams();
+  const reportId = useMemo(() => decodeJwtPayload(token)?.id || "", [token]);
   const { dateFormat, timeFormat } = useFormatSettings();
 
   // Report state

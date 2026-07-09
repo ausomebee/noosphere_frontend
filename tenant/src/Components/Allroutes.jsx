@@ -239,8 +239,9 @@ const AllRoutes = () => {
       {/* Public / Auth Routes - Available on root domain and subdomains */}
       <Route path="/" element={<Lazy><AdminLogin /></Lazy>} />
 
-      {/* Public Client Report View - No auth/layout required, link sent via email */}
-      <Route path="/report/client-view/:reportId" element={<Lazy><ClientReportView /></Lazy>} />
+      {/* Public Client Report View - No auth/layout required, link sent via email.
+          The path segment is the signing JWT; the report id is its `id` claim. */}
+      <Route path="/report/client-view/:token" element={<Lazy><ClientReportView /></Lazy>} />
       <Route path="/auth/2fa/login-authenticator" element={<Lazy><Admin2FAAuthenticatorLogin /></Lazy>} />
       <Route path="/auth/2fa/login-question" element={<Lazy><Admin2FAQuestionLogin /></Lazy>} />
       <Route path="/auth/initial-login" element={<Lazy><InitialSuperLogin /></Lazy>} />
