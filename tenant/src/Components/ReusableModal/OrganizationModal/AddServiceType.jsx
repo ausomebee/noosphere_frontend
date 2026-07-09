@@ -14,9 +14,11 @@ import { FaPlus } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
-import { getStateOptions } from "../../../Helper/geoOptions";
-
-const stateOptions = getStateOptions("US");
+import {
+  unitTypeOptions,
+  currencyOptions,
+  standardRuleOptions,
+} from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
@@ -167,7 +169,7 @@ const AddServiceType = ({
                 <SelectInput
                   required
                   label="Unit Type"
-                  options={stateOptions} // Replace with actual unit type options
+                  options={unitTypeOptions}
                   error={errors.unitType?.message}
                   placeholder="Select unit type"
                   {...field}
@@ -205,7 +207,7 @@ const AddServiceType = ({
                 <SelectInput
                   required
                   label="Rate Currency"
-                  options={stateOptions} // Replace with actual currency options
+                  options={currencyOptions}
                   error={errors.rateCurrency?.message}
                   placeholder="Select currency"
                   {...field}
@@ -223,7 +225,7 @@ const AddServiceType = ({
               <SelectInput
                 required
                 label="Rounding Rule"
-                options={stateOptions} // Replace with actual rounding rule options
+                options={standardRuleOptions}
                 error={errors.roundingRule?.message}
                 placeholder="Select rounding rule"
                 {...field}
