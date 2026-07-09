@@ -426,6 +426,26 @@
   border: 1px solid #f3f4f6;
 }
 
+/* Images (signatures, uploads, and anything embedded in report HTML) scale to
+   the container instead of overflowing. Client-facing page, so keep it fluid:
+   never wider than its column, aspect ratio preserved, with a sensible cap so a
+   large upload can't dominate the report on a wide screen. */
+.crv-content-image,
+.crv-html-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 6px;
+  background-color: #ffffff;
+}
+
+.crv-content-image {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+}
+
 .crv-html-content h1,
 .crv-html-content h2,
 .crv-html-content h3,

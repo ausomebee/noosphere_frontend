@@ -17,7 +17,7 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import api from "../../api/TemplateAndReportApi";
-import { formatDate, formatDateTime, formatLabel } from "../../Helper/Formatters";
+import { formatDate, formatLabel } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
 import "./ClientReportView.css";
 import ErrorFallback from "../../Components/ErrorFallback";
@@ -27,6 +27,13 @@ const SKIP_KEYS = ["id", "clinicalReportId"];
 
 const isHTMLString = (str) =>
   typeof str === "string" && /<[a-z][\s\S]*>/i.test(str);
+
+// Signatures and uploads arrive either as a base64 data URL or as a link to an
+// image file. Both should render as an image rather than as raw text.
+const isImageValue = (str) =>
+  typeof str === "string" &&
+  (/^data:image\//i.test(str) ||
+    /^https?:\/\/[^\s]+\.(png|jpe?g|gif|webp|svg)(\?[^\s]*)?$/i.test(str));
 
 const SIGNATURE_TYPES = [
   { value: "type", label: "Type", icon: <FiType size={20} /> },
@@ -64,6 +71,21 @@ const renderContentValue = (key, value) => {
       <div key={key} className="crv-field">
         <span className="crv-field-label">{label}</span>
         <span className="crv-field-value">{value.join(", ")}</span>
+      </div>
+    );
+  }
+
+  // Image (base64 data URL or image link)
+  if (isImageValue(value)) {
+    return (
+      <div key={key} className="crv-field crv-field-full">
+        <span className="crv-field-label">{label}</span>
+        <img
+          className="crv-content-image"
+          src={value}
+          alt={label}
+          loading="lazy"
+        />
       </div>
     );
   }
@@ -255,7 +277,7 @@ const ClientReportView = () => {
   // The report id is the token's `id` claim, so it never appears in the URL.
   const { token = "" } = useParams();
   const reportId = useMemo(() => decodeJwtPayload(token)?.id || "", [token]);
-  const { dateFormat, timeFormat } = useFormatSettings();
+  const { dateFormat } = useFormatSettings();
 
   // Report state
   const [report, setReport] = useState(null);
@@ -470,7 +492,6 @@ const ClientReportView = () => {
   const clientName = client
     ? `${client.firstName || ""} ${client.lastName || ""}`.trim()
     : "Client";
-  const changeRequests = report?.clinicalReportChangeRequests || [];
 
   return (
     <div className="crv-page">
@@ -547,29 +568,6 @@ const ClientReportView = () => {
             </div>
           </div>
         </div>
-
-        {/* Change Requests Alert */}
-        {changeRequests.length > 0 && (
-          <div className="crv-change-alert">
-            <div className="crv-change-alert-header">
-              <FiAlertCircle size={18} />
-              <span>
-                {changeRequests.length} Change Request
-                {changeRequests.length > 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="crv-change-list">
-              {changeRequests.map((cr, idx) => (
-                <div key={cr.id || idx} className="crv-change-item">
-                  <p className="crv-change-desc">{cr.description}</p>
-                  <span className="crv-change-date">
-                    {formatDateTime(cr.createdAt, dateFormat, timeFormat)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Sections */}
         <div className="crv-sections">
