@@ -56,7 +56,7 @@ const UploadDocumentModal = ({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
             {allowMultiple ? "Upload files (multiple allowed)" : "Upload file"}{" "}
-            <span className="text-red-500">*</span>
+            <span className="required-indicator">*</span>
           </label>
 
           <FileUploadArea

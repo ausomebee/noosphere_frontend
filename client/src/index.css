@@ -1922,6 +1922,13 @@ input:checked + .slider:before {
 }
 
 /* Upload Area */
+/* The single convention for marking a compulsory field. Replaces the ad-hoc
+   `text-red-500` spans that used to do this. */
+.required-indicator {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
 .upload-area {
   border: 2px dashed #e5e7eb;
   border-radius: 0.5rem;
