@@ -1,6 +1,10 @@
 import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useRef, useEffect } from "react";
-import { PasswordInput, TextInput } from "../../Components/Input/Inputs";
+import {
+  PasswordInput,
+  TextInput,
+  PASSWORD_RULES,
+} from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import "./Profile.css";
 import DashboardLayout from "../../layouts/ClientLayout";
@@ -240,8 +244,11 @@ const Profile = () => {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
+    // Enforce the same rules the strength checklist displays, otherwise the
+    // checklist can mark a rule unmet on a password this handler still accepts.
+    const unmetRule = PASSWORD_RULES.find((rule) => !rule.test(newPassword));
+    if (unmetRule) {
+      setPasswordError(`Password must have: ${unmetRule.label.toLowerCase()}`);
       return;
     }
 
@@ -430,6 +437,7 @@ const Profile = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
+                matchValue={newPassword}
               />
               {passwordError && (
                 <div className="password-error">{passwordError}</div>

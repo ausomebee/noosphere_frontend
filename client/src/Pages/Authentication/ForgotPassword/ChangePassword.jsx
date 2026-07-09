@@ -8,24 +8,15 @@ import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../Helper/passwordValidation";
 
-// Validation schema
+// Validation schema. Confirm is held to the same strength rules as the password.
 const changePasswordSchema = yup.object().shape({
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-    .matches(/[0-9]/, "Password must contain at least one number")
-    .matches(
-      /[!@#$%^&*(),.?":{}|<>]/,
-      "Password must contain at least one special character"
-    ),
-  confirmPassword: yup
-    .string()
-    .required("Confirm password is required")
-    .oneOf([yup.ref("password")], "Passwords must match"),
+  password: passwordSchema(),
+  confirmPassword: confirmPasswordSchema("password"),
 });
 
 const ChangePassword = () => {
@@ -36,6 +27,7 @@ const ChangePassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(changePasswordSchema),
@@ -88,6 +80,7 @@ const ChangePassword = () => {
             placeholder="Confirm Password"
             {...register("confirmPassword")}
             error={errors.confirmPassword?.message}
+            matchValue={watch("password") || ""}
           />
         </div>
 

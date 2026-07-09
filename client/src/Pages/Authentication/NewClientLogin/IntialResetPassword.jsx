@@ -6,26 +6,18 @@ import AuthLayout from "../AuthLayout";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../../Helper/passwordValidation";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import api from "../../../api/authApis";
-// Validation schema
+// Validation schema. Both fields share the same rule set, so the confirm field
+// is held to the identical strength policy — not just "must match".
 const resetPasswordSchema = yup.object().shape({
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-    .matches(/[0-9]/, "Password must contain at least one number")
-    .matches(
-      /[!@#$%^&*(),.?":{}|<>]/,
-      "Password must contain at least one special character"
-    ),
-  confirmPassword: yup
-    .string()
-    .required("Confirm password is required")
-    .oneOf([yup.ref("password")], "Passwords must match"),
+  password: passwordSchema(),
+  confirmPassword: confirmPasswordSchema("password"),
 });
 
 const InitialResetPassword = () => {
@@ -35,6 +27,7 @@ const InitialResetPassword = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(resetPasswordSchema),
@@ -83,6 +76,7 @@ const InitialResetPassword = () => {
             placeholder="Confirm Password"
             {...register("confirmPassword")}
             error={errors.confirmPassword?.message}
+            matchValue={watch("password") || ""}
           />
         </div>
 
