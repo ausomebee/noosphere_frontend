@@ -54,6 +54,24 @@ const AuthLayout = ({ children }) => {
           width: 100%;
           max-width: 380px;
         }
+
+        /* These headings had no rule and fell back to the browser's 2em.
+           Match control's auth scale: 24px heading, 14px subtitle. The
+           selector outranks the .text-4xl / .text-2xl utilities some pages
+           put on the same element. */
+        .auth-form-container h1,
+        .auth-form-container h2 {
+          font-size: 24px;
+          font-weight: 600;
+          line-height: 1.3;
+        }
+
+        /* The subtitle is the paragraph immediately after the heading, so
+           this cannot reach error messages or body copy further down. */
+        .auth-form-container h1 + p,
+        .auth-form-container h2 + p {
+          font-size: 14px;
+        }
         
         /* Tablet styles */
         @media (max-width: 1024px) {
@@ -110,6 +128,16 @@ const AuthLayout = ({ children }) => {
         
         /* Small mobile */
         @media (max-width: 480px) {
+          .auth-form-container h1,
+          .auth-form-container h2 {
+            font-size: 20px;
+          }
+
+          .auth-form-container h1 + p,
+          .auth-form-container h2 + p {
+            font-size: 12px;
+          }
+
           .auth-form-section {
             padding: 32px 20px;
           }
