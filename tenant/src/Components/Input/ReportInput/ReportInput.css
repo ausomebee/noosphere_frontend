@@ -405,9 +405,25 @@
   }
 }
 
-.report-builder-uploaded-list {
+/* File fields stack the picker and the uploaded files vertically. The field row
+   stays a flex row (label on the left), but the picker + uploaded list live in
+   their own column so an uploaded file sits BELOW the picker, never beside it. */
+.report-builder-field-file {
+  align-items: flex-start;
+}
+
+.report-builder-file-column {
   flex: 1;
-  margin-top: 12px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-builder-uploaded-list {
+  /* No longer a growing sibling of the picker — it's a block within the column. */
+  flex: initial;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;

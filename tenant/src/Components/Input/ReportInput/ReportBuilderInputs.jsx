@@ -286,9 +286,13 @@ const ReportFileUpload = ({
   const displayFiles = Array.isArray(value) ? value : [];
 
   return (
-    <div className="report-builder-field">
+    <div className="report-builder-field report-builder-field-file">
       <label className="report-builder-label">{label}</label>
 
+      {/* Picker and the uploaded files stack vertically. Without this column the
+          uploaded file sits beside the picker as a sibling flex item and shares
+          its width. */}
+      <div className="report-builder-file-column">
       {!readOnly && (
         <div
           className={`report-builder-file-upload-wrapper ${uploading ? "uploading" : ""}`}
@@ -357,6 +361,7 @@ const ReportFileUpload = ({
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
