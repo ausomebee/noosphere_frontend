@@ -5,7 +5,6 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import expandForAppointments from "../../../utils/expandForAppointments";
-import { showToast } from "../../../Helper/ShowToast";
 import "../Dashboard.css";
 
 const ITEMS_PER_PAGE = 5;

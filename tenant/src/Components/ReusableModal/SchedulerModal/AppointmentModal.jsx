@@ -23,7 +23,6 @@ import ColorPicker from "../../ColorPicker";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import DatePicker from "react-multi-date-picker";
-import { showToast } from "../../../Helper/ShowToast";
 import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
@@ -658,7 +657,7 @@ const AppointmentModal = ({
         });
         onClose();
       }
-    } catch (error) {
+    } catch {
       // Parent handles the error toast
     } finally {
       setIsLoading(false);

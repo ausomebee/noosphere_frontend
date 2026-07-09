@@ -5,7 +5,6 @@ import api from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
-import { showToast } from "../../../Helper/ShowToast";
 
 const Claims = () => {
   const navigate = useNavigate();

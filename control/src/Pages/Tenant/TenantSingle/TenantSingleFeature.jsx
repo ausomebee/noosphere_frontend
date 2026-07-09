@@ -5,7 +5,7 @@ import Button from "../../../Components/Button/Button";
 import { FiArrowUpRight } from "react-icons/fi";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 

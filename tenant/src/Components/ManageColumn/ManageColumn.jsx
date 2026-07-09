@@ -15,7 +15,6 @@ import {
   resetDraft,
   fetchSinglePipelineStages,
   fetchPipelineItems,
-  updatePipelineItemActivity,
   deletePipelineItem,
   createCandidate,
 } from "../../ReduxStore/features/PipelineSlice";

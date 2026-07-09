@@ -42,7 +42,11 @@ import Alert from "../../../../../../Components/Alert/Alert";
 import ReusableModal from "../../../../../../Components/ReusableModal/ReusableModal";
 import { TextareaInput } from "../../../../../../Components/Input/Inputs";
 import api from "../../../../../../api/TemplateAndReportApi";
-import { formatDate, formatDateTime, formatGender } from "../../../../../../Helper/Formatters";
+import {
+  formatDate,
+  formatDateTime,
+  formatGender,
+} from "../../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 
 import {
@@ -858,7 +862,7 @@ const ClinicalReportBuilder = () => {
       setIsChangeRequestModalOpen(false);
       setChangeRequestText("");
       navigate(-1);
-    } catch (err) {
+    } catch {
       showToast("Failed to submit change request", "error");
     } finally {
       setChangeRequestLoading(false);

@@ -143,7 +143,7 @@ const MyDocuments = () => {
       });
       setFoldersData((prev) => [...prev, res?.data?.data]);
       showToast(`Folder "${folderData.name}" created`, "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to create folder", "error");
     }
   };
@@ -162,7 +162,7 @@ const MyDocuments = () => {
         ),
       );
       showToast("Folder renamed successfully", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to rename folder", "error");
     }
   };
@@ -183,7 +183,7 @@ const MyDocuments = () => {
       }
       showToast("File(s) uploaded successfully", "success");
       refreshFiles(); // re-fetch recent/all files so the upload appears
-    } catch (err) {
+    } catch {
       showToast("Failed to upload file", "error");
     }
   };

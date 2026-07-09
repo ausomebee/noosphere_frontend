@@ -8,7 +8,6 @@ import expand from "../../../utils/expand";
 import { format } from "date-fns";
 import api from "../../../api/AppointmentApi";
 import usePermissions from "../../../hooks/usePermissions";
-import { showToast } from "../../../Helper/ShowToast";
 
 const toUICard = (apiAppt, masters = []) => {
   if (!apiAppt || typeof apiAppt !== "object") {

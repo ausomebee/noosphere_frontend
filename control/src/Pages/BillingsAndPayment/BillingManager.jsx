@@ -8,8 +8,12 @@ import api2 from "../../api/TenantApis";
 import useAuth from "../../hooks/useAuth";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
-import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
-import { showToast } from "../../Helper/ShowToast";
+import {
+  SiVisa,
+  SiMastercard,
+  SiAmericanexpress,
+  SiPaypal,
+} from "react-icons/si";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 import "./BillingAndPayments.css";

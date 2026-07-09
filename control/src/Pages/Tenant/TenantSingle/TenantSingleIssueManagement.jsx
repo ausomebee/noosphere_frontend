@@ -12,7 +12,7 @@ import ViewIssue from "../../IssueManagement/ViewIssue";
 import useAuth from "../../../hooks/useAuth";
 import issueApi from "../../../api/IssueApi";
 import tenantApi from "../../../api/TenantApis";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../hooks/usePersistedTab";

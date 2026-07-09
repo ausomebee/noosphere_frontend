@@ -1,4 +1,3 @@
-import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;

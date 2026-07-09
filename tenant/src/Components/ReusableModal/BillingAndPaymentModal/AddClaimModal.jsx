@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import ReusableModal from "../ReusableModal";
 import { SelectInput } from "../../Input/Inputs";

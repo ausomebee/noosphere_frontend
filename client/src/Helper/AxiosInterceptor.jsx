@@ -83,7 +83,7 @@ const AxiosInterceptor = (accessToken, refreshToken, dispatch, navigate) => {
               showToast("Session expired. Please log in again.", "error");
               return Promise.reject(error);
             }
-          } catch (refreshError) {
+          } catch {
             isRefreshing = false;
             getStore()?.dispatch(logout());
             showToast("Session expired. Please log in again.", "error");

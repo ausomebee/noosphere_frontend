@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 
 const ContactTenantModal = ({ isOpen, onClose, onSave, issueId, accessToken, refreshToken }) => {
   const schema = yup.object().shape({

@@ -8,7 +8,6 @@ import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
-import { showToast } from "../../../Helper/ShowToast";
 
 const Authorizations = ({
   hasData,

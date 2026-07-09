@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaChevronDown,
@@ -20,7 +20,12 @@ import Modal from "../../../Components/ReusableModal/ReusableModal";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import LoadingSpinner from "../../../Components/LoadingSpinner";
 import usePermissions from "../../../hooks/usePermissions";
-import { formatTime, formatDuration, calculateSessionHours, formatDate, formatDateTime } from "../../../Helper/Formatters";
+import {
+  formatDuration,
+  calculateSessionHours,
+  formatDate,
+  formatDateTime,
+} from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
 // Document Modal Component
@@ -1265,7 +1270,7 @@ const SingleTimeSheet = () => {
             const sigHeight = 25;
             doc.addImage(sigData, "PNG", margin, yPos, sigWidth, sigHeight);
             yPos += sigHeight + 5;
-          } catch (e) {
+          } catch {
             doc.setFont("helvetica", "normal");
             doc.text("(Signature could not be rendered)", margin, yPos);
             yPos += lineHeight;

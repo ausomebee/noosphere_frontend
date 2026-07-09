@@ -5,7 +5,6 @@ import { TextInput, SelectInput } from "../../../../Input/Inputs";
 import "./BuildDocumentModal.css";
 import api from "../../../../../api/AppointmentApi";
 import { useParams } from "react-router-dom";
-import { showToast } from "../../../../../Helper/ShowToast";
 
 const SECTIONS_CONFIG = [
   { id: "clientInformation", label: "Client Information" },

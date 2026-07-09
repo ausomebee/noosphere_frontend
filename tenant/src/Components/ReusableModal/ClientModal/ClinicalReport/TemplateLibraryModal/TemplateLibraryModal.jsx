@@ -4,7 +4,6 @@ import { FiX, FiFileText } from "react-icons/fi";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
 import "./TemplateLibraryModal.css";
 import api from "../../../../../api/TemplateAndReportApi";
-import { showToast } from "../../../../../Helper/ShowToast";
 
 const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();

@@ -6,7 +6,6 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
 import { formatTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
-import { showToast } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const RescheduledAppointmentsReport = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import IncomeItems from "./PayrollSettingsSubs/IncomeItems";
 import Deductions from "./PayrollSettingsSubs/Deductions";
 import PayrollCycles from "./PayrollSettingsSubs/PayrollCycles";

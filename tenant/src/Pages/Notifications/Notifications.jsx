@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
-import { showToast } from "../../Helper/ShowToast";
 import {
   IoClose,
   IoCalendarOutline,

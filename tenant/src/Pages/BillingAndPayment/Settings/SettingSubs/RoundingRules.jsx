@@ -55,7 +55,7 @@ const RoundingRules = () => {
         }));
 
       setTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ const RoundingRules = () => {
                 `Rounding rule ${row.isActive ? "deactivated" : "activated"} successfully`,
                 "success"
               );
-            } catch (error) {
+            } catch {
               showToast("Failed to update rounding rule status", "error");
             }
           },

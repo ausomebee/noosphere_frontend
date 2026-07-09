@@ -3,7 +3,6 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 import api from "../../../../api/organisationStaffApis";
-import { showToast } from "../../../../Helper/ShowToast";
 
 const Client = ({ staffId, accessToken, refreshToken, tenantId }) => {
   const { dateFormat } = useFormatSettings();

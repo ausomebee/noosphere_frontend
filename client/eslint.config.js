@@ -25,7 +25,16 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-unused-vars': [
+          'error',
+          {
+            varsIgnorePattern: '^[A-Z_]',
+            // A leading underscore is how this codebase says
+            // "deliberately unused", e.g. `type: _type`.
+            argsIgnorePattern: '^_',
+            caughtErrorsIgnorePattern: '^_',
+          },
+        ],
       // Core no-undef does not see JSX identifiers, so a component used
       // without an import compiles to a bare global: Vite emits it happily
       // and it only fails at runtime.

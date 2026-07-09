@@ -36,7 +36,7 @@ const parseTime = (time, date) => {
       return null;
     }
     return result;
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -110,7 +110,7 @@ const DayView = ({ date, appointments, clients, onAppointmentClick, onSlotClick 
           const normalizedViewDate = startOfDay(viewDate);
           const isMatch = isSameDay(normalizedApptDate, normalizedViewDate);
           return isMatch;
-        } catch (e) {
+        } catch {
           return false;
         }
       }),

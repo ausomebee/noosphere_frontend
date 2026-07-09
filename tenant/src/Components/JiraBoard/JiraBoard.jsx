@@ -24,7 +24,6 @@ import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfir
 import LoadingSpinner from "../LoadingSpinner";
 import "./DragAndDrop.css";
 import {
-  addColumn,
   updateColumnTaskIds,
   addTaskToColumn,
   removeTaskFromColumn,

@@ -3,7 +3,6 @@ import Chart from "react-apexcharts";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis";
-import { showToast } from "../../../Helper/ShowToast";
 
 const ProductivityInformation = ({ hasData }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();

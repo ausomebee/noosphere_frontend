@@ -4,7 +4,6 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
 import useAuth from "../../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "../../../../Helper/ShowToast";
 import { format } from "date-fns";
 import expandForAppointments from "../../../../utils/expandForAppointments";
 

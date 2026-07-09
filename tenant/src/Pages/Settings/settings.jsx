@@ -1,5 +1,5 @@
 import usePageTitle from "../../hooks/usePageTitle";
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import GeneralSettings from "./SettingsSubs/GeneralSettings";
 import NotificationSettings from "./SettingsSubs/NotificationSettings";
 import ClinicalReports from "./SettingsSubs/ClinicalReports";

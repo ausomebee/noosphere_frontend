@@ -353,7 +353,7 @@ const DocumentsForms = () => {
         });
         setDocumentsData(transformedData);
       }
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, documents: false }));
@@ -372,7 +372,7 @@ const DocumentsForms = () => {
       if (response.data) {
         setRequestsData(response.data.data || []); // Adjust based on your API response
       }
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, requests: false }));
@@ -401,7 +401,7 @@ const DocumentsForms = () => {
       }));
 
       setFormsData(forms);
-    } catch (err) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, forms: false }));
@@ -425,7 +425,7 @@ const DocumentsForms = () => {
       }));
 
       setLibraryForms(library);
-    } catch (err) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading((prev) => ({ ...prev, library: false }));
@@ -568,7 +568,7 @@ const DocumentsForms = () => {
         })
       );
       navigate(`/custom-forms/forms/renderer/${row.formId}`);
-    } catch (err) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     }
   };

@@ -101,7 +101,7 @@ const StaffsAndTeams = () => {
         hasActions: true,
       }));
       setStaffData(rows);
-    } catch (err) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ const StaffsAndTeams = () => {
     try {
       const res = await api.GetAllTeamsByTenantId({ tenantId, accessToken, refreshToken });
       setRawTeams(res.data?.data || []);
-    } catch (err) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setTeamsLoading(false);

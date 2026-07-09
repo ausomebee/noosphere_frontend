@@ -42,7 +42,7 @@ const TargetLibrary = ({ programName, domainName, onBack, programId }) => {
           hasActions: true,
         })),
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);

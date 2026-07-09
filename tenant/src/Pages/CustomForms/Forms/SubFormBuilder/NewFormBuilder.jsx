@@ -434,7 +434,7 @@ const ImportTemplateModal = ({
           refreshToken,
         });
         setTemplates(res.data.data || []);
-      } catch (err) {
+      } catch {
         // No toast: empty/unavailable content is not an error.
       } finally {
         setLoading(false);
@@ -934,7 +934,7 @@ const NewFormBuilder = () => {
       );
 
       showToast(`Template "${data.name}" imported!`, "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to import template", "error");
     } finally {
       setLoading(false);

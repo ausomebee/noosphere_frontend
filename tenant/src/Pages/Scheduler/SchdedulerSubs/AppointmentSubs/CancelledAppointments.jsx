@@ -3,9 +3,12 @@ import React, { useMemo, useState, useEffect } from "react";
 import useAuth from "../../../../hooks/useAuth";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/AppointmentApi";
-import { formatDate, formatTime, formatDateTime } from "../../../../Helper/Formatters";
+import {
+  formatDate,
+  formatTime,
+  formatDateTime,
+} from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
-import { showToast } from "../../../../Helper/ShowToast";
 
 const CancelledAppointments = () => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();

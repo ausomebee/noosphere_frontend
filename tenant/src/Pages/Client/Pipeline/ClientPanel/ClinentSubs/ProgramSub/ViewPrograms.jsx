@@ -1,5 +1,5 @@
 // src/pages/Client/ClientSubs/ViewPrograms.jsx (Targets Tab)
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FaChevronDown, FaArrowLeft } from "react-icons/fa";
 import Button from "../../../../../../Components/Button/Button";
@@ -57,7 +57,7 @@ const ViewPrograms = () => {
           rawData: t,
         }))
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ const ViewPrograms = () => {
           description: t.description,
         }))
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLibraryLoading(false);

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { CheckboxInput, SwitchInput } from "../Input/Inputs";
 import { Link } from "react-router-dom";
 

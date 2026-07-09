@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import {
@@ -439,7 +445,7 @@ const ClientReportView = () => {
       });
       setSigned(true);
       showToast("Document signed successfully!");
-    } catch (err) {
+    } catch {
       showToast("Failed to sign document. Please try again.", "error");
     } finally {
       setSigning(false);
@@ -466,7 +472,7 @@ const ClientReportView = () => {
       setShowChangeModal(false);
       setChangeRequestText("");
       fetchReport(); // Refresh to show updated change requests
-    } catch (err) {
+    } catch {
       showToast("Failed to submit change request", "error");
     } finally {
       setChangeRequestLoading(false);

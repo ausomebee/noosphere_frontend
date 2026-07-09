@@ -7,7 +7,7 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import useAuth from "../../../hooks/useAuth";
 import billingApi from "../../../api/billingAndPaymentsApi";
 import reportsApi from "../../../api/reportsApi";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const calcDuration = (start, end) => {

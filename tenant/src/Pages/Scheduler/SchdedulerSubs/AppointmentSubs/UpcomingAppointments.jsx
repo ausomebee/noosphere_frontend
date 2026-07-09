@@ -94,7 +94,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
         const transformed = response.data.data.map(toTableRow);
         setMasters(transformed);
       }
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -122,7 +122,7 @@ const UpcomingAppointments = ({ counts, setCounts }) => {
       setSessionTypes(sess);
       setClients(clis);
       setStaff(stf);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     }
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps

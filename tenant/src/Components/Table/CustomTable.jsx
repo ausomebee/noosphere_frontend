@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   exportTableData,
   printTableData,
@@ -9,7 +15,7 @@ import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import TableActions from "./TableActions";
 import "./CustomTable.css";
-import { parse, isSameDay, isWithinInterval, isValid, format } from "date-fns";
+import { parse, isWithinInterval, isValid, format } from "date-fns";
 
 const CustomTable = ({
   data,

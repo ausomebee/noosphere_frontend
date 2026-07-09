@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import LoadingSpinner, { SectionSpinner, Skeleton, SkeletonText, SkeletonCard, SkeletonTable } from '../Components/LoadingSpinner';
+import { render } from '@testing-library/react';
+import LoadingSpinner, {
+  SectionSpinner,
+  Skeleton,
+  SkeletonText,
+  SkeletonCard,
+  SkeletonTable,
+} from '../Components/LoadingSpinner';
 
 describe('LoadingSpinner', () => {
   it('renders full-page spinner', () => {

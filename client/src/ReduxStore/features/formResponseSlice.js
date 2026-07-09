@@ -30,7 +30,7 @@ const serializeFileInfo = (fileItems) => {
     if (previewUrl && !item.url) { // only revoke if not yet uploaded
       try {
         URL.revokeObjectURL(previewUrl);
-      } catch (e) {
+      } catch {
         // Silent fail - URL might already be revoked
       }
     }

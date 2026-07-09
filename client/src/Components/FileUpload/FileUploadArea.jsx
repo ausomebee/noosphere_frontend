@@ -126,7 +126,7 @@ const FileUploadArea = memo(
               url: uploaded.url,
             });
           }
-        } catch (err) {
+        } catch {
           setFiles((prev) =>
             prev.map((f, idx) =>
               idx === index

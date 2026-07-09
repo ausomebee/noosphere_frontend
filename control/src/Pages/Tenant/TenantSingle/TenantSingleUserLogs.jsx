@@ -5,7 +5,7 @@ import "./TenantSingle.css";
 import CustomTable from "../../../Components/Table/CustomTable";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../hooks/usePersistedTab";

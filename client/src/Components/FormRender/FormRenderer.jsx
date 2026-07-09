@@ -13,7 +13,6 @@ import {
   setResponse,
   addFilesToField,
   setFilesForField,
-  setFileUploadStatus,
   setSignature,
   setSignatureMode,
   setCurrentPage,

@@ -70,7 +70,7 @@ const AddStaffModal = ({
     try {
       await onSave(data.selectedStaff);
       reset();
-    } catch (error) {
+    } catch {
       showToast("Failed to add staff", "error");
     } finally {
       setIsLoading(false);

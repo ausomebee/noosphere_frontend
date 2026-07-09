@@ -157,7 +157,7 @@ const AccordionTableRobust = ({
       const payload = { [authId]: currentServices };
       if (onSave) await onSave(payload);
       setHasChanges(false);
-    } catch (err) {
+    } catch {
       // Error handled in parent
     } finally {
       setSaving(false);

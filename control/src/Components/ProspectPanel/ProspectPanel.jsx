@@ -454,7 +454,7 @@ const ProspectPanel = () => {
         document.body.removeChild(textarea);
       }
       showToast("Link copied to clipboard!", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to copy link", "error");
     }
   };
@@ -558,7 +558,7 @@ const ProspectPanel = () => {
       setCustomDocuments((prev) => [...prev, created]);
       setIsCustomDocModalOpen(false);
       showToast("Document added successfully!", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to add document", "error");
     }
   };
@@ -609,7 +609,7 @@ const ProspectPanel = () => {
       }));
       setIsUploadModalOpen(false);
       showToast("Document uploaded successfully!", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to upload document", "error");
     }
   };
@@ -638,7 +638,7 @@ const ProspectPanel = () => {
           Object.values(sentDocuments).filter(Boolean).length
         }/${tasks.length + documents.length}`,
       }));
-    } catch (err) {
+    } catch {
       showToast("Failed to update task status", "error");
     }
   };
@@ -667,7 +667,7 @@ const ProspectPanel = () => {
           Object.values(updatedSentDocuments).filter(Boolean).length
         }/${tasks.length + documents.length}`,
       }));
-    } catch (err) {
+    } catch {
       showToast("Failed to update document status", "error");
     }
   };
@@ -685,7 +685,7 @@ const ProspectPanel = () => {
       setCustomTasks((prev) =>
         prev.map((t) => t.id === customTask.id ? { ...t, isCompleted: !t.isCompleted } : t)
       );
-    } catch (err) {
+    } catch {
       showToast("Failed to update custom task", "error");
     }
   };
@@ -695,7 +695,7 @@ const ProspectPanel = () => {
       await api.DeleteCustomTask({ id: customTaskId, accessToken, refreshToken });
       setCustomTasks((prev) => prev.filter((t) => t.id !== customTaskId));
       showToast("Custom task deleted", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to delete custom task", "error");
     }
   };
@@ -705,7 +705,7 @@ const ProspectPanel = () => {
       await api.DeleteCustomDocument({ id: customDocId, accessToken, refreshToken });
       setCustomDocuments((prev) => prev.filter((d) => d.id !== customDocId));
       showToast("Custom document deleted", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to delete custom document", "error");
     }
   };
@@ -723,7 +723,7 @@ const ProspectPanel = () => {
       setCustomDocuments((prev) =>
         prev.map((d) => d.id === customDoc.id ? { ...d, isCompleted: !d.isCompleted } : d)
       );
-    } catch (err) {
+    } catch {
       showToast("Failed to update custom document", "error");
     }
   };
@@ -746,7 +746,7 @@ const ProspectPanel = () => {
       );
       setEditingCustomTask(null);
       showToast("Custom task updated", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to update custom task", "error");
     }
   };
@@ -768,7 +768,7 @@ const ProspectPanel = () => {
       );
       setEditingCustomDocument(null);
       showToast("Custom document updated", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to update custom document", "error");
     }
   };

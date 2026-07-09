@@ -44,7 +44,7 @@ const FrequencyModal = ({
   const handleFormSubmit = async (data) => {
     try {
       await onSave(data);
-    } catch (error) {
+    } catch {
       showToast("Failed to save frequency data", "error");
     }
   };

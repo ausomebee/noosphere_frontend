@@ -75,7 +75,7 @@ const PayersAndInsurance = () => {
         fullData: item,
       }));
       setInsuranceTypeTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setInsuranceTypeLoading(false);
@@ -147,7 +147,7 @@ const PayersAndInsurance = () => {
           modifiers: Object.values(item.modifiers || {}).map(mod => ({ modifier: mod })), // Flatten object to array {modifier: string}
         }));
       setServiceCodeTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setServiceCodeLoading(false);
@@ -179,7 +179,7 @@ const PayersAndInsurance = () => {
           fullData: item,
         }));
       setRoundingRuleTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setRoundingRuleLoading(false);
@@ -232,7 +232,7 @@ const PayersAndInsurance = () => {
               });
               await fetchInsuranceTypes();
               showToast(`Insurance type ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch (error) {
+            } catch {
               showToast("Failed to update insurance type status", "error");
             }
           },
@@ -275,7 +275,7 @@ const PayersAndInsurance = () => {
               });
               await fetchPayers();
               showToast(`Payer ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch (error) {
+            } catch {
               showToast("Failed to update payer status", "error");
             }
           },
@@ -349,7 +349,7 @@ const PayersAndInsurance = () => {
       setSelectedRow(null);
       setMode("add");
       showToast("Insurance type deactivated successfully", "success");
-    } catch (error) {
+    } catch {
       showToast("Failed to deactivate insurance type", "error");
     }
   };
@@ -437,7 +437,7 @@ const PayersAndInsurance = () => {
       setSelectedRow(null);
       setMode("add");
       showToast("Payer deactivated successfully", "success");
-    } catch (error) {
+    } catch {
       showToast("Failed to deactivate payer", "error");
     }
   };

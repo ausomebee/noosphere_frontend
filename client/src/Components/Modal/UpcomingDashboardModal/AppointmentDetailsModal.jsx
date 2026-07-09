@@ -38,7 +38,7 @@ const AppointmentDetailsModal = ({
         return defaultDate;
       }
       return parsedDate;
-    } catch (error) {
+    } catch {
       const [h, m] = timeStr.split(":");
       const d = new Date(dateStr);
       if (!isValid(d)) {

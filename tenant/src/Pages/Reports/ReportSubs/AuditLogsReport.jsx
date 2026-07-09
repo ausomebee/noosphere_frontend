@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import CustomTable from "../../../Components/Table/CustomTable";
 import useAuth from "../../../hooks/useAuth";
 import reportsApi from "../../../api/reportsApi";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showApiError } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
 const toRow = (log) => ({

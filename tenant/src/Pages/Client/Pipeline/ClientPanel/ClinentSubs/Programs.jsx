@@ -9,7 +9,6 @@ import AddProgramModal from "../../../../../Components/ReusableModal/ProgramLibr
 import DeleteLibraryModal from "../../../../../Components/ReusableModal/ProgramLibraryModal/DeleteLibraryModal";
 import { showToast } from "../../../../../Helper/ShowToast";
 import api2 from "../../../../../api/clientPanelApis";
-import api from "../../../../../api/ProgramLibraryApis";
 import ProgramLibraryModal from "../../../../../Components/ReusableModal/ClientModal/ProgramLibraryModal";
 import useAuth from "../../../../../hooks/useAuth";
 
@@ -55,7 +54,7 @@ const ProgramsTab = ({ fullName }) => {
           hasActions: true,
         }))
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -81,7 +80,7 @@ const ProgramsTab = ({ fullName }) => {
           description: prog.description || "No description",
         }))
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLibraryLoading(false);

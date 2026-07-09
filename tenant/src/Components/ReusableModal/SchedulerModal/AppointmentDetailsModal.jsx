@@ -1,4 +1,10 @@
-import React, { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import React, {
+  useRef,
+  useMemo,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import Button from "../../Button/Button";
 import { RxCross2 } from "react-icons/rx";
 import { FiRefreshCw, FiEdit2 } from "react-icons/fi";
@@ -58,7 +64,7 @@ const splitId = useCallback((id) => {
         return defaultDate;
       }
       return parsedDate;
-    } catch (error) {
+    } catch {
       const [h, m] = timeStr.split(":");
       const d = new Date(dateStr);
       if (!isValid(d)) {

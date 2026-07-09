@@ -1,12 +1,5 @@
 // CalendarScheduler.jsx
-import React, {
-  useState,
-  useRef,
-  useMemo,
-  useCallback,
-  useEffect,
-  memo,
-} from "react";
+import React, { useState, useMemo, useCallback, useEffect, memo } from "react";
 import { format, addDays, subDays } from "date-fns";
 import DayView from "./DayView";
 import WeekView from "./WeekView";

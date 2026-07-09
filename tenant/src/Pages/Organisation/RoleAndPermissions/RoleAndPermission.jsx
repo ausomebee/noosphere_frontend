@@ -54,7 +54,7 @@ const RoleAndPermission = () => {
           selectedModules: (role.roleModuleAccesses || []).map((m) => m.module),
         })),
       );
-    } catch (e) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);

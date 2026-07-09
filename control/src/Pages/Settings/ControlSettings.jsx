@@ -1,5 +1,5 @@
 import usePageTitle from "../../hooks/usePageTitle";
-import React, { useState } from "react";
+import React from "react";
 import Staff from "./SettingsSubs/Staff";
 import Departments from "./SettingsSubs/Departments";
 import Roles from "./SettingsSubs/Roles";

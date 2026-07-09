@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import useAuth from "../../../../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaArrowLeft, FaEdit, FaPlus } from "react-icons/fa";
@@ -49,7 +49,7 @@ const SingleViewPayer = () => {
         fullData: item,
       }));
       setInsuranceTypeTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setInsuranceTypeLoading(false);
@@ -74,7 +74,7 @@ const SingleViewPayer = () => {
           fullData: item,
         }));
       setRoundingRuleTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setRoundingRuleLoading(false);
@@ -99,7 +99,7 @@ const SingleViewPayer = () => {
           modifiers: Array.isArray(item.modifiers) ? item.modifiers : [],
         }));
       setServiceCodeTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setServiceCodeLoading(false);
@@ -169,7 +169,7 @@ const SingleViewPayer = () => {
       }) || [];
 
       setTableData(transformedServices);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoadingPayer(false);
@@ -233,7 +233,7 @@ const SingleViewPayer = () => {
               });
               await fetchPayerData();
               showToast(`Service code ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch (error) {
+            } catch {
               showToast("Failed to update service code status", "error");
               await fetchPayerData();
             }

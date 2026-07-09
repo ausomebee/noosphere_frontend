@@ -36,7 +36,6 @@ import {
   fetchPipelineByModule,
   fetchPipelineItems,
   createPipelineStage,
-  reorderPipelineStage,
   updatePipelineItemActivity,
   deletePipelineStage,
   deletePipelineItem,

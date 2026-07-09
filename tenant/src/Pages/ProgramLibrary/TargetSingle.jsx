@@ -3,11 +3,6 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import "./TargetSingle.css";
-import {
-  exportTableData,
-  printTableData,
-  exportTableToPDF,
-} from "../../utils/TableUtils";
 import Button from "../../Components/Button/Button";
 import Chart from "react-apexcharts";
 import CustomTable from "../../Components/Table/CustomTable";
@@ -16,7 +11,12 @@ import api from "../../api/ProgramLibraryApis";
 import ErrorFallback from "../../Components/ErrorFallback";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
-import { formatDate, formatDateTime, formatTime, formatDuration } from "../../Helper/Formatters";
+import {
+  formatDate,
+  formatDateTime,
+  formatTime,
+  formatDuration,
+} from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
 import FrequencyModal from "../../Components/ReusableModal/DataCollectionModal/FrequencyModal";
 import DurationModal from "../../Components/ReusableModal/DataCollectionModal/DurationModal";

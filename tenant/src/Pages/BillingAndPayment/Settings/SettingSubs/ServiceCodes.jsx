@@ -49,7 +49,7 @@ const ServiceCodes = () => {
           hasActions: true,
         }));
       setTableData(transformedData);
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -143,7 +143,7 @@ const ServiceCodes = () => {
               });
               await fetchServiceCodes();
               showToast(`Service code ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch (error) {
+            } catch {
               showToast("Failed to update service code status", "error");
             }
           },

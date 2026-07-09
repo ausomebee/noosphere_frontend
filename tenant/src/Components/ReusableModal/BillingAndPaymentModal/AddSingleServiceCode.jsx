@@ -121,7 +121,7 @@ const AddSingleServiceCodeModal = ({
   const defaultValues = useMemo(() => {
     try {
       return transformServiceCodeToFormData(initialData, mode, serviceCodes);
-    } catch (error) {
+    } catch {
       return {
         mode,
         codeSelection: "custom",
@@ -187,7 +187,7 @@ const AddSingleServiceCodeModal = ({
       ];
 
       return options;
-    } catch (error) {
+    } catch {
       return [
         {
           value: "custom",
@@ -211,7 +211,7 @@ const AddSingleServiceCodeModal = ({
         : [];
 
       return options;
-    } catch (error) {
+    } catch {
       return [];
     }
   }, [roundingRules]);
@@ -250,7 +250,7 @@ const AddSingleServiceCodeModal = ({
       });
 
       setHasChanges(false);
-    } catch (error) {
+    } catch {
       reset({
         mode,
         codeSelection: "custom",
@@ -314,7 +314,7 @@ const AddSingleServiceCodeModal = ({
             removeModifier(modifierFields.length - 1);
           }
         }
-      } catch (error) {
+      } catch {
         // Non-critical — form validation handles invalid selections
       }
     },
@@ -360,7 +360,7 @@ const AddSingleServiceCodeModal = ({
       await onSave(cleanedData);
       clearDraft();
       onClose();
-    } catch (error) {
+    } catch {
       showToast("Failed to save service code", "error");
     } finally {
       setSubmitting(false);

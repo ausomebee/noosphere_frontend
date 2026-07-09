@@ -1,4 +1,3 @@
-import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 

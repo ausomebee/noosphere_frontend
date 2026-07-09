@@ -60,7 +60,7 @@ const PracticeSettings = () => {
         ? response.data.data
         : [];
       setDiagnosisCodes(codes.map((code) => ({ ...code, hasActions: true })));
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ const PracticeSettings = () => {
         ? response.data.data
         : [];
       setSessionTypes(types.map((type) => ({ ...type, hasActions: true })));
-    } catch (error) {
+    } catch {
       // No toast: empty/unavailable content is not an error.
     } finally {
       setLoading(false);
@@ -172,7 +172,7 @@ const PracticeSettings = () => {
       }
       setIsAddModalOpen(false);
       setSelectedRow(null);
-    } catch (error) {
+    } catch {
       showToast(`Failed to ${modalMode} diagnosis code`, "error");
     }
   };
@@ -240,7 +240,7 @@ const PracticeSettings = () => {
         } successfully`,
         "success"
       );
-    } catch (error) {
+    } catch {
       showToast("Failed to toggle status", "error");
     }
   };
@@ -263,7 +263,7 @@ const PracticeSettings = () => {
         `Session type ${newStatus ? "activated" : "deactivated"} successfully`,
         "success"
       );
-    } catch (error) {
+    } catch {
       showToast("Failed to toggle status", "error");
     }
   };

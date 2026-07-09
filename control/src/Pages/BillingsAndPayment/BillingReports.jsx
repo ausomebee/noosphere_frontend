@@ -139,7 +139,7 @@ import { FaChevronRight, FaArrowLeft } from "react-icons/fa";
 import { FiCreditCard } from "react-icons/fi";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SectionSpinner } from "../../Components/LoadingSpinner";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showApiError } from "../../Helper/ShowToast";
 import { formatDate, formatTime } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/InvoiceApi";
