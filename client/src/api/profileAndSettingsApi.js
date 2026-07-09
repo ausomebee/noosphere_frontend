@@ -1,4 +1,5 @@
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import omitEmpty from "../Helper/omitEmpty";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
@@ -120,21 +121,26 @@ export const UpdateClientDetails = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/client/client`, {
-      id: clientId,
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      gender,
-      DOB,
-      preferredName,
-      streetAddress,
-      city,
-      state,
-      country,
-      zipCode,
-    });
+    // Optional fields the user never filled (zipCode, city, DOB, …) are dropped
+    // entirely rather than sent as empty strings.
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/client/client`,
+      omitEmpty({
+        id: clientId,
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        gender,
+        DOB,
+        preferredName,
+        streetAddress,
+        city,
+        state,
+        country,
+        zipCode,
+      }),
+    );
     return response;
   } catch (error) {
     throw new Error(
