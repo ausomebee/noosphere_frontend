@@ -11,6 +11,7 @@ import { FaPlus } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
 import "./GoalsTargetsSection.css";
 import { showToast } from "../../../../../../../../Helper/ShowToast";
+import { RequiredMark } from "../../../../../../../../Components/Input/Inputs";
 
 // Goal Domain Options
 const GOAL_DOMAIN_OPTIONS = [
@@ -424,6 +425,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
               <div className="report-builder-field">
                 <label className="report-builder-label">
                   Target Behavior(s)
+                  <RequiredMark required />
                 </label>
                 <div className="target-behaviors-input-wrapper">
                   <input
@@ -456,6 +458,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Goal Statement */}
               <RichTextEditor
+                required
                 label="Goal Statement"
                 placeholder="Enter a description..."
                 value={goal.goalStatement}
@@ -472,6 +475,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
               {/* Goal Domain */}
               <div className="select-with-other-container">
                 <ReportSelect
+                  required
                   label="Goal domain"
                   placeholder="Select an option"
                   options={GOAL_DOMAIN_OPTIONS}
@@ -521,6 +525,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Goal Timeframe */}
               <ReportSelect
+                required
                 label="Goal timeframe"
                 placeholder="Select an option"
                 options={GOAL_TIMEFRAME_OPTIONS}
@@ -539,6 +544,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
               {/* Goal Measurement Method */}
               <div className="select-with-other-container">
                 <ReportSelect
+                  required
                   label="Measurement method"
                   placeholder="Select an option"
                   options={MEASUREMENT_METHOD_OPTIONS}
@@ -608,6 +614,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                       <div className="target-card-content">
                         {/* Target Statement */}
                         <RichTextEditor
+                          required
                           label="Target Statement"
                           placeholder="Enter a description..."
                           value={target.targetStatement}
@@ -630,6 +637,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
                         {/* Target Type */}
                         <ReportSelect
+                          required
                           label="Target Type"
                           placeholder="Select an option"
                           options={TARGET_TYPE_OPTIONS}
@@ -667,6 +675,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
                         {/* Mastery Criteria */}
                         <RichTextEditor
+                          required
                           label="Mastery Criteria"
                           placeholder="Enter a description..."
                           value={target.masteryCriteria}
@@ -690,6 +699,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                         {/* Target Measurement Method */}
                         <div className="select-with-other-container">
                           <ReportSelect
+                            required
                             label="Measurement method"
                             placeholder="Select an option"
                             options={MEASUREMENT_METHOD_OPTIONS}
@@ -756,6 +766,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
                         {/* Review Timeframe */}
                         <ReportSelect
+                          required
                           label="Review timeframe/date"
                           placeholder="Select an option"
                           options={REVIEW_TIMEFRAME_OPTIONS}
@@ -782,6 +793,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
                         {/* Target Status */}
                         <ReportSelect
+                          required
                           label="Target Status"
                           placeholder="Select an option"
                           options={TARGET_STATUS_OPTIONS}

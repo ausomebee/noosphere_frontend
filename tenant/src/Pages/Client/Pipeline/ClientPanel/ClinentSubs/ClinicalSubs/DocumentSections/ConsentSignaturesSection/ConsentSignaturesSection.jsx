@@ -9,6 +9,7 @@ import Button from "../../../../../../../../Components/Button/Button";
 import { FiEdit, FiImage, FiType } from "react-icons/fi";
 import "./ConsentSignaturesSection.css";
 import { RxCross2 } from "react-icons/rx";
+import { RequiredMark } from "../../../../../../../../Components/Input/Inputs";
 
 // Relationship to Client Options
 const RELATIONSHIP_OPTIONS = [
@@ -146,6 +147,7 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Client/Guardian Name */}
         <ReportTextInput
+          required
           label="Client/guardian name"
           placeholder="Type something"
           value={formData.clientGuardianName}
@@ -161,6 +163,7 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Relationship to Client */}
         <ReportSelect
+          required
           label="Relationship to client"
           placeholder="Select an option"
           options={RELATIONSHIP_OPTIONS}
@@ -193,6 +196,7 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Clinician Name */}
         <ReportTextInput
+          required
           label="Clinician name"
           placeholder="Type something"
           value={formData.clinicianName}
@@ -206,6 +210,7 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Clinician Role */}
         <ReportSelect
+          required
           label="Clinician role"
           placeholder="Select an option"
           options={CLINICIAN_ROLE_OPTIONS}
@@ -220,7 +225,10 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Clinician Signature Type Selection */}
         <div className="report-builder-field">
-          <label className="report-builder-label">Clinician Signature</label>
+          <label className="report-builder-label">
+            Clinician Signature
+            <RequiredMark required />
+          </label>
           <div className="signature-type-selector">
             {SIGNATURE_TYPES.map((type) => (
               <button

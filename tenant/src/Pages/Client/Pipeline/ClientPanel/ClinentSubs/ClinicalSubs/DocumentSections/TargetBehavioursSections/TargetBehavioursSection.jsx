@@ -331,6 +331,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
             <div className="behavior-card-content">
               {/* Behavior Name */}
               <ReportTextInput
+                required
                 label="Behavior Name"
                 placeholder="Type something"
                 value={behavior.name}
@@ -348,6 +349,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
               {/* Behavior Category */}
               <div className="select-with-other-container">
                 <ReportSelect
+                  required
                   label="Behavior Category"
                   placeholder="Select an option"
                   options={BEHAVIOR_CATEGORIES}
@@ -396,6 +398,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
 
               {/* Operational Definition */}
               <RichTextEditor
+                required
                 label="Operational definition"
                 placeholder="Enter a description..."
                 value={behavior.operationalDefinition}
@@ -413,6 +416,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
 
               {/* Behavior Direction */}
               <ReportRadioGroup
+                required
                 label="Behavior Direction"
                 options={DIRECTION_OPTIONS}
                 value={behavior.direction}
@@ -431,6 +435,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
               {/* Function of Behavior */}
               <div className="select-with-other-container">
                 <ReportSelect
+                  required
                   label="Function of behavior"
                   placeholder="Select an option"
                   options={FUNCTION_OPTIONS}
@@ -502,6 +507,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
               {/* Measurement Method */}
               <div className="select-with-other-container">
                 <ReportSelect
+                  required
                   label="Measurement method"
                   placeholder="Select an option"
                   options={MEASUREMENT_METHODS}
@@ -619,6 +625,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
 
               {/* Priority */}
               <ReportSelect
+                required
                 label="Priority"
                 placeholder="Select an option"
                 options={PRIORITY_OPTIONS}

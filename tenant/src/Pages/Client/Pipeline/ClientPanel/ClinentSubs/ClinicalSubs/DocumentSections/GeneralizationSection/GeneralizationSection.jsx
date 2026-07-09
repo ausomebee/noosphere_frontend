@@ -304,6 +304,7 @@ const GeneralizationSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
 
       {/* Maintenance schedule */}
       <ReportSelect
+        required
         label="Maintenance schedule"
         placeholder="Select an option"
         options={MAINTENANCE_SCHEDULE_OPTIONS}

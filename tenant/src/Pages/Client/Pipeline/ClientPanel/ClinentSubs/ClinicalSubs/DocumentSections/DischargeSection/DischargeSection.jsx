@@ -103,6 +103,7 @@ const DischargeSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = f
       <div className="discharge-content">
         {/* Discharge Reason */}
         <ReportSelect
+          required
           label="Discharge reason (if applicable)"
           placeholder="Select an option"
           options={DISCHARGE_REASONS}
@@ -117,6 +118,7 @@ const DischargeSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = f
 
         {/* Discharge Date */}
         <ReportTextInput
+          required
           label="Discharge date"
           placeholder="Choose a date"
           type="date"

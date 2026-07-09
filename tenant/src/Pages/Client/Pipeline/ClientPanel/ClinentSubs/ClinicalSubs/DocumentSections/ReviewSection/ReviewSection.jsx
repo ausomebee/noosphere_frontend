@@ -262,6 +262,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
     <div className="crb-section-fields">
       {/* Review Type */}
       <ReportSelect
+        required
         label="Review Type"
         placeholder="Select an option"
         options={REVIEW_TYPE_OPTIONS}
@@ -303,6 +304,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
 
       {/* Progress determination */}
       <ReportSelect
+        required
         label="Progress determination"
         placeholder="Select an option"
         options={PROGRESS_DETERMINATION_OPTIONS}
@@ -317,6 +319,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
 
       {/* Decision outcome */}
       <ReportSelect
+        required
         label="Decision outcome"
         placeholder="Select an option"
         options={DECISION_OUTCOME_OPTIONS}
@@ -349,6 +352,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
 
       {/* Next review timeline */}
       <ReportSelect
+        required
         label="Next review timeline"
         placeholder="Select an option"
         options={NEXT_REVIEW_TIMELINE_OPTIONS}
@@ -390,6 +394,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
               <div className="service-recommendation-content">
                 {/* Service Recommendation */}
                 <ReportTextInput
+                  required
                   label="Service Recommendation"
                   placeholder="Type something"
                   value={serviceRec.serviceRecommendation}

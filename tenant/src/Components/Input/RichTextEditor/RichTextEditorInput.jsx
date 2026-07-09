@@ -4,9 +4,11 @@ import { FiBold, FiItalic, FiUnderline } from "react-icons/fi";
 import { TfiList } from "react-icons/tfi";
 import { GrOrderedList } from "react-icons/gr";
 import "./RichTextEditor.css";
+import { RequiredMark } from "../Inputs";
 
 const RichTextEditor = ({
   label = "Client Background",
+  required = false,
   placeholder = "Enter a description...",
   value = "",
   onChange,
@@ -96,6 +98,7 @@ const RichTextEditor = ({
     <div className="rich-editor-container">
       <label className="editor-label">
         <span className="label-text">{label}</span>
+        <RequiredMark required={required} />
       </label>
 
       <div className="editor-wrapper">

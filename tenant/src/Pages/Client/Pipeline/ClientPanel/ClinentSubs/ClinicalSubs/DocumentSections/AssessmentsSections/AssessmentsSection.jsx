@@ -244,6 +244,7 @@ const AssessmentsSection = ({ data = [], onChange, onRemoveSection, isReadOnly =
             <div className="assessment-card-content">
               {/* Category */}
               <ReportSelect
+                required
                 label="Assessment Category"
                 placeholder="Select an option"
                 options={ASSESSMENT_CATEGORIES}

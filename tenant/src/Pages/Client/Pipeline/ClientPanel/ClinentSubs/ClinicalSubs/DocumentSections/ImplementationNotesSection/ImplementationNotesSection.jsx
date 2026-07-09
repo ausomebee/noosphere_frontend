@@ -192,6 +192,7 @@ const ImplementationNotesSection = ({ data = {}, onChange, onRemoveSection, isRe
 
       {/* Caregiver Involvement */}
       <ReportSelect
+        required
         label="Caregiver involvement"
         placeholder="Select an option"
         options={CAREGIVER_INVOLVEMENT_OPTIONS}
@@ -275,6 +276,7 @@ const ImplementationNotesSection = ({ data = {}, onChange, onRemoveSection, isRe
 
       {/* Fidelity monitoring in place - Radio Group */}
       <ReportRadioGroup
+        required
         label="Fidelity monitoring in place"
         options={FIDELITY_MONITORING_OPTIONS}
         value={formData.fidelityMonitoringInPlace}

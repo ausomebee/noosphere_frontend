@@ -4,10 +4,12 @@ import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
 import uploadApi from "../../../api/ImageUpload";
 import { showToast } from "../../../Helper/ShowToast";
+import { RequiredMark } from "../Inputs";
 import "./ReportInput.css";
 // Text Input Component
 const ReportTextInput = ({
   label,
+  required = false,
   placeholder,
   value,
   onChange,
@@ -15,7 +17,10 @@ const ReportTextInput = ({
 }) => {
   return (
     <div className="report-builder-field">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
       <input
         type={type}
         className="report-builder-input"
@@ -28,13 +33,16 @@ const ReportTextInput = ({
 };
 
 // Select Component
-const ReportSelect = ({ label, placeholder, options, value, onChange }) => {
+const ReportSelect = ({ label, placeholder, options, value, onChange, required = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((opt) => opt.value === value);
 
   return (
     <div className="report-builder-field">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
       <div className="report-builder-select-wrapper">
         <button
           type="button"
@@ -84,6 +92,7 @@ const ReportSelect = ({ label, placeholder, options, value, onChange }) => {
 // Multi-Select Dropdown Component
 const ReportMultiSelect = ({
   label,
+  required = false,
   placeholder = "Select options",
   options,
   value = [],
@@ -105,7 +114,10 @@ const ReportMultiSelect = ({
 
   return (
     <div className="report-builder-field">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
       <div className="report-builder-select-wrapper">
         <button
           type="button"
@@ -159,6 +171,7 @@ const ReportMultiSelect = ({
 // Checkbox Grid Component (for the layout you showed in image 3)
 const ReportCheckboxGrid = ({
   label,
+  required = false,
   options,
   value,
   onChange,
@@ -173,7 +186,10 @@ const ReportCheckboxGrid = ({
 
   return (
     <div className="report-builder-field">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
       <div
         className={`report-builder-checkbox-grid ${
           layout === "double" ? "double" : "single"
@@ -196,10 +212,13 @@ const ReportCheckboxGrid = ({
   );
 };
 
-const ReportRadioGroup = ({ label, options, value, onChange }) => {
+const ReportRadioGroup = ({ label, options, value, onChange, required = false }) => {
    return (
     <div className="report-builder-field">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
       <div className="report-builder-radio-group inline">
         {options.map((option) => (
           <label key={option.value} className="report-builder-radio-label">
@@ -220,6 +239,7 @@ const ReportRadioGroup = ({ label, options, value, onChange }) => {
 
 const ReportFileUpload = ({
   label,
+  required = false,
   acceptedFormats,
   value = [],
   onChange,
@@ -287,7 +307,10 @@ const ReportFileUpload = ({
 
   return (
     <div className="report-builder-field report-builder-field-file">
-      <label className="report-builder-label">{label}</label>
+      <label className="report-builder-label">
+        {label}
+        <RequiredMark required={required} />
+      </label>
 
       {/* Picker and the uploaded files stack vertically. Without this column the
           uploaded file sits beside the picker as a sibling flex item and shares

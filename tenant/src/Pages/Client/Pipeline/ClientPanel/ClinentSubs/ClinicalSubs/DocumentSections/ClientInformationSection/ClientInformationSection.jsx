@@ -281,6 +281,7 @@ const ClientInformationSection = ({
 
             <div className="diagnosis-card-content">
               <ReportTextInput
+                required
                 label="Diagnosis Name"
                 placeholder="Type Something"
                 value={diagnosis.diagnosisName}
@@ -300,6 +301,7 @@ const ClientInformationSection = ({
                 )}
 
               <ReportTextInput
+                required
                 label="Diagnosis Code"
                 placeholder="Enter ICD-10/ICD-CM or other standard code format"
                 value={diagnosis.diagnosisCode}
@@ -333,6 +335,7 @@ const ClientInformationSection = ({
               />
 
               <ReportTextInput
+                required
                 label="Diagnosis Date"
                 placeholder="Choose a date"
                 type="date"
@@ -353,6 +356,7 @@ const ClientInformationSection = ({
                 )}
 
               <ReportTextInput
+                required
                 label="Diagnosed by"
                 placeholder="Type Something"
                 value={diagnosis.diagnosedBy}
@@ -372,6 +376,7 @@ const ClientInformationSection = ({
                 )}
 
               <ReportRadioGroup
+                required
                 label="Primary diagnosis"
                 options={yesNoOptions}
                 value={diagnosis.primaryDiagnosis}
@@ -423,6 +428,7 @@ const ClientInformationSection = ({
 
       {/* Other Fields */}
       <ReportTextInput
+        required
         label="Intake Date"
         placeholder="Choose a date"
         type="date"
@@ -436,6 +442,7 @@ const ClientInformationSection = ({
       )}
 
       <ReportSelect
+        required
         label="Referral Source"
         placeholder="Select an option"
         options={referralSourceOptions}
@@ -448,6 +455,7 @@ const ClientInformationSection = ({
       )}
 
       <ReportMultiSelect
+        required
         label="Service Location"
         placeholder="Select an option"
         options={serviceLocationOptions}

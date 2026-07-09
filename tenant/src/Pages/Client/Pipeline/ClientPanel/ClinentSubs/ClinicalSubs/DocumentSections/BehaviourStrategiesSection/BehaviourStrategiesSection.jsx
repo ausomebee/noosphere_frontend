@@ -11,6 +11,7 @@ import { FaPlus } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
 import "./BehaviourStrategiesSection.css";
 import { showToast } from "../../../../../../../../Helper/ShowToast";
+import { RequiredMark } from "../../../../../../../../Components/Input/Inputs";
 
 // Strategy Types
 const STRATEGY_TYPES = [
@@ -251,7 +252,10 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
             <div className="strategy-card-content">
               {/* Target Behaviors */}
               <div className="report-builder-field">
-                <label className="report-builder-label">Target Behavior(s)</label>
+                <label className="report-builder-label">
+                  Target Behavior(s)
+                  <RequiredMark required />
+                </label>
                 <div className="target-behaviors-input-wrapper">
                   <input
                     type="text"
@@ -279,6 +283,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
 
               {/* Strategy Name */}
               <ReportTextInput
+                required
                 label="Strategy name"
                 placeholder="Type something"
                 value={strategy.strategyName}
@@ -333,6 +338,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
 
               {/* Behavior Function Addressed */}
               <ReportSelect
+                required
                 label="Behavior function addressed"
                 placeholder="Select an option"
                 options={FUNCTION_OPTIONS}

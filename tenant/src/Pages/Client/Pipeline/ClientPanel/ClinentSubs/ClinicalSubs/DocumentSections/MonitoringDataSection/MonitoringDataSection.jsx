@@ -283,6 +283,7 @@ const MonitoringDataSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
 
       {/* Data Collection Frequency */}
       <ReportSelect
+        required
         label="Data collection frequency"
         placeholder="Select an option"
         options={COLLECTION_FREQUENCY_OPTIONS}
@@ -351,6 +352,7 @@ const MonitoringDataSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
 
       {/* Data Review Frequency */}
       <ReportSelect
+        required
         label="Data review frequency"
         placeholder="Select an option"
         options={REVIEW_FREQUENCY_OPTIONS}

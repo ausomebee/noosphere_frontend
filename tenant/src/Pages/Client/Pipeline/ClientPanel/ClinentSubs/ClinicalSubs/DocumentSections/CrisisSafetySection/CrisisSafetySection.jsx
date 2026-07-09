@@ -366,6 +366,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Risk Level */}
               <ReportSelect
+                required
                 label="Risk level"
                 placeholder="Select an option"
                 options={RISK_LEVEL_OPTIONS}
@@ -449,6 +450,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Physical intervention permitted */}
               <ReportSelect
+                required
                 label="Physical intervention permitted"
                 placeholder="Select an option"
                 options={PHYSICAL_INTERVENTION_OPTIONS}
@@ -525,6 +527,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Emergency services involvement */}
               <ReportSelect
+                required
                 label="Emergency services involvement"
                 placeholder="Select an option"
                 options={EMERGENCY_SERVICES_OPTIONS}
@@ -560,6 +563,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Incident documentation required */}
               <ReportSelect
+                required
                 label="Incident documentation required"
                 placeholder="Select an option"
                 options={INCIDENT_DOCUMENTATION_OPTIONS}
@@ -577,6 +581,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
 
               {/* Review schedule */}
               <ReportSelect
+                required
                 label="Review schedule"
                 placeholder="Select an option"
                 options={REVIEW_SCHEDULE_OPTIONS}
