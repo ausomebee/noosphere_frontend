@@ -106,6 +106,7 @@ const AddStaffModal = ({
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Select Employees"
                 options={staffOptions}
                 emptyHint="No staff found. Create one in Organisation → Staff & Teams."

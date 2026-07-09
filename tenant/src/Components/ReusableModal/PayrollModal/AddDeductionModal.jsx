@@ -105,6 +105,7 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Select Deduction"
                 options={deductionOptions}
                 emptyHint="No deductions found. Create one in Payroll → Payroll Settings."

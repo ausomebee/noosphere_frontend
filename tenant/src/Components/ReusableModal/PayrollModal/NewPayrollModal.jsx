@@ -81,7 +81,8 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
             control={control}
             render={({ field }) => (
               <SelectInput
-                label="Compensation Type *"
+                required
+                label="Compensation Type"
                 options={COMPENSATION_OPTIONS}
                 value={field.value}
                 onChange={(value) => field.onChange(value)}
@@ -98,7 +99,8 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
                 control={control}
                 render={({ field }) => (
                   <TextInput
-                    label="Start Date *"
+                    required
+                    label="Start Date"
                     type="date"
                     value={field.value}
                     onChange={(value) => field.onChange(value)}
@@ -116,7 +118,8 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
                 control={control}
                 render={({ field }) => (
                   <TextInput
-                    label="End Date *"
+                    required
+                    label="End Date"
                     type="date"
                     value={field.value}
                     onChange={(value) => field.onChange(value)}

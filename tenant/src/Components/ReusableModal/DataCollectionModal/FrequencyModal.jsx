@@ -110,6 +110,7 @@ const FrequencyModal = ({
               </label>
               <div style={{ marginBottom: "-10px" }}>
                 <TextInput
+                  required
                   type="number"
                   min="1"
                   {...register("numberOfOccurrence")}

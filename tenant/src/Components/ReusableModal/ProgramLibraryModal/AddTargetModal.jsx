@@ -536,6 +536,7 @@ const AddTargetModal = ({
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Teaching Procedure"
                 placeholder="Select a teaching procedure"
                 options={TeachingProcedureOptions}
@@ -598,6 +599,7 @@ const AddTargetModal = ({
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Data Collection Type"
                 placeholder="Select data collection type"
                 options={DataCollectionTypeOptions}
@@ -1296,6 +1298,7 @@ const AddTargetModal = ({
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Initial Status"
                 placeholder="Select an option"
                 options={StatusAndAdmin}

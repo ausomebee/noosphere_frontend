@@ -152,6 +152,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave, tenantId }) => {
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="Document Name"
           {...register("documentName")}
           error={errors.documentName?.message}

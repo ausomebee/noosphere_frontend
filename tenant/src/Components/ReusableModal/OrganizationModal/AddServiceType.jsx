@@ -137,6 +137,7 @@ const AddServiceType = ({
       <div className="space-y-4">
         <div>
           <TextInput
+            required
             label="Code"
             {...register("code")}
             placeholder="Start typing to search"
@@ -160,6 +161,7 @@ const AddServiceType = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Unit Type"
                   options={stateOptions} // Replace with actual unit type options
                   error={errors.unitType?.message}
@@ -171,6 +173,7 @@ const AddServiceType = ({
           </div>
           <div className="flex-1">
             <TextInput
+              required
               label="Unit Duration"
               {...register("unitDuration")} // Fixed from city
               error={errors.unitDuration?.message}
@@ -182,6 +185,7 @@ const AddServiceType = ({
         <div className="flex gap-4 w-full">
           <div className="flex-1">
             <TextInput
+              required
               label="Rate"
               {...register("rate")} // Fixed from city
               error={errors.rate?.message}
@@ -195,6 +199,7 @@ const AddServiceType = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Rate Currency"
                   options={stateOptions} // Replace with actual currency options
                   error={errors.rateCurrency?.message}
@@ -212,6 +217,7 @@ const AddServiceType = ({
             control={control}
             render={({ field }) => (
               <SelectInput
+                required
                 label="Rounding Rule"
                 options={stateOptions} // Replace with actual rounding rule options
                 error={errors.roundingRule?.message}

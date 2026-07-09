@@ -105,6 +105,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
     >
       <div className="mt-5 space-y-4">
         <TextInput
+          required
           label="License Name"
           {...register("licenseName")}
           error={errors.licenseName?.message}
@@ -112,6 +113,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
         />
 
         <TextInput
+          required
           label="License Number"
           {...register("licenseNumber")}
           error={errors.licenseNumber?.message}
@@ -121,6 +123,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
         <div className="flex gap-4 w-full">
           <div className="flex-1">
             <TextInput
+              required
               label="Expiration Date"
               type="date"
               {...register("expiryDate")}
@@ -134,6 +137,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="State"
                   options={stateOptions}
                   error={errors.issueState?.message}

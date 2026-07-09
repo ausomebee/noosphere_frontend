@@ -808,7 +808,8 @@ const AppointmentModal = ({
         control={control}
         render={({ field }) => (
           <SearchableSelectInput
-            label="Client *"
+            required
+            label="Client"
             options={clientOptions}
             emptyHint="No clients found. Create one in Clients."
             placeholder="Select Client"
@@ -824,7 +825,8 @@ const AppointmentModal = ({
         control={control}
         render={({ field }) => (
           <SearchableSelectInput
-            label="Session Type *"
+            required
+            label="Session Type"
             options={sessionTypeOptions}
             emptyHint="No session types found. Create one in Organisation → Practice Settings."
             placeholder="Select Session Type"
@@ -919,7 +921,8 @@ const AppointmentModal = ({
       />
       <div className="mt-6">
         <TextInput
-          label="Date *"
+          required
+          label="Date"
           type="date"
           {...register("date")}
           placeholder="Select a Date"
@@ -1280,7 +1283,8 @@ const AppointmentModal = ({
             control={control}
             render={({ field }) => (
               <TextInput
-                label="Start Time *"
+                required
+                label="Start Time"
                 type="time"
                 value={field.value || ""}
                 onChange={(e) => field.onChange(e.target.value)}
@@ -1298,7 +1302,8 @@ const AppointmentModal = ({
             control={control}
             render={({ field }) => (
               <TextInput
-                label="End Time *"
+                required
+                label="End Time"
                 type="time"
                 value={field.value || ""}
                 onChange={(e) => field.onChange(e.target.value)}
@@ -1329,7 +1334,8 @@ const AppointmentModal = ({
         control={control}
         render={({ field }) => (
           <SelectInput
-            label="Service Location *"
+            required
+            label="Service Location"
             options={locationOptions}
             value={field.value}
             onChange={(value) => field.onChange(value)}

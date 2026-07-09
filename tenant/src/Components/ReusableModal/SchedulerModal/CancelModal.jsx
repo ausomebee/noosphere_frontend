@@ -72,6 +72,7 @@ const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
           the cancellation.
         </p>
         <TextareaInput
+          required
           label="Reason"
           placeholder="Enter Reason"
           {...register("reason")}

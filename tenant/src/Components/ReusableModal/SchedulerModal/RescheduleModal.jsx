@@ -151,7 +151,8 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
   const renderMainForm = () => (
     <div className="space-y-4">
       <TextInput
-        label="Date *"
+        required
+        label="Date"
         type="date"
         {...register("date")}
         placeholder="Select a Date"
@@ -161,7 +162,8 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
       <div className="flex gap-4">
         <div className="flex-1">
           <TextInput
-            label="Start Time *"
+            required
+            label="Start Time"
             type="time"
             {...register("startTime")}
             placeholder="Select a Time"
@@ -171,7 +173,8 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
         </div>
         <div className="flex-1">
           <TextInput
-            label="End Time *"
+            required
+            label="End Time"
             type="time"
             {...register("endTime")}
             placeholder="Select a Time"

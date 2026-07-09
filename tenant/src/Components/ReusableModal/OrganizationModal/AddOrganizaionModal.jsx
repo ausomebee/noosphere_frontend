@@ -87,33 +87,39 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     >
       <div className="mt-5 grid ">
         <TextInput
+          required
           label="Name"
           {...register("name")}
           error={errors.name?.message}
           disabled={true}
         />
         <TextInput
+          required
           label="Email"
           {...register("email")}
           error={errors.email?.message}
           disabled={true}
         />
         <TextInput
+          required
           label="Phone"
           {...register("phone")}
           error={errors.phone?.message}
         />
         <TextInput
+          required
           label="Website"
           {...register("website")}
           error={errors.website?.message}
         />
         <TextInput
+          required
           label="Practice NPI"
           {...register("practiceNPI")}
           error={errors.practiceNPI?.message}
         />
         <TextInput
+          required
           label="Street Address"
           {...register("street")}
           error={errors.street?.message}
@@ -121,6 +127,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
         <div className="flex gap-4">
           <div className="flex-1">
             <TextInput
+              required
               label="City"
               {...register("city")}
               error={errors.city?.message}
@@ -132,6 +139,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="State/Province"
                   options={stateOptions}
                   {...field}
@@ -144,6 +152,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
         <div className="flex gap-4">
           <div className="flex-1">
             <TextInput
+              required
               label="ZIP"
               {...register("zip")}
               error={errors.zip?.message}
@@ -155,6 +164,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required
                   label="Country"
                   options={countryOptions}
                   {...field}

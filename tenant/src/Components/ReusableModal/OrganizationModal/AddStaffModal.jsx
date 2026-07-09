@@ -895,12 +895,14 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
     () => (
       <div className="space-y-4">
         <TextInput
+          required
           label="Full Name"
           {...register("fullName")}
           error={errors.fullName?.message}
           placeholder="Enter Full Name"
         />
         <TextInput
+          required
           label="Email"
           type="email"
           {...register("email")}
@@ -908,6 +910,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           placeholder="Enter Email"
         />
         <TextInput
+          required
           label="Phone Number"
           type="tel"
           {...register("phoneNumber")}
@@ -946,6 +949,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
           control={control}
           render={({ field }) => (
             <SelectInput
+              required
               label="Staff Role"
               placeholder="Select staff role"
               options={staffRoleOptions}
@@ -1152,6 +1156,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
         {paymentSchedule && (
           <TextInput
+            required
             label={
               paymentSchedule === "HOURLY"
                 ? "Pay Rate (per hour)"

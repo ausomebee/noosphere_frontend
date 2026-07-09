@@ -151,6 +151,7 @@ const RateModal = ({
                 </label>
                 <div style={{ marginBottom: "-15px" }}>
                   <TextInput
+                    required
                     type="number"
                     min="0"
                     {...register("numberOfOccurrence")}
