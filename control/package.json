@@ -26,6 +26,7 @@
     "@stripe/stripe-js": "^7.9.0",
     "apexcharts": "^4.5.0",
     "axios": "^1.8.4",
+    "country-region-data": "^4.1.0",
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",

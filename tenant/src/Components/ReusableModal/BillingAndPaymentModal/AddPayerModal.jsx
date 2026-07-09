@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -6,7 +6,8 @@ import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Inpu
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast } from "../../../Helper/ShowToast";
-import { currencyOptions, modifierOptions, stateOptions, countryOptions } from "../../../Data/selectOptions";
+import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
+import { countryOptions, getStateOptions } from "../../../Helper/geoOptions";
 import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -42,6 +43,9 @@ const AddPayerModal = ({
     context: {mode},
     defaultValues: transformPayerToFormData(initialData, mode),
   });
+
+  const country = watch("country");
+  const stateOptions = useMemo(() => getStateOptions(country), [country]);
 
   // Freshest errors so handleNext can name the failing field right after trigger().
   const errorsRef = useRef(errors);
@@ -278,7 +282,12 @@ const AddPayerModal = ({
                           options={stateOptions}
                           error={errors.state?.message}
                           placeholder="Select state"
-                          disabled={mode === "view"}
+                          disabled={mode === "view" || !country}
+                          emptyHint={
+                            country
+                              ? "This country has no states/provinces."
+                              : "Select a country first."
+                          }
                           {...field}
                         />
                       )}
@@ -305,6 +314,11 @@ const AddPayerModal = ({
                           placeholder="Select country"
                           disabled={mode === "view"}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // The old state belongs to the old country.
+                            setValue("state", "");
+                          }}
                         />
                       )}
                     />

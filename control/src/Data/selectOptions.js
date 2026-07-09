@@ -25,16 +25,6 @@ export const companySizeOptions = [
   { value: "1000+", label: "1000+ Employees" },
 ];
 
-export const countryOptions = [
-  { value: "", label: "Select" },
-  { value: "United States", label: "United States" },
-  { value: "Canada", label: "Canada" },
-  { value: "United Kingdom", label: "United Kingdom" },
-  { value: "Nigeria", label: "Nigeria" },
-  { value: "Australia", label: "Australia" },
-  { value: "India", label: "India" },
-  { value: "Other", label: "Other" },
-];
 
 // === Issue Options ===
 

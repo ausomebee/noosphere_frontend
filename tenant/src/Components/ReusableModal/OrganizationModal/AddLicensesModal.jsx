@@ -5,7 +5,10 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
-import { stateOptions } from "../../../Data/selectOptions";
+import { getStateOptions } from "../../../Helper/geoOptions";
+
+// Professional licences are issued by US states.
+const stateOptions = getStateOptions("US");
 
 // Validation schema
 const licenseSchema = yup.object({

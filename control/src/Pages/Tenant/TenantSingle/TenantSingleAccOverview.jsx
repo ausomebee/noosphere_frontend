@@ -14,7 +14,12 @@ import invoiceApi from "../../../api/InvoiceApi";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
-import { orgTypeOptions, companySizeOptions, countryOptions } from "../../../Data/selectOptions";
+import { orgTypeOptions, companySizeOptions } from "../../../Data/selectOptions";
+import {
+  countryOptions,
+  getCountryLabel,
+  normalizeCountryCode,
+} from "../../../Helper/geoOptions";
 
 const getInitials = (name) => {
   if (!name) return "?";
@@ -144,7 +149,7 @@ const TenantSingleAccOverview = () => {
       city: loc.city || "",
       stateProvince: loc.stateProvince || loc.state || "",
       zip: loc.zip || "",
-      country: loc.country || "",
+      country: normalizeCountryCode(loc.country),
     });
     setEditModal(true);
   };
@@ -357,7 +362,7 @@ const TenantSingleAccOverview = () => {
           </div>
           <div className="info-item">
             <label>Country</label>
-            <p>{loc.country || "—"}</p>
+            <p>{getCountryLabel(loc.country) || "—"}</p>
           </div>
           <div className="info-item">
             <label>Subdomain</label>

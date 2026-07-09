@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
-import { stateOptions, countryOptions } from "../../../Data/selectOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountryCode,
+  normalizeStateCode,
+} from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 const schema = yup.object({
@@ -30,6 +35,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     control,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     mode: "onTouched",
@@ -53,6 +59,9 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
 
   const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [] });
 
+  const country = watch("country");
+  const stateOptions = useMemo(() => getStateOptions(country), [country]);
+
   useEffect(() => {
     reset({
       name: initialValues?.name || "",
@@ -62,8 +71,11 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
       practiceNPI: initialValues?.practiceNPI || "",
       street: initialValues?.streetAddress || "",
       city: initialValues?.city || "",
-      stateProvince: initialValues?.state || "",
-      country: initialValues?.country || "",
+      stateProvince: normalizeStateCode(
+        initialValues?.state,
+        normalizeCountryCode(initialValues?.country),
+      ),
+      country: normalizeCountryCode(initialValues?.country),
       zip: initialValues?.zipCode || "",
       active: initialValues?.active !== undefined ? initialValues.active : true,
     });
@@ -144,6 +156,12 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
                   required
                   label="State/Province"
                   options={stateOptions}
+                  disabled={!country}
+                  emptyHint={
+                    country
+                      ? "This country has no states/provinces."
+                      : "Select a country first."
+                  }
                   {...field}
                   error={errors.stateProvince?.message}
                 />
@@ -170,6 +188,11 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
                   label="Country"
                   options={countryOptions}
                   {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // The old state belongs to the old country.
+                    setValue("stateProvince", "");
+                  }}
                   error={errors.country?.message}
                 />
               )}

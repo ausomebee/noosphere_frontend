@@ -21,7 +21,13 @@ import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import { genderOptions, countryOptions, stateOptions as usStates } from "../../../Data/selectOptions";
+import { genderOptions } from "../../../Data/selectOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountryCode,
+  normalizeStateCode,
+} from "../../../Helper/geoOptions";
 import { formatDateForInput } from "../../../Helper/Formatters";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -149,9 +155,12 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       primaryPayer: initialData?.client?.primaryPayer || "",
       streetAddress: initialData?.client?.streetAddress || "",
       city: initialData?.client?.city || "",
-      state: initialData?.client?.state || "",
+      state: normalizeStateCode(
+        initialData?.client?.state,
+        normalizeCountryCode(initialData?.client?.country || "US"),
+      ),
       zipCode: initialData?.client?.zipCodeCode || "",
-      country: initialData?.client?.country || "US",
+      country: normalizeCountryCode(initialData?.client?.country || "US"),
       assignToClinician: initialData?.clinicians?.map((c) => c.id) || [],
       clientPortalAccess: initialData?.dbAccess ?? false,
       caregiverName: initialData?.client?.caregiverName || "",
@@ -160,9 +169,14 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       caregiverEmail: initialData?.client?.caregiverEmail || "",
       caregiverStreetAddress: initialData?.client?.caregiverStreetAddress || "",
       caregiverCity: initialData?.client?.caregiverCity || "",
-      caregiverState: initialData?.client?.caregiverState || "",
+      caregiverState: normalizeStateCode(
+        initialData?.client?.caregiverState,
+        normalizeCountryCode(initialData?.client?.caregiverCountry || "US"),
+      ),
       caregiverzipCode: initialData?.client?.caregiverzipCode || "",
-      caregiverCountry: initialData?.client?.caregiverCountry || "US",
+      caregiverCountry: normalizeCountryCode(
+        initialData?.client?.caregiverCountry || "US",
+      ),
 
       documentName: hasDoc ? docs.name : "",
       hasDocument: hasDoc,
@@ -185,6 +199,17 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     resolver: yupResolver(schema),
     defaultValues,
   });
+
+  const clientCountry = watch("country");
+  const caregiverCountry = watch("caregiverCountry");
+  const clientStateOptions = useMemo(
+    () => getStateOptions(clientCountry),
+    [clientCountry],
+  );
+  const caregiverStateOptions = useMemo(
+    () => getStateOptions(caregiverCountry),
+    [caregiverCountry],
+  );
 
   const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [] });
 
@@ -292,7 +317,17 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 name="state"
                 control={control}
                 render={({ field }) => (
-                  <SelectInput label="State" options={usStates} {...field} />
+                  <SelectInput
+                    label="State"
+                    options={clientStateOptions}
+                    disabled={!clientCountry}
+                    emptyHint={
+                      clientCountry
+                        ? "This country has no states/provinces."
+                        : "Select a country first."
+                    }
+                    {...field}
+                  />
                 )}
               />
             </div>
@@ -306,6 +341,10 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                     label="Country"
                     options={countryOptions}
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setValue("state", "");
+                    }}
                   />
                 )}
               />
@@ -374,7 +413,17 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 name="caregiverState"
                 control={control}
                 render={({ field }) => (
-                  <SelectInput label="State" options={usStates} {...field} />
+                  <SelectInput
+                    label="State"
+                    options={caregiverStateOptions}
+                    disabled={!caregiverCountry}
+                    emptyHint={
+                      caregiverCountry
+                        ? "This country has no states/provinces."
+                        : "Select a country first."
+                    }
+                    {...field}
+                  />
                 )}
               />
             </div>
@@ -388,6 +437,10 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                     label="Country"
                     options={countryOptions}
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setValue("caregiverState", "");
+                    }}
                   />
                 )}
               />

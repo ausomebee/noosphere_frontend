@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,7 +8,13 @@ import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
-import { genderOptions, countryOptions, stateOptions } from "../../../Data/selectOptions";
+import { genderOptions } from "../../../Data/selectOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountryCode,
+  normalizeStateCode,
+} from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema for Basic Information fields
@@ -78,6 +84,7 @@ const BasicInfoModal = ({
     reset,
     watch,
     control,
+    setValue,
     formState: { errors, isDirty },
   } = useForm({
     mode: "onTouched",
@@ -100,6 +107,9 @@ const BasicInfoModal = ({
     },
   });
 
+  const country = watch("country");
+  const stateOptions = useMemo(() => getStateOptions(country), [country]);
+
   const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [] });
 
   // Initialize form with initialData
@@ -117,9 +127,12 @@ const BasicInfoModal = ({
         staffRole: initialData.staffRole || "",
         address: initialData.address || "",
         city: initialData.city || "",
-        state: initialData.state || "",
+        state: normalizeStateCode(
+          initialData.state,
+          normalizeCountryCode(initialData.country),
+        ),
         zip: initialData.zip || "",
-        country: initialData.country || "",
+        country: normalizeCountryCode(initialData.country),
         active: initialData.active ?? true,
       });
       setSubmitError("");
@@ -306,6 +319,12 @@ const BasicInfoModal = ({
                   required
                   label="State"
                   options={stateOptions}
+                  disabled={!country}
+                  emptyHint={
+                    country
+                      ? "This country has no states/provinces."
+                      : "Select a country first."
+                  }
                   error={errors.state?.message}
                   placeholder="Select state"
                   {...field}
@@ -334,6 +353,11 @@ const BasicInfoModal = ({
                   error={errors.country?.message}
                   placeholder="Select country"
                   {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // The old state belongs to the old country.
+                    setValue("state", "");
+                  }}
                 />
               )}
             />

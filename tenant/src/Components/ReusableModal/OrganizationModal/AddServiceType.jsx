@@ -14,7 +14,9 @@ import { FaPlus } from "react-icons/fa";
 import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
-import { stateOptions } from "../../../Data/selectOptions";
+import { getStateOptions } from "../../../Helper/geoOptions";
+
+const stateOptions = getStateOptions("US");
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 // Validation schema
