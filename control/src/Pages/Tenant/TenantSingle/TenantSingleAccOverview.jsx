@@ -18,7 +18,9 @@ import { orgTypeOptions, companySizeOptions } from "../../../Data/selectOptions"
 import {
   countryOptions,
   getCountryLabel,
+  getStateOptions,
   normalizeCountry,
+  normalizeState,
 } from "../../../Helper/geoOptions";
 
 const getInitials = (name) => {
@@ -147,7 +149,14 @@ const TenantSingleAccOverview = () => {
       subdomain: tenant?.subdomain || "",
       address: loc.address || "",
       city: loc.city || "",
-      stateProvince: loc.stateProvince || loc.state || "",
+      stateProvince:
+        normalizeState(
+          loc.stateProvince || loc.state,
+          normalizeCountry(loc.country),
+        ) ||
+        loc.stateProvince ||
+        loc.state ||
+        "",
       zip: loc.zip || "",
       country: normalizeCountry(loc.country),
     });
@@ -158,6 +167,18 @@ const TenantSingleAccOverview = () => {
     setEditModal(false);
     setEditForm({});
   };
+
+  const stateOptions = useMemo(() => {
+    const options = getStateOptions(editForm.country);
+    // This field used to be free text, so a saved tenant may hold a value the
+    // library has never heard of ("Lagos State"). Offer it as an option rather
+    // than drop it, which would wipe the field on the next save.
+    const current = editForm.stateProvince;
+    if (current && !options.some((o) => o.value === current)) {
+      return [...options, { value: current, label: current }];
+    }
+    return options;
+  }, [editForm.country, editForm.stateProvince]);
 
   const handleEditChange = (field, value) => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
@@ -537,29 +558,39 @@ const TenantSingleAccOverview = () => {
             />
           </div>
           <div style={{ flex: 1 }}>
-            <TextInput
-              label="State/Province"
-              placeholder="State"
-              value={editForm.stateProvince || ""}
-              onChange={(e) => handleEditChange("stateProvince", e.target.value)}
+            <SelectInput
+              label="Country"
+              options={countryOptions}
+              value={editForm.country || ""}
+              onChange={(e) => {
+                handleEditChange("country", e.target.value);
+                // The old state belongs to the old country.
+                handleEditChange("stateProvince", "");
+              }}
             />
           </div>
         </div>
         <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ flex: 1 }}>
+            <SelectInput
+              label="State/Province"
+              options={stateOptions}
+              value={editForm.stateProvince || ""}
+              disabled={!editForm.country}
+              emptyHint={
+                editForm.country
+                  ? "This country has no states/provinces."
+                  : "Select a country first."
+              }
+              onChange={(e) => handleEditChange("stateProvince", e.target.value)}
+            />
+          </div>
           <div style={{ flex: 1 }}>
             <TextInput
               label="ZIP"
               placeholder="ZIP"
               value={editForm.zip || ""}
               onChange={(e) => handleEditChange("zip", e.target.value)}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <SelectInput
-              label="Country"
-              options={countryOptions}
-              value={editForm.country || ""}
-              onChange={(e) => handleEditChange("country", e.target.value)}
             />
           </div>
         </div>

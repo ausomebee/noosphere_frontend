@@ -29,6 +29,7 @@ const lazyWithReload = (factory) =>
 /* ============================
    Authentication (public, no layout) — keep lazy since they're a separate flow
 ============================ */
+const TenantSingle = lazyWithReload(() => import("../Pages/Tenant/TenantSingle/TenantSingleAccOverview"));
 const SuperAdminLogin = lazyWithReload(() => import("../Pages/Authentication/SuperAdminLogin"));
 const SuperAdminChangePassword = lazyWithReload(() => import("../Pages/Authentication/SuperAdminChangePassword"));
 const AdministrativePassword = lazyWithReload(() => import("../Pages/Authentication/AdministrativePassword"));
@@ -51,7 +52,7 @@ const PaymentPage = lazyWithReload(() => import("../Pages/Payment/PaymentPage"))
    Dashboard (protected, with layout) — eager imports for instant navigation
 ============================ */
 import TenantList from "../Pages/Tenant/TenantList/TenantList";
-import TenantSingle from "../Pages/Tenant/TenantSingle/TenantSingleAccOverview";
+
 import TenantPipeline from "../Pages/Tenant/TenantPipeline/TenantPipeline";
 import ProspectPanel from "./ProspectPanel/ProspectPanel";
 import ManageColumn from "./ManageColumn/ManageColumn";
