@@ -281,6 +281,7 @@ const AddRoundingRule = ({
         {/* Custom-only description */}
         {ruleType === "custom" && (
           <TextareaInput
+            required
             label="Description"
             {...register("description")}
             error={errors.description?.message}
@@ -295,6 +296,7 @@ const AddRoundingRule = ({
             <p className="text-base text-gray-600 font-semibold">Standard Unit</p>
             <div className="flex items-center gap-3 mb-4">
               <TextInput
+                required
                 type="number"
                 {...register("minutes")}
                 placeholder="0"
@@ -311,6 +313,7 @@ const AddRoundingRule = ({
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-700">Approximate</span>
               <TextInput
+                required
                 type="number"
                 {...register("unit")}
                 placeholder="0"
@@ -320,6 +323,7 @@ const AddRoundingRule = ({
               />
               <span className="text-sm text-gray-700">unit after every</span>
               <TextInput
+                required
                 type="number"
                 {...register("unitMinutes")}
                 placeholder="0"

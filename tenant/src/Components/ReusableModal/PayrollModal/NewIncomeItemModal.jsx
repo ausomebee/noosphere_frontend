@@ -240,6 +240,7 @@ const PayrollItemModal = ({
         {unitType === "Flat Rate" && (
           <div className="flex-1">
             <TextInput
+              required
               label="Rate"
               type="number"
               {...register("rate.rate")}

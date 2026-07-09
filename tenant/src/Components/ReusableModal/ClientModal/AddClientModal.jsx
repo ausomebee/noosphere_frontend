@@ -200,6 +200,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     defaultValues,
   });
 
+  const hasDocument = watch("hasDocument");
   const clientCountry = watch("country");
   const caregiverCountry = watch("caregiverCountry");
   const clientStateOptions = useMemo(
@@ -457,7 +458,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             </h4>
 
             <TextInput
-              label="Document Name *"
+              required={hasDocument}
+              label="Document Name"
               placeholder="e.g., National ID, Passport, Insurance Card"
               {...register("documentName")}
               error={errors.documentName?.message}

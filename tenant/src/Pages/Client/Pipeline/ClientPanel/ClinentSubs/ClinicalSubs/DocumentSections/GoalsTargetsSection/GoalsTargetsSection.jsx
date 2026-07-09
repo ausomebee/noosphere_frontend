@@ -495,6 +495,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 {showGoalDomainOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other goal domain"
                       value={goal.goalDomainOther}
@@ -566,6 +567,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 {showGoalMeasurementOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other measurement method"
                       value={goal.measurementMethodOther}
@@ -728,6 +730,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                           {showTargetMeasurementOther && (
                             <div className="other-input-wrapper">
                               <ReportTextInput
+                                required
                                 label="Please specify"
                                 placeholder="Enter other measurement method"
                                 value={target.measurementMethodOther}

@@ -110,6 +110,7 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
           />
           {pauseType === "until" && (
             <TextInput
+              required
               type="datetime-local"
               {...register("untilDate")}
               error={errors.untilDate?.message}
@@ -125,6 +126,7 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
           />
           {pauseType === "specificDate" && (
             <TextInput
+              required
               type="datetime-local"
               {...register("specificDate")}
               error={errors.specificDate?.message}

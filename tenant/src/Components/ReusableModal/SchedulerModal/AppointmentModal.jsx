@@ -1044,6 +1044,7 @@ const AppointmentModal = ({
                   </p>
                   <div style={{ marginBottom: "-15px" }}>
                     <TextInput
+                      required
                       type="text"
                       {...register("customRecurrenceInterval")}
                       width="50"
@@ -1264,6 +1265,7 @@ const AppointmentModal = ({
                 control={control}
                 render={({ field }) => (
                   <SelectInput
+                    required
                     label="Number of occurrences"
                     value={field.value}
                     onChange={(value) => field.onChange(value)}

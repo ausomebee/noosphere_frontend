@@ -1151,6 +1151,7 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
 
         {paymentSchedule === "SALARIED" && (
           <TextInput
+            required
             label="Minimum Number of Hours per Month"
             type="number"
             step="0.5"

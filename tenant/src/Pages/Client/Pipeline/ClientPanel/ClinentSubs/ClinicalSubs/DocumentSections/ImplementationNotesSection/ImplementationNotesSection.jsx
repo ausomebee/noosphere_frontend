@@ -251,6 +251,7 @@ const ImplementationNotesSection = ({ data = {}, onChange, onRemoveSection, isRe
         {showCoordinationOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other provider"
               value={formData.coordinationWithProvidersOther}

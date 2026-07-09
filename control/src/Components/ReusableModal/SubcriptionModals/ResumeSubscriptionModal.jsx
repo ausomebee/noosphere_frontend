@@ -103,6 +103,7 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
           />
           {resumptionType === "specificDate" && (
             <TextInput
+              required
               type="datetime-local"
               {...register("specificDate")}
               error={errors.specificDate?.message}

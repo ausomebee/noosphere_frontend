@@ -264,6 +264,7 @@ const MonitoringDataSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showMeasurementMethodsOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other measurement method"
               value={formData.measurementMethodsOther}
@@ -333,6 +334,7 @@ const MonitoringDataSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showRecordingToolsOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other recording tool"
               value={formData.dataRecordingToolsOther}
@@ -386,6 +388,7 @@ const MonitoringDataSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showStorageLocationOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other storage location"
               value={formData.dataStorageLocationOther}

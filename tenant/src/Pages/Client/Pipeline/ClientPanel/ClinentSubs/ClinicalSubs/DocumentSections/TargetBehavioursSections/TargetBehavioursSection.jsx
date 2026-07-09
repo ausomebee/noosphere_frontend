@@ -377,6 +377,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 {showCategoryOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other behavior category"
                       value={behavior.categoryOther}
@@ -463,6 +464,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 {showFunctionOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other function"
                       value={behavior.functionOther}
@@ -535,6 +537,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 {showMeasurementMethodOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other measurement method"
                       value={behavior.measurementMethodOther}
@@ -602,6 +605,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 {showSettingsContextOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other settings/context"
                       value={behavior.settingsContextOther}

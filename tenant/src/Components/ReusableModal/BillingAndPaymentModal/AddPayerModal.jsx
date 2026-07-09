@@ -200,6 +200,7 @@ const AddPayerModal = ({
             content: (
               <div className="space-y-4">
                 <TextInput
+                  required={mode !== "view"}
                   label="Payer Name"
                   {...register("payerName")}
                   error={errors.payerName?.message}
@@ -207,6 +208,7 @@ const AddPayerModal = ({
                   disabled={mode === "view"}
                 />
                 <TextInput
+                  required={mode !== "view"}
                   label="Email"
                   type="email"
                   {...register("email")}
@@ -215,6 +217,7 @@ const AddPayerModal = ({
                   disabled={mode === "view"}
                 />
                 <TextInput
+                  required={mode !== "view"}
                   label="Phone Number"
                   type="tel"
                   {...register("phoneNumber")}
@@ -227,6 +230,7 @@ const AddPayerModal = ({
                   control={control}
                   render={({ field }) => (
                     <SelectInput
+                      required={mode !== "view"}
                       label="Insurance Type"
                       placeholder="Select Insurance Type"
                       options={insuranceTypeOptions}
@@ -240,6 +244,7 @@ const AddPayerModal = ({
                   )}
                 />
                 <TextInput
+                  required={mode !== "view"}
                   label="TPL Code"
                   {...register("tplCode")}
                   error={errors.tplCode?.message}
@@ -247,6 +252,7 @@ const AddPayerModal = ({
                   disabled={mode === "view"}
                 />
                 <TextInput
+                  required={mode !== "view"}
                   label="Carrier Payer ID"
                   {...register("carrierPayerId")}
                   error={errors.carrierPayerId?.message}
@@ -256,6 +262,7 @@ const AddPayerModal = ({
                 <div className="flex gap-4 border-t pt-5">
                   <div className="flex-1">
                     <TextInput
+                      required={mode !== "view"}
                       label="Address"
                       {...register("address")}
                       error={errors.address?.message}
@@ -264,6 +271,7 @@ const AddPayerModal = ({
                     />
                   </div>
                   <TextInput
+                    required={mode !== "view"}
                     label="City"
                     {...register("city")}
                     error={errors.city?.message}
@@ -278,6 +286,7 @@ const AddPayerModal = ({
                       control={control}
                       render={({ field }) => (
                         <SelectInput
+                          required={mode !== "view"}
                           label="State"
                           options={stateOptions}
                           error={errors.state?.message}
@@ -295,6 +304,7 @@ const AddPayerModal = ({
                   </div>
                   <div className="flex-1">
                     <TextInput
+                      required={mode !== "view"}
                       label="ZIP"
                       {...register("zip")}
                       error={errors.zip?.message}
@@ -308,6 +318,7 @@ const AddPayerModal = ({
                       control={control}
                       render={({ field }) => (
                         <SelectInput
+                          required={mode !== "view"}
                           label="Country"
                           options={countryOptions}
                           error={errors.country?.message}

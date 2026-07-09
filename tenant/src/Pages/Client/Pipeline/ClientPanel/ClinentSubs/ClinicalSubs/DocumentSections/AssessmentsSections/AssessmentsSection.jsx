@@ -264,6 +264,7 @@ const AssessmentsSection = ({ data = [], onChange, onRemoveSection, isReadOnly =
               {showTypeDropdown && (
                 <>
                   <ReportSelect
+                    required
                     label="Assessment Type"
                     placeholder="Select an option"
                     options={types}
@@ -284,6 +285,7 @@ const AssessmentsSection = ({ data = [], onChange, onRemoveSection, isReadOnly =
               {showCustomType && (
                 <>
                   <ReportTextInput
+                    required
                     label="Assessment Type"
                     placeholder="Type the assessment name..."
                     value={assessment.customType}

@@ -20,6 +20,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { teachingProcedureOptions as TeachingProcedureOptions, promptStrategyOptions as PromptStrategyOptions, dataCollectionTypeOptions as DataCollectionTypeOptions, masteryCriteriaOptions as MasteryCriteria, targetStatusOptions as StatusAndAdmin } from "../../../Data/selectOptions";
 import { addTargetSchema as schema, MASTERY_OPTION_SLOTS, MASTERY_FIELDS } from "./addTargetSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
+import { RequiredMark } from "../../Input/Inputs";
 
 /* ---------- FileUploadArea Component ---------- */
 const FileUploadArea = ({
@@ -553,6 +554,7 @@ const AddTargetModal = ({
           {teachingProcedure === "Other (specify)" && (
             <div className="mt-4">
               <TextInput
+                required
                 label="Other Teaching Procedure"
                 {...register("teachingOthers")}
                 placeholder="Enter other teaching procedure"
@@ -581,6 +583,7 @@ const AddTargetModal = ({
           {promptingStrategy?.includes("Other (specify)") && (
             <div className="mt-4">
               <TextInput
+                required
                 label="Other Prompting Strategy"
                 {...register("promptOthers")}
                 placeholder="Enter other prompting strategy"
@@ -642,6 +645,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4">
                 <p className="text-base text-gray-700 font-semibold">
                   Number of trials per session
+                  <RequiredMark required />
                 </p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput
@@ -663,6 +667,7 @@ const AddTargetModal = ({
               <div className="flex items-center gap-4">
                 <p className="text-base text-gray-700 font-semibold">
                   Number of trials per session
+                  <RequiredMark required />
                 </p>
                 <div style={{ marginBottom: "-14px" }}>
                   <TextInput

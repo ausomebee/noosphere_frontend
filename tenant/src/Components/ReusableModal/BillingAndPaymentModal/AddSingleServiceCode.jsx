@@ -423,6 +423,7 @@ const AddSingleServiceCodeModal = ({
           control={control}
           render={({ field }) => (
             <SelectInput
+              required={mode !== "view"}
               label="Service Code"
               options={serviceCodeOptions}
               error={errors.codeSelection?.message}
@@ -435,6 +436,7 @@ const AddSingleServiceCodeModal = ({
 
         {watch("codeSelection") === "custom" && (
           <TextInput
+            required
             label="Custom Code"
             {...register("code")}
             error={errors.code?.message}
@@ -444,6 +446,7 @@ const AddSingleServiceCodeModal = ({
         )}
 
         <TextareaInput
+          required={mode !== "view"}
           label="Description"
           {...register("description")}
           error={errors.description?.message}
@@ -456,6 +459,7 @@ const AddSingleServiceCodeModal = ({
           control={control}
           render={({ field }) => (
             <SelectInput
+              required={mode !== "view"}
               label="Rounding Rule"
               options={roundingRuleOptions}
               emptyHint="No rounding rules found. Create one in Billing & Payments → Settings."
@@ -474,6 +478,7 @@ const AddSingleServiceCodeModal = ({
               control={control}
               render={({ field }) => (
                 <SelectInput
+                  required={mode !== "view"}
                   label="Unit Currency"
                   options={currencyOptions}
                   error={errors.unitCurrency?.message}
@@ -485,6 +490,7 @@ const AddSingleServiceCodeModal = ({
           </div>
           <div className="flex-1">
             <TextInput
+              required={mode !== "view"}
               label="Rate per Unit"
               type="number"
               {...register("ratePerUnit")}

@@ -456,6 +456,7 @@ const ReviewSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = fals
                   {showLocationOther && (
                     <div className="other-input-wrapper">
                       <ReportTextInput
+                        required
                         label="Please specify"
                         placeholder="Enter other location"
                         value={serviceRec.locationOther}

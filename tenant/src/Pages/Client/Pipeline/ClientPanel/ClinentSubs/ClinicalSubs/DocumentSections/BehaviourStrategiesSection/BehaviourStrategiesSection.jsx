@@ -318,6 +318,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
               {showCustomStrategyType && (
                 <>
                   <ReportTextInput
+                    required
                     label="Custom Strategy Type"
                     placeholder="Type something"
                     value={strategy.customStrategyType}
@@ -427,6 +428,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
               {showCustomFidelity && (
                 <>
                   <ReportTextInput
+                    required
                     label="Custom Fidelity Requirement"
                     placeholder="Type something"
                     value={strategy.customFidelityRequirement}
@@ -465,6 +467,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
               {showCustomData && (
                 <>
                   <ReportTextInput
+                    required
                     label="Custom Data Collection Method"
                     placeholder="Type something"
                     value={strategy.customDataCollected}

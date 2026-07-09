@@ -320,6 +320,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 {showCrisisTypeOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other crisis type"
                       value={crisisPlan.crisisTypeOther}
@@ -431,6 +432,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 {showDeescalationOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other de-escalation technique"
                       value={crisisPlan.deescalationTechniquesOther}
@@ -499,6 +501,7 @@ const CrisisSafetySection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 {showStaffAuthorizedOther && (
                   <div className="other-input-wrapper">
                     <ReportTextInput
+                      required
                       label="Please specify"
                       placeholder="Enter other authorized staff"
                       value={crisisPlan.staffAuthorizedOther}

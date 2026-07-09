@@ -195,6 +195,7 @@ const GeneralizationSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showGeneralizationApproachOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other generalization approach"
               value={formData.generalizationApproachOther}
@@ -237,6 +238,7 @@ const GeneralizationSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showSettingsForGeneralizationOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other setting"
               value={formData.settingsForGeneralizationOther}
@@ -270,6 +272,7 @@ const GeneralizationSection = ({ data = {}, onChange, onRemoveSection, isReadOnl
         {showPeopleInvolvedOther && (
           <div className="other-input-wrapper">
             <ReportTextInput
+              required
               label="Please specify"
               placeholder="Enter other person involved"
               value={formData.peopleInvolvedOther}
