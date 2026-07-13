@@ -16,7 +16,7 @@ import {
   setDraftField,
   resetDraft,
 } from "../../../ReduxStore/features/clientDraftSlice";
-import { SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
+import { CheckboxInput, SelectInput, SwitchInput, TextInput } from "../../Input/Inputs";
 import FileUploadArea from "../../FileUpload/FileUploadArea";
 import api from "../../../api/AppointmentApi";
 import api2 from "../../../api/billingAndPaymentsApi";
@@ -82,6 +82,8 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const [activeTab, setActiveTab] = useState("Basic Information");
   const [submitting, setSubmitting] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState(null); // This holds the file
+  // When on, the caregiver address mirrors the client address (read-only + synced).
+  const [caregiverSameAsClient, setCaregiverSameAsClient] = useState(false);
 
   const [clinicians, setClinicians] = useState([]);
   const [loadingClinicians, setLoadingClinicians] = useState(false);
@@ -211,6 +213,31 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     () => getStateOptions(caregiverCountry),
     [caregiverCountry],
   );
+
+  // Client address, watched so the caregiver mirror stays in sync while the
+  // "Use client address" toggle is on -- including when the client address is
+  // later corrected (on both create and edit).
+  const clientStreetAddress = watch("streetAddress");
+  const clientCity = watch("city");
+  const clientState = watch("state");
+  const clientZip = watch("zipCode");
+
+  useEffect(() => {
+    if (!caregiverSameAsClient) return;
+    setValue("caregiverStreetAddress", clientStreetAddress || "");
+    setValue("caregiverCity", clientCity || "");
+    setValue("caregiverCountry", clientCountry || "");
+    setValue("caregiverState", clientState || "");
+    setValue("caregiverzipCode", clientZip || "");
+  }, [
+    caregiverSameAsClient,
+    clientStreetAddress,
+    clientCity,
+    clientCountry,
+    clientState,
+    clientZip,
+    setValue,
+  ]);
 
   const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [],
     // A saved draft may hold an ISO code, "UK", or a full name.
@@ -413,12 +440,35 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               {...register("caregiverEmail")}
               error={errors.caregiverEmail?.message}
             />
+            {/* Mirror the client address into the caregiver fields on demand. */}
+            <CheckboxInput
+              label="Use client address"
+              checked={caregiverSameAsClient}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setCaregiverSameAsClient(on);
+                // Toggling off clears the mirror; toggling on lets the sync
+                // effect fill it and keep it in step with the client address.
+                if (!on) {
+                  setValue("caregiverStreetAddress", "");
+                  setValue("caregiverCity", "");
+                  setValue("caregiverCountry", "");
+                  setValue("caregiverState", "");
+                  setValue("caregiverzipCode", "");
+                }
+              }}
+            />
             <TextInput
               label="Caregiver Address"
               {...register("caregiverStreetAddress")}
+              disabled={caregiverSameAsClient}
             />
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="City" {...register("caregiverCity")} />
+              <TextInput
+                label="City"
+                {...register("caregiverCity")}
+                disabled={caregiverSameAsClient}
+              />
               <Controller
                 name="caregiverCountry"
                 control={control}
@@ -426,6 +476,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                   <SelectInput
                     label="Country"
                     options={countryOptions}
+                    disabled={caregiverSameAsClient}
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
@@ -436,7 +487,11 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextInput label="Zip Code" {...register("caregiverzipCode")} />
+              <TextInput
+                label="Zip Code"
+                {...register("caregiverzipCode")}
+                disabled={caregiverSameAsClient}
+              />
               <Controller
                 name="caregiverState"
                 control={control}
@@ -444,7 +499,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                   <SelectInput
                     label="State"
                     options={caregiverStateOptions}
-                    disabled={!caregiverCountry}
+                    disabled={caregiverSameAsClient || !caregiverCountry}
                     emptyHint={
                       caregiverCountry
                         ? "This country has no states/provinces."
@@ -522,6 +577,7 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       clientStateOptions,
       caregiverCountry,
       caregiverStateOptions,
+      caregiverSameAsClient,
       hasDocument,
       setValue,
     ],
@@ -534,11 +590,23 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       // Clear the staged upload too — it's local state that would otherwise
       // survive close/reopen and get sent on the next submit.
       setUploadedDocument(null);
+      setCaregiverSameAsClient(false);
       dispatch(resetDraft());
       return;
     }
     if (isOpen && !hasInitialized.current) {
       reset(defaultValues);
+      // On an existing client whose caregiver address already matches the
+      // client address, start with the mirror toggle on.
+      const d = defaultValues;
+      const sameAddress =
+        !!d.streetAddress &&
+        d.streetAddress === d.caregiverStreetAddress &&
+        d.city === d.caregiverCity &&
+        d.country === d.caregiverCountry &&
+        d.state === d.caregiverState &&
+        d.zipCode === d.caregiverzipCode;
+      setCaregiverSameAsClient(sameAddress);
       hasInitialized.current = true;
     }
   }, [isOpen, reset, defaultValues, dispatch]);
