@@ -143,7 +143,6 @@ const AddSingleServiceCodeModal = ({
     formState: { errors },
     watch,
     setValue,
-    getValues,
   } = useForm({
     mode: "onTouched",
     reValidateMode: "onBlur",
@@ -157,6 +156,7 @@ const AddSingleServiceCodeModal = ({
     fields: modifierFields,
     append: appendModifier,
     remove: removeModifier,
+    replace: replaceModifiers,
   } = useFieldArray({
     control,
     name: "modifiers",
@@ -225,28 +225,16 @@ const AddSingleServiceCodeModal = ({
         mode,
         serviceCodes
       );
-      reset(formData);
       const modifiers =
         Array.isArray(formData.modifiers) && formData.modifiers.length > 0
           ? formData.modifiers
           : [{ modifier: "", ratePerUnit: 0 }];
 
-      setValue("modifiers", modifiers);
-      // Sync useFieldArray
-      while (modifierFields.length > modifiers.length) {
-        removeModifier(modifierFields.length - 1);
-      }
-      modifiers.forEach((mod, index) => {
-        if (index >= modifierFields.length) {
-          appendModifier({
-            modifier: mod.modifier || "",
-            ratePerUnit: mod.ratePerUnit || 0,
-          });
-        }
-        // Explicitly set values to ensure SelectInput displays correctly
-        setValue(`modifiers[${index}].modifier`, mod.modifier || "");
-        setValue(`modifiers[${index}].ratePerUnit`, mod.ratePerUnit || 0);
-      });
+      // reset() re-seeds the connected useFieldArray on its own. The previous
+      // manual removeModifier/appendModifier sync, driven by modifierFields.length
+      // in this effect's deps, re-fired the effect on every add or remove and
+      // undid the user's action -- so Add hung and Delete appeared to do nothing.
+      reset({ ...formData, modifiers });
 
       setHasChanges(false);
     } catch {
@@ -262,18 +250,7 @@ const AddSingleServiceCodeModal = ({
         billable: false,
       });
     }
-  }, [
-    isOpen,
-    mode,
-    initialData,
-    serviceCodes,
-    reset,
-    setValue,
-    modifierFields.length,
-    removeModifier,
-    appendModifier,
-    getValues,
-  ]);
+  }, [isOpen, mode, initialData, serviceCodes, reset]);
 
   // Watch codeSelection for auto-population
   const handleCodeSelectionChange = useCallback(
@@ -298,33 +275,19 @@ const AddSingleServiceCodeModal = ({
                 }))
               : [{ modifier: "", ratePerUnit: 0 }];
 
-          setValue("modifiers", populatedModifiers);
-          while (modifierFields.length > populatedModifiers.length) {
-            removeModifier(modifierFields.length - 1);
-          }
-          while (modifierFields.length < populatedModifiers.length) {
-            appendModifier({ modifier: "", ratePerUnit: 0 });
-          }
+          // replace() swaps the whole array in one update -- no length-driven
+          // while loops, which is what made this laggy.
+          replaceModifiers(populatedModifiers);
         } else if (selectedCode === "custom") {
           setValue("code", "");
           setValue("description", "");
-          setValue("modifiers", [{ modifier: "", ratePerUnit: 0 }]);
-          while (modifierFields.length > 1) {
-            removeModifier(modifierFields.length - 1);
-          }
+          replaceModifiers([{ modifier: "", ratePerUnit: 0 }]);
         }
       } catch {
         // Non-critical — form validation handles invalid selections
       }
     },
-    [
-      mode,
-      setValue,
-      serviceCodeOptions,
-      modifierFields.length,
-      removeModifier,
-      appendModifier,
-    ]
+    [mode, setValue, serviceCodeOptions, replaceModifiers]
   );
 
   useEffect(() => {
