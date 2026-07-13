@@ -18,19 +18,17 @@ const schema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
   phone: yup.string().required("Phone is required"),
   // Optional. A value that is entered may be a bare domain (acme.com) or a full
-  // URL (https://acme.com/path). The empty string is treated as "not provided"
-  // so a blank field is not rejected. yup's .url() is not used because it
-  // requires a protocol, which people rarely type for a website.
+  // URL (https://acme.com/path). An empty value stays "" rather than becoming
+  // undefined, so on this edit form clearing the website is sent to the backend
+  // and actually persists (excludeEmptyString skips the pattern check on blank).
+  // yup's .url() is not used because it requires a protocol people rarely type.
   website: yup
     .string()
-    .transform((value) => {
-      const trimmed = (value ?? "").trim();
-      return trimmed === "" ? undefined : trimmed;
+    .trim()
+    .matches(/^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/i, {
+      message: "Invalid URL",
+      excludeEmptyString: true,
     })
-    .matches(
-      /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/i,
-      "Invalid URL",
-    )
     .notRequired(),
   practiceNPI: yup.string().required("Practice NPI is required"),
   street: yup.string().required("Street is required"),
