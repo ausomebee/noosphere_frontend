@@ -536,7 +536,9 @@ const AddSingleServiceCodeModal = ({
                   disabled={mode === "view"}
                 />
               </div>
-              {mode !== "view" && modifierFields.length > 1 && (
+              {/* Modifiers are optional (the array has no minimum), so any row
+                  can be removed -- including the only one. */}
+              {mode !== "view" && (
                 <button
                   type="button"
                   className="modal-row-delete-btn"

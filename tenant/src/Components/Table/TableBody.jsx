@@ -25,6 +25,7 @@ const TableBody = ({
     "Candidate Name",
     "Client",
     "Client Name",
+    "Payer Name",
     "ServiceType",
     "Program",
     "Sessions",
