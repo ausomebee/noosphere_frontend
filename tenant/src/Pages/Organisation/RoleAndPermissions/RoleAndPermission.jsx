@@ -4,6 +4,7 @@ import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import RoleConfiguration from "./RoleConfiguration";
+import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import roleApi from "../../../api/roleApi";
@@ -24,8 +25,11 @@ const RoleAndPermission = () => {
   const { hasPermission } = usePermissions();
 
   const [view, setView] = useState("list"); // "list" | "config"
-  const [configMode, setConfigMode] = useState("add"); // "add" | "edit" | "view"
+  const [configMode, setConfigMode] = useState("add"); // "add" | "edit"
   const [editRoleId, setEditRoleId] = useState(null);
+  // Editing an existing role is confirmed before it is saved.
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState(null);
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -80,10 +84,6 @@ const RoleAndPermission = () => {
         hasPermission("edit_a_role") && {
           label: "Edit Role",
           onClick: (row) => handleEditRole(row),
-        },
-        hasPermission("view_roles_permissions") && {
-          label: "View Permissions",
-          onClick: (row) => handleViewPermissions(row),
         },
         hasPermission("deactivate_a_role") && {
           label: (row) =>
@@ -158,40 +158,6 @@ const RoleAndPermission = () => {
     setView("config");
   };
 
-  const handleViewPermissions = async (row) => {
-    try {
-      const res = await roleApi.GetSingleRole({
-        roleId: row.id,
-        accessToken,
-        refreshToken,
-      });
-      const role = res.data?.data || res.data;
-      const moduleAccesses = role.roleModuleAccesses || [];
-      dispatch(
-        loadDraft({
-          roleName: role.name || row.roleName || "",
-          selectedModules: moduleAccesses.map((m) => m.module),
-          dataAccessLevel: role.dataAccessLevel || "",
-          permissions: buildPermissionsFromApi(moduleAccesses),
-          rawModuleAccesses: moduleAccesses,
-        }),
-      );
-    } catch {
-      dispatch(
-        loadDraft({
-          roleName: row.roleName || "",
-          selectedModules: row.selectedModules || [],
-          dataAccessLevel: row.dataAccessLevel || "",
-          permissions: buildPermissionsFromApi(row.rawModuleAccesses || []),
-          rawModuleAccesses: row.rawModuleAccesses || [],
-        }),
-      );
-    }
-    setConfigMode("view");
-    setEditRoleId(row.id);
-    setView("config");
-  };
-
   const handleDeactivateRole = async (row) => {
     try {
       await roleApi.DeactivateRole({
@@ -248,7 +214,17 @@ const RoleAndPermission = () => {
   };
 
   /* ─── Submit role from config view ─── */
-  const handleSubmitRole = async (draft) => {
+  // Editing asks for confirmation first; creating submits straight away.
+  const handleSubmitRole = (draft) => {
+    if (configMode === "edit") {
+      setPendingDraft(draft);
+      setConfirmEditOpen(true);
+      return;
+    }
+    doSubmitRole(draft);
+  };
+
+  const doSubmitRole = async (draft) => {
     setSubmitting(true);
     try {
       const moduleAccesses = buildModuleAccessesPayload(draft);
@@ -299,6 +275,24 @@ const RoleAndPermission = () => {
           onSubmit={handleSubmitRole}
           submitting={submitting}
         />
+        <ReusableModal
+          isOpen={confirmEditOpen}
+          onClose={() => setConfirmEditOpen(false)}
+          title="Update role"
+          primaryButtonText="Confirm"
+          secondaryButtonText="Cancel"
+          primaryButtonLoading={submitting}
+          onPrimaryButtonClick={() => {
+            setConfirmEditOpen(false);
+            if (pendingDraft) doSubmitRole(pendingDraft);
+            setPendingDraft(null);
+          }}
+          onSecondaryButtonClick={() => setConfirmEditOpen(false)}
+        >
+          <p className="text-base text-gray-700 mt-2">
+            Are you sure you want to save changes to this role?
+          </p>
+        </ReusableModal>
       </div>
     );
   }
@@ -334,6 +328,9 @@ const RoleAndPermission = () => {
           hideSearch
           hideTableActions
           onToggleActive={handleToggleActive}
+          onActionClick={
+            hasPermission("edit_a_role") ? handleEditRole : undefined
+          }
         />
       </div>
     </div>

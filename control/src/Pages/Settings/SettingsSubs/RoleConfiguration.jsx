@@ -13,6 +13,7 @@ import {
 } from "../../../Data/permissionsConfig";
 import { Skeleton } from "../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../hooks/usePersistedTab";
+import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import "./RoleConfiguration.css";
 
 const RoleConfiguration = () => {
@@ -23,6 +24,8 @@ const RoleConfiguration = () => {
 
   const [activeTab, setActiveTab] = usePersistedTab("control:roleConfig", "basic");
   const [saving, setSaving] = useState(false);
+  // Editing an existing role is confirmed before it is saved.
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
   const [loadingRole, setLoadingRole] = useState(false);
 
   const [roleName, setRoleName] = useState("");
@@ -123,9 +126,15 @@ const RoleConfiguration = () => {
     setActiveTab("permissions");
   };
 
-  const handleSave = async () => {
+  // Editing asks for confirmation first; creating saves straight away.
+  const handleSave = () => {
     if (!roleName.trim()) { showToast("Role name is required", "error"); return; }
     if (!dataAccessLevel) { showToast("Data access level is required", "error"); return; }
+    if (isEditing) { setConfirmEditOpen(true); return; }
+    doSave();
+  };
+
+  const doSave = async () => {
     const moduleAccesses = buildModuleAccesses();
     try {
       setSaving(true);
@@ -289,6 +298,24 @@ const RoleConfiguration = () => {
           </div>
         </div>
       )}
+
+      <ReusableModal
+        isOpen={confirmEditOpen}
+        onClose={() => setConfirmEditOpen(false)}
+        title="Update role"
+        primaryButtonText="Confirm"
+        secondaryButtonText="Cancel"
+        primaryButtonLoading={saving}
+        onPrimaryButtonClick={() => {
+          setConfirmEditOpen(false);
+          doSave();
+        }}
+        onSecondaryButtonClick={() => setConfirmEditOpen(false)}
+      >
+        <p className="text-base text-gray-700 mt-2">
+          Are you sure you want to save changes to this role?
+        </p>
+      </ReusableModal>
     </div>
   );
 };
