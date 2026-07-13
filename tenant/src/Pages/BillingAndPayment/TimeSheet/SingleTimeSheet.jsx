@@ -1619,7 +1619,6 @@ const SingleTimeSheet = () => {
     parseFloat(sessionHours) + parseFloat(travelHours)
   ).toFixed(2);
 
-  const isAdminOrSupervisor = role === "Admin" || role === "Supervisor";
 
   // Prepare billing data with fallbacks
   const billingColumns = [

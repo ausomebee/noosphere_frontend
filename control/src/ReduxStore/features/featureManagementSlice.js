@@ -50,7 +50,7 @@ export const asyncDeleteFeatureGroup = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.DeleteFeatureGroup({
+      await api.DeleteFeatureGroup({
         id,
         administratorPassword,
         accessToken,
@@ -136,7 +136,7 @@ export const asyncDeleteFeature = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.DeleteFeature({
+      await api.DeleteFeature({
         id,
         administratorPassword,
         accessToken,
@@ -156,7 +156,7 @@ export const asyncMoveFeatureToAnotherGroup = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.MoveFeatureToAnotherGroup({
+      await api.MoveFeatureToAnotherGroup({
         id,
         featureGroupId,
         accessToken,
@@ -173,7 +173,7 @@ export const asyncEnableOrDisableFeature = createAsyncThunk(
   "featureManagement/asyncEnableOrDisableFeature",
   async ({ id, active, accessToken, refreshToken }, { rejectWithValue }) => {
     try {
-      const response = await api.EnableOrDisableFeature({
+      await api.EnableOrDisableFeature({
         id,
         active,
         accessToken,
@@ -193,7 +193,7 @@ export const asyncAssignFeatureToPlan = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.AssignFeatureToPlan({
+      await api.AssignFeatureToPlan({
         id,
         applicablePlans,
         accessToken,

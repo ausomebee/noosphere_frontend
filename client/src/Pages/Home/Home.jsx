@@ -279,11 +279,6 @@ const Home = () => {
               const sessionInfo = apt.session || {};
               const clinicians = apt.clinicians || [];
 
-              // Get client name
-              const clientName = client.firstName && client.lastName
-                ? `${client.firstName} ${client.lastName}`
-                : "Unknown";
-
               // Get clinician names
               const clinicianNames = clinicians
                 .map(c => c.fullName)

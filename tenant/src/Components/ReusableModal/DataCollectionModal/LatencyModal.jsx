@@ -128,7 +128,6 @@ const LatencyModal = ({
     setRenderTrigger((prev) => prev + 1); // Force re-render
   };
 
-  const current = trials[currentTrialIdx];
 
   return (
     <ReusableModal

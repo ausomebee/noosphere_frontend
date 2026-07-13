@@ -5,10 +5,6 @@ const OverviewCard = ({ data, onPeriodChange, selectedPeriod }) => {
   const isEmpty = !data || !data.chartData || data.chartData.length === 0;
   const [hoveredBar, setHoveredBar] = useState(null);
 
-  const maxValue = isEmpty
-    ? 24
-    : Math.max(...data.chartData.map((d) => d.value));
-
   const handlePeriodChange = (e) => {
     if (onPeriodChange) {
       onPeriodChange(e.target.value);

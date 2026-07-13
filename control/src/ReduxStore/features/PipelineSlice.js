@@ -646,7 +646,7 @@ export const updateStageTasks = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.UpdateStageTasks({
+      await api.UpdateStageTasks({
         pipelineStageId,
         requiredTasks: requiredTasks.map((task) => ({
           id: task.id || uuidv4(),
@@ -670,7 +670,7 @@ export const updateStageDocuments = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.UpdateStageDocuments({
+      await api.UpdateStageDocuments({
         pipelineStageId,
         requiredDocuments: requiredDocuments.map((doc) => ({
           id: doc.id || uuidv4(),

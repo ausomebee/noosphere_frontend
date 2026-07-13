@@ -123,12 +123,6 @@ const splitId = useCallback((id) => {
   const end = parseTime(appointment.endTime, appointment.date);
   const startTime = isValid(start) ? format(start, "h:mm a") : "Invalid Time";
   const endTime = isValid(end) ? format(end, "h:mm a") : "Invalid Time";
-  const timeRange = `${startTime} - ${endTime}`;
-  const dateDisplay =
-    appointment.date && isValid(new Date(appointment.date))
-      ? format(new Date(appointment.date), "MM/dd/yyyy")
-      : "Invalid Date";
-
   const getRecurrenceDescription = () => {
     if (!appointment.isRecurring || !appointment.recurrence)
       return "Does not repeat";

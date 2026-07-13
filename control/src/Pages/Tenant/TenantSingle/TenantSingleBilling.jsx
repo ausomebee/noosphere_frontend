@@ -192,12 +192,10 @@ const TenantSingleBilling = () => {
   const subscription     = tenant?.Subscription?.[0] || null;
   const plan             = subscription?.plan || null;
   const planTypeBadge    = plan?.planType ? plan.planType.charAt(0).toUpperCase() + plan.planType.slice(1).toLowerCase() : "—";
-  const planDisplayName  = plan?.name || "—";
   const clientSeatsUsed  = tenant?._count?.clientLinks ?? 0;
   const clientSeatsTotal = plan?.forClient ?? 0;
   const seatsPercent     = clientSeatsTotal > 0 ? Math.min((clientSeatsUsed / clientSeatsTotal) * 100, 100) : 0;
   const nextPaymentDate  = formatDateDisplay(subscription?.endDate);
-  const pipelineItem     = tenant?.pipelineItems?.[0];
   const hasInvoice       = !!tenant?.Invoice?.[0]?.id;
 
   const mapInvoice = (inv) => ({

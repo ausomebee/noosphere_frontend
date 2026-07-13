@@ -54,7 +54,6 @@ const securityQuestionSchema = yup.object().shape({
 
 const SuperAdmin2FAQuestion = () => {
   const { userId, user } = useAuth();
-  const superAdmin = user?.superAdmin;
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

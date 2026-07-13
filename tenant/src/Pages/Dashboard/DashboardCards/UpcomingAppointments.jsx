@@ -114,7 +114,6 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
     return allAppointments.slice(start, end);
   }, [allAppointments, currentPage]);
 
-  const hasMore = paginatedData.length < allAppointments.length;
 
   const loadMore = () => {
     setCurrentPage((prev) => prev + 1);

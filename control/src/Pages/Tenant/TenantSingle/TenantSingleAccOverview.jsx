@@ -285,7 +285,6 @@ const TenantSingleAccOverview = () => {
   const clientSeatsTotal = plan?.forClient ?? 0;
   const seatsPercent = clientSeatsTotal > 0 ? Math.min((clientSeatsUsed / clientSeatsTotal) * 100, 100) : 0;
   const nextPaymentDate = formatDate(subscription?.endDate);
-  const pipelineItem = tenant.pipelineItems?.[0];
   const hasInvoice = !!tenant.Invoice?.[0]?.id;
 
   return (

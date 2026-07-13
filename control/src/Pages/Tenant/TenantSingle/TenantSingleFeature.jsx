@@ -55,7 +55,6 @@ const TenantSingleFeature = () => {
     ? Math.min((clientSeatsUsed / clientSeatsTotal) * 100, 100)
     : 0;
 
-  const pipelineItem = subscription?.tenant?.pipelineItems?.[0];
   const features = plan?.features || [];
   const extraFeatures = plan?.extraFeatures || [];
 

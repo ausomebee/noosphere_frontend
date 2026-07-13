@@ -13,7 +13,6 @@ const TOTP_PERIOD_MS = 30_000;
 
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const { userId, user } = useAuth();
-  const superAdmin = user?.superAdmin;
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
