@@ -515,6 +515,15 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       initialData,
       errors,
       register,
+      // Without these, the memoized tab content kept a stale state list, so the
+      // country -> state cascade only refreshed on the render where another dep
+      // (e.g. errors) happened to change -- "works once, then stops".
+      clientCountry,
+      clientStateOptions,
+      caregiverCountry,
+      caregiverStateOptions,
+      hasDocument,
+      setValue,
     ],
   );
 
