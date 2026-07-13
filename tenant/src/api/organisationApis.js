@@ -366,7 +366,7 @@ const UpdateOrganizationInformation = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/tenant/organization`,
+      `${PLAIN_API_URL}/tenant/organization/tenant`,
       {
         active,
         id,
