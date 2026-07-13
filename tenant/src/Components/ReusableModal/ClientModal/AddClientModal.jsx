@@ -324,6 +324,24 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             <div className="grid grid-cols-2 gap-4">
               <TextInput label="City" {...register("city")} />
               <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label="Country"
+                    options={countryOptions}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setValue("state", "");
+                    }}
+                  />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="Zip Code" {...register("zipCode")} />
+              <Controller
                 name="state"
                 control={control}
                 render={({ field }) => (
@@ -337,24 +355,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                         : "Select a country first."
                     }
                     {...field}
-                  />
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <TextInput label="Zip Code" {...register("zipCode")} />
-              <Controller
-                name="country"
-                control={control}
-                render={({ field }) => (
-                  <SelectInput
-                    label="Country"
-                    options={countryOptions}
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setValue("state", "");
-                    }}
                   />
                 )}
               />
@@ -420,6 +420,24 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             <div className="grid grid-cols-2 gap-4">
               <TextInput label="City" {...register("caregiverCity")} />
               <Controller
+                name="caregiverCountry"
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label="Country"
+                    options={countryOptions}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setValue("caregiverState", "");
+                    }}
+                  />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput label="Zip Code" {...register("caregiverzipCode")} />
+              <Controller
                 name="caregiverState"
                 control={control}
                 render={({ field }) => (
@@ -433,24 +451,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                         : "Select a country first."
                     }
                     {...field}
-                  />
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <TextInput label="Zip Code" {...register("caregiverzipCode")} />
-              <Controller
-                name="caregiverCountry"
-                control={control}
-                render={({ field }) => (
-                  <SelectInput
-                    label="Country"
-                    options={countryOptions}
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setValue("caregiverState", "");
-                    }}
                   />
                 )}
               />

@@ -293,6 +293,28 @@ const AddPayerModal = ({
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <Controller
+                      name="country"
+                      control={control}
+                      render={({ field }) => (
+                        <SelectInput
+                          required={mode !== "view"}
+                          label="Country"
+                          options={countryOptions}
+                          error={errors.country?.message}
+                          placeholder="Select country"
+                          disabled={mode === "view"}
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // The old state belongs to the old country.
+                            setValue("state", "");
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Controller
                       name="state"
                       control={control}
                       render={({ field }) => (
@@ -321,28 +343,6 @@ const AddPayerModal = ({
                       error={errors.zip?.message}
                       placeholder="Enter ZIP"
                       disabled={mode === "view"}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Controller
-                      name="country"
-                      control={control}
-                      render={({ field }) => (
-                        <SelectInput
-                          required={mode !== "view"}
-                          label="Country"
-                          options={countryOptions}
-                          error={errors.country?.message}
-                          placeholder="Select country"
-                          disabled={mode === "view"}
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            // The old state belongs to the old country.
-                            setValue("state", "");
-                          }}
-                        />
-                      )}
                     />
                   </div>
                 </div>

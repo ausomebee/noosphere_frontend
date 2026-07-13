@@ -939,6 +939,26 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
         <div className="flex gap-4">
           <div className="flex-1">
             <Controller
+              name="country"
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Country"
+                  options={countryOptions}
+                  error={errors.country?.message}
+                  placeholder="Select country"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // The old state belongs to the old country.
+                    setValue("state", "");
+                  }}
+                />
+              )}
+            />
+          </div>
+          <div className="flex-1">
+            <Controller
               name="state"
               control={control}
               render={({ field }) => (
@@ -964,26 +984,6 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
               {...register("zip")}
               error={errors.zip?.message}
               placeholder="Enter ZIP"
-            />
-          </div>
-          <div className="flex-1">
-            <Controller
-              name="country"
-              control={control}
-              render={({ field }) => (
-                <SelectInput
-                  label="Country"
-                  options={countryOptions}
-                  error={errors.country?.message}
-                  placeholder="Select country"
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    // The old state belongs to the old country.
-                    setValue("state", "");
-                  }}
-                />
-              )}
             />
           </div>
         </div>

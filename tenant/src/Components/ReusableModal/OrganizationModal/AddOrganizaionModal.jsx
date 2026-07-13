@@ -17,7 +17,13 @@ const schema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
   phone: yup.string().required("Phone is required"),
-  website: yup.string().url("Invalid URL").required("Website is required"),
+  // Optional, but a value that is entered must still look like a URL. The empty
+  // string is treated as "not provided" so .url() does not reject a blank field.
+  website: yup
+    .string()
+    .transform((value) => (value === "" ? undefined : value))
+    .url("Invalid URL")
+    .notRequired(),
   practiceNPI: yup.string().required("Practice NPI is required"),
   street: yup.string().required("Street is required"),
   city: yup.string().required("City is required"),
@@ -128,7 +134,6 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
           error={errors.phone?.message}
         />
         <TextInput
-          required
           label="Website"
           {...register("website")}
           error={errors.website?.message}
@@ -156,21 +161,20 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
           </div>
           <div className="flex-1">
             <Controller
-              name="stateProvince"
+              name="country"
               control={control}
               render={({ field }) => (
                 <SelectInput
                   required
-                  label="State/Province"
-                  options={stateOptions}
-                  disabled={!country}
-                  emptyHint={
-                    country
-                      ? "This country has no states/provinces."
-                      : "Select a country first."
-                  }
+                  label="Country"
+                  options={countryOptions}
                   {...field}
-                  error={errors.stateProvince?.message}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // The old state belongs to the old country.
+                    setValue("stateProvince", "");
+                  }}
+                  error={errors.country?.message}
                 />
               )}
             />
@@ -187,20 +191,21 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
           </div>
           <div className="flex-1">
             <Controller
-              name="country"
+              name="stateProvince"
               control={control}
               render={({ field }) => (
                 <SelectInput
                   required
-                  label="Country"
-                  options={countryOptions}
+                  label="State/Province"
+                  options={stateOptions}
+                  disabled={!country}
+                  emptyHint={
+                    country
+                      ? "This country has no states/provinces."
+                      : "Select a country first."
+                  }
                   {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    // The old state belongs to the old country.
-                    setValue("stateProvince", "");
-                  }}
-                  error={errors.country?.message}
+                  error={errors.stateProvince?.message}
                 />
               )}
             />
