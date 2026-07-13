@@ -74,7 +74,7 @@ const DeactivateRole = async ({ roleId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/role/deactivate/${roleId}`,
+      `${PLAIN_API_URL}/role/deactivate/tenant/${roleId}`,
     );
     return response;
   } catch (error) {
