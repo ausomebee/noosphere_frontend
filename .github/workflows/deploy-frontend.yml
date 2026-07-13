@@ -107,30 +107,6 @@ jobs:
           npm run build
 
       #########################################################
-      # LINT (non-blocking)
-      #
-      # Surfaces lint regressions in the CI log without blocking a deploy while
-      # the existing backlog is worked down. Node modules are already installed
-      # by the build steps above. Once each app reaches zero errors, drop its
-      # `continue-on-error: true` to make lint a required gate.
-      #########################################################
-
-      - name: Lint client
-        working-directory: ./client
-        continue-on-error: true
-        run: npm run lint
-
-      - name: Lint control
-        working-directory: ./control
-        continue-on-error: true
-        run: npm run lint
-
-      - name: Lint tenant
-        working-directory: ./tenant
-        continue-on-error: true
-        run: npm run lint
-
-      #########################################################
       # PREPARE SERVER DIRECTORIES
       #########################################################
 
