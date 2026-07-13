@@ -145,7 +145,7 @@ const AdminOnboarding = () => {
                 <div className="form-group">
                   <PasswordInput
                     required
-                    label="Password"
+                    label="Create a secure password"
                     id="password"
                     placeholder="Enter a password"
                     showStrength
