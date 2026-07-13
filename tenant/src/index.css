@@ -1045,6 +1045,10 @@ select {
   cursor: pointer;
   border-radius: 8px;
   padding: 0;
+  /* These buttons sit in `flex items-end` rows beside an .input-group, which
+     carries a 1rem bottom margin. Matching that margin keeps the button aligned
+     with the input control rather than dropping it below the field. */
+  margin-bottom: var(--space-4);
 }
 .modal-row-delete-btn:hover {
   background: rgba(220, 38, 38, 0.08);
