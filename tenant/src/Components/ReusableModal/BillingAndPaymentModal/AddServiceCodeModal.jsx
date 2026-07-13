@@ -151,16 +151,16 @@ const AddServiceCodeModal = ({
                 )}
               />
             </div>
-            {fields.length > 1 && (
-              <button
-                type="button"
-                className="modal-row-delete-btn"
-                onClick={() => remove(index)}
-                aria-label="Remove Modifier"
-              >
-                <FaTrash />
-              </button>
-            )}
+            {/* Modifiers are optional, so any row can be removed -- including
+                the only one, which leaves the service code with none. */}
+            <button
+              type="button"
+              className="modal-row-delete-btn"
+              onClick={() => remove(index)}
+              aria-label="Remove Modifier"
+            >
+              <FaTrash />
+            </button>
           </div>
         ))}
 

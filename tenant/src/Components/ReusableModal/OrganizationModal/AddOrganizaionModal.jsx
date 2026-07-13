@@ -17,12 +17,20 @@ const schema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
   phone: yup.string().required("Phone is required"),
-  // Optional, but a value that is entered must still look like a URL. The empty
-  // string is treated as "not provided" so .url() does not reject a blank field.
+  // Optional. A value that is entered may be a bare domain (acme.com) or a full
+  // URL (https://acme.com/path). The empty string is treated as "not provided"
+  // so a blank field is not rejected. yup's .url() is not used because it
+  // requires a protocol, which people rarely type for a website.
   website: yup
     .string()
-    .transform((value) => (value === "" ? undefined : value))
-    .url("Invalid URL")
+    .transform((value) => {
+      const trimmed = (value ?? "").trim();
+      return trimmed === "" ? undefined : trimmed;
+    })
+    .matches(
+      /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/i,
+      "Invalid URL",
+    )
     .notRequired(),
   practiceNPI: yup.string().required("Practice NPI is required"),
   street: yup.string().required("Street is required"),
