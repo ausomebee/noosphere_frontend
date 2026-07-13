@@ -16,6 +16,8 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
+        // terser only runs for `vite build`, so dev and vitest keep logging.
+        drop_console: true,
         drop_debugger: true,
       },
     },
