@@ -10,8 +10,8 @@ import AddSingleServiceCodeModal from "../../../../Components/ReusableModal/Bill
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import { formatCurrency } from "../../../../Helper/Formatters";
+import { toBackendServiceCode } from "../../../../Helper/payerServiceCode";
 import "../../BillingPayment.css";
-
 
 const SingleViewPayer = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -141,10 +141,22 @@ const SingleViewPayer = () => {
         fullData: payer,
       };
       setPayerData(mappedPayerData);
-      setRawPayerServiceCodes(mappedPayerData.PayerServiceCodes);
 
       const serviceCodeMap = new Map(
         mappedPayerData.serviceCodes.map((sc) => [sc.serviceCodeId, sc]) || []
+      );
+
+      // The raw config only carries serviceCodeId; carry its code/description
+      // along too so an update payload can send them for existing rows.
+      setRawPayerServiceCodes(
+        mappedPayerData.PayerServiceCodes.map((psc) => {
+          const serviceCode = serviceCodeMap.get(psc.serviceCodeId) || {};
+          return {
+            ...psc,
+            code: psc.code || serviceCode.code || "",
+            description: psc.description || serviceCode.description || "",
+          };
+        })
       );
 
       const transformedServices = mappedPayerData.PayerServiceCodes.map((psc) => {
@@ -267,7 +279,7 @@ const SingleViewPayer = () => {
         state: data.state,
         zip: data.zip,
         country: data.country,
-        PayerServiceCodes: rawPayerServiceCodes,
+        serviceCodes: rawPayerServiceCodes.map(toBackendServiceCode),
         isActive: payerData.isActive,
       };
 
@@ -335,13 +347,14 @@ const SingleViewPayer = () => {
         const newPayerServiceCode = {
           payerId: payerData.id,
           serviceCodeId: data.serviceCodeId || "",
+          code: data.code,
+          description: data.description,
           unitCurrency: data.unitCurrency,
           ratePerUnit: data.ratePerUnit,
           roundingRuleId: data.roundingRule,
           billable: data.billable,
           modifiers: Array.isArray(data.modifiers) ? data.modifiers : [],
           isActive: true,
-          isDeleted: false,
         };
         updatedRawPayerServiceCodes = [...rawPayerServiceCodes, newPayerServiceCode];
 
@@ -381,7 +394,7 @@ const SingleViewPayer = () => {
         state: payerData.state,
         zip: payerData.zip,
         country: payerData.country,
-        PayerServiceCodes: updatedRawPayerServiceCodes,
+        serviceCodes: updatedRawPayerServiceCodes.map(toBackendServiceCode),
         isActive: payerData.isActive,
       };
 

@@ -6,6 +6,7 @@ import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Inpu
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { showToast } from "../../../Helper/ShowToast";
+import { toBackendServiceCode } from "../../../Helper/payerServiceCode";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 import {
   countryOptions,
@@ -139,18 +140,9 @@ const AddPayerModal = ({
     try {
       const cleanedData = {
         ...data,
-        serviceCodes: data.serviceCodes.map((sc) => ({
-          serviceCodeId: sc.serviceCodeId || "",
-          code: sc.code,
-          // Description is optional — only include it when non-empty.
-          ...(sc.description?.trim() ? { description: sc.description } : {}),
-          unitCurrency: sc.unitCurrency,
-          ratePerUnit: sc.ratePerUnit,
-          roundingRuleId: sc.roundingRule,
-          // Modifiers are optional — drop empty rows so blanks aren't sent.
-          modifiers: (sc.modifiers || []).filter((m) => m && m.modifier),
-          billable: sc.billable,
-        })),
+        // An existing service code is sent with its serviceCodeId and string
+        // modifiers; a custom one omits serviceCodeId and sends {modifier} objects.
+        serviceCodes: data.serviceCodes.map(toBackendServiceCode),
       };
       await onSave(cleanedData);
       clearDraft();
