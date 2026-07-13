@@ -39,7 +39,7 @@ const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
   phone: yup
     .string()
-    .matches(/^\+?[\d\s-]{10,}$/, "Invalid phone")
+    .matches(/^\+?[\d\s()-]{10,}$/, "Invalid phone")
     .required("Phone is required"),
   DOB: yup.string().nullable(),
   gender: yup

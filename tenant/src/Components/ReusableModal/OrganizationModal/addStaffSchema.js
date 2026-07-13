@@ -8,7 +8,7 @@ export const addStaffSchema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
   phoneNumber: yup
     .string()
-    .matches(/^\+?[\d\s-]{10,}$/, "Invalid phone number")
+    .matches(/^\+?[\d\s()-]{10,}$/, "Invalid phone number")
     .required("Phone Number is required"),
   // DOB, Gender and Address are optional (not mandatory).
   DOB: yup

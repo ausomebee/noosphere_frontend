@@ -35,7 +35,7 @@ const UpdateRole = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.put(`${PLAIN_API_URL}/role`, {
+    const response = await authFetch.patch(`${PLAIN_API_URL}/role`, {
       id,
       name,
       dataAccessLevel,

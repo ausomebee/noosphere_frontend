@@ -40,7 +40,7 @@ const GetAllRolesByTenantId = async ({ tenantId, accessToken, refreshToken }) =>
 const GetSingleRole = async ({ roleId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.get(`${PLAIN_API_URL}/role/${roleId}`);
+    const response = await authFetch.get(`${PLAIN_API_URL}/role/tenant/${roleId}`);
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Get role failed");
