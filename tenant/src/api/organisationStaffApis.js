@@ -689,7 +689,7 @@ const CreateTeam = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.post(
-      `${PLAIN_API_URL}/organization/teams`,
+      `${PLAIN_API_URL}/organization/teams/tenant`,
       omitEmpty({ name, tenantId, teamLeadId, members }),
     );
     return response;
@@ -709,7 +709,7 @@ const UpdateTeam = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.put(
-      `${PLAIN_API_URL}/organization/teams`,
+      `${PLAIN_API_URL}/organization/teams/tenant`,
       { id, name, teamLeadId, members },
     );
     return response;
