@@ -4,7 +4,7 @@ import useAuth from "../../../../../hooks/useAuth";
 import { format, addDays, subDays } from "date-fns";
 import Button from "../../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
-import { showToast } from "../../../../../Helper/ShowToast";
+import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import AppointmentModal from "../../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
 import api from "../../../../../api/AppointmentApi";
 import api2 from "../../../../../api/clientPanelApis";
@@ -472,11 +472,23 @@ const AppointmentsScheduleTab = ({ fullName }) => {
 
   const handleSaveAppointment = async (data) => {
     try {
+      // Shape the payload exactly as the Scheduler does: the modal returns a
+      // raw form (clinician ids, `billable`, flat recurrence fields) that the
+      // API does not accept -- map them instead of spreading `...data`.
       const payload = {
-        ...data,
-        sessionId: data.sessionType,
-        clientId,
         tenantId,
+        clientId: data.client || clientId,
+        sessionId: data.sessionType,
+        clinicians: (data.clinicians || []).map((id) => ({ id })),
+        service: data.service,
+        date: data.date,
+        isRecurring: data.isRecurring,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        recurrence: data.recurrence || {},
+        isBillable: data.billable,
+        serviceLocation: data.serviceLocation,
+        requiresTravel: data.requiresTravel,
         colourCode: data.colorCode,
         accessToken,
         refreshToken,
@@ -499,8 +511,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       closeModal();
       fetchAppointments();
     } catch (err) {
-      console.error(err);
-      showToast("Failed to save appointment", "error");
+      showApiError(err, "SAVE_APPOINTMENT");
+      // Re-throw so the AppointmentModal stays open on a failed save.
+      throw err;
     }
   };
 
