@@ -1,6 +1,31 @@
 import { useMemo } from "react";
 import useAuth from "./useAuth";
 
+// Some permission keys used to be shared across modules for different actions
+// (e.g. "create_form" meant both "create a client form" and "create a custom
+// form template"). Those were split into distinct keys. This maps a legacy
+// shared key + the module that granted it → the new module-specific key, so a
+// role saved BEFORE the split keeps working on the next login without any
+// backend migration.
+export const LEGACY_KEY_ALIASES = {
+  create_form: {
+    CLIENTS: "create_client_form",
+    CUSTOM_FORMS: "create_custom_form",
+  },
+};
+
+/** Expand an array of granted permission keys from one module, adding the new
+ *  module-specific key for any legacy shared key. Used by both the runtime hook
+ *  and the role editor so old roles read consistently. */
+export const expandModulePermissions = (moduleKey, permissions = []) => {
+  const set = new Set(permissions);
+  for (const perm of permissions) {
+    const alias = LEGACY_KEY_ALIASES[perm]?.[moduleKey];
+    if (alias) set.add(alias);
+  }
+  return set;
+};
+
 const usePermissions = () => {
   const { user } = useAuth();
   const moduleAccesses = user?.role?.roleModuleAccesses || [];
@@ -23,6 +48,10 @@ const usePermissions = () => {
     for (const access of moduleAccesses) {
       for (const perm of access.permissions || []) {
         perms.add(perm);
+        // Translate a legacy shared key to its new module-specific key so roles
+        // saved before the key split keep working.
+        const alias = LEGACY_KEY_ALIASES[perm]?.[access.module];
+        if (alias) perms.add(alias);
       }
     }
     return perms;

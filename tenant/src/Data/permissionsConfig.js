@@ -119,7 +119,7 @@ export const PERMISSIONS_CONFIG = {
           { key: "cancel_document_request", label: "Cancel document request" },
           { key: "download_uploaded_document", label: "Download uploaded document" },
           { key: "view_client_forms_list", label: "View client forms list" },
-          { key: "create_form", label: "Create form" },
+          { key: "create_client_form", label: "Create client form" },
           { key: "view_form_response", label: "View form response" },
           { key: "view_program", label: "View program" },
           { key: "add_new_program", label: "Add new program" },
@@ -339,7 +339,7 @@ export const PERMISSIONS_CONFIG = {
         permissions: [
           { key: "view_form_list", label: "View form list" },
           { key: "view_form", label: "View form" },
-          { key: "create_form", label: "Create form" },
+          { key: "create_custom_form", label: "Create custom form" },
           { key: "edit_form", label: "Edit form" },
           { key: "duplicate_form", label: "Duplicate form" },
           { key: "delete_form", label: "Delete form" },

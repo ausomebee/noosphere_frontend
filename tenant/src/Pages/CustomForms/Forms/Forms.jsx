@@ -178,7 +178,7 @@ const Forms = () => {
         </h3>
       </div>
 
-      {hasPermission("create_form") && (
+      {hasPermission("create_custom_form") && (
         <div className="justify-end flex mt-6">
           <Button
             label="Create a new form"

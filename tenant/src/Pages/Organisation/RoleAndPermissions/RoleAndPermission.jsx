@@ -6,7 +6,9 @@ import Button from "../../../Components/Button/Button";
 import RoleConfiguration from "./RoleConfiguration";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import useAuth from "../../../hooks/useAuth";
-import usePermissions from "../../../hooks/usePermissions";
+import usePermissions, {
+  expandModulePermissions,
+} from "../../../hooks/usePermissions";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import roleApi from "../../../api/roleApi";
 import { showToast } from "../../../Helper/ShowToast";
@@ -109,12 +111,14 @@ const RoleAndPermission = () => {
     const perms = buildBlankPermissions();
     for (const access of moduleAccesses) {
       const moduleKey = access.module; // e.g. "DASHBOARD"
-      const apiPerms = access.permissions || []; // flat array of permission strings
+      // Expand legacy shared keys (e.g. "create_form") to their new
+      // module-specific key so an old role shows its grants checked on edit.
+      const apiPerms = expandModulePermissions(moduleKey, access.permissions || []);
       const moduleConfig = PERMISSIONS_CONFIG[moduleKey];
       if (!moduleConfig) continue;
       for (const subcat of moduleConfig.subcategories) {
         for (const perm of subcat.permissions) {
-          if (apiPerms.includes(perm.key)) {
+          if (apiPerms.has(perm.key)) {
             perms[moduleKey][subcat.key][perm.key] = true;
           }
         }

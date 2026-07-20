@@ -16,7 +16,7 @@ import {
   FaReceipt,
 } from "react-icons/fa";
 import { MdMessage } from "react-icons/md";
-import { IoNotificationsOutline, IoLogOutOutline } from "react-icons/io5";
+import { IoNotifications, IoNotificationsOutline, IoLogOutOutline } from "react-icons/io5";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import TenantLogo from "../assets/Logo.svg";
 import "./DashboardLayout.css";
@@ -367,7 +367,7 @@ const DashboardLayout = ({ children }) => {
                   onClick={() => navigate("/notifications")}
                   aria-label="Notifications"
                 >
-                  <IoNotificationsOutline size={26} color="#fff" />
+                  <IoNotifications size={26} color="#fff" />
                   {alerts.length > 0 && (
                     <span className="notification-badge">
                       {alerts.length > 99 ? "99+" : alerts.length}

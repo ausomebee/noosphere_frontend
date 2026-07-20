@@ -709,7 +709,7 @@ const DocumentsForms = () => {
               />
             )}
 
-            {activeTab === "forms" && hasPermission("create_form") && (
+            {activeTab === "forms" && hasPermission("create_client_form") && (
               <div className="manage-dropdown-wrapper">
                 <Button
                   label="New form"
