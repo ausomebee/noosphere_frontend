@@ -31,6 +31,13 @@ const usePermission = () => {
     }
 
     const accesses = user.role?.roleModuleAccesses || [];
+
+    // An empty access list means "all access" — a role that returns no explicit
+    // module/permission grants is treated as full access (org owner case).
+    if (accesses.length === 0) {
+      return { ...empty, isSuperAdmin: true };
+    }
+
     const permissionSet = new Set();
     const moduleSet = new Set();
 

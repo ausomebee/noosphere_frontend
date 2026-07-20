@@ -1,6 +1,7 @@
 // src/pages/Client/ClientSubs/AppointmentsAndSchedules/AppointmentsScheduleTab.jsx
 import { useState, memo, useCallback, useEffect, useMemo } from "react";
 import useAuth from "../../../../../hooks/useAuth";
+import usePermissions from "../../../../../hooks/usePermissions";
 import { format, addDays, subDays } from "date-fns";
 import Button from "../../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -21,6 +22,7 @@ const MemoAppointmentModal = memo(AppointmentModal);
 
 const AppointmentsScheduleTab = ({ fullName }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("upcomingAppointments");
   const [viewMode, setViewMode] = useState("table");
@@ -430,9 +432,14 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const actions = [
     {
       type: "dropdown",
-      items: [{ label: "Edit Appointment", onClick: (row) => openModal(row) }],
+      items: [
+        hasPermission("edit_appointments") && {
+          label: "Edit Appointment",
+          onClick: (row) => openModal(row),
+        },
+      ].filter(Boolean),
     },
-  ];
+  ].filter((a) => a.items.length > 0);
 
   const handleAppointmentClick = (appointment) => {
     const full = appointments.find(
@@ -585,12 +592,14 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             </div>
           </div>
         </div>
-        <Button
-          label="New Appointment"
-          variant="primary"
-          icon={<FaPlus />}
-          onClick={() => openModal()}
-        />
+        {hasPermission("create_a_new_appointment") && (
+          <Button
+            label="New Appointment"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={() => openModal()}
+          />
+        )}
       </div>
 
       {viewMode === "calendar" && (

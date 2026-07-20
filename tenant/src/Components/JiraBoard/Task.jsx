@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { FiChevronRight } from "react-icons/fi";
+import usePermissions from "../../hooks/usePermissions";
 import "./DragAndDrop.css";
 
 const Task = ({
@@ -11,6 +12,9 @@ const Task = ({
   selected,
   toggleSelection,
 }) => {
+  const { hasPermission } = usePermissions();
+  const canMoveCandidate = hasPermission("manage_candidate_in_pipeline");
+
   if (!task) {
     if (import.meta.env.DEV) console.warn(`Task with ID ${id} is undefined`);
     return null;
@@ -26,7 +30,11 @@ const Task = ({
   } = useSortable({
     id,
     data: { type: "Task" },
+    disabled: !canMoveCandidate,
   });
+
+  // Only attach drag listeners when the user can actually persist a move.
+  const dragListeners = canMoveCandidate ? listeners : undefined;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -55,7 +63,7 @@ const Task = ({
         selected ? "selected" : ""
       }`}
       {...attributes}
-      {...listeners}
+      {...dragListeners}
       onPointerDownCapture={(e) => {
         pointerDownPos.current = { x: e.clientX, y: e.clientY };
       }}

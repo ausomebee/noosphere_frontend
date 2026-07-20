@@ -2,6 +2,7 @@
 import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
+import usePermissions from "../../../../../../hooks/usePermissions";
 import { GrDrag } from "react-icons/gr";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaChevronLeft, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
@@ -504,6 +505,7 @@ const ClinicalReportBuilder = () => {
   const dispatch = useDispatch();
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const { dateFormat, timeFormat } = useFormatSettings();
 
   const {
@@ -980,13 +982,15 @@ const ClinicalReportBuilder = () => {
             onClick={handleRequestChange}
             disabled={isSaving || isPublishing}
           />
-          <Button
-            variant="primary"
-            label={isApproving ? "Approving..." : "Approve"}
-            onClick={handleApprove}
-            disabled={isSaving || isPublishing || isApproving}
-            loading={isApproving}
-          />
+          {hasPermission("approve_clinical_report") && (
+            <Button
+              variant="primary"
+              label={isApproving ? "Approving..." : "Approve"}
+              onClick={handleApprove}
+              disabled={isSaving || isPublishing || isApproving}
+              loading={isApproving}
+            />
+          )}
         </>
       );
     }

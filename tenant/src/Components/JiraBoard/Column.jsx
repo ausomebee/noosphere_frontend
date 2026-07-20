@@ -15,6 +15,7 @@ import { Menu } from "@headlessui/react";
 import "./DragAndDrop.css";
 import { useNavigate } from "react-router-dom";
 import { getContrastTextColor } from "../../Helper/colorContrast";
+import usePermissions from "../../hooks/usePermissions";
 
 const Column = ({
   column,
@@ -30,6 +31,8 @@ const Column = ({
   columns,
   onOpenAddClientModal, // New prop to handle opening the modal from parent
 }) => {
+  const { hasPermission } = usePermissions();
+
   // Early return if column is invalid
   if (!column || !column.id) {
     if (import.meta.env.DEV) console.warn("Invalid column prop received:", column);
@@ -182,47 +185,55 @@ const Column = ({
           </Menu.Button>
           <Menu.Items className="menu-items">
             <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={`menu-item ${active ? "menu-item-active" : ""}`}
-                    onClick={handleAddClientModalOpen}
-                  >
-                    <FiUserPlus className="menu-item-icon" /> Add new candidate
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={`menu-item ${active ? "menu-item-active" : ""}`}
-                    onClick={handleManageColumn}
-                  >
-                    Edit Column Setup
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={`menu-item-delete ${
-                      active ? "menu-item-delete-active" : ""
-                    }`}
-                    onClick={handleDeleteColumn}
-                  >
-                    Delete column
-                  </button>
-                )}
-              </Menu.Item>
+              {hasPermission("create_candidate_in_pipeline") && (
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`menu-item ${active ? "menu-item-active" : ""}`}
+                      onClick={handleAddClientModalOpen}
+                    >
+                      <FiUserPlus className="menu-item-icon" /> Add new candidate
+                    </button>
+                  )}
+                </Menu.Item>
+              )}
+              {hasPermission("manage_pipeline_setup") && (
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`menu-item ${active ? "menu-item-active" : ""}`}
+                      onClick={handleManageColumn}
+                    >
+                      Edit Column Setup
+                    </button>
+                  )}
+                </Menu.Item>
+              )}
+              {hasPermission("manage_pipeline_setup") && (
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`menu-item-delete ${
+                        active ? "menu-item-delete-active" : ""
+                      }`}
+                      onClick={handleDeleteColumn}
+                    >
+                      Delete column
+                    </button>
+                  )}
+                </Menu.Item>
+              )}
             </div>
           </Menu.Items>
         </Menu>
       </div>
       {validTaskIds.length === 0 ? (
         <div className="empty-column">
-          <button className="add-candidate" onClick={handleAddClientModalOpen}>
-            <FiPlusCircle /> Add a candidate
-          </button>
+          {hasPermission("create_candidate_in_pipeline") && (
+            <button className="add-candidate" onClick={handleAddClientModalOpen}>
+              <FiPlusCircle /> Add a candidate
+            </button>
+          )}
         </div>
       ) : (
         <SortableContext

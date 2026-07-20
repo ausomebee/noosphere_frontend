@@ -19,6 +19,7 @@ const AppointmentDetailsModal = ({
   onEdit,
   onReschedule,
   onCancel,
+  canStart = false,
 }) => {
   const modalRef = useRef(null);
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
@@ -269,41 +270,49 @@ const handleStartAppointment = () => {
       </div>
 
       <div className="appointment-modal-footer">
-        <div className="flex-1">
-          <Button
-            label="Cancel"
-            icon={<RxCross2 size={20} color="#D92D20" />}
-            variant="secondary-danger"
-            width="w-full"
-            onClick={() => onCancel(appointment)}
-          />
-        </div>
-        <div className="flex-1">
-          <Button
-            label="Reschedule"
-            icon={<FiRefreshCw size={20} />}
-            variant="secondary"
-            width="w-full"
-            onClick={() => onReschedule(appointment)}
-          />
-        </div>
-        <div className="flex-1">
-          <Button
-            label="Edit"
-            icon={<FiEdit2 size={20} />}
-            variant="secondary"
-            width="w-full"
-            onClick={() => onEdit(appointment)}
-          />
-        </div>
-        <div className="flex-1">
-          <Button
-            label="Start Appointment"
-            variant="primary"
-            width="w-full"
-            onClick={handleStartAppointment}
-          />
-        </div>
+        {onCancel && (
+          <div className="flex-1">
+            <Button
+              label="Cancel"
+              icon={<RxCross2 size={20} color="#D92D20" />}
+              variant="secondary-danger"
+              width="w-full"
+              onClick={() => onCancel(appointment)}
+            />
+          </div>
+        )}
+        {onReschedule && (
+          <div className="flex-1">
+            <Button
+              label="Reschedule"
+              icon={<FiRefreshCw size={20} />}
+              variant="secondary"
+              width="w-full"
+              onClick={() => onReschedule(appointment)}
+            />
+          </div>
+        )}
+        {onEdit && (
+          <div className="flex-1">
+            <Button
+              label="Edit"
+              icon={<FiEdit2 size={20} />}
+              variant="secondary"
+              width="w-full"
+              onClick={() => onEdit(appointment)}
+            />
+          </div>
+        )}
+        {canStart && (
+          <div className="flex-1">
+            <Button
+              label="Start Appointment"
+              variant="primary"
+              width="w-full"
+              onClick={handleStartAppointment}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

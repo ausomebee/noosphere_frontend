@@ -10,11 +10,13 @@ import useAuth from "../../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
+import usePermissions from "../../../../hooks/usePermissions";
 
 const FormDrafts = ({ onCountChange, onEditDraft }) => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { dateFormat } = useFormatSettings();
+  const { hasPermission } = usePermissions();
 
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ const FormDrafts = ({ onCountChange, onEditDraft }) => {
   ];
 
   const actions = [
-    {
+    hasPermission("edit_form") && {
       type: "icon",
       label: "Edit",
       icon: <FiEdit2 className="w-5 h-5" />,
@@ -76,7 +78,7 @@ const FormDrafts = ({ onCountChange, onEditDraft }) => {
         onEditDraft?.();
       },
     },
-    {
+    hasPermission("duplicate_form") && {
       type: "icon",
       label: "Duplicate",
       icon: <HiOutlineDuplicate className="w-5 h-5 text-green-600" />,
@@ -104,14 +106,14 @@ const FormDrafts = ({ onCountChange, onEditDraft }) => {
         }
       },
     },
-    {
+    hasPermission("delete_form") && {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
       onClick: (row) => setRowToDelete(row),
       className: "remove",
     },
-  ];
+  ].filter(Boolean);
 
   const handleDeleteDraft = async () => {
     if (!rowToDelete) return;

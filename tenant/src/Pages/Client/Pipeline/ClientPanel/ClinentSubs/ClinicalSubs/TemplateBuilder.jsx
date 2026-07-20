@@ -2,6 +2,7 @@
 import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
+import usePermissions from "../../../../../../hooks/usePermissions";
 import { GrDrag } from "react-icons/gr";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaChevronLeft, FaEllipsisV } from "react-icons/fa";
@@ -390,6 +391,7 @@ const ClinicalReportTemplateBuilder = () => {
   const dispatch = useDispatch();
 
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // The builder is entered via navigate(..., { state }) so its context (which
   // template, what mode) lives only in router state — which a page refresh
@@ -446,6 +448,12 @@ const ClinicalReportTemplateBuilder = () => {
   const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
 
   const canEditInputs = mode !== "viewTemplate";
+  // Saving is either creating a brand-new template or editing an existing one,
+  // so gate the Save action on the matching permission for the current mode.
+  const canSaveTemplate =
+    mode === "newTemplate"
+      ? hasPermission("create_clinical_report_template")
+      : hasPermission("edit_clinical_report_templates");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -799,7 +807,7 @@ const ClinicalReportTemplateBuilder = () => {
 
           <div className="crb-footer">
             <div className="crb-footer-actions">
-              {canEditInputs && (
+              {canEditInputs && canSaveTemplate && (
                 <Button
                   variant="primary"
                   label={isSaving ? "Saving..." : "Save Template"}

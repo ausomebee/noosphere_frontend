@@ -10,6 +10,7 @@ import { RiFileUploadLine } from "react-icons/ri";
 import { formatDateTime, formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
+import usePermissions from "../../../hooks/usePermissions";
 import "./ViewRequestDetails.css";
 import "./SupportRequests.css";
 
@@ -17,6 +18,7 @@ const ViewRequestDetails = () => {
   const navigate = useNavigate();
   const { requestId } = useParams();
   const { userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [withdrawing, setWithdrawing] = useState(false);
   const { dateFormat, timeFormat } = useFormatSettings();
   const { openDocument } = useDocumentViewer();
@@ -108,13 +110,15 @@ const ViewRequestDetails = () => {
             </button>
             <h2>View issue details</h2>
           </div>
-          <button
-            className="withdraw-btn cursor-pointer"
-            onClick={handleWithdraw}
-            disabled={withdrawing}
-          >
-            {withdrawing ? "Withdrawing..." : "Withdraw Request"}
-          </button>
+          {hasPermission("withdraw_support_request") && (
+            <button
+              className="withdraw-btn cursor-pointer"
+              onClick={handleWithdraw}
+              disabled={withdrawing}
+            >
+              {withdrawing ? "Withdrawing..." : "Withdraw Request"}
+            </button>
+          )}
         </div>
 
         {/* Issue Information */}

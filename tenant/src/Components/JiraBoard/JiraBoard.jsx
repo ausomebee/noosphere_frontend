@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import usePermissions from "../../hooks/usePermissions";
 import { useAnyModalOpen } from "../../hooks/modalRegistry";
 import {
   DndContext,
@@ -63,6 +64,7 @@ const JiraBoard = () => {
   const { pipeline, columns, columnOrder, status, error } =
     useSelector((state) => state.pipeline);
   const { userId, tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [loadingCount, setLoadingCount] = useState(0);
   const isLoading = loadingCount > 0;
   const [localTasks, setLocalTasks] = useState({});
@@ -349,6 +351,8 @@ const JiraBoard = () => {
     const overId = over.id;
 
     if (active.data.current?.type === "Column") {
+      // Reordering pipeline stages is a "manage pipeline setup" action.
+      if (!hasPermission("manage_pipeline_setup")) return;
       const activeColumnIndex = columnOrder.indexOf(activeId);
       const overColumnIndex = columnOrder.indexOf(overId);
 
@@ -376,6 +380,10 @@ const JiraBoard = () => {
       }
       return;
     }
+
+    // Moving a candidate between/within columns persists via the API. Users
+    // without this permission must not be able to commit a move.
+    if (!hasPermission("manage_candidate_in_pipeline")) return;
 
     const activeColumnId = Object.keys(columns).find((columnId) =>
       columns[columnId].taskIds.includes(activeId)
@@ -548,6 +556,8 @@ const JiraBoard = () => {
 
   const handleDeleteTask = async () => {
     if (!selectedTaskIds.length) return;
+    // Removing a candidate is a candidate-management action.
+    if (!hasPermission("manage_candidate_in_pipeline")) return;
 
     startLoading();
     try {
@@ -743,7 +753,7 @@ const JiraBoard = () => {
                 "Manage your client intake process seamlessly"}
             </p>
           </div>
-          {hasColumns && (
+          {hasColumns && hasPermission("create_candidate_in_pipeline") && (
             <div style={{ display: "flex", gap: "10px" }}>
               <Button
                 label="Add new candidate"

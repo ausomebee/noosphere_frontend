@@ -4,6 +4,7 @@ import { FaArrowLeft, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Button from "../../../Components/Button/Button";
 import { SelectInput, TextInput } from "../../../Components/Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 import usePersistedTab from "../../../hooks/usePersistedTab";
 import {
   MODULE_OPTIONS,
@@ -17,9 +18,15 @@ import {
 } from "../../../ReduxStore/features/roleDraftSlice";
 import "../../Organisation/Organisation.css";
 
-const RoleConfiguration = ({ onCancel, onSubmit, submitting }) => {
+const RoleConfiguration = ({ mode = "add", onCancel, onSubmit, submitting }) => {
   const dispatch = useDispatch();
   const draft = useSelector((state) => state.roleDraft);
+  const { hasPermission } = usePermissions();
+
+  // Saving a role is gated by the matching permission for the current mode.
+  const canSaveRole = hasPermission(
+    mode === "edit" ? "edit_a_role" : "create_new_role"
+  );
 
   const [activeTab, setActiveTab] = usePersistedTab("tenant:roleConfig", "basic");
 
@@ -294,12 +301,14 @@ const RoleConfiguration = ({ onCancel, onSubmit, submitting }) => {
               variant="secondary"
               onClick={handlePrevious}
             />
-            <Button
-              label="Submit"
-              variant="primary"
-              onClick={handleSubmit}
-              loading={submitting}
-            />
+            {canSaveRole && (
+              <Button
+                label="Submit"
+                variant="primary"
+                onClick={handleSubmit}
+                loading={submitting}
+              />
+            )}
           </div>
         </div>
       )}

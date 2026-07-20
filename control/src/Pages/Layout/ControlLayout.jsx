@@ -113,8 +113,8 @@ const Layout = ({ children }) => {
       icon: <PiUserList size={28} />,
       moduleKey: "tenant",
       children: [
-        { name: "Pipeline", path: "/tenants/pipeline" },
-        { name: "Tenant List", path: "/tenants/tenant-list" },
+        { name: "Pipeline", path: "/tenants/pipeline", permissionKey: "view_pipeline" },
+        { name: "Tenant List", path: "/tenants/tenant-list", permissionKey: "view_tenant_list" },
         {
           name: "",
           path: "/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit",
@@ -132,20 +132,23 @@ const Layout = ({ children }) => {
       icon: <FiCreditCard size={20} />,
       moduleKey: "billing",
       children: [
-        { name: "Plans & Pricing", path: "/billing-payments/plans-pricing" },
+        { name: "Plans & Pricing", path: "/billing-payments/plans-pricing", permissionKey: "view_plans" },
         {
           name: "Invoice & Payments",
           path: "/billing-payments/invoice-payments",
+          permissionKey: "view_invoices",
         },
         {
           name: "Subscription Manager",
           path: "/billing-payments/subscription-manager",
+          permissionKey: "view_subscriptions",
         },
         {
           name: "Auto-billing Settings",
           path: "/billing-payments/auto-billing-settings",
+          permissionKey: "view_auto_billing",
         },
-        { name: "Reports", path: "/billing-payments/Reports" },
+        { name: "Reports", path: "/billing-payments/Reports", permissionKey: "view_billing_reports" },
       ],
     },
     {
@@ -168,17 +171,26 @@ const Layout = ({ children }) => {
       icon: <FiSettings size={20} />,
       moduleKey: "settings",
       children: [
-        { name: "Roles & Permissions", path: "/settings/roles-permissions" },
-        { name: "Security Settings", path: "/settings/securitySettings" },
+        { name: "Roles & Permissions", path: "/settings/roles-permissions", permissionKey: "view_roles" },
+        { name: "Security Settings", path: "/settings/securitySettings", permissionKey: "view_security_settings" },
         { name: "", path: "/settings/roles-permissions/configure" },
         { name: "", path: "/settings/roles-permissions/configure/:roleId" },
       ],
     },
   ];
 
-  const navItems = allNavItems.filter(
-    (item) => !item.moduleKey || hasModuleAccess(item.moduleKey)
-  );
+  const navItems = allNavItems
+    .filter((item) => !item.moduleKey || hasModuleAccess(item.moduleKey))
+    .map((item) => {
+      if (!item.children) return item;
+      // Hide named sub-nav items the role can't view. Route-only children
+      // (no name) are kept so active-path matching still works.
+      const children = item.children.filter(
+        (child) =>
+          !child.name || !child.permissionKey || hasPermission(child.permissionKey),
+      );
+      return { ...item, children };
+    });
 
   // Extract tenantId from current path for secondary nav links
   const tenantIdMatch = location.pathname.match(/\/tenants\/tenant-lists\/[\w-]+\/([^/]+)/);

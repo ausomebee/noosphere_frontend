@@ -187,7 +187,9 @@ const PayrollCycles = () => {
           hideSearch={true}
           hideTableActions={true}
           loading={loading}
-          onToggleActive={handleToggleActive}
+          onToggleActive={
+            hasPermission("deactivate_payroll_cycle") ? handleToggleActive : undefined
+          }
         />
       </div>
       <PayrollCycleModal

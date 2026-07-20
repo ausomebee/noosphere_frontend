@@ -4,6 +4,7 @@ import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import expandForAppointments from "../../../utils/expandForAppointments";
 import "../Dashboard.css";
 
@@ -11,6 +12,7 @@ const ITEMS_PER_PAGE = 5;
 
 const UpcomingAppointments = ({ hasData, setCount }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,11 +153,13 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
         <p className="text-muted mb-6">
           Schedule your first appointment to see it here
         </p>
-        <Button
-          label="Schedule Appointment"
-          variant="primary"
-          onClick={() => (window.location.href = "/schedule-appointment")}
-        />
+        {hasPermission("create_a_new_appointment") && (
+          <Button
+            label="Schedule Appointment"
+            variant="primary"
+            onClick={() => (window.location.href = "/schedule-appointment")}
+          />
+        )}
       </div>
     );
   }

@@ -11,9 +11,11 @@ import { showToast } from "../../../../../Helper/ShowToast";
 import api2 from "../../../../../api/clientPanelApis";
 import ProgramLibraryModal from "../../../../../Components/ReusableModal/ClientModal/ProgramLibraryModal";
 import useAuth from "../../../../../hooks/useAuth";
+import usePermissions from "../../../../../hooks/usePermissions";
 
 const ProgramsTab = ({ fullName }) => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const { clientId } = useParams();
   const menuRef = useRef(null);
   const triggerRef = useRef(null);
@@ -195,7 +197,7 @@ const handleDeleteConfirm = async () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_program") && {
           label: "View Program",
           onClick: (row) =>
             navigate(
@@ -206,13 +208,16 @@ const handleDeleteConfirm = async () => {
               )}&client=${encodeURIComponent(fullName)}`
             ),
         },
-        { label: "Edit Program", onClick: handleEditProgram },
-        {
+        hasPermission("edit_program") && {
+          label: "Edit Program",
+          onClick: handleEditProgram,
+        },
+        hasPermission("delete_program") && {
           label: "Remove Program",
           onClick: handleDeleteProgram,
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -220,6 +225,7 @@ const handleDeleteConfirm = async () => {
   return (
     <div>
       <div className="client-dropdown-wrapper justify-end flex mt-6">
+        {hasPermission("add_new_program") && (
         <div
           ref={triggerRef}
           onClick={() => setIsProgramOpen((prev) => !prev)}
@@ -232,6 +238,7 @@ const handleDeleteConfirm = async () => {
             iconPosition="right"
           />
         </div>
+        )}
 
         {/* Dropdown Menu - Your original classes preserved */}
         {isProgramOpen && (

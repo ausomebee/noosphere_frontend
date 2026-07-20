@@ -24,6 +24,7 @@ import { useDispatch } from "react-redux";
 import { loadForm } from "../../../../../ReduxStore/features/formBuilderSlice";
 import { formatDate } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
+import usePermissions from "../../../../../hooks/usePermissions";
 
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
@@ -236,6 +237,7 @@ const DocumentsForms = () => {
   const { accessToken, refreshToken, userId, tenantId } = useAuth();
   const { dateFormat } = useFormatSettings();
   const { openDocument, downloadDocument } = useDocumentViewer();
+  const { hasPermission } = usePermissions();
 
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("documents");
@@ -475,7 +477,7 @@ const DocumentsForms = () => {
 
   // UPDATED DOCUMENT ACTIONS WITH VIEW FUNCTIONALITY
   const documentsActions = [
-    {
+    hasPermission("view_document") && {
       type: "icon",
       label: "View",
       icon: <LuEye className="w-5 h-5 text-blue-600" />,
@@ -491,7 +493,7 @@ const DocumentsForms = () => {
     //   icon: <FiEdit2 className="w-5 h-5 text-gray-600" />,
     //   onClick: (row) => navigate(`/documents/edit/${row.id}`),
     // },
-    {
+    hasPermission("delete_document") && {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
@@ -500,7 +502,7 @@ const DocumentsForms = () => {
         setSelectedDocumentRow(row);
       },
     },
-  ];
+  ].filter(Boolean);
 
   // =====================================
   // 2. DOCUMENT REQUESTS DATA - USING REAL DATA
@@ -578,18 +580,18 @@ const DocumentsForms = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_form_response") && {
           label: "View Form",
           onClick: handleViewForm,
         },
-        {
+        hasPermission("nudge_client") && {
           label: "Nudge Client",
           onClick: (row) => {
             showToast(`Nudge sent for form "${row.name}"`, "success");
           }
         },
 
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -639,35 +641,41 @@ const DocumentsForms = () => {
         <div className="documents-section p-6">
           {/* Tabs */}
           <div className=" documents-tabs">
-            <button
-              className={`doc-tab flex-1 ${
-                activeTab === "documents" ? "doc-tab-active" : ""
-              }`}
-              onClick={() => setActiveTab("documents")}
-            >
-              Documents
-            </button>
-            <button
-              className={`doc-tab flex-1 ${
-                activeTab === "requests" ? "doc-tab-active" : ""
-              }`}
-              onClick={() => setActiveTab("requests")}
-            >
-              Document Requests
-            </button>
-            <button
-              className={`doc-tab flex-1 ${
-                activeTab === "forms" ? "doc-tab-active" : ""
-              }`}
-              onClick={() => setActiveTab("forms")}
-            >
-              Forms
-            </button>
+            {hasPermission("view_client_document_forms") && (
+              <button
+                className={`doc-tab flex-1 ${
+                  activeTab === "documents" ? "doc-tab-active" : ""
+                }`}
+                onClick={() => setActiveTab("documents")}
+              >
+                Documents
+              </button>
+            )}
+            {hasPermission("view_document_request_list") && (
+              <button
+                className={`doc-tab flex-1 ${
+                  activeTab === "requests" ? "doc-tab-active" : ""
+                }`}
+                onClick={() => setActiveTab("requests")}
+              >
+                Document Requests
+              </button>
+            )}
+            {hasPermission("view_client_forms_list") && (
+              <button
+                className={`doc-tab flex-1 ${
+                  activeTab === "forms" ? "doc-tab-active" : ""
+                }`}
+                onClick={() => setActiveTab("forms")}
+              >
+                Forms
+              </button>
+            )}
           </div>
 
           {/* Action Buttons with Dropdowns */}
           <div className="justify-end flex">
-            {activeTab === "documents" && (
+            {activeTab === "documents" && hasPermission("add_document") && (
               <div
                 className="manage-dropdown-wrapper"
                 style={{ minWidth: "0 important!" }}
@@ -694,14 +702,14 @@ const DocumentsForms = () => {
               </div>
             )}
 
-            {activeTab === "requests" && (
+            {activeTab === "requests" && hasPermission("create_document_request") && (
               <Button
                 label="New document request"
                 onClick={() => setIsRequestModalOpen(true)}
               />
             )}
 
-            {activeTab === "forms" && (
+            {activeTab === "forms" && hasPermission("create_form") && (
               <div className="manage-dropdown-wrapper">
                 <Button
                   label="New form"
@@ -875,6 +883,7 @@ const DocumentsForms = () => {
                                                   </span>
                                                 </div>
                                                 <div className="flex gap-4">
+                                                  {hasPermission("view_document") && (
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
@@ -888,6 +897,8 @@ const DocumentsForms = () => {
                                                     <LuEye className="w-4 h-4" />
                                                     View
                                                   </button>
+                                                  )}
+                                                  {hasPermission("download_uploaded_document") && (
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
@@ -913,6 +924,7 @@ const DocumentsForms = () => {
                                                     </svg>
                                                     Download
                                                   </button>
+                                                  )}
                                                 </div>
                                               </div>
                                             ))}
@@ -926,12 +938,16 @@ const DocumentsForms = () => {
                                               </h3>
                                               {(req.status === "PENDING" || req.status === "OVERDUE") && (
                                                 <div className="flex gap-6 mt-2">
+                                                  {hasPermission("nudge_client") && (
                                                   <button className="text-primary font-600 text-base hover:underline cursor-pointer">
                                                     Nudge
                                                   </button>
+                                                  )}
+                                                  {hasPermission("cancel_document_request") && (
                                                   <button className="text-red-600 font-600 text-base hover:underline cursor-pointer">
                                                     Cancel request
                                                   </button>
+                                                  )}
                                                 </div>
                                               )}
                                             </div>
@@ -1010,6 +1026,7 @@ const ClientInformationTab = ({ clientData, onUpdated }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const { tenantClientId } = useParams();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // WITH THIS REAL ONE:
   const assignees = useMemo(() => {
@@ -1132,6 +1149,7 @@ const ClientInformationTab = ({ clientData, onUpdated }) => {
                 Client Portal Settings
               </div>
 
+              {hasPermission("edit_client_basic_information") && (
               <div
                 className="timesheet-dropdown-item"
                 onClick={() => {
@@ -1141,6 +1159,7 @@ const ClientInformationTab = ({ clientData, onUpdated }) => {
               >
                 Edit candidate information
               </div>
+              )}
             </div>
           )}
         </div>

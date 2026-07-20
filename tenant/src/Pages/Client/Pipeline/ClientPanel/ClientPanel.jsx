@@ -13,9 +13,11 @@ import api from "../../../../api/clientPanelApis"; // adjust path
 import useAuth from "../../../../hooks/useAuth";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
+import usePermissions from "../../../../hooks/usePermissions";
 
 const ClientPanel = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const { clientId, tenantClientId } = useParams(); // <-- get the IDs from URL
   const location = useLocation();
   const [view, setView] = usePersistedTab(`tenant:clientPanel:${clientId}`, "clientInformation");
@@ -154,47 +156,55 @@ const ClientPanel = () => {
           >
             Client Information
           </button>
-          <button
-            onClick={() => setView("programs")}
-            className={`appointment-sched-view-button ${
-              view === "programs"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Programs
-          </button>
-          <button
-            onClick={() => setView("appointmentsAndSchedule")}
-            className={`appointment-sched-view-button ${
-              view === "appointmentsAndSchedule"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Appointments & Schedule
-          </button>
-          <button
-            onClick={() => setView("authorization")}
-            className={`appointment-sched-view-button ${
-              view === "authorization"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Authorization
-            {authCount > 0 && <span className="auth-badge">{authCount}</span>}
-          </button>
-          <button
-            onClick={() => setView("clinicalReports")}
-            className={`appointment-sched-view-button ${
-              view === "clinicalReports"
-                ? "appointment-sched-view-button-active"
-                : "appointment-sched-view-button-inactive"
-            }`}
-          >
-            Clinical Reports
-          </button>
+          {hasPermission("view_client_program_list") && (
+            <button
+              onClick={() => setView("programs")}
+              className={`appointment-sched-view-button ${
+                view === "programs"
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              Programs
+            </button>
+          )}
+          {hasPermission("view_client_appointment_schedules_list") && (
+            <button
+              onClick={() => setView("appointmentsAndSchedule")}
+              className={`appointment-sched-view-button ${
+                view === "appointmentsAndSchedule"
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              Appointments & Schedule
+            </button>
+          )}
+          {hasPermission("view_authorization") && (
+            <button
+              onClick={() => setView("authorization")}
+              className={`appointment-sched-view-button ${
+                view === "authorization"
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              Authorization
+              {authCount > 0 && <span className="auth-badge">{authCount}</span>}
+            </button>
+          )}
+          {hasPermission("view_client_clinical_report_list") && (
+            <button
+              onClick={() => setView("clinicalReports")}
+              className={`appointment-sched-view-button ${
+                view === "clinicalReports"
+                  ? "appointment-sched-view-button-active"
+                  : "appointment-sched-view-button-inactive"
+              }`}
+            >
+              Clinical Reports
+            </button>
+          )}
         </div>
 
         {/* Dynamic Content */}

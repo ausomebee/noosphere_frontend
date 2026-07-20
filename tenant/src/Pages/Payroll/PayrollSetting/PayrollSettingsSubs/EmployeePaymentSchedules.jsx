@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
 const EmployeePaymentSchedules = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const [scheduleData, setScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,11 @@ const EmployeePaymentSchedules = () => {
         showCheckbox={false}
         hideSearch={true}
         loading={loading}
-        onToggleActive={handleToggleActive}
+        onToggleActive={
+          hasPermission("activate_deactivate_compensation_type")
+            ? handleToggleActive
+            : undefined
+        }
       />
     </div>
   );

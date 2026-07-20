@@ -236,7 +236,9 @@ const Deductions = () => {
           hideSearch={true}
           hideTableActions={true}
           loading={loading}
-          onToggleActive={handleToggleActive}
+          onToggleActive={
+            hasPermission("deactivate_deductions") ? handleToggleActive : undefined
+          }
         />
       </div>
       <PayrollItemModal

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CustomTable from "../../../Components/Table/CustomTable";
 import api from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
@@ -11,6 +12,7 @@ const Claims = () => {
 
   // Auth state
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
   
   // State
@@ -107,11 +109,13 @@ const Claims = () => {
           filters={filters}
           tableName="Claims"
           itemsPerPage={10}
-          showActions={true}
+          showActions={hasPermission("can_view_claims")}
           showCheckbox={false}
           actionText="View"
           actionLinkPrefix="/claims/view/"
-          onActionClick={handleActionClick}
+          onActionClick={
+            hasPermission("can_view_claims") ? handleActionClick : undefined
+          }
           loading={loading}
         />
       </div>

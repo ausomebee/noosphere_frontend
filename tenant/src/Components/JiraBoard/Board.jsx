@@ -4,6 +4,7 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Column from './Column';
 import { FaCirclePlus } from 'react-icons/fa6';
+import usePermissions from '../../hooks/usePermissions';
 import './DragAndDrop.css';
 
 const Board = ({
@@ -24,6 +25,7 @@ const Board = ({
   setSelectedTaskIds, // Update prop name
   setShowAssignCandidateModal,
 }) => {
+  const { hasPermission } = usePermissions();
   const { tasks, columns, columnOrder } = data;
   const columnData = Object.keys(columns).map((colId) => ({
     id: colId,
@@ -101,7 +103,7 @@ const Board = ({
           return (
             <div className="column-wrapper" key={columnId}>
               {/* Render "Add Column" button before the first column */}
-              {index === 0 && (
+              {index === 0 && hasPermission("create_pipeline") && (
                 <div
                   className="column-insertion-point"
                   onMouseEnter={() => setHoverIndex(0)}
@@ -138,21 +140,23 @@ const Board = ({
                 setShowAssignCandidateModal={setShowAssignCandidateModal}
               />
               {/* Render "Add Column" button between columns and after the last column */}
-              <div
-                className="column-insertion-point"
-                onMouseEnter={() => setHoverIndex(index + 1)}
-                onMouseLeave={() => setHoverIndex(null)}
-              >
-                {hoverIndex === index + 1 && (
-                  <button
-                    className="add-column-button"
-                    onClick={() => onAddColumn(index + 1)}
-                    aria-label="Add column"
-                  >
-                    <FaCirclePlus />
-                  </button>
-                )}
-              </div>
+              {hasPermission("create_pipeline") && (
+                <div
+                  className="column-insertion-point"
+                  onMouseEnter={() => setHoverIndex(index + 1)}
+                  onMouseLeave={() => setHoverIndex(null)}
+                >
+                  {hoverIndex === index + 1 && (
+                    <button
+                      className="add-column-button"
+                      onClick={() => onAddColumn(index + 1)}
+                      aria-label="Add column"
+                    >
+                      <FaCirclePlus />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -160,17 +164,19 @@ const Board = ({
 
       {/* Always-visible affordance: a column-shaped box to add a new stage at
           the end (the hover "+" insertion points still work between columns). */}
-      <div className="add-column-card">
-        <button
-          type="button"
-          className="add-column-card-button"
-          onClick={() => onAddColumn(columnOrder.length)}
-          aria-label="Add pipeline stage"
-        >
-          <FaCirclePlus />
-          <span>Add pipeline stage</span>
-        </button>
-      </div>
+      {hasPermission("create_pipeline") && (
+        <div className="add-column-card">
+          <button
+            type="button"
+            className="add-column-card-button"
+            onClick={() => onAddColumn(columnOrder.length)}
+            aria-label="Add pipeline stage"
+          >
+            <FaCirclePlus />
+            <span>Add pipeline stage</span>
+          </button>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -10,10 +10,12 @@ import TargetLibraryModal from "../../../../../../Components/ReusableModal/Clien
 import { showToast } from "../../../../../../Helper/ShowToast";
 import api from "../../../../../../api/clientPanelApis";
 import useAuth from "../../../../../../hooks/useAuth";
+import usePermissions from "../../../../../../hooks/usePermissions";
 
 
 const ViewPrograms = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const { clientId, programId } = useParams();
   const [searchParams] = useSearchParams(); // Correct hook usage
 
@@ -185,7 +187,7 @@ const ViewPrograms = () => {
       type: "dropdown",
       label: "Actions",
       items: [
-        {
+        hasPermission("view_target_data_sheet") && {
           label: "View Data",
           onClick: (row) =>
             navigate(
@@ -200,12 +202,12 @@ const ViewPrograms = () => {
           label: "Edit Target",
           onClick: handleEditTarget,
         },
-        {
+        hasPermission("remove_target") && {
           label: "Remove Target",
           onClick: handleDeleteTarget,
           className: "text-red-600",
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
@@ -230,6 +232,7 @@ const ViewPrograms = () => {
 
       {/* New Target Dropdown */}
       <div className="client-dropdown-wrapper flex justify-end mb-6 relative">
+        {hasPermission("add_target") && (
         <div ref={triggerRef}>
           <Button
             label="New"
@@ -239,6 +242,7 @@ const ViewPrograms = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           />
         </div>
+        )}
 
         {isDropdownOpen && (
           <div className="client-dropdown-menu w-64 z-50">

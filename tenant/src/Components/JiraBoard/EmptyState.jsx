@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { FaPlus, FaRegFileAlt } from "react-icons/fa";
 import Button from "../Button/Button";
 import NewPipelineColumnModal from "../ReusableModal/PipelineModal/NewPipelineColumnModal";
+import usePermissions from "../../hooks/usePermissions";
 
 const EmptyState = ({ onAddFirstStage }) => {
   const [showDialog, setShowDialog] = useState(false);
+  const { hasPermission } = usePermissions();
 
   return (
     <div className="empty-state">
@@ -15,16 +17,18 @@ const EmptyState = ({ onAddFirstStage }) => {
         <h2>Setup your client onboarding pipeline</h2>
         <p>Set up custom stages to match your client intake process</p>
 
-        <div>
-          <Button
-            label="Add a first stage"
-            icon={<FaPlus />}
-            variant="primary"
-            onClick={() => setShowDialog(true)}
-            iconPosition="left"
-            width="200px"
-          />
-        </div>
+        {hasPermission("create_pipeline") && (
+          <div>
+            <Button
+              label="Add a first stage"
+              icon={<FaPlus />}
+              variant="primary"
+              onClick={() => setShowDialog(true)}
+              iconPosition="left"
+              width="200px"
+            />
+          </div>
+        )}
       </div>
 
       <NewPipelineColumnModal

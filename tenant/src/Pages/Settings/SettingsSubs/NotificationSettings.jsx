@@ -4,6 +4,7 @@ import useAuth from "../../../hooks/useAuth";
 import { CheckboxInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
+import usePermissions from "../../../hooks/usePermissions";
 import api from "../../../api/notificationApi";
 import "./NotificationSettings.css";
 
@@ -86,6 +87,7 @@ const buildDefaultState = () => {
 
 const NotificationSettings = () => {
   const { userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const [settings, setSettings] = useState(buildDefaultState);
   const [expandedSections, setExpandedSections] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
@@ -193,10 +195,12 @@ const NotificationSettings = () => {
         );
       })}
 
-      <div className="notif-settings-footer">
-        <Button label="Reset to Default" variant="secondary" onClick={handleReset} width="auto" />
-        <Button label="Save Changes" variant="primary" onClick={handleSave} loading={saveLoading} width="auto" />
-      </div>
+      {hasPermission("edit_notification_settings") && (
+        <div className="notif-settings-footer">
+          <Button label="Reset to Default" variant="secondary" onClick={handleReset} width="auto" />
+          <Button label="Save Changes" variant="primary" onClick={handleSave} loading={saveLoading} width="auto" />
+        </div>
+      )}
     </div>
   );
 };

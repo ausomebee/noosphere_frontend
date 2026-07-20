@@ -76,6 +76,13 @@ function CalendarScheduler({
   const canViewStaff = hasPermission("view_staff_list");
   const canViewClients = hasPermission("view_client_list");
 
+  // Granular appointment action gates (SCHEDULER module)
+  const canCreateAppointment = hasPermission("create_a_new_appointment");
+  const canEditAppointment = hasPermission("edit_appointments");
+  const canRescheduleAppointment = hasPermission("reschedule_appointments");
+  const canCancelAppointment = hasPermission("cancel_appointments");
+  const canStartAppointment = hasPermission("start_appointments");
+
   // Auto-show sidebar if user has filter permission
   useEffect(() => {
     if (canViewFilter) {
@@ -174,14 +181,20 @@ function CalendarScheduler({
 
   // Clicking (or right-clicking) an empty calendar slot opens the New
   // Appointment modal pre-filled with that slot's DATE only (time left blank).
-  const handleSlotClick = useCallback((date) => {
-    const d = date instanceof Date ? date : new Date(date);
-    if (isNaN(d.getTime())) return;
-    const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    setSelectedAppointment(null);
-    setPresetSlot({ date: ymd });
-    setIsAppointmentModalOpen(true);
-  }, []);
+  const handleSlotClick = useCallback(
+    (date) => {
+      // Clicking an empty slot also opens the create-appointment modal, so it
+      // needs the same gate as the New Appointment button.
+      if (!canCreateAppointment) return;
+      const d = date instanceof Date ? date : new Date(date);
+      if (isNaN(d.getTime())) return;
+      const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      setSelectedAppointment(null);
+      setPresetSlot({ date: ymd });
+      setIsAppointmentModalOpen(true);
+    },
+    [canCreateAppointment],
+  );
 
   const handleEditAppointment = (appt) => {
     setSelectedAppointment(appt);
@@ -351,16 +364,18 @@ function CalendarScheduler({
           </button>
         </div>
 
-        <Button
-          label="New Appointment"
-          variant="primary"
-          onClick={() => {
-            setSelectedAppointment(null);
-            setPresetSlot(null);
-            setIsAppointmentModalOpen(true);
-          }}
-          icon={<FaPlus />}
-        />
+        {canCreateAppointment && (
+          <Button
+            label="New Appointment"
+            variant="primary"
+            onClick={() => {
+              setSelectedAppointment(null);
+              setPresetSlot(null);
+              setIsAppointmentModalOpen(true);
+            }}
+            icon={<FaPlus />}
+          />
+        )}
       </div>
 
       <div className="cal-sched-filter-section">
@@ -521,9 +536,16 @@ function CalendarScheduler({
                 position={appointmentPosition}
                 clients={clients}
                 staff={staff}
-                onEdit={handleEditAppointment}
-                onReschedule={handleRescheduleAppointment}
-                onCancel={handleCancelAppointment}
+                onEdit={canEditAppointment ? handleEditAppointment : undefined}
+                onReschedule={
+                  canRescheduleAppointment
+                    ? handleRescheduleAppointment
+                    : undefined
+                }
+                onCancel={
+                  canCancelAppointment ? handleCancelAppointment : undefined
+                }
+                canStart={canStartAppointment}
               />
             </>
           )}

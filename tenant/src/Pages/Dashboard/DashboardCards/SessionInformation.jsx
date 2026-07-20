@@ -4,6 +4,7 @@ import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
 import useAuth from "../../../hooks/useAuth";
+import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
@@ -11,6 +12,7 @@ import ErrorFallback from "../../../Components/ErrorFallback";
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
 
   const [chartData, setChartData] = useState({
@@ -206,7 +208,9 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
         <p className="text-muted text-left mb-16">
           You have not scheduled any sessions. Data from all your sessions will be shown here
         </p>
-        <Button label="Schedule a session" variant="primary" className="mx-auto block" />
+        {hasPermission("create_a_new_appointment") && (
+          <Button label="Schedule a session" variant="primary" className="mx-auto block" />
+        )}
       </>
     );
   }

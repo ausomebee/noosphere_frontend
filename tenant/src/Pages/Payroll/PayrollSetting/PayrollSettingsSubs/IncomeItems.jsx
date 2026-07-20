@@ -232,7 +232,9 @@ const IncomeItems = () => {
           hideSearch={true}
           hideTableActions={true}
           loading={loading}
-          onToggleActive={handleToggleActive}
+          onToggleActive={
+            hasPermission("deactivate_income_item") ? handleToggleActive : undefined
+          }
         />
       </div>
       <PayrollItemModal

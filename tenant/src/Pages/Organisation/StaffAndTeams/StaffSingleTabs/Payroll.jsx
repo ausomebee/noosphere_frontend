@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import useAuth from "../../../../hooks/useAuth";
+import usePermissions from "../../../../hooks/usePermissions";
 import { useParams } from "react-router-dom";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollModal from "../../../../Components/ReusableModal/OrganizationModal/PayRollModal";
@@ -20,6 +21,7 @@ const formatRate = (item) => {
 
 const Payroll = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const { dateFormat } = useFormatSettings();
   const { tenantStaffId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -164,12 +166,14 @@ const Payroll = () => {
         <h2 className="font-bold text-lg text-gray-600 mb-4">
           Payroll Settings
         </h2>
-        <div
-          className="bg-white-bg p-5 rounded-md border border-gray-200 self-start cursor-pointer"
-          onClick={() => handleOpenModal("edit")}
-        >
-          <FiEdit3 size={20} />
-        </div>
+        {hasPermission("edit_staff_payroll_settings") && (
+          <div
+            className="bg-white-bg p-5 rounded-md border border-gray-200 self-start cursor-pointer"
+            onClick={() => handleOpenModal("edit")}
+          >
+            <FiEdit3 size={20} />
+          </div>
+        )}
       </div>
 
       {loading ? (
