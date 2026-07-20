@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
 import CustomTable from "../../Components/Table/CustomTable";
+import usePermission from "../../hooks/usePermission";
 
 const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete }) => {
+  const { hasPermission } = usePermission();
   const columns = [
     { key: "enterpriseName", header: "Enterprise Name" },
     { key: "dateAdded", header: "Date Added" },
@@ -23,16 +25,16 @@ const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete }) => {
   );
 
   const actions = [
-    {
+    hasPermission("edit_plan") && {
       label: "Edit Plan",
       onClick: (row) => onEdit(row._raw, "enterprise"),
     },
-    {
+    hasPermission("delete_plan") && {
       label: "Remove Plan",
       className: "remove",
       onClick: (row) => onDelete(row._raw, "enterprise"),
     },
-  ];
+  ].filter(Boolean);
 
   const handleToggleActive = (rowIndex) => {
     const row = tableData[rowIndex];
@@ -49,7 +51,11 @@ const EnterpriseTable = ({ plans, onStatusChange, onEdit, onDelete }) => {
       showCheckbox={false}
       itemsPerPage={10}
       tableName="Enterprise Plans"
-      onToggleActive={handleToggleActive}
+      onToggleActive={
+        hasPermission("activate_plan") && hasPermission("deactivate_plan")
+          ? handleToggleActive
+          : undefined
+      }
     />
   );
 };

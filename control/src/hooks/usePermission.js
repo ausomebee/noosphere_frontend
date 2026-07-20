@@ -1,70 +1,96 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import useAuth from "./useAuth";
 import { permissionsConfig } from "../Data/permissionsConfig";
 
 /**
  * Reads the logged-in admin's permissions from Redux.
  *
- * Expected user shape (from login response):
- *   user.isSuperAdmin            – boolean; if true, all permissions granted
- *   user.role.roleModuleAccesses – array of { module: string, permissions: Record<string, boolean> }
+ * Actual login response shape (confirmed):
+ *   user.role.roleModuleAccesses – array of:
+ *     { id, roleId, module: "<BACKEND_KEY>", permissions: ["<perm_key>", ...] }
+ *   i.e. `module` is the module backendKey (e.g. "TENANT", "BILLING") and
+ *   `permissions` is a FLAT ARRAY of granted permission-key strings.
  *
- * Falls back to user.permissions as a flat object if roleModuleAccesses is absent.
+ * Super-admins (explicit flag or no role) are granted everything.
+ * A flat `user.permissions` (array or object) is accepted as a fallback.
  */
 const usePermission = () => {
   const { user } = useAuth();
 
-  const { flatPermissions, isSuperAdmin } = useMemo(() => {
-    if (!user) return { flatPermissions: {}, isSuperAdmin: false };
+  const { permissionSet, moduleSet, isSuperAdmin } = useMemo(() => {
+    const empty = {
+      permissionSet: new Set(),
+      moduleSet: new Set(),
+      isSuperAdmin: false,
+    };
+    if (!user) return empty;
 
     // Super-admin: explicit flag OR no role assigned
-    const isSuper = user.isSuperAdmin === true || !user.role;
-    if (isSuper) return { flatPermissions: {}, isSuperAdmin: true };
+    if (user.isSuperAdmin === true || !user.role) {
+      return { ...empty, isSuperAdmin: true };
+    }
 
-    // Flatten from role module accesses
     const accesses = user.role?.roleModuleAccesses || [];
-    const perms = {};
+    const permissionSet = new Set();
+    const moduleSet = new Set();
+
     accesses.forEach((access) => {
-      if (access.permissions && typeof access.permissions === "object") {
-        Object.assign(perms, access.permissions);
+      if (access.module) moduleSet.add(access.module);
+      const perms = access.permissions;
+      if (Array.isArray(perms)) {
+        // Real backend shape: flat array of permission-key strings.
+        perms.forEach((key) => permissionSet.add(key));
+      } else if (perms && typeof perms === "object") {
+        // Defensive: object map { key: boolean }.
+        Object.entries(perms).forEach(([key, value]) => {
+          if (value) permissionSet.add(key);
+        });
       }
     });
 
-    // Fallback: flat permissions object directly on user
-    if (Object.keys(perms).length === 0 && user.permissions) {
-      Object.assign(perms, user.permissions);
+    // Fallback: flat permissions directly on the user object.
+    if (permissionSet.size === 0 && user.permissions) {
+      const flat = user.permissions;
+      if (Array.isArray(flat)) {
+        flat.forEach((key) => permissionSet.add(key));
+      } else if (typeof flat === "object") {
+        Object.entries(flat).forEach(([key, value]) => {
+          if (value) permissionSet.add(key);
+        });
+      }
     }
 
-    return { flatPermissions: perms, isSuperAdmin: false };
+    return { permissionSet, moduleSet, isSuperAdmin: false };
   }, [user]);
 
   /**
-   * Returns true if the current user has the given permission key.
+   * True if the current user was granted the given granular permission key.
    * Super-admins always return true.
    */
-  const hasPermission = (key) => {
-    if (!user) return false;
-    if (isSuperAdmin) return true;
-    return flatPermissions[key] === true;
-  };
+  const hasPermission = useCallback(
+    (key) => {
+      if (!user) return false;
+      if (isSuperAdmin) return true;
+      return permissionSet.has(key);
+    },
+    [user, isSuperAdmin, permissionSet],
+  );
 
   /**
-   * Returns true if the current user has access to at least one section
-   * within the given top-level module key (e.g. "tenant", "billing").
-   * Super-admins always return true.
+   * True if the current user has access to the given top-level module
+   * (e.g. "tenant", "billing"). Matches the module's backendKey against the
+   * `module` field the backend returns. Super-admins always return true.
    */
-  const hasModuleAccess = (moduleKey) => {
-    if (!user) return false;
-    if (isSuperAdmin) return true;
-
-    const configModule = permissionsConfig.find((m) => m.key === moduleKey);
-    if (!configModule) return true; // unknown module — allow by default
-
-    const accesses = user.role?.roleModuleAccesses || [];
-    return configModule.sections.some((section) =>
-      accesses.some((a) => a.module === section.key)
-    );
-  };
+  const hasModuleAccess = useCallback(
+    (moduleKey) => {
+      if (!user) return false;
+      if (isSuperAdmin) return true;
+      const configModule = permissionsConfig.find((m) => m.key === moduleKey);
+      if (!configModule) return true; // unknown module — allow by default
+      return moduleSet.has(configModule.backendKey);
+    },
+    [user, isSuperAdmin, moduleSet],
+  );
 
   return { hasPermission, hasModuleAccess, isSuperAdmin };
 };

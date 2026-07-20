@@ -630,7 +630,7 @@ const GetStaffClients = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/client/clinician/${staffId}/${tenantId}`,
+      `${PLAIN_API_URL}/client/clinician/tenant/${staffId}/${tenantId}`,
     );
     return response.data;
   } catch (error) {

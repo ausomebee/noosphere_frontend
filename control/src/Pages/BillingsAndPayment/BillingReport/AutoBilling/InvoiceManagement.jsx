@@ -11,6 +11,7 @@ import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvo
 import api from "../../../../api/AutoBillingInvoiceAPIs";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
+import usePermission from "../../../../hooks/usePermission";
 
 const InvoiceManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -45,6 +46,7 @@ const InvoiceManagement = () => {
   });
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const fetchInvoiceSettings = useCallback(async () => {
     setIsLoading(true);
@@ -211,6 +213,9 @@ const InvoiceManagement = () => {
   };
 
   const handleInputChange = (key, value, index = null) => {
+    // Inline fields auto-persist via debouncedSave, so gate the whole path —
+    // hiding the Save button alone would leave this save vector open.
+    if (!hasPermission("configure_auto_billing")) return;
     if (index !== null) {
       setReminders((prev) =>
         prev.map((reminder, i) =>
@@ -422,12 +427,14 @@ const InvoiceManagement = () => {
             <label>
               Auto-generate a payment invoice when a tenant purchases a plan
             </label>
-            <SwitchInput
-              checked={invoiceSettings.autoGenerateInvoice}
-              onChange={(e) =>
-                handleInputChange("autoGenerateInvoice", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={invoiceSettings.autoGenerateInvoice}
+                  onChange={(e) =>
+                    handleInputChange("autoGenerateInvoice", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         <div className="form-row">
@@ -462,12 +469,14 @@ const InvoiceManagement = () => {
               </div>
               <label>days before due date</label>
             </div>
-            <SwitchInput
-              checked={invoiceSettings.sendUpcomingInvoices}
-              onChange={(e) =>
-                handleInputChange("sendUpcomingInvoices", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={invoiceSettings.sendUpcomingInvoices}
+                  onChange={(e) =>
+                    handleInputChange("sendUpcomingInvoices", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
 
@@ -497,29 +506,30 @@ const InvoiceManagement = () => {
                   rows={4}
                   disabled={!editMode.upcomingInvoices}
                 />
-                {!editMode.upcomingInvoices ? (
-                  <Button
-                    label="Edit"
-                    variant="outline"
-                    onClick={() => toggleEditMode("upcomingInvoices")}
-                    width="100px"
-                  />
-                ) : (
-                  <div className="edit-actions">
+                {hasPermission("configure_auto_billing") &&
+                  (!editMode.upcomingInvoices ? (
                     <Button
-                      label="Cancel"
+                      label="Edit"
                       variant="outline"
                       onClick={() => toggleEditMode("upcomingInvoices")}
                       width="100px"
                     />
-                    <Button
-                      label="Save"
-                      variant="primary"
-                      onClick={() => handleSave("upcomingInvoices")}
-                      width="100px"
-                    />
-                  </div>
-                )}
+                  ) : (
+                    <div className="edit-actions">
+                      <Button
+                        label="Cancel"
+                        variant="outline"
+                        onClick={() => toggleEditMode("upcomingInvoices")}
+                        width="100px"
+                      />
+                      <Button
+                        label="Save"
+                        variant="primary"
+                        onClick={() => handleSave("upcomingInvoices")}
+                        width="100px"
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           </>
@@ -531,12 +541,14 @@ const InvoiceManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>Send payment invoice to tenants on due date</label>
-            <SwitchInput
-              checked={invoiceSettings.sendDueInvoices}
-              onChange={(e) =>
-                handleInputChange("sendDueInvoices", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={invoiceSettings.sendDueInvoices}
+                  onChange={(e) =>
+                    handleInputChange("sendDueInvoices", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
 
@@ -568,29 +580,30 @@ const InvoiceManagement = () => {
                     disabled={!editMode.dueInvoices}
                   />
                 </div>
-                {!editMode.dueInvoices ? (
-                  <Button
-                    label="Edit"
-                    variant="outline"
-                    onClick={() => toggleEditMode("dueInvoices")}
-                    width="100px"
-                  />
-                ) : (
-                  <div className="edit-actions">
+                {hasPermission("configure_auto_billing") &&
+                  (!editMode.dueInvoices ? (
                     <Button
-                      label="Cancel"
+                      label="Edit"
                       variant="outline"
                       onClick={() => toggleEditMode("dueInvoices")}
                       width="100px"
                     />
-                    <Button
-                      label="Save"
-                      variant="primary"
-                      onClick={() => handleSave("dueInvoices")}
-                      width="100px"
-                    />
-                  </div>
-                )}
+                  ) : (
+                    <div className="edit-actions">
+                      <Button
+                        label="Cancel"
+                        variant="outline"
+                        onClick={() => toggleEditMode("dueInvoices")}
+                        width="100px"
+                      />
+                      <Button
+                        label="Save"
+                        variant="primary"
+                        onClick={() => handleSave("dueInvoices")}
+                        width="100px"
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           </>
@@ -642,23 +655,30 @@ const InvoiceManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>Attach payment invoice to each reminder email?</label>
-            <SwitchInput
-              checked={invoiceSettings.attachInvoiceToReminder}
-              onChange={(e) =>
-                handleInputChange("attachInvoiceToReminder", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={invoiceSettings.attachInvoiceToReminder}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "attachInvoiceToReminder",
+                      e.target.checked
+                    )
+                  }
+                />
+              )}
           </div>
         </div>
         <div className="form-row">
           <div className="form-header">
             <label>Save reminders individually</label>
-            <SwitchInput
-              checked={saveMode === "individual"}
-              onChange={(e) =>
-                setSaveMode(e.target.checked ? "individual" : "batch")
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={saveMode === "individual"}
+                  onChange={(e) =>
+                    setSaveMode(e.target.checked ? "individual" : "batch")
+                  }
+                />
+              )}
           </div>
         </div>
 
@@ -715,44 +735,47 @@ const InvoiceManagement = () => {
                     placeholder="Enter message"
                     rows={4}
                   />
-                  {!reminder.editMode ? (
-                    <Button
-                      label="Edit"
-                      variant="outline"
-                      onClick={() => toggleReminderEditMode(index)}
-                      width="100px"
-                    />
-                  ) : (
-                    <div className="edit-actions">
+                  {hasPermission("configure_auto_billing") &&
+                    (!reminder.editMode ? (
                       <Button
-                        label="Cancel"
+                        label="Edit"
                         variant="outline"
                         onClick={() => toggleReminderEditMode(index)}
                         width="100px"
                       />
-                      <Button
-                        label="Save"
-                        variant="primary"
-                        onClick={() => handleSaveReminder(index)}
-                        width="100px"
-                      />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="edit-actions">
+                        <Button
+                          label="Cancel"
+                          variant="outline"
+                          onClick={() => toggleReminderEditMode(index)}
+                          width="100px"
+                        />
+                        <Button
+                          label="Save"
+                          variant="primary"
+                          onClick={() => handleSaveReminder(index)}
+                          width="100px"
+                        />
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
           </React.Fragment>
         ))}
-        {reminders.length > 1 && saveMode === "batch" && (
-          <div className="form-row">
-            <Button
-              label="Save All Reminders"
-              variant="primary"
-              onClick={handleSaveAllReminders}
-              width="auto"
-            />
-          </div>
-        )}
+        {reminders.length > 1 &&
+          saveMode === "batch" &&
+          hasPermission("configure_auto_billing") && (
+            <div className="form-row">
+              <Button
+                label="Save All Reminders"
+                variant="primary"
+                onClick={handleSaveAllReminders}
+                width="auto"
+              />
+            </div>
+          )}
       </div>
     </div>
   );

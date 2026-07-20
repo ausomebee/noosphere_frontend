@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../../hooks/useAuth";
+import usePermission from "../../../../hooks/usePermission";
 
 import CustomTable from "../../../../Components/Table/CustomTable";
 import { SelectInput, TextInput } from "../../../../Components/Input/Inputs";
@@ -31,6 +32,7 @@ import usePersistedTab from "../../../../hooks/usePersistedTab";
 const SubscriptionManager = () => {
   const navigate = useNavigate();
   const { accessToken, refreshToken, userId: adminId } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [activeTab, setActiveTab] = usePersistedTab("control:subscriptionManager", "all");
   const [, setFilterValue] = useState("");
@@ -354,14 +356,14 @@ const SubscriptionManager = () => {
 
   const activeActions = useMemo(
     () => [
-      {
+      hasPermission("pause_subscription") && {
         label: "Pause Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
           setIsPauseModalOpen(true);
         },
       },
-      {
+      hasPermission("cancel_subscription") && {
         label: "Cancel Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
@@ -370,27 +372,27 @@ const SubscriptionManager = () => {
       },
       { label: "View Payment History", onClick: handleViewPayment },
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
-      {
+      hasPermission("modify_subscription") && {
         label: "Change Plan",
         onClick: (row) => {
           setSelectedTenantId(row.tenantId);
           setIsPaymentLinkModalOpen(true);
         },
       },
-    ],
-    [handleViewPayment, handleViewTenantProfile]
+    ].filter(Boolean),
+    [handleViewPayment, handleViewTenantProfile, hasPermission]
   );
 
   const pausedActions = useMemo(
     () => [
-      {
+      hasPermission("resume_subscription") && {
         label: "Resume Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
           setIsResumeModalOpen(true);
         },
       },
-      {
+      hasPermission("cancel_subscription") && {
         label: "Cancel Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
@@ -399,49 +401,49 @@ const SubscriptionManager = () => {
       },
       { label: "View Payment History", onClick: handleViewPayment },
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
-      {
+      hasPermission("modify_subscription") && {
         label: "Change Plan",
         onClick: (row) => {
           setSelectedTenantId(row.tenantId);
           setIsPaymentLinkModalOpen(true);
         },
       },
-    ],
-    [handleViewPayment, handleViewTenantProfile]
+    ].filter(Boolean),
+    [handleViewPayment, handleViewTenantProfile, hasPermission]
   );
 
   const canceledActions = useMemo(
     () => [
       { label: "View Payment History", onClick: handleViewPayment },
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
-      {
+      hasPermission("modify_subscription") && {
         label: "Assign a New Plan",
         onClick: (row) => {
           setSelectedTenantId(row.tenantId);
           setIsPaymentLinkModalOpen(true);
         },
       },
-    ],
-    [handleViewPayment, handleViewTenantProfile]
+    ].filter(Boolean),
+    [handleViewPayment, handleViewTenantProfile, hasPermission]
   );
 
   const defaultActions = useMemo(
     () => [
-      {
+      hasPermission("pause_subscription") && {
         label: "Pause Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
           setIsPauseModalOpen(true);
         },
       },
-      {
+      hasPermission("cancel_subscription") && {
         label: "Cancel Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
           setIsCancelModalOpen(true);
         },
       },
-      {
+      hasPermission("resume_subscription") && {
         label: "Resume Subscription",
         onClick: (row) => {
           setSelectedItems([row]);
@@ -450,15 +452,15 @@ const SubscriptionManager = () => {
       },
       { label: "View Payment History", onClick: handleViewPayment },
       { label: "View Tenant Profile", onClick: handleViewTenantProfile },
-      {
+      hasPermission("modify_subscription") && {
         label: "Change Plan",
         onClick: (row) => {
           setSelectedTenantId(row.tenantId);
           setIsPaymentLinkModalOpen(true);
         },
       },
-    ],
-    [handleViewPayment, handleViewTenantProfile]
+    ].filter(Boolean),
+    [handleViewPayment, handleViewTenantProfile, hasPermission]
   );
 
   const getActionsForTab = useCallback(() => {
@@ -609,35 +611,43 @@ const SubscriptionManager = () => {
       if (selectedStatuses.has("active")) {
         return (
           <div className="bulk-actions">
-            <Button
-              label="Pause Subscription"
-              variant="outline"
-              onClick={() => setIsPauseModalOpen(true)}
-              width="200px"
-            />
-            <Button
-              label="Cancel Subscription"
-              variant="secondary-danger"
-              onClick={() => setIsCancelModalOpen(true)}
-              width="200px"
-            />
+            {hasPermission("pause_subscription") && (
+              <Button
+                label="Pause Subscription"
+                variant="outline"
+                onClick={() => setIsPauseModalOpen(true)}
+                width="200px"
+              />
+            )}
+            {hasPermission("cancel_subscription") && (
+              <Button
+                label="Cancel Subscription"
+                variant="secondary-danger"
+                onClick={() => setIsCancelModalOpen(true)}
+                width="200px"
+              />
+            )}
           </div>
         );
       } else if (selectedStatuses.has("paused")) {
         return (
           <div className="bulk-actions">
-            <Button
-              label="Resume Subscription"
-              variant="outline"
-              onClick={() => setIsResumeModalOpen(true)}
-              width="200px"
-            />
-            <Button
-              label="Cancel Subscription"
-              variant="secondary-danger"
-              onClick={() => setIsCancelModalOpen(true)}
-              width="200px"
-            />
+            {hasPermission("resume_subscription") && (
+              <Button
+                label="Resume Subscription"
+                variant="outline"
+                onClick={() => setIsResumeModalOpen(true)}
+                width="200px"
+              />
+            )}
+            {hasPermission("cancel_subscription") && (
+              <Button
+                label="Cancel Subscription"
+                variant="secondary-danger"
+                onClick={() => setIsCancelModalOpen(true)}
+                width="200px"
+              />
+            )}
           </div>
         );
       }
@@ -647,18 +657,20 @@ const SubscriptionManager = () => {
     ) {
       return (
         <div className="bulk-actions">
-          <Button
-            label="Cancel Subscription"
-            variant="secondary-danger"
-            onClick={() => setIsCancelModalOpen(true)}
-            width="200px"
-          />
+          {hasPermission("cancel_subscription") && (
+            <Button
+              label="Cancel Subscription"
+              variant="secondary-danger"
+              onClick={() => setIsCancelModalOpen(true)}
+              width="200px"
+            />
+          )}
         </div>
       );
     }
 
     return null;
-  }, [selectedItems, selectedStatuses]);
+  }, [selectedItems, selectedStatuses, hasPermission]);
 
   const handleBackFromPayment = useCallback(() => {
     setShowPaymentView(false);

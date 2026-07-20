@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -28,6 +29,7 @@ import { Skeleton, SkeletonText, SkeletonTable } from "../../Components/LoadingS
 
 const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   const { accessToken, refreshToken, userId: adminId } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [issueData, setIssueData] = useState(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
@@ -120,16 +122,16 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
   }, []);
 
   const actions = [
-    "Add a comment",
-    "Add an attachment",
+    hasPermission("add_issue_comment") && "Add a comment",
+    hasPermission("add_issue_attachment") && "Add an attachment",
     "Change category",
-    "Change Priority",
-    "Change Status",
+    hasPermission("change_issue_priority") && "Change Priority",
+    hasPermission("change_issue_status") && "Change Status",
     "Contact tenant by email",
-    "Edit issue",
-    "Mark as resolved",
-    "Reassign",
-  ];
+    hasPermission("edit_issue") && "Edit issue",
+    hasPermission("change_issue_status") && "Mark as resolved",
+    hasPermission("reassign_issue") && "Reassign",
+  ].filter(Boolean);
 
   // Column definitions for each section (used by TableUtils)
   const issueInfoColumns = [

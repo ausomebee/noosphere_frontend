@@ -4,6 +4,7 @@ export const moduleAccessOptions = [
   { key: "billing", label: "Billing & Payments" },
   { key: "issueManagement", label: "Issue Management" },
   { key: "featureManagement", label: "Feature Management" },
+  { key: "performanceMonitoring", label: "Performance Monitoring" },
   { key: "settings", label: "Settings" },
 ];
 

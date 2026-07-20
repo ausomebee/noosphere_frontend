@@ -5,12 +5,14 @@ import CustomTable from "../../../Components/Table/CustomTable";
 import Button from "../../../Components/Button/Button";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import roleApi from "../../../api/roleApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
 
 const Roles = () => {
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterValue, setFilterValue] = useState("");
@@ -62,13 +64,13 @@ const Roles = () => {
   );
 
   const actions = [
-    {
+    hasPermission("edit_role") && {
       label: "Edit Role",
       onClick: (row) => {
         navigate(`/settings/roles-permissions/configure/${row.id}`);
       },
     },
-  ];
+  ].filter(Boolean);
 
   const handleToggleActive = async (rowIndex) => {
     const role = roles[rowIndex];
@@ -105,14 +107,16 @@ const Roles = () => {
       <div className="settings-action-bar">
         <div className="settings-action-bar-left" />
         <div className="settings-action-bar-right">
-          <Button
-            label="Add new role"
-            variant="dark"
-            icon={<FaPlus />}
-            iconPosition="left"
-            width="auto"
-            onClick={() => navigate("/settings/roles-permissions/configure")}
-          />
+          {hasPermission("create_role") && (
+            <Button
+              label="Add new role"
+              variant="dark"
+              icon={<FaPlus />}
+              iconPosition="left"
+              width="auto"
+              onClick={() => navigate("/settings/roles-permissions/configure")}
+            />
+          )}
         </div>
       </div>
 
@@ -128,7 +132,11 @@ const Roles = () => {
           showCheckbox={false}
           itemsPerPage={10}
           tableName="Roles"
-          onToggleActive={handleToggleActive}
+          onToggleActive={
+            hasPermission("activate_role") && hasPermission("deactivate_role")
+              ? handleToggleActive
+              : undefined
+          }
         />
       )}
     </div>

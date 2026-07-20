@@ -9,6 +9,7 @@ import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import staffApi from "../../../api/staffApis";
 import departmentApi from "../../../api/departmentApis";
 import roleApi from "../../../api/roleApis";
@@ -73,6 +74,7 @@ const defaultValues = {
 
 const Staff = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
   const [staff, setStaff] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -206,7 +208,7 @@ const Staff = () => {
   ];
 
   const actions = [
-    {
+    hasPermission("edit_staff") && {
       label: "Edit Staff",
       onClick: (row) => {
         const raw = row._raw;
@@ -223,7 +225,7 @@ const Staff = () => {
         setIsModalOpen(true);
       },
     },
-    {
+    hasPermission("delete_staff") && {
       label: "Deactivate Staff",
       className: "remove",
       onClick: async (row) => {
@@ -250,7 +252,7 @@ const Staff = () => {
         }
       },
     },
-  ];
+  ].filter(Boolean);
 
   const handleToggleActive = async (rowIndex) => {
     const row = tableData[rowIndex];
@@ -318,14 +320,16 @@ const Staff = () => {
       <div className="settings-action-bar">
         <div className="settings-action-bar-left" />
         <div className="settings-action-bar-right">
-          <Button
-            label="Add new staff"
-            variant="dark"
-            icon={<FaPlus />}
-            iconPosition="left"
-            width="auto"
-            onClick={() => setIsModalOpen(true)}
-          />
+          {hasPermission("create_staff") && (
+            <Button
+              label="Add new staff"
+              variant="dark"
+              icon={<FaPlus />}
+              iconPosition="left"
+              width="auto"
+              onClick={() => setIsModalOpen(true)}
+            />
+          )}
         </div>
       </div>
 
@@ -341,7 +345,9 @@ const Staff = () => {
           showCheckbox={false}
           itemsPerPage={10}
           tableName="Staff"
-          onToggleActive={handleToggleActive}
+          onToggleActive={
+            hasPermission("delete_staff") ? handleToggleActive : undefined
+          }
         />
       )}
 

@@ -29,6 +29,7 @@ import { FaArrowLeft, FaDollarSign } from "react-icons/fa";
 import Alert from "../Alert/Alert";
 import { useDispatch, useSelector } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import {
   fetchSinglePipelineItem,
   fetchSinglePipelineStages,
@@ -84,6 +85,8 @@ const ProspectPanel = () => {
   const dispatch = useDispatch();
   const { pipelineStageId, pipelineItemId } = useParams();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
+  const canGeneratePayment = hasPermission("generate_payment_link");
 
   const pipelineItem = useSelector(selectPipelineItem);
   const pipelineId = useSelector((state) => state.pipeline.pipeline?.id);
@@ -943,10 +946,14 @@ const ProspectPanel = () => {
           <Alert
             message="No Payment has been recorded for this candidate"
             variant="warning"
-            primaryAction={{
-              label: "Generate payment link",
-              onClick: () => handleOpenPaymentModal("Plan Settings"),
-            }}
+            primaryAction={
+              canGeneratePayment
+                ? {
+                    label: "Generate payment link",
+                    onClick: () => handleOpenPaymentModal("Plan Settings"),
+                  }
+                : undefined
+            }
           />
         )}
         <div className="prospect-layout">
@@ -1046,34 +1053,38 @@ const ProspectPanel = () => {
             </div>
             <div className="org-actions">
               <p className="org-actions-title">Actions</p>
-              <div className="org-action-item">
-                <Button
-                  label={
-                    hasGeneratedPaymentBefore
-                      ? "Manage Payment Actions"
-                      : "Generate payment link"
-                  }
-                  icon={<FaDollarSign size={20} />}
-                  variant="important"
-                  iconPosition="left"
-                  onClick={() =>
-                    handleOpenPaymentModal(
-                      hasGeneratedPaymentBefore ? "Payment Link" : "Plan Settings"
-                    )
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="org-action-item">
-                <Button
-                  label="Move Candidate"
-                  icon={<IoMdMove size={20} />}
-                  variant="action"
-                  iconPosition="left"
-                  onClick={() => setIsMoveCandidateModalOpen(true)}
-                  disabled={isLoading}
-                />
-              </div>
+              {canGeneratePayment && (
+                <div className="org-action-item">
+                  <Button
+                    label={
+                      hasGeneratedPaymentBefore
+                        ? "Manage Payment Actions"
+                        : "Generate payment link"
+                    }
+                    icon={<FaDollarSign size={20} />}
+                    variant="important"
+                    iconPosition="left"
+                    onClick={() =>
+                      handleOpenPaymentModal(
+                        hasGeneratedPaymentBefore ? "Payment Link" : "Plan Settings"
+                      )
+                    }
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+              {hasPermission("move_prospect") && (
+                <div className="org-action-item">
+                  <Button
+                    label="Move Candidate"
+                    icon={<IoMdMove size={20} />}
+                    variant="action"
+                    iconPosition="left"
+                    onClick={() => setIsMoveCandidateModalOpen(true)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
               <div className="org-action-item">
                 <Button
                   label="Send an email"
@@ -1094,17 +1105,19 @@ const ProspectPanel = () => {
                   disabled={isLoading}
                 />
               </div>
-              <div className="org-action-item no-border">
-                <Button
-                  label="Delete prospect"
-                  icon={<RxCross2 size={20} />}
-                  variant="action-danger"
-                  iconPosition="left"
-                  iconSize={24}
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  disabled={isLoading}
-                />
-              </div>
+              {hasPermission("remove_prospect") && (
+                <div className="org-action-item no-border">
+                  <Button
+                    label="Delete prospect"
+                    icon={<RxCross2 size={20} />}
+                    variant="action-danger"
+                    iconPosition="left"
+                    iconSize={24}
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
             </div>
           </div>
           <div className="prospect-right">
@@ -1475,7 +1488,7 @@ const ProspectPanel = () => {
                             <span className="history-entry-text">
                               {formatEventLabel(entry.event)} {formatHistoryDate(entry.time)}
                             </span>
-                            {entry.event === "PAYMENT_LINK_EXPIRED" && idx === lastExpiredIdx && (
+                            {entry.event === "PAYMENT_LINK_EXPIRED" && idx === lastExpiredIdx && canGeneratePayment && (
                               <Button
                                 label="Regenerate link"
                                 variant="primary"

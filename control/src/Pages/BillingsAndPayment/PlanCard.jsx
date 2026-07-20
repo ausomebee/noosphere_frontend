@@ -3,9 +3,24 @@ import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import { RxDragHandleDots2 } from "react-icons/rx";
 import "./BillingAndPayments.css";
 import { useNavigate } from "react-router-dom";
+import usePermission from "../../hooks/usePermission";
 
 const PlanCard = ({ plan, onDuplicate, onStatusChange, onEdit, onDelete }) => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermission();
+  const canActivate = hasPermission("activate_plan");
+  const canDeactivate = hasPermission("deactivate_plan");
+  const canViewSubscribers = hasPermission("view_subscribers");
+  const canDuplicate = hasPermission("duplicate_plan");
+  const canEdit = hasPermission("edit_plan");
+  const canDelete = hasPermission("delete_plan");
+  const canDoAny =
+    canActivate ||
+    canDeactivate ||
+    canViewSubscribers ||
+    canDuplicate ||
+    canEdit ||
+    canDelete;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const cogButtonRef = useRef(null);
@@ -105,65 +120,79 @@ const getHeaderClass = () => "plan-header";
           </div>
         </div>
         <div className="plan-header-right">
-          <button
-            ref={cogButtonRef}
-            className="cog-button"
-            onClick={handleDropdownToggle}
-            aria-label="Plan options"
-            aria-expanded={isDropdownOpen}
-          >
-            <HiOutlineCog6Tooth
-              className="gear-icon"
-              size={30}
-              color={headerStyle.color}
-            />
-          </button>
+          {canDoAny && (
+            <button
+              ref={cogButtonRef}
+              className="cog-button"
+              onClick={handleDropdownToggle}
+              aria-label="Plan options"
+              aria-expanded={isDropdownOpen}
+            >
+              <HiOutlineCog6Tooth
+                className="gear-icon"
+                size={30}
+                color={headerStyle.color}
+              />
+            </button>
+          )}
         </div>
       </div>
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>
           <div className="dropdown-items">
             {plan.status === "inactive" ? (
-              <button
-                className="dropdown-item"
-                onClick={(e) => handleMenuClick("activate", e)}
-              >
-                Activate Plan
-              </button>
+              canActivate && (
+                <button
+                  className="dropdown-item"
+                  onClick={(e) => handleMenuClick("activate", e)}
+                >
+                  Activate Plan
+                </button>
+              )
             ) : (
               <>
-                <button
-                  className="dropdown-item"
-                  onClick={(e) => handleMenuClick("view", e)}
-                >
-                  View subscriber list
-                </button>
-                <button
-                  className="dropdown-item"
-                  onClick={(e) => handleMenuClick("deactivate", e)}
-                >
-                  Deactivate Plan
-                </button>
+                {canViewSubscribers && (
+                  <button
+                    className="dropdown-item"
+                    onClick={(e) => handleMenuClick("view", e)}
+                  >
+                    View subscriber list
+                  </button>
+                )}
+                {canDeactivate && (
+                  <button
+                    className="dropdown-item"
+                    onClick={(e) => handleMenuClick("deactivate", e)}
+                  >
+                    Deactivate Plan
+                  </button>
+                )}
               </>
             )}
-            <button
-              className="dropdown-item"
-              onClick={(e) => handleMenuClick("duplicate", e)}
-            >
-              Duplicate Plan
-            </button>
-            <button
-              className="dropdown-item"
-              onClick={(e) => handleMenuClick("edit", e)}
-            >
-              Edit Plan
-            </button>
-            <button
-              className="dropdown-item dropdown-item-danger"
-              onClick={(e) => handleMenuClick("delete", e)}
-            >
-              Delete Plan
-            </button>
+            {canDuplicate && (
+              <button
+                className="dropdown-item"
+                onClick={(e) => handleMenuClick("duplicate", e)}
+              >
+                Duplicate Plan
+              </button>
+            )}
+            {canEdit && (
+              <button
+                className="dropdown-item"
+                onClick={(e) => handleMenuClick("edit", e)}
+              >
+                Edit Plan
+              </button>
+            )}
+            {canDelete && (
+              <button
+                className="dropdown-item dropdown-item-danger"
+                onClick={(e) => handleMenuClick("delete", e)}
+              >
+                Delete Plan
+              </button>
+            )}
           </div>
         </div>
       )}

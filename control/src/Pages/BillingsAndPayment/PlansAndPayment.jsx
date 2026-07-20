@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 
 import Button from "../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -40,6 +41,7 @@ const PlansAndPayment = () => {
   const [errors, setErrors] = useState({});
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   useEffect(() => {
     if (accessToken && refreshToken) {
@@ -676,15 +678,17 @@ const handleSavePlan = async (planData) => {
       <div className="text-sm" style={{ marginBottom: "20px" }}>
         You haven't configured any plans. Create your first plan to begin.
       </div>
-      <Button
-        label="Add new plan"
-        icon={<FaPlus />}
-        iconPosition="left"
-        variant="primary"
-        onClick={handleAddNewPlan}
-        width="auto"
-        disabled={loading}
-      />
+      {hasPermission("create_plan") && (
+        <Button
+          label="Add new plan"
+          icon={<FaPlus />}
+          iconPosition="left"
+          variant="primary"
+          onClick={handleAddNewPlan}
+          width="auto"
+          disabled={loading}
+        />
+      )}
     </div>
   );
 
@@ -697,16 +701,18 @@ const handleSavePlan = async (planData) => {
         </div>
       </div>
       <div className="billing-board-buttons">
-        <Button
-          label="Add New Plan"
-          icon={<FaPlus />}
-          iconPosition="left"
-          width="200px"
-          variant="primary"
-          onClick={handleAddNewPlan}
-          aria-label="Add a new billing plan"
-          disabled={loading}
-        />
+        {hasPermission("create_plan") && (
+          <Button
+            label="Add New Plan"
+            icon={<FaPlus />}
+            iconPosition="left"
+            width="200px"
+            variant="primary"
+            onClick={handleAddNewPlan}
+            aria-label="Add a new billing plan"
+            disabled={loading}
+          />
+        )}
       </div>
 
       <div className="tabs">

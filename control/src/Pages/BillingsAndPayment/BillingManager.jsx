@@ -6,6 +6,7 @@ import { SelectInput, TextInput } from "../../Components/Input/Inputs";
 import api from "../../api/InvoiceApi";
 import api2 from "../../api/TenantApis";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
 import {
@@ -32,6 +33,7 @@ const statusMap = {
 
 const BillingManager = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [activeTab, setActiveTab] = usePersistedTab("control:billingManager", "invoices");
   const [activeSubTab, setActiveSubTab] = useState("all");
@@ -586,9 +588,9 @@ const BillingManager = () => {
   };
 
   const tabs = [
-    { key: "invoices", label: "Invoices" },
-    { key: "payments", label: "Payments" },
-  ];
+    hasPermission("view_invoices") && { key: "invoices", label: "Invoices" },
+    hasPermission("view_payments") && { key: "payments", label: "Payments" },
+  ].filter(Boolean);
 
   const invoiceSubTabs = [
     { key: "all", label: "All", count: invoiceCounts.All },

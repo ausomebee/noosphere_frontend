@@ -280,46 +280,54 @@ const AccordionTableRobust = ({
                       className="robust-action-cell"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
-                        className="robust-action-dots"
-                        ref={(el) => { actionButtonRefs.current[idx] = el; }}
-                        onClick={(e) => toggleDropdown(idx, e)}
-                      >
-                        <FaEllipsisV />
-                      </button>
+                      {(onEdit || onDeactivate || onDelete) && (
+                        <button
+                          className="robust-action-dots"
+                          ref={(el) => { actionButtonRefs.current[idx] = el; }}
+                          onClick={(e) => toggleDropdown(idx, e)}
+                        >
+                          <FaEllipsisV />
+                        </button>
+                      )}
 
                       {isDropdownOpen && (
                         <div
                           className="robust-dropdown"
                           style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
                         >
-                          <button
-                            onClick={() => {
-                              onEdit?.(row);
-                              setDropdownOpen(null);
-                            }}
-                            disabled={used}
-                          >
-                            Edit Authorization
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDeactivate?.(row);
-                              setDropdownOpen(null);
-                            }}
-                          >
-                            {row.isActive === false ? "Activate" : "Deactivate"} Authorization
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDelete?.(row);
-                              setDropdownOpen(null);
-                            }}
-                            className="robust-danger"
-                          >
-                            Delete Authorization
-                          </button>
-                          {used && (
+                          {onEdit && (
+                            <button
+                              onClick={() => {
+                                onEdit(row);
+                                setDropdownOpen(null);
+                              }}
+                              disabled={used}
+                            >
+                              Edit Authorization
+                            </button>
+                          )}
+                          {onDeactivate && (
+                            <button
+                              onClick={() => {
+                                onDeactivate(row);
+                                setDropdownOpen(null);
+                              }}
+                            >
+                              {row.isActive === false ? "Activate" : "Deactivate"} Authorization
+                            </button>
+                          )}
+                          {onDelete && (
+                            <button
+                              onClick={() => {
+                                onDelete(row);
+                                setDropdownOpen(null);
+                              }}
+                              className="robust-danger"
+                            >
+                              Delete Authorization
+                            </button>
+                          )}
+                          {onEdit && used && (
                             <div className="robust-note">
                               Edit disabled — services already utilized
                             </div>

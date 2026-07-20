@@ -10,6 +10,7 @@ import Button from "../../../../Components/Button/Button";
 import api from "../../../../api/AutoBillingPandAApis";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
+import usePermission from "../../../../hooks/usePermission";
 
 const PaymentManagement = () => {
   const [, setIsLoading] = useState(false);
@@ -44,6 +45,7 @@ const PaymentManagement = () => {
   });
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const fetchPaymentSettings = useCallback(async () => {
     setIsLoading(true);
@@ -239,6 +241,9 @@ const PaymentManagement = () => {
   );
 
   const handleInputChange = (key, value, isFormField = false) => {
+    // Inline fields auto-persist via debouncedSave, so gate the whole path —
+    // hiding the Save button alone would leave this save vector open.
+    if (!hasPermission("configure_auto_billing")) return;
     setPaymentSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -263,12 +268,14 @@ const PaymentManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>Charge tenant payment method on invoice due date</label>
-            <SwitchInput
-              checked={paymentSettings.chargeOnDueDate}
-              onChange={(e) =>
-                handleInputChange("chargeOnDueDate", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.chargeOnDueDate}
+                  onChange={(e) =>
+                    handleInputChange("chargeOnDueDate", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         <div className="form-row">
@@ -276,12 +283,14 @@ const PaymentManagement = () => {
             <label>
               If tenant has multiple payment methods, charge last used method first
             </label>
-            <SwitchInput
-              checked={paymentSettings.chargeLastUsedFirst}
-              onChange={(e) =>
-                handleInputChange("chargeLastUsedFirst", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.chargeLastUsedFirst}
+                  onChange={(e) =>
+                    handleInputChange("chargeLastUsedFirst", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         <div className="form-row">
@@ -289,12 +298,14 @@ const PaymentManagement = () => {
             <label>
               Charge alternative payment methods if the last used method fails
             </label>
-            <SwitchInput
-              checked={paymentSettings.chargeAlternative}
-              onChange={(e) =>
-                handleInputChange("chargeAlternative", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.chargeAlternative}
+                  onChange={(e) =>
+                    handleInputChange("chargeAlternative", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
       </div>
@@ -347,12 +358,14 @@ const PaymentManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>Notify tenant of every charge attempt</label>
-            <SwitchInput
-              checked={paymentSettings.notifyTenant}
-              onChange={(e) =>
-                handleInputChange("notifyTenant", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.notifyTenant}
+                  onChange={(e) =>
+                    handleInputChange("notifyTenant", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         {paymentSettings.notifyTenant && (
@@ -383,33 +396,34 @@ const PaymentManagement = () => {
                 />
               </div>
             </div>
-            {!editMode.notificationEmail ? (
-              <div className="form-row">
-                <Button
-                  label="Edit"
-                  variant="outline"
-                  onClick={() => toggleEditMode("notificationEmail")}
-                  width="100px"
-                />
-              </div>
-            ) : (
-              <div className="form-row">
-                <div className="edit-actions">
+            {hasPermission("configure_auto_billing") &&
+              (!editMode.notificationEmail ? (
+                <div className="form-row">
                   <Button
-                    label="Cancel"
+                    label="Edit"
                     variant="outline"
                     onClick={() => toggleEditMode("notificationEmail")}
                     width="100px"
                   />
-                  <Button
-                    label="Save"
-                    variant="primary"
-                    onClick={() => handleSaveForm("notificationEmail")}
-                    width="100px"
-                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="form-row">
+                  <div className="edit-actions">
+                    <Button
+                      label="Cancel"
+                      variant="outline"
+                      onClick={() => toggleEditMode("notificationEmail")}
+                      width="100px"
+                    />
+                    <Button
+                      label="Save"
+                      variant="primary"
+                      onClick={() => handleSaveForm("notificationEmail")}
+                      width="100px"
+                    />
+                  </div>
+                </div>
+              ))}
           </>
         )}
       </div>
@@ -441,12 +455,14 @@ const PaymentManagement = () => {
         <div className="form-row">
           <div className="form-header">
             <label>Allow admin to manually cancel subscriptions</label>
-            <SwitchInput
-              checked={paymentSettings.manualCancel}
-              onChange={(e) =>
-                handleInputChange("manualCancel", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.manualCancel}
+                  onChange={(e) =>
+                    handleInputChange("manualCancel", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         <div className="form-header-two">
@@ -493,33 +509,34 @@ const PaymentManagement = () => {
             />
           </div>
         </div>
-        {!editMode.suspensionAction ? (
-          <div className="form-row">
-            <Button
-              label="Edit"
-              variant="outline"
-              onClick={() => toggleEditMode("suspensionAction")}
-              width="100px"
-            />
-          </div>
-        ) : (
-          <div className="form-row">
-            <div className="edit-actions">
+        {hasPermission("configure_auto_billing") &&
+          (!editMode.suspensionAction ? (
+            <div className="form-row">
               <Button
-                label="Cancel"
+                label="Edit"
                 variant="outline"
                 onClick={() => toggleEditMode("suspensionAction")}
                 width="100px"
               />
-              <Button
-                label="Save"
-                variant="primary"
-                onClick={() => handleSaveForm("suspensionAction")}
-                width="100px"
-              />
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="form-row">
+              <div className="edit-actions">
+                <Button
+                  label="Cancel"
+                  variant="outline"
+                  onClick={() => toggleEditMode("suspensionAction")}
+                  width="100px"
+                />
+                <Button
+                  label="Save"
+                  variant="primary"
+                  onClick={() => handleSaveForm("suspensionAction")}
+                  width="100px"
+                />
+              </div>
+            </div>
+          ))}
       </div>
 
       {/* Cancellation Notification Section */}
@@ -544,12 +561,14 @@ const PaymentManagement = () => {
               </div>
               <label>failed payment attempts</label>
             </div>
-            <SwitchInput
-              checked={paymentSettings.sendWarningEmail}
-              onChange={(e) =>
-                handleInputChange("sendWarningEmail", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.sendWarningEmail}
+                  onChange={(e) =>
+                    handleInputChange("sendWarningEmail", e.target.checked)
+                  }
+                />
+              )}
           </div>
         </div>
         {paymentSettings.sendWarningEmail && (
@@ -580,44 +599,50 @@ const PaymentManagement = () => {
                 />
               </div>
             </div>
-            {!editMode.warningEmail ? (
-              <div className="form-row">
-                <Button
-                  label="Edit"
-                  variant="outline"
-                  onClick={() => toggleEditMode("warningEmail")}
-                  width="100px"
-                />
-              </div>
-            ) : (
-              <div className="form-row">
-                <div className="edit-actions">
+            {hasPermission("configure_auto_billing") &&
+              (!editMode.warningEmail ? (
+                <div className="form-row">
                   <Button
-                    label="Cancel"
+                    label="Edit"
                     variant="outline"
                     onClick={() => toggleEditMode("warningEmail")}
                     width="100px"
                   />
-                  <Button
-                    label="Save"
-                    variant="primary"
-                    onClick={() => handleSaveForm("warningEmail")}
-                    width="100px"
-                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="form-row">
+                  <div className="edit-actions">
+                    <Button
+                      label="Cancel"
+                      variant="outline"
+                      onClick={() => toggleEditMode("warningEmail")}
+                      width="100px"
+                    />
+                    <Button
+                      label="Save"
+                      variant="primary"
+                      onClick={() => handleSaveForm("warningEmail")}
+                      width="100px"
+                    />
+                  </div>
+                </div>
+              ))}
           </>
         )}
         <div className="form-row">
           <div className="form-header">
             <label>Send an email when subscription is cancelled</label>
-            <SwitchInput
-              checked={paymentSettings.sendOnSubscriptionCancel}
-              onChange={(e) =>
-                handleInputChange("sendOnSubscriptionCancel", e.target.checked)
-              }
-            />
+            {hasPermission("configure_auto_billing") && (
+                <SwitchInput
+                  checked={paymentSettings.sendOnSubscriptionCancel}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "sendOnSubscriptionCancel",
+                      e.target.checked
+                    )
+                  }
+                />
+              )}
           </div>
         </div>
         {paymentSettings.sendOnSubscriptionCancel && (
@@ -648,33 +673,34 @@ const PaymentManagement = () => {
                 />
               </div>
             </div>
-            {!editMode.cancelEmail ? (
-              <div className="form-row">
-                <Button
-                  label="Edit"
-                  variant="outline"
-                  onClick={() => toggleEditMode("cancelEmail")}
-                  width="100px"
-                />
-              </div>
-            ) : (
-              <div className="form-row">
-                <div className="edit-actions">
+            {hasPermission("configure_auto_billing") &&
+              (!editMode.cancelEmail ? (
+                <div className="form-row">
                   <Button
-                    label="Cancel"
+                    label="Edit"
                     variant="outline"
                     onClick={() => toggleEditMode("cancelEmail")}
                     width="100px"
                   />
-                  <Button
-                    label="Save"
-                    variant="primary"
-                    onClick={() => handleSaveForm("cancelEmail")}
-                    width="100px"
-                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="form-row">
+                  <div className="edit-actions">
+                    <Button
+                      label="Cancel"
+                      variant="outline"
+                      onClick={() => toggleEditMode("cancelEmail")}
+                      width="100px"
+                    />
+                    <Button
+                      label="Save"
+                      variant="primary"
+                      onClick={() => handleSaveForm("cancelEmail")}
+                      width="100px"
+                    />
+                  </div>
+                </div>
+              ))}
           </>
         )}
       </div>

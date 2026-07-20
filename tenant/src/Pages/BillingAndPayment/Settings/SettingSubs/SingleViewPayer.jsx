@@ -11,10 +11,12 @@ import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import { formatCurrency } from "../../../../Helper/Formatters";
 import { toBackendServiceCode } from "../../../../Helper/payerServiceCode";
+import usePermissions from "../../../../hooks/usePermissions";
 import "../../BillingPayment.css";
 
 const SingleViewPayer = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
   const navigate = useNavigate();
   const { id } = useParams();
   const [payerData, setPayerData] = useState(null);
@@ -225,7 +227,7 @@ const SingleViewPayer = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("edit_service_code") && {
           label: "Edit",
           onClick: () => {
 
@@ -233,7 +235,7 @@ const SingleViewPayer = () => {
             setIsServiceCodeModalOpen(true);
           },
         },
-        {
+        hasPermission("deactivate_service_code") && {
           label: row.isActive ? "Deactivate" : "Activate",
           onClick: async () => {
             try {
@@ -252,7 +254,7 @@ const SingleViewPayer = () => {
           },
           className: "remove",
         },
-      ],
+      ].filter(Boolean),
       className: "more-dropdown",
     },
   ];
@@ -460,32 +462,36 @@ const SingleViewPayer = () => {
         ) : (
           <>
             <OrgGrid data={payerData || {}} />
-            <div>
-              <div
-                className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
-                onClick={() => setShowPayerModal(true)}
-              >
-                <FiEdit3 size={32} />
+            {hasPermission("edit_payer") && (
+              <div>
+                <div
+                  className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
+                  onClick={() => setShowPayerModal(true)}
+                >
+                  <FiEdit3 size={32} />
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>
 
       <div className="billing-status-row">
         <h2 className="font-bold text-lg text-gray-700-em mb-4">Authorization</h2>
-        <div>
-          <Button
-            label="Add Service Code"
-            variant="secondary"
-            icon={<FaPlus />}
-            onClick={() => {
-              setSelectedService(null);
-              setIsServiceCodeModalOpen(true);
-            }}
-            disabled={payerSaving || roundingRuleLoading || serviceCodeLoading}
-          />
-        </div>
+        {hasPermission("add_service_code") && (
+          <div>
+            <Button
+              label="Add Service Code"
+              variant="secondary"
+              icon={<FaPlus />}
+              onClick={() => {
+                setSelectedService(null);
+                setIsServiceCodeModalOpen(true);
+              }}
+              disabled={payerSaving || roundingRuleLoading || serviceCodeLoading}
+            />
+          </div>
+        )}
       </div>
       <div className="mt-6">
         <CustomTable

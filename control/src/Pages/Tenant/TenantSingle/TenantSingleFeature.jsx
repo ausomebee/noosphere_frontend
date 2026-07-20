@@ -5,6 +5,7 @@ import Button from "../../../Components/Button/Button";
 import { FiArrowUpRight } from "react-icons/fi";
 import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import { showApiError } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
@@ -13,6 +14,7 @@ const TenantSingleFeature = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
@@ -107,13 +109,15 @@ const TenantSingleFeature = () => {
               <span className="plan-badge">{planTypeBadge}</span>
               {planDisplayName}
             </p>
-            <Button
-              label="Change plan"
-              iconPosition="right"
-              icon={<FiArrowUpRight size={20} />}
-              width="auto"
-              onClick={handleChangePlan}
-            />
+            {hasPermission("generate_payment_link") && (
+              <Button
+                label="Change plan"
+                iconPosition="right"
+                icon={<FiArrowUpRight size={20} />}
+                width="auto"
+                onClick={handleChangePlan}
+              />
+            )}
           </div>
 
           <div className="plan-item">

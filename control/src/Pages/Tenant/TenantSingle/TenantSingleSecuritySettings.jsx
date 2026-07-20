@@ -12,6 +12,7 @@ import {
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
@@ -50,6 +51,7 @@ const getTenantBaseDomain = () => {
 const TenantSingleSecuritySettings = () => {
   const { tenantId } = useParams();
   const { userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [loading, setLoading] = useState(true);
   const [tenant, setTenant] = useState(null);
@@ -327,13 +329,15 @@ const TenantSingleSecuritySettings = () => {
                 />
               </div>
             </div>
-            <Button
-              onClick={handleEmailToggle}
-              variant="action"
-              label={editingEmail ? "Save" : "Change"}
-              width="100px"
-              loading={savingEmail}
-            />
+            {hasPermission("manage_tenant_security") && (
+              <Button
+                onClick={handleEmailToggle}
+                variant="action"
+                label={editingEmail ? "Save" : "Change"}
+                width="100px"
+                loading={savingEmail}
+              />
+            )}
           </div>
 
           {/* Tenant Admin Mobile */}
@@ -350,13 +354,15 @@ const TenantSingleSecuritySettings = () => {
                 />
               </div>
             </div>
-            <Button
-              onClick={handlePhoneToggle}
-              variant="action"
-              label={editingPhone ? "Save" : "Change"}
-              width="100px"
-              loading={savingPhone}
-            />
+            {hasPermission("manage_tenant_security") && (
+              <Button
+                onClick={handlePhoneToggle}
+                variant="action"
+                label={editingPhone ? "Save" : "Change"}
+                width="100px"
+                loading={savingPhone}
+              />
+            )}
           </div>
 
           {/* Tenant Portal URL */}
@@ -382,34 +388,38 @@ const TenantSingleSecuritySettings = () => {
         </div>
 
         {/* Admin Security Settings */}
-        <div className="tenant-settings-section">
-          <h2 className="tenant-settings-section-title">Admin Security Settings</h2>
+        {hasPermission("manage_tenant_security") && (
+          <div className="tenant-settings-section">
+            <h2 className="tenant-settings-section-title">Admin Security Settings</h2>
 
-          <div className="tenant-settings-row">
-            <div className="tenant-settings-action-group">
-              <Button
-                onClick={handleResetPassword}
-                label="Reset Password"
-                variant="important"
-                width="100%"
-                loading={savingPassword}
-              />
+            <div className="tenant-settings-row">
+              <div className="tenant-settings-action-group">
+                <Button
+                  onClick={handleResetPassword}
+                  label="Reset Password"
+                  variant="important"
+                  width="100%"
+                  loading={savingPassword}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <Button
-          label="Deactivate Account"
-          onClick={() => {
-            setDeactivateStep(1);
-            setDeactivateReason("");
-            setDeactivateDetails("");
-            setDeactivatePassword("");
-            setDeactivateModal(true);
-          }}
-          variant="danger"
-          width="auto"
-        />
+        {hasPermission("deactivate_tenant") && (
+          <Button
+            label="Deactivate Account"
+            onClick={() => {
+              setDeactivateStep(1);
+              setDeactivateReason("");
+              setDeactivateDetails("");
+              setDeactivatePassword("");
+              setDeactivateModal(true);
+            }}
+            variant="danger"
+            width="auto"
+          />
+        )}
       </div>
 
       {/* Deactivation Modal — multi-step */}

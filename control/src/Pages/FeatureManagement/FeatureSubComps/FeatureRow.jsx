@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import { createPortal } from "react-dom";
 import { SwitchInput } from "../../../Components/Input/Inputs";
 import { FiMoreVertical } from "react-icons/fi";
@@ -29,6 +30,7 @@ const getErrorMessage = (err) =>
 const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
   const dispatch = useDispatch();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
   const featureGroups = useSelector((state) => state.featureManagement.featureGroups);
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
   const [modalState, setModalState] = useState({
@@ -212,10 +214,14 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
         <td>{feature.managedBy}</td>
         <td>
           <div className="active-cell">
-            <SwitchInput
-              checked={feature.active}
-              onChange={() => setModalState({ ...modalState, toggleActive: true })}
-            />
+            {(feature.active
+              ? hasPermission("deactivate_feature")
+              : hasPermission("activate_feature")) && (
+              <SwitchInput
+                checked={feature.active}
+                onChange={() => setModalState({ ...modalState, toggleActive: true })}
+              />
+            )}
             <span className="active-status">{feature.active ? "Yes" : "No"}</span>
           </div>
         </td>
@@ -264,33 +270,39 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
                   >
                     Move to Feature Group
                   </button>
-                  <button
-                    onClick={() => {
-                      setModalState({ ...modalState, editFeature: true });
-                      setIsRowDropdownOpen(false);
-                    }}
-                    className="dropdown-item"
-                  >
-                    Edit Feature
-                  </button>
-                  <button
-                    onClick={() => {
-                      setModalState({ ...modalState, toggleActive: true });
-                      setIsRowDropdownOpen(false);
-                    }}
-                    className={`dropdown-item ${feature.active ? "blurred" : ""}`}
-                  >
-                    Enable Feature
-                  </button>
-                  <button
-                    onClick={() => {
-                      setModalState({ ...modalState, toggleActive: true });
-                      setIsRowDropdownOpen(false);
-                    }}
-                    className={`dropdown-item ${!feature.active ? "blurred" : ""}`}
-                  >
-                    Disable Feature
-                  </button>
+                  {hasPermission("edit_feature") && (
+                    <button
+                      onClick={() => {
+                        setModalState({ ...modalState, editFeature: true });
+                        setIsRowDropdownOpen(false);
+                      }}
+                      className="dropdown-item"
+                    >
+                      Edit Feature
+                    </button>
+                  )}
+                  {hasPermission("activate_feature") && (
+                    <button
+                      onClick={() => {
+                        setModalState({ ...modalState, toggleActive: true });
+                        setIsRowDropdownOpen(false);
+                      }}
+                      className={`dropdown-item ${feature.active ? "blurred" : ""}`}
+                    >
+                      Enable Feature
+                    </button>
+                  )}
+                  {hasPermission("deactivate_feature") && (
+                    <button
+                      onClick={() => {
+                        setModalState({ ...modalState, toggleActive: true });
+                        setIsRowDropdownOpen(false);
+                      }}
+                      className={`dropdown-item ${!feature.active ? "blurred" : ""}`}
+                    >
+                      Disable Feature
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setModalState({ ...modalState, assignPlan: true });
@@ -300,15 +312,17 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
                   >
                     Assign to Plan
                   </button>
-                  <button
-                    onClick={() => {
-                      setModalState({ ...modalState, deleteFeature: true });
-                      setIsRowDropdownOpen(false);
-                    }}
-                    className="dropdown-item dropdown-item-danger"
-                  >
-                    Remove Feature
-                  </button>
+                  {hasPermission("delete_feature") && (
+                    <button
+                      onClick={() => {
+                        setModalState({ ...modalState, deleteFeature: true });
+                        setIsRowDropdownOpen(false);
+                      }}
+                      className="dropdown-item dropdown-item-danger"
+                    >
+                      Remove Feature
+                    </button>
+                  )}
                 </div>
               </div>
             )}

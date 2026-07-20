@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import { FaArrowLeft, FaPlus, FaSave } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { SwitchInput, TextareaInput, TextInput } from "../Input/Inputs";
@@ -44,6 +45,8 @@ const ManageColumn = () => {
   const navigate = useNavigate();
   const { pipeline, draft, status } = useSelector((state) => state.pipeline);
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
+  const canEditStage = hasPermission("edit_pipeline_stage");
 
   // State management
   const [activeTab, setActiveTab] = useState("basic");
@@ -375,6 +378,13 @@ const ManageColumn = () => {
     title: stage.name,
   }));
 
+  // Hide row actions the current admin lacks permission for
+  const visibleActions = actions.filter((action) => {
+    if (action.label === "Move candidate") return hasPermission("move_prospect");
+    if (action.label === "Remove candidate") return hasPermission("remove_prospect");
+    return true;
+  });
+
   // Map tableDataState to tasks format for AssignCandidateModal
   const tasksForModal = tableDataState.reduce((acc, item) => ({
     ...acc,
@@ -491,26 +501,30 @@ const ManageColumn = () => {
               >
 
 
-                <Button
-                  variant="secondary-danger"
-                  width="200px"
-                  label="Delete this Column"
-                  onClick={() => {
-                    if (window.confirm("Delete this stage?")) {
-                      navigate(-1);
-                      showToast("Stage deleted", "success");
-                    }
-                  }}
-                />
-                <div className="save-button-container">
+                {hasPermission("delete_pipeline_stage") && (
                   <Button
-                    label="Save Changes"
-                    icon={<FaSave />}
-                    onClick={handleSaveBasicInfo}
-                    loading={isSaving}
-                    width="auto"
+                    variant="secondary-danger"
+                    width="200px"
+                    label="Delete this Column"
+                    onClick={() => {
+                      if (window.confirm("Delete this stage?")) {
+                        navigate(-1);
+                        showToast("Stage deleted", "success");
+                      }
+                    }}
                   />
-                </div>
+                )}
+                {canEditStage && (
+                  <div className="save-button-container">
+                    <Button
+                      label="Save Changes"
+                      icon={<FaSave />}
+                      onClick={handleSaveBasicInfo}
+                      loading={isSaving}
+                      width="auto"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -536,23 +550,27 @@ const ManageColumn = () => {
                           className="task-name-container flex items-center"
                         >
                           <span>{task.name}</span>
-                          <button
-                            className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
-                            onClick={() =>
-                              dispatch(removeTaskFromDraft(task.id))
-                            }
-                            style={{ background: "none" }}
-                          >
-                            <AiOutlineDelete color="red" size={20} />
-                          </button>
+                          {canEditStage && (
+                            <button
+                              className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
+                              onClick={() =>
+                                dispatch(removeTaskFromDraft(task.id))
+                              }
+                              style={{ background: "none" }}
+                            >
+                              <AiOutlineDelete color="red" size={20} />
+                            </button>
+                          )}
                         </div>
                         <div className="toggle-switch-container">
-                          <SwitchInput
-                            checked={task.required}
-                            onChange={() =>
-                              dispatch(toggleTaskRequiredInDraft(task.id))
-                            }
-                          />
+                          {canEditStage && (
+                            <SwitchInput
+                              checked={task.required}
+                              onChange={() =>
+                                dispatch(toggleTaskRequiredInDraft(task.id))
+                              }
+                            />
+                          )}
                         </div>
                       </div>
                     ))
@@ -565,36 +583,38 @@ const ManageColumn = () => {
                     </div>
                   )}
                 </div>
-                <div
-                  className="flex justify-between"
-                  style={{ gap: "10px" }}
-                >
+                {canEditStage && (
+                  <div
+                    className="flex justify-between"
+                    style={{ gap: "10px" }}
+                  >
 
-                  <div className="add-button-container">
-                    <Button
-                      label="Add a new task"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowTaskModal(true)}
-                      width="auto"
-                    />
+                    <div className="add-button-container">
+                      <Button
+                        label="Add a new task"
+                        variant="outline"
+                        iconPosition="left"
+                        onClick={() => setShowTaskModal(true)}
+                        width="auto"
+                      />
+                    </div>
+                    <div className="save-button-container">
+                      <Button
+                        label="Save Tasks"
+                        icon={<FaSave />}
+                        loading={isSaving}
+                        onClick={() =>
+                          handleSaveItems(
+                            "requiredTasks",
+                            draft.requiredTasks,
+                            updateStageTasks
+                          )
+                        }
+                        disabled={isSaving}
+                      />
+                    </div>
                   </div>
-                  <div className="save-button-container">
-                    <Button
-                      label="Save Tasks"
-                      icon={<FaSave />}
-                      loading={isSaving}
-                      onClick={() =>
-                        handleSaveItems(
-                          "requiredTasks",
-                          draft.requiredTasks,
-                          updateStageTasks
-                        )
-                      }
-                      disabled={isSaving}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Documents Section */}
@@ -616,23 +636,27 @@ const ManageColumn = () => {
                           className="document-name-container flex items-center"
                         >
                           <span>{doc.name}</span>
-                          <button
-                            className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
-                            onClick={() =>
-                              dispatch(removeDocumentFromDraft(doc.id))
-                            }
-                            style={{ background: "none" }}
-                          >
-                            <AiOutlineDelete color="red" size={20} />
-                          </button>
+                          {canEditStage && (
+                            <button
+                              className="delete-btn ml-2 border-0 cursor-pointer p-0 inline-flex items-center justify-center"
+                              onClick={() =>
+                                dispatch(removeDocumentFromDraft(doc.id))
+                              }
+                              style={{ background: "none" }}
+                            >
+                              <AiOutlineDelete color="red" size={20} />
+                            </button>
+                          )}
                         </div>
                         <div className="toggle-switch-container">
-                          <SwitchInput
-                            checked={doc.required}
-                            onChange={() =>
-                              dispatch(toggleDocumentRequiredInDraft(doc.id))
-                            }
-                          />
+                          {canEditStage && (
+                            <SwitchInput
+                              checked={doc.required}
+                              onChange={() =>
+                                dispatch(toggleDocumentRequiredInDraft(doc.id))
+                              }
+                            />
+                          )}
                         </div>
                       </div>
                     ))
@@ -646,36 +670,38 @@ const ManageColumn = () => {
                   )}
                 </div>
 
-                <div
-                  className="flex justify-between"
-                  style={{ gap: "10px" }}
-                >
+                {canEditStage && (
+                  <div
+                    className="flex justify-between"
+                    style={{ gap: "10px" }}
+                  >
 
-                  <div className="add-button-container">
-                    <Button
-                      label="Request a new document"
-                      variant="outline"
-                      iconPosition="left"
-                      onClick={() => setShowDocumentModal(true)}
-                      width="auto"
-                    />
+                    <div className="add-button-container">
+                      <Button
+                        label="Request a new document"
+                        variant="outline"
+                        iconPosition="left"
+                        onClick={() => setShowDocumentModal(true)}
+                        width="auto"
+                      />
+                    </div>
+                    <div className="save-button-container">
+                      <Button
+                        label="Save Documents"
+                        icon={<FaSave />}
+                        loading={isSaving}
+                        onClick={() =>
+                          handleSaveItems(
+                            "requiredDocuments",
+                            draft.requiredDocuments,
+                            updateStageDocuments
+                          )
+                        }
+                        disabled={isSaving}
+                      />
+                    </div>
                   </div>
-                  <div className="save-button-container">
-                    <Button
-                      label="Save Documents"
-                      icon={<FaSave />}
-                      loading={isSaving}
-                      onClick={() =>
-                        handleSaveItems(
-                          "requiredDocuments",
-                          draft.requiredDocuments,
-                          updateStageDocuments
-                        )
-                      }
-                      disabled={isSaving}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Modals */}
@@ -711,23 +737,25 @@ const ManageColumn = () => {
 
           {activeTab === "candidates" && (
             <div className="candidates-tab">
-              <div className="add-candidate-manage">
-                <Button
-                  label="Add new candidate"
-                  icon={<FaPlus />}
-                  iconPosition="left"
-                  variant="primary"
-                  width="auto"
-                  onClick={() => setShowAddProspectModal(true)}
-                />
-              </div>
+              {hasPermission("add_prospect") && (
+                <div className="add-candidate-manage">
+                  <Button
+                    label="Add new candidate"
+                    icon={<FaPlus />}
+                    iconPosition="left"
+                    variant="primary"
+                    width="auto"
+                    onClick={() => setShowAddProspectModal(true)}
+                  />
+                </div>
+              )}
               <div className="candidates-content">
                 <CustomTable
                   data={tableDataState}
                   columns={columns}
                   filters={filters}
                   onFilterChange={handleFilterChange}
-                  actions={actions.map((action) => ({
+                  actions={visibleActions.map((action) => ({
                     ...action,
                     onClick: (candidate) =>
                       action.onClick(candidate, {
@@ -746,14 +774,22 @@ const ManageColumn = () => {
                     setSelectedCandidates(selectedIds);
                     setShowAssignModal(true);
                   }}
-                  onMoveCandidates={(selectedIds) => {
-                    setSelectedCandidates(selectedIds);
-                    setShowMoveModal(true);
-                  }}
-                  onDelete={(selectedIds) => {
-                    setSelectedCandidates(selectedIds);
-                    setShowDeleteCandidateModal(true);
-                  }}
+                  onMoveCandidates={
+                    hasPermission("move_prospect")
+                      ? (selectedIds) => {
+                          setSelectedCandidates(selectedIds);
+                          setShowMoveModal(true);
+                        }
+                      : undefined
+                  }
+                  onDelete={
+                    hasPermission("remove_prospect")
+                      ? (selectedIds) => {
+                          setSelectedCandidates(selectedIds);
+                          setShowDeleteCandidateModal(true);
+                        }
+                      : undefined
+                  }
                 />
               </div>
             </div>

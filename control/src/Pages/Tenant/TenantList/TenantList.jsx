@@ -7,6 +7,7 @@ import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { SelectInput, TextareaInput, PasswordInput } from "../../../Components/Input/Inputs";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import { formatDate } from "../../../Helper/Formatters";
@@ -28,6 +29,7 @@ const deactivationReasons = [
 const TenantList = () => {
   const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   usePageTitle("Tenants");
   const [tenants, setTenants] = useState([]);
@@ -132,13 +134,13 @@ const TenantList = () => {
   ];
 
   const actions = [
-    {
+    hasPermission("view_tenant_details") && {
       label: "View Tenant",
       onClick: (row) => {
         navigate(`/tenants/tenant-lists/overview/${row.tenantId}`);
       },
     },
-    {
+    hasPermission("deactivate_tenant") && {
       label: "Deactivate Tenant",
       className: "remove",
       onClick: (row) => {
@@ -150,7 +152,7 @@ const TenantList = () => {
         setDeactivateModal(true);
       },
     },
-  ];
+  ].filter(Boolean);
 
   const [, setFilterValues] = useState({});
   const handleFilterChange = (key, value) => {

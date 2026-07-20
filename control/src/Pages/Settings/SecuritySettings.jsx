@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import ReusableModal from "../../Components/ReusableModal/ReusableModal";
 import {
   TextInput,
@@ -16,6 +17,8 @@ import "./SecuritySettings.css";
 
 const SecuritySettings = () => {
   const { user, userId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
+  const canManageSecurity = hasPermission("manage_security_settings");
 
   // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -320,10 +323,12 @@ const SecuritySettings = () => {
                 Require a second verification step when signing in
               </span>
             </div>
-            <SwitchInput
-              checked={twoFactorEnabled}
-              onChange={(e) => handleToggle2FA(e.target.checked)}
-            />
+            {canManageSecurity && (
+              <SwitchInput
+                checked={twoFactorEnabled}
+                onChange={(e) => handleToggle2FA(e.target.checked)}
+              />
+            )}
           </div>
         </div>
 
@@ -343,13 +348,15 @@ const SecuritySettings = () => {
                     <span className="settings-2fa-default-badge">Default</span>
                   )}
                 </div>
-                <button
-                  className="settings-2fa-gear-btn"
-                  onClick={() => openAuthMethodSettings(method)}
-                  title="Settings"
-                >
-                  <FiSettings size={18} />
-                </button>
+                {canManageSecurity && (
+                  <button
+                    className="settings-2fa-gear-btn"
+                    onClick={() => openAuthMethodSettings(method)}
+                    title="Settings"
+                  >
+                    <FiSettings size={18} />
+                  </button>
+                )}
               </div>
             ))}
           </div>

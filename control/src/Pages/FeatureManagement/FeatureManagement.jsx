@@ -2,6 +2,7 @@ import usePageTitle from "../../hooks/usePageTitle";
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 
 import Button from "../../Components/Button/Button";
 import { FiSettings } from "react-icons/fi";
@@ -54,6 +55,7 @@ const FeatureManagement = () => {
   const headerDropdownRef = useRef(null);
 
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   useEffect(() => {
     if (accessToken && refreshToken) {
@@ -228,44 +230,52 @@ const FeatureManagement = () => {
               {isHeaderDropdownOpen && (
                 <div className="dropdown-menu dropdown-menu-header">
                   <div className="dropdown-items">
-                    <button
-                      onClick={() => {
-                        setModalState({ ...modalState, createFeatureGroup: true });
-                        setIsHeaderDropdownOpen(false);
-                      }}
-                      className="dropdown-item"
-                    >
-                      Add New Feature Group
-                    </button>
-                    <button
-                      onClick={() => {
-                        setModalState({ ...modalState, createFeature: true });
-                        setIsHeaderDropdownOpen(false);
-                      }}
-                      className="dropdown-item"
-                    >
-                      Add New Feature
-                    </button>
-                    <button
-                      onClick={() => {
-                        setModalState({ ...modalState, editFeatureGroup: true });
-                        setIsHeaderDropdownOpen(false);
-                      }}
-                      className="dropdown-item"
-                      disabled={featureGroups.length === 0}
-                    >
-                      Edit Feature Group
-                    </button>
-                    <button
-                      onClick={() => {
-                        setModalState({ ...modalState, deleteFeatureGroup: true });
-                        setIsHeaderDropdownOpen(false);
-                      }}
-                      className="dropdown-item dropdown-item-danger"
-                      disabled={featureGroups.length === 0}
-                    >
-                      Remove Feature Group
-                    </button>
+                    {hasPermission("create_feature") && (
+                      <button
+                        onClick={() => {
+                          setModalState({ ...modalState, createFeatureGroup: true });
+                          setIsHeaderDropdownOpen(false);
+                        }}
+                        className="dropdown-item"
+                      >
+                        Add New Feature Group
+                      </button>
+                    )}
+                    {hasPermission("create_feature") && (
+                      <button
+                        onClick={() => {
+                          setModalState({ ...modalState, createFeature: true });
+                          setIsHeaderDropdownOpen(false);
+                        }}
+                        className="dropdown-item"
+                      >
+                        Add New Feature
+                      </button>
+                    )}
+                    {hasPermission("edit_feature") && (
+                      <button
+                        onClick={() => {
+                          setModalState({ ...modalState, editFeatureGroup: true });
+                          setIsHeaderDropdownOpen(false);
+                        }}
+                        className="dropdown-item"
+                        disabled={featureGroups.length === 0}
+                      >
+                        Edit Feature Group
+                      </button>
+                    )}
+                    {hasPermission("delete_feature") && (
+                      <button
+                        onClick={() => {
+                          setModalState({ ...modalState, deleteFeatureGroup: true });
+                          setIsHeaderDropdownOpen(false);
+                        }}
+                        className="dropdown-item dropdown-item-danger"
+                        disabled={featureGroups.length === 0}
+                      >
+                        Remove Feature Group
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

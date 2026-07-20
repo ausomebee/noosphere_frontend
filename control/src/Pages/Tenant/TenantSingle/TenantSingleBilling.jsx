@@ -11,6 +11,7 @@ import TableFilterDateModal from "../../../Components/ReusableModal/TableFilterD
 import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear } from "../../../Helper/Formatters";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
@@ -87,6 +88,7 @@ const TenantSingleBilling = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [loading, setLoading]                 = useState(true);
   const [tenant, setTenant]                   = useState(null);
@@ -475,13 +477,15 @@ const TenantSingleBilling = () => {
         <div className="plan-info-col">
           <span className="plan-badge-billing">{planTypeBadge}</span>
           <p className="plan-name-billing">Plan</p>
-          <Button
-            label="Change plan"
-            iconPosition="right"
-            icon={<FiArrowUpRight size={18} />}
-            width="auto"
-            onClick={() => setIsPaymentLinkModalOpen(true)}
-          />
+          {hasPermission("generate_payment_link") && (
+            <Button
+              label="Change plan"
+              iconPosition="right"
+              icon={<FiArrowUpRight size={18} />}
+              width="auto"
+              onClick={() => setIsPaymentLinkModalOpen(true)}
+            />
+          )}
         </div>
         <div className="plan-info-col">
           <label className="plan-info-col-label">USAGE</label>

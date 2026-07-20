@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from "react";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 
 import { SelectInput } from "../../Components/Input/Inputs";
 import Chart from "react-apexcharts";
@@ -27,6 +28,7 @@ import usePersistedTab from "../../hooks/usePersistedTab";
 
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   usePageTitle("Issues");
   const [selectedFilter, setSelectedFilter] = useState("by category");
@@ -608,8 +610,14 @@ const IssueManagement = () => {
   );
 
   const activeActions = useMemo(
-    () => [{ label: "View Issue", onClick: handleViewIssue }],
-    [handleViewIssue]
+    () =>
+      [
+        hasPermission("view_issues") && {
+          label: "View Issue",
+          onClick: handleViewIssue,
+        },
+      ].filter(Boolean),
+    [handleViewIssue, hasPermission]
   );
 
   const filters = useMemo(
@@ -780,15 +788,17 @@ const IssueManagement = () => {
           ))}
         </div>
         <div className="add-issue-buttons">
-          <Button
-            label="Log an Issue"
-            icon={<FaPlus />}
-            iconPosition="left"
-            width="200px"
-            variant="primary"
-            aria-label="Add a new issue"
-            onClick={() => setIsAddIssueModalOpen(true)}
-          />
+          {hasPermission("create_issue") && (
+            <Button
+              label="Log an Issue"
+              icon={<FaPlus />}
+              iconPosition="left"
+              width="200px"
+              variant="primary"
+              aria-label="Add a new issue"
+              onClick={() => setIsAddIssueModalOpen(true)}
+            />
+          )}
         </div>
         <div className="issue-mgt-table-container">
           <CustomTable

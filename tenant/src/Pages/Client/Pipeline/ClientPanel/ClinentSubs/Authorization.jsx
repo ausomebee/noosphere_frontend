@@ -12,9 +12,11 @@ import api2 from "../../../../../api/billingAndPaymentsApi";
 import { useParams } from "react-router-dom";
 import { formatDate } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
+import usePermissions from "../../../../../hooks/usePermissions";
 
 const AuthorizationTab = () => {
   const { dateFormat } = useFormatSettings();
+  const { hasPermission } = usePermissions();
   const [authorizations, setAuthorizations] = useState([]);
   const [serviceData, setServiceData] = useState({}); // authId → array of services for inline editing
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -386,11 +388,13 @@ const AuthorizationTab = () => {
           itemsPerPage={10}
           initialServiceData={serviceData}
           onServiceDataChange={setServiceData}
-          isEditMode={true}
-          onEdit={handleEdit}
-          onDeactivate={handleDeactivate}
-          onDelete={handleDelete}
-          onSave={handleInlineSave}
+          isEditMode={hasPermission("edit_authorization")}
+          onEdit={hasPermission("edit_authorization") ? handleEdit : undefined}
+          onDeactivate={
+            hasPermission("deactivate_authorization") ? handleDeactivate : undefined
+          }
+          onDelete={hasPermission("delete_authorization") ? handleDelete : undefined}
+          onSave={hasPermission("edit_authorization") ? handleInlineSave : undefined}
           serviceCodes={tenantServiceCodes}
           loadingServiceCodes={loadingTenantServiceCodes}
         />

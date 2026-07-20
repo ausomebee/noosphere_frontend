@@ -9,6 +9,7 @@ import { TextInput, SelectInput } from "../../../Components/Input/Inputs";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateShortMonth as formatDate } from "../../../Helper/Formatters";
 import useAuth from "../../../hooks/useAuth";
+import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
@@ -35,6 +36,7 @@ const TenantSingleAccOverview = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [tenant, setTenant] = useState(null);
   const [admins, setAdmins] = useState([]);
@@ -322,9 +324,11 @@ const TenantSingleAccOverview = () => {
           <span className="officer-role">Account Officer</span>
           <span className="officer-name">{officerName}</span>
         </div>
-        <button className="change-button" onClick={handleOpenOfficerModal}>
-          Change
-        </button>
+        {hasPermission("change_account_officer") && (
+          <button className="change-button" onClick={handleOpenOfficerModal}>
+            Change
+          </button>
+        )}
       </div>
 
       {/* General Information */}
@@ -332,10 +336,12 @@ const TenantSingleAccOverview = () => {
       <div className="tenant-info">
         <div className="tenant-org-header">
           <h4 className="tenant-org-name">{tenant.companyName}</h4>
-          <button className="edit-button" onClick={handleOpenEditModal}>
-            <FiEdit3 size={14} style={{ marginRight: "5px" }} />
-            Edit
-          </button>
+          {hasPermission("edit_tenant") && (
+            <button className="edit-button" onClick={handleOpenEditModal}>
+              <FiEdit3 size={14} style={{ marginRight: "5px" }} />
+              Edit
+            </button>
+          )}
         </div>
         <div className="info-grid">
           <div className="info-item">
@@ -394,13 +400,15 @@ const TenantSingleAccOverview = () => {
               <span className="plan-badge">{planTypeBadge}</span>
               {planDisplayName}
             </p>
-            <Button
-              label="Change plan"
-              iconPosition="right"
-              icon={<FiArrowUpRight size={20} />}
-              width="auto"
-              onClick={() => setIsPaymentLinkModalOpen(true)}
-            />
+            {hasPermission("generate_payment_link") && (
+              <Button
+                label="Change plan"
+                iconPosition="right"
+                icon={<FiArrowUpRight size={20} />}
+                width="auto"
+                onClick={() => setIsPaymentLinkModalOpen(true)}
+              />
+            )}
           </div>
           <div className="plan-item">
             <label>Usage</label>

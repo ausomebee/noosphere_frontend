@@ -1,9 +1,27 @@
-import React, { Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import React, { Suspense, useEffect } from "react";
+import { Route, Routes, Outlet } from "react-router-dom";
 import LayoutRoute from "./LayoutRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import FullPageLoader from "./FullPageLoader";
 import NotFound from "./NotFound";
+import usePermission from "../hooks/usePermission";
+import { showToast } from "../Helper/ShowToast";
+
+/** Blocks child routes if the user lacks the given module. Shows a toast,
+ *  renders nothing. Super-admins pass through (handled inside hasModuleAccess). */
+const ModuleGuard = ({ moduleKey }) => {
+  const { hasModuleAccess } = usePermission();
+  const allowed = hasModuleAccess(moduleKey);
+
+  useEffect(() => {
+    if (!allowed) {
+      showToast("You don't have access to this module", "error");
+    }
+  }, [allowed]);
+
+  if (!allowed) return null;
+  return <Outlet />;
+};
 
 // Recover from stale chunk references after a deploy: if a lazily-imported route
 // chunk fails to load (its hashed filename no longer exists on the server),
@@ -102,39 +120,53 @@ const AllRoutes = () => {
         {/* Dashboard routes (protected, with layout) */}
         <Route element={<ProtectedRoute><LayoutRoute /></ProtectedRoute>}>
           {/* Tenant Management */}
-          <Route path="/tenants/tenant-list" element={<TenantList />} />
-          <Route path="/tenants/tenant-lists/overview/:tenantId" element={<TenantSingle />} />
-          <Route path="/tenants/pipeline" element={<TenantPipeline />} />
-          <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId" element={<ProspectPanel />} />
-          <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit" element={<ProspectPanel />} />
-          <Route path="/tenants/column-single/:pipelineStageId" element={<ManageColumn />} />
-          <Route path="/tenants/tenant-lists/features/:tenantId" element={<TenantSingleFeature />} />
-          <Route path="/tenants/tenant-lists/billing/:tenantId" element={<TenantSingleBilling />} />
-          <Route path="/tenants/tenant-lists/issues/:tenantId" element={<TenantSingleIssueManagement />} />
-          <Route path="/tenants/tenant-lists/logs/:tenantId" element={<TenantSingleUserLogs />} />
-          <Route path="/tenants/tenant-lists/security/:tenantId" element={<TenantSingleSecuritySettings />} />
-          <Route path="/tenants/tenant-lists/usage-statistics/:tenantId" element={<TenantListUsageStatistics />} />
-          <Route path="/plans/subscribers/:planId" element={<SubscriberList />} />
+          <Route element={<ModuleGuard moduleKey="tenant" />}>
+            <Route path="/tenants/tenant-list" element={<TenantList />} />
+            <Route path="/tenants/tenant-lists/overview/:tenantId" element={<TenantSingle />} />
+            <Route path="/tenants/pipeline" element={<TenantPipeline />} />
+            <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId" element={<ProspectPanel />} />
+            <Route path="/tenants/candidate-single/:pipelineStageId/:pipelineItemId/edit" element={<ProspectPanel />} />
+            <Route path="/tenants/column-single/:pipelineStageId" element={<ManageColumn />} />
+            <Route path="/tenants/tenant-lists/features/:tenantId" element={<TenantSingleFeature />} />
+            <Route path="/tenants/tenant-lists/billing/:tenantId" element={<TenantSingleBilling />} />
+            <Route path="/tenants/tenant-lists/issues/:tenantId" element={<TenantSingleIssueManagement />} />
+            <Route path="/tenants/tenant-lists/logs/:tenantId" element={<TenantSingleUserLogs />} />
+            <Route path="/tenants/tenant-lists/security/:tenantId" element={<TenantSingleSecuritySettings />} />
+            <Route path="/tenants/tenant-lists/usage-statistics/:tenantId" element={<TenantListUsageStatistics />} />
+          </Route>
 
           {/* Performance */}
-          <Route path="/performance" element={<MainPerformance />} />
+          <Route element={<ModuleGuard moduleKey="performanceMonitoring" />}>
+            <Route path="/performance" element={<MainPerformance />} />
+          </Route>
 
           {/* Billing & Payments */}
-          <Route path="/billing-payments/plans-pricing" element={<PlansAndPayment />} />
-          <Route path="/billing-payments/invoice-payments" element={<BillingManager />} />
-          <Route path="/billing-payments/subscription-manager" element={<SubscriptionManager />} />
-          <Route path="/billing-payments/auto-billing-settings" element={<AutoBilling />} />
-          <Route path="/billing-payments/Reports" element={<BillingReports />} />
+          <Route element={<ModuleGuard moduleKey="billing" />}>
+            <Route path="/plans/subscribers/:planId" element={<SubscriberList />} />
+            <Route path="/billing-payments/plans-pricing" element={<PlansAndPayment />} />
+            <Route path="/billing-payments/invoice-payments" element={<BillingManager />} />
+            <Route path="/billing-payments/subscription-manager" element={<SubscriptionManager />} />
+            <Route path="/billing-payments/auto-billing-settings" element={<AutoBilling />} />
+            <Route path="/billing-payments/Reports" element={<BillingReports />} />
+          </Route>
 
-          {/* Issues & Features */}
-          <Route path="/issues" element={<IssueManagement />} />
-          <Route path="/features" element={<FeatureManagement />} />
+          {/* Issues */}
+          <Route element={<ModuleGuard moduleKey="issueManagement" />}>
+            <Route path="/issues" element={<IssueManagement />} />
+          </Route>
+
+          {/* Features */}
+          <Route element={<ModuleGuard moduleKey="featureManagement" />}>
+            <Route path="/features" element={<FeatureManagement />} />
+          </Route>
 
           {/* Settings */}
-          <Route path="/settings/roles-permissions" element={<ControlSettings />} />
-          <Route path="/settings/roles-permissions/configure" element={<RoleConfiguration />} />
-          <Route path="/settings/roles-permissions/configure/:roleId" element={<RoleConfiguration />} />
-          <Route path="/settings/securitySettings" element={<SecuritySettings />} />
+          <Route element={<ModuleGuard moduleKey="settings" />}>
+            <Route path="/settings/roles-permissions" element={<ControlSettings />} />
+            <Route path="/settings/roles-permissions/configure" element={<RoleConfiguration />} />
+            <Route path="/settings/roles-permissions/configure/:roleId" element={<RoleConfiguration />} />
+            <Route path="/settings/securitySettings" element={<SecuritySettings />} />
+          </Route>
         </Route>
 
         {/* 404 catch-all */}

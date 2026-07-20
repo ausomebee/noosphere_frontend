@@ -6,6 +6,7 @@ import { SkeletonTable } from "../../Components/LoadingSpinner";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate as formatDateStr } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import api from "../../api/SubcriptionApis";
 import GeneratePaymentLinkModal from "../../Components/ReusableModal/GeneratePaymentLinkModal";
 import "./BillingAndPayments.css";
@@ -32,6 +33,7 @@ const SubscriberList = () => {
   const { planId } = useParams();
   const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
 
   const [subscribers, setSubscribers] = useState([]);
   const [currentPlanLabel, setCurrentPlanLabel] = useState("Plan");
@@ -85,7 +87,7 @@ const SubscriberList = () => {
         }
       },
     },
-    {
+    hasPermission("modify_subscription") && {
       label: "Change Plan",
       onClick: (row) => {
         if (row.tenantId) {
@@ -96,7 +98,7 @@ const SubscriberList = () => {
         }
       },
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="subscriber-list-container">
