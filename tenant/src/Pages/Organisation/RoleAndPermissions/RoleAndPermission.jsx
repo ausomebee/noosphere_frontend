@@ -163,31 +163,28 @@ const RoleAndPermission = () => {
     setView("config");
   };
 
+  // Active roles deactivate; inactive roles activate — each has its own endpoint.
   const handleDeactivateRole = async (row) => {
+    const isActive = row.toggleActive;
     try {
-      await roleApi.DeactivateRole({
-        roleId: row.id,
-        accessToken,
-        refreshToken,
-      });
-      showToast("Role deactivated", "success");
+      const toggle = isActive ? roleApi.DeactivateRole : roleApi.ActivateRole;
+      await toggle({ roleId: row.id, accessToken, refreshToken });
+      showToast(isActive ? "Role deactivated" : "Role activated", "success");
       fetchRoles();
     } catch (e) {
-      showToast(e.message || "Failed to deactivate role", "error");
+      showToast(
+        e.message || `Failed to ${isActive ? "deactivate" : "activate"} role`,
+        "error",
+      );
     }
   };
 
   const handleToggleActive = async (row) => {
+    const isActive = row.toggleActive;
     try {
-      await roleApi.DeactivateRole({
-        roleId: row.id,
-        accessToken,
-        refreshToken,
-      });
-      showToast(
-        row.toggleActive ? "Role deactivated" : "Role activated",
-        "success",
-      );
+      const toggle = isActive ? roleApi.DeactivateRole : roleApi.ActivateRole;
+      await toggle({ roleId: row.id, accessToken, refreshToken });
+      showToast(isActive ? "Role deactivated" : "Role activated", "success");
       fetchRoles();
     } catch (e) {
       showToast(e.message || "Failed to update role status", "error");

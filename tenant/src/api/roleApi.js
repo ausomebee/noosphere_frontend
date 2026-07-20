@@ -82,10 +82,23 @@ const DeactivateRole = async ({ roleId, accessToken, refreshToken }) => {
   }
 };
 
+const ActivateRole = async ({ roleId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/role/activate/tenant/${roleId}`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Activate role failed");
+  }
+};
+
 export default {
   CreateRole,
   GetAllRolesByTenantId,
   GetSingleRole,
   UpdateRole,
   DeactivateRole,
+  ActivateRole,
 };
