@@ -442,7 +442,7 @@ const General = () => {
               type: "dropdown",
               label: "More",
               items: [
-                hasPermission("view_document") && {
+                hasPermission("view_org_document") && {
                   label: "View",
                   onClick: (row) => {
                     if (row.documentUrl) {
@@ -458,7 +458,7 @@ const General = () => {
                     }
                   },
                 },
-                hasPermission("delete_document") && {
+                hasPermission("delete_org_document") && {
                   label: "Delete",
                   className: "remove",
                   onClick: (row) =>

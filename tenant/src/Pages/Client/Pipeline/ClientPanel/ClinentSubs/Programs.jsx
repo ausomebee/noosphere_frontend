@@ -208,11 +208,11 @@ const handleDeleteConfirm = async () => {
               )}&client=${encodeURIComponent(fullName)}`
             ),
         },
-        hasPermission("edit_program") && {
+        hasPermission("edit_client_program") && {
           label: "Edit Program",
           onClick: handleEditProgram,
         },
-        hasPermission("delete_program") && {
+        hasPermission("delete_client_program") && {
           label: "Remove Program",
           onClick: handleDeleteProgram,
           className: "remove",

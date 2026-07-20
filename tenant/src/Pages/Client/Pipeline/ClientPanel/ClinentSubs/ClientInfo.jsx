@@ -477,7 +477,7 @@ const DocumentsForms = () => {
 
   // UPDATED DOCUMENT ACTIONS WITH VIEW FUNCTIONALITY
   const documentsActions = [
-    hasPermission("view_document") && {
+    hasPermission("view_client_document") && {
       type: "icon",
       label: "View",
       icon: <LuEye className="w-5 h-5 text-blue-600" />,
@@ -493,7 +493,7 @@ const DocumentsForms = () => {
     //   icon: <FiEdit2 className="w-5 h-5 text-gray-600" />,
     //   onClick: (row) => navigate(`/documents/edit/${row.id}`),
     // },
-    hasPermission("delete_document") && {
+    hasPermission("delete_client_document") && {
       type: "icon",
       label: "Delete",
       icon: <HiOutlineTrash className="w-5 h-5 text-red-600" />,
@@ -883,7 +883,7 @@ const DocumentsForms = () => {
                                                   </span>
                                                 </div>
                                                 <div className="flex gap-4">
-                                                  {hasPermission("view_document") && (
+                                                  {hasPermission("view_client_document") && (
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();

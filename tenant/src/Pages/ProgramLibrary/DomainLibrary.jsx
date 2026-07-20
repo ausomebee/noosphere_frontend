@@ -154,7 +154,7 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
             setCurrentView("targetLibrary");
           },
         },
-        hasPermission("edit_program") && {
+        hasPermission("edit_library_program") && {
           label: "Edit",
           onClick: handleEditProgram,
         },
@@ -176,7 +176,7 @@ const DomainLibrary = ({ domainName, onBack, domainId }) => {
             }
           },
         },
-        hasPermission("delete_program") && {
+        hasPermission("delete_library_program") && {
           label: "Delete",
           onClick: handleDeleteProgram,
           className: "remove",

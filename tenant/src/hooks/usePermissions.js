@@ -12,6 +12,22 @@ export const LEGACY_KEY_ALIASES = {
     CLIENTS: "create_client_form",
     CUSTOM_FORMS: "create_custom_form",
   },
+  view_document: {
+    CLIENTS: "view_client_document",
+    MY_ORGANIZATION: "view_org_document",
+  },
+  delete_document: {
+    CLIENTS: "delete_client_document",
+    MY_ORGANIZATION: "delete_org_document",
+  },
+  edit_program: {
+    CLIENTS: "edit_client_program",
+    PROGRAM_LIBRARY: "edit_library_program",
+  },
+  delete_program: {
+    CLIENTS: "delete_client_program",
+    PROGRAM_LIBRARY: "delete_library_program",
+  },
 };
 
 /** Expand an array of granted permission keys from one module, adding the new
