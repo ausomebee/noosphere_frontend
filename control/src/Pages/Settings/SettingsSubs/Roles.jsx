@@ -77,11 +77,11 @@ const Roles = () => {
     if (!role) return;
 
     try {
-      await roleApi.DeactivateRole({
-        id: role.id,
-        accessToken,
-        refreshToken,
-      });
+      // Active roles deactivate; inactive roles activate — separate endpoints.
+      const toggle = role.active
+        ? roleApi.DeactivateRole
+        : roleApi.ActivateRole;
+      await toggle({ id: role.id, accessToken, refreshToken });
       setRoles((prev) =>
         prev.map((r, i) =>
           i === rowIndex

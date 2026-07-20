@@ -81,10 +81,25 @@ const DeactivateRole = async ({ id, accessToken, refreshToken }) => {
   }
 };
 
+const ActivateRole = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.put(
+      `${PLAIN_API_URL}/role/activate/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Role activation failed"
+    );
+  }
+};
+
 export default {
   CreateRole,
   UpdateRole,
   GetRolesByModule,
   GetRoleById,
   DeactivateRole,
+  ActivateRole,
 };
