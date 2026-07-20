@@ -240,11 +240,16 @@ const CreateClientsProgram = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/programs/custom`, {
-      name,
-      description,
-      clientId,
-    });
+    // description is optional — only send it when provided.
+    const payload = { name, clientId };
+    const trimmed =
+      typeof description === "string" ? description.trim() : description;
+    if (trimmed) payload.description = trimmed;
+
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/programs/custom`,
+      payload
+    );
     return response;
   } catch (error) {
     throw new Error(

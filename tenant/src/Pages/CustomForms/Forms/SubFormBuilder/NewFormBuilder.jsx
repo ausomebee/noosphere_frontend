@@ -49,6 +49,7 @@ import {
 } from "../../../../ReduxStore/features/formBuilderSlice";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/customFormsApi";
+import usePermissions from "../../../../hooks/usePermissions";
 import "./NewFormBuilder.css";
 
 const elementTypes = [
@@ -530,6 +531,17 @@ const NewFormBuilder = () => {
     (state) => state.formBuilder,
   );
   const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasAnyPermission } = usePermissions();
+
+  // Building (dragging elements, editing fields, saving) requires a create/edit
+  // permission. Without any, the builder is shown greyed-out and non-interactive
+  // so a view-only user can look but can't drag, edit, or save.
+  const canEdit = hasAnyPermission(
+    "create_custom_form",
+    "edit_form",
+    "create_template",
+    "edit_template",
+  );
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -949,7 +961,14 @@ const NewFormBuilder = () => {
     );
 
   return (
-    <>
+    <div
+      style={
+        canEdit
+          ? undefined
+          : { pointerEvents: "none", opacity: 0.55, userSelect: "none" }
+      }
+      aria-disabled={!canEdit}
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -1072,7 +1091,7 @@ const NewFormBuilder = () => {
           refreshToken={refreshToken}
         />
       )}
-    </>
+    </div>
   );
 };
 

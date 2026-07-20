@@ -391,7 +391,14 @@ const ClinicalReportTemplateBuilder = () => {
   const dispatch = useDispatch();
 
   const { tenantId, accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
+
+  // Building a clinical report template requires create/edit permission.
+  // Without it the builder is greyed-out and non-interactive (view only).
+  const canEdit = hasAnyPermission(
+    "create_clinical_report_template",
+    "edit_clinical_report_templates",
+  );
 
   // The builder is entered via navigate(..., { state }) so its context (which
   // template, what mode) lives only in router state — which a page refresh
@@ -675,7 +682,14 @@ const ClinicalReportTemplateBuilder = () => {
   }, [actionMenuOpen, dispatch]);
 
   return (
-    <>
+    <div
+      style={
+        canEdit
+          ? undefined
+          : { pointerEvents: "none", opacity: 0.55, userSelect: "none" }
+      }
+      aria-disabled={!canEdit}
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -858,7 +872,7 @@ const ClinicalReportTemplateBuilder = () => {
           />
         </div>
       </DndContext>
-    </>
+    </div>
   );
 };
 

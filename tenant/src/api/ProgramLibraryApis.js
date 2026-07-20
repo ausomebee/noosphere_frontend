@@ -12,12 +12,13 @@ const CreateProgramsDomain = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/domains`, {
-      name,
-      description,
-      tenantId,
-      domainType,
-    });
+    // description is optional — only send it when provided.
+    const payload = { name, tenantId, domainType };
+    const trimmed =
+      typeof description === "string" ? description.trim() : description;
+    if (trimmed) payload.description = trimmed;
+
+    const response = await authFetch.post(`${PLAIN_API_URL}/domains`, payload);
     return response;
   } catch (error) {
     throw new Error(
@@ -88,11 +89,13 @@ const CreateProgramsProgram = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/programs`, {
-      name,
-      description,
-      domainId,
-    });
+    // description is optional — only send it when provided.
+    const payload = { name, domainId };
+    const trimmed =
+      typeof description === "string" ? description.trim() : description;
+    if (trimmed) payload.description = trimmed;
+
+    const response = await authFetch.post(`${PLAIN_API_URL}/programs`, payload);
     return response;
   } catch (error) {
     throw new Error(
