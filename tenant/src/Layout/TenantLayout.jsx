@@ -361,6 +361,19 @@ const DashboardLayout = ({ children }) => {
             )}
             <div className="flex gap-4 items-center justify-end">
               <div className="header-left">
+                {/* Notification bell — opens the notifications page */}
+                <button
+                  className="message-icon"
+                  onClick={() => navigate("/notifications")}
+                  aria-label="Notifications"
+                >
+                  <IoNotificationsOutline size={26} color="#fff" />
+                  {alerts.length > 0 && (
+                    <span className="notification-badge">
+                      {alerts.length > 99 ? "99+" : alerts.length}
+                    </span>
+                  )}
+                </button>
                 {/* Message icon */}
                 <button
                   className="message-icon"
