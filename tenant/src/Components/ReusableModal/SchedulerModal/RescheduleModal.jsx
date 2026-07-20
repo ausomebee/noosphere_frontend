@@ -9,15 +9,31 @@ import Button from "../../Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 
 // Utility function to convert 12-hour time (e.g., "1:30pm") to 24-hour format (e.g., "13:30")
+// Normalize any time representation to the "HH:MM" value an <input type="time">
+// needs. Handles 24h ("HH:MM" / "HH:MM:SS") and 12h ("10:00 AM", "10:00am")
+// with or without a space, so the requested time always prefills.
 const convertTo24Hour = (timeStr) => {
   if (!timeStr) return "";
-  const match = timeStr.match(/^(\d{1,2}):(\d{2})([ap]m)$/i);
-  if (!match) return timeStr;
-  let [_, hours, minutes, period] = match;
-  hours = parseInt(hours, 10);
-  if (period.toLowerCase() === "pm" && hours < 12) hours += 12;
-  if (period.toLowerCase() === "am" && hours === 12) hours = 0;
-  return `${hours.toString().padStart(2, "0")}:${minutes}`;
+  const s = String(timeStr).trim();
+  // Already 24-hour, optionally with seconds.
+  const m24 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m24) return `${m24[1].padStart(2, "0")}:${m24[2]}`;
+  // 12-hour with AM/PM (space optional, dots tolerated).
+  const m12 = s.match(/^(\d{1,2}):(\d{2})\s*([ap]\.?m\.?)$/i);
+  if (m12) {
+    let hours = parseInt(m12[1], 10);
+    const period = m12[3].toLowerCase().replace(/\./g, "");
+    if (period === "pm" && hours < 12) hours += 12;
+    if (period === "am" && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, "0")}:${m12[2]}`;
+  }
+  return "";
+};
+
+// An <input type="date"> needs "YYYY-MM-DD"; strip any ISO time part.
+const toDateInput = (d) => {
+  if (!d) return new Date().toISOString().split("T")[0];
+  return String(d).split("T")[0];
 };
 
 const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
@@ -96,9 +112,9 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
   useEffect(() => {
     if (isOpen && appointment) {
       const formattedData = {
-        date: appointment.date || new Date().toISOString().split("T")[0],
-        startTime: appointment.startTime ? convertTo24Hour(appointment.startTime) : "",
-        endTime: appointment.endTime ? convertTo24Hour(appointment.endTime) : "",
+        date: toDateInput(appointment.date),
+        startTime: convertTo24Hour(appointment.startTime),
+        endTime: convertTo24Hour(appointment.endTime),
       };
       reset(formattedData);
      

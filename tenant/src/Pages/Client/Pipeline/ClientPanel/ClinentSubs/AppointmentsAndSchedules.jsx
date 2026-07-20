@@ -13,7 +13,7 @@ import api3 from "../../../../../api/billingAndPaymentsApi"; // For real service
 import CustomTable from "../../../../../Components/Table/CustomTable";
 import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
 import { SearchInput } from "../../../../../Components/Input/Inputs";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import expand from "../../../../../utils/expand";
 import expandForAppointments from "../../../../../utils/expandForAppointments";
@@ -31,6 +31,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { clientId } = useParams();
+  const navigate = useNavigate();
 
   const [clients, setClients] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
@@ -429,17 +430,32 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     { header: "Time", key: "time", type: "text" },
   ];
 
-  const actions = [
-    {
-      type: "dropdown",
-      items: [
-        hasPermission("edit_appointments") && {
-          label: "Edit Appointment",
-          onClick: (row) => openModal(row),
-        },
-      ].filter(Boolean),
-    },
-  ].filter((a) => a.items.length > 0);
+  // Past appointments can't be edited — mirror the Scheduler's Past Appointments
+  // tab and offer "View Timesheet" instead of "Edit Appointment".
+  const actions =
+    activeTab === "pastAppointments"
+      ? [
+          {
+            type: "dropdown",
+            items: [
+              {
+                label: "View Timesheet",
+                onClick: () => navigate("/billing/timesheets"),
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            type: "dropdown",
+            items: [
+              hasPermission("edit_appointments") && {
+                label: "Edit Appointment",
+                onClick: (row) => openModal(row),
+              },
+            ].filter(Boolean),
+          },
+        ].filter((a) => a.items.length > 0);
 
   const handleAppointmentClick = (appointment) => {
     const full = appointments.find(

@@ -286,11 +286,19 @@ const RescheduleRequests = ({ setCounts }) => {
           ? rescheduleData
           : [rescheduleData];
 
+        // The modal returns the new date/time but not the appointment id, so
+        // pull it from the selected appointment(s) — the endpoint requires it.
+        const selected = Array.isArray(selectedAppointment)
+          ? selectedAppointment
+          : selectedAppointment
+            ? [selectedAppointment]
+            : [];
+
         await Promise.all(
-          items.map((item) =>
+          items.map((item, i) =>
             api.RescheduleAppointments({
               tenantId,
-              id: item.id,
+              id: item.id ?? selected[i]?.id ?? selected[0]?.id,
               date: item.date,
               startTime: item.startTime,
               endTime: item.endTime,
@@ -311,7 +319,13 @@ const RescheduleRequests = ({ setCounts }) => {
         setError(err.message || "Failed to modify reschedule");
       }
     },
-    [tenantId, accessToken, refreshToken, fetchRescheduleRequests],
+    [
+      tenantId,
+      accessToken,
+      refreshToken,
+      fetchRescheduleRequests,
+      selectedAppointment,
+    ],
   );
 
   const handleSelectionChange = useCallback((rows, items, reset = false) => {
