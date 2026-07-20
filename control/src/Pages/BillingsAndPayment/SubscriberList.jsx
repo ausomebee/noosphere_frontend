@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import CustomTable from "../../Components/Table/CustomTable";
 import { SkeletonTable } from "../../Components/LoadingSpinner";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate as formatDateStr } from "../../Helper/Formatters";
 import useAuth from "../../hooks/useAuth";
@@ -99,6 +100,8 @@ const SubscriberList = () => {
       },
     },
   ].filter(Boolean);
+
+  if (!hasPermission("view_subscribers")) return <AccessDenied />;
 
   return (
     <div className="subscriber-list-container">

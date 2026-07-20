@@ -9,6 +9,7 @@ import useAuth from "../../hooks/useAuth";
 import usePermission from "../../hooks/usePermission";
 import SubscriptionInvoice from "../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../Pages/Tenant/TenantList/TenantListViewPayment";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import {
   SiVisa,
   SiMastercard,
@@ -33,7 +34,7 @@ const statusMap = {
 
 const BillingManager = () => {
   const { accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermission();
+  const { hasPermission, hasAnyPermission } = usePermission();
 
   const [activeTab, setActiveTab] = usePersistedTab("control:billingManager", "invoices");
   const [activeSubTab, setActiveSubTab] = useState("all");
@@ -687,6 +688,9 @@ const BillingManager = () => {
     setShowPaymentView(false);
     setSelectedPayment(null);
   };
+
+  if (!hasAnyPermission("view_invoices", "view_payments"))
+    return <AccessDenied />;
 
   return (
     <>

@@ -23,6 +23,7 @@ import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/s
 import { createRoot } from "react-dom/client";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import LoadingSpinner from "../../../../Components/LoadingSpinner";
+import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
@@ -781,6 +782,8 @@ const SubscriptionManager = () => {
       })),
     [getFilteredData]
   );
+
+  if (!hasPermission("view_subscriptions")) return <AccessDenied />;
 
   return (
     <>

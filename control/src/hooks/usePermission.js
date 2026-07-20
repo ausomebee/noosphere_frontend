@@ -83,6 +83,15 @@ const usePermission = () => {
     [user, isSuperAdmin, permissionSet],
   );
 
+  const hasAnyPermission = useCallback(
+    (...keys) => {
+      if (!user) return false;
+      if (isSuperAdmin) return true;
+      return keys.some((k) => permissionSet.has(k));
+    },
+    [user, isSuperAdmin, permissionSet],
+  );
+
   /**
    * True if the current user has access to the given top-level module
    * (e.g. "tenant", "billing"). Matches the module's backendKey against the
@@ -99,7 +108,7 @@ const usePermission = () => {
     [user, isSuperAdmin, moduleSet],
   );
 
-  return { hasPermission, hasModuleAccess, isSuperAdmin };
+  return { hasPermission, hasAnyPermission, hasModuleAccess, isSuperAdmin };
 };
 
 export default usePermission;

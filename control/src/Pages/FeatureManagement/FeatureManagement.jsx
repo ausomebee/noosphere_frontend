@@ -23,6 +23,7 @@ import {
 import { showToast } from "../../Helper/ShowToast";
 import "./FeatureManagement.css";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
 // Thunks reject via rejectWithValue(error.message), so unwrap() throws a plain
@@ -55,7 +56,7 @@ const FeatureManagement = () => {
   const headerDropdownRef = useRef(null);
 
   const { accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermission();
+  const { hasPermission, hasAnyPermission } = usePermission();
 
   useEffect(() => {
     if (accessToken && refreshToken) {
@@ -208,6 +209,9 @@ const FeatureManagement = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (!hasAnyPermission("feature_management", "view_features"))
+    return <AccessDenied />;
 
   return (
     <>

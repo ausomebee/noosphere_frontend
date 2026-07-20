@@ -22,13 +22,14 @@ import ViewIssue from "./ViewIssue";
 import api from "../../api/IssueApi";
 import api2 from "../../api/TenantApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermission();
+  const { hasPermission, hasAnyPermission } = usePermission();
 
   usePageTitle("Issues");
   const [selectedFilter, setSelectedFilter] = useState("by category");
@@ -649,6 +650,9 @@ const IssueManagement = () => {
     ],
     []
   );
+
+  if (!hasAnyPermission("issue_management", "view_issues"))
+    return <AccessDenied />;
 
   if (selectedIssue) {
     return (

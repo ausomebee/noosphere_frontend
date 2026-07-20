@@ -5,7 +5,9 @@ import SystemSpeedChart from "../../Components/SpeedChart/SpeedChart";
 import StackedBarChart from "../../Components/BarChart/StackedBarChart";
 import ResourceUtilizationChart from "../../Components/ResourceUtilizationUsage/ResourceUtilizationUsage";
 import { Skeleton } from "../../Components/LoadingSpinner";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import performanceApi from "../../api/performanceApi";
 
 // Fallback shapes so components never receive undefined
@@ -24,6 +26,7 @@ const EMPTY_RESOURCE_TIMESERIES = {
 
 const MainPerformance = () => {
   const { accessToken, refreshToken } = useAuth();
+  const { hasAnyPermission } = usePermission();
   const [loading, setLoading] = useState(true);
 
   const [generalMetrics, setGeneralMetrics] = useState({
@@ -66,6 +69,9 @@ const MainPerformance = () => {
 
     fetchAll();
   }, [accessToken, refreshToken]);
+
+  if (!hasAnyPermission("performance_monitoring", "view_performance"))
+    return <AccessDenied />;
 
   return (
     <>

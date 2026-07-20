@@ -11,6 +11,7 @@ import { Menu } from '@headlessui/react';
 import './DragAndDrop.css';
 import { useNavigate } from 'react-router-dom';
 import { getContrastTextColor } from '../../Helper/colorContrast';
+import usePermission from '../../hooks/usePermission';
 
 const Column = React.memo(({
   column,
@@ -28,9 +29,11 @@ const Column = React.memo(({
   staffList = [],
   stages = [],
 }) => {
+  const { hasPermission } = usePermission();
+
   // Early return if column is invalid
   if (!column || !column.id) {
-    return null; 
+    return null;
   }
 
   // Safe access to column properties
@@ -40,7 +43,7 @@ const Column = React.memo(({
 
   const [showAddProspectModal, setShowAddProspectModal] = useState(false);
   const navigate = useNavigate();
-  
+
   const { setNodeRef: droppableRef } = useDroppable({
     id: columnId,
   });
@@ -176,26 +179,30 @@ const Column = React.memo(({
                   </button>
                 )}
               </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={`menu-item ${active ? 'menu-item-active' : ''}`}
-                    onClick={handleManageColumn}
-                  >
-                    Manage column
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={`menu-item-delete ${active ? 'menu-item-delete-active' : ''}`}
-                    onClick={handleDeleteColumn}
-                  >
-                    Delete column
-                  </button>
-                )}
-              </Menu.Item>
+              {hasPermission('edit_pipeline_stage') && (
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`menu-item ${active ? 'menu-item-active' : ''}`}
+                      onClick={handleManageColumn}
+                    >
+                      Manage column
+                    </button>
+                  )}
+                </Menu.Item>
+              )}
+              {hasPermission('delete_pipeline_stage') && (
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`menu-item-delete ${active ? 'menu-item-delete-active' : ''}`}
+                      onClick={handleDeleteColumn}
+                    >
+                      Delete column
+                    </button>
+                  )}
+                </Menu.Item>
+              )}
             </div>
           </Menu.Items>
         </Menu>

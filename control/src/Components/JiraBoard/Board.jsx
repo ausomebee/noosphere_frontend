@@ -4,6 +4,7 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Column from './Column';
 import { FaCirclePlus } from 'react-icons/fa6';
+import usePermission from '../../hooks/usePermission';
 import './DragAndDrop.css';
 
 const Board = ({
@@ -24,6 +25,9 @@ const Board = ({
   setSelectedTaskIds, // Update prop name
   setShowAssignCandidateModal,
 }) => {
+  const { hasPermission } = usePermission();
+  const canCreateStage = hasPermission('create_pipeline_stage');
+
   const { tasks, columns, columnOrder } = data;
   const columnData = Object.keys(columns).map((colId) => ({
     id: colId,
@@ -97,7 +101,7 @@ const Board = ({
           return (
             <div className="column-wrapper" key={columnId}>
               {/* Render "Add Column" button before the first column */}
-              {index === 0 && (
+              {index === 0 && canCreateStage && (
                 <div
                   className="column-insertion-point"
                   onMouseEnter={() => setHoverIndex(0)}
@@ -134,6 +138,7 @@ const Board = ({
                 setShowAssignCandidateModal={setShowAssignCandidateModal}
               />
               {/* Render "Add Column" button between columns and after the last column */}
+              {canCreateStage && (
               <div
                 className="column-insertion-point"
                 onMouseEnter={() => setHoverIndex(index + 1)}
@@ -149,6 +154,7 @@ const Board = ({
                   </button>
                 )}
               </div>
+              )}
             </div>
           );
         })}
@@ -156,6 +162,7 @@ const Board = ({
 
       {/* Always-visible affordance: a column-shaped box to add a new stage at
           the end (the hover "+" insertion points still work between columns). */}
+      {canCreateStage && (
       <div className="add-column-card">
         <button
           type="button"
@@ -167,6 +174,7 @@ const Board = ({
           <span>Add pipeline stage</span>
         </button>
       </div>
+      )}
       </div>
     </div>
   );

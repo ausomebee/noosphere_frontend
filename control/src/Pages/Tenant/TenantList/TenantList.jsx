@@ -10,6 +10,7 @@ import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import { SectionSpinner } from "../../../Components/LoadingSpinner";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import { formatDate } from "../../../Helper/Formatters";
 
 const deactivationReasons = [
@@ -263,6 +264,8 @@ const TenantList = () => {
       </div>
     );
   };
+
+  if (!hasPermission("view_tenant_list")) return <AccessDenied />;
 
   if (loading) {
     return (

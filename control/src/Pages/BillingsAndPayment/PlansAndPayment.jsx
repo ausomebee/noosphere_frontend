@@ -18,6 +18,7 @@ import api1 from "../../api/FeatureApis";
 import api2 from "../../api/TenantApis";
 import api from "../../api/BillingApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
@@ -691,6 +692,8 @@ const handleSavePlan = async (planData) => {
       )}
     </div>
   );
+
+  if (!hasPermission("view_plans")) return <AccessDenied />;
 
   return (
     <>

@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from "react";
 
 import "../../BillingAndPayments.css";
 import { SectionSpinner } from "../../../../Components/LoadingSpinner";
+import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
+import usePermission from "../../../../hooks/usePermission";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 const InvoiceManagement = lazy(() => import("./InvoiceManagement"));
@@ -9,11 +11,14 @@ const PaymentManagement = lazy(() => import("./PaymentManagement"));
 
 const AutoBilling = () => {
   const [activeTab, setActiveTab] = usePersistedTab("control:autoBilling", "invoice");
+  const { hasPermission } = usePermission();
 
   const subscriptionStats = [
     { key: "invoice", label: "INVOICE MANAGEMENT" },
     { key: "payment", label: "PAYMENT & ACCOUNT ACCESS" },
   ];
+
+  if (!hasPermission("view_auto_billing")) return <AccessDenied />;
 
   return (
     <>

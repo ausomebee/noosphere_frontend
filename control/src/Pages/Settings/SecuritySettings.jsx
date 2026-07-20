@@ -9,6 +9,7 @@ import {
   PasswordInput,
 } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import authApis from "../../api/authApis";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { firstUnmetPasswordRule } from "../../Helper/passwordValidation";
@@ -239,6 +240,8 @@ const SecuritySettings = () => {
       setIsSecurityQuestionModalOpen(true);
     }
   };
+
+  if (!hasPermission("view_security_settings")) return <AccessDenied />;
 
   return (
     <div className="security-settings-container">
