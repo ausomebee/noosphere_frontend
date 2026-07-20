@@ -143,15 +143,17 @@ const CreateClientDocumentsRequest = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
+    // description and dueDate are optional — only send them when provided so an
+    // empty value isn't persisted as a blank description / null due date.
+    const payload = { tenantClientId, name, allowMultiple };
+    const trimmedDescription =
+      typeof description === "string" ? description.trim() : description;
+    if (trimmedDescription) payload.description = trimmedDescription;
+    if (dueDate) payload.dueDate = dueDate;
+
     const response = await authFetch.post(
       `${PLAIN_API_URL}/client-requested-documents/tenant`,
-      {
-        tenantClientId,
-        name,
-        description,
-        allowMultiple,
-        dueDate,
-      }
+      payload
     );
     return response;
   } catch (error) {
