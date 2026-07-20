@@ -14,6 +14,7 @@ import { BsCloudUpload } from "react-icons/bs";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import "./SupportRequests.css";
 
 const CATEGORIES = [
@@ -287,6 +288,8 @@ const SupportRequests = () => {
     setProgressData(logs);
     setIsProgressModalOpen(true);
   };
+
+  if (!hasPermission("view_support_request_list")) return <AccessDenied />;
 
   return (
     <>

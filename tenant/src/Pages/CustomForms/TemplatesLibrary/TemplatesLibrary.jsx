@@ -11,11 +11,12 @@ import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 const TemplatesLibrary = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +124,9 @@ const TemplatesLibrary = () => {
       setDeleting(false);
     }
   };
+
+  if (!hasAnyPermission("view_template_list", "view_template"))
+    return <AccessDenied />;
 
   return (
     <>

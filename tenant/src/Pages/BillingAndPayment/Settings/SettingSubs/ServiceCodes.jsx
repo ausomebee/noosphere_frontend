@@ -8,11 +8,12 @@ import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import usePermissions from "../../../../hooks/usePermissions";
+import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 
 const ServiceCodes = () => {
   const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -152,6 +153,9 @@ const ServiceCodes = () => {
       className: "more-dropdown",
     },
   ];
+
+  if (!hasAnyPermission("view_service_codes_list", "view_service_code"))
+    return <AccessDenied />;
 
   return (
     <div>

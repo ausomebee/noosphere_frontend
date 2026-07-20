@@ -7,17 +7,17 @@ import usePermissions from "../../hooks/usePermissions";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
 const ALL_TABS = [
-  { key: "generalSettings", label: "General Settings", permissionKey: "view_general_settings" },
-  { key: "notificationSettings", label: "Notification Settings", permissionKey: "view_notification_settings" },
-  { key: "clinicalReports", label: "Clinical Reports (Template Library)", permissionKey: "view_clinical_report_template_list" },
+  { key: "generalSettings", label: "General Settings", permissionKeys: ["general_settings", "view_general_settings"] },
+  { key: "notificationSettings", label: "Notification Settings", permissionKeys: ["notification_settings", "view_notification_settings"] },
+  { key: "clinicalReports", label: "Clinical Reports (Template Library)", permissionKeys: ["clinical_reports_template_library", "view_clinical_report_template_list"] },
 ];
 
 const Settings = () => {
-  const { hasPermission } = usePermissions();
+  const { hasAnyPermission } = usePermissions();
 
   const visibleTabs = useMemo(
-    () => ALL_TABS.filter((t) => hasPermission(t.permissionKey)),
-    [hasPermission]
+    () => ALL_TABS.filter((t) => hasAnyPermission(...t.permissionKeys)),
+    [hasAnyPermission]
   );
 
   usePageTitle("Settings");

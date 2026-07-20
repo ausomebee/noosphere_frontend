@@ -228,7 +228,7 @@ const ClinicalReports = () => {
   };
 
   const actions = [
-    {
+    hasPermission("view_clinical_report_templates") && {
       type: "icon",
       label: "View",
       icon: <LuEye className="w-5 h-5 text-blue-600" />,

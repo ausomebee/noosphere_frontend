@@ -175,6 +175,9 @@ function CalendarScheduler({
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
   const handleAppointmentClick = (appt, position) => {
+    // Clicking an event opens the appointment-details popover. Gate it so the
+    // detail view won't open without the view_appointment_details_on_calendar key.
+    if (!hasPermission("view_appointment_details_on_calendar")) return;
     setSelectedAppointment(appt);
     setAppointmentPosition(position);
   };

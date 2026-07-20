@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/billingAndPaymentsApi";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 const TimeSheet = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -132,6 +133,8 @@ const TimeSheet = () => {
     ],
     [],
   );
+
+  if (!hasPermission("view_timesheets_list")) return <AccessDenied />;
 
   return (
     <>

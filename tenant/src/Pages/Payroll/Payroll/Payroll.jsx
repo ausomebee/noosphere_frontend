@@ -10,6 +10,7 @@ import payrollApi from "../../../api/payrollApi";
 import { showApiError } from "../../../Helper/ShowToast";
 import { formatDate, formatCurrency } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 const Payroll = () => {
   const navigate = useNavigate();
@@ -72,6 +73,8 @@ const Payroll = () => {
     fetchPayrollStats();
   };
 
+  if (!hasPermission("view_payroll_list")) return <AccessDenied />;
+
   return (
     <>
       <div>
@@ -100,9 +103,17 @@ const Payroll = () => {
           itemsPerPage={10}
           showActions={true}
           showCheckbox={false}
-          actionText="View Breakdown"
+          actionText={
+            hasPermission("view_payroll_information")
+              ? "View Breakdown"
+              : undefined
+          }
           actionLinkPrefix="/claims/view/"
-          onActionClick={handleActionClick}
+          onActionClick={
+            hasPermission("view_payroll_information")
+              ? handleActionClick
+              : undefined
+          }
           loading={loading}
         />
       </div>

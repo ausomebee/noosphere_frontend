@@ -51,8 +51,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/scheduler",
       moduleKey: "SCHEDULER",
       children: [
-        { name: "Calendar", path: "/scheduler/calendar", permissionKey: "view_calendar" },
-        { name: "Appointments", path: "/scheduler/appointments", permissionKey: "view_upcoming_appointments" },
+        { name: "Calendar", path: "/scheduler/calendar", permissionKeys: ["calendar", "view_calendar"] },
+        { name: "Appointments", path: "/scheduler/appointments", permissionKeys: ["appointments", "view_upcoming_appointments"] },
       ],
     },
     {
@@ -61,8 +61,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/clients",
       moduleKey: "CLIENTS",
       children: [
-        { name: "Pipeline", path: "/clients/pipeline", permissionKey: "view_onboarding_pipeline" },
-        { name: "Client List", path: "/clients/client-list", permissionKey: "view_client_list" },
+        { name: "Pipeline", path: "/clients/pipeline", permissionKeys: ["client_pipeline", "view_onboarding_pipeline"] },
+        { name: "Client List", path: "/clients/client-list", permissionKeys: ["client_list", "view_client_list"] },
       ],
     },
     {
@@ -71,10 +71,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/organization",
       moduleKey: "MY_ORGANIZATION",
       children: [
-        { name: "General", path: "/organization/general", permissionKey: "view_organization_information" },
-        { name: "Staff & Teams", path: "/organization/staff-and-teams", permissionKey: "view_staff_list" },
-        { name: "Practice Settings", path: "/organization/practice-settings", permissionKeys: ["view_diagnosis_codes", "view_session_types", "view_service_codes_list", "view_rounding_rules_list", "view_payers_list"] },
-        { name: "Role & Permissions", path: "/organization/role-and-permissions", permissionKey: "view_roles_list" },
+        { name: "General", path: "/organization/general", permissionKeys: ["general", "view_organization_information"] },
+        { name: "Staff & Teams", path: "/organization/staff-and-teams", permissionKeys: ["staff_teams", "view_staff_list"] },
+        { name: "Practice Settings", path: "/organization/practice-settings", permissionKeys: ["practice_settings", "view_diagnosis_codes", "view_session_types", "view_service_codes_list", "view_rounding_rules_list", "view_payers_list"] },
+        { name: "Role & Permissions", path: "/organization/role-and-permissions", permissionKeys: ["roles_permissions", "view_roles_list"] },
       ],
     },
     {
@@ -83,8 +83,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/billing",
       moduleKey: "BILLINGS_PAYMENTS",
       children: [
-        { name: "Timesheets", path: "/billing/timesheets", permissionKey: "view_timesheets_list" },
-        { name: "Claims", path: "/billing/claims", permissionKey: "can_view_claims" },
+        { name: "Timesheets", path: "/billing/timesheets", permissionKeys: ["timesheets", "view_timesheets_list"] },
+        { name: "Claims", path: "/billing/claims", permissionKeys: ["claims", "can_view_claims"] },
         // Service Codes / Rounding Rules / Payers moved to My Organization → Practice Settings.
       ],
     },
@@ -94,8 +94,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/payroll",
       moduleKey: "PAYROLL",
       children: [
-        { name: "Payroll", path: "/payroll/payroll-setup", permissionKey: "view_payroll_list" },
-        { name: "Payroll Settings", path: "/payroll/payroll-settings", permissionKey: "view_income_items_list" },
+        { name: "Payroll", path: "/payroll/payroll-setup", permissionKeys: ["payroll", "view_payroll_list"] },
+        { name: "Payroll Settings", path: "/payroll/payroll-settings", permissionKeys: ["payroll_settings", "view_income_items_list"] },
       ],
     },
     { name: "Program Library", icon: FaBook, path: "/program-library", moduleKey: "PROGRAM_LIBRARY" },
@@ -106,8 +106,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/custom-forms",
       moduleKey: "CUSTOM_FORMS",
       children: [
-        { name: "Forms", path: "/custom-forms/forms", permissionKey: "view_form_list" },
-        { name: "Templates Library", path: "/custom-forms/templates-library", permissionKey: "view_template_list" },
+        { name: "Forms", path: "/custom-forms/forms", permissionKeys: ["forms", "view_form_list"] },
+        { name: "Templates Library", path: "/custom-forms/templates-library", permissionKeys: ["template_library", "view_template_list"] },
       ],
     },
     {
@@ -116,7 +116,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       path: "/help",
       moduleKey: "HELP_SUPPORT",
       children: [
-        { name: "Support Requests", path: "/help/support-requests", permissionKey: "view_support_request_list" },
+        { name: "Support Requests", path: "/help/support-requests", permissionKeys: ["support_requests", "view_support_request_list"] },
         // { name: "Knowledge Base", path: "/help/knowledge-base", permissionKey: "view_knowledge_base" },
       ],
     },
@@ -360,8 +360,8 @@ const DashboardLayout = ({ children }) => {
               </button>
             )}
             <div className="flex gap-4 items-center justify-end">
+              {/* Notification bell — its own circle, separate from messaging */}
               <div className="header-left">
-                {/* Notification bell — opens the notifications page */}
                 <button
                   className="message-icon"
                   onClick={() => navigate("/notifications")}
@@ -374,13 +374,16 @@ const DashboardLayout = ({ children }) => {
                     </span>
                   )}
                 </button>
-                {/* Message icon */}
+              </div>
+              {/* Message icon — its own circle */}
+              <div className="header-left">
                 <button
                   className="message-icon"
                   onClick={() => {
                     setMessageCount(0);
                     setIsMessageModalOpen(true);
                   }}
+                  aria-label="Messages"
                 >
                   <MdMessage size={26} color="#fff" />
                   {messageCount > 0 && (

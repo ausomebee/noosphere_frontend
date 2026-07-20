@@ -180,7 +180,7 @@ const ClientPanel = () => {
               Appointments & Schedule
             </button>
           )}
-          {hasPermission("view_authorization") && (
+          {hasPermission("view_client_authorization_list") && (
             <button
               onClick={() => setView("authorization")}
               className={`appointment-sched-view-button ${

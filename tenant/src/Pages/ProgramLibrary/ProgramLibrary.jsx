@@ -11,6 +11,7 @@ import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/ProgramLibraryApis";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePermissions from "../../hooks/usePermissions";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 
 const ProgramLibrary = () => {
   /* ----------  state  ---------- */
@@ -25,7 +26,7 @@ const ProgramLibrary = () => {
 
   /* ----------  auth  ---------- */
   const { tenantId, accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   /* ----------  helpers  ---------- */
   const domainType = view === "skillAcquisition" ? "SKILL_ACQUISITION" : "BEHAVIOR_REDUCTION";
@@ -192,6 +193,9 @@ const handleDeleteConfirm = async () => {
   };
 
   /* ----------  render  ---------- */
+  if (!hasAnyPermission("program_library", "view_program_library"))
+    return <AccessDenied />;
+
   return (
     <>
       <div>

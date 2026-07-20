@@ -1704,19 +1704,21 @@ const SingleTimeSheet = () => {
           >
             <span>TimeSheet Details</span>
           </button>
-          <button
-            className={`tab flex items-center justify-center ${
-              activeTab === "historyAndApprovals" ? "active" : ""
-            }`}
-            onClick={() => setActiveTab("historyAndApprovals")}
-          >
-            <span>History & Approvals</span>
-            {counts.historyAndApprovalsCount !== undefined && (
-              <span className="ml-2 bg-blue-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
-                {counts.historyAndApprovalsCount}
-              </span>
-            )}
-          </button>
+          {hasPermission("view_timesheet_history_approvals") && (
+            <button
+              className={`tab flex items-center justify-center ${
+                activeTab === "historyAndApprovals" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("historyAndApprovals")}
+            >
+              <span>History & Approvals</span>
+              {counts.historyAndApprovalsCount !== undefined && (
+                <span className="ml-2 bg-blue-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                  {counts.historyAndApprovalsCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {activeTab === "timeSheetDetails" && (
@@ -2358,7 +2360,8 @@ const SingleTimeSheet = () => {
           </div>
         )}
 
-        {activeTab === "historyAndApprovals" && (
+        {activeTab === "historyAndApprovals" &&
+          hasPermission("view_timesheet_history_approvals") && (
           <div>
             <div className="p-6">
               <div className="space-y-4">

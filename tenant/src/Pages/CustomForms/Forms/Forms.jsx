@@ -12,6 +12,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 const Forms = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const Forms = () => {
       type: "dropdown",
       label: "More",
       items: [
-        {
+        hasPermission("view_form") && {
           label: "View Responses",
           onClick: (row) => navigate(`/custom-forms/forms/responses/${row.id}`),
         },
@@ -166,6 +167,8 @@ const Forms = () => {
   };
 
   // ----------------------------------------------------------------
+  if (!hasPermission("view_form_list")) return <AccessDenied />;
+
   return (
     <>
       <div>

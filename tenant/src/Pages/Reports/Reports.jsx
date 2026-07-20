@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import usePermissions from "../../hooks/usePermissions";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import "./Reports.css";
 
 const appointmentReports = [
@@ -16,6 +18,7 @@ const logReports = [
 
 const ReportCard = ({ icon, title, description, items }) => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   return (
     <div className="report-card">
       <div className="report-card-header">
@@ -24,7 +27,7 @@ const ReportCard = ({ icon, title, description, items }) => {
         <p className="report-card-desc">{description}</p>
       </div>
       <ul className="report-card-list">
-        {items.map((item) => (
+        {hasPermission("view_report") && items.map((item) => (
           <li key={item.path} className="report-card-item" onClick={() => navigate(item.path)}>
             <span>{item.label}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#004ABA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -38,6 +41,10 @@ const ReportCard = ({ icon, title, description, items }) => {
 };
 
 const Reports = () => {
+  const { hasAnyPermission } = usePermissions();
+
+  if (!hasAnyPermission("reports", "view_report_list")) return <AccessDenied />;
+
   return (
     <div className="reports-page">
       <h1 className="reports-title">Reports</h1>

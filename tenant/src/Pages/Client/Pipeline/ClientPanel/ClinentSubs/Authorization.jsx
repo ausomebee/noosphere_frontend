@@ -13,6 +13,7 @@ import { useParams } from "react-router-dom";
 import { formatDate } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import usePermissions from "../../../../../hooks/usePermissions";
+import AccessDenied from "../../../../../Components/AccessDenied/AccessDenied";
 
 const AuthorizationTab = () => {
   const { dateFormat } = useFormatSettings();
@@ -376,6 +377,10 @@ const AuthorizationTab = () => {
         />
       </div>
 
+      {!hasPermission("view_authorization") ? (
+        <AccessDenied message="You don't have permission to view authorization details." />
+      ) : (
+        <>
       {loading && (
         <div className="text-center py-8">Loading authorizations...</div>
       )}
@@ -404,6 +409,8 @@ const AuthorizationTab = () => {
         <div className="text-center py-8 text-gray-500">
           No authorizations found. Click "Add Authorization" to create one.
         </div>
+      )}
+        </>
       )}
 
       <AddAuthorizationModal

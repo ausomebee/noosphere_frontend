@@ -10,6 +10,7 @@ import api from "../../../api/TenantApis"; // For Create & Update
 import clientApi from "../../../api/clientPanelApis"; // For GetAll, Activate/Deactivate
 import AddClientModal from "../../../Components/ReusableModal/ClientModal/AddClientModal";
 import usePermissions from "../../../hooks/usePermissions";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 
 const ClientList = () => {
@@ -184,6 +185,8 @@ const ClientList = () => {
       },
     ];
   }, [tableData]);
+
+  if (!hasPermission("view_client_list")) return <AccessDenied />;
 
   return (
     <>

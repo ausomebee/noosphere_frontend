@@ -410,7 +410,7 @@ const ViewBreakDown = () => {
       </div>
 
       <div className="flex justify-end items-center mb-6 gap-2">
-        {hasChanges && hasPermission("edit_payroll_breakdown") && (
+        {hasChanges && hasPermission("edit_payroll_information") && (
           <Button
             variant="primary"
             label="Submit"

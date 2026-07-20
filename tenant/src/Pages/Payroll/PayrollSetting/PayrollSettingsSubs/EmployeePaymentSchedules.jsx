@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 import api from "../../../../api/payrollApi";
 import { showToast } from "../../../../Helper/ShowToast";
 
@@ -82,6 +83,8 @@ const EmployeePaymentSchedules = () => {
       fetchCompensationTypes();
     }
   }, [tenantId, fetchCompensationTypes]);
+
+  if (!hasPermission("view_compensation_type_list")) return <AccessDenied />;
 
   return (
     <div>

@@ -15,6 +15,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import usePersistedTab from "../../../hooks/usePersistedTab";
+import usePermissions from "../../../hooks/usePermissions";
 import "../Organisation.css";
 
 const SingleStaffByAdmin = () => {
@@ -24,6 +25,7 @@ const SingleStaffByAdmin = () => {
   const [searchParams] = useSearchParams();
   const staffName = searchParams.get("name");
   const { dateFormat } = useFormatSettings();
+  const { hasPermission } = usePermissions();
 
   const [staff, setStaff] = useState(null);
   const [licenses, setLicenses] = useState([]);
@@ -329,8 +331,34 @@ const SingleStaffByAdmin = () => {
     navigate("/organization/staff-and-teams");
   };
 
+  // Only show sub-tabs the user is allowed to view. Each tab maps to its exact
+  // view permission key; a tab is hidden when its key is absent (a user with
+  // empty access gets all, handled inside usePermissions).
+  const tabs = [
+    hasPermission("view_staff_profile_information") && {
+      key: "staffProfile",
+      label: "Profile",
+    },
+    hasPermission("view_staff_appointment_schedule") && {
+      key: "appointmentSchedule",
+      label: "Appointment & Schedule",
+    },
+    hasPermission("view_staff_clients_list") && {
+      key: "staffClient",
+      label: "Clients",
+    },
+    hasPermission("view_staff_payroll") && {
+      key: "payrollSettings",
+      label: "Payroll Settings",
+    },
+  ].filter(Boolean);
+
+  // Fall back to the first visible tab if the persisted/active one is hidden so
+  // the page never lands on a tab the user cannot see.
+  const effectiveTab = tabs.some((t) => t.key === view) ? view : tabs[0]?.key;
+
   const renderContent = () => {
-    switch (view) {
+    switch (effectiveTab) {
       case "staffProfile":
         return (
           <Profile
@@ -392,46 +420,19 @@ const SingleStaffByAdmin = () => {
         </div>
       </div>
       <div className="appointment-sched-view-switcher">
-        <button
-          onClick={() => setView("staffProfile")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "staffProfile"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Profile</span>
-        </button>
-        <button
-          onClick={() => setView("appointmentSchedule")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "appointmentSchedule"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Appointment & Schedule</span>
-        </button>
-        <button
-          onClick={() => setView("staffClient")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "staffClient"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Clients</span>
-        </button>
-        <button
-          onClick={() => setView("payrollSettings")}
-          className={`appointment-sched-view-button flex items-center ${
-            view === "payrollSettings"
-              ? "appointment-sched-view-button-active"
-              : "appointment-sched-view-button-inactive"
-          }`}
-        >
-          <span>Payroll Settings</span>
-        </button>
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setView(tab.key)}
+            className={`appointment-sched-view-button flex items-center ${
+              effectiveTab === tab.key
+                ? "appointment-sched-view-button-active"
+                : "appointment-sched-view-button-inactive"
+            }`}
+          >
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
       {renderContent()}
       <AddLicensesModal

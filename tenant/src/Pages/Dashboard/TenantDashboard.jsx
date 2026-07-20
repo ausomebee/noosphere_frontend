@@ -9,6 +9,7 @@ import UpcomingAppointments from "../Dashboard/DashboardCards/UpcomingAppointmen
 import { SelectInput } from "../../Components/Input/Inputs";
 import { useNavigate } from "react-router-dom";
 import usePermissions from "../../hooks/usePermissions";
+import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 
 const DashboardCard = ({
   title,
@@ -119,7 +120,7 @@ const DashboardCard = ({
 };
 
 const Dashboard = () => {
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
   // State for all controlled inputs
   const [upcomingAppointmentsCount, setUpcomingAppointmentsCount] = useState(0);
   const [authorizationStatus, setAuthorizationStatus] = useState("expired");
@@ -273,6 +274,18 @@ const Dashboard = () => {
         return null;
     }
   };
+
+  if (
+    !hasAnyPermission(
+      "dashboard",
+      "view_upcoming_appointments",
+      "view_session_information",
+      "view_intake_pipeline_info",
+      "view_authorization_information",
+      "view_productivity_information"
+    )
+  )
+    return <AccessDenied />;
 
   return (
     <>

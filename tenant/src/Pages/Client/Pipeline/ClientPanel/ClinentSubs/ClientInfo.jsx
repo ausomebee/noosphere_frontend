@@ -837,7 +837,7 @@ const DocumentsForms = () => {
                                     <div className="p-6">
                                       <div className="space-y-4">
                                         {/* Show uploaded files if available */}
-                                        {req.files && req.files.length > 0 ? (
+                                        {hasPermission("view_uploaded_documents_in_request_table") && req.files && req.files.length > 0 ? (
                                           <div>
                                             <h3 className="text-base font-600 text-gray-800 mb-4">
                                               Uploaded Documents ({req.files.length})

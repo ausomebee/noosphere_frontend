@@ -208,6 +208,7 @@ const Profile = ({
           </div>
         )}
       </div>
+      {hasPermission("view_staff_licenses_list") && (
       <div className="org-section">
         <div className="org-section-header">
           <h2 className="font-bold text-lg text-gray-700-em">Staff Licenses</h2>
@@ -241,6 +242,8 @@ const Profile = ({
         </div>
         {renderLicenses()}
       </div>
+      )}
+      {hasPermission("view_staff_document_list") && (
       <div className="org-section">
         <div className="org-section-header">
           <h2 className="font-bold text-lg text-gray-700-em">
@@ -260,6 +263,7 @@ const Profile = ({
         </div>
         {renderFiles()}
       </div>
+      )}
     </>
   );
 };

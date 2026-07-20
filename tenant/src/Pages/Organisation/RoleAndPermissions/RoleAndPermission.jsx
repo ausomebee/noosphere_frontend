@@ -7,6 +7,7 @@ import RoleConfiguration from "./RoleConfiguration";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import roleApi from "../../../api/roleApi";
 import { showToast } from "../../../Helper/ShowToast";
 import {
@@ -22,7 +23,7 @@ import "../Organisation.css";
 const RoleAndPermission = () => {
   const dispatch = useDispatch();
   const { tenantId, accessToken, refreshToken } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   const [view, setView] = useState("list"); // "list" | "config"
   const [configMode, setConfigMode] = useState("add"); // "add" | "edit"
@@ -266,6 +267,16 @@ const RoleAndPermission = () => {
   };
 
   /* ─── Render ─── */
+  if (
+    !hasAnyPermission(
+      "view_roles_list",
+      "view_roles_permissions",
+      "create_new_role",
+      "edit_a_role",
+    )
+  )
+    return <AccessDenied />;
+
   if (view === "config") {
     return (
       <div className="p-6">

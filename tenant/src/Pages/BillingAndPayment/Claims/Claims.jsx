@@ -6,6 +6,7 @@ import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
 const Claims = () => {
   const navigate = useNavigate();
@@ -94,6 +95,8 @@ const Claims = () => {
   const handleActionClick = (row) => {
     navigate(`/billing/claims/view/${row.id}`);
   };
+
+  if (!hasPermission("can_view_claims")) return <AccessDenied />;
 
   return (
     <>
