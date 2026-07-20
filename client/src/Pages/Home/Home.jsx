@@ -130,8 +130,17 @@ const Home = () => {
           refreshToken,
         });
 
-        // Transform API data to match component props
-        const avgSeconds = response.data.data.avgSession[0]?.avg_seconds;
+        // Transform API data to match component props.
+        // avgSession comes back as a plain number of seconds (e.g. 605.25);
+        // older responses used an array of { avg_seconds }. Normalize both to a
+        // number so the duration never renders as NaN.
+        const rawAvg = response.data.data.avgSession;
+        const avgSeconds =
+          typeof rawAvg === "number"
+            ? rawAvg
+            : Array.isArray(rawAvg)
+              ? Number(rawAvg[0]?.avg_seconds) || 0
+              : Number(rawAvg) || 0;
         const hours = Math.floor(avgSeconds / 3600);
         const minutes = Math.floor((avgSeconds % 3600) / 60);
         const avgDuration = `${hours.toString().padStart(2, "0")}:${minutes
