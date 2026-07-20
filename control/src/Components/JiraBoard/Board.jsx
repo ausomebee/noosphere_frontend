@@ -101,13 +101,13 @@ const Board = ({
           return (
             <div className="column-wrapper" key={columnId}>
               {/* Render "Add Column" button before the first column */}
-              {index === 0 && canCreateStage && (
+              {index === 0 && (
                 <div
                   className="column-insertion-point"
                   onMouseEnter={() => setHoverIndex(0)}
                   onMouseLeave={() => setHoverIndex(null)}
                 >
-                  {hoverIndex === 0 && (
+                  {hoverIndex === 0 && canCreateStage && (
                     <button
                       className="add-column-button"
                       aria-label="Add column"
@@ -138,13 +138,12 @@ const Board = ({
                 setShowAssignCandidateModal={setShowAssignCandidateModal}
               />
               {/* Render "Add Column" button between columns and after the last column */}
-              {canCreateStage && (
               <div
                 className="column-insertion-point"
                 onMouseEnter={() => setHoverIndex(index + 1)}
                 onMouseLeave={() => setHoverIndex(null)}
               >
-                {hoverIndex === index + 1 && (
+                {hoverIndex === index + 1 && canCreateStage && (
                   <button
                     className="add-column-button"
                     aria-label="Add column"
@@ -154,7 +153,6 @@ const Board = ({
                   </button>
                 )}
               </div>
-              )}
             </div>
           );
         })}

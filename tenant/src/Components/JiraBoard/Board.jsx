@@ -103,13 +103,13 @@ const Board = ({
           return (
             <div className="column-wrapper" key={columnId}>
               {/* Render "Add Column" button before the first column */}
-              {index === 0 && hasPermission("create_pipeline") && (
+              {index === 0 && (
                 <div
                   className="column-insertion-point"
                   onMouseEnter={() => setHoverIndex(0)}
                   onMouseLeave={() => setHoverIndex(null)}
                 >
-                  {hoverIndex === 0 && (
+                  {hoverIndex === 0 && hasPermission("create_pipeline") && (
                     <button
                       className="add-column-button"
                       onClick={() => onAddColumn(0)}
@@ -140,23 +140,21 @@ const Board = ({
                 setShowAssignCandidateModal={setShowAssignCandidateModal}
               />
               {/* Render "Add Column" button between columns and after the last column */}
-              {hasPermission("create_pipeline") && (
-                <div
-                  className="column-insertion-point"
-                  onMouseEnter={() => setHoverIndex(index + 1)}
-                  onMouseLeave={() => setHoverIndex(null)}
-                >
-                  {hoverIndex === index + 1 && (
-                    <button
-                      className="add-column-button"
-                      onClick={() => onAddColumn(index + 1)}
-                      aria-label="Add column"
-                    >
-                      <FaCirclePlus />
-                    </button>
-                  )}
-                </div>
-              )}
+              <div
+                className="column-insertion-point"
+                onMouseEnter={() => setHoverIndex(index + 1)}
+                onMouseLeave={() => setHoverIndex(null)}
+              >
+                {hoverIndex === index + 1 && hasPermission("create_pipeline") && (
+                  <button
+                    className="add-column-button"
+                    onClick={() => onAddColumn(index + 1)}
+                    aria-label="Add column"
+                  >
+                    <FaCirclePlus />
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
