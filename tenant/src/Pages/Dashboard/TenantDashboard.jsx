@@ -62,9 +62,9 @@ const DashboardCard = ({
           <div className="dashboard-card-header-left">
             <h3 className="text-base font-semibold text-color-sec">
               <span>{title}</span>
-              {count !== undefined && count !== null && count > 0 && (
+              {(Number(count) || 0) > 0 && (
                 <span className="ml-2 bg-blue-600 text-white px-2 py-2 rounded-full text-base font-bold">
-                  {count}
+                  {Number(count) || 0}
                 </span>
               )}
             </h3>

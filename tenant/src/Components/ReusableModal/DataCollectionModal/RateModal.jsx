@@ -102,6 +102,7 @@ const RateModal = ({
   const {
     register,
     handleSubmit,
+    reset,
     setValue,
     formState: { errors },
   } = useForm({
@@ -119,6 +120,20 @@ const RateModal = ({
   useEffect(() => {
     setValue("duration", seconds, { shouldValidate: true });
   }, [seconds, setValue]);
+
+  // Reset the form + timer each time the modal opens so re-recording after a
+  // clear starts blank (the modal stays mounted between opens).
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+      reset({
+        numberOfOccurrence: initialData.numberOfOccurrence || 0,
+        duration: initialData.duration || 0,
+        notes: initialData.notes || "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   /* ----------  submit  ---------- */
   const onSubmit = (data) => {

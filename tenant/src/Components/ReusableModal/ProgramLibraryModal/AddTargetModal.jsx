@@ -7,8 +7,14 @@ import {
   resetDraft,
 } from "../../../ReduxStore/features/AddTargetDraftSlice";
 import ReusableModal from "../ReusableModal";
-import { BsCloudUpload } from "react-icons/bs";
+import {
+  BsCloudUpload,
+  BsFileEarmarkPdf,
+  BsFileEarmarkPlay,
+} from "react-icons/bs";
+import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { formatFileSize } from "../../../Helper/Formatters";
 import {
   RadioInput,
   SelectInput,
@@ -23,6 +29,21 @@ import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 import { RequiredMark } from "../../Input/Inputs";
 
 /* ---------- FileUploadArea Component ---------- */
+const getFileIcon = (fileName) => {
+  if (!fileName || typeof fileName !== "string") {
+    return <FaRegFile size={16} className="file-icon" />;
+  }
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return <BsFileEarmarkPdf size={16} className="file-icon" />;
+  if (["mp4", "avi", "mov"].includes(ext))
+    return <FaPhotoVideo size={16} className="file-icon" />;
+  if (["gif"].includes(ext))
+    return <BsFileEarmarkPlay size={16} className="file-icon" />;
+  if (["png", "jpg", "jpeg", "webp"].includes(ext))
+    return <FaImage size={16} className="file-icon" />;
+  return <FaRegFile size={16} className="file-icon" />;
+};
+
 const FileUploadArea = ({
   onFiles,
   onRemove = () => {},
@@ -117,50 +138,43 @@ const FileUploadArea = ({
 
       {file && (
         <div className="file-list mt-3">
-          <div
-            className="file-item"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "8px",
-            }}
-          >
-            <span>
-              {file.url ? (
-                <a href={file.url} target="_blank" rel="noreferrer">
-                  {file.name}
-                </a>
-              ) : (
-                file.name
-              )}
-              {typeof file.size === "number"
-                ? ` (${(file.size / 1024 / 1024).toFixed(1)} MB)`
-                : ""}
-            </span>
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            >
-              {!file.existing && (
-                <div className="progress-bar">
-                  <div className="progress" style={{ width: `${progress}%` }} />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={handleRemove}
-                className="remove-file"
-                aria-label="Remove file"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#dc2626",
-                }}
-              >
-                <RiDeleteBin6Line size={16} />
-              </button>
+          <div className="file-item">
+            <div className="file-header">
+              <div className="file-info">
+                {getFileIcon(file.name)}
+                <span className="file-name">
+                  {file.url ? (
+                    <a href={file.url} target="_blank" rel="noreferrer">
+                      {file.name}
+                    </a>
+                  ) : (
+                    file.name
+                  )}
+                  {typeof file.size === "number"
+                    ? ` • ${formatFileSize(file.size)}`
+                    : ""}
+                </span>
+              </div>
+              <div className="file-actions">
+                {(file.existing || progress === 100) && (
+                  <FaCheckCircle size={16} className="file-success" />
+                )}
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  className="remove-file"
+                  aria-label="Remove file"
+                >
+                  <RiDeleteBin6Line size={16} />
+                </button>
+              </div>
             </div>
+            {!file.existing && (
+              <div className="progress-bar">
+                <div className="progress" style={{ width: `${progress}%` }} />
+                <span className="progress-text">{progress}%</span>
+              </div>
+            )}
           </div>
         </div>
       )}

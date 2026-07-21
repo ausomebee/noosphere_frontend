@@ -4,9 +4,16 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, RequiredMark } from "../../Input/Inputs";
-import { BsCloudUpload } from "react-icons/bs";
+import {
+  BsCloudUpload,
+  BsFileEarmarkPdf,
+  BsFileEarmarkPlay,
+} from "react-icons/bs";
+import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa";
+import { RiDeleteBin6Line } from "react-icons/ri";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { formatFileSize } from "../../../Helper/Formatters";
 
 // Validation schema
 const documentSchema = yup.object({
@@ -23,8 +30,24 @@ const documentSchema = yup.object({
 });
 
 /* ---------- FileUploadArea Component ---------- */
+const getFileIcon = (fileName) => {
+  if (!fileName || typeof fileName !== "string") {
+    return <FaRegFile size={16} className="file-icon" />;
+  }
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return <BsFileEarmarkPdf size={16} className="file-icon" />;
+  if (["mp4", "avi", "mov"].includes(ext))
+    return <FaPhotoVideo size={16} className="file-icon" />;
+  if (["gif"].includes(ext))
+    return <BsFileEarmarkPlay size={16} className="file-icon" />;
+  if (["png", "jpg", "jpeg", "webp"].includes(ext))
+    return <FaImage size={16} className="file-icon" />;
+  return <FaRegFile size={16} className="file-icon" />;
+};
+
 const FileUploadArea = ({
   onFiles,
+  onRemove = () => {},
   accept = ".pdf,.jpg,.jpeg,.png,.gif",
   maxSizeMB = 50,
 }) => {
@@ -55,6 +78,12 @@ const FileUploadArea = ({
     }, 200);
   };
 
+  const handleRemove = () => {
+    setFile(null);
+    setProgress(0);
+    onRemove();
+  };
+
   return (
     <div className="mb-6">
       <p className="text-sm text-gray-700 font-semibold mb-2">
@@ -79,11 +108,30 @@ const FileUploadArea = ({
       {file && (
         <div className="file-list mt-3">
           <div className="file-item">
-            <span>
-              {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
-            </span>
+            <div className="file-header">
+              <div className="file-info">
+                {getFileIcon(file.name)}
+                <span className="file-name">
+                  {file.name} • {formatFileSize(file.size)}
+                </span>
+              </div>
+              <div className="file-actions">
+                {progress === 100 && (
+                  <FaCheckCircle size={16} className="file-success" />
+                )}
+                <button
+                  type="button"
+                  className="remove-file"
+                  onClick={handleRemove}
+                  aria-label="Remove file"
+                >
+                  <RiDeleteBin6Line size={16} />
+                </button>
+              </div>
+            </div>
             <div className="progress-bar">
               <div className="progress" style={{ width: `${progress}%` }} />
+              <span className="progress-text">{progress}%</span>
             </div>
           </div>
         </div>
@@ -172,6 +220,9 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
             <FileUploadArea
               onFiles={(files) => {
                 setValue("document", files[0], { shouldValidate: true });
+              }}
+              onRemove={() => {
+                setValue("document", null, { shouldValidate: true });
               }}
               accept=".pdf,.jpg,.jpeg,.png,.gif"
               maxSizeMB={50}

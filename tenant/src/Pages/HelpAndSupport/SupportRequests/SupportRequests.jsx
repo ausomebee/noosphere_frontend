@@ -10,9 +10,14 @@ import api from "../../../api/helpAndSupportApi";
 import { showToast } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 import { FiPlus } from "react-icons/fi";
-import { BsCloudUpload } from "react-icons/bs";
+import {
+  BsCloudUpload,
+  BsFileEarmarkPdf,
+  BsFileEarmarkPlay,
+} from "react-icons/bs";
+import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { formatDate } from "../../../Helper/Formatters";
+import { formatDate, formatFileSize } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import "./SupportRequests.css";
@@ -43,6 +48,21 @@ const STATUS_CLASS_MAP = {
   Assigned: "assigned",
   Pending: "pending",
   Unassigned: "unassigned",
+};
+
+const getFileIcon = (fileName) => {
+  if (!fileName || typeof fileName !== "string") {
+    return <FaRegFile size={16} className="file-icon" />;
+  }
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return <BsFileEarmarkPdf size={16} className="file-icon" />;
+  if (["mp4", "avi", "mov"].includes(ext))
+    return <FaPhotoVideo size={16} className="file-icon" />;
+  if (["gif"].includes(ext))
+    return <BsFileEarmarkPlay size={16} className="file-icon" />;
+  if (["png", "jpg", "jpeg", "webp", "svg"].includes(ext))
+    return <FaImage size={16} className="file-icon" />;
+  return <FaRegFile size={16} className="file-icon" />;
 };
 
 const SupportRequests = () => {
@@ -430,15 +450,22 @@ const SupportRequests = () => {
                   <div key={idx} className="file-item">
                     <div className="file-header">
                       <div className="file-info">
-                        <span className="file-name">{file.name}</span>
+                        {getFileIcon(file.name)}
+                        <span className="file-name">
+                          {file.name} • {formatFileSize(file.size)}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        className="remove-file"
-                        onClick={() => handleRemoveFile(idx)}
-                      >
-                        <RiDeleteBin6Line size={16} />
-                      </button>
+                      <div className="file-actions">
+                        <FaCheckCircle size={16} className="file-success" />
+                        <button
+                          type="button"
+                          className="remove-file"
+                          onClick={() => handleRemoveFile(idx)}
+                          aria-label="Remove file"
+                        >
+                          <RiDeleteBin6Line size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

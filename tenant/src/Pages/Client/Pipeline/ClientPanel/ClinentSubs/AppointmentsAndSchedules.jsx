@@ -430,32 +430,17 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     { header: "Time", key: "time", type: "text" },
   ];
 
-  // Past appointments can't be edited — mirror the Scheduler's Past Appointments
-  // tab and offer "View Timesheet" instead of "Edit Appointment".
-  const actions =
-    activeTab === "pastAppointments"
-      ? [
-          {
-            type: "dropdown",
-            items: [
-              {
-                label: "View Timesheet",
-                onClick: () => navigate("/billing/timesheets"),
-              },
-            ],
-          },
-        ]
-      : [
-          {
-            type: "dropdown",
-            items: [
-              hasPermission("edit_appointments") && {
-                label: "Edit Appointment",
-                onClick: (row) => openModal(row),
-              },
-            ].filter(Boolean),
-          },
-        ].filter((a) => a.items.length > 0);
+  const actions = [
+    {
+      type: "dropdown",
+      items: [
+        hasPermission("edit_appointments") && {
+          label: "Edit Appointment",
+          onClick: (row) => openModal(row),
+        },
+      ].filter(Boolean),
+    },
+  ].filter((a) => a.items.length > 0);
 
   const handleAppointmentClick = (appointment) => {
     const full = appointments.find(
@@ -658,7 +643,14 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           <CustomTable
             data={filteredAppointments}
             columns={columns}
-            actions={actions}
+            {...(activeTab === "pastAppointments"
+              ? {
+                  // Past appointments can't be edited — a simple link to the
+                  // timesheets instead of the Edit action.
+                  actionText: "Go to Timesheets",
+                  onActionClick: () => navigate("/billing/timesheets"),
+                }
+              : { actions })}
             filters={filters}
             tableName={activeTab
               .replace(/([A-Z])/g, " $1")

@@ -6,6 +6,7 @@ import api from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import expandForAppointments from "../../../utils/expandForAppointments";
+import DashboardEmptyState from "./DashboardEmptyState";
 import "../Dashboard.css";
 
 const ITEMS_PER_PAGE = 5;
@@ -16,6 +17,7 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   // FIXED: Transform appointmentServices → service array
@@ -58,6 +60,7 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
 
     try {
       setLoading(true);
+      setError(false);
       const response = await api.GetUpcomingAppointmentByTenantId({
         tenantId,
         accessToken,
@@ -72,12 +75,13 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
       if (setCount) {
         const totalInstances = transformed.reduce((total, master) => {
           const instances = expandForAppointments(master, "future");
-          return total + instances.length;
+          return total + (Number(instances.length) || 0);
         }, 0);
-        setCount(totalInstances);
+        setCount(Number(totalInstances) || 0);
       }
     } catch (err) {
       console.error("Failed to load upcoming appointments:", err);
+      setError(true);
       setMasters([]);
       if (setCount) setCount(0);
     } finally {
@@ -169,6 +173,19 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
       <div className="text-center py-8 text-gray-500">
         Loading appointments...
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardEmptyState description="We couldn't load your upcoming appointments. Please try again.">
+        <Button
+          label="Try again"
+          variant="primary"
+          className="mx-auto block"
+          onClick={fetchAppointments}
+        />
+      </DashboardEmptyState>
     );
   }
 

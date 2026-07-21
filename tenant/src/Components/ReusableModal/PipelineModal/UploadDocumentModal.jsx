@@ -118,8 +118,9 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload, loading = false }) => 
                     <button
                       className="remove-file"
                       onClick={() => handleRemoveFile(index)}
+                      aria-label="Remove file"
                     >
-                      <RiDeleteBin6Line size={16} className="file-success" />
+                      <RiDeleteBin6Line size={16} />
                     </button>
                   </div>
                 </div>

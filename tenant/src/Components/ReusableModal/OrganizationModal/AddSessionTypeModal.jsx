@@ -208,10 +208,12 @@ const AddSessionTypeModal = ({
         refreshToken,
       });
       const roles = response?.data?.data || response?.data || [];
-      const options = roles.map((role) => ({
-        value: role.id,
-        label: role.name,
-      }));
+      const options = roles
+        .filter((role) => role.isActive !== false)
+        .map((role) => ({
+          value: role.id,
+          label: role.name,
+        }));
       setStaffRoleOptions(options);
     } catch (error) {
       console.error("Failed to load roles:", error);

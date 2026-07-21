@@ -730,11 +730,7 @@ const SessionFeedbackModal = ({
       e.stopPropagation();
     }
 
-    if (!confirmed) {
-      showToast("Please confirm that the session was delivered", "error");
-      return;
-    }
-
+    // Confirming the session was delivered is optional — no longer blocks submit.
     const signatureData = getSignatureData();
     if (!signatureData || (signatureMode === "type" && !typedSignature.trim()) ||
         (signatureMode === "draw" && sigCanvas.current?.isEmpty())) {
@@ -890,7 +886,7 @@ const SessionFeedbackModal = ({
         primaryButtonText={isLoading ? "Saving..." : "Save and Close"}
         primaryButtonLoading={isLoading}
         onPrimaryButtonClick={handleSave}
-        primaryButtonDisabled={!confirmed || isLoading || loadingSession}
+        primaryButtonDisabled={isLoading || loadingSession}
         secondaryButtonText="Cancel"
         onSecondaryButtonClick={onClose}
       >

@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
+import DashboardEmptyState from "./DashboardEmptyState";
 
 const Authorizations = ({
   hasData,
@@ -28,6 +29,7 @@ const Authorizations = ({
   const [totalAuthorizations, setTotalAuthorizations] = useState(0);
   const [modalData, setModalData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   // Fetch metrics on component mount
   useEffect(() => {
@@ -49,6 +51,7 @@ const Authorizations = ({
 
   const fetchAuthorizationMetrics = async () => {
     try {
+      setError(false);
       const response = await api.GetTenantClientAuthorizationMetrics({
         tenantId,
         accessToken,
@@ -59,15 +62,16 @@ const Authorizations = ({
         const { active, expiring, expired, total } = response.data.data;
 
         setAuthorizationData([
-          { label: "Expired", value: expired, color: "#3B82F6" },
-          { label: "Expiring", value: expiring, color: "#60A5FA" },
-          { label: "Active", value: active, color: "#93C5FD" },
+          { label: "Expired", value: Number(expired) || 0, color: "#3B82F6" },
+          { label: "Expiring", value: Number(expiring) || 0, color: "#60A5FA" },
+          { label: "Active", value: Number(active) || 0, color: "#93C5FD" },
         ]);
 
-        setTotalAuthorizations(total);
+        setTotalAuthorizations(Number(total) || 0);
       }
     } catch (error) {
       console.error("Error fetching authorization metrics:", error);
+      setError(true);
     }
   };
 
@@ -176,20 +180,29 @@ const Authorizations = ({
 
   return (
     <>
-      {hasData ? (
+      {error ? (
+        <DashboardEmptyState description="We couldn't load your authorizations. Please try again.">
+          <Button
+            label="Try again"
+            variant="primary"
+            className="mx-auto block px-6 py-2"
+            onClick={fetchAuthorizationMetrics}
+          />
+        </DashboardEmptyState>
+      ) : hasData ? (
         <div className="">
           <div className="auth-layout">
             <div className="chart-container">
               <Chart
                 options={chartOptions}
-                series={authorizationData.map((item) => item.value)}
+                series={authorizationData.map((item) => Number(item.value) || 0)}
                 type="donut"
                 width="100%"
               />
             </div>
             <div className="auth-details">
               <p className="text-4xl font-semibold text-primary mb-2">
-                {totalAuthorizations}
+                {Number(totalAuthorizations) || 0}
               </p>
               {loading ? (
                 <p className="text-sm text-gray-500">Loading...</p>

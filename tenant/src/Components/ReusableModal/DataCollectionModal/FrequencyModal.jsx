@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -26,6 +26,7 @@ const FrequencyModal = ({
   const {
     register,
     handleSubmit,
+    reset,
     setValue,
     watch,
     formState: { errors },
@@ -38,6 +39,18 @@ const FrequencyModal = ({
       notes: initialData.notes || "",
     },
   });
+
+  // Reset the form each time the modal opens so re-recording after a clear
+  // starts blank (the modal stays mounted, so defaultValues alone won't).
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        numberOfOccurrence: initialData.numberOfOccurrence || 1,
+        notes: initialData.notes || "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const numberOfOccurrenceValue = watch("numberOfOccurrence");
 

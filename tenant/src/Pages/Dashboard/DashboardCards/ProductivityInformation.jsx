@@ -3,11 +3,13 @@ import Chart from "react-apexcharts";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis";
+import DashboardEmptyState from "./DashboardEmptyState";
 
 const ProductivityInformation = ({ hasData }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const [productivityRate, setProductivityRate] = useState(null);
   const [averageSatisfaction, setAverageSatisfaction] = useState(null);
@@ -21,6 +23,7 @@ const ProductivityInformation = ({ hasData }) => {
     if (!tenantId || !accessToken) return;
 
     setLoading(true);
+    setError(false);
 
     const fetchProductivity = async () => {
       try {
@@ -32,12 +35,13 @@ const ProductivityInformation = ({ hasData }) => {
 
         const data = res?.data?.data;
 
-        setProductivityRate(Number(data?.sessionSatisfactionPercentage ?? 0));
+        setProductivityRate(Number(data?.sessionSatisfactionPercentage) || 0);
         setAverageSatisfaction(
-          Number(data?.averageSessionSatisfactionScore ?? 0),
+          Number(data?.averageSessionSatisfactionScore) || 0,
         );
       } catch (err) {
         console.error("Productivity fetch failed", err);
+        throw err;
       }
     };
 
@@ -52,11 +56,12 @@ const ProductivityInformation = ({ hasData }) => {
         const data = res?.data?.data;
 
         setAvailability({
-          totalStaff: data?.totalStaff ?? 0,
-          availableStaff: data?.availableStaff ?? 0,
+          totalStaff: Number(data?.totalStaff) || 0,
+          availableStaff: Number(data?.availableStaff) || 0,
         });
       } catch (err) {
         console.error("Availability fetch failed", err);
+        throw err;
       }
     };
 
@@ -68,9 +73,10 @@ const ProductivityInformation = ({ hasData }) => {
           refreshToken,
         });
 
-        setAverageCaseload(Number(res?.data?.data?.average ?? 0));
+        setAverageCaseload(Number(res?.data?.data?.average) || 0);
       } catch (err) {
         console.error("Caseload fetch failed", err);
+        throw err;
       }
     };
 
@@ -78,7 +84,12 @@ const ProductivityInformation = ({ hasData }) => {
       fetchProductivity(),
       fetchAvailability(),
       fetchCaseload(),
-    ]).finally(() => {
+    ]).then((results) => {
+      // Only surface an error state if every metric failed (fully blank card);
+      // partial failures still render with "--" placeholders.
+      if (results.every((r) => r.status === "rejected")) {
+        setError(true);
+      }
       setLoading(false);
     });
     // Token lifecycle is owned by the axios interceptor; depending on it here
@@ -102,13 +113,19 @@ const ProductivityInformation = ({ hasData }) => {
     return <p className="text-muted">Loading productivity data...</p>;
   }
 
+  if (error) {
+    return (
+      <DashboardEmptyState description="We couldn't load your productivity data. Please refresh to try again." />
+    );
+  }
+
   const availabilityText =
     availability.totalStaff !== null
-      ? `${availability.availableStaff}/${availability.totalStaff}`
+      ? `${Number(availability.availableStaff) || 0}/${Number(availability.totalStaff) || 0}`
       : "--";
 
   const productivityChartData = {
-    series: [productivityRate ?? 0],
+    series: [Number(productivityRate) || 0],
     options: {
       chart: {
         id: "prod-chart",

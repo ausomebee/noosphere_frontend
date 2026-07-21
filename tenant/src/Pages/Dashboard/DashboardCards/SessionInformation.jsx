@@ -8,7 +8,7 @@ import usePermissions from "../../../hooks/usePermissions";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
-import ErrorFallback from "../../../Components/ErrorFallback";
+import DashboardEmptyState from "./DashboardEmptyState";
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -99,13 +99,13 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
     // Fill missing periods with 0
     const filledData = expectedPeriods.map((period) => ({
       period,
-      count: dataMap[period] || 0,
+      count: Number(dataMap[period]) || 0,
     }));
 
     const labels = filledData.map((item) => formatLabel(item.period));
-    const values = filledData.map((item) => item.count);
+    const values = filledData.map((item) => Number(item.count) || 0);
 
-    const total = values.reduce((sum, v) => sum + v, 0);
+    const total = values.reduce((sum, v) => sum + (Number(v) || 0), 0);
 
     return { labels, values, total };
   };
@@ -220,13 +220,24 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
   }
 
   if (error) {
-    return <ErrorFallback message="Something went wrong loading sessions. Please try again." onRetry={() => window.location.reload()} />;
+    return (
+      <DashboardEmptyState description="We couldn't load your session information. Please try again.">
+        <Button
+          label="Try again"
+          variant="primary"
+          className="mx-auto block"
+          onClick={() => window.location.reload()}
+        />
+      </DashboardEmptyState>
+    );
   }
+
+  const safeTotalSessions = Number(totalSessions) || 0;
 
   return (
     <>
       <p className="text-lg font-semibold mb-4 text-gray-4B4E54">
-        {totalSessions} Session{totalSessions !== 1 ? "s" : ""} {currentPeriod === "year" ? "this year" : currentPeriod === "month" ? "this month" : "last 30 days"}
+        {safeTotalSessions} Session{safeTotalSessions !== 1 ? "s" : ""} {currentPeriod === "year" ? "this year" : currentPeriod === "month" ? "this month" : "last 30 days"}
       </p>
 
       <Chart

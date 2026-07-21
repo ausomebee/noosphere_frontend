@@ -65,7 +65,9 @@ const BasicInfoModal = ({
       });
       const roles = res.data?.data || res.data || [];
       setStaffRoleOptions(
-        roles.map((role) => ({ value: role.id, label: role.name })),
+        roles
+          .filter((role) => role.isActive !== false)
+          .map((role) => ({ value: role.id, label: role.name })),
       );
     } catch {
       setStaffRoleOptions([]);

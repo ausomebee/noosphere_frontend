@@ -16,11 +16,17 @@
 }
 
 .sa-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px 10px;
   border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
   transition: background 0.2s;
 }
 
@@ -35,86 +41,94 @@
 }
 
 .sa-content {
+  max-width: 1200px;
   margin: 24px auto;
   padding: 0 24px;
 }
 
+/* Grey-label-above-value pattern (shared) */
+.sa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sa-field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+}
+
+.sa-field-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.5;
+}
+
+.sa-field-value--travel {
+  color: #059669;
+}
+
 /* Client Info Card */
 .client-card {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 1.6fr;
+  gap: 32px;
   background: white;
-  border: 20px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   margin-bottom: 24px;
 }
 
-.client-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-  gap: 8px;
-}
-
-.sa-client-info {
-border-right: 3px solid #d8c7c7;
-}
-
-.sa-client-info h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #111827;
+.sa-client-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 32px;
+  border-right: 1px solid #e5e7eb;
 }
 
 .client-name {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 8px;
+  line-height: 1.2;
 }
 
-.client-details {
+.sa-client-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  font-size: 14px;
-  color: #4b5563;
+  gap: 24px 32px;
+  margin-top: 4px;
 }
 
-.info-section h3 {
-  font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.sa-client-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 24px 28px;
+  align-content: start;
 }
 
-.info-section ul,
-.info-section p {
-  font-size: 14px;
-  color: #111827;
-  line-height: 1.6;
-}
-
-.info-section ul {
-  padding-left: 4px;
-}
-
-/* Main Layout */
+/* Main Layout — unified content card (programs rail + data collection) */
 .main-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 24px;
-}
-
-/* Programs Sidebar */
-.programs-sidebar {
+  grid-template-columns: 280px 1fr;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+/* Programs Sidebar */
+.programs-sidebar {
+  background: #fafafa;
+  border-right: 1px solid #e5e7eb;
 }
 
 .program-item {
@@ -163,45 +177,47 @@ border-right: 3px solid #d8c7c7;
   border-left-color: #cbd5e1;
 }
 
-/* Data Collection Card */
+.target-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+  border-left-color: #3b82f6;
+}
+
+/* Data Collection Card (right side of the unified content card) */
 .data-card {
   background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px 16px 0 0;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px 28px;
 }
 
 .data-card h2 {
   text-align: center;
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   color: #111827;
 }
 
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 32px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 28px 32px;
+  margin-bottom: 32px;
+}
+
+.data-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .data-section h3 {
   font-size: 15px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-}
-
-.data-section p {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 8px 0;
-}
-
-.data-section strong {
   color: #111827;
+  margin-bottom: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .status-not-started {
@@ -209,7 +225,150 @@ border-right: 3px solid #d8c7c7;
   font-weight: 600;
 }
 
+/* Collect Data / success feedback */
 .collect-btn-wrapper {
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+/* Inline success chip (shown after a trial set is recorded) */
+.sa-success-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 20px;
+}
+
+/* Keep the Edit / Re-collect button compact (Button defaults to full width) */
+.sa-success-wrapper .btn {
+  width: auto;
+}
+
+.sa-success-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 9999px;
+  color: #047857;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(4, 120, 87, 0.08);
+  animation: sa-success-in 260ms ease-out;
+}
+
+.sa-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #10b981;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+@keyframes sa-success-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Trials table */
+.sa-trials-table-container {
+  margin-top: 24px;
+}
+
+.sa-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.sa-trials-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sa-trials-table thead th {
+  background: #f9fafb;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.sa-trials-table tbody td {
+  padding: 12px 16px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.sa-trials-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sa-th-action,
+.sa-td-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sa-table-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+}
+
+.sa-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sa-clear-btn:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+/* Grey summary bar (below trials table) */
+.sa-summary-bar {
+  margin-top: 16px;
+  padding: 12px 20px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
   text-align: center;
 }
 
@@ -217,9 +376,10 @@ border-right: 3px solid #d8c7c7;
 .notes-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 0 0 16px 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
 }
 
 .notes-card h2 {
@@ -259,8 +419,7 @@ border-right: 3px solid #d8c7c7;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 20px 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-top: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .time-display {
@@ -283,9 +442,21 @@ border-right: 3px solid #d8c7c7;
     grid-template-columns: 1fr;
   }
 
-  .client-grid {
+  .programs-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .client-card {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .sa-client-block {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 20px;
   }
 }
 
@@ -306,7 +477,6 @@ border-right: 3px solid #d8c7c7;
   }
 
   .client-card {
-    border-width: 10px;
     padding: 16px;
   }
 
@@ -335,10 +505,8 @@ border-right: 3px solid #d8c7c7;
     text-align: center;
   }
 
-  .sa-client-info {
-    border-right: none;
-    border-bottom: 2px solid #d8c7c7;
-    padding-bottom: 16px;
+  .sa-client-meta {
+    gap: 16px 24px;
   }
 
   .program-btn {
@@ -349,4 +517,20 @@ border-right: 3px solid #d8c7c7;
   .target-item {
     padding: 10px 16px;
   }
+}
+
+/* Clear / re-log affordance for a logged travel time */
+.sa-travel-clear {
+  margin-left: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #d92d20;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sa-travel-clear:hover {
+  opacity: 0.8;
 }

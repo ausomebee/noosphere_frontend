@@ -3,6 +3,7 @@ import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
 import api from "../../../api/DashboardApis";
 import useAuth from "../../../hooks/useAuth";
+import DashboardEmptyState from "./DashboardEmptyState";
 
 const IntakePipeline = ({ hasData }) => {
   const [stages, setStages] = React.useState([]);
@@ -11,53 +12,47 @@ const IntakePipeline = ({ hasData }) => {
 
   const { tenantId, accessToken, refreshToken } = useAuth();
 
-  React.useEffect(() => {
-    if (!hasData) {
+  const fetchIntakePipeline = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(false);
+
+      const response = await api.GetDashboardIntakeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const pipelineStages = response?.data?.data?.pipelineStages || [];
+
+      const transformed = pipelineStages
+        .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+        .slice(0, 6) // Maximum 6 stages
+        .map((stage) => ({
+          name: stage.name || "Unnamed Stage",
+          count: Number(stage._count?.pipelineItem) || 0,
+        }));
+
+      setStages(transformed);
+    } catch (err) {
+      console.error("Failed to load intake pipeline:", err);
+      setError(true);
+      setStages([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const fetchIntakePipeline = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-
-        const response = await api.GetDashboardIntakeByTenantId({
-          tenantId,
-          accessToken,
-          refreshToken,
-        });
-
-        const pipelineStages = response?.data?.data?.pipelineStages || [];
-
-        const transformed = pipelineStages
-          .sort((a, b) => (a.order || 0) - (b.order || 0))
-          .slice(0, 6) // Maximum 6 stages
-          .map((stage) => ({
-            name: stage.name || "Unnamed Stage",
-            count: stage._count?.pipelineItem || 0,
-          }));
-
-        setStages(transformed);
-      } catch (err) {
-        console.error("Failed to load intake pipeline:", err);
-        setError(true);
-        setStages([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchIntakePipeline();
     // Token lifecycle is owned by the axios interceptor; depending on it here
     // causes an infinite refetch loop when a 401 triggers a token refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, hasData]);
 
-  // No data setup needed
-  if (!hasData) {
-    return <Button label="Setup Intake Pipeline" variant="primary" />;
-  }
+  React.useEffect(() => {
+    if (!hasData) {
+      setLoading(false);
+      return;
+    }
+    fetchIntakePipeline();
+  }, [hasData, fetchIntakePipeline]);
 
   if (loading) {
     return (
@@ -67,11 +62,30 @@ const IntakePipeline = ({ hasData }) => {
     );
   }
 
-  if (error || stages.length === 0) {
+  // Endpoint errored — show the friendly state with a retry instead of a blank card.
+  if (error) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        No pipeline stages configured yet.
-      </div>
+      <DashboardEmptyState description="We couldn't load your intake pipeline. Please try again.">
+        <Button
+          label="Try again"
+          variant="primary"
+          className="mx-auto block"
+          onClick={fetchIntakePipeline}
+        />
+      </DashboardEmptyState>
+    );
+  }
+
+  // No data yet (or no stages configured) — consistent empty state + CTA.
+  if (!hasData || stages.length === 0) {
+    return (
+      <DashboardEmptyState description="You have not set up your intake pipeline yet. Your pipeline stages will be shown here.">
+        <Button
+          label="Set up intake pipeline"
+          variant="primary"
+          className="mx-auto block"
+        />
+      </DashboardEmptyState>
     );
   }
 

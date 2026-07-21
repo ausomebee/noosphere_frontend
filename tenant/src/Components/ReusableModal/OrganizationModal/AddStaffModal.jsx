@@ -319,7 +319,12 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
   const clearDraft = useReduxFormDraft("add-staff", {
     watch,
     reset,
-    isOpen,
+    // Only drive the persisted "add-staff" draft when creating a new staff
+    // member. In edit mode the big effect below resets the form to the staff's
+    // real values (initialData); letting this hook run would (a) overwrite
+    // those pre-filled values with the deferred draft reset on open, blanking
+    // the form, and (b) pollute the add draft with the edited staff's data.
+    isOpen: isOpen && mode !== "edit",
     exclude: ["documents", "licenses"],
     // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
@@ -384,7 +389,9 @@ const AddStaffModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       });
       const roles = res.data?.data || res.data || [];
       setStaffRoleOptions(
-        roles.map((role) => ({ value: role.id, label: role.name })),
+        roles
+          .filter((role) => role.isActive !== false)
+          .map((role) => ({ value: role.id, label: role.name })),
       );
     } catch {
       setStaffRoleOptions([]);

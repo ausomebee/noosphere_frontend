@@ -11,6 +11,7 @@ import usePermissions from "../../../../hooks/usePermissions";
 import ErrorFallback from "../../../../Components/ErrorFallback";
 import api from "../../../../api/AppointmentApi";
 import { formatTime } from "../../../../Helper/Formatters";
+import { showToast } from "../../../../Helper/ShowToast";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 
 const RescheduleRequests = ({ setCounts }) => {
@@ -112,9 +113,13 @@ const RescheduleRequests = ({ setCounts }) => {
               appt.endTime, timeFormat,
             )}`,
           },
+          // Raw client-requested date/time for the Modify modal to prefill.
+          // The modal (convertTo24Hour/toDateInput) normalizes these itself, so
+          // pass raw values here — NOT formatTime() output, whose 12-hour
+          // "HH:MM:SS AM/PM" form the modal's parser rejects, leaving it blank.
           date: appt.date,
-          startTime: formatTime(appt.startTime, timeFormat),
-          endTime: formatTime(appt.endTime, timeFormat),
+          startTime: appt.startTime,
+          endTime: appt.endTime,
           hasActions: true,
           hasCheckbox: true,
           therapistNames,
@@ -227,9 +232,11 @@ const RescheduleRequests = ({ setCounts }) => {
         }));
         setSelectedItems([]);
         clearSelection();
+        showToast("Reschedule request approved", "success");
       } catch (err) {
         console.error("Approve Error:", err);
         setError(err.message || "Failed to approve");
+        showToast(err.message || "Failed to approve reschedule request", "error");
       }
     },
     [accessToken, refreshToken, setCounts],
@@ -266,9 +273,11 @@ const RescheduleRequests = ({ setCounts }) => {
         setSelectedAppointment(null);
         setSelectedItems([]);
         clearSelection();
+        showToast("Reschedule request rejected", "success");
       } catch (err) {
         console.error("Reject Error:", err);
         setError(err.message || "Failed to reject");
+        showToast(err.message || "Failed to reject reschedule request", "error");
       }
     },
     [accessToken, refreshToken, setCounts],
@@ -315,8 +324,10 @@ const RescheduleRequests = ({ setCounts }) => {
         setSelectedAppointment(null);
         setSelectedItems([]);
         clearSelection();
+        showToast("Appointment rescheduled", "success");
       } catch (err) {
         setError(err.message || "Failed to modify reschedule");
+        showToast(err.message || "Failed to reschedule appointment", "error");
       }
     },
     [

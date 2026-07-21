@@ -16,6 +16,7 @@ import TaskAnalysisModal from "../../../Components/ReusableModal/DataCollectionM
 import LatencyModal from "../../../Components/ReusableModal/DataCollectionModal/LatencyModal";
 
 // Appointment Modals
+import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import TravelTimeModal from "../../../Components/ReusableModal/StartAppointmentModal/TravelTimeModal";
 import ConfirmCancelModal from "../../../Components/ReusableModal/StartAppointmentModal/ConfirmCancelModal";
 import ConfirmLeaveModal from "../../../Components/ReusableModal/StartAppointmentModal/ConfirmLeaveModal";
@@ -54,6 +55,10 @@ const StartAppointment = () => {
   const [travelModalOpen, setTravelModalOpen] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
+
+  // Target whose recorded data is being cleared. Holds the targetId while the
+  // "Clear data" confirmation modal is open.
+  const [clearTargetInfo, setClearTargetInfo] = useState(null);
 
   const pendingCloseRef = useRef(null);
   const [collectedData, setCollectedData] = useState({});
@@ -135,6 +140,7 @@ const StartAppointment = () => {
             .map((t) => ({
               id: t.id,
               name: t.name,
+              domain: t.domain || t.domainName || "—",
               sd: t.sd || "—",
               expectedResponse: t.expectedResponse || "—",
               teachingProcedure: t.teachingProcedure || "—",
@@ -321,6 +327,21 @@ const StartAppointment = () => {
     closeDataModal();
   };
 
+  // Clear ALL recorded data for the selected target/task (any task type).
+  // The target returns to the unrecorded state so the clinician can record it
+  // fresh via "Collect Data". This is a Start-Appointment-only action and
+  // can't be undone.
+  const confirmClearData = () => {
+    if (!clearTargetInfo) return;
+    const targetId = clearTargetInfo;
+    setCollectedData((prev) => {
+      const next = { ...prev };
+      delete next[targetId];
+      return next;
+    });
+    setClearTargetInfo(null);
+  };
+
   const handleBackClick = () => setConfirmLeaveOpen(true);
 
   const finishAppointment = async () => {
@@ -472,9 +493,12 @@ const StartAppointment = () => {
         const correct = trials.filter(
           (t) => t.performance === "correct",
         ).length;
-        return `Total Correct: ${correct}/${trials.length} | Accuracy: ${
-          data.percentageCorrect || 0
-        }%`;
+        // Recompute accuracy from the live trials so it stays correct after a
+        // trial is cleared (don't use the stale stored data.percentageCorrect).
+        const accuracy = trials.length
+          ? Math.round((correct / trials.length) * 100)
+          : 0;
+        return `Total Correct: ${correct}/${trials.length} | Accuracy: ${accuracy}%`;
       }
       if (type === "Trials/Opportunities") {
         const trials = data.trials || [];
@@ -484,8 +508,10 @@ const StartAppointment = () => {
         const incorrect = trials.filter(
           (t) => t.performance === "incorrect",
         ).length;
+        // Prompted = a prompt level was recorded and it wasn't independent ("I").
+        // Cleared trials (empty promptLevel) are excluded.
         const prompted = trials.filter(
-          (t) => t.promptLevel !== "independent",
+          (t) => t.promptLevel && t.promptLevel !== "I" && t.promptLevel !== "independent",
         ).length;
         return `Trials: ${trials.length} | Correct: ${correct} | Incorrect: ${incorrect} | Prompted: ${prompted}`;
       }
@@ -493,27 +519,17 @@ const StartAppointment = () => {
     })();
 
     return (
-      <div className="baseline-table-container mt-8">
-        {summary && (
-          <div className="mb-4 text-sm font-medium text-gray-700">
-            {summary}
-          </div>
-        )}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="sa-trials-table-container">
+        <div className="sa-table-scroll">
+          <table className="sa-trials-table">
+            <thead>
               <tr>
                 {headers.map((h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                  >
-                    {h}
-                  </th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {dataRows.length > 0 ? (
                 dataRows.map((row, i) => (
                   <tr key={i}>
@@ -533,9 +549,10 @@ const StartAppointment = () => {
                       };
                       const key =
                         keyMap[h] || h.toLowerCase().replace(/[^a-z]/g, "");
+                      const value = row[key];
                       return (
-                        <td key={h} className="px-6 py-4 text-sm">
-                          {row[key] || "—"}
+                        <td key={h}>
+                          {value === 0 || value ? value : "—"}
                         </td>
                       );
                     })}
@@ -543,10 +560,7 @@ const StartAppointment = () => {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={headers.length}
-                    className="text-center py-8 text-gray-500"
-                  >
+                  <td colSpan={headers.length} className="sa-table-empty">
                     No data collected yet
                   </td>
                 </tr>
@@ -554,6 +568,8 @@ const StartAppointment = () => {
             </tbody>
           </table>
         </div>
+
+        {summary && <div className="sa-summary-bar">{summary}</div>}
       </div>
     );
   };
@@ -584,15 +600,18 @@ const StartAppointment = () => {
       <header className="sa-header">
         <button className="sa-back-btn" onClick={handleBackClick}>
           <svg
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="M15 18l-6-6 6-6" />
           </svg>
+          <span>Back</span>
         </button>
         <h1 className="sa-title">Start Appointment</h1>
       </header>
@@ -600,38 +619,45 @@ const StartAppointment = () => {
       <div className="sa-content">
         {/* Client Card */}
         <div className="client-card">
-          <div className="client-grid">
-            <div className="sa-client-info">
-              <h2>Client</h2>
-              <div className="client-name">
-                {client.firstName} {client.lastName} ({client.preferredName})
+          <div className="sa-client-block">
+            <span className="sa-field-label">Client</span>
+            <div className="client-name">
+              {client.firstName} {client.lastName}
+              {client.preferredName ? ` (${client.preferredName})` : ""}
+            </div>
+            <div className="sa-client-meta">
+              <div className="sa-field">
+                <span className="sa-field-label">Gender</span>
+                <span className="sa-field-value">{client.gender || "—"}</span>
               </div>
-              <div className="client-details">
-                <span className="flex flex-col">
-                  <strong>Gender:</strong> {client.gender || "—"}
+              <div className="sa-field">
+                <span className="sa-field-label">Date of Birth</span>
+                <span className="sa-field-value">
+                  {formatDate(client.DOB, dateFormat) || "—"}
                 </span>
-                <span className="flex flex-col">
-                  <strong>DOB:</strong>{" "}
-                  {formatDate(client.DOB, dateFormat)}
-                </span>
-                <span className="flex flex-col">
-                  <strong>Payer:</strong> {client.payer?.payerName || "—"}
+              </div>
+              <div className="sa-field">
+                <span className="sa-field-label">Primary Payer</span>
+                <span className="sa-field-value">
+                  {client.payer?.payerName || "—"}
                 </span>
               </div>
             </div>
+          </div>
 
-            <div className="info-section">
-              <h3>Clinician(s)</h3>
-              <ul>
+          <div className="sa-client-cols">
+            <div className="sa-field">
+              <span className="sa-field-label">Clinician(s)</span>
+              <div className="sa-field-value">
                 {clinicians.map((c) => (
-                  <li key={c.id}>• {c.fullName}</li>
+                  <div key={c.id}>{c.fullName}</div>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div className="info-section">
-              <h3>Service Type</h3>
-              <ul>
+            <div className="sa-field">
+              <span className="sa-field-label">Service Type</span>
+              <div className="sa-field-value">
                 {appointmentServices?.map((s, i) => {
                   const code = s.serviceCode || {};
                   const serviceLabel = code.code
@@ -639,45 +665,59 @@ const StartAppointment = () => {
                     : "Not specified";
                   const modifier = code.modifiers?.modifier1;
                   return (
-                    <li key={i}>
+                    <div key={i}>
                       {serviceLabel}
                       {modifier ? ` + ${modifier}` : ""}
-                    </li>
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             </div>
 
-            <div className="info-section">
-              <h3>Location</h3>
-              <p>{serviceLocation || "—"}</p>
-
-              <h3 style={{ marginTop: "16px" }}>Session</h3>
-              <p>{session?.name || "—"}</p>
-
-              <h3 style={{ marginTop: "16px" }}>Appointment Time</h3>
-              <p className="font-medium text-gray-800">
-                {formatTime(startTime, timeFormat)} - {formatTime(endTime, timeFormat)}
-              </p>
-
-              {requiresTravel && (
-                <>
-                  <h3 style={{ marginTop: "16px" }}>Travel Time</h3>
-                  {travelTime.start && travelTime.end ? (
-                    <p className="font-medium text-green-600">
-                      {formatTime(travelTime.start, timeFormat)} -{" "}
-                      {formatTime(travelTime.end, timeFormat)}
-                    </p>
-                  ) : (
-                    <Button
-                      label="+ Log travel time"
-                      variant="primary"
-                      onClick={() => setTravelModalOpen(true)}
-                    />
-                  )}
-                </>
-              )}
+            <div className="sa-field">
+              <span className="sa-field-label">Service Location</span>
+              <span className="sa-field-value">{serviceLocation || "—"}</span>
             </div>
+
+            <div className="sa-field">
+              <span className="sa-field-label">Session Type</span>
+              <span className="sa-field-value">{session?.name || "—"}</span>
+            </div>
+
+            <div className="sa-field">
+              <span className="sa-field-label">Appointment Time</span>
+              <span className="sa-field-value">
+                {formatTime(startTime, timeFormat)} -{" "}
+                {formatTime(endTime, timeFormat)}
+              </span>
+            </div>
+
+            {requiresTravel && (
+              <div className="sa-field">
+                <span className="sa-field-label">Travel Time</span>
+                {travelTime.start && travelTime.end ? (
+                  <span className="sa-field-value sa-field-value--travel">
+                    {formatTime(travelTime.start, timeFormat)} -{" "}
+                    {formatTime(travelTime.end, timeFormat)}
+                    <button
+                      type="button"
+                      className="sa-travel-clear"
+                      aria-label="Clear travel time"
+                      title="Clear and re-log travel time"
+                      onClick={() => setTravelTime({ start: null, end: null })}
+                    >
+                      Clear
+                    </button>
+                  </span>
+                ) : (
+                  <Button
+                    label="+ Log travel time"
+                    variant="primary"
+                    onClick={() => setTravelModalOpen(true)}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -723,46 +763,72 @@ const StartAppointment = () => {
                 <div className="data-grid">
                   <div className="data-section">
                     <h3>Basic Details</h3>
-                    <p>
-                      <strong>Program:</strong> {currentProgram.name}
-                    </p>
-                    <p>
-                      <strong>Target:</strong> {currentTarget.name}
-                    </p>
-                    <p>
-                      <strong>Status:</strong>{" "}
-                      <span className="status-not-started">
+                    <div className="sa-field">
+                      <span className="sa-field-label">Domain</span>
+                      <span className="sa-field-value">
+                        {currentTarget.domain}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Program</span>
+                      <span className="sa-field-value">
+                        {currentProgram.name}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Target</span>
+                      <span className="sa-field-value">
+                        {currentTarget.name}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Status</span>
+                      <span className="sa-field-value status-not-started">
                         {currentTarget.initialStatus}
                       </span>
-                    </p>
+                    </div>
                   </div>
                   <div className="data-section">
                     <h3>Teaching Details</h3>
-                    <p>
-                      <strong>SD:</strong> {currentTarget.sd}
-                    </p>
-                    <p>
-                      <strong>Expected:</strong>{" "}
-                      {currentTarget.expectedResponse}
-                    </p>
-                    <p>
-                      <strong>Procedure:</strong>{" "}
-                      {currentTarget.teachingProcedure}
-                    </p>
-                    <p>
-                      <strong>Prompting:</strong>{" "}
-                      {currentTarget.promptingStrategy}
-                    </p>
+                    <div className="sa-field">
+                      <span className="sa-field-label">
+                        SD/Discretionary Stimulus
+                      </span>
+                      <span className="sa-field-value">{currentTarget.sd}</span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Expected Response</span>
+                      <span className="sa-field-value">
+                        {currentTarget.expectedResponse}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Teaching Procedure</span>
+                      <span className="sa-field-value">
+                        {currentTarget.teachingProcedure}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Prompting Strategy</span>
+                      <span className="sa-field-value">
+                        {currentTarget.promptingStrategy}
+                      </span>
+                    </div>
                   </div>
                   <div className="data-section">
                     <h3>Data Collection</h3>
-                    <p>
-                      <strong>Type:</strong> {currentTarget.dataCollectionType}
-                    </p>
-                    <p>
-                      <strong>Trials:</strong>{" "}
-                      {currentTarget.numberOfTrials || "Flexible"}
-                    </p>
+                    <div className="sa-field">
+                      <span className="sa-field-label">Type</span>
+                      <span className="sa-field-value">
+                        {currentTarget.dataCollectionType}
+                      </span>
+                    </div>
+                    <div className="sa-field">
+                      <span className="sa-field-label">No of Trials</span>
+                      <span className="sa-field-value">
+                        {currentTarget.numberOfTrials || "Flexible"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -790,10 +856,45 @@ const StartAppointment = () => {
                     />
                   </div>
                 ) : (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center mb-6">
-                    <p className="text-green-800 font-medium">
-                      Data collected successfully!
-                    </p>
+                  <div className="sa-success-wrapper">
+                    <div className="sa-success-chip" role="status">
+                      <span className="sa-success-icon">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </span>
+                      <span>Data recorded successfully</span>
+                    </div>
+                    <Button
+                      label="Clear Data"
+                      variant="secondary"
+                      size="medium"
+                      onClick={() => setClearTargetInfo(selectedTargetId)}
+                      icon={
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        </svg>
+                      }
+                      iconPosition="left"
+                    />
                   </div>
                 )}
 
@@ -806,74 +907,67 @@ const StartAppointment = () => {
                 </p>
               </div>
             )}
-
-            <div className="notes-card">
-              <h2>Session Notes</h2>
-              <textarea
-                className="notes-textarea"
-                placeholder="Write session notes here..."
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-                rows="6"
-              />
-            </div>
-
-            <div className="bottom-bar">
-              <div className="time-display">
-                <strong>Total time spent:</strong>{" "}
-                <span className="time-value">{formatTotalTime(seconds)}</span>
-              </div>
-              <Button
-                label={submitting ? "Submitting..." : "Finish Appointment"}
-                variant="primary"
-                size="large"
-                onClick={finishAppointment}
-                disabled={submitting}
-              />
-            </div>
           </main>
+        </div>
+
+        <div className="notes-card">
+          <h2>Session Notes</h2>
+          <textarea
+            className="notes-textarea"
+            placeholder="Write Something"
+            value={sessionNotes}
+            onChange={(e) => setSessionNotes(e.target.value)}
+            rows="6"
+          />
+        </div>
+
+        <div className="bottom-bar">
+          <div className="time-display">
+            <strong>Total time spent:</strong>{" "}
+            <span className="time-value">{formatTotalTime(seconds)}</span>
+          </div>
+          <Button
+            label={submitting ? "Submitting..." : "Finish Appointment"}
+            variant="primary"
+            size="large"
+            onClick={finishAppointment}
+            disabled={submitting}
+          />
         </div>
       </div>
 
       {/* Modals */}
       <FrequencyModal
         isOpen={currentModal.isOpen && currentModal.type === "frequency"}
-        onClose={requestCloseDataModal}
-        onSave={saveCollectedData}
+        onClose={requestCloseDataModal}        onSave={saveCollectedData}
       />
       <DurationModal
         isOpen={currentModal.isOpen && currentModal.type === "duration"}
-        onClose={requestCloseDataModal}
-        onSave={saveCollectedData}
+        onClose={requestCloseDataModal}        onSave={saveCollectedData}
       />
       <RateModal
         isOpen={currentModal.isOpen && currentModal.type === "rate"}
-        onClose={requestCloseDataModal}
-        onSave={saveCollectedData}
+        onClose={requestCloseDataModal}        onSave={saveCollectedData}
       />
       <PercentageCorrectModal
         isOpen={currentModal.isOpen && currentModal.type === "percentage"}
         onClose={requestCloseDataModal}
-        trialCount={currentModal.props.trialCount}
-        onSave={saveCollectedData}
+        trialCount={currentModal.props.trialCount}        onSave={saveCollectedData}
       />
       <TrialsOpportunitiesModal
         isOpen={currentModal.isOpen && currentModal.type === "trials"}
         onClose={requestCloseDataModal}
-        trialCount={currentModal.props.trialCount}
-        onSave={saveCollectedData}
+        trialCount={currentModal.props.trialCount}        onSave={saveCollectedData}
       />
       <TaskAnalysisModal
         isOpen={currentModal.isOpen && currentModal.type === "task"}
         onClose={requestCloseDataModal}
-        steps={currentModal.props.steps}
-        onSave={saveCollectedData}
+        steps={currentModal.props.steps}        onSave={saveCollectedData}
       />
       <LatencyModal
         isOpen={currentModal.isOpen && currentModal.type === "latency"}
         onClose={requestCloseDataModal}
-        trialCount={currentModal.props.trialCount}
-        onSave={saveCollectedData}
+        trialCount={currentModal.props.trialCount}        onSave={saveCollectedData}
       />
 
       <TravelTimeModal
@@ -899,6 +993,51 @@ const StartAppointment = () => {
         onClose={() => setConfirmLeaveOpen(false)}
         onConfirm={() => navigate(-1)}
       />
+
+      <ReusableModal
+        isOpen={!!clearTargetInfo}
+        onClose={() => setClearTargetInfo(null)}
+        title="Clear this recording?"
+        primaryButtonText="Clear data"
+        secondaryButtonText="Cancel"
+        onPrimaryButtonClick={confirmClearData}
+        onSecondaryButtonClick={() => setClearTargetInfo(null)}
+        primaryButtonColor="#D92D20"
+        size="md"
+      >
+        <div className="text-center">
+          <div className="flex justify-center mb-5">
+            <svg
+              width="56"
+              height="56"
+              viewBox="0 0 56 56"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect x="4" y="4" width="48" height="48" rx="24" fill="#FEE4E2" />
+              <rect
+                x="4"
+                y="4"
+                width="48"
+                height="48"
+                rx="24"
+                stroke="#FEF3F2"
+                strokeWidth="8"
+              />
+              <path
+                d="M28 24V28M28 32H28.01M38 28C38 33.5228 33.5228 38 28 38C22.4772 38 18 33.5228 18 28C18 22.4772 22.4772 18 28 18C33.5228 18 38 22.4772 38 28Z"
+                stroke="#D92D20"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 mb-8">
+            Once cleared, this recording can&apos;t be retrieved. Are you sure?
+          </p>
+        </div>
+      </ReusableModal>
     </div>
   );
 };
