@@ -87,7 +87,7 @@ const BasicInfoModal = ({
     watch,
     control,
     setValue,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm({
     mode: "onTouched",
     reValidateMode: "onBlur",
@@ -112,8 +112,11 @@ const BasicInfoModal = ({
   const country = watch("country");
   const stateOptions = useMemo(() => getStateOptions(country), [country]);
 
-  const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen, exclude: [],
-    // A saved draft may hold an ISO code, "UK", or a full name.
+  // This modal always edits an existing staff record, so a persisted draft is
+  // never appropriate: a stale draft would hydrate as the reset() baseline and
+  // make isDirty read false, silently no-op'ing Save. Disable draft hydration
+  // (isOpen: false) — the staff record is the single source of truth.
+  const clearDraft = useReduxFormDraft("edit-basic-info", { watch, reset, isOpen: false, exclude: [],
     transform: (draft) => ({
       ...draft,
       country: normalizeCountry(draft.country),
@@ -170,11 +173,6 @@ const BasicInfoModal = ({
   };
 
   const handleFormSubmit = async (data) => {
-    if (!isDirty) {
-      onClose(); // No changes, close modal
-      return;
-    }
-
     setSubmitting(true);
     setSubmitError("");
 
@@ -223,7 +221,7 @@ const BasicInfoModal = ({
       onSecondaryButtonClick={handleClose}
       size="lg"
       primaryButtonLoading={submitting}
-      primaryButtonDisabled={submitting || !isDirty}
+      primaryButtonDisabled={submitting}
     >
       <div className="p-4 space-y-4">
         {submitError && (
