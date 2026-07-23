@@ -1,5 +1,6 @@
 // ClinicalReportBuilder.jsx
 import React, { useEffect, useCallback, useState, useMemo } from "react";
+import LoadingSpinner from "../../../../../../Components/LoadingSpinner";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
 import usePermissions from "../../../../../../hooks/usePermissions";
@@ -1245,10 +1246,7 @@ const ClinicalReportBuilder = () => {
               <h3 className="crb-preview-title">Document Preview</h3>
 
               {isLoading ? (
-                <div className="crb-empty-state">
-                  <h3>Loading report...</h3>
-                  <p>Please wait while we fetch the report data</p>
-                </div>
+                <LoadingSpinner />
               ) : isSaving ? (
                 <div className="crb-empty-state">
                   <h3>Saving draft...</h3>
@@ -1374,7 +1372,7 @@ const ClinicalReportBuilder = () => {
           >
             <div className="p-6">
               {changeRequestsLoading ? (
-                <p className="text-gray-500">Loading change requests...</p>
+                <LoadingSpinner />
               ) : changeRequests.length > 0 ? (
                 <div className="flex-col gap-16">
                   {changeRequests.map((cr, idx) => (

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -123,7 +124,7 @@ const ForgotPasswordQuestionVerifier = () => {
               {step === 2 && (
                 <>
                   {loading ? (
-                    <p>Loading...</p>
+                    <LoadingSpinner />
                   ) : isVerified ? (
                     <>
                       <div className="icon success-icon">✔</div>

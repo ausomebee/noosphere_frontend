@@ -2,6 +2,7 @@ import usePageTitle from "../../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import {
   IoAddOutline,
   IoFolderOutline,
@@ -336,7 +337,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">Folders</h2>
 
         {foldersLoading ? (
-          <div className="section-loader">Loading folders...</div>
+          <LoadingSpinner />
         ) : foldersData.length === 0 ? (
           <div className="empty-state">
             <IoFolderOpenOutline size={48} className="empty-icon" />
@@ -404,7 +405,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">Recent</h2>
 
         {recentLoading ? (
-          <div className="section-loader">Loading recent files...</div>
+          <LoadingSpinner />
         ) : recentFiles.length === 0 ? (
           <div className="empty-state">
             <IoDocumentTextOutline size={48} className="empty-icon" />
@@ -448,7 +449,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">All files</h2>
 
         {allFilesLoading ? (
-          <div className="section-loader">Loading all files...</div>
+          <LoadingSpinner />
         ) : allFilesData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentOutline size={48} className="empty-icon" />

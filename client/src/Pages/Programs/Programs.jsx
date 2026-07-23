@@ -4,6 +4,7 @@ import ReusableTable from "../../Components/Table/ReuseableTable";
 import { FiEye, FiX } from "react-icons/fi";
 import Chart from "react-apexcharts";
 import "./Programs.css";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import DashboardLayout from "../../layouts/ClientLayout";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/programsApis";
@@ -501,7 +502,7 @@ const Programs = () => {
         </div>
 
         {loadingPrograms ? (
-          <div className="loading-state">Loading programs...</div>
+          <LoadingSpinner />
         ) : programsError ? (
           <div className="error-state">{programsError}</div>
         ) : (
@@ -591,7 +592,7 @@ const TargetPerformanceModal = ({ modalState, onClose }) => {
 
         <div className="modal-chart-container-unique">
           {loading ? (
-            <div className="chart-loading">Loading performance data...</div>
+            <LoadingSpinner />
           ) : error ? (
             <ErrorFallback message="Something went wrong loading performance data. Please try again." />
           ) : performanceData ? (

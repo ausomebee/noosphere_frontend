@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import ReusableModal from "./ReusableModal";
 import { RadioInput, SelectInput } from "../Input/Inputs";
 import Button from "../Button/Button";
+import { SectionSpinner } from "../LoadingSpinner";
 import useAuth from "../../hooks/useAuth";
 import billingApi from "../../api/BillingApis";
 import invoiceApi from "../../api/InvoiceApi";
@@ -343,7 +344,7 @@ const GeneratePaymentLinkModal = ({ isOpen, onClose, tenantId }) => {
                 </div>
               )}
               {isLoadingHistory ? (
-                <p className="no-links-message">Loading history...</p>
+                <SectionSpinner />
               ) : invoiceHistory.length === 0 && !generatedLink ? (
                 <p className="no-links-message">
                   No payment link generated yet. Go to Plan Settings to generate

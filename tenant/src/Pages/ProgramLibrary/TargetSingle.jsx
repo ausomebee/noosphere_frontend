@@ -841,9 +841,7 @@ const TargetSingle = () => {
           </div>
         </div>
         {performanceLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <p className="text-gray-500">Loading performance data...</p>
-          </div>
+          <LoadingSpinner />
         ) : performanceError ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500">{performanceError}</p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import LoadingSpinner from "../../LoadingSpinner";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -101,7 +102,7 @@ const AddStaffModal = ({
     >
       <div className="flex flex-col gap-4">
         {loadingStaff ? (
-          <p className="text-gray-500 text-center py-4">Loading staff...</p>
+          <LoadingSpinner />
         ) : (
           <Controller
             name="selectedStaff"

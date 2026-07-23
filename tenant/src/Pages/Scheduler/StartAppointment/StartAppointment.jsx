@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
@@ -576,7 +577,7 @@ const StartAppointment = () => {
 
   if (loading)
     return (
-      <div className="p-10 text-center text-lg">Loading appointment...</div>
+      <LoadingSpinner />
     );
   if (error)
     return <ErrorFallback message="Something went wrong loading the appointment. Please try again." onRetry={() => window.location.reload()} />;

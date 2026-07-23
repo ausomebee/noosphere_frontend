@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import LoadingSpinner from "../../LoadingSpinner";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -100,7 +101,7 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
     >
       <div className="flex flex-col gap-4">
         {loadingItems ? (
-          <p className="text-gray-500 text-center py-4">Loading deductions...</p>
+          <LoadingSpinner />
         ) : (
           <Controller
             name="deductionItem"

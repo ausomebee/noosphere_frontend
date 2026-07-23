@@ -11,6 +11,7 @@ import { RxCross2 } from "react-icons/rx";
 import { LuCloudUpload } from "react-icons/lu";
 import { CheckboxInput, RadioInput, SelectInput } from "../Input/Inputs";
 import Button from "../Button/Button";
+import { SectionSpinner } from "../LoadingSpinner";
 import "./ProspectPanel.css";
 import "../ReusableModal/ReusableModal.css";
 import { frequencyOptions } from "../../Data/selectOptions";
@@ -1471,7 +1472,7 @@ const ProspectPanel = () => {
                     </div>
                   )}
                   {isLoadingHistory ? (
-                    <p className="no-links-message">Loading history...</p>
+                    <SectionSpinner />
                   ) : invoiceHistory.length === 0 && !generatedLink ? (
                     <p className="no-links-message">
                       No payment link generated yet. Go to Plan Settings to generate a link.

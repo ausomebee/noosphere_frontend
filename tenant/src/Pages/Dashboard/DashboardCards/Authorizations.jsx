@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaSpinner } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
@@ -205,7 +206,7 @@ const Authorizations = ({
                 {Number(totalAuthorizations) || 0}
               </p>
               {loading ? (
-                <p className="text-sm text-gray-500">Loading...</p>
+                <FaSpinner className="animate-spin text-lg text-black" aria-hidden="true" />
               ) : (
                 <>
                   {authDetails.map((item, index) => (

@@ -2,6 +2,7 @@
 import React from "react";
 import { SwitchInput } from "../Input/Inputs";
 import { notificationItems } from "../../Data/notificationConfig";
+import LoadingSpinner from "../LoadingSpinner";
 
 const NotificationItem = ({ label, checked, onChange, disabled }) => {
   return (
@@ -20,9 +21,7 @@ const NotificationSettings = ({ notifications, isLoading, loadingKeys = new Set(
         <p className="section-description">
           Manage how and when you'd like to receive updates.
         </p>
-        <div className="loading-notifications">
-          Loading notification settings...
-        </div>
+        <LoadingSpinner />
       </section>
     );
   }

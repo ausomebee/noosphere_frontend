@@ -1,6 +1,6 @@
 // src/pages/Client/ClinentSubs/ClientInfo.jsx
 import React, { useMemo, useState, useEffect } from "react";
-import { FaCog, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCog, FaChevronDown, FaChevronUp, FaSpinner } from "react-icons/fa";
 import { FiChevronDown, FiEdit2 } from "react-icons/fi";
 import { HiOutlineCog6Tooth, HiOutlineTrash } from "react-icons/hi2";
 import { LuEye } from "react-icons/lu";
@@ -787,7 +787,7 @@ const DocumentsForms = () => {
                       {loading.requests ? (
                         <tr>
                           <td colSpan={5} className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                            <FaSpinner className="animate-spin text-2xl text-black mx-auto" aria-hidden="true" />
                           </td>
                         </tr>
                       ) : (

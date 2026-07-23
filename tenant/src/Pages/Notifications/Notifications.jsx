@@ -1,4 +1,5 @@
 import usePageTitle from "../../hooks/usePageTitle";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
@@ -173,10 +174,7 @@ const Notifications = () => {
       {/* Notification groups */}
       <div className="notifications-body">
         {loading ? (
-          <div className="notifications-empty">
-            <IoNotificationsOutline size={48} />
-            <p>Loading notifications…</p>
-          </div>
+          <LoadingSpinner />
         ) : notifications.length === 0 ? (
           <div className="notifications-empty">
             <IoNotificationsOutline size={48} />

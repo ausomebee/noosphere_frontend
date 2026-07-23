@@ -1,5 +1,6 @@
 // src/pages/Dashboard/DashboardCards/SessionInformation.jsx
 import React, { useState, useEffect } from "react";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
@@ -216,7 +217,7 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
   }
 
   if (loading) {
-    return <div className="text-center py-8">Loading sessions...</div>;
+    return <LoadingSpinner />;
   }
 
   if (error) {

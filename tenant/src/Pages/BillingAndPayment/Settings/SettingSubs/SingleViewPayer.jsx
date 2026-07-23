@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import useAuth from "../../../../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaArrowLeft, FaEdit, FaPlus } from "react-icons/fa";
@@ -456,9 +457,7 @@ const SingleViewPayer = () => {
       </h2>
       <div className="billing-info-card flex justify-between">
         {loadingPayer ? (
-          <div className="flex justify-center items-center w-full py-8">
-            <div>Loading...</div>
-          </div>
+          <LoadingSpinner />
         ) : (
           <>
             <OrgGrid data={payerData || {}} />

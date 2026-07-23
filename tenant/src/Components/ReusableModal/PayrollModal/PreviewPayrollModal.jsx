@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import LoadingSpinner from "../../LoadingSpinner";
 import ReusableModal from "../ReusableModal";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -238,9 +239,7 @@ const PreviewPayrollModal = ({
             )}
           </div>
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <p className="text-gray-500">Loading staff...</p>
-            </div>
+            <LoadingSpinner />
           ) : (
             <div className="flex-1 overflow-auto">
               <table className="custom-table">

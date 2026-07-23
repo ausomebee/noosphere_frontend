@@ -2,6 +2,7 @@ import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import messageApi from "../../api/messageApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
@@ -101,7 +102,7 @@ const Notifications = () => {
           </header>
 
           {loading ? (
-            <p style={{ color: "#5f6368", fontSize: "14px" }}>Loading notifications…</p>
+            <LoadingSpinner />
           ) : allNotifications.length === 0 ? (
             <p style={{ color: "#5f6368", fontSize: "14px" }}>No notifications</p>
           ) : (

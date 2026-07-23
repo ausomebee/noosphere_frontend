@@ -6,6 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { useParams } from "react-router-dom";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import DOMPurify from "dompurify";
 import {
   FiType,
@@ -483,10 +484,7 @@ const ClientReportView = () => {
   if (loading) {
     return (
       <div className="crv-page">
-        <div className="crv-loading">
-          <div className="crv-spinner" />
-          <p>Loading clinical report...</p>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { BsListUl, BsGrid } from "react-icons/bs";
 import { FiMoreVertical } from "react-icons/fi";
 import { IoArrowBack, IoArrowForward } from "react-icons/io5";
+import LoadingSpinner from "../LoadingSpinner";
 import "./ReusableTable.css";
 
 const EmptyState = ({ icon, title, subtitle }) => (
@@ -194,7 +195,7 @@ const ReusableTable = ({
       {/* Table */}
       <div className="table-wrapper">
         {loading ? (
-          <div className="table-loading">Loading...</div>
+          <LoadingSpinner />
         ) : !data || data.length === 0 ? (
           <EmptyState
             icon={emptyState?.icon}

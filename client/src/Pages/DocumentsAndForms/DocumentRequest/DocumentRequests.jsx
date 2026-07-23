@@ -19,6 +19,7 @@ import SelectFromMyDocumentsModal from "../../../Components/Modal/SelectFromMyDo
 import api from "../../../api/documentsAndFormsApis";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 
 const DocumentRequests = () => {
   const navigate = useNavigate();
@@ -545,7 +546,7 @@ const DocumentRequests = () => {
         )}
 
         {loadingDocs ? (
-          <div className="section-loader">Loading document requests...</div>
+          <LoadingSpinner />
         ) : documentRequests.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />
@@ -588,7 +589,7 @@ const DocumentRequests = () => {
         )}
 
         {loadingForms ? (
-          <div className="section-loader">Loading forms...</div>
+          <LoadingSpinner />
         ) : formsData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />

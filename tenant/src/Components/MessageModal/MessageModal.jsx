@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import LoadingSpinner from "../LoadingSpinner";
 import { IoClose, IoSend, IoCheckmark, IoCheckmarkDone } from "react-icons/io5";
 import "./MessageModal.css";
 import useAuth from "../../hooks/useAuth";
@@ -300,7 +301,7 @@ const MessageModal = ({ isOpen, onClose }) => {
           {/* Conversation list */}
           <div className="msg-conv-list">
             {loadingClients ? (
-              <div className="msg-conv-loading">Loading…</div>
+              <LoadingSpinner />
             ) : conversationList.length === 0 ? (
               <div className="msg-conv-loading">No conversations yet</div>
             ) : (

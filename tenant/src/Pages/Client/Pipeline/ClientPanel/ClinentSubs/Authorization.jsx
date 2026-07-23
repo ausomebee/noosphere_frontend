@@ -1,6 +1,7 @@
 // src/pages/Client/ClientSubs/AuthorizationTab.jsx
 
 import React, { useState, useEffect } from "react";
+import LoadingSpinner from "../../../../../Components/LoadingSpinner";
 import { FaPlus } from "react-icons/fa";
 import useAuth from "../../../../../hooks/useAuth";
 import Button from "../../../../../Components/Button/Button";
@@ -382,7 +383,7 @@ const AuthorizationTab = () => {
       ) : (
         <>
       {loading && (
-        <div className="text-center py-8">Loading authorizations...</div>
+        <LoadingSpinner />
       )}
 
       {!loading && authorizations.length > 0 && (

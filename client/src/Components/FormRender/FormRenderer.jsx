@@ -7,6 +7,7 @@ import "./FormRenderer.css";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/documentsAndFormsApis";
 import api2 from "../../api/ImageUpload";
+import LoadingSpinner from "../LoadingSpinner";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   initializeResponse,
@@ -489,7 +490,7 @@ const FormRenderer = () => {
     return (
       <div className="form-renderer">
         <div className="form-container">
-          <div className="loading-spinner">Loading form...</div>
+          <LoadingSpinner />
         </div>
       </div>
     );

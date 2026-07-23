@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import Chart from "react-apexcharts";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import useAuth from "../../../hooks/useAuth";
@@ -110,7 +111,7 @@ const ProductivityInformation = ({ hasData }) => {
   }
 
   if (loading) {
-    return <p className="text-muted">Loading productivity data...</p>;
+    return <LoadingSpinner />;
   }
 
   if (error) {

@@ -1,6 +1,7 @@
 // src/components/ReusableModal/ClientModal/FormLibraryModal.jsx
 
 import React, { useState, useEffect } from "react";
+import LoadingSpinner from "../../LoadingSpinner";
 import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
@@ -77,9 +78,7 @@ const FormLibraryModal = ({
 
         {/* Loading State */}
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading forms...</p>
-          </div>
+          <LoadingSpinner />
         ) : currentForms.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">

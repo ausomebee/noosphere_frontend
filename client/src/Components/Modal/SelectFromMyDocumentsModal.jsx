@@ -8,6 +8,7 @@ import { BsCheckCircleFill } from "react-icons/bs";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/documentsAndFormsApis";
 import { formatDate } from "../../Helper/Formatters";
+import LoadingSpinner from "../LoadingSpinner";
 
 const SelectFromMyDocumentsModal = ({
   isOpen,
@@ -129,7 +130,7 @@ const SelectFromMyDocumentsModal = ({
 
         {/* Loading / Empty / List */}
         {fetching ? (
-          <div className="status-message loading">Loading your documents...</div>
+          <LoadingSpinner />
         ) : filteredDocs.length === 0 ? (
           <div className="status-message empty">
             {searchTerm

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../../../../../../Components/LoadingSpinner";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
@@ -233,9 +234,7 @@ const AuditTrails = () => {
 
         <div className="audit-trail-content">
           {loading && (
-            <div className="approval-item p-6" style={{ textAlign: "center" }}>
-              <p style={{ color: "#6b7280" }}>Loading audit trails...</p>
-            </div>
+            <LoadingSpinner />
           )}
 
           {error && (

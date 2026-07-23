@@ -5,6 +5,7 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput, RequiredMark } from "../../Input/Inputs";
 import { FiRefreshCcw } from "react-icons/fi";
+import { FaSpinner } from "react-icons/fa";
 import Button from "../../Button/Button";
 import { formatTimerDisplay } from "../../../Helper/Formatters";
 
@@ -263,7 +264,7 @@ const RateModal = ({
         {/* Show loading indicator while submitting */}
         {submitting && (
           <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <FaSpinner className="animate-spin text-2xl text-black" aria-hidden="true" />
             <span className="ml-2 text-gray-600">Saving data...</span>
           </div>
         )}

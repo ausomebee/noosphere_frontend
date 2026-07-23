@@ -18,61 +18,11 @@ import SuccessModal from "../../Components/Modal/SuccessModal";
 // API Functions
 import api from "../../api/homeApis";
 import ErrorFallback from "../../Components/ErrorFallback";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePersistedTab from "../../hooks/usePersistedTab";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
-
-// ============================================================================
-// Loading Spinner Component (Embedded)
-// ============================================================================
-const LoadingSpinner = ({ size = "medium", message = "Loading..." }) => {
-  const sizeMap = {
-    small: { width: "24px", height: "24px", borderWidth: "2px" },
-    medium: { width: "40px", height: "40px", borderWidth: "3px" },
-    large: { width: "60px", height: "60px", borderWidth: "4px" },
-  };
-
-  const spinnerSize = sizeMap[size] || sizeMap.medium;
-
-  const containerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "60px 20px",
-    minHeight: "300px",
-  };
-
-  const spinnerStyle = {
-    width: spinnerSize.width,
-    height: spinnerSize.height,
-    border: `${spinnerSize.borderWidth} solid #f3f4f6`,
-    borderTop: `${spinnerSize.borderWidth} solid #3b82f6`,
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  };
-
-  const messageStyle = {
-    marginTop: "16px",
-    fontSize: "14px",
-    color: "#6b7280",
-    fontWeight: "500",
-  };
-
-  return (
-    <div style={containerStyle}>
-      <div style={spinnerStyle}></div>
-      {message && <p style={messageStyle}>{message}</p>}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
-};
 
 // ============================================================================
 // Main Home Component
@@ -728,7 +678,7 @@ const Home = () => {
     return (
       <DashboardLayout>
         <div className="home-content">
-          <LoadingSpinner size="large" message="Loading dashboard..." />
+          <LoadingSpinner />
         </div>
       </DashboardLayout>
     );
@@ -779,7 +729,7 @@ const Home = () => {
                   See and manage all your appointments here
                 </p>
               </div>
-              <LoadingSpinner message="Loading appointments..." />
+              <LoadingSpinner />
             </div>
           ) : (
             <ReusableTable

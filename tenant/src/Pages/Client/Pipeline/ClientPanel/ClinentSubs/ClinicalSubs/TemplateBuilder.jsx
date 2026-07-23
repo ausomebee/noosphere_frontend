@@ -1,5 +1,6 @@
 // ClinicalReportTemplateBuilder.jsx
 import React, { useEffect, useCallback, useState, useMemo } from "react";
+import LoadingSpinner from "../../../../../../Components/LoadingSpinner";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
 import usePermissions from "../../../../../../hooks/usePermissions";
@@ -774,10 +775,7 @@ const ClinicalReportTemplateBuilder = () => {
               <h3 className="crb-preview-title">Template Preview</h3>
 
               {isLoading ? (
-                <div className="crb-empty-state">
-                  <h3>Loading template...</h3>
-                  <p>Please wait while we fetch your template data</p>
-                </div>
+                <LoadingSpinner />
               ) : isSaving ? (
                 <div className="crb-empty-state">
                   <h3>Saving template...</h3>

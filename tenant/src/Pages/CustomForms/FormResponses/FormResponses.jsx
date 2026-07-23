@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FiChevronLeft,
@@ -171,10 +172,7 @@ const FormResponses = () => {
 
   if (loading) {
     return (
-      <div className="fr-loading" role="status" aria-live="polite">
-        <div className="fr-spinner" />
-        <p>Loading form responses...</p>
-      </div>
+      <LoadingSpinner />
     );
   }
 

@@ -16,6 +16,7 @@ import {
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
 import { formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
+import LoadingSpinner from "../LoadingSpinner";
 
 const getClinicianName = (c) => c?.fullName?.trim() || "Unknown";
 
@@ -307,7 +308,7 @@ const MessageModal = ({ isOpen, onClose }) => {
           {/* Conversation list */}
           <div className="msg-conv-list">
             {loading ? (
-              <div className="msg-conv-loading">Loading…</div>
+              <LoadingSpinner />
             ) : conversationList.length === 0 ? (
               <div className="msg-conv-loading">No conversations yet</div>
             ) : (
