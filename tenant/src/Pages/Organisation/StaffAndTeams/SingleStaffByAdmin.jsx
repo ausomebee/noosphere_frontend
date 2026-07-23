@@ -296,7 +296,7 @@ const SingleStaffByAdmin = () => {
         id: tenantStaffId,
         fullName: payload.fullName,
         email: payload.email,
-        roleId: "8285a9a5-0455-447d-9dbe-00ad68d6a0e5",
+        roleId: payload.staffRole,
         tenantId: user?.tenantId,
         dob: payload.DOB,
         gender: payload.gender,
