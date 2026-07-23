@@ -91,7 +91,10 @@ const EditProspectModal = ({
     resolver: yupResolver(validationSchema),
   });
 
-  const clearDraft = useReduxFormDraft("edit-prospect", { watch, reset, isOpen, exclude: [] });
+  // Edit-only modal: the prospect record is the source of truth, so never
+  // hydrate a stale persisted draft (it would clobber the record and poison
+  // the isDirty baseline). Disable draft persistence here.
+  const clearDraft = useReduxFormDraft("edit-prospect", { watch, reset, isOpen: false, exclude: [] });
 
   const country = watch("country");
   const state = watch("state");

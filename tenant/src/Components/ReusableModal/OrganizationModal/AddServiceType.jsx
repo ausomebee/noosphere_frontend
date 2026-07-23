@@ -75,7 +75,9 @@ const AddServiceType = ({
           },
   });
 
-  const clearDraft = useReduxFormDraft("add-service-type", { watch, reset, isOpen, exclude: [] });
+  // Only persist a draft when creating; in edit mode a stale draft would
+  // override the existing record and poison the isDirty baseline.
+  const clearDraft = useReduxFormDraft("add-service-type", { watch, reset, isOpen: isOpen && mode !== "edit", exclude: [] });
 
   const handleFormSubmit = async (data) => {
     setSubmitting(true);

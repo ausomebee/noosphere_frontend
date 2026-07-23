@@ -69,7 +69,8 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
     },
   });
 
-  const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen, exclude: [],
+  // Edit-only modal (updates the existing org): never hydrate a stale draft.
+  const clearDraft = useReduxFormDraft("add-organization", { watch, reset, isOpen: false, exclude: [],
     // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,

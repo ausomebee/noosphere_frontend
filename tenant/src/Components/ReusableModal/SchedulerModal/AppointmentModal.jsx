@@ -355,7 +355,9 @@ const AppointmentModal = ({
     },
   });
 
-  const clearDraft = useReduxFormDraft("add-appointment", { watch, reset, isOpen, exclude: [] });
+  // Only persist a draft when creating; in edit mode the appointment record is
+  // the source of truth and a stale draft would clobber it / poison isDirty.
+  const clearDraft = useReduxFormDraft("add-appointment", { watch, reset, isOpen: isOpen && !isEditMode, exclude: [] });
 
   const { fields, append, replace } = useFieldArray({
     control,

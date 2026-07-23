@@ -239,7 +239,9 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     setValue,
   ]);
 
-  const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen, exclude: [],
+  // Only persist a draft when creating; when editing an existing client a
+  // stale draft would clobber the record and poison the isDirty baseline.
+  const clearDraft = useReduxFormDraft("add-client", { watch, reset, isOpen: isOpen && !initialData, exclude: [],
     // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,

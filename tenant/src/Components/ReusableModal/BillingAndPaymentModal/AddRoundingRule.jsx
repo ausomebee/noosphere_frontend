@@ -128,7 +128,9 @@ const AddRoundingRule = ({
     defaultValues: transformRoundingRuleToFormData(initialData),
   });
 
-  const clearDraft = useReduxFormDraft("add-rounding-rule", { watch, reset, isOpen, exclude: [] });
+  // Only persist a draft when adding; edit/view modes read an existing record
+  // and a stale draft would clobber it / poison the isDirty baseline.
+  const clearDraft = useReduxFormDraft("add-rounding-rule", { watch, reset, isOpen: isOpen && mode === "add", exclude: [] });
 
   const ruleType = watch("ruleType");
   const parentRole = watch("parentRole");

@@ -128,7 +128,6 @@ const AvailabilityModal = ({
     reset,
     watch,
     setValue,
-    formState: { isDirty },
   } = useForm({
     mode: "onTouched",
     reValidateMode: "onBlur",
@@ -226,7 +225,7 @@ const AvailabilityModal = ({
       title="Set your availability"
       primaryButtonText={isLoading ? "Saving..." : "Save"}
       secondaryButtonText="Cancel"
-      primaryButtonDisabled={isLoading || !isDirty}
+      primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}
       onSecondaryButtonClick={handleClose}
       size="lg"

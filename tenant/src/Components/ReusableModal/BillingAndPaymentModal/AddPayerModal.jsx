@@ -56,7 +56,9 @@ const AddPayerModal = ({
   const errorsRef = useRef(errors);
   errorsRef.current = errors;
 
-  const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen, exclude: [],
+  // Only persist a draft when adding; edit/view modes read an existing record
+  // and a stale draft would clobber it / poison the isDirty baseline.
+  const clearDraft = useReduxFormDraft("add-payer", { watch, reset, isOpen: isOpen && mode === "add", exclude: [],
     // A saved draft may hold an ISO code, "UK", or a full name.
     transform: (draft) => ({
       ...draft,
