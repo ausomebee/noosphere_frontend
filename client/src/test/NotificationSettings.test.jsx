@@ -27,7 +27,8 @@ describe("NotificationSettings Component", () => {
 
   it("shows loading state", () => {
     render(<NotificationSettings notifications={{}} isLoading={true} onToggle={vi.fn()} />);
-    expect(screen.getByText("Loading notification settings...")).toBeInTheDocument();
+    // Loading is now the standardized borderless spinner (role="status"), not inline text.
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("does not render notification items when loading", () => {

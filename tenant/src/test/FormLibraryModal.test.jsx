@@ -29,9 +29,10 @@ describe('FormLibraryModal', () => {
     expect(screen.queryByText('Intake Form')).not.toBeInTheDocument();
   });
 
-  it('shows loading text when loading', () => {
+  it('shows loading spinner when loading', () => {
     render(<FormLibraryModal {...defaultProps} loading={true} forms={[]} />);
-    expect(screen.getByText('Loading forms...')).toBeInTheDocument();
+    // Loading is now the standardized borderless spinner (role="status"), not inline text.
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('shows empty state when no forms', () => {
