@@ -651,7 +651,7 @@ const IconFile = (props) => (
 
 const OrgGrid = ({ data }) => (
   <div className="org-detail-grid">
-    <div className="items-center flex justify-center h-full">
+    <div className="items-center flex justify-center self-center">
       <div className="organisation-user-avatar ">
         {data.companyName
           ? data.companyName
