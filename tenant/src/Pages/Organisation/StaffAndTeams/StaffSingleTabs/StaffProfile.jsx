@@ -31,14 +31,15 @@ const Profile = ({
   const renderLicenses = () => {
     if (!licenses.length) {
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6">
+        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6">
           <div className="text-center py-8 text-gray-500">
-            <IconFile className="mx-auto mb-4" />
+            <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
-              No Licenses added yet
+              No licenses added yet
             </p>
             <p className="text-gray-700 text-xl">
-              Add your practice license details here …
+              Add this staff member’s license details here, and we’ll track
+              renewals and expiration dates for you
             </p>
           </div>
         </div>
@@ -117,14 +118,15 @@ const Profile = ({
   const renderFiles = () => {
     if (!files.length) {
       return (
-        <div className="bg-gray-200 rounded-sm w-full p-6 mb-6">
+        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6">
           <div className="text-center py-8 text-gray-500">
-            <IconFile className="mx-auto mb-4" />
+            <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
-              No Documents added
+              No documents added
             </p>
             <p className="text-gray-700 text-xl">
-              Add your practice documents here …
+              Add this staff member’s documents here, and keep them organized and
+              easily accessible.
             </p>
           </div>
         </div>
