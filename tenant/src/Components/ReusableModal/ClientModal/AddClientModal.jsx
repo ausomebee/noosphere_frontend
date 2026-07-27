@@ -105,7 +105,9 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       });
       const staff = response?.data?.data || [];
       setClinicians(
-        staff.map((c) => ({ value: c.id, label: c.fullName || "Unnamed" })),
+        staff
+          .filter((c) => c.active !== false)
+          .map((c) => ({ value: c.id, label: c.fullName || "Unnamed" })),
       );
     } catch (err) {
       console.error("Failed to load clinicians:", err);

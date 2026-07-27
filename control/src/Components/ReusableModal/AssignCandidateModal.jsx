@@ -38,10 +38,12 @@ const AssignCandidateModal = ({
     const options = [{ value: "", label: "Select" }];
     if (Array.isArray(staffList) && staffList.length > 0) {
       options.push(
-        ...staffList.map((staff) => ({
-          value: staff.staffId,
-          label: staff.name,
-        }))
+        ...staffList
+          .filter((staff) => staff.active !== false)
+          .map((staff) => ({
+            value: staff.staffId,
+            label: staff.name,
+          }))
       );
     }
     return options;

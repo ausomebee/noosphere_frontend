@@ -96,11 +96,13 @@ const AppointmentModal = ({
 
   const clinicianOptions = useMemo(
     () =>
-      staff.map((s) => ({
-        value: s.id,
-        label: s.fullName,
-        role: s.roleId,
-      })),
+      staff
+        .filter((s) => s.active !== false)
+        .map((s) => ({
+          value: s.id,
+          label: s.fullName,
+          role: s.roleId,
+        })),
     [staff]
   );
 

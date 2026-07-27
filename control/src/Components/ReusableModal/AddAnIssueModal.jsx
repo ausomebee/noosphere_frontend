@@ -162,10 +162,12 @@ const AddIssueModal = ({
   const staffOptions = useMemo(
     () => [
       { value: "", label: staffList.length ? "Select" : "No staff available" },
-      ...staffList.map((staff) => ({
-        value: staff.staffId,
-        label: staff.name,
-      })),
+      ...staffList
+        .filter((staff) => staff.active !== false)
+        .map((staff) => ({
+          value: staff.staffId,
+          label: staff.name,
+        })),
     ],
     [staffList]
   );

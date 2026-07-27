@@ -191,6 +191,7 @@ const ProspectPanel = () => {
         admins.map((admin) => ({
           staffId: admin.id || `admin-${uuidv4()}`,
           name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
+          active: admin.active,
         }))
       );
 

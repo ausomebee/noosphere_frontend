@@ -157,6 +157,7 @@ const IssueManagement = () => {
           ? adminsResult.value.data.data.map((a) => ({
               staffId: a.id || "",
               name: `${a.firstName || ""} ${a.lastName || ""}`.trim() || a.id || "Unnamed Admin",
+              active: a.active,
             }))
           : [];
         staffCache.current = adminsData;

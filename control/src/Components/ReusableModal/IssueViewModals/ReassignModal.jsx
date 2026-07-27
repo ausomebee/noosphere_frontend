@@ -30,10 +30,12 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
 
   const staffOptions = [
     { value: "", label: staffList.length ? "Select" : "No staff available" },
-    ...staffList.map((staff) => ({
-      value: staff.staffId,
-      label: staff.name,
-    })),
+    ...staffList
+      .filter((staff) => staff.active !== false)
+      .map((staff) => ({
+        value: staff.staffId,
+        label: staff.name,
+      })),
   ];
 
   const [loading, setLoading] = useState(false);

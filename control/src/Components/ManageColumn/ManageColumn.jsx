@@ -114,6 +114,7 @@ const ManageColumn = () => {
         adminsResponse.data?.data?.map((admin) => ({
           staffId: admin.id,
           name: `${admin.firstName || ""} ${admin.lastName || ""}`.trim() || "Unknown Admin",
+          active: admin.active,
         })) || []
       );
 

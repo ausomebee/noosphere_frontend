@@ -49,10 +49,12 @@ const AddStaffModal = ({
           });
           const data = response?.data || response || [];
           const options = Array.isArray(data)
-            ? data.map((staff) => ({
-                value: staff.id,
-                label: staff.fullName || `${staff.firstName || ""} ${staff.lastName || ""}`.trim() || "Unknown",
-              }))
+            ? data
+                .filter((staff) => staff.active !== false)
+                .map((staff) => ({
+                  value: staff.id,
+                  label: staff.fullName || `${staff.firstName || ""} ${staff.lastName || ""}`.trim() || "Unknown",
+                }))
             : [];
           setStaffOptions(options);
         } catch (error) {

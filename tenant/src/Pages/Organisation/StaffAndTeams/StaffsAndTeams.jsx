@@ -49,13 +49,19 @@ const StaffsAndTeams = () => {
   // filters out the tenant admin, so use the full staff list so he — and
   // everyone else — can be picked as lead).
   const teamLeadOptions = useMemo(
-    () => allTenantStaff.map((s) => ({ value: s.id, label: s.fullName })),
+    () =>
+      allTenantStaff
+        .filter((s) => s.active !== false)
+        .map((s) => ({ value: s.id, label: s.fullName })),
     [allTenantStaff],
   );
 
   // Team Member options – all tenant staff
   const memberOptions = useMemo(
-    () => allTenantStaff.map((s) => ({ value: s.id, label: s.fullName })),
+    () =>
+      allTenantStaff
+        .filter((s) => s.active !== false)
+        .map((s) => ({ value: s.id, label: s.fullName })),
     [allTenantStaff],
   );
 

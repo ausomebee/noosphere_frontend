@@ -189,10 +189,12 @@ const BuildDocumentModal = ({
 
   const approverOptions = [
     { value: "", label: "Select" },
-    ...staffList.map((staff) => ({
-      value: staff.id,
-      label: `${staff.fullName}`,
-    })),
+    ...staffList
+      .filter((staff) => staff.active !== false)
+      .map((staff) => ({
+        value: staff.id,
+        label: `${staff.fullName}`,
+      })),
   ];
 
   const isFormValid = formData.title && formData.approverId;
