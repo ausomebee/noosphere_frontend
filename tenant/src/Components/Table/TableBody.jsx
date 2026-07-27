@@ -39,6 +39,7 @@ const TableBody = ({
     "TimeSheet Number",
     "Domain",
     "Target",
+    "Team Name",
     "Team Lead",
     "Name",
     "Diagnosis Description",
