@@ -47,13 +47,14 @@ const ChangePlanModal = ({ isOpen, onClose, onSave, currentPlanId, plans = [] })
       isOpen={isOpen}
       onClose={onClose}
       title="Change Plan"
-      primaryButtonText={isLoading ? "Saving..." : "Save"}
+      primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"
       onPrimaryButtonClick={handleSave}
       onSecondaryButtonClick={onClose}
       primaryButtonDisabled={isLoading || !selectedToPlan}
+      primaryButtonLoading={isLoading}
     >
       <div className="modal-content-wrapper" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <SelectInput

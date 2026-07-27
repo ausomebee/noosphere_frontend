@@ -56,7 +56,7 @@ const EditFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading  }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Edit Feature Group"
-        primaryButtonText={isLoading ? "Saving..." : "Save"}
+        primaryButtonText="Save"
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"

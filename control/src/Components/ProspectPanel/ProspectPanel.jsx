@@ -1553,7 +1553,8 @@ const ProspectPanel = () => {
           onConfirm={handleDeleteProspect}
           title="Delete prospect?"
           message="This will permanently remove this prospect and all of its data. This action cannot be undone."
-          confirmButtonText={isLoading ? "Deleting..." : "Delete"}
+          confirmButtonText="Delete"
+          confirmButtonLoading={isLoading}
           confirmButtonColor="#dc2626"
         />
 

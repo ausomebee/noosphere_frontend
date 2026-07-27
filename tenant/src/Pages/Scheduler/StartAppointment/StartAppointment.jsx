@@ -928,10 +928,11 @@ const StartAppointment = () => {
             <span className="time-value">{formatTotalTime(seconds)}</span>
           </div>
           <Button
-            label={submitting ? "Submitting..." : "Finish Appointment"}
+            label="Finish Appointment"
             variant="primary"
             size="large"
             onClick={finishAppointment}
+            loading={submitting}
             disabled={submitting}
           />
         </div>

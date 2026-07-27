@@ -11,6 +11,7 @@ const DeleteConfirmationModal = ({
   message,
   confirmButtonText,
   confirmButtonColor,
+  confirmButtonLoading = false,
   showConfirmButton = true,
   showSecondaryButton = true, 
   icon: IconComponent, 
@@ -21,6 +22,7 @@ const DeleteConfirmationModal = ({
       onClose={onClose}
       title=""
       primaryButtonText={confirmButtonText}
+      primaryButtonLoading={confirmButtonLoading}
       secondaryButtonText="Cancel"
       primaryButtonColor={confirmButtonColor}
       secondaryButtonColor="#ffffff"

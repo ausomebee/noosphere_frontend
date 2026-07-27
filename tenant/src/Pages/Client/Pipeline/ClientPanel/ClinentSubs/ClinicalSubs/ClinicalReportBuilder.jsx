@@ -986,7 +986,7 @@ const ClinicalReportBuilder = () => {
           {hasPermission("approve_clinical_report") && (
             <Button
               variant="primary"
-              label={isApproving ? "Approving..." : "Approve"}
+              label="Approve"
               onClick={handleApprove}
               disabled={isSaving || isPublishing || isApproving}
               loading={isApproving}
@@ -1009,14 +1009,14 @@ const ClinicalReportBuilder = () => {
           )}
           <Button
             variant="secondary"
-            label={isSaving ? "Saving..." : "Save as Draft"}
+            label="Save as Draft"
             onClick={handleSaveDraft}
             disabled={activeSections.length === 0 || isSaving || isPublishing}
             loading={isSaving}
           />
           <Button
             variant="primary"
-            label={isResubmitting ? "Submitting..." : "Submit for Signature"}
+            label="Submit for Signature"
             onClick={handleResubmit}
             disabled={activeSections.length === 0 || isSaving || isResubmitting}
             loading={isResubmitting}
@@ -1036,14 +1036,14 @@ const ClinicalReportBuilder = () => {
           />
           <Button
             variant="secondary"
-            label={isSaving ? "Saving..." : "Save Draft"}
+            label="Save Draft"
             onClick={handleSaveDraft}
             disabled={activeSections.length === 0 || isSaving || isPublishing}
             loading={isSaving}
           />
           <Button
             variant="primary"
-            label={isPublishing ? "Publishing..." : "Publish for Approval"}
+            label="Publish for Approval"
             onClick={handlePublish}
             disabled={activeSections.length === 0 || isSaving || isPublishing}
             loading={isPublishing}
@@ -1056,7 +1056,7 @@ const ClinicalReportBuilder = () => {
       return (
         <Button
           variant="primary"
-          label={isRevertingToDraft ? "Reverting..." : "Edit Document (New Version)"}
+          label="Edit Document (New Version)"
           loading={isRevertingToDraft}
           disabled={isRevertingToDraft}
           onClick={async () => {
@@ -1086,14 +1086,14 @@ const ClinicalReportBuilder = () => {
         <>
           <Button
             variant="secondary"
-            label={isSaving ? "Saving..." : "Save as Draft"}
+            label="Save as Draft"
             onClick={handleSaveDraft}
             disabled={activeSections.length === 0 || isSaving || isPublishing}
             loading={isSaving}
           />
           <Button
             variant="primary"
-            label={isPublishing ? "Publishing..." : "Publish for Approval"}
+            label="Publish for Approval"
             onClick={handlePublish}
             disabled={activeSections.length === 0 || isSaving || isPublishing}
             loading={isPublishing}
@@ -1109,14 +1109,14 @@ const ClinicalReportBuilder = () => {
       <>
         <Button
           variant="secondary"
-          label={isSaving ? "Saving..." : "Save Draft"}
+          label="Save Draft"
           onClick={handleSaveDraft}
           disabled={activeSections.length === 0 || isSaving || isPublishing}
           loading={isSaving}
         />
         <Button
           variant="primary"
-          label={isPublishing ? "Publishing..." : "Publish for Approval"}
+          label="Publish for Approval"
           onClick={handlePublish}
           disabled={activeSections.length === 0 || isSaving || isPublishing}
           loading={isPublishing}

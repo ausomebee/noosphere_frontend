@@ -93,7 +93,7 @@ const AddTeamsModal = ({
       isOpen={isOpen}
       onClose={handleClose}
       title={mode === "edit" ? "Edit Team" : "Add a new Team"}
-      primaryButtonText={submitting ? "Saving..." : mode === "edit" ? "Save Changes" : "Save Team"}
+      primaryButtonText={mode === "edit" ? "Save Changes" : "Save Team"}
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
       onSecondaryButtonClick={handleClose}

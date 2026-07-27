@@ -105,7 +105,7 @@ const AddServiceCodeModal = ({
         onClose();
       }}
       title={mode === "edit" ? "Edit Service Code" : "Add Service Code"}
-      primaryButtonText={isLoading ? "Saving..." : "Save Service Code"}
+      primaryButtonText="Save Service Code"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}

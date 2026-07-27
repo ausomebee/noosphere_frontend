@@ -33,7 +33,7 @@ const CreateFeatureGroupModal = ({ isOpen, onClose, onSave, isLoading }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Create Feature Group"
-        primaryButtonText={isLoading ? "Saving..." : "Save"}
+        primaryButtonText="Save"
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"

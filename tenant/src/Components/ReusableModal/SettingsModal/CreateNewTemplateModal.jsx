@@ -37,7 +37,7 @@ const CreateNewTemplateModal = ({ isOpen, onClose, onStartCreating }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="New Template"
-      primaryButtonText={isSubmitting ? "Creating..." : "Start Creating"}
+      primaryButtonText="Start Creating"
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit}
       onSecondaryButtonClick={onClose}

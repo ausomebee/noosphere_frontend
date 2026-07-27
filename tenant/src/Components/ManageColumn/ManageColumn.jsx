@@ -393,9 +393,10 @@ const ManageColumn = () => {
               />
               <div className="save-button-container">
                 <Button
-                  label={isSaving ? "Saving..." : "Save Changes"}
-                  icon={!isSaving && <FaSave />}
+                  label="Save Changes"
+                  icon={<FaSave />}
                   onClick={handleSaveBasicInfo}
+                  loading={isSaving}
                   disabled={isSaving}
                   width="auto"
                 />

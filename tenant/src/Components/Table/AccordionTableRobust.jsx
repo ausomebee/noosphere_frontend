@@ -463,12 +463,11 @@ const AccordionTableRobust = ({
                               {hasChanges && isEditMode && !used && (
                                 <div className="flex justify-end mt-4">
                                   <Button
-                                    label={
-                                      saving ? "Saving..." : "Save Changes"
-                                    }
+                                    label="Save Changes"
                                     icon={<FaSave className="w-4 h-4" />}
                                     variant="primary"
                                     onClick={handleSaveChanges}
+                                    loading={saving}
                                     disabled={saving}
                                   />
                                 </div>

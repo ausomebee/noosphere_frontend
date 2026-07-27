@@ -86,7 +86,7 @@ const AddDiagnosisCode = ({
         onClose();
       }}
       title={mode === "edit" ? "Edit Diagnosis Code" : "Add Diagnosis Code"}
-      primaryButtonText={submitting ? "Saving..." : mode === "edit" ? "Save Changes" : "Save"}
+      primaryButtonText={mode === "edit" ? "Save Changes" : "Save"}
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSubmit(onSubmit, onValidationError)}
       onSecondaryButtonClick={() => {

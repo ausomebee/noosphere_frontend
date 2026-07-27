@@ -11,9 +11,8 @@ const ToggleActiveModal = ({
 }) => {
   const newState = !currentState; // Toggle the current state
   const actionText = newState ? "enable" : "disable";
-  const buttonText = isLoading
-    ? "Confirming..."
-    : actionText.charAt(0).toUpperCase() + actionText.slice(1); // "Enable" or "Disable"
+  const buttonText =
+    actionText.charAt(0).toUpperCase() + actionText.slice(1); // "Enable" or "Disable"
 
   return (
     <ReusableModal

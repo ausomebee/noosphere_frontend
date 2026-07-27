@@ -59,7 +59,7 @@ const SendEmailModal = ({ isOpen, onClose, recipientEmail, recipientName }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Send an email"
-      primaryButtonText={isSending ? "Sending..." : "Send"}
+      primaryButtonText="Send"
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handleSend}
       onSecondaryButtonClick={onClose}

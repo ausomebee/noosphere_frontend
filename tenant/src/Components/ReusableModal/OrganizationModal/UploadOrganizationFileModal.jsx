@@ -189,7 +189,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
         onClose();
       }}
       title="Upload document"
-      primaryButtonText={isLoading ? "Saving..." : "Save"}
+      primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}

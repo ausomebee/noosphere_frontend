@@ -75,7 +75,7 @@ const MoveCandidateModal = ({
         onClose();
       }}
       title={`Move ${taskIds?.length || 1} Candidate(s)`}
-      primaryButtonText={isLoading ? "Moving..." : "Save"}
+      primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"

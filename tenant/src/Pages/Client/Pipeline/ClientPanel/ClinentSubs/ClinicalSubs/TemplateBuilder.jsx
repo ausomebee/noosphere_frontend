@@ -822,7 +822,7 @@ const ClinicalReportTemplateBuilder = () => {
               {canEditInputs && canSaveTemplate && (
                 <Button
                   variant="primary"
-                  label={isSaving ? "Saving..." : "Save Template"}
+                  label="Save Template"
                   onClick={handleSaveTemplate}
                   disabled={
                     activeSections.length === 0 || isSaving || !templateTitle

@@ -470,7 +470,7 @@ const UploadTenantStaffDocumentModal = ({
       isOpen={isOpen}
       onClose={handleClose}
       title={mode === "edit" ? "Edit Document" : "Upload Document"}
-      primaryButtonText={submitting || uploadingFile ? "Saving..." : "Save"}
+      primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={submitting || uploadingFile || fileResult?.error}
       primaryButtonLoading={submitting || uploadingFile}

@@ -289,7 +289,7 @@ const AddSessionTypeModal = ({
         onClose();
       }}
       title={mode === "edit" ? "Edit Session Type" : "Add Session Type"}
-      primaryButtonText={isLoading ? "Saving..." : "Save Session Type"}
+      primaryButtonText="Save Session Type"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave)}

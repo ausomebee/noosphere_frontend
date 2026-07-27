@@ -199,7 +199,7 @@ const AddRoundingRule = ({
       primaryButtonLoading={submitting || loading}
       primaryButtonDisabled={mode === "view"}
       onPrimaryButtonClick={handleSubmit(handleFormSubmit, onValidationError)}
-      primaryButtonText={submitting ? "Saving..." : "Save Rule"}
+      primaryButtonText="Save Rule"
       secondaryButtonText="Cancel"
       onSecondaryButtonClick={handleClose}
     >

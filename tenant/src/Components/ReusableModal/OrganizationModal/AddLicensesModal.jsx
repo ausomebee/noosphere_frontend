@@ -97,7 +97,7 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
         onClose();
       }}
       title={`${isEdit ? "Edit" : "Add"} License`}
-      primaryButtonText={isLoading ? "Saving..." : "Save License"}
+      primaryButtonText="Save License"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}

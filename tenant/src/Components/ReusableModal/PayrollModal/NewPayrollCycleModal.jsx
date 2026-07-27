@@ -115,7 +115,7 @@ const PayrollCycleModal = ({
         onClose();
       }}
       title={mode === "edit" ? "Edit Payroll Cycle" : "Add Payroll Cycle"}
-      primaryButtonText={isLoading ? "Saving..." : "Save Payroll Cycle"}
+      primaryButtonText="Save Payroll Cycle"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
       onPrimaryButtonClick={handleSubmit(handleSave, onValidationError)}

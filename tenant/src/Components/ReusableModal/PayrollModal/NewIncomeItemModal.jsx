@@ -194,9 +194,7 @@ const PayrollItemModal = ({
       primaryButtonText={
         mode === "view"
           ? undefined
-          : isLoading
-            ? "Saving..."
-            : `Save ${isDeduction ? "Deduction" : "Income Item"}`
+          : `Save ${isDeduction ? "Deduction" : "Income Item"}`
       }
       secondaryButtonText={mode === "view" ? "Close" : "Cancel"}
       primaryButtonDisabled={isLoading}

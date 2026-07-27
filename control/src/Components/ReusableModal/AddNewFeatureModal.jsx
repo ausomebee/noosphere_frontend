@@ -84,7 +84,7 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
         isOpen={isOpen}
         onClose={handleClose}
         title="Add New Feature"
-        primaryButtonText={isLoading ? "Saving..." : "Save"}
+        primaryButtonText="Save"
         secondaryButtonText="Cancel"
         primaryButtonColor="#000000"
         secondaryButtonColor="#ffffff"
