@@ -25,7 +25,7 @@ const getSessionsBySessionType = async ({ tenantId, sessionTypeId, accessToken, 
 const getActivityLogs = async ({ tenantId, page = 1, limit = 50, featureNames, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    let url = `${API_URL}/logs/tenant/activity?tenantId=${tenantId}&page=${page}&limit=${limit}`;
+    let url = `${API_URL}/logs/tenant/activity/tenant?tenantId=${tenantId}&page=${page}&limit=${limit}`;
     if (featureNames) url += `&featureNames=${featureNames}`;
     const res = await authFetch.get(url);
     return res.data?.data || { data: [], meta: { total: 0, page: 1, limit, totalPages: 1 } };
