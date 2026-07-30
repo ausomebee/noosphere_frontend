@@ -1,6 +1,8 @@
 // src/Pages/Scheduler/SchdedulerSubs/AppointmentSubs/PastAppointments.jsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import PastAppointmentDetailsModal from "../../../../Components/ReusableModal/SchedulerModal/PastAppointmentDetailsModal";
+import useFocusAppointment from "../../../../hooks/useFocusAppointment";
 import api from "../../../../api/AppointmentApi";
 import useAuth from "../../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +16,8 @@ const PastAppointments = () => {
 
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
+  // The past appointment opened from a notification (read-only details).
+  const [detailsAppt, setDetailsAppt] = useState(null);
 
   const toTableRow = (apiAppt) => {
     const service = (apiAppt.appointmentServices || []).map((as) => {
@@ -193,6 +197,9 @@ const PastAppointments = () => {
     { header: "Time", key: "time", type: "text" },
   ];
 
+  // Open the past appointment's details when arriving from a notification.
+  useFocusAppointment(formattedAppointments, setDetailsAppt);
+
   return (
     <div className="appointment-tab-content mt-20">
       <CustomTable
@@ -206,6 +213,16 @@ const PastAppointments = () => {
         loading={loading}
         showActions={true}
         showCheckbox={false}
+      />
+
+      <PastAppointmentDetailsModal
+        isOpen={!!detailsAppt}
+        appointment={detailsAppt}
+        onClose={() => setDetailsAppt(null)}
+        onViewTimesheet={() => {
+          setDetailsAppt(null);
+          navigate("/billing/timesheets");
+        }}
       />
     </div>
   );

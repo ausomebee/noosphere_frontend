@@ -6,6 +6,8 @@ import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import RescheduleModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
 import RejectConfirmationModal from "../../../../Components/ReusableModal/SchedulerModal/RejectConfirmationModal";
+import RescheduleRequestActionModal from "../../../../Components/ReusableModal/SchedulerModal/RescheduleRequestActionModal";
+import useFocusAppointment from "../../../../hooks/useFocusAppointment";
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
 import ErrorFallback from "../../../../Components/ErrorFallback";
@@ -27,6 +29,8 @@ const RescheduleRequests = ({ setCounts }) => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // The single request opened from a notification (shows Accept/Modify/Reject).
+  const [actionRequest, setActionRequest] = useState(null);
 
   const toTableRow = (apiAppt) => {
     const service = (apiAppt.appointmentServices || []).map((as) => {
@@ -355,6 +359,9 @@ const RescheduleRequests = ({ setCounts }) => {
     handleSelectionChange([], [], true);
   }, [handleSelectionChange]);
 
+  // Open the request's action modal when arriving from a notification.
+  useFocusAppointment(appointments, setActionRequest);
+
   const Actions = [
     {
       type: "dropdown",
@@ -413,6 +420,24 @@ const RescheduleRequests = ({ setCounts }) => {
         showCheckbox={true}
         onSelectionChange={handleSelectionChange}
         loading={loading}
+      />
+
+      <RescheduleRequestActionModal
+        isOpen={!!actionRequest}
+        request={actionRequest}
+        onClose={() => setActionRequest(null)}
+        onApprove={() => {
+          if (actionRequest) handleApprove([actionRequest], () => {});
+          setActionRequest(null);
+        }}
+        onModify={() => {
+          if (actionRequest) handleModify([actionRequest]);
+          setActionRequest(null);
+        }}
+        onReject={() => {
+          if (actionRequest) handleReject([actionRequest]);
+          setActionRequest(null);
+        }}
       />
 
       <RescheduleModal
