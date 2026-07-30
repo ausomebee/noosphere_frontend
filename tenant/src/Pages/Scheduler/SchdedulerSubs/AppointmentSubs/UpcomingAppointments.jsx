@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import useFocusAppointment from "../../../../hooks/useFocusAppointment";
+import AppointmentViewModal from "../../../../Components/ReusableModal/SchedulerModal/AppointmentViewModal";
 import { FiEdit, FiRefreshCw } from "react-icons/fi";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
@@ -34,6 +35,8 @@ const UpcomingAppointments = ({ setCounts }) => {
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Read-only details opened from a notification.
+  const [viewAppt, setViewAppt] = useState(null);
 
   const splitId = useCallback((id) => {
     if (!id) return { uuid: null, timestamp: null };
@@ -277,8 +280,9 @@ const UpcomingAppointments = ({ setCounts }) => {
     setIsCancelModalOpen(true);
   };
 
-  // Open the appointment's modal when arriving from a notification.
-  useFocusAppointment(formattedAppointments, handleEdit);
+  // When arriving from a notification, show read-only details (not the edit
+  // form, which renders half-populated before its option lists have loaded).
+  useFocusAppointment(formattedAppointments, setViewAppt);
 
   const handleSaveAppointment = async (data) => {
     try {
@@ -417,6 +421,18 @@ const UpcomingAppointments = ({ setCounts }) => {
         loading={loading}
         showActions={true}
         showCheckbox={false}
+      />
+
+      <AppointmentViewModal
+        isOpen={!!viewAppt}
+        appointment={viewAppt}
+        onClose={() => setViewAppt(null)}
+        primaryLabel="Edit appointment"
+        onPrimary={() => {
+          const appt = viewAppt;
+          setViewAppt(null);
+          if (appt) handleEdit(appt);
+        }}
       />
 
       <AppointmentModal
