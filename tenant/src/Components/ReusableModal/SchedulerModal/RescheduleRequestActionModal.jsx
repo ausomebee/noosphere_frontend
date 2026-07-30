@@ -11,10 +11,18 @@ import { FiEdit } from "react-icons/fi";
  * Accept, Modify, Reject. Each button delegates to the page's existing
  * handlers (so behaviour stays identical to the table).
  */
+// Render any value safely — some row fields (prev/new date & time) are
+// { date, time } objects, which can't be rendered directly as React children.
+const renderValue = (v) => {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v === "object") return [v.date, v.time].filter(Boolean).join(" · ") || "—";
+  return v;
+};
+
 const Field = ({ label, value }) => (
   <div>
     <p className="text-sm text-gray-400">{label}</p>
-    <p className="font-semibold text-gray-700">{value || "—"}</p>
+    <p className="font-semibold text-gray-700">{renderValue(value)}</p>
   </div>
 );
 

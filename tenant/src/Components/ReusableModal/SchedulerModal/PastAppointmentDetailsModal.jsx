@@ -8,10 +8,16 @@ import Button from "../../Button/Button";
  * notification. Shows the appointment summary and leads onward to the
  * timesheet (the natural next step for a completed appointment).
  */
+const renderValue = (v) => {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v === "object") return [v.date, v.time].filter(Boolean).join(" · ") || "—";
+  return v;
+};
+
 const Field = ({ label, value }) => (
   <div>
     <p className="text-sm text-gray-400">{label}</p>
-    <p className="font-semibold text-gray-700">{value || "—"}</p>
+    <p className="font-semibold text-gray-700">{renderValue(value)}</p>
   </div>
 );
 
