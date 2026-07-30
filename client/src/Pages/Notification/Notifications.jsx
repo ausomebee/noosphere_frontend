@@ -44,7 +44,9 @@ const Notifications = () => {
       .GetNotifications({ userId, userType: "CLIENT", accessToken, refreshToken })
       .then((res) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        setAllNotifications(Array.isArray(raw) ? raw : []);
+        // Each item may arrive flat or wrapped as { notification: {...} }.
+        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+        setAllNotifications(list);
       })
       .catch((err) => console.error("[Notifications] Failed to load:", err))
       .finally(() => setLoading(false));

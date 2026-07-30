@@ -71,7 +71,8 @@ const Notifications = () => {
       .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
       .then((res) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
+        // Each item may arrive flat or wrapped as { notification: {...} }.
+        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
         setNotifications(list);
       })
       .catch(() => {})

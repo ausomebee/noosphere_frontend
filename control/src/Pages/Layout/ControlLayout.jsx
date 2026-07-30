@@ -83,7 +83,7 @@ const Layout = ({ children }) => {
       .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
       .then((res) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
+        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
         setUnreadNotifications(list.filter((n) => !n.isRead).length);
       })
       .catch(() => {});
