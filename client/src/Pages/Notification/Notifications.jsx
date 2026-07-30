@@ -7,7 +7,8 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import messageApi from "../../api/messageApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
-import { TYPE_LABEL, TYPE_ORDER, getNotificationAction } from "../../Data/notificationConfig";
+import { getNotificationAction } from "../../Data/notificationConfig";
+import { formatDateHeader } from "../../Helper/Formatters";
 
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -84,15 +85,16 @@ const Notifications = () => {
     });
   };
 
-  // Group by type, preserve TYPE_ORDER, unknown types appended at end
-  const byType = allNotifications.reduce((acc, n) => {
-    const key = n.type || "UNKNOWN";
+  // Group by date header (Today, Yesterday, ...), most recent first.
+  const sorted = [...allNotifications].sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  );
+  const byDate = sorted.reduce((acc, n) => {
+    const key = n.createdAt ? formatDateHeader(n.createdAt) : "Earlier";
     (acc[key] = acc[key] || []).push(n);
     return acc;
   }, {});
-
-  const unknownTypes = Object.keys(byType).filter((t) => !TYPE_ORDER.includes(t));
-  const orderedTypes = [...TYPE_ORDER, ...unknownTypes].filter((t) => byType[t]?.length > 0);
+  const dateGroups = Object.keys(byDate);
 
   const renderCard = (notification) => {
     const action = getNotificationAction(notification);
@@ -139,13 +141,11 @@ const Notifications = () => {
             <p style={{ color: "#5f6368", fontSize: "14px" }}>No notifications</p>
           ) : (
             <div className="notifications-content">
-              {orderedTypes.map((type) => (
-                <section key={type} className="notifications-section">
-                  <h2 className="notification-type-label">
-                    {TYPE_LABEL[type] ?? type.replace(/_/g, " ")}
-                  </h2>
+              {dateGroups.map((date) => (
+                <section key={date} className="notifications-section">
+                  <h2 className="notification-type-label">{date}</h2>
                   <div className="notifications-list">
-                    {byType[type].map(renderCard)}
+                    {byDate[date].map(renderCard)}
                   </div>
                 </section>
               ))}
