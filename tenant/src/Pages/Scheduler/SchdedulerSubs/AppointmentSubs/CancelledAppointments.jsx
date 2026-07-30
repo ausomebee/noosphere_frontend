@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import useAuth from "../../../../hooks/useAuth";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import useFocusAppointment from "../../../../hooks/useFocusAppointment";
 import api from "../../../../api/AppointmentApi";
 import {
   formatDate,
@@ -181,6 +182,9 @@ const CancelledAppointments = () => {
     setSelectedAppointment(row);
     setIsModalOpen(true);
   };
+
+  // Open the cancelled appointment's modal when arriving from a notification.
+  useFocusAppointment(localAppointments, handleActionClick);
 
   const closeModal = () => {
     setIsModalOpen(false);

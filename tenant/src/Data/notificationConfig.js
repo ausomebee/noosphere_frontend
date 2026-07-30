@@ -106,6 +106,29 @@ const APPT = {
 const entityIdOf = (n) =>
   n?.entityId ?? n?.data?.entityId ?? n?.metadata?.entityId ?? null;
 
+// The client panel route needs BOTH ids. Read them only from explicit fields —
+// never guess from entityId (which is the document/auth/report id, not a client
+// id). When absent we fall back to the clients list, so nothing breaks.
+const clientIdsOf = (n) => ({
+  clientId: n?.clientId ?? n?.data?.clientId ?? n?.metadata?.clientId ?? null,
+  tenantClientId:
+    n?.tenantClientId ?? n?.data?.tenantClientId ?? n?.metadata?.tenantClientId ?? null,
+});
+
+// Client-scoped notification: deep-link into the client panel tab when the
+// payload carries both client ids; otherwise land on the clients list.
+const clientScoped = (label, focusTab) => (id, notif) => {
+  const { clientId, tenantClientId } = clientIdsOf(notif);
+  if (clientId && tenantClientId) {
+    return {
+      label,
+      path: `/client/client-single/${clientId}/${tenantClientId}`,
+      state: { focusTab, focusId: id },
+    };
+  }
+  return { label, path: "/clients/client-list" };
+};
+
 const ACTIONS = {
   // ---- Appointments → /scheduler/appointments, focus the right sub-tab ----
   UPCOMING_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
@@ -116,20 +139,21 @@ const ACTIONS = {
   CANCELLED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.cancelled, focusId: id } }),
   COMPLETED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.past, focusId: id } }),
 
-  // ---- Clients (client-scoped: land on the clients section) ----
-  CLIENT_PROFILE_CREATION: (id) => ({ label: "View client", path: "/clients/client-list", state: { focusId: id } }),
-  DOCUMENT_REQUEST_CREATED: (id) => ({ label: "View documents", path: "/clients/client-list", state: { focusId: id, focusTab: "documents" } }),
-  DOCUMENT_REQUEST_COMPLETED: (id) => ({ label: "View documents", path: "/clients/client-list", state: { focusId: id, focusTab: "documents" } }),
-  DOCUMENT_REQUEST_NUDGE: (id) => ({ label: "View documents", path: "/clients/client-list", state: { focusId: id, focusTab: "documents" } }),
-  AUTHORIZATION_CREATION: (id) => ({ label: "View authorization", path: "/clients/client-list", state: { focusId: id, focusTab: "authorization" } }),
-  AUTHORIZATION_EXPIRY_1_MONTH: (id) => ({ label: "View authorization", path: "/clients/client-list", state: { focusId: id, focusTab: "authorization" } }),
-  AUTHORIZATION_EXPIRY_1_WEEK: (id) => ({ label: "View authorization", path: "/clients/client-list", state: { focusId: id, focusTab: "authorization" } }),
-  AUTHORIZATION_UTILIZATION_80_PERCENT: (id) => ({ label: "View authorization", path: "/clients/client-list", state: { focusId: id, focusTab: "authorization" } }),
-  AUTHORIZATION_UTILIZATION_ZERO: (id) => ({ label: "View authorization", path: "/clients/client-list", state: { focusId: id, focusTab: "authorization" } }),
-  REPORT_APPROVAL_REQUEST_TO_SUPERVISOR: (id) => ({ label: "View report", path: "/clients/client-list", state: { focusId: id, focusTab: "clinicalReports" } }),
-  REPORT_APPROVED_BY_SUPERVISOR: (id) => ({ label: "View report", path: "/clients/client-list", state: { focusId: id, focusTab: "clinicalReports" } }),
-  CLIENT_REPORT_SIGNED: (id) => ({ label: "View report", path: "/clients/client-list", state: { focusId: id, focusTab: "clinicalReports" } }),
-  CLIENT_REPORT_CHANGE_REQUEST: (id) => ({ label: "View report", path: "/clients/client-list", state: { focusId: id, focusTab: "clinicalReports" } }),
+  // ---- Clients (client-scoped: deep-link to the client panel when the payload
+  //      carries both client ids, else land on the clients list) ----
+  CLIENT_PROFILE_CREATION: clientScoped("View client", "clientInformation"),
+  DOCUMENT_REQUEST_CREATED: clientScoped("View documents", "clientInformation"),
+  DOCUMENT_REQUEST_COMPLETED: clientScoped("View documents", "clientInformation"),
+  DOCUMENT_REQUEST_NUDGE: clientScoped("View documents", "clientInformation"),
+  AUTHORIZATION_CREATION: clientScoped("View authorization", "authorization"),
+  AUTHORIZATION_EXPIRY_1_MONTH: clientScoped("View authorization", "authorization"),
+  AUTHORIZATION_EXPIRY_1_WEEK: clientScoped("View authorization", "authorization"),
+  AUTHORIZATION_UTILIZATION_80_PERCENT: clientScoped("View authorization", "authorization"),
+  AUTHORIZATION_UTILIZATION_ZERO: clientScoped("View authorization", "authorization"),
+  REPORT_APPROVAL_REQUEST_TO_SUPERVISOR: clientScoped("View report", "clinicalReports"),
+  REPORT_APPROVED_BY_SUPERVISOR: clientScoped("View report", "clinicalReports"),
+  CLIENT_REPORT_SIGNED: clientScoped("View report", "clinicalReports"),
+  CLIENT_REPORT_CHANGE_REQUEST: clientScoped("View report", "clinicalReports"),
 
   // ---- Forms (single-id deep links) ----
   FORM_CREATED: () => ({ label: "View forms", path: "/custom-forms/forms" }),
@@ -158,13 +182,13 @@ const ACTIONS = {
   TICKET_SUBMITTED: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
   TICKET_STATUS_IN_PROGRESS: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
   TICKET_STATUS_RESOLVED: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
-  TICKET_WITHDRAWN: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
+  TICKET_WITHDRAWN: (id) => (id ? { label:  "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
 };
 
 // Resolve the action for a notification. Returns { label, path, state? } or null.
 export const getNotificationAction = (notif) => {
   const build = ACTIONS[notif?.type];
   if (!build) return null;
-  const action = build(entityIdOf(notif));
+  const action = build(entityIdOf(notif), notif);
   return action || null;
 };

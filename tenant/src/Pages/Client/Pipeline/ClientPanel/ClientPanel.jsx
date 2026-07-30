@@ -31,6 +31,22 @@ const ClientPanel = () => {
 
   const isViewMode = location.pathname.includes("/view-client/");
 
+  // When arriving from a notification, focus the requested panel tab.
+  useEffect(() => {
+    const focusTab = location.state?.focusTab;
+    const VALID_TABS = [
+      "clientInformation",
+      "programs",
+      "appointmentsAndSchedule",
+      "authorization",
+      "clinicalReports",
+    ];
+    if (focusTab && VALID_TABS.includes(focusTab)) {
+      setView(focusTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
   // Fetch single pipeline item
   useEffect(() => {
     if (!clientId) return;

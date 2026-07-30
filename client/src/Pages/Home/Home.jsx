@@ -33,14 +33,17 @@ const Home = () => {
   const [activeTab, setActiveTab] = usePersistedTab("client:home", "upcoming");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // When arriving from a notification, focus the requested appointments tab.
+  // When arriving from a notification, focus the requested appointments tab
+  // and remember which appointment to open once that tab's data has loaded.
   const location = useLocation();
+  const pendingFocusIdRef = useRef(null);
   useEffect(() => {
     const focusTab = location.state?.focusTab;
     const VALID_TABS = ["upcoming", "awaiting", "reschedule", "completed", "cancelled"];
     if (focusTab && VALID_TABS.includes(focusTab)) {
       setActiveTab(focusTab);
     }
+    pendingFocusIdRef.current = location.state?.focusId ?? null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
   const [loading, setLoading] = useState({
@@ -483,6 +486,23 @@ const Home = () => {
     ),
     [currentTabData, currentPage]
   );
+
+  // Once the focused tab's data has loaded, open the specific appointment's
+  // modal (feedback for the awaiting tab, details otherwise). Consumed once so
+  // it never re-opens after the user closes it.
+  useEffect(() => {
+    const focusId = pendingFocusIdRef.current;
+    if (!focusId || !currentTabData.length) return;
+    const row = currentTabData.find(
+      (a) => a.id === focusId || a.originalData?.id === focusId
+    );
+    if (!row) return;
+    pendingFocusIdRef.current = null;
+    setSelectedAppointment(row);
+    if (activeTab === "awaiting") setFeedbackModalOpen(true);
+    else setDetailsModalOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTabData, activeTab]);
 
   // Reset page when tab changes
   const handleTabChange = useCallback((tab) => {

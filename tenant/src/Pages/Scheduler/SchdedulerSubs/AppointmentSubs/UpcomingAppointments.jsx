@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomTable from "../../../../Components/Table/CustomTable";
+import useFocusAppointment from "../../../../hooks/useFocusAppointment";
 import { FiEdit, FiRefreshCw } from "react-icons/fi";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
@@ -275,6 +276,9 @@ const UpcomingAppointments = ({ setCounts }) => {
     setSelectedAppointment(toUICard(item));
     setIsCancelModalOpen(true);
   };
+
+  // Open the appointment's modal when arriving from a notification.
+  useFocusAppointment(formattedAppointments, handleEdit);
 
   const handleSaveAppointment = async (data) => {
     try {
