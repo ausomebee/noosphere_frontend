@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { IoSearchOutline, IoChevronDown, IoChevronUp } from "react-icons/io5";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { BsListUl, BsGrid } from "react-icons/bs";
@@ -38,6 +39,8 @@ const ReusableTable = ({
   const [viewType, setViewType] = useState("list");
   const [expandedRows, setExpandedRows] = useState([]);
   const [openActionMenu, setOpenActionMenu] = useState(null);
+  const [menuRow, setMenuRow] = useState(null);
+  const [menuPos, setMenuPos] = useState(null);
   const debounceRef = useRef(null);
 
   const handleSearch = useCallback((e) => {
@@ -57,9 +60,26 @@ const ReusableTable = ({
     );
   };
 
-  const toggleActionMenu = (rowId) => {
-    setOpenActionMenu(openActionMenu === rowId ? null : rowId);
+  const closeActionMenu = () => {
+    setOpenActionMenu(null);
+    setMenuRow(null);
+    setMenuPos(null);
   };
+
+  const toggleActionMenu = (row, e) => {
+    if (openActionMenu === row.id) {
+      closeActionMenu();
+      return;
+    }
+    // Anchor the menu to the button and render it in a portal (fixed) so the
+    // table's overflow can't clip it.
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    setMenuRow(row);
+    setOpenActionMenu(row.id);
+  };
+
+  const menuActions = Array.isArray(actions) ? actions.filter((a) => a.menu) : [];
 
   const renderPagination = () => {
     if (!pagination) return null;
@@ -254,30 +274,11 @@ const ReusableTable = ({
                             <div className="action-menu-container">
                               <button
                                 className="action-menu-btn"
-                                onClick={() => toggleActionMenu(row.id)}
+                                onClick={(e) => toggleActionMenu(row, e)}
                                 aria-label="More actions"
                               >
                                 <FiMoreVertical size={18} />
                               </button>
-                              {openActionMenu === row.id && (
-                                <div className="action-menu">
-                                  {actions
-                                    .filter((a) => a.menu)
-                                    .map((action, idx) => (
-                                      <button
-                                        key={idx}
-                                        className="action-menu-item"
-                                        onClick={() => {
-                                          action.onClick?.(row);
-                                          setOpenActionMenu(null);
-                                        }}
-                                      >
-                                        {action.icon}
-                                        <span>{action.label}</span>
-                                      </button>
-                                    ))}
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -300,6 +301,34 @@ const ReusableTable = ({
 
       {/* Pagination */}
       {data && data.length > 0 && renderPagination()}
+
+      {/* Row action menu — portaled to the body so the table's overflow never
+          clips it (fixes the menu opening into empty/cut-off space). */}
+      {openActionMenu && menuRow && menuPos &&
+        createPortal(
+          <>
+            <div className="action-menu-backdrop" onClick={closeActionMenu} />
+            <div
+              className="action-menu action-menu--portal"
+              style={{ top: menuPos.top, right: menuPos.right }}
+            >
+              {menuActions.map((action, idx) => (
+                <button
+                  key={idx}
+                  className="action-menu-item"
+                  onClick={() => {
+                    action.onClick?.(menuRow);
+                    closeActionMenu();
+                  }}
+                >
+                  {action.icon}
+                  <span>{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 };

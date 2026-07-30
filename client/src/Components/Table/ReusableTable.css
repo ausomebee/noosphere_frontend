@@ -285,6 +285,18 @@
   z-index: 9999;
 }
 
+/* Portaled to <body> and anchored via inline top/right, so the table's
+   overflow can never clip it. */
+.action-menu--portal {
+  position: fixed;
+}
+
+.action-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+
 .action-menu-item {
   display: flex;
   align-items: center;
