@@ -97,10 +97,29 @@ const ACTIONS = {
   ISSUE_RESOLVED: (id) => ({ label: "View issue", path: "/issues", state: { focusId: id } }),
 };
 
+// Fallback by entityType, so a notification still gets a working "view" action
+// even if its exact `type` string isn't in ACTIONS (new/renamed types).
+const ENTITY_FALLBACK = {
+  ISSUE: (id) => ({ label: "View issue", path: "/issues", state: { focusId: id } }),
+  TENANT: (id) => (id
+    ? { label: "View tenant", path: `/tenants/tenant-lists/overview/${id}` }
+    : { label: "View tenant", path: "/tenants/tenant-list" }),
+  PLAN: () => ({ label: "View plans", path: "/billing-payments/plans-pricing" }),
+  SUBSCRIPTION: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  PAYMENT: () => ({ label: "View payment", path: "/billing-payments/invoice-payments" }),
+  FEATURE: () => ({ label: "View features", path: "/features" }),
+  PRODUCT: () => ({ label: "View features", path: "/features" }),
+};
+
 // Resolve the action for a notification. Returns { label, path, state? } or null.
 export const getNotificationAction = (notif) => {
+  const id = entityIdOf(notif);
   const build = ACTIONS[notif?.type];
-  if (!build) return null;
-  const action = build(entityIdOf(notif));
-  return action || null;
+  if (build) {
+    const action = build(id);
+    if (action) return action;
+  }
+  const fallback = ENTITY_FALLBACK[notif?.entityType];
+  if (fallback) return fallback(id);
+  return null;
 };

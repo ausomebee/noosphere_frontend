@@ -185,23 +185,12 @@ const Notifications = () => {
                             <span className="ctrl-notification-card-time">
                               {relativeTime(notif.createdAt)}
                             </span>
-                            {action ? (
-                              <button
-                                className="ctrl-notification-card-link"
-                                onClick={() => handleAction(notif)}
-                              >
-                                {action.label}
-                              </button>
-                            ) : (
-                              !notif.isRead && (
-                                <button
-                                  className="ctrl-notification-card-link"
-                                  onClick={() => markRead(notif)}
-                                >
-                                  Mark as read
-                                </button>
-                              )
-                            )}
+                            <button
+                              className="ctrl-notification-card-link"
+                              onClick={() => handleAction(notif)}
+                            >
+                              {action?.label || "View details"}
+                            </button>
                           </div>
                         </div>
                       </div>

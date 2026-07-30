@@ -107,17 +107,9 @@ const Notifications = () => {
         <div className="notification-body">
           <div className="notification-top-row">
             <h3 className="notification-title">{notification.title || "Notification"}</h3>
-            {action ? (
-              <button className="notification-action" onClick={() => handleAction(notification)}>
-                {action.label}
-              </button>
-            ) : (
-              !notification.isRead && (
-                <button className="notification-action" onClick={() => markRead(notification)}>
-                  Mark as read
-                </button>
-              )
-            )}
+            <button className="notification-action" onClick={() => handleAction(notification)}>
+              {action?.label || "View details"}
+            </button>
           </div>
           <p className="notification-message">
             {notification.content || notification.description || notification.body || ""}

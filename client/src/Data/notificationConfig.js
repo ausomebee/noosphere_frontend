@@ -77,11 +77,27 @@ const ACTIONS = {
   SIGNATURE_REQUESTED: () => null,
 };
 
+// Fallback by entityType, so a notification still gets a working "view" action
+// even if its exact `type` string isn't in ACTIONS (new/renamed types).
+const ENTITY_FALLBACK = {
+  APPOINTMENT: (id) => ({ label: "View details", path: "/dashboard", state: { focusTab: "upcoming", focusId: id } }),
+  DOCUMENT: () => ({ label: "View request", path: "/documents" }),
+  FORM: (id) => (id ? { label: "Fill form", path: `/forms/renderer/${id}` } : { label: "View forms", path: "/documents" }),
+  AUTHORIZATION: () => ({ label: "View overview", path: "/dashboard" }),
+  REPORT: () => ({ label: "View", path: "/dashboard" }),
+};
+
 // Resolve the action for a notification: { label, path, state? } or null.
 export const getNotificationAction = (notif) => {
+  const id = entityIdOf(notif);
   const build = ACTIONS[notif?.type];
-  if (!build) return null;
-  return build(entityIdOf(notif)) || null;
+  if (build) {
+    const action = build(id);
+    if (action) return action;
+  }
+  const fallback = ENTITY_FALLBACK[notif?.entityType];
+  if (fallback) return fallback(id);
+  return null;
 };
 
 // ---------------------------------------------------------------------------

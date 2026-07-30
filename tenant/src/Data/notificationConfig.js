@@ -185,10 +185,31 @@ const ACTIONS = {
   TICKET_WITHDRAWN: (id) => (id ? { label:  "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
 };
 
+// Fallback by entityType, so a notification still gets a working "view" action
+// even if its exact `type` string isn't in ACTIONS (new/renamed types).
+const ENTITY_FALLBACK = {
+  APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusId: id } }),
+  CLIENT: clientScoped("View client", "clientInformation"),
+  DOCUMENT: clientScoped("View documents", "clientInformation"),
+  AUTHORIZATION: clientScoped("View authorization", "authorization"),
+  REPORT: clientScoped("View report", "clinicalReports"),
+  FORM: (id) => (id ? { label: "View responses", path: `/custom-forms/forms/responses/${id}` } : { label: "View forms", path: "/custom-forms/forms" }),
+  LICENSE: () => ({ label: "View licenses", path: "/organization/general" }),
+  TIMESHEET: (id) => (id ? { label: "View timesheet", path: `/billing/timesheets/${id}` } : { label: "View timesheets", path: "/billing/timesheets" }),
+  PAYER: () => ({ label: "View payers", path: "/organization/practice-settings" }),
+  PAYROLL: () => ({ label: "View payroll", path: "/payroll/payroll-setup" }),
+  TICKET: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
+};
+
 // Resolve the action for a notification. Returns { label, path, state? } or null.
 export const getNotificationAction = (notif) => {
+  const id = entityIdOf(notif);
   const build = ACTIONS[notif?.type];
-  if (!build) return null;
-  const action = build(entityIdOf(notif), notif);
-  return action || null;
+  if (build) {
+    const action = build(id, notif);
+    if (action) return action;
+  }
+  const fallback = ENTITY_FALLBACK[notif?.entityType];
+  if (fallback) return fallback(id, notif);
+  return null;
 };

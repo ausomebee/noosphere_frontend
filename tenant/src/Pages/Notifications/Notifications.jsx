@@ -178,23 +178,12 @@ const Notifications = () => {
                         </p>
                         <div className="notification-card-footer">
                           <span className="notification-card-time">{resolveTime(notif, timeFormat)}</span>
-                          {action ? (
-                            <button
-                              className="notification-card-link"
-                              onClick={() => handleAction(notif)}
-                            >
-                              {action.label}
-                            </button>
-                          ) : (
-                            !notif.isRead && (
-                              <button
-                                className="notification-card-link"
-                                onClick={() => markRead(notif)}
-                              >
-                                Mark as read
-                              </button>
-                            )
-                          )}
+                          <button
+                            className="notification-card-link"
+                            onClick={() => handleAction(notif)}
+                          >
+                            {action?.label || "View details"}
+                          </button>
                         </div>
                       </div>
                     </div>
