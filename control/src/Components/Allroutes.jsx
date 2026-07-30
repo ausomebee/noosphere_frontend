@@ -92,6 +92,7 @@ import AutoBilling from "../Pages/BillingsAndPayment/BillingReport/AutoBilling/A
 import MainPerformance from "../Pages/Performance/MainPerformance";
 import IssueManagement from "../Pages/IssueManagement/IssueManagement";
 import ControlSettings from "../Pages/Settings/ControlSettings";
+import Notifications from "../Pages/Notifications/Notifications";
 import SecuritySettings from "../Pages/Settings/SecuritySettings";
 import RoleConfiguration from "../Pages/Settings/SettingsSubs/RoleConfiguration";
 
@@ -154,6 +155,9 @@ const AllRoutes = () => {
           <Route element={<ModuleGuard moduleKey="issueManagement" />}>
             <Route path="/issues" element={<IssueManagement />} />
           </Route>
+
+          {/* Notifications (available to any authenticated admin) */}
+          <Route path="/notifications" element={<Notifications />} />
 
           {/* Features */}
           <Route element={<ModuleGuard moduleKey="featureManagement" />}>

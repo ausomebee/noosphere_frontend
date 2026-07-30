@@ -1,12 +1,13 @@
 import usePageTitle from "../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import messageApi from "../../api/messageApi";
 import { emitNotificationRead } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
-import { TYPE_LABEL, TYPE_ORDER } from "../../Data/notificationConfig";
+import { TYPE_LABEL, TYPE_ORDER, getNotificationAction } from "../../Data/notificationConfig";
 
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,6 +31,7 @@ const resolveRelativeTime = (createdAt) => {
 };
 
 const Notifications = () => {
+  const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
   usePageTitle("Notifications");
   const [allNotifications, setAllNotifications] = useState([]);
@@ -48,16 +50,36 @@ const Notifications = () => {
       .finally(() => setLoading(false));
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const unreadCount = allNotifications.filter((n) => !n.isRead).length;
+
+  const markRead = (notification) => {
+    if (notification.isRead) return;
+    setAllNotifications((prev) =>
+      prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+    );
+    messageApi.MarkNotificationRead({ id: notification.id, accessToken, refreshToken }).catch(() => {
+      // Silent — marking as read is non-critical, UI already updated optimistically
+    });
+    emitNotificationRead(notification.id);
+  };
+
+  // Primary action: mark read, then navigate to the mapped destination.
   const handleAction = (notification) => {
-    if (!notification.isRead) {
-      setAllNotifications((prev) =>
-        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
-      );
-      messageApi.MarkNotificationRead({ id: notification.id, accessToken, refreshToken }).catch(() => {
-        // Silent — marking as read is non-critical, UI already updated optimistically
-      });
-      emitNotificationRead(notification.id);
+    markRead(notification);
+    const action = getNotificationAction(notification);
+    if (action?.path) {
+      navigate(action.path, action.state ? { state: action.state } : undefined);
     }
+  };
+
+  const handleMarkAllRead = () => {
+    const unread = allNotifications.filter((n) => !n.isRead);
+    if (!unread.length) return;
+    setAllNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    unread.forEach((n) => {
+      messageApi.MarkNotificationRead({ id: n.id, accessToken, refreshToken }).catch(() => {});
+      emitNotificationRead(n.id);
+    });
   };
 
   // Group by type, preserve TYPE_ORDER, unknown types appended at end
@@ -70,28 +92,39 @@ const Notifications = () => {
   const unknownTypes = Object.keys(byType).filter((t) => !TYPE_ORDER.includes(t));
   const orderedTypes = [...TYPE_ORDER, ...unknownTypes].filter((t) => byType[t]?.length > 0);
 
-  const renderCard = (notification) => (
-    <div
-      key={notification.id}
-      className={`notification-card${!notification.isRead ? " notification-card--unread" : ""}`}
-    >
-      <div className="notification-icon">
-        <CalendarIcon />
-      </div>
-      <div className="notification-body">
-        <div className="notification-top-row">
-          <h3 className="notification-title">{notification.title || "Notification"}</h3>
-          <button className="notification-action" onClick={() => handleAction(notification)}>
-            {notification.type === "APPOINTMENT_COMPLETED_AWAITING_FEEDBACK" ? "Review" : "View details"}
-          </button>
+  const renderCard = (notification) => {
+    const action = getNotificationAction(notification);
+    return (
+      <div
+        key={notification.id}
+        className={`notification-card${!notification.isRead ? " notification-card--unread" : ""}`}
+      >
+        <div className="notification-icon">
+          <CalendarIcon />
         </div>
-        <p className="notification-message">
-          {notification.content || notification.description || notification.body || ""}
-        </p>
-        <span className="notification-time">{resolveRelativeTime(notification.createdAt)}</span>
+        <div className="notification-body">
+          <div className="notification-top-row">
+            <h3 className="notification-title">{notification.title || "Notification"}</h3>
+            {action ? (
+              <button className="notification-action" onClick={() => handleAction(notification)}>
+                {action.label}
+              </button>
+            ) : (
+              !notification.isRead && (
+                <button className="notification-action" onClick={() => markRead(notification)}>
+                  Mark as read
+                </button>
+              )
+            )}
+          </div>
+          <p className="notification-message">
+            {notification.content || notification.description || notification.body || ""}
+          </p>
+          <span className="notification-time">{resolveRelativeTime(notification.createdAt)}</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <DashboardLayout>
@@ -99,6 +132,11 @@ const Notifications = () => {
         <div className="notifications-page">
           <header className="notifications-header">
             <h1 className="page-title">Notifications</h1>
+            {unreadCount > 0 && (
+              <button className="notifications-mark-all" onClick={handleMarkAllRead}>
+                Mark all as read
+              </button>
+            )}
           </header>
 
           {loading ? (

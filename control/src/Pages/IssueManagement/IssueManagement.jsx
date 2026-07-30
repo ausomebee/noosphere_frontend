@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import usePermission from "../../hooks/usePermission";
 
@@ -447,6 +448,16 @@ const IssueManagement = () => {
     },
     [accessToken, refreshToken, formatDate]
   );
+
+  // When arriving from an issue notification, open that issue directly.
+  const location = useLocation();
+  useEffect(() => {
+    const focusId = location.state?.focusId;
+    if (focusId) {
+      handleViewIssue({ id: focusId });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const issuesStats = useMemo(
     () => [

@@ -16,6 +16,8 @@ import {
 } from "react-icons/fi";
 import { GrDocumentPerformance } from "react-icons/gr";
 import { PiUserList } from "react-icons/pi";
+import { IoNotifications } from "react-icons/io5";
+import notificationApi from "../../api/notificationApi";
 import "./ControlLayout.css";
 import NoosphereLogo from "../../assets/NoosphereLogo.png";
 import useIdleTimeout from "../../hooks/useIdleTimeout";
@@ -29,6 +31,7 @@ const Layout = ({ children }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showOnlineBanner, setShowOnlineBanner] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const profileDropdownRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -71,6 +74,20 @@ const Layout = ({ children }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch the unread notification count once on mount for the header badge.
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId || !accessToken) return;
+    notificationApi
+      .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
+      .then((res) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        setUnreadNotifications(list.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, [user?.id, accessToken]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -433,6 +450,18 @@ const Layout = ({ children }) => {
             </button>
           </div>
           <div className="header-right">
+            <button
+              className="notification-bell"
+              onClick={() => navigate("/notifications")}
+              aria-label="Notifications"
+            >
+              <IoNotifications size={20} />
+              {unreadNotifications > 0 && (
+                <span className="notification-bell-badge">
+                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                </span>
+              )}
+            </button>
             <div
               className="user-profile"
               ref={profileDropdownRef}

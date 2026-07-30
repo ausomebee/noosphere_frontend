@@ -20,6 +20,7 @@ import api from "../../api/homeApis";
 import ErrorFallback from "../../Components/ErrorFallback";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePersistedTab from "../../hooks/usePersistedTab";
+import { useLocation } from "react-router-dom";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
@@ -31,6 +32,17 @@ const Home = () => {
   usePageTitle("Dashboard");
   const [activeTab, setActiveTab] = usePersistedTab("client:home", "upcoming");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // When arriving from a notification, focus the requested appointments tab.
+  const location = useLocation();
+  useEffect(() => {
+    const focusTab = location.state?.focusTab;
+    const VALID_TABS = ["upcoming", "awaiting", "reschedule", "completed", "cancelled"];
+    if (focusTab && VALID_TABS.includes(focusTab)) {
+      setActiveTab(focusTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
   const [loading, setLoading] = useState({
     overview: false,
     chart: false,

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import UpcomingAppointments from "./AppointmentSubs/UpcomingAppointments";
 import RescheduleRequests from "./AppointmentSubs/RescheduleRequests";
@@ -29,6 +30,16 @@ const Appointments = () => {
   );
 
   const [view, setView] = usePersistedTab("tenant:appointments", visibleTabs[0]?.key || "", visibleTabs.map((t) => t.key));
+
+  // When arriving from a notification, focus the requested sub-tab.
+  const location = useLocation();
+  useEffect(() => {
+    const focusTab = location.state?.focusTab;
+    if (focusTab && visibleTabs.some((t) => t.key === focusTab)) {
+      setView(focusTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
   // No seeded mock counts — badges derive from real data and stay hidden at 0.
   const [counts, setCounts] = useState({});
 

@@ -1,6 +1,6 @@
 import usePageTitle from "../../hooks/usePageTitle";
 import LoadingSpinner from "../../Components/LoadingSpinner";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
 import { emitNotificationRead } from "../../api/socketService";
@@ -16,6 +16,7 @@ import {
 } from "react-icons/io5";
 import { formatDateHeader, formatMsgTime } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
+import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
 
 const ICON_MAP = {
@@ -27,72 +28,14 @@ const ICON_MAP = {
   alert: IoAlertCircleOutline,
 };
 
-// Placeholder notifications – replace with API data
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "appointment",
-    title: "New Appointment Scheduled",
-    description: "Orlando Diggs has been scheduled for a session on Friday 3:00 PM.",
-    time: "2 hours ago",
-    date: "Today",
-    read: false,
-  },
-  {
-    id: 2,
-    type: "document",
-    title: "Document Uploaded",
-    description: "A new document has been uploaded to the client file for Jane Smith.",
-    time: "4 hours ago",
-    date: "Today",
-    read: false,
-  },
-  {
-    id: 3,
-    type: "success",
-    title: "Report Approved",
-    description: "The clinical report for Michael Brown has been approved by supervisor.",
-    time: "5 hours ago",
-    date: "Today",
-    read: true,
-  },
-  {
-    id: 4,
-    type: "alert",
-    title: "Authorization Expiring",
-    description: "Authorization for Orlando Diggs expires in 5 days. Please renew.",
-    time: "Yesterday, 3:45 PM",
-    date: "Yesterday",
-    read: true,
-  },
-  {
-    id: 5,
-    type: "client",
-    title: "New Client Added",
-    description: "A new client Sarah Johnson has been added to the pipeline.",
-    time: "Yesterday, 11:20 AM",
-    date: "Yesterday",
-    read: true,
-  },
-  {
-    id: 6,
-    type: "system",
-    title: "System Maintenance",
-    description: "Scheduled maintenance will occur this Saturday from 2:00 AM to 4:00 AM.",
-    time: "Yesterday, 9:00 AM",
-    date: "Yesterday",
-    read: true,
-  },
-];
-
-// Map a notification type/category from the API to an icon key
+// Map a notification type to an icon key
 const resolveType = (notif) => {
   const t = (notif.type || notif.category || "").toLowerCase();
-  if (t.includes("appointment")) return "appointment";
-  if (t.includes("document") || t.includes("file")) return "document";
+  if (t.includes("appointment") || t.includes("reschedule")) return "appointment";
+  if (t.includes("document") || t.includes("form") || t.includes("report") || t.includes("timesheet")) return "document";
   if (t.includes("client")) return "client";
-  if (t.includes("success") || t.includes("approved")) return "success";
-  if (t.includes("alert") || t.includes("warn") || t.includes("expir")) return "alert";
+  if (t.includes("approved") || t.includes("completed") || t.includes("signed") || t.includes("resolved")) return "success";
+  if (t.includes("expir") || t.includes("cancel") || t.includes("reject") || t.includes("exhaust")) return "alert";
   return "system";
 };
 
@@ -137,18 +80,39 @@ const Notifications = () => {
     return groups;
   }, {});
 
-  const handleViewDetails = (notif) => {
-    // Mark as read locally
+  // Mark a single notification read (optimistic + server + socket).
+  const markRead = (notif) => {
+    if (notif.isRead) return;
     setNotifications((prev) =>
       prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
     );
-    // Mark as read on server + via socket for real-time sync
     notificationApi
       .markNotificationRead({ id: notif.id, accessToken, refreshToken })
       .catch(() => {
         // Non-critical — UI already updated optimistically
       });
     emitNotificationRead(notif.id);
+  };
+
+  // Primary action: mark read, then navigate to the mapped destination.
+  const handleAction = (notif) => {
+    markRead(notif);
+    const action = getNotificationAction(notif);
+    if (action?.path) {
+      navigate(action.path, action.state ? { state: action.state } : undefined);
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    const unread = notifications.filter((n) => !n.isRead);
+    if (!unread.length) return;
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    unread.forEach((n) => {
+      notificationApi
+        .markNotificationRead({ id: n.id, accessToken, refreshToken })
+        .catch(() => {});
+      emitNotificationRead(n.id);
+    });
   };
 
   const handleClose = () => {
@@ -165,10 +129,17 @@ const Notifications = () => {
             <span className="notifications-count">{unreadCount}</span>
           )}
         </div>
-        <button className="notifications-close" onClick={handleClose}>
-          <IoClose size={18} />
-          <span>Close</span>
-        </button>
+        <div className="notifications-header-actions">
+          {unreadCount > 0 && (
+            <button className="notifications-mark-all" onClick={handleMarkAllRead}>
+              Mark all as read
+            </button>
+          )}
+          <button className="notifications-close" onClick={handleClose}>
+            <IoClose size={18} />
+            <span>Close</span>
+          </button>
+        </div>
       </div>
 
       {/* Notification groups */}
@@ -188,6 +159,7 @@ const Notifications = () => {
                 {items.map((notif) => {
                   const type = resolveType(notif);
                   const Icon = ICON_MAP[type] || IoNotificationsOutline;
+                  const action = getNotificationAction(notif);
                   return (
                     <div
                       key={notif.id}
@@ -205,13 +177,22 @@ const Notifications = () => {
                         </p>
                         <div className="notification-card-footer">
                           <span className="notification-card-time">{resolveTime(notif, timeFormat)}</span>
-                          {!notif.isRead && (
+                          {action ? (
                             <button
                               className="notification-card-link"
-                              onClick={() => handleViewDetails(notif)}
+                              onClick={() => handleAction(notif)}
                             >
-                              Mark as read
+                              {action.label}
                             </button>
+                          ) : (
+                            !notif.isRead && (
+                              <button
+                                className="notification-card-link"
+                                onClick={() => markRead(notif)}
+                              >
+                                Mark as read
+                              </button>
+                            )
                           )}
                         </div>
                       </div>
