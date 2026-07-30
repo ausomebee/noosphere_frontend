@@ -13,7 +13,7 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePageTitle from "../../hooks/usePageTitle";
 import useAuth from "../../hooks/useAuth";
 import notificationApi from "../../api/notificationApi";
-import { getNotificationAction, TYPE_LABEL, TYPE_ORDER } from "../../Data/notificationConfig";
+import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
 
 // Icon key per notification type (grouped by domain).
@@ -56,6 +56,19 @@ const relativeTime = (dateStr) => {
   return then.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
 
+// Section header for a date group: "Today", "Yesterday", or "Weekday, Mon D".
+const dateHeader = (dateStr) => {
+  if (!dateStr) return "Earlier";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "Earlier";
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+};
+
 const Notifications = () => {
   const navigate = useNavigate();
   const { userId, accessToken, refreshToken } = useAuth();
@@ -81,16 +94,16 @@ const Notifications = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Group notifications into ordered sections keyed by type.
-  const knownOrder = TYPE_ORDER.filter((type) => notifications.some((n) => n.type === type));
-  const unknownTypes = [
-    ...new Set(
-      notifications
-        .map((n) => n.type)
-        .filter((type) => type && !TYPE_ORDER.includes(type))
-    ),
-  ];
-  const sectionTypes = [...knownOrder, ...unknownTypes];
+  // Group by date header (Today, Yesterday, ...), most recent first.
+  const sorted = [...notifications].sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  );
+  const byDate = sorted.reduce((acc, n) => {
+    const key = dateHeader(n.createdAt);
+    (acc[key] = acc[key] || []).push(n);
+    return acc;
+  }, {});
+  const dateGroups = Object.keys(byDate);
 
   // Mark a single notification read (optimistic + server).
   const markRead = (notif) => {
@@ -152,13 +165,12 @@ const Notifications = () => {
             <p>No notifications</p>
           </div>
         ) : (
-          sectionTypes.map((type) => {
-            const items = notifications.filter((n) => n.type === type);
+          dateGroups.map((date) => {
+            const items = byDate[date];
             if (!items.length) return null;
-            const label = TYPE_LABEL[type] || (type || "OTHER").replace(/_/g, " ");
             return (
-              <div key={type} className="ctrl-notifications-group">
-                <h3 className="ctrl-notifications-group-label">{label}</h3>
+              <div key={date} className="ctrl-notifications-group">
+                <h3 className="ctrl-notifications-group-label">{date}</h3>
                 <div className="ctrl-notifications-list">
                   {items.map((notif) => {
                     const iconKey = resolveIconKey(notif);
