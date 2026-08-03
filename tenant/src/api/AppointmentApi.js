@@ -370,6 +370,26 @@ const GetRescheduleAppointmentReqByStaffId = async ({
   }
 };
 
+const GetRescheduleAppointmentReqByClientId = async ({
+  clientId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      // TODO: confirm path with backend
+      `${PLAIN_API_URL}/appointments/reschedule-requests/client/${clientId}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.message ||
+        "Get Client All Resheduled Req Appointments by client id failed"
+    );
+  }
+};
+
 const ApproveRescheduledReq = async ({
   appointments,
   accessToken,
@@ -564,6 +584,7 @@ export default {
   GetCancelledAppointmentByTenantId,
   GetRescheduleAppointmentReqByTenantId,
   GetRescheduleAppointmentReqByStaffId,
+  GetRescheduleAppointmentReqByClientId,
   ApproveRescheduledReq,
   RejectRescheduledReq,
   GetUpcomingAppointmentByTenantId,

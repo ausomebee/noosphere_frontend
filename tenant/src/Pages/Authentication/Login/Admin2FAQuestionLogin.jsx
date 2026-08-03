@@ -11,6 +11,7 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
+import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 // Yup validation schema for security answer
 const answerSchema = yup.object().shape({
@@ -21,9 +22,10 @@ const answerSchema = yup.object().shape({
 });
 
 const Admin2FAQuestionLogin = () => {
-  const { userId, accessToken, tenantId, authQuestion } = useAuth();
+  const { userId, accessToken, tenantId, authQuestion, role } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showCantAccess, setShowCantAccess] = useState(false);
 
   // Form setup with react-hook-form and yup
   const {
@@ -61,11 +63,11 @@ const Admin2FAQuestionLogin = () => {
     }
   };
 
-  // Handle "Forgot answer?" link
+  // Handle "Forgot your security answer?" link. Reveal a role-aware message
+  // telling the user how to recover access.
   const handleForgotAnswer = (e) => {
     e.preventDefault();
-    // navigate("/SA/forgot-security-answer");
-    // showToast("Redirecting to reset security answer.", "success");
+    setShowCantAccess(true);
   };
 
   return (
@@ -106,9 +108,10 @@ const Admin2FAQuestionLogin = () => {
                 />
                 <p className="forgot-answer">
                   <a href="#" onClick={handleForgotAnswer}>
-                    Forgot answer?
+                    Forgot your security answer?
                   </a>
                 </p>
+                {showCantAccess && <AccountAccessMessage role={role} />}
               </form>
             </div>
           </div>

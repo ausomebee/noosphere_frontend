@@ -10,6 +10,7 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
+import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 // Yup validation schema for OTP
 const otpSchema = yup.object().shape({
@@ -20,10 +21,11 @@ const otpSchema = yup.object().shape({
 });
 
 const Admin2FAAuthenticatorLogin = () => {
-  const { userId, accessToken, tenantId } = useAuth();
+  const { userId, accessToken, tenantId, role } = useAuth();
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
+  const [showCantAccess, setShowCantAccess] = useState(false);
   const inputRefs = useRef([]);
 
   // Form setup with react-hook-form and yup
@@ -108,11 +110,11 @@ const Admin2FAAuthenticatorLogin = () => {
     }
   };
 
-  // Handle "Can't access authenticator app?" link
+  // Handle "Can't access your authenticator app?" link. Reveal a role-aware
+  // message telling the user how to recover access.
   const handleCantAccess = (e) => {
     e.preventDefault();
-    // navigate("/SA/alternate-2fa"); // Adjust the route as needed
-    // showToast("Redirecting to alternate 2FA options.", "success");
+    setShowCantAccess(true);
   };
 
   return (
@@ -167,9 +169,10 @@ const Admin2FAAuthenticatorLogin = () => {
                 />
                 <p className="cant-access">
                   <a href="#" onClick={handleCantAccess}>
-                    Can't access authenticator app?
+                    Can't access your authenticator app?
                   </a>
                 </p>
+                {showCantAccess && <AccountAccessMessage role={role} />}
               </form>
             </div>
           </div>

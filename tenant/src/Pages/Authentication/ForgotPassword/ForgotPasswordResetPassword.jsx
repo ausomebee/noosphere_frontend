@@ -61,7 +61,7 @@ const ForgotPasswordResetPassword = () => {
       );
       const user = response.data.data;
       const { setForAll } = await handleGetSuperAdminChoice(user.tenantId);
-      const { authType, auth2FADone, authQuestion } = response.data.data; // Use setPassword response
+      const { authType, auth2FADone, authQuestion, role } = response.data.data; // Use setPassword response
 
       if (setForAll && !auth2FADone) {
        if (authType === "AUTHENTICATOR") {
@@ -76,9 +76,9 @@ const ForgotPasswordResetPassword = () => {
         navigate("/");
       } else if (setForAll && auth2FADone) {
            if (authType === "AUTHENTICATOR") {
-          navigate("/auth/forgot-password/2fa-auth-verify", { state: { userId } });
+          navigate("/auth/forgot-password/2fa-auth-verify", { state: { userId, role } });
         } else if (authType === "SECRETMESSAGE") {
-          navigate("/auth/forgot-password/2fa-question-verify", { state: { userId, authQuestion } });
+          navigate("/auth/forgot-password/2fa-question-verify", { state: { userId, authQuestion, role } });
         } else {
           console.error("Unknown authType:", authType);
           showToast("Unknown authentication type", "error");

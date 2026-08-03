@@ -318,7 +318,7 @@ const General = () => {
 
     if (!licenses.length)
       return (
-        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6 mt-6">
+        <div className="bg-[#f7f7f7] rounded-lg w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -412,7 +412,7 @@ const General = () => {
 
     if (!files.length)
       return (
-        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6 mt-6">
+        <div className="bg-[#f7f7f7] rounded-lg w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">

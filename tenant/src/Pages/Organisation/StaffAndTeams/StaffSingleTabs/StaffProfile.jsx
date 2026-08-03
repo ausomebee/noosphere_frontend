@@ -2,7 +2,7 @@ import React from "react";
 import usePermissions from "../../../../hooks/usePermissions";
 import useDocumentViewer from "../../../../hooks/useDocumentViewer";
 import { FaPlus, FaRegTrashAlt } from "react-icons/fa";
-import { FiEdit3 } from "react-icons/fi";
+import { FiEdit3, FiRefreshCw } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
 import { PiListDashesBold } from "react-icons/pi";
 import Button from "../../../../Components/Button/Button";
@@ -25,13 +25,14 @@ const Profile = ({
   deleteLicense,
   deleteFile,
   openBasicInfoModal, // New prop for opening Basic Info modal
+  onResetStaffLogin,
 }) => {
   const { hasPermission } = usePermissions();
   const { openDocument, downloadDocument } = useDocumentViewer();
   const renderLicenses = () => {
     if (!licenses.length) {
       return (
-        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6 mt-6">
+        <div className="bg-[#f7f7f7] rounded-lg w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -118,7 +119,7 @@ const Profile = ({
   const renderFiles = () => {
     if (!files.length) {
       return (
-        <div className="bg-gray-200 rounded-lg w-full p-6 mb-6 mt-6">
+        <div className="bg-[#f7f7f7] rounded-lg w-full p-6 mb-6 mt-6">
           <div className="text-center py-8 text-gray-500">
             <IconFile className="mx-auto mb-4 text-gray-400" />
             <p className="mb-2 text-3xl font-bold text-gray-400">
@@ -197,17 +198,38 @@ const Profile = ({
       <h2 className="font-bold text-lg text-gray-700-em mb-4 mt-6">
         Basic Information
       </h2>
-      <div className="org-info-card">
-        <OrgGrid data={staff} />
-        {hasPermission("edit_staff_basic_information") && (
-          <div>
-            <div
-              className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
-              onClick={openBasicInfoModal}
-            >
-              <FiEdit3 size={32} />
+      <div className="org-info-card staff-info-card">
+        <div className="staff-info-card-main">
+          <OrgGrid data={staff} />
+          {hasPermission("edit_staff_basic_information") && (
+            <div>
+              <div
+                className="bg-white-bg p-5 rounded-md self-start cursor-pointer"
+                onClick={openBasicInfoModal}
+              >
+                <FiEdit3 size={32} />
+              </div>
             </div>
-          </div>
+          )}
+        </div>
+        {onResetStaffLogin && (
+          <button
+            type="button"
+            className="staff-reset-login"
+            onClick={() =>
+              openDelete({
+                title: "Reset staff login",
+                message:
+                  "Are you sure you want to reset this staff member's login? This removes their 2FA login.",
+                icon: <CgDanger size={32} color="#D92D20" />,
+                confirmLabel: "Reset login",
+                onConfirm: onResetStaffLogin,
+              })
+            }
+          >
+            Reset staff login
+            <FiRefreshCw size={16} />
+          </button>
         )}
       </div>
       {hasPermission("view_staff_licenses_list") && (

@@ -142,8 +142,25 @@ const SingleStaffByAdmin = () => {
     }
   };
 
-  const openDelete = ({ title, message, icon, onConfirm }) =>
-    setDeleteCfg({ isOpen: true, title, message, icon, onConfirm });
+  const openDelete = ({ title, message, icon, onConfirm, confirmLabel }) =>
+    setDeleteCfg({ isOpen: true, title, message, icon, onConfirm, confirmLabel });
+
+  // Reset (remove) this staff member's 2FA login.
+  const handleResetStaffLogin = async () => {
+    try {
+      await api.ResetStaffLogin({
+        id: tenantStaffId,
+        accessToken,
+        refreshToken,
+      });
+      showToast({ message: "Staff login reset successfully", type: "success" });
+    } catch (e) {
+      showToast({
+        message: e.message || "Failed to reset staff login",
+        type: "error",
+      });
+    }
+  };
 
   const closeDelete = () =>
     setDeleteCfg({
@@ -377,6 +394,7 @@ const SingleStaffByAdmin = () => {
             deleteLicense={deleteLicense}
             deleteFile={deleteFile}
             openBasicInfoModal={() => setShowBasicInfoModal(true)}
+            onResetStaffLogin={handleResetStaffLogin}
           />
         );
       case "appointmentSchedule":

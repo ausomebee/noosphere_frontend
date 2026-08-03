@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReusableModal from "../ReusableModal";
 
-const DeleteModal = ({ isOpen, onClose, title, message, icon, onConfirm }) => {
+const DeleteModal = ({ isOpen, onClose, title, message, icon, onConfirm, confirmLabel = "Delete" }) => {
   const [loading, setLoading] = useState(false);
 
   const handle = async () => {
@@ -19,7 +19,7 @@ const DeleteModal = ({ isOpen, onClose, title, message, icon, onConfirm }) => {
       isOpen={isOpen}
       onClose={onClose}
       title=""
-      primaryButtonText="Delete"
+      primaryButtonText={confirmLabel}
       secondaryButtonText="Cancel"
       onPrimaryButtonClick={handle}
       onSecondaryButtonClick={onClose}

@@ -16,7 +16,7 @@ import { formatTime } from "../../../../Helper/Formatters";
 import { showToast } from "../../../../Helper/ShowToast";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
 
-const RescheduleRequests = ({ setCounts }) => {
+const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const { timeFormat } = useFormatSettings();
@@ -66,17 +66,23 @@ const RescheduleRequests = ({ setCounts }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await (role === "Staff"
-        ? api.GetRescheduleAppointmentReqByStaffId({
-            staffId: userId,
+      const response = await (clientId
+        ? api.GetRescheduleAppointmentReqByClientId({
+            clientId,
             accessToken,
             refreshToken,
           })
-        : api.GetRescheduleAppointmentReqByTenantId({
-            tenantId,
-            accessToken,
-            refreshToken,
-          }));
+        : role === "Staff"
+          ? api.GetRescheduleAppointmentReqByStaffId({
+              staffId: userId,
+              accessToken,
+              refreshToken,
+            })
+          : api.GetRescheduleAppointmentReqByTenantId({
+              tenantId,
+              accessToken,
+              refreshToken,
+            }));
 
       const rawData = response?.data?.data || [];
       const transformed = rawData.map(toTableRow);
@@ -142,7 +148,7 @@ const RescheduleRequests = ({ setCounts }) => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, userId, role, accessToken, refreshToken, setCounts]);
+  }, [tenantId, userId, role, clientId, accessToken, refreshToken, setCounts]);
 
   useEffect(() => {
     fetchRescheduleRequests();

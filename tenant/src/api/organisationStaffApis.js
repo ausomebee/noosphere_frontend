@@ -291,6 +291,22 @@ const UpdateActiveTenantStaff = async ({
   }
 };
 
+// Resets (removes) a staff member's 2FA login so they can set it up afresh.
+// TODO: confirm path with backend.
+const ResetStaffLogin = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/organization-staff/${id}/reset-2fa`,
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Reset staff login failed",
+    );
+  }
+};
+
 const GetSingleTenantStaffById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -768,6 +784,7 @@ export default {
   UpdateTenantStaff,
   GetAllStaffByTenantId,
   UpdateActiveTenantStaff,
+  ResetStaffLogin,
   GetSingleTenantStaffById,
   GetAllStaffDocumentById,
   GetAllStaffLicenseById,

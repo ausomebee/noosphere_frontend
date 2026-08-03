@@ -543,6 +543,21 @@ const ChangeAdminPassword = async ({ tenantId, accessToken, refreshToken }) => {
   }
 };
 
+const ResetTenant2FA = async ({ tenantId, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      // TODO: confirm path with backend
+      `${PLAIN_API_URL}/admin/tenant/${tenantId}/reset-2fa`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Reset Tenant 2FA login failed",
+    );
+  }
+};
+
 const ChangeTenantEmail = async ({
   tenantId,
   email,
@@ -904,6 +919,7 @@ export default {
   ChangeAccountOfficer,
   GetSingleTenant,
   ChangeAdminPassword,
+  ResetTenant2FA,
   ChangeTenantEmail,
   ChangeTenantPhoneNumber,
   GetTenantActivityLog,

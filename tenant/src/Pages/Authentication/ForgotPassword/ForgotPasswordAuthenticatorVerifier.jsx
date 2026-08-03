@@ -10,6 +10,7 @@ import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
+import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 const otpSchema = yup.object().shape({
   code: yup
@@ -19,9 +20,13 @@ const otpSchema = yup.object().shape({
 });
 
 const ForgotPasswordAuthenticatorVerifier = () => {
-  const { userId: authUserId } = useAuth();
+  const { userId: authUserId, role: authRole } = useAuth();
   const location = useLocation();
   const userId = location.state?.userId || authUserId;
+  // In the forgot-password flow the user isn't in the auth store yet, so the
+  // role is threaded through navigation state from the reset-password step;
+  // fall back to the auth store for any authenticated entry point.
+  const role = location.state?.role ?? authRole;
   const navigate = useNavigate();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [step, setStep] = useState(1);
@@ -176,11 +181,7 @@ const ForgotPasswordAuthenticatorVerifier = () => {
                     <>
                       <div className="icon failure-icon">✖</div>
                       <h2>Unable to verify your identity</h2>
-                      <p className="confirmation-message">
-                        Unfortunately we cannot verify your identity. Please contact the support team for further assistance
-                        
-                      </p>
-                      <p className="font-bold">Email: support@noosphere.com</p>
+                      <AccountAccessMessage role={role} />
                       <Button
                         label="Try Again"
                         variant="primary"

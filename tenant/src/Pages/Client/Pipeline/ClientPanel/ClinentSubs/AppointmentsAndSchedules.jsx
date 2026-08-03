@@ -12,6 +12,7 @@ import api2 from "../../../../../api/clientPanelApis";
 import api3 from "../../../../../api/billingAndPaymentsApi"; // For real service codes
 import CustomTable from "../../../../../Components/Table/CustomTable";
 import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
+import RescheduleRequests from "../../../../Scheduler/SchdedulerSubs/AppointmentSubs/RescheduleRequests";
 import { SearchInput } from "../../../../../Components/Input/Inputs";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -207,6 +208,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   }, [tenantId, accessToken, refreshToken, clientId]);
 
   const fetchAppointments = useCallback(async () => {
+    // The Reschedule Requests tab renders the self-contained RescheduleRequests
+    // component, which fetches its own data — skip the parent appointment fetch.
+    if (activeTab === "rescheduleRequests") return;
     if (!clientId) return showToast("Client ID not found", "error");
 
     setLoading(true);
@@ -552,6 +556,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
           "upcomingAppointments",
           "pastAppointments",
           "cancelledAppointments",
+          "rescheduleRequests",
         ].map((tab) => (
           <button
             key={tab}
@@ -563,12 +568,14 @@ const AppointmentsScheduleTab = ({ fullName }) => {
             {tab === "upcomingAppointments" && "Upcoming Appointments"}
             {tab === "pastAppointments" && "Past Appointments"}
             {tab === "cancelledAppointments" && "Cancelled Appointments"}
+            {tab === "rescheduleRequests" && "Reschedule Requests"}
           </button>
         ))}
       </div>
 
       <div className="appt-controls-row">
         <div className="flex items-center gap-4">
+          {activeTab !== "rescheduleRequests" && (
           <div className="cal-sched-filter-controls">
             <div className="cal-sched-tab-container">
               <button
@@ -608,6 +615,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
               </button>
             </div>
           </div>
+          )}
         </div>
         {hasPermission("create_a_new_appointment") && (
           <Button
@@ -619,7 +627,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         )}
       </div>
 
-      {viewMode === "calendar" && (
+      {viewMode === "calendar" && activeTab !== "rescheduleRequests" && (
         <div className="appt-calendar-nav">
           <div className="appt-calendar-nav-controls">
             <div className="flex items-center gap-2">
@@ -655,7 +663,12 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       )}
 
       <div className="mt-4">
-        {viewMode === "table" ? (
+        {activeTab === "rescheduleRequests" ? (
+          // Self-contained: renders its own table + Approve/Reject/Modify
+          // modals and fetches client-scoped reschedule requests itself.
+          // Table-only — the calendar view does not apply here.
+          <RescheduleRequests clientId={clientId} />
+        ) : viewMode === "table" ? (
           <CustomTable
             data={filteredAppointments}
             columns={columns}

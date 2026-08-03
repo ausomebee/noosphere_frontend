@@ -68,6 +68,10 @@ const TenantSingleSecuritySettings = () => {
   const [savingPhone, setSavingPhone] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Reset Tenant 2FA login modal state
+  const [reset2FAModal, setReset2FAModal] = useState(false);
+  const [isResetting2FA, setIsResetting2FA] = useState(false);
+
   // Deactivation modal state
   const [deactivateModal, setDeactivateModal] = useState(false);
   const [deactivateStep, setDeactivateStep] = useState(1);
@@ -156,6 +160,20 @@ const TenantSingleSecuritySettings = () => {
       showApiError(err, "RESET_TENANT_PASSWORD");
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  // --- Reset Tenant 2FA login ---
+  const handleReset2FA = async () => {
+    try {
+      setIsResetting2FA(true);
+      await tenantApi.ResetTenant2FA({ tenantId, accessToken, refreshToken });
+      showToast("Tenant 2FA login reset successfully", "success");
+      setReset2FAModal(false);
+    } catch (err) {
+      showApiError(err, "RESET_TENANT_2FA");
+    } finally {
+      setIsResetting2FA(false);
     }
   };
 
@@ -403,6 +421,18 @@ const TenantSingleSecuritySettings = () => {
                 />
               </div>
             </div>
+
+            <div className="tenant-settings-row">
+              <div className="tenant-settings-action-group">
+                <Button
+                  onClick={() => setReset2FAModal(true)}
+                  label="Reset Tenant 2FA login"
+                  variant="important"
+                  width="100%"
+                  loading={isResetting2FA}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -435,6 +465,21 @@ const TenantSingleSecuritySettings = () => {
         primaryButtonLoading={isDeactivating}
       >
         {renderDeactivateBody()}
+      </ReusableModal>
+
+      {/* Reset Tenant 2FA login — confirmation */}
+      <ReusableModal
+        isOpen={reset2FAModal}
+        onClose={() => setReset2FAModal(false)}
+        title="Are you sure you want to reset this tenant's login?"
+        primaryButtonText="Reset login"
+        secondaryButtonText="Cancel"
+        primaryButtonColor="#dc2626"
+        onPrimaryButtonClick={handleReset2FA}
+        onSecondaryButtonClick={() => setReset2FAModal(false)}
+        primaryButtonLoading={isResetting2FA}
+      >
+        <p>This removes the tenant's 2FA login.</p>
       </ReusableModal>
     </>
   );

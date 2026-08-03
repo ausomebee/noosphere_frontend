@@ -11,6 +11,7 @@ import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 const answerSchema = yup.object().shape({
   answer: yup
@@ -20,10 +21,14 @@ const answerSchema = yup.object().shape({
 });
 
 const ForgotPasswordQuestionVerifier = () => {
-  const { userId: authUserId, authQuestion: authQuestionFromStore } = useAuth();
+  const { userId: authUserId, authQuestion: authQuestionFromStore, role: authRole } = useAuth();
   const location = useLocation();
   const userId = location.state?.userId || authUserId;
   const authQuestion = location.state?.authQuestion || authQuestionFromStore;
+  // In the forgot-password flow the user isn't in the auth store yet, so the
+  // role is threaded through navigation state from the reset-password step;
+  // fall back to the auth store for any authenticated entry point.
+  const role = location.state?.role ?? authRole;
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -143,10 +148,7 @@ const ForgotPasswordQuestionVerifier = () => {
                     <>
                       <div className="icon failure-icon">✖</div>
                       <h2>Unable to verify your identity</h2>
-                      <p className="confirmation-message">
-                        Unfortunately we cannot verify your identity. Please try
-                        again.
-                      </p>
+                      <AccountAccessMessage role={role} />
                       <Button
                         label="Try Again"
                         variant="primary"

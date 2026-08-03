@@ -4,11 +4,42 @@
 .org-info-card {
   display: flex;
   justify-content: space-between;
-  background-color: #e5e7eb;
+  background-color: #f7f7f7;
   border-radius: 8px;
   width: 100%;
   padding: 20px;
   margin-bottom: 24px;
+}
+
+/* Staff profile card: info row on top, "Reset staff login" beneath it. */
+.staff-info-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.staff-info-card-main {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.staff-reset-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #d92d20;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.staff-reset-login:hover {
+  opacity: 0.85;
 }
 
 /* OrgGrid: General page (4-col) */
