@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { IoSearchOutline, IoChevronDown, IoChevronUp } from "react-icons/io5";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
@@ -40,7 +40,9 @@ const ReusableTable = ({
   const [expandedRows, setExpandedRows] = useState([]);
   const [openActionMenu, setOpenActionMenu] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
-  const [menuPos, setMenuPos] = useState(null);
+  const [menuRect, setMenuRect] = useState(null);
+  const [menuStyle, setMenuStyle] = useState(null);
+  const menuRef = useRef(null);
   const debounceRef = useRef(null);
 
   const handleSearch = useCallback((e) => {
@@ -63,7 +65,8 @@ const ReusableTable = ({
   const closeActionMenu = () => {
     setOpenActionMenu(null);
     setMenuRow(null);
-    setMenuPos(null);
+    setMenuRect(null);
+    setMenuStyle(null);
   };
 
   const toggleActionMenu = (row, e) => {
@@ -72,14 +75,39 @@ const ReusableTable = ({
       return;
     }
     // Anchor the menu to the button and render it in a portal (fixed) so the
-    // table's overflow can't clip it.
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    // table's overflow can't clip it. Final position is computed after render.
+    setMenuRect(e.currentTarget.getBoundingClientRect());
+    setMenuStyle(null);
     setMenuRow(row);
     setOpenActionMenu(row.id);
   };
 
   const menuActions = Array.isArray(actions) ? actions.filter((a) => a.menu) : [];
+
+  // Once the menu is rendered, measure it and flip up / clamp horizontally so
+  // it never spills off-screen (opens upward when there's no room below).
+  useLayoutEffect(() => {
+    if (!openActionMenu || !menuRect || !menuRef.current) return;
+    const mh = menuRef.current.offsetHeight;
+    const mw = menuRef.current.offsetWidth;
+    const gap = 4;
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+
+    let top;
+    const roomBelow = vh - menuRect.bottom;
+    if (roomBelow >= mh + gap || menuRect.top < mh + gap) {
+      top = Math.min(menuRect.bottom + gap, vh - mh - 8);
+    } else {
+      top = Math.max(8, menuRect.top - gap - mh);
+    }
+
+    let left = menuRect.right - mw; // right-aligned to the button
+    if (left + mw > vw - 8) left = vw - mw - 8;
+    if (left < 8) left = 8;
+
+    setMenuStyle({ top, left });
+  }, [openActionMenu, menuRect]);
 
   const renderPagination = () => {
     if (!pagination) return null;
@@ -304,13 +332,14 @@ const ReusableTable = ({
 
       {/* Row action menu — portaled to the body so the table's overflow never
           clips it (fixes the menu opening into empty/cut-off space). */}
-      {openActionMenu && menuRow && menuPos &&
+      {openActionMenu && menuRow && menuRect &&
         createPortal(
           <>
             <div className="action-menu-backdrop" onClick={closeActionMenu} />
             <div
+              ref={menuRef}
               className="action-menu action-menu--portal"
-              style={{ top: menuPos.top, right: menuPos.right }}
+              style={menuStyle || { top: 0, left: 0, visibility: "hidden" }}
             >
               {menuActions.map((action, idx) => (
                 <button

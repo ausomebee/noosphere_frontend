@@ -289,6 +289,9 @@
    overflow can never clip it. */
 .action-menu--portal {
   position: fixed;
+  right: auto;
+  top: auto;
+  margin: 0;
 }
 
 .action-menu-backdrop {

@@ -20,7 +20,7 @@ import api from "../../api/homeApis";
 import ErrorFallback from "../../Components/ErrorFallback";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePersistedTab from "../../hooks/usePersistedTab";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
@@ -36,6 +36,7 @@ const Home = () => {
   // When arriving from a notification, focus the requested appointments tab
   // and remember which appointment to open once that tab's data has loaded.
   const location = useLocation();
+  const navigate = useNavigate();
   const pendingFocusIdRef = useRef(null);
   useEffect(() => {
     const focusTab = location.state?.focusTab;
@@ -412,6 +413,15 @@ const Home = () => {
                 previousDate: apt.previousDate,
                 previousStartTime: apt.previousStartTime,
                 previousEndTime: apt.previousEndTime,
+                prevDateTime: apt.previousDate
+                  ? `${formatDate(apt.previousDate)}${
+                      apt.previousStartTime
+                        ? `\n${formatTime(apt.previousStartTime)} - ${formatTime(
+                            apt.previousEndTime
+                          )}`
+                        : ""
+                    }`
+                  : "—",
                 // Store original data for modals
                 originalData: apt,
               };
@@ -501,6 +511,8 @@ const Home = () => {
     setSelectedAppointment(row);
     if (activeTab === "awaiting") setFeedbackModalOpen(true);
     else setDetailsModalOpen(true);
+    // Consume the focus so a re-mount can't re-open the modal from stale state.
+    if (location.state) navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTabData, activeTab]);
 
@@ -518,18 +530,30 @@ const Home = () => {
     { key: "cancelled", label: "Cancelled" },
   ], [awaitingCount]);
 
-  const columns = useMemo(() => [
-    { key: "sessionType", title: "Session Type" },
-    { key: "serviceType", title: "Service Type(s)" },
-    {
+  const columns = useMemo(() => {
+    const dayTime = (value) => (
+      <span style={{ whiteSpace: "pre-line" }}>{value}</span>
+    );
+    const cols = [
+      { key: "sessionType", title: "Session Type" },
+      { key: "serviceType", title: "Service Type(s)" },
+    ];
+    // On the reschedule tab, show the previous date/time alongside the new one.
+    if (activeTab === "reschedule") {
+      cols.push({
+        key: "prevDateTime",
+        title: "Previous Date & Time",
+        render: dayTime,
+      });
+    }
+    cols.push({
       key: "dateTime",
-      title: "Date & Time",
-      render: (value) => (
-        <span style={{ whiteSpace: "pre-line" }}>{value}</span>
-      ),
-    },
-    { key: "clinician", title: "Clinician(s)" },
-  ], []);
+      title: activeTab === "reschedule" ? "New Date & Time" : "Date & Time",
+      render: dayTime,
+    });
+    cols.push({ key: "clinician", title: "Clinician(s)" });
+    return cols;
+  }, [activeTab]);
 
   // Actions per tab
   const getActions = () => {
