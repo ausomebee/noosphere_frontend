@@ -28,6 +28,8 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [viewMode, setViewMode] = useState("table");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // The cancelled appointment whose "Cancellation details" modal is open.
+  const [cancelDetails, setCancelDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { clientId } = useParams();
@@ -259,28 +261,42 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     if (!appointments.length) return [];
 
     if (activeTab === "cancelledAppointments") {
-      return appointments.map((appt) => ({
-        id: appt.id,
-        clientName: currentClient?.fullName || "Current Client",
-        therapistName:
-          appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
-        serviceType:
-          appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
-        sessionType: appt.session?.name || "N/A",
-        date: appt.date || "Unknown Date",
-        time:
-          appt.startTime && appt.endTime
-            ? `${appt.startTime} - ${appt.endTime}`
-            : "No Time",
-        dateTime: appt.date
-          ? `${format(new Date(appt.date), "MMM dd, yyyy")} • ${
-              appt.startTime || ""
-            }`
-          : "Unknown Date",
-        colorCode: appt.colourCode || "#3B82F6",
-        hasActions: true,
-        rawData: appt,
-      }));
+      return appointments.map((appt) => {
+        const cancelTime = appt.cancelTime ? new Date(appt.cancelTime) : null;
+        const validCancelTime = cancelTime && !isNaN(cancelTime.getTime());
+        return {
+          id: appt.id,
+          clientName: currentClient?.fullName || "Current Client",
+          therapistName:
+            appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
+          serviceType:
+            appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
+          sessionType: appt.session?.name || "N/A",
+          date: appt.date || "Unknown Date",
+          time:
+            appt.startTime && appt.endTime
+              ? `${appt.startTime} - ${appt.endTime}`
+              : "No Time",
+          dateTime: appt.date
+            ? `${format(new Date(appt.date), "MMM dd, yyyy")} • ${
+                appt.startTime || ""
+              }`
+            : "Unknown Date",
+          colorCode: appt.colourCode || "#3B82F6",
+          cancellation: {
+            cancelledBy: appt.canceledBy || "N/A",
+            dateOfCancellation: validCancelTime
+              ? format(cancelTime, "MMM dd, yyyy")
+              : "N/A",
+            timeOfCancellation: validCancelTime
+              ? format(cancelTime, "hh:mm a")
+              : "N/A",
+            reason: appt.reasonForCancel || "No reason provided",
+          },
+          hasActions: true,
+          rawData: appt,
+        };
+      });
     }
 
     const direction = activeTab === "pastAppointments" ? "past" : "future";
@@ -650,6 +666,12 @@ const AppointmentsScheduleTab = ({ fullName }) => {
                   actionText: "Go to Timesheets",
                   onActionClick: () => navigate("/billing/timesheets"),
                 }
+              : activeTab === "cancelledAppointments"
+              ? {
+                  // Cancelled appointments reveal their cancellation details.
+                  actionText: "See more",
+                  onActionClick: (row) => setCancelDetails(row),
+                }
               : { actions })}
             filters={filters}
             tableName={activeTab
@@ -687,6 +709,44 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         tenantId={tenantId}
         initialClientId={clientId}
       />
+
+      {cancelDetails && (
+        <div className="modal-overlay">
+          <div className="cancel-modal-content">
+            <div className="cancel-modal-header">
+              <h2>Cancellation details</h2>
+              <button
+                className="cancel-close-button"
+                onClick={() => setCancelDetails(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="cancel-modal-body">
+              <div className="grid grid-cols-3 mb-6">
+                <div>
+                  <h3>Cancelled by</h3>
+                  <p>{cancelDetails.cancellation?.cancelledBy || "N/A"}</p>
+                </div>
+                <div>
+                  <h3>Date of Cancellation</h3>
+                  <p>{cancelDetails.cancellation?.dateOfCancellation || "N/A"}</p>
+                </div>
+                <div>
+                  <h3>Time of Cancellation</h3>
+                  <p>{cancelDetails.cancellation?.timeOfCancellation || "N/A"}</p>
+                </div>
+              </div>
+              <div>
+                <h3>Reason for Cancellation</h3>
+                <p>
+                  {cancelDetails.cancellation?.reason || "No reason provided"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
