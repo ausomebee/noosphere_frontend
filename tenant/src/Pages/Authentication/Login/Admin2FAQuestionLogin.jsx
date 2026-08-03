@@ -82,6 +82,13 @@ const Admin2FAQuestionLogin = () => {
               <h1><span className="hero-line">The all-in-one ABA</span><span className="hero-line">Practice Management</span><span className="hero-line">Solution</span></h1>
             </div>
             <div className="login-section">
+              {showCantAccess ? (
+                <AccountAccessMessage
+                  role={role}
+                  onBack={() => setShowCantAccess(false)}
+                />
+              ) : (
+                <>
               <h2>Two-Factor Authentication</h2>
               <p className="subtitle">Please answer your security question</p>
               <p className="security-question">{authQuestion || "No question available"}</p>
@@ -111,8 +118,9 @@ const Admin2FAQuestionLogin = () => {
                     Forgot your security answer?
                   </a>
                 </p>
-                {showCantAccess && <AccountAccessMessage role={role} />}
               </form>
+                </>
+              )}
             </div>
           </div>
         </div>

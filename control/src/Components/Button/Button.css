@@ -132,6 +132,19 @@
   opacity: 0.7;
 }
 
+/* Same link-style button, coloured red (chevron included). */
+.custom-button.important.important-red {
+  color: #dc2626;
+}
+
+.custom-button.important.important-red::after {
+  background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%23dc2626' stroke-width='2' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+}
+
+.custom-button.important.important-red:disabled {
+  color: #f0a3a3;
+}
+
 .custom-button.action {
   all: unset;
   display: flex;

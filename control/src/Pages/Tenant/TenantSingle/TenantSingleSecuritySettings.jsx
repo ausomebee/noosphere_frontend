@@ -415,7 +415,8 @@ const TenantSingleSecuritySettings = () => {
                 <Button
                   onClick={handleResetPassword}
                   label="Reset Password"
-                  variant="danger"
+                  variant="important"
+                  className="important-red"
                   width="100%"
                   loading={savingPassword}
                 />
@@ -427,7 +428,8 @@ const TenantSingleSecuritySettings = () => {
                 <Button
                   onClick={() => setReset2FAModal(true)}
                   label="Reset tenant two-factor authentication settings"
-                  variant="danger"
+                  variant="important"
+                  className="important-red"
                   width="100%"
                   loading={isResetting2FA}
                 />

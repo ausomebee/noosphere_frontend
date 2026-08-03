@@ -129,6 +129,13 @@ const Admin2FAAuthenticatorLogin = () => {
               <h1><span className="hero-line">The all-in-one ABA</span><span className="hero-line">Practice Management</span><span className="hero-line">Solution</span></h1>
             </div>
             <div className="login-section">
+              {showCantAccess ? (
+                <AccountAccessMessage
+                  role={role}
+                  onBack={() => setShowCantAccess(false)}
+                />
+              ) : (
+                <>
               <h2>Two-Factor Authentication</h2>
               <p className="subtitle">
                 Please generate a 6-digit code from your authenticator app and
@@ -172,8 +179,9 @@ const Admin2FAAuthenticatorLogin = () => {
                     Can't access your authenticator app?
                   </a>
                 </p>
-                {showCantAccess && <AccountAccessMessage role={role} />}
               </form>
+                </>
+              )}
             </div>
           </div>
         </div>

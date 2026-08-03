@@ -200,7 +200,30 @@ const Profile = ({
       </h2>
       <div className="org-info-card staff-info-card">
         <div className="staff-info-card-main">
-          <OrgGrid data={staff} />
+          <OrgGrid
+            data={staff}
+            resetSlot={
+              onResetStaffLogin ? (
+                <button
+                  type="button"
+                  className="staff-reset-login"
+                  onClick={() =>
+                    openDelete({
+                      title: "Reset staff login",
+                      message:
+                        "The staff will need to set up a new two-factor authentication before they log in.",
+                      icon: <CgDanger size={32} color="#D92D20" />,
+                      confirmLabel: "Reset login",
+                      onConfirm: onResetStaffLogin,
+                    })
+                  }
+                >
+                  Reset staff login
+                  <FiRefreshCw size={16} />
+                </button>
+              ) : null
+            }
+          />
           {hasPermission("edit_staff_basic_information") && (
             <div>
               <div
@@ -212,25 +235,6 @@ const Profile = ({
             </div>
           )}
         </div>
-        {onResetStaffLogin && (
-          <button
-            type="button"
-            className="staff-reset-login"
-            onClick={() =>
-              openDelete({
-                title: "Reset staff login",
-                message:
-                  "The staff will need to set up a new two-factor authentication before they log in.",
-                icon: <CgDanger size={32} color="#D92D20" />,
-                confirmLabel: "Reset login",
-                onConfirm: onResetStaffLogin,
-              })
-            }
-          >
-            Reset staff login
-            <FiRefreshCw size={16} />
-          </button>
-        )}
       </div>
       {hasPermission("view_staff_licenses_list") && (
       <div className="org-section">
@@ -291,7 +295,7 @@ const Profile = ({
     </>
   );
 };
-const OrgGrid = ({ data }) => (
+const OrgGrid = ({ data, resetSlot }) => (
   <div className="staff-info-layout">
     <div className="staff-info-avatar">
       <div className="organisation-user-avatar">
@@ -307,14 +311,17 @@ const OrgGrid = ({ data }) => (
         {data?.name || "N/A"}
       </h2>
     </div>
-    <div className="staff-info-fields">
-      <Field label="Gender" value={data?.gender} />
-      <Field label="Date of Birth" value={data?.DOB} />
-      <Field label="Staff Role" value={data?.staffRoleName} />
-      <Field label="NPI" value={data?.practiceNPI} />
-      <Field label="Email" value={data?.email} />
-      <Field label="Address" value={data?.address} />
-      <Field label="Date joined" value={data?.dateJoined} />
+    <div className="staff-info-body">
+      <div className="staff-info-fields">
+        <Field label="Gender" value={data?.gender} />
+        <Field label="Date of Birth" value={data?.DOB} />
+        <Field label="Staff Role" value={data?.staffRoleName} />
+        <Field label="NPI" value={data?.practiceNPI} />
+        <Field label="Email" value={data?.email} />
+        <Field label="Address" value={data?.address} />
+        <Field label="Date joined" value={data?.dateJoined} />
+      </div>
+      {resetSlot}
     </div>
   </div>
 );
