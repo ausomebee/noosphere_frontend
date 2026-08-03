@@ -179,8 +179,6 @@ const ForgotPasswordAuthenticatorVerifier = () => {
                     </>
                   ) : (
                     <>
-                      <div className="icon failure-icon">✖</div>
-                      <h2>Unable to verify your identity</h2>
                       <AccountAccessMessage role={role} />
                       <Button
                         label="Try Again"

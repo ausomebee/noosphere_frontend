@@ -220,7 +220,7 @@ const Profile = ({
               openDelete({
                 title: "Reset staff login",
                 message:
-                  "Are you sure you want to reset this staff member's login? This removes their 2FA login.",
+                  "The staff will need to set up a new two-factor authentication before they log in.",
                 icon: <CgDanger size={32} color="#D92D20" />,
                 confirmLabel: "Reset login",
                 onConfirm: onResetStaffLogin,
@@ -310,6 +310,7 @@ const OrgGrid = ({ data }) => (
     <div className="staff-info-fields">
       <Field label="Gender" value={data?.gender} />
       <Field label="Date of Birth" value={data?.DOB} />
+      <Field label="Staff Role" value={data?.staffRoleName} />
       <Field label="NPI" value={data?.practiceNPI} />
       <Field label="Email" value={data?.email} />
       <Field label="Address" value={data?.address} />

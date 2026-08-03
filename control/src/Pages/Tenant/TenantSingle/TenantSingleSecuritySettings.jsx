@@ -415,7 +415,7 @@ const TenantSingleSecuritySettings = () => {
                 <Button
                   onClick={handleResetPassword}
                   label="Reset Password"
-                  variant="important"
+                  variant="danger"
                   width="100%"
                   loading={savingPassword}
                 />
@@ -426,8 +426,8 @@ const TenantSingleSecuritySettings = () => {
               <div className="tenant-settings-action-group">
                 <Button
                   onClick={() => setReset2FAModal(true)}
-                  label="Reset Tenant 2FA login"
-                  variant="important"
+                  label="Reset tenant two-factor authentication settings"
+                  variant="danger"
                   width="100%"
                   loading={isResetting2FA}
                 />
@@ -479,7 +479,7 @@ const TenantSingleSecuritySettings = () => {
         onSecondaryButtonClick={() => setReset2FAModal(false)}
         primaryButtonLoading={isResetting2FA}
       >
-        <p>This removes the tenant's 2FA login.</p>
+        <p>The tenant will need to set up a new two-factor authentication before they log in.</p>
       </ReusableModal>
     </>
   );

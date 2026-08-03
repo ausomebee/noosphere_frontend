@@ -84,6 +84,11 @@ const SingleStaffByAdmin = () => {
           : "",
         staffRole: staffData.staff.roleId,
         roleId: staffData.staff.roleId,
+        staffRoleName:
+          staffData.staff.roles?.name ||
+          staffData.staff.role?.name ||
+          staffData.staff.roleName ||
+          "",
       });
     } catch (e) {
       console.error("Failed to fetch staff data:", e.message);
