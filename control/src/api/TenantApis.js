@@ -546,9 +546,8 @@ const ChangeAdminPassword = async ({ tenantId, accessToken, refreshToken }) => {
 const ResetTenant2FA = async ({ tenantId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(
-      // TODO: confirm path with backend
-      `${PLAIN_API_URL}/admin/tenant/${tenantId}/reset-2fa`,
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/tenant/staff/${tenantId}/reset-2fa`,
     );
     return response.data;
   } catch (error) {
