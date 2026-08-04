@@ -186,7 +186,7 @@ const ChangePassword = async ({
   try {
     const payload = { currentPassword, newPassword, staffId };
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/tenant/change-password`,
+      `${PLAIN_API_URL}/tenant/change-password/tenant`,
       payload,
     );
     return response.data;
