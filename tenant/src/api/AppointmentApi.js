@@ -378,8 +378,7 @@ const GetRescheduleAppointmentReqByClientId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      // TODO: confirm path with backend
-      `${PLAIN_API_URL}/appointments/reschedule-requests/client/${clientId}`
+      `${PLAIN_API_URL}/appointments/client/rescheduled/client/tenant/${clientId}`
     );
     return response;
   } catch (error) {
