@@ -1431,7 +1431,7 @@ const AppointmentModal = ({
       <p className="text-base text-center text-gray-600 font-semibold mb-4">
         Would you like to apply changes to:
       </p>
-      <div className="flex flex-col gap-2 mb-6">
+      <div className="flex flex-col gap-3 mb-6">
         <Button
           variant="secondary"
           label="This Event Only"
@@ -1445,7 +1445,7 @@ const AppointmentModal = ({
           isLoading={isLoading}
         />
         <Button
-          variant="secondary"
+          variant="ghost"
           label="Go Back"
           onClick={() => setShowConfirmation(false)}
         />
