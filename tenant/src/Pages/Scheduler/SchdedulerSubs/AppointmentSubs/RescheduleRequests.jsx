@@ -1,5 +1,5 @@
 // src/Pages/Scheduler/SchdedulerSubs/AppointmentSubs/RescheduleRequests.jsx
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import Button from "../../../../Components/Button/Button";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
@@ -31,6 +31,14 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
   const [error, setError] = useState(null);
   // The single request opened from a notification (shows Accept/Modify/Reject).
   const [actionRequest, setActionRequest] = useState(null);
+
+  // Hold the latest setCounts in a ref so callers that pass an inline (or the
+  // default noop) setCounts don't destabilize fetchRescheduleRequests and spin
+  // the fetch effect into an infinite loop.
+  const setCountsRef = useRef(setCounts);
+  useEffect(() => {
+    setCountsRef.current = setCounts;
+  }, [setCounts]);
 
   const toTableRow = (apiAppt) => {
     const service = (apiAppt.appointmentServices || []).map((as) => {
@@ -138,7 +146,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
       });
 
       setAppointments(mappedAppointments);
-      setCounts((prev) => ({
+      setCountsRef.current((prev) => ({
         ...prev,
         rescheduleRequests: mappedAppointments.length,
       }));
@@ -148,7 +156,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, userId, role, clientId, accessToken, refreshToken, setCounts]);
+  }, [tenantId, userId, role, clientId, accessToken, refreshToken, timeFormat]);
 
   useEffect(() => {
     fetchRescheduleRequests();
@@ -235,7 +243,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
         setAppointments((prev) =>
           prev.filter((appt) => !items.some((item) => item.id === appt.id)),
         );
-        setCounts((prev) => ({
+        setCountsRef.current((prev) => ({
           ...prev,
           rescheduleRequests: prev.rescheduleRequests - items.length,
           upcomingAppointments: prev.upcomingAppointments + items.length,
@@ -249,7 +257,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
         showToast(err.message || "Failed to approve reschedule request", "error");
       }
     },
-    [accessToken, refreshToken, setCounts],
+    [accessToken, refreshToken],
   );
 
   const handleReject = useCallback((items) => {
@@ -273,7 +281,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
         setAppointments((prev) =>
           prev.filter((appt) => !appointments.some((a) => a.id === appt.id)),
         );
-        setCounts((prev) => ({
+        setCountsRef.current((prev) => ({
           ...prev,
           rescheduleRequests: prev.rescheduleRequests - appointments.length,
           cancelledAppointments:
@@ -290,7 +298,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
         showToast(err.message || "Failed to reject reschedule request", "error");
       }
     },
-    [accessToken, refreshToken, setCounts],
+    [accessToken, refreshToken],
   );
 
   const handleModify = useCallback((items) => {
