@@ -17,7 +17,7 @@ const getNotifications = async ({ userId, userType = "TENANT_STAFF", accessToken
 const markNotificationRead = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.post(`${PLAIN_API_URL}/notifications/read/${id}`);
+    const response = await authFetch.patch(`${PLAIN_API_URL}/notifications/read/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to mark notification as read");

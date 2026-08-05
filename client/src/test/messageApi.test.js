@@ -73,13 +73,13 @@ describe("messageApi", () => {
   });
 
   describe("MarkNotificationRead", () => {
-    it("posts to correct endpoint", async () => {
-      mockPost.mockResolvedValue({ data: {} });
+    it("patches the correct endpoint", async () => {
+      mockPatch.mockResolvedValue({ data: {} });
       await api.MarkNotificationRead({ id: "n1", ...auth });
-      expect(mockPost).toHaveBeenCalledWith(expect.stringContaining("/notifications/read/n1"));
+      expect(mockPatch).toHaveBeenCalledWith(expect.stringContaining("/notifications/read/client/n1"));
     });
     it("throws on failure", async () => {
-      mockPost.mockRejectedValue({ response: { data: { message: "Fail" } } });
+      mockPatch.mockRejectedValue({ response: { data: { message: "Fail" } } });
       await expect(api.MarkNotificationRead({ id: "n1", ...auth })).rejects.toThrow("Fail");
     });
   });
