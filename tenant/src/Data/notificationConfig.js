@@ -188,7 +188,7 @@ const ACTIONS = {
 // Fallback by entityType, so a notification still gets a working "view" action
 // even if its exact `type` string isn't in ACTIONS (new/renamed types).
 const ENTITY_FALLBACK = {
-  APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusId: id } }),
+  APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   CLIENT: clientScoped("View client", "clientInformation"),
   DOCUMENT: clientScoped("View documents", "clientInformation"),
   AUTHORIZATION: clientScoped("View authorization", "authorization"),

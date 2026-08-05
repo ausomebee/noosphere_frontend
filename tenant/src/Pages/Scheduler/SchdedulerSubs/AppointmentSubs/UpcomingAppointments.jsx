@@ -280,9 +280,68 @@ const UpcomingAppointments = ({ setCounts }) => {
     setIsCancelModalOpen(true);
   };
 
+  // Fallback for the notification deep-link: fetch the single appointment by id
+  // and shape it into a view row, so the details modal opens even when the row
+  // isn't in the loaded list (e.g. the list endpoint failed, or it's created
+  // just now). Mirrors toTableRow so the Edit action keeps working.
+  const fetchApptForView = useCallback(
+    async (id) => {
+      try {
+        const res = await api.GetClientAppointmentDetails({
+          Id: id,
+          accessToken,
+          refreshToken,
+        });
+        const appt = res?.data?.data ?? res?.data ?? null;
+        if (!appt) return null;
+        const rawData = {
+          ...appt,
+          service: (appt.appointmentServices || []).map((as) => ({
+            serviceType: `${as.serviceCode?.code || "Unknown"}${
+              as.modifiers?.modifier ? ` (${as.modifiers.modifier})` : ""
+            }`,
+            modifierType: as.modifiers?.modifier || "",
+          })),
+          client: appt.client || { fullName: "Unknown Client" },
+          clinicians: appt.clinicians || [],
+          session: appt.session || { name: "Unknown Session" },
+          colourCode: appt.colourCode || "#3B82F6",
+        };
+        const therapistNames = rawData.clinicians
+          .map((c) => c.fullName)
+          .filter(Boolean);
+        const serviceTypes = rawData.service
+          .map((s) => s.serviceType)
+          .filter(Boolean);
+        return {
+          id: appt.id,
+          clientName:
+            `${appt.client?.firstName || ""} ${appt.client?.lastName || ""}`.trim() ||
+            appt.client?.fullName ||
+            "Unknown Client",
+          therapistName: therapistNames.join(", ") || "Unassigned",
+          serviceType: serviceTypes.join(", ") || "N/A",
+          serviceTypes,
+          sessionType: rawData.session?.name || "N/A",
+          date: appt.date,
+          time:
+            appt.startTime && appt.endTime
+              ? `${appt.startTime} - ${appt.endTime}`
+              : "",
+          therapistNames,
+          rawData,
+          hasActions: true,
+        };
+      } catch {
+        return null;
+      }
+    },
+    [accessToken, refreshToken],
+  );
+
   // When arriving from a notification, show read-only details (not the edit
   // form, which renders half-populated before its option lists have loaded).
-  useFocusAppointment(formattedAppointments, setViewAppt);
+  useFocusAppointment(formattedAppointments, setViewAppt, fetchApptForView);
 
   const handleSaveAppointment = async (data) => {
     try {

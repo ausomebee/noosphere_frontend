@@ -14,10 +14,14 @@ import { useLocation, useNavigate } from "react-router-dom";
  * Fully additive: with no `focusId` in state it does nothing, so normal
  * navigation is unaffected.
  *
- * @param {Array}    list   the tab's loaded appointment rows (each with an id)
- * @param {function} openFn handler that opens the view modal for a row
+ * @param {Array}    list      the tab's loaded appointment rows (each with an id)
+ * @param {function} openFn    handler that opens the view modal for a row
+ * @param {function} [fetchById] optional async fallback: given the base id it
+ *   resolves the row to open when it isn't present in `list` (e.g. the list
+ *   endpoint 404'd, or the appointment lives on another tab). Makes the modal
+ *   open straight from the notification regardless of list state.
  */
-export default function useFocusAppointment(list, openFn) {
+export default function useFocusAppointment(list, openFn, fetchById) {
   const location = useLocation();
   const navigate = useNavigate();
   const consumedRef = useRef(false);
@@ -29,22 +33,42 @@ export default function useFocusAppointment(list, openFn) {
 
   useEffect(() => {
     const focusId = location.state?.focusId;
-    if (!focusId || consumedRef.current) return;
-    if (!Array.isArray(list) || !list.length) return;
+    if (!focusId || consumedRef.current || typeof openFn !== "function") return;
     // A recurring appointment is expanded into rows whose id is
     // `${masterId}_${timestamp}`, while the notification carries the master id.
     // Compare on the base id so a freshly created appointment still matches.
     const baseId = (v) => (typeof v === "string" ? v.split("_")[0] : v);
     const target = baseId(focusId);
-    const item = list.find((i) =>
-      [i?.id, i?.rawData?.id, i?.rawData?.appointmentId].some(
-        (c) => c != null && baseId(c) === target
-      )
-    );
-    if (!item || typeof openFn !== "function") return;
-    consumedRef.current = true;
-    openFn(item);
-    // Consume the focus so a later re-mount doesn't re-open the modal.
-    navigate(location.pathname + location.search, { replace: true, state: null });
-  }, [list, location.state, location.pathname, location.search, openFn, navigate]);
+
+    const consume = () =>
+      navigate(location.pathname + location.search, { replace: true, state: null });
+
+    // 1) Prefer the row already in the loaded list.
+    if (Array.isArray(list) && list.length) {
+      const item = list.find((i) =>
+        [i?.id, i?.rawData?.id, i?.rawData?.appointmentId].some(
+          (c) => c != null && baseId(c) === target
+        )
+      );
+      if (item) {
+        consumedRef.current = true;
+        openFn(item);
+        consume();
+        return;
+      }
+    }
+
+    // 2) Fallback: fetch the single appointment by id and open it directly, so
+    //    the modal doesn't depend on the tab's list having loaded/matched.
+    if (typeof fetchById === "function") {
+      consumedRef.current = true;
+      let cancelled = false;
+      Promise.resolve(fetchById(target))
+        .then((item) => {
+          if (!cancelled && item) openFn(item);
+        })
+        .catch(() => {});
+      consume();
+    }
+  }, [list, location.state, location.pathname, location.search, openFn, fetchById, navigate]);
 }
