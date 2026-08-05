@@ -247,7 +247,9 @@ const DashboardLayout = ({ children }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [alerts, setAlerts] = useState([]);
+  // A single notification banner that counts up as more arrive, instead of one
+  // stacked banner per notification.
+  const [notifBanner, setNotifBanner] = useState(null); // { count, message }
   const profileDropdownRef = useRef(null);
 
   useIdleTimeout();
@@ -256,14 +258,14 @@ const DashboardLayout = ({ children }) => {
   useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
     onNotification: (notif) => {
-      setAlerts((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          variant: "primary",
-          message: notif?.title || notif?.message || "New notification",
-        },
-      ]);
+      setNotifBanner((prev) => {
+        const count = (prev?.count || 0) + 1;
+        const message =
+          count === 1
+            ? notif?.title || notif?.message || "New notification"
+            : `You have ${count} new notifications`;
+        return { count, message };
+      });
     },
   });
 
@@ -329,9 +331,7 @@ const DashboardLayout = ({ children }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleDismissAlert = (id) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-  };
+  const handleDismissAlert = () => setNotifBanner(null);
 
   return (
     <div className="dashboard-layout">
@@ -368,9 +368,9 @@ const DashboardLayout = ({ children }) => {
                   aria-label="Notifications"
                 >
                   <IoNotifications size={26} color="#fff" />
-                  {alerts.length > 0 && (
+                  {notifBanner?.count > 0 && (
                     <span className="notification-badge">
-                      {alerts.length > 99 ? "99+" : alerts.length}
+                      {notifBanner.count > 99 ? "99+" : notifBanner.count}
                     </span>
                   )}
                 </button>
@@ -455,19 +455,18 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         <main id="main-content" className="main-content">
-          {/* Notification alert banners */}
-          {alerts.length > 0 && (
+          {/* Single notification banner — counts up instead of stacking */}
+          {notifBanner && (
             <div className="layout-alerts">
-              {alerts.map((alert) => (
-                <NotificationAlert
-                  key={alert.id}
-                  variant={alert.variant}
-                  message={alert.message}
-                  primaryAction={alert.primaryAction}
-                  secondaryAction={alert.secondaryAction}
-                  onClose={() => handleDismissAlert(alert.id)}
-                />
-              ))}
+              <NotificationAlert
+                variant="primary"
+                message={notifBanner.message}
+                onClose={handleDismissAlert}
+                onClick={() => {
+                  handleDismissAlert();
+                  navigate("/notifications");
+                }}
+              />
             </div>
           )}
           {children}

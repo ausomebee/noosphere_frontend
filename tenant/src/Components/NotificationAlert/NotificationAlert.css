@@ -10,6 +10,19 @@
   margin-bottom: 12px;
 }
 
+.notif-alert-clickable {
+  cursor: pointer;
+}
+
+.notif-alert-clickable:hover {
+  filter: brightness(0.98);
+}
+
+.notif-alert-clickable:focus-visible {
+  outline: 2px solid var(--button-primary-color, #004aba);
+  outline-offset: 2px;
+}
+
 .notif-alert-left {
   display: flex;
   align-items: center;

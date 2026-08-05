@@ -18,6 +18,8 @@ import { GrDocumentPerformance } from "react-icons/gr";
 import { PiUserList } from "react-icons/pi";
 import { IoNotifications } from "react-icons/io5";
 import notificationApi from "../../api/notificationApi";
+import useSocket from "../../hooks/useSocket";
+import { disconnectSocket } from "../../api/socketService";
 import "./ControlLayout.css";
 import NoosphereLogo from "../../assets/NoosphereLogo.png";
 import useIdleTimeout from "../../hooks/useIdleTimeout";
@@ -60,7 +62,14 @@ const Layout = ({ children }) => {
   const { accessToken, refreshToken, user } = useAuth();
   const { hasModuleAccess, hasPermission } = usePermission();
 
+  // Live-count incoming notifications even while the admin is elsewhere in the
+  // app, so the header bell badge tells them something is waiting.
+  useSocket({
+    onNotification: () => setUnreadNotifications((c) => c + 1),
+  });
+
   const handleLogout = () => {
+    disconnectSocket();
     dispatch(logout());
     navigate("/auth/login");
   };
@@ -452,7 +461,10 @@ const Layout = ({ children }) => {
           <div className="header-right">
             <button
               className="notification-bell"
-              onClick={() => navigate("/notifications")}
+              onClick={() => {
+                setUnreadNotifications(0);
+                navigate("/notifications");
+              }}
               aria-label="Notifications"
             >
               <IoNotifications size={20} />

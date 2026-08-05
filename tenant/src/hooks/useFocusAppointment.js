@@ -31,8 +31,15 @@ export default function useFocusAppointment(list, openFn) {
     const focusId = location.state?.focusId;
     if (!focusId || consumedRef.current) return;
     if (!Array.isArray(list) || !list.length) return;
-    const item = list.find(
-      (i) => i?.id === focusId || i?.rawData?.id === focusId
+    // A recurring appointment is expanded into rows whose id is
+    // `${masterId}_${timestamp}`, while the notification carries the master id.
+    // Compare on the base id so a freshly created appointment still matches.
+    const baseId = (v) => (typeof v === "string" ? v.split("_")[0] : v);
+    const target = baseId(focusId);
+    const item = list.find((i) =>
+      [i?.id, i?.rawData?.id, i?.rawData?.appointmentId].some(
+        (c) => c != null && baseId(c) === target
+      )
     );
     if (!item || typeof openFn !== "function") return;
     consumedRef.current = true;

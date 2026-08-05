@@ -3,7 +3,7 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
-import { emitNotificationRead } from "../../api/socketService";
+import { emitNotificationRead, onNotification } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
 import {
   IoClose,
@@ -70,7 +70,23 @@ const Notifications = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userId, accessToken]);
+  }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live updates: the socket pushes a "newNotification" whose payload uses the
+  // same keys as the fetched list, so prepend it directly — no refresh needed.
+  useEffect(() => {
+    const unsub = onNotification((incoming) => {
+      const notif = incoming?.notification ?? incoming;
+      if (!notif) return;
+      setNotifications((prev) => {
+        if (notif.id && prev.some((n) => n.id === notif.id)) {
+          return prev.map((n) => (n.id === notif.id ? { ...n, ...notif } : n));
+        }
+        return [notif, ...prev];
+      });
+    });
+    return unsub;
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

@@ -13,6 +13,7 @@ import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePageTitle from "../../hooks/usePageTitle";
 import useAuth from "../../hooks/useAuth";
 import notificationApi from "../../api/notificationApi";
+import { onNotification } from "../../api/socketService";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
 
@@ -90,7 +91,23 @@ const Notifications = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userId, accessToken]);
+  }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live updates: the socket pushes a "newNotification" whose payload uses the
+  // same keys as the fetched list, so prepend it directly — no refresh needed.
+  useEffect(() => {
+    const unsub = onNotification((incoming) => {
+      const notif = incoming?.notification ?? incoming;
+      if (!notif) return;
+      setNotifications((prev) => {
+        if (notif.id && prev.some((n) => n.id === notif.id)) {
+          return prev.map((n) => (n.id === notif.id ? { ...n, ...notif } : n));
+        }
+        return [notif, ...prev];
+      });
+    });
+    return unsub;
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

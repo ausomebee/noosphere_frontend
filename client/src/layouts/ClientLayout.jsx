@@ -12,6 +12,7 @@ import { logout } from "../ReduxStore/features/authentication";
 import useAuth from "../hooks/useAuth";
 import useSocket from "../hooks/useSocket";
 import { disconnectSocket } from "../api/socketService";
+import messageApi from "../api/messageApi";
 import { persistor } from "../ReduxStore/store";
 import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/Modal/MessageModal";
@@ -23,6 +24,7 @@ const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
+  const [notifCount, setNotifCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showOnlineBanner, setShowOnlineBanner] = useState(false);
 
@@ -49,10 +51,28 @@ const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { firstName, lastName, avatarUrl } = useAuth();
+  const { firstName, lastName, avatarUrl, userId, accessToken, refreshToken } = useAuth();
   useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
+    // Live-count incoming notifications even while the user is elsewhere in the
+    // app, so the sidebar badge tells them something is waiting.
+    onNotification: () => setNotifCount((c) => c + 1),
   });
+
+  // Seed the badge with the unread count already on the server, so it survives
+  // refreshes/logins (not just sockets fired during this session).
+  useEffect(() => {
+    if (!userId || !accessToken) return;
+    messageApi
+      .GetNotifications({ userId, userType: "CLIENT", accessToken, refreshToken })
+      .then((res) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+        setNotifCount(list.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useIdleTimeout();
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
@@ -168,20 +188,31 @@ const DashboardLayout = ({ children }) => {
           </div>
 
           <ul className="sidebar-nav">
-            {navItems.map((item, index) => (
-              <li key={index} className="nav-item">
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `nav-link ${isActive ? "active" : ""}`
-                  }
-                  onClick={closeSidebar}
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
+            {navItems.map((item, index) => {
+              const isNotifItem = item.path === "/notifications";
+              return (
+                <li key={index} className="nav-item">
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `nav-link ${isActive ? "active" : ""}`
+                    }
+                    onClick={() => {
+                      closeSidebar();
+                      if (isNotifItem) setNotifCount(0);
+                    }}
+                  >
+                    {item.icon}
+                    {item.label}
+                    {isNotifItem && notifCount > 0 && (
+                      <span className="nav-badge">
+                        {notifCount > 99 ? "99+" : notifCount}
+                      </span>
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
 
           <button className="logout-link" onClick={handleLogout}>

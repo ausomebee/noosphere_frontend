@@ -5,7 +5,7 @@ import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
 import LoadingSpinner from "../../Components/LoadingSpinner";
 import messageApi from "../../api/messageApi";
-import { emitNotificationRead } from "../../api/socketService";
+import { emitNotificationRead, onNotification } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import { formatDateHeader } from "../../Helper/Formatters";
@@ -52,6 +52,22 @@ const Notifications = () => {
       .catch((err) => console.error("[Notifications] Failed to load:", err))
       .finally(() => setLoading(false));
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live updates: the socket pushes a "newNotification" whose payload uses the
+  // same keys as the fetched list, so prepend it directly — no refresh needed.
+  useEffect(() => {
+    const unsub = onNotification((incoming) => {
+      const notif = incoming?.notification ?? incoming;
+      if (!notif) return;
+      setAllNotifications((prev) => {
+        if (notif.id && prev.some((n) => n.id === notif.id)) {
+          return prev.map((n) => (n.id === notif.id ? { ...n, ...notif } : n));
+        }
+        return [notif, ...prev];
+      });
+    });
+    return unsub;
+  }, []);
 
   const unreadCount = allNotifications.filter((n) => !n.isRead).length;
 

@@ -361,13 +361,16 @@
   color: var(--white);
   border-radius: 20px;
   width: auto;
-  padding: 2px 4px;
+  min-width: 20px;
+  padding: 2px 7px;
   height: 20px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
   font-weight: bold;
+  line-height: 1;
 }
 
 .header-right {
@@ -543,8 +546,10 @@
   }
 
   .notification-badge {
-    width: 18px;
+    width: auto;
+    min-width: 18px;
     height: 18px;
+    padding: 2px 6px;
     font-size: 0.6rem;
   }
 }
