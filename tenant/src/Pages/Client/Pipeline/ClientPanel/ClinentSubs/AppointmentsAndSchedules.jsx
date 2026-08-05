@@ -5,8 +5,13 @@ import usePermissions from "../../../../../hooks/usePermissions";
 import { format, addDays, subDays } from "date-fns";
 import Button from "../../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
+import { FiEdit, FiRefreshCw } from "react-icons/fi";
+import { RxCross2 } from "react-icons/rx";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import AppointmentModal from "../../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
+import RescheduleModal from "../../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
+import CancelModal from "../../../../../Components/ReusableModal/SchedulerModal/CancelModal";
 import api from "../../../../../api/AppointmentApi";
 import api2 from "../../../../../api/clientPanelApis";
 import api3 from "../../../../../api/billingAndPaymentsApi"; // For real service codes
@@ -29,6 +34,10 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [viewMode, setViewMode] = useState("table");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Targets for the Reschedule / Cancel action modals (ported from the
+  // scheduler so the client panel has the same actions as the main table).
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
   // The cancelled appointment whose "Cancellation details" modal is open.
   const [cancelDetails, setCancelDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -453,10 +462,28 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const actions = [
     {
       type: "dropdown",
+      label: "Actions",
       items: [
         hasPermission("edit_appointments") && {
           label: "Edit Appointment",
+          icon: <FiEdit />,
           onClick: (row) => openModal(row),
+        },
+        hasPermission("reschedule_appointments") && {
+          label: "Reschedule",
+          icon: <FiRefreshCw />,
+          onClick: (row) => handleReschedule(row),
+        },
+        hasPermission("cancel_appointments") && {
+          label: "Cancel",
+          icon: <RxCross2 />,
+          onClick: (row) => handleCancel(row),
+        },
+        hasPermission("start_appointments") && {
+          label: "Start Appointment",
+          icon: <IoCheckmarkCircleOutline />,
+          onClick: (row) => handleStartAppointment(row),
+          className: "text-primary font-bold bg-brand-50",
         },
       ].filter(Boolean),
     },
@@ -543,6 +570,62 @@ const AppointmentsScheduleTab = ({ fullName }) => {
       // Re-throw so the AppointmentModal stays open on a failed save.
       throw err;
     }
+  };
+
+  // ---- Reschedule ----
+  const handleReschedule = (row) => setRescheduleTarget(row.rawData || row);
+
+  const handleSaveReschedule = async (data) => {
+    try {
+      await api.RescheduleAppointments({
+        tenantId,
+        id: rescheduleTarget?.id,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        forAll: data.scope === "all",
+        accessToken,
+        refreshToken,
+      });
+      showToast("Rescheduled!", "success");
+      setRescheduleTarget(null);
+      fetchAppointments();
+    } catch (err) {
+      showApiError(err, "RESCHEDULE_APPOINTMENT");
+    }
+  };
+
+  // ---- Cancel ----
+  const handleCancel = (row) => setCancelTarget(row.rawData || row);
+
+  const handleSaveCancel = async (data) => {
+    try {
+      await api.CancelAppointments({
+        tenantId,
+        id: cancelTarget?.id,
+        reason: data.reason,
+        forAll: true,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Cancelled!", "success");
+      setCancelTarget(null);
+      fetchAppointments();
+    } catch (err) {
+      showApiError(err, "CANCEL_APPOINTMENT");
+    }
+  };
+
+  // ---- Start appointment ----
+  const handleStartAppointment = (row) => {
+    const raw = row.rawData || row;
+    const appointmentId = (row.id || raw.id || "").split("_")[0] || raw.id;
+    const cid = raw.client?.id || raw.clientId || clientId;
+    if (!appointmentId || !cid) {
+      showToast("Cannot start: missing appointment or client ID", "error");
+      return;
+    }
+    navigate(`/appointments/start/${appointmentId}/${cid}`);
   };
 
   const handlePrevMonth = () => setCurrentDate(subDays(currentDate, 30));
@@ -721,6 +804,20 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         refreshToken={refreshToken}
         tenantId={tenantId}
         initialClientId={clientId}
+      />
+
+      <RescheduleModal
+        isOpen={!!rescheduleTarget}
+        onClose={() => setRescheduleTarget(null)}
+        appointment={rescheduleTarget}
+        onSave={handleSaveReschedule}
+      />
+
+      <CancelModal
+        isOpen={!!cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onSave={handleSaveCancel}
+        appointments={cancelTarget ? [cancelTarget] : []}
       />
 
       {cancelDetails && (
