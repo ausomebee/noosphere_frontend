@@ -40,11 +40,19 @@ const Home = () => {
   const pendingFocusIdRef = useRef(null);
   useEffect(() => {
     const focusTab = location.state?.focusTab;
+    const focusId = location.state?.focusId ?? null;
     const VALID_TABS = ["upcoming", "awaiting", "reschedule", "completed", "cancelled"];
-    if (focusTab && VALID_TABS.includes(focusTab)) {
-      setActiveTab(focusTab);
+    const targetTab =
+      focusTab && VALID_TABS.includes(focusTab) ? focusTab : null;
+    if (targetTab) setActiveTab(targetTab);
+    pendingFocusIdRef.current = focusId;
+    // Opening from a notification: clear the target tab's cached rows and force
+    // a fresh fetch, so the details modal opens against up-to-date data rather
+    // than a stale cached row (which showed the wrong/old appointment).
+    if (focusId && targetTab) {
+      setAppointmentsData((prev) => ({ ...prev, [targetTab]: [] }));
+      setRefreshKey((k) => k + 1);
     }
-    pendingFocusIdRef.current = location.state?.focusId ?? null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
   const [loading, setLoading] = useState({
@@ -250,7 +258,6 @@ const Home = () => {
             // Transform awaiting approvals data based on actual API response
             transformedData = response.data.data.map(session => {
               const apt = session.appointment || {};
-              const client = apt.client || {};
               const sessionInfo = apt.session || {};
               const clinicians = apt.clinicians || [];
 
@@ -502,7 +509,9 @@ const Home = () => {
   // it never re-opens after the user closes it.
   useEffect(() => {
     const focusId = pendingFocusIdRef.current;
-    if (!focusId || !currentTabData.length) return;
+    // Wait for the fresh fetch to finish so we match against up-to-date rows,
+    // not stale cached data.
+    if (!focusId || loading.appointments || !currentTabData.length) return;
     const row = currentTabData.find(
       (a) => a.id === focusId || a.originalData?.id === focusId
     );
@@ -514,7 +523,7 @@ const Home = () => {
     // Consume the focus so a re-mount can't re-open the modal from stale state.
     if (location.state) navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTabData, activeTab]);
+  }, [currentTabData, activeTab, loading.appointments]);
 
   // Reset page when tab changes
   const handleTabChange = useCallback((tab) => {
