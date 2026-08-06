@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   IoNotificationsOutline,
@@ -78,7 +78,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
     setLoading(true);
     notificationApi
@@ -91,7 +91,11 @@ const Notifications = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   // Live updates: the socket pushes a "newNotification" whose payload uses the
   // same keys as the fetched list, so prepend it directly — no refresh needed.
@@ -144,15 +148,19 @@ const Notifications = () => {
     }
   };
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     const unread = notifications.filter((n) => !n.isRead);
     if (!unread.length) return;
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    unread.forEach((n) => {
-      notificationApi
-        .markNotificationRead({ id: n.id, accessToken, refreshToken })
-        .catch(() => {});
-    });
+    await Promise.all(
+      unread.map((n) =>
+        notificationApi
+          .markNotificationRead({ id: n.id, accessToken, refreshToken })
+          .catch(() => {})
+      )
+    );
+    // Refresh from the server so the list reflects the persisted read state.
+    loadNotifications();
   };
 
   return (

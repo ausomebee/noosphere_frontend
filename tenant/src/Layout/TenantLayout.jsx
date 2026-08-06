@@ -29,8 +29,8 @@ import { disconnectSocket } from "../api/socketService";
 import { persistor } from "../ReduxStore/store";
 import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/MessageModal/MessageModal";
-import NotificationAlert from "../Components/NotificationAlert/NotificationAlert";
 import useSocket from "../hooks/useSocket";
+import notificationApi from "../api/notificationApi";
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   const location = useLocation();
@@ -237,7 +237,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 };
 
 const DashboardLayout = ({ children }) => {
-  const { user } = useAuth();
+  const { user, userId, accessToken, refreshToken } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [messageCount, setMessageCount] = useState(0);
@@ -247,26 +247,31 @@ const DashboardLayout = ({ children }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  // A single notification banner that counts up as more arrive, instead of one
-  // stacked banner per notification.
-  const [notifBanner, setNotifBanner] = useState(null); // { count, message }
+  // Unread notification count shown on the bell — driven by the socket, so no
+  // banner is needed.
+  const [notifCount, setNotifCount] = useState(0);
   const profileDropdownRef = useRef(null);
 
   useIdleTimeout();
 
+  // Seed the bell with the unread count already on the server, so it survives
+  // refreshes/logins (not just sockets fired during this session).
+  useEffect(() => {
+    if (!userId || !accessToken) return;
+    notificationApi
+      .getNotifications({ userId, userType: "TENANT_STAFF", accessToken, refreshToken })
+      .then((res) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+        setNotifCount(list.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Wire socket: register + listen for notifications and new messages
   useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
-    onNotification: (notif) => {
-      setNotifBanner((prev) => {
-        const count = (prev?.count || 0) + 1;
-        const message =
-          count === 1
-            ? notif?.title || notif?.message || "New notification"
-            : `You have ${count} new notifications`;
-        return { count, message };
-      });
-    },
+    onNotification: () => setNotifCount((c) => c + 1),
   });
 
   // Derive display name & initials from auth
@@ -331,8 +336,6 @@ const DashboardLayout = ({ children }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleDismissAlert = () => setNotifBanner(null);
-
   return (
     <div className="dashboard-layout">
       {(!isOnline || showOnlineBanner) && (
@@ -364,13 +367,16 @@ const DashboardLayout = ({ children }) => {
               <div className="header-left">
                 <button
                   className="message-icon"
-                  onClick={() => navigate("/notifications")}
+                  onClick={() => {
+                    setNotifCount(0);
+                    navigate("/notifications");
+                  }}
                   aria-label="Notifications"
                 >
                   <IoNotifications size={26} color="#fff" />
-                  {notifBanner?.count > 0 && (
+                  {notifCount > 0 && (
                     <span className="notification-badge">
-                      {notifBanner.count > 99 ? "99+" : notifBanner.count}
+                      {notifCount > 99 ? "99+" : notifCount}
                     </span>
                   )}
                 </button>
@@ -455,20 +461,6 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         <main id="main-content" className="main-content">
-          {/* Single notification banner — counts up instead of stacking */}
-          {notifBanner && (
-            <div className="layout-alerts">
-              <NotificationAlert
-                variant="primary"
-                message={notifBanner.message}
-                onClose={handleDismissAlert}
-                onClick={() => {
-                  handleDismissAlert();
-                  navigate("/notifications");
-                }}
-              />
-            </div>
-          )}
           {children}
         </main>
       </div>

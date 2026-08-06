@@ -131,7 +131,9 @@ const clientScoped = (label, focusTab) => (id, notif) => {
 
 const ACTIONS = {
   // ---- Appointments → /scheduler/appointments, focus the right sub-tab ----
-  UPCOMING_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
+  // A newly created / upcoming appointment simply lands on the Upcoming tab
+  // (opening the details modal here proved unreliable), so just route there.
+  UPCOMING_APPOINTMENT: () => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming } }),
   APPOINTMENT_START_REMINDER: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   APPOINTMENT_STARTED: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   RESCHEDULED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
@@ -188,7 +190,7 @@ const ACTIONS = {
 // Fallback by entityType, so a notification still gets a working "view" action
 // even if its exact `type` string isn't in ACTIONS (new/renamed types).
 const ENTITY_FALLBACK = {
-  APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
+  APPOINTMENT: () => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming } }),
   CLIENT: clientScoped("View client", "clientInformation"),
   DOCUMENT: clientScoped("View documents", "clientInformation"),
   AUTHORIZATION: clientScoped("View authorization", "authorization"),

@@ -42,7 +42,8 @@ const columns = [
   { header: "Outcome", key: "outcome" },
 ];
 
-const LIMIT = 20;
+const PAGE_SIZE = 20;
+const FETCH_LIMIT = 100;
 
 const LoginLogsReport = () => {
   const navigate = useNavigate();
@@ -50,23 +51,34 @@ const LoginLogsReport = () => {
 
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
-  const fetchLogs = async (p) => {
+  // Pull every log so the table paginates client-side with its own pager,
+  // instead of the external Previous/Next controls we had before.
+  const fetchLogs = async () => {
     setLoading(true);
     try {
-      const result = await reportsApi.getActivityLogs({
+      const first = await reportsApi.getActivityLogs({
         tenantId,
-        page: p,
-        limit: LIMIT,
+        page: 1,
+        limit: FETCH_LIMIT,
         featureNames: "login",
         accessToken,
         refreshToken,
       });
-      setTableData((result.data || []).map(toRow));
-      setMeta(result.meta || { total: 0, totalPages: 1 });
-      setPage(p);
+      let logs = first.data || [];
+      const totalPages = first.meta?.totalPages || 1;
+      for (let p = 2; p <= totalPages; p++) {
+        const res = await reportsApi.getActivityLogs({
+          tenantId,
+          page: p,
+          limit: FETCH_LIMIT,
+          featureNames: "login",
+          accessToken,
+          refreshToken,
+        });
+        logs = logs.concat(res.data || []);
+      }
+      setTableData(logs.map(toRow));
     } catch (err) {
       showApiError(err, "LOAD_LOGIN_LOGS");
     } finally {
@@ -75,8 +87,8 @@ const LoginLogsReport = () => {
   };
 
   useEffect(() => {
-    if (tenantId && accessToken) fetchLogs(1);
-  }, [tenantId, accessToken]);
+    if (tenantId && accessToken) fetchLogs();
+  }, [tenantId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="report-subpage">
@@ -94,23 +106,11 @@ const LoginLogsReport = () => {
         data={tableData}
         columns={columns}
         tableName="Login Logs"
-        itemsPerPage={LIMIT}
+        itemsPerPage={PAGE_SIZE}
         showActions={false}
         showCheckbox={false}
         loading={loading}
       />
-
-      {meta.totalPages > 1 && (
-        <div className="report-pagination">
-          <button className="report-page-btn" disabled={page <= 1} onClick={() => fetchLogs(page - 1)}>
-            Previous
-          </button>
-          <span className="report-page-info">Page {page} of {meta.totalPages}</span>
-          <button className="report-page-btn" disabled={page >= meta.totalPages} onClick={() => fetchLogs(page + 1)}>
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };

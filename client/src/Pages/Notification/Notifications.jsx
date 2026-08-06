@@ -1,5 +1,5 @@
 import usePageTitle from "../../hooks/usePageTitle";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
@@ -38,7 +38,7 @@ const Notifications = () => {
   const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
     setLoading(true);
     messageApi
@@ -51,7 +51,11 @@ const Notifications = () => {
       })
       .catch((err) => console.error("[Notifications] Failed to load:", err))
       .finally(() => setLoading(false));
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   // Live updates: the socket pushes a "newNotification" whose payload uses the
   // same keys as the fetched list, so prepend it directly — no refresh needed.
@@ -91,14 +95,20 @@ const Notifications = () => {
     }
   };
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     const unread = allNotifications.filter((n) => !n.isRead);
     if (!unread.length) return;
     setAllNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    unread.forEach((n) => {
-      messageApi.MarkNotificationRead({ id: n.id, accessToken, refreshToken }).catch(() => {});
-      emitNotificationRead(n.id);
-    });
+    await Promise.all(
+      unread.map((n) => {
+        emitNotificationRead(n.id);
+        return messageApi
+          .MarkNotificationRead({ id: n.id, accessToken, refreshToken })
+          .catch(() => {});
+      })
+    );
+    // Refresh from the server so the list reflects the persisted read state.
+    loadNotifications();
   };
 
   // Group by date header (Today, Yesterday, ...), most recent first.
