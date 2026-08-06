@@ -10,12 +10,15 @@ import {
   IoCheckmarkCircleOutline,
 } from "react-icons/io5";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import Pagination from "../../Components/Table/Pagination";
 import usePageTitle from "../../hooks/usePageTitle";
 import useAuth from "../../hooks/useAuth";
 import notificationApi from "../../api/notificationApi";
 import { onNotification } from "../../api/socketService";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
+
+const ITEMS_PER_PAGE = 10;
 
 // Icon key per notification type (grouped by domain).
 const ICON_MAP = {
@@ -77,6 +80,7 @@ const Notifications = () => {
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
@@ -119,7 +123,14 @@ const Notifications = () => {
   const sorted = [...notifications].sort(
     (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
   );
-  const byDate = sorted.reduce((acc, n) => {
+  // Client-side pagination over the sorted list, then group each page by date.
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
+  const pageItems = sorted.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+  const byDate = pageItems.reduce((acc, n) => {
     const key = dateHeader(n.createdAt);
     (acc[key] = acc[key] || []).push(n);
     return acc;
@@ -239,6 +250,14 @@ const Notifications = () => {
           })
         )}
       </div>
+
+      {!loading && totalPages > 1 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,8 @@
 import usePageTitle from "../../hooks/usePageTitle";
 import LoadingSpinner from "../../Components/LoadingSpinner";
+import Pagination from "../../Components/Table/Pagination";
+
+const ITEMS_PER_PAGE = 10;
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
@@ -56,6 +59,7 @@ const Notifications = () => {
   usePageTitle("Notifications");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
@@ -94,7 +98,16 @@ const Notifications = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const groupedNotifications = notifications.reduce((groups, notif) => {
+  // Client-side pagination: page through the full list, then group each page
+  // by date so the headers stay correct within the page.
+  const totalPages = Math.max(1, Math.ceil(notifications.length / ITEMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
+  const pageItems = notifications.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+
+  const groupedNotifications = pageItems.reduce((groups, notif) => {
     const date = resolveDate(notif);
     if (!groups[date]) groups[date] = [];
     groups[date].push(notif);
@@ -218,6 +231,14 @@ const Notifications = () => {
           ))
         )}
       </div>
+
+      {!loading && totalPages > 1 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 };

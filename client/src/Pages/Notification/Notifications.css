@@ -1,5 +1,39 @@
 /* Notifications.css */
 
+/* Client-side pagination for the notifications list */
+.notif-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.notif-page-btn {
+  padding: 8px 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.notif-page-btn:hover:not(:disabled) {
+  background: #f2f4f7;
+}
+
+.notif-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notif-page-info {
+  font-size: 14px;
+  color: #667085;
+}
+
 .notifications-container {
   min-height: 100vh;
   background-color: #f8f9fa;

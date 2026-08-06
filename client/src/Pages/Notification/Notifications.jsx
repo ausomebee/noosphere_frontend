@@ -10,6 +10,8 @@ import useAuth from "../../hooks/useAuth";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import { formatDateHeader } from "../../Helper/Formatters";
 
+const ITEMS_PER_PAGE = 10;
+
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="3" y="6" width="18" height="15" rx="2" stroke="#4d7cfe" strokeWidth="2" fill="none" />
@@ -37,6 +39,7 @@ const Notifications = () => {
   usePageTitle("Notifications");
   const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
@@ -115,7 +118,14 @@ const Notifications = () => {
   const sorted = [...allNotifications].sort(
     (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
   );
-  const byDate = sorted.reduce((acc, n) => {
+  // Client-side pagination over the sorted list, then group each page by date.
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
+  const pageItems = sorted.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+  const byDate = pageItems.reduce((acc, n) => {
     const key = n.createdAt ? formatDateHeader(n.createdAt) : "Earlier";
     (acc[key] = acc[key] || []).push(n);
     return acc;
@@ -175,6 +185,29 @@ const Notifications = () => {
                   </div>
                 </section>
               ))}
+              {totalPages > 1 && (
+                <div className="notif-pagination">
+                  <button
+                    type="button"
+                    className="notif-page-btn"
+                    disabled={page <= 1}
+                    onClick={() => setCurrentPage(page - 1)}
+                  >
+                    Previous
+                  </button>
+                  <span className="notif-page-info">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="notif-page-btn"
+                    disabled={page >= totalPages}
+                    onClick={() => setCurrentPage(page + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
