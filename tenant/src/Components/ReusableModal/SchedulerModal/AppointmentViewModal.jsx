@@ -77,37 +77,37 @@ const AppointmentViewModal = ({
         <div className="flex gap-3 mt-6 p-2">
           {onStart && (
             <Button
-              label="Start appointment"
+              label="Start"
               variant="primary"
               icon={<IoCheckmarkCircleOutline />}
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={onStart}
             />
           )}
           {onEdit && (
             <Button
-              label="Edit appointment"
+              label="Edit"
               variant="secondary"
               icon={<FiEdit />}
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={onEdit}
             />
           )}
           {onReschedule && (
             <Button
-              label="Reschedule appointment"
+              label="Reschedule"
               variant="secondary"
               icon={<FiRefreshCw />}
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={onReschedule}
             />
           )}
           {onCancel && (
             <Button
-              label="Cancel appointment"
+              label="Cancel"
               variant="secondary-danger"
               icon={<RxCross2 />}
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={onCancel}
             />
           )}
