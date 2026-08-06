@@ -486,12 +486,42 @@ const UpcomingAppointments = ({ setCounts }) => {
         isOpen={!!viewAppt}
         appointment={viewAppt}
         onClose={() => setViewAppt(null)}
-        primaryLabel="Edit appointment"
-        onPrimary={() => {
-          const appt = viewAppt;
-          setViewAppt(null);
-          if (appt) handleEdit(appt);
-        }}
+        onStart={
+          hasPermission("start_appointments")
+            ? () => {
+                const appt = viewAppt;
+                setViewAppt(null);
+                if (appt) handleStartAppointment(appt);
+              }
+            : undefined
+        }
+        onEdit={
+          hasPermission("edit_appointments")
+            ? () => {
+                const appt = viewAppt;
+                setViewAppt(null);
+                if (appt) handleEdit(appt);
+              }
+            : undefined
+        }
+        onReschedule={
+          hasPermission("reschedule_appointments")
+            ? () => {
+                const appt = viewAppt;
+                setViewAppt(null);
+                if (appt) handleReschedule(appt);
+              }
+            : undefined
+        }
+        onCancel={
+          hasPermission("cancel_appointments")
+            ? () => {
+                const appt = viewAppt;
+                setViewAppt(null);
+                if (appt) handleCancel(appt);
+              }
+            : undefined
+        }
       />
 
       <AppointmentModal

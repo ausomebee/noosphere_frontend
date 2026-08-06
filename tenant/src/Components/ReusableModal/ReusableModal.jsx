@@ -23,6 +23,8 @@ const ReusableModal = ({
   primaryButtonLoading = false,
   activeTab,
   onTabChange,
+  showClose = false,
+  closeOnOverlayClick = false,
 }) => {
   const scrollPositionRef = useRef(0);
   const modalRef = useRef(null);
@@ -114,6 +116,14 @@ const ReusableModal = ({
       onKeyDown={(e) => {
         if (e.key !== "Escape" && e.key !== "Tab") e.stopPropagation();
       }}
+      // Opt-in: clicking the backdrop (not the modal content) closes it.
+      onClick={
+        closeOnOverlayClick
+          ? (e) => {
+              if (e.target === e.currentTarget) onClose();
+            }
+          : undefined
+      }
       onDragStart={blockDrag}
       onDrag={blockDrag}
       onDragEnd={blockDrag}
@@ -137,7 +147,7 @@ const ReusableModal = ({
           </h1>
           {subTitle && <p className="modal-subtitle">{subTitle}</p>}
 
-          {tabs && tabs.length > 0 && (
+          {((tabs && tabs.length > 0) || showClose) && (
             <button
               type="button"
               className="modal-close-btn"
@@ -260,6 +270,8 @@ ReusableModal.propTypes = {
   primaryButtonLoading: PropTypes.bool,
   activeTab: PropTypes.string,
   onTabChange: PropTypes.func,
+  showClose: PropTypes.bool,
+  closeOnOverlayClick: PropTypes.bool,
 };
 
 export default ReusableModal;
