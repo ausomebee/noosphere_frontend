@@ -60,7 +60,7 @@ const AppointmentViewModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Appointment details"
-      size="md"
+      size="lg"
       showClose
       closeOnOverlayClick
     >
@@ -74,13 +74,13 @@ const AppointmentViewModal = ({
       </div>
 
       {(onStart || onEdit || onReschedule || onCancel) && (
-        <div className="flex flex-col gap-3 mt-6 p-2">
+        <div className="flex gap-3 mt-6 p-2">
           {onStart && (
             <Button
               label="Start appointment"
               variant="primary"
               icon={<IoCheckmarkCircleOutline />}
-              className="w-full"
+              className="flex-1"
               onClick={onStart}
             />
           )}
@@ -89,7 +89,7 @@ const AppointmentViewModal = ({
               label="Edit appointment"
               variant="secondary"
               icon={<FiEdit />}
-              className="w-full"
+              className="flex-1"
               onClick={onEdit}
             />
           )}
@@ -98,7 +98,7 @@ const AppointmentViewModal = ({
               label="Reschedule appointment"
               variant="secondary"
               icon={<FiRefreshCw />}
-              className="w-full"
+              className="flex-1"
               onClick={onReschedule}
             />
           )}
@@ -107,7 +107,7 @@ const AppointmentViewModal = ({
               label="Cancel appointment"
               variant="secondary-danger"
               icon={<RxCross2 />}
-              className="w-full"
+              className="flex-1"
               onClick={onCancel}
             />
           )}
