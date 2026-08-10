@@ -876,7 +876,7 @@ const AppointmentModal = ({
         </p>
       ) : (
         fields.map((item, index) => (
-          <div key={item.id} className="flex gap-4 items-end mb-4">
+          <div key={item.id} className="flex gap-4 items-start mb-4">
             <div className="flex-1">
               <Controller
                 name={`service.${index}.serviceCodeId`}
@@ -918,15 +918,24 @@ const AppointmentModal = ({
                 )}
               />
             </div>
-            <button
-              type="button"
-              className="shrink-0 mb-1 p-2.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
-              onClick={() => remove(index)}
-              aria-label="Remove service code"
-              title="Remove service code"
-            >
-              <FaTrash size={16} />
-            </button>
+            {/* Column mirrors the inputs' label spacing so the button lines up
+                with the select box itself, not the label or any error text. */}
+            <div className="shrink-0 flex flex-col">
+              {index === 0 && (
+                <span className="input-group-label" aria-hidden="true">
+                  &nbsp;
+                </span>
+              )}
+              <button
+                type="button"
+                className="h-9 w-9 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors"
+                onClick={() => remove(index)}
+                aria-label="Remove service code"
+                title="Remove service code"
+              >
+                <FaTrash size={16} />
+              </button>
+            </div>
           </div>
         ))
       )}
