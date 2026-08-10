@@ -6,6 +6,7 @@ import api from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
 import expandForAppointments from "../../../utils/expandForAppointments";
+import { toServiceRows } from "../../../utils/appointmentDisplay";
 import DashboardEmptyState from "./DashboardEmptyState";
 import "../Dashboard.css";
 
@@ -20,36 +21,15 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
   const [error, setError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // FIXED: Transform appointmentServices → service array
-  const toTableRow = (apiAppt) => {
-    const service = (apiAppt.appointmentServices || []).map((as) => {
-      const modifier = as.modifiers?.modifier
-        ? ` (${as.modifiers.modifier})`
-        : "";
-
-      // Known serviceCodeId → code mapping
-      const knownCodes = {
-        "4e304a36-8fe8-41fd-85f1-0398a25a50dd": "97158",
-        // Add more mappings as needed
-      };
-
-      const code = knownCodes[as.serviceCodeId] || "Unknown";
-
-      return {
-        serviceType: `${code}${modifier}`,
-        modifierType: as.modifiers?.modifier || "",
-      };
-    });
-
-    return {
-      ...apiAppt,
-      service: service.length > 0 ? service : [],
-      client: apiAppt.client || { firstName: "", lastName: "" },
-      clinicians: apiAppt.clinicians || [],
-      session: apiAppt.session || { name: "Unknown" },
-      colourCode: apiAppt.colourCode || "#3B82F6",
-    };
-  };
+  // Transform appointmentServices → service array
+  const toTableRow = (apiAppt) => ({
+    ...apiAppt,
+    service: toServiceRows(apiAppt.appointmentServices),
+    client: apiAppt.client || { firstName: "", lastName: "" },
+    clinicians: apiAppt.clinicians || [],
+    session: apiAppt.session || { name: "Unknown" },
+    colourCode: apiAppt.colourCode || "#3B82F6",
+  });
 
   // Fetch upcoming appointments (tenant-wide only)
   const fetchAppointments = useCallback(async () => {

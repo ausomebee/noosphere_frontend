@@ -16,6 +16,10 @@ import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
 import expandForAppointments from "../../../../utils/expandForAppointments";
+import {
+  clientDisplayName,
+  toServiceRows,
+} from "../../../../utils/appointmentDisplay";
 
 const UpcomingAppointments = ({ setCounts }) => {
   const navigate = useNavigate();
@@ -46,35 +50,14 @@ const UpcomingAppointments = ({ setCounts }) => {
   }, []);
 
   // Transform raw API appointment to include service array
-  const toTableRow = (apiAppt) => {
-    const service = (apiAppt.appointmentServices || []).map((as) => {
-      const modifier = as.modifiers?.modifier
-        ? ` (${as.modifiers.modifier})`
-        : "";
-
-      // Hardcoded known service code mapping (add more as needed)
-      const knownCodes = {
-        "4e304a36-8fe8-41fd-85f1-0398a25a50dd": "97158",
-        // Add other serviceCodeId → code mappings here
-      };
-
-      const code = knownCodes[as.serviceCodeId] || "Unknown";
-
-      return {
-        serviceType: `${code}${modifier}`,
-        modifierType: as.modifiers?.modifier || "",
-      };
-    });
-
-    return {
-      ...apiAppt,
-      service: service.length > 0 ? service : [], // empty array if no services
-      client: apiAppt.client || { fullName: "Unknown Client" },
-      clinicians: apiAppt.clinicians || [],
-      session: apiAppt.session || { name: "Unknown Session" },
-      colourCode: apiAppt.colourCode || "#3B82F6",
-    };
-  };
+  const toTableRow = (apiAppt) => ({
+    ...apiAppt,
+    service: toServiceRows(apiAppt.appointmentServices),
+    client: apiAppt.client || null,
+    clinicians: apiAppt.clinicians || [],
+    session: apiAppt.session || { name: "Unknown Session" },
+    colourCode: apiAppt.colourCode || "#3B82F6",
+  });
 
   // Fetch master appointments
   const fetchAppointments = useCallback(async () => {
@@ -167,10 +150,7 @@ const UpcomingAppointments = ({ setCounts }) => {
 
       return {
         id: appt.id,
-        clientName:
-          `${appt.client?.firstName || ""} ${
-            appt.client?.lastName || ""
-          }`.trim() || "Unknown Client",
+        clientName: clientDisplayName(appt.client, "Unknown Client"),
         therapistName:
           appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
         serviceType: truncated,
@@ -294,19 +274,7 @@ const UpcomingAppointments = ({ setCounts }) => {
         });
         const appt = res?.data?.data ?? res?.data ?? null;
         if (!appt) return null;
-        const rawData = {
-          ...appt,
-          service: (appt.appointmentServices || []).map((as) => ({
-            serviceType: `${as.serviceCode?.code || "Unknown"}${
-              as.modifiers?.modifier ? ` (${as.modifiers.modifier})` : ""
-            }`,
-            modifierType: as.modifiers?.modifier || "",
-          })),
-          client: appt.client || { fullName: "Unknown Client" },
-          clinicians: appt.clinicians || [],
-          session: appt.session || { name: "Unknown Session" },
-          colourCode: appt.colourCode || "#3B82F6",
-        };
+        const rawData = toTableRow(appt);
         const therapistNames = rawData.clinicians
           .map((c) => c.fullName)
           .filter(Boolean);
@@ -315,10 +283,7 @@ const UpcomingAppointments = ({ setCounts }) => {
           .filter(Boolean);
         return {
           id: appt.id,
-          clientName:
-            `${appt.client?.firstName || ""} ${appt.client?.lastName || ""}`.trim() ||
-            appt.client?.fullName ||
-            "Unknown Client",
+          clientName: clientDisplayName(appt.client, "Unknown Client"),
           therapistName: therapistNames.join(", ") || "Unassigned",
           serviceType: serviceTypes.join(", ") || "N/A",
           serviceTypes,

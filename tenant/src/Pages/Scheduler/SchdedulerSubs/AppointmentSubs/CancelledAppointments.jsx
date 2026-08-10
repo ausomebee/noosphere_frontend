@@ -10,6 +10,10 @@ import {
   formatDateTime,
 } from "../../../../Helper/Formatters";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
+import {
+  clientDisplayName,
+  toServiceRows,
+} from "../../../../utils/appointmentDisplay";
 
 const CancelledAppointments = () => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
@@ -19,31 +23,14 @@ const CancelledAppointments = () => {
   const [localAppointments, setLocalAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // FIXED: Transform appointmentServices → service array (same as other tabs)
+  // Transform appointmentServices → service array (same as other tabs)
   const toTableRow = (apiAppt) => {
-    const service = (apiAppt.appointmentServices || []).map((as) => {
-      const modifier = as.modifiers?.modifier
-        ? ` (${as.modifiers.modifier})`
-        : "";
-
-      // Known serviceCodeId → code mapping
-      const knownCodes = {
-        "4e304a36-8fe8-41fd-85f1-0398a25a50dd": "97158",
-        // Add more mappings as needed
-      };
-
-      const code = knownCodes[as.serviceCodeId] || "Unknown";
-
-      return {
-        serviceType: `${code}${modifier}`,
-        modifierType: as.modifiers?.modifier || "",
-      };
-    });
+    const service = toServiceRows(apiAppt.appointmentServices);
 
     return {
       ...apiAppt,
-      service: service.length > 0 ? service : [],
-      client: apiAppt.client || { fullName: "Unknown Client" },
+      service,
+      client: apiAppt.client || null,
       clinicians: apiAppt.clinicians || [],
       session: apiAppt.session || { name: "Unknown Session" },
       colourCode: apiAppt.colourCode || "#3B82F6",
@@ -83,7 +70,7 @@ const CancelledAppointments = () => {
       return {
         id: transformed.id,
         clientId: transformed.clientId,
-        clientName: transformed.client?.fullName || "N/A",
+        clientName: clientDisplayName(transformed.client),
         therapistName: therapistNames.join(", ") || "N/A",
         serviceType: truncatedServiceType,
         sessionType:

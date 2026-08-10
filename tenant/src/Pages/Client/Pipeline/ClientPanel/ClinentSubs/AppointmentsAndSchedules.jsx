@@ -107,10 +107,12 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     };
   };
 
-  // Transform for table — use real code from map
+  // Transform for table — prefer the code the appointment already carries and
+  // only fall back to the fetched map (which may not have loaded yet).
   const toTableRow = (apiAppt) => {
     const service = (apiAppt.appointmentServices || []).map((as) => {
-      const code = serviceCodeMap[as.serviceCodeId] || "N/A";
+      const code =
+        as.serviceCode?.code || serviceCodeMap[as.serviceCodeId] || "N/A";
       const modifier = as.modifiers?.modifier
         ? ` (${as.modifiers.modifier})`
         : "";
