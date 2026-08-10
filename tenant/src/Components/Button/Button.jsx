@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 const Button = ({
@@ -13,8 +13,23 @@ const Button = ({
   loading = false,
   disabled = false,
   className = "",
+  onClick,
   ...props
 }) => {
+  // Auto-disable while an async onClick is in flight, so no button can be
+  // double-clicked into a duplicate request without any per-caller wiring.
+  const [busy, setBusy] = useState(false);
+  const isBusy = loading || busy;
+
+  const handleClick = (e) => {
+    if (disabled || isBusy) return;
+    const result = onClick?.(e);
+    if (result && typeof result.then === "function") {
+      setBusy(true);
+      Promise.resolve(result).finally(() => setBusy(false));
+    }
+  };
+
   const renderIcon = () => {
     if (!icon) return null;
 
@@ -30,13 +45,14 @@ const Button = ({
     <button
       type={type}
       className={` p-6 btn btn-${variant} btn-${size} ${width} ${
-        disabled || loading ? "btn-disabled" : ""
+        disabled || isBusy ? "btn-disabled" : ""
       } ${className}`}
-      disabled={disabled || loading}
-      aria-label={loading ? "Loading" : label}
+      disabled={disabled || isBusy}
+      aria-label={isBusy ? "Loading" : label}
+      onClick={handleClick}
       {...props}
     >
-      {loading ? (
+      {isBusy ? (
         <span className="btn-spinner">
           <svg
             className="spinner animate-spin"
@@ -91,6 +107,7 @@ Button.propTypes = {
   loading: PropTypes.bool,
   disabled: PropTypes.bool,
   className: PropTypes.string,
+  onClick: PropTypes.func,
 };
 
 export default Button;

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
@@ -87,15 +87,24 @@ const ReusableModal = ({
     };
   }, [isOpen]);
 
+  // Auto-disable the primary button while an async submit is in flight, so it
+  // can't be double-clicked into a duplicate request.
+  const [submitting, setSubmitting] = useState(false);
+  const primaryBusy = primaryButtonLoading || submitting;
+
   const handleClose = () => {
-    if (primaryButtonLoading) return;
+    if (primaryBusy) return;
     onClose?.();
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (primaryButtonLoading) return;
-    onPrimaryButtonClick?.(e);
+    if (primaryBusy) return;
+    const result = onPrimaryButtonClick?.(e);
+    if (result && typeof result.then === "function") {
+      setSubmitting(true);
+      Promise.resolve(result).finally(() => setSubmitting(false));
+    }
   };
 
   const blockDrag = (e) => {
@@ -179,14 +188,14 @@ const ReusableModal = ({
             {secondaryButtonText && (
               <button
                 type="button"
-                onClick={primaryButtonLoading ? undefined : (onSecondaryButtonClick || handleClose)}
+                onClick={primaryBusy ? undefined : (onSecondaryButtonClick || handleClose)}
                 className="modal-btn modal-btn-secondary"
-                disabled={primaryButtonLoading}
+                disabled={primaryBusy}
                 style={{
                   backgroundColor: secondaryButtonColor || "#ffffff",
                   color: "#333333",
-                  opacity: primaryButtonLoading ? 0.5 : 1,
-                  cursor: primaryButtonLoading ? "not-allowed" : "pointer",
+                  opacity: primaryBusy ? 0.5 : 1,
+                  cursor: primaryBusy ? "not-allowed" : "pointer",
                 }}
               >
                 {secondaryButtonText}
@@ -201,9 +210,9 @@ const ReusableModal = ({
                   backgroundColor: primaryButtonColor || "#004aba",
                   color: "#ffffff",
                 }}
-                disabled={primaryButtonLoading}
+                disabled={primaryBusy}
               >
-                {primaryButtonLoading ? (
+                {primaryBusy ? (
                   <span className="modal-btn-spinner">
                     <svg
                       className="modal-spinner animate-spin"

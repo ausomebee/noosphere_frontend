@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { RxCross2 } from "react-icons/rx";
@@ -97,9 +97,19 @@ const ReusableModal = ({
     };
   }, [isOpen]);
 
+  // Auto-disable the primary button while an async submit is in flight, so it
+  // can't be double-clicked into a duplicate request.
+  const [submitting, setSubmitting] = useState(false);
+  const primaryBusy = primaryButtonLoading || submitting;
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onPrimaryButtonClick?.(e);
+    if (primaryBusy) return;
+    const result = onPrimaryButtonClick?.(e);
+    if (result && typeof result.then === "function") {
+      setSubmitting(true);
+      Promise.resolve(result).finally(() => setSubmitting(false));
+    }
   };
 
   const blockDrag = (e) => {
@@ -213,9 +223,9 @@ const ReusableModal = ({
                   backgroundColor: primaryButtonColor || "#004aba",
                   color: "#ffffff",
                 }}
-                disabled={primaryButtonLoading}
+                disabled={primaryBusy}
               >
-                {primaryButtonLoading ? (
+                {primaryBusy ? (
                   <span className="modal-btn-spinner">
                     <svg
                       className="modal-spinner animate-spin"

@@ -29,6 +29,19 @@ const ReusableModal = ({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
+  // Auto-disable the primary button while an async submit is in flight, so it
+  // can't be double-clicked into a duplicate request.
+  const [submitting, setSubmitting] = React.useState(false);
+  const primaryBusy = primaryButtonLoading || submitting;
+  const handlePrimary = (e) => {
+    if (primaryBusy) return;
+    const result = (onPrimaryButtonClick || onClose)?.(e);
+    if (result && typeof result.then === "function") {
+      setSubmitting(true);
+      Promise.resolve(result).finally(() => setSubmitting(false));
+    }
+  };
+
   /* ---------- Register open modal (so the board goes inert) ---------- */
   useEffect(() => {
     if (!isOpen) return;
@@ -137,12 +150,12 @@ const ReusableModal = ({
           )}
           {showPrimaryButton && (
           <button
-            onClick={onPrimaryButtonClick || onClose}
+            onClick={handlePrimary}
             className="modal-button primary-button"
             style={{ backgroundColor: primaryButtonColor || '#000000', color: '#ffffff' }}
-            disabled={primaryButtonLoading}
+            disabled={primaryBusy}
           >
-            {primaryButtonLoading ? (
+            {primaryBusy ? (
               <span className="modal-button-spinner">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" focusable="false">
                   <path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

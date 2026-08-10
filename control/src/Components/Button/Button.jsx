@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import "./Button.css";
 
@@ -13,8 +13,23 @@ const Button = React.memo(({
   disabled = false,
   className = "",
   width = "100%",
+  onClick,
   ...props
 }) => {
+  // Auto-disable while an async onClick is in flight, so no button can be
+  // double-clicked into a duplicate request without any per-caller wiring.
+  const [busy, setBusy] = useState(false);
+  const isBusy = loading || busy;
+
+  const handleClick = (e) => {
+    if (disabled || isBusy) return;
+    const result = onClick?.(e);
+    if (result && typeof result.then === "function") {
+      setBusy(true);
+      Promise.resolve(result).finally(() => setBusy(false));
+    }
+  };
+
   const renderIcon = () => {
     if (!icon) return null;
 
@@ -30,11 +45,12 @@ const Button = React.memo(({
     <button
       type={type}
       className={`custom-button ${variant} ${className}`}
-      disabled={disabled || loading}
+      disabled={disabled || isBusy}
       style={{ width }}
+      onClick={handleClick}
       {...props}
     >
-      {loading ? (
+      {isBusy ? (
         <span className="button-spinner">
           <svg
             className="spinner"
@@ -87,6 +103,7 @@ Button.propTypes = {
   disabled: PropTypes.bool,
   className: PropTypes.string,
   width: PropTypes.string,
+  onClick: PropTypes.func,
 };
 
 export default Button;
