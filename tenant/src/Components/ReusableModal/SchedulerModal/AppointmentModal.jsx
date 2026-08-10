@@ -361,7 +361,7 @@ const AppointmentModal = ({
   // the source of truth and a stale draft would clobber it / poison isDirty.
   const clearDraft = useReduxFormDraft("add-appointment", { watch, reset, isOpen: isOpen && !isEditMode, exclude: [] });
 
-  const { fields, append, replace } = useFieldArray({
+  const { fields, append, replace, remove } = useFieldArray({
     control,
     name: "service",
   });
@@ -910,6 +910,7 @@ const AppointmentModal = ({
                     label={index === 0 ? "Modifier" : ""}
                     options={modifierSelectOptions}
                     placeholder="Select modifier (optional)"
+                    isClearable
                     value={field.value}
                     onChange={field.onChange}
                     {...field}
@@ -917,6 +918,15 @@ const AppointmentModal = ({
                 )}
               />
             </div>
+            <button
+              type="button"
+              className="shrink-0 mb-1 p-2.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
+              onClick={() => remove(index)}
+              aria-label="Remove service code"
+              title="Remove service code"
+            >
+              <FaTrash size={16} />
+            </button>
           </div>
         ))
       )}

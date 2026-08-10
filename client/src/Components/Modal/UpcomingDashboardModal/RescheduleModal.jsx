@@ -49,8 +49,11 @@ const RescheduleModal = ({
     if (!formData.startTime) newErrors.startTime = "Start time is required";
     if (!formData.endTime) newErrors.endTime = "End time is required";
     if (!formData.reason.trim()) newErrors.reason = "Reason is required";
-    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
-      newErrors.endTime = "End time must be after start time";
+    // An end time earlier than the start time is a valid overnight slot that
+    // rolls into the next day (e.g. 11:30 PM → 12:00 AM); only a zero-length
+    // slot (identical start/end) is invalid.
+    if (formData.startTime && formData.endTime && formData.startTime === formData.endTime) {
+      newErrors.endTime = "End time must be different from start time";
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {

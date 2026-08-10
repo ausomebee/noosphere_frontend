@@ -47,5 +47,20 @@ export const showToast = (message, type) => {
 
 export const showApiError = (err, messageKey = "DEFAULT") => {
   if (import.meta.env.DEV) console.error(messageKey, err);
-  showToast(ERROR_MESSAGES[messageKey] || ERROR_MESSAGES.DEFAULT, "error");
+  // Prefer the message the endpoint actually returned; only fall back to our
+  // own copy when the backend gave nothing useful (generic axios/network text).
+  const raw =
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    err?.message ||
+    "";
+  const isGeneric =
+    !raw ||
+    /^Request failed with status code/i.test(raw) ||
+    /^Network Error$/i.test(raw) ||
+    /^timeout of /i.test(raw);
+  const message = isGeneric
+    ? ERROR_MESSAGES[messageKey] || ERROR_MESSAGES.DEFAULT
+    : raw;
+  showToast(message, "error");
 };

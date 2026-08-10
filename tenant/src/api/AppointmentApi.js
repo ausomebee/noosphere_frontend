@@ -52,7 +52,9 @@ const CreateAppointments = async ({
     );
     return response.data;
   } catch (error) {
-    throw new Error(error.message || "Create Appointment failed");
+    throw new Error(
+      error.response?.data?.message || error.message || "Create Appointment failed"
+    );
   }
 };
 const UpdateAppointments = async ({
@@ -104,7 +106,9 @@ const UpdateAppointments = async ({
     );
     return response.data;
   } catch (error) {
-    throw new Error(error.message || "Update Appointment failed");
+    throw new Error(
+      error.response?.data?.message || error.message || "Update Appointment failed"
+    );
   }
 };
 

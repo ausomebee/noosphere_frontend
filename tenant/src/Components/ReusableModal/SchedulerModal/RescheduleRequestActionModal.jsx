@@ -37,8 +37,15 @@ const RescheduleRequestActionModal = ({
   if (!isOpen || !request) return null;
 
   return (
-    <ReusableModal isOpen={isOpen} onClose={onClose} title="Reschedule request" size="md">
-      <div className="p-2 space-y-5">
+    <ReusableModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Reschedule request"
+      size="lg"
+      showClose
+      closeOnOverlayClick
+    >
+      <div className="p-2 space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Client" value={request.clientName} />
           <Field label="Clinician(s)" value={request.therapistName} />
@@ -46,23 +53,26 @@ const RescheduleRequestActionModal = ({
           <Field label="Requested date & time" value={request.newDateTime} />
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex gap-3 pt-2">
           <Button
             label="Reject"
             variant="secondary-danger"
             icon={<RxCross2 size={18} />}
+            className="flex-1 min-w-0"
             onClick={onReject}
           />
           <Button
             label="Modify"
             variant="secondary"
             icon={<FiEdit size={18} />}
+            className="flex-1 min-w-0"
             onClick={onModify}
           />
           <Button
             label="Accept"
             variant="secondary-success"
             icon={<IoCheckmarkCircleOutline size={18} />}
+            className="flex-1 min-w-0"
             onClick={onApprove}
           />
         </div>

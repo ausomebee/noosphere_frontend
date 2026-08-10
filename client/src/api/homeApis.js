@@ -79,6 +79,20 @@ const GetClientUpcomingAppointments = async ({
     );
   }
 };
+// Fetch a single appointment by its id, so the details modal shows accurate
+// date/time/service instead of relying on possibly-thin list rows.
+const GetAppointmentById = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/${id}`);
+    return res;
+  } catch (e) {
+    throw new Error(
+      e.response?.data?.message || "Get appointment details failed",
+    );
+  }
+};
+
 const GetClientCompletedAppointments = async ({
   clientId,
   accessToken,
@@ -245,6 +259,7 @@ export default {
   GetClientCancelAppointments,
   GetClientAwaitingApprovals,
   GetSingleSessionBySessionId,
+  GetAppointmentById,
   GetClientCompletedAppointments,
   ApproveSession,
   RescheduleAppointments,

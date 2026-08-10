@@ -262,6 +262,7 @@ const SelectInput = ({
   className = "",
   error,
   isMulti = false,
+  isClearable = false,
   emptyHint,
   disabled = false,
   placeholder = typeof label === "string" && label
@@ -319,6 +320,7 @@ const SelectInput = ({
           value={selected}
           onChange={handleChange}
           isMulti={isMulti}
+          isClearable={isClearable}
           isDisabled={disabled}
           menuPosition="fixed"
           menuPlacement="auto"
@@ -390,6 +392,7 @@ SelectInput.propTypes = {
   className: PropTypes.string,
   error: PropTypes.string,
   isMulti: PropTypes.bool,
+  isClearable: PropTypes.bool,
   placeholder: PropTypes.string,
 };
 

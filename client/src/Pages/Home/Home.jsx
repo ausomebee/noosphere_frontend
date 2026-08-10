@@ -504,6 +504,29 @@ const Home = () => {
     [currentTabData, currentPage]
   );
 
+  // Open the details modal for a row, fetching the full appointment by id so
+  // the modal shows the real date/time/service (list rows can be thin, which
+  // made the modal fall back to the current time).
+  const openDetails = useCallback(
+    async (row) => {
+      const id = row?.originalData?.id || row?.id;
+      if (!id) {
+        setSelectedAppointment(row);
+        setDetailsModalOpen(true);
+        return;
+      }
+      try {
+        const res = await api.GetAppointmentById({ id, accessToken, refreshToken });
+        const appt = res?.data?.data ?? res?.data ?? null;
+        setSelectedAppointment(appt ? { ...row, originalData: appt } : row);
+      } catch {
+        setSelectedAppointment(row);
+      }
+      setDetailsModalOpen(true);
+    },
+    [accessToken, refreshToken]
+  );
+
   // Once the focused tab's data has loaded, open the specific appointment's
   // modal (feedback for the awaiting tab, details otherwise). Consumed once so
   // it never re-opens after the user closes it.
@@ -517,9 +540,12 @@ const Home = () => {
     );
     if (!row) return;
     pendingFocusIdRef.current = null;
-    setSelectedAppointment(row);
-    if (activeTab === "awaiting") setFeedbackModalOpen(true);
-    else setDetailsModalOpen(true);
+    if (activeTab === "awaiting") {
+      setSelectedAppointment(row);
+      setFeedbackModalOpen(true);
+    } else {
+      openDetails(row);
+    }
     // Consume the focus so a re-mount can't re-open the modal from stale state.
     if (location.state) navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -586,10 +612,7 @@ const Home = () => {
             menu: true,
             label: "View appointment details",
             icon: <LuEye size={16} />,
-            onClick: (row) => {
-              setSelectedAppointment(row);
-              setDetailsModalOpen(true);
-            },
+            onClick: (row) => openDetails(row),
           },
         ];
 
@@ -674,10 +697,7 @@ const Home = () => {
             menu: true,
             label: "View details",
             icon: <LuEye size={16} />,
-            onClick: (row) => {
-              setSelectedAppointment(row);
-              setDetailsModalOpen(true);
-            },
+            onClick: (row) => openDetails(row),
           },
         ];
 

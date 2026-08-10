@@ -43,7 +43,21 @@ export default function useFocusAppointment(list, openFn, fetchById) {
     const consume = () =>
       navigate(location.pathname + location.search, { replace: true, state: null });
 
-    // 1) Prefer the row already in the loaded list.
+    // 1) Prefer fetching the single appointment by id, so the modal always
+    //    shows fresh, complete data and opens regardless of the tab's list
+    //    state (list rows can be thin/expanded or not loaded yet).
+    if (typeof fetchById === "function") {
+      consumedRef.current = true;
+      Promise.resolve(fetchById(target))
+        .then((item) => {
+          if (item) openFn(item);
+        })
+        .catch(() => {});
+      consume();
+      return;
+    }
+
+    // 2) Fallback: use the row already in the loaded list.
     if (Array.isArray(list) && list.length) {
       const item = list.find((i) =>
         [i?.id, i?.rawData?.id, i?.rawData?.appointmentId].some(
@@ -54,21 +68,7 @@ export default function useFocusAppointment(list, openFn, fetchById) {
         consumedRef.current = true;
         openFn(item);
         consume();
-        return;
       }
-    }
-
-    // 2) Fallback: fetch the single appointment by id and open it directly, so
-    //    the modal doesn't depend on the tab's list having loaded/matched.
-    if (typeof fetchById === "function") {
-      consumedRef.current = true;
-      let cancelled = false;
-      Promise.resolve(fetchById(target))
-        .then((item) => {
-          if (!cancelled && item) openFn(item);
-        })
-        .catch(() => {});
-      consume();
     }
   }, [list, location.state, location.pathname, location.search, openFn, fetchById, navigate]);
 }
