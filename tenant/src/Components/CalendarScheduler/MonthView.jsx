@@ -217,7 +217,9 @@ const MonthView = ({ date, appointments, onAppointmentClick, onSlotClick }) => {
                   justifyContent: "space-between",
                   alignItems: "center",
                   fontSize: "13px",
-                  color: "#1f2937",
+                  // Inherit the row's contrast colour — a hardcoded dark grey
+                  // was unreadable on dark appointment colours.
+                  color: "inherit",
                   fontWeight: "400",
                 }}
               >

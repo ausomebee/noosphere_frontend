@@ -78,9 +78,34 @@
   color: #374151;
 }
 
-.modal-close-btn:focus {
+/* Keyboard-only ring: the modal auto-focuses this button on open, so a plain
+   :focus rule drew a blue circle around the ✕ every time a modal appeared. */
+.modal-close-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px #3b82f6;
+}
+
+/* Left-aligned header variant (opt-in via the modal's className). */
+.modal-content.modal-header-left .re-modal-header {
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-bottom: 1px solid #dbdbdb;
+}
+
+.modal-content.modal-header-left .modal-title {
+  justify-content: flex-start;
+  text-align: left;
+  color: #1f2937;
+}
+
+.modal-content.modal-header-left .modal-close-btn {
+  top: 18px;
+  right: 20px;
+}
+
+/* The body's own divider is redundant when the footer already has one. */
+.modal-content.modal-header-left .ReuseableModal-body {
+  border-bottom: none;
 }
 
 .modal-title {

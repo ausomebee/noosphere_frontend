@@ -25,6 +25,8 @@ const ReusableModal = ({
   onTabChange,
   showClose = false,
   closeOnOverlayClick = false,
+  className = "",
+  footerContent,
 }) => {
   const scrollPositionRef = useRef(0);
   const modalRef = useRef(null);
@@ -144,7 +146,7 @@ const ReusableModal = ({
     >
       <form
         id="modal-form"
-        className={`modal-content modal-${size}`}
+        className={`modal-content modal-${size} ${className}`}
         ref={modalRef}
         role="dialog"
         aria-labelledby="modal-title"
@@ -199,7 +201,10 @@ const ReusableModal = ({
             : children}
         </div>
 
-        {(tabs?.length || primaryButtonText || secondaryButtonText) && (
+        {footerContent ? (
+          <div className="modal-btns">{footerContent}</div>
+        ) : (
+          (tabs?.length || primaryButtonText || secondaryButtonText) && (
           <div className="modal-btns">
             {secondaryButtonText && (
               <button
@@ -249,6 +254,7 @@ const ReusableModal = ({
               </button>
             )}
           </div>
+          )
         )}
       </form>
     </div>
@@ -282,6 +288,8 @@ ReusableModal.propTypes = {
   onTabChange: PropTypes.func,
   showClose: PropTypes.bool,
   closeOnOverlayClick: PropTypes.bool,
+  className: PropTypes.string,
+  footerContent: PropTypes.node,
 };
 
 export default ReusableModal;

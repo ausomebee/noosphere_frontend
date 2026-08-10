@@ -20,9 +20,12 @@ const renderValue = (v) => {
 };
 
 const Field = ({ label, value }) => (
-  <div>
-    <p className="text-sm text-gray-400">{label}</p>
-    <p className="font-semibold text-gray-700">{renderValue(value)}</p>
+  <div className="flex gap-2">
+    <span className="text-gray-400 leading-5">•</span>
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-semibold text-gray-800">{renderValue(value)}</p>
+    </div>
   </div>
 );
 
@@ -44,16 +47,9 @@ const RescheduleRequestActionModal = ({
       size="lg"
       showClose
       closeOnOverlayClick
-    >
-      <div className="p-2 space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Client" value={request.clientName} />
-          <Field label="Clinician(s)" value={request.therapistName} />
-          <Field label="Previous date & time" value={request.prevDateTime} />
-          <Field label="Requested date & time" value={request.newDateTime} />
-        </div>
-
-        <div className="flex gap-3 pt-2">
+      className="modal-header-left"
+      footerContent={
+        <>
           <Button
             label="Reject"
             variant="secondary-danger"
@@ -75,6 +71,15 @@ const RescheduleRequestActionModal = ({
             className="flex-1 min-w-0"
             onClick={onApprove}
           />
+        </>
+      }
+    >
+      <div className="border border-gray-200 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <Field label="Client" value={request.clientName} />
+          <Field label="Clinician(s)" value={request.therapistName} />
+          <Field label="Previous date & time" value={request.prevDateTime} />
+          <Field label="Requested date & time" value={request.newDateTime} />
         </div>
       </div>
     </ReusableModal>
