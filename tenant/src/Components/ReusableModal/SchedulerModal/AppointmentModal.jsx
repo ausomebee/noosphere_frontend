@@ -918,23 +918,29 @@ const AppointmentModal = ({
                 )}
               />
             </div>
-            {/* Column mirrors the inputs' label spacing so the button lines up
-                with the select box itself, not the label or any error text. */}
-            <div className="shrink-0 flex flex-col">
+            {/* Mirrors an input-group (same label element + spacing) so the
+                button centres on the select box itself, not the label or any
+                error text below it. */}
+            <div className="shrink-0">
+              {/* Hidden label keeps the exact same line height as the real
+                  field labels, so the button lines up with the select box. */}
               {index === 0 && (
-                <span className="input-group-label" aria-hidden="true">
-                  &nbsp;
-                </span>
+                <label className="input-group-label invisible" aria-hidden="true">
+                  Remove
+                </label>
               )}
-              <button
-                type="button"
-                className="h-9 w-9 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors"
-                onClick={() => remove(index)}
-                aria-label="Remove service code"
-                title="Remove service code"
-              >
-                <FaTrash size={16} />
-              </button>
+              {/* Matches the select box height (min-height 36 + 1px borders). */}
+              <div className="flex items-center" style={{ minHeight: 38 }}>
+                <button
+                  type="button"
+                  className="h-9 w-9 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors"
+                  onClick={() => remove(index)}
+                  aria-label="Remove service code"
+                  title="Remove service code"
+                >
+                  <FaTrash size={16} />
+                </button>
+              </div>
             </div>
           </div>
         ))
