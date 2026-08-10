@@ -922,11 +922,11 @@ const AppointmentModal = ({
                 button centres on the select box itself, not the label or any
                 error text below it. */}
             <div className="shrink-0">
-              {/* Hidden label keeps the exact same line height as the real
-                  field labels, so the button lines up with the select box. */}
+              {/* Blank label reserves the same line height as the real field
+                  labels, so the button lines up with the select box. */}
               {index === 0 && (
-                <label className="input-group-label invisible" aria-hidden="true">
-                  Remove
+                <label className="input-group-label" aria-hidden="true">
+                  {" "}
                 </label>
               )}
               {/* Matches the select box height (min-height 36 + 1px borders). */}
