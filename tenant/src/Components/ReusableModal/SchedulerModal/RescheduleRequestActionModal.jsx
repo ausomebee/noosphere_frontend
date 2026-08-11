@@ -20,11 +20,13 @@ const renderValue = (v) => {
 };
 
 const Field = ({ label, value }) => (
-  <div className="flex gap-2">
-    <span className="text-gray-400 leading-5">•</span>
+  <div className="modal-detail-field">
+    <span className="bullet" aria-hidden="true">
+      •
+    </span>
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-semibold text-gray-800">{renderValue(value)}</p>
+      <p className="label">{label}</p>
+      <p className="value">{renderValue(value)}</p>
     </div>
   </div>
 );
@@ -74,8 +76,8 @@ const RescheduleRequestActionModal = ({
         </>
       }
     >
-      <div className="border border-gray-200 rounded-xl p-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+      <div className="modal-detail-card">
+        <div className="modal-detail-grid">
           <Field label="Client" value={request.clientName} />
           <Field label="Clinician(s)" value={request.therapistName} />
           <Field label="Previous date & time" value={request.prevDateTime} />

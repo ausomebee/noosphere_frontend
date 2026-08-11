@@ -34,6 +34,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const [viewMode, setViewMode] = useState("table");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Date pre-filled into the New Appointment modal when a calendar day is
+  // clicked (time left blank), mirroring the scheduler calendar.
+  const [presetDate, setPresetDate] = useState(null);
   // Targets for the Reschedule / Cancel action modals (ported from the
   // scheduler so the client panel has the same actions as the main table).
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
@@ -498,8 +501,27 @@ const AppointmentsScheduleTab = ({ fullName }) => {
     if (full) openModal(full);
   };
 
+  // Clicking an empty day in the calendar opens the New Appointment modal
+  // pre-filled with that date. The client stays locked to this panel's client.
+  const handleSlotClick = useCallback(
+    (day) => {
+      if (!hasPermission("create_a_new_appointment")) return;
+      const d = day instanceof Date ? day : new Date(day);
+      if (isNaN(d.getTime())) return;
+      setPresetDate(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+          d.getDate()
+        ).padStart(2, "0")}`
+      );
+      setSelectedAppointment(null);
+      setIsModalOpen(true);
+    },
+    [hasPermission]
+  );
+
   const openModal = (appointment = null) => {
     if (!appointment) {
+      setPresetDate(null);
       setSelectedAppointment(null);
       setIsModalOpen(true);
       return;
@@ -525,6 +547,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAppointment(null);
+    setPresetDate(null);
   };
 
   const handleSaveAppointment = async (data) => {
@@ -787,6 +810,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
               appointments={calendarAppointments}
               clients={[currentClient].filter(Boolean)}
               onAppointmentClick={handleAppointmentClick}
+              onSlotClick={handleSlotClick}
             />
           </div>
         )}
@@ -797,6 +821,7 @@ const AppointmentsScheduleTab = ({ fullName }) => {
         onClose={closeModal}
         initialData={selectedAppointment || null}
         isEditMode={!!selectedAppointment}
+        presetSlot={presetDate ? { date: presetDate } : null}
         onSave={handleSaveAppointment}
         clients={currentClient ? [currentClient] : []}
         sessionTypes={sessionTypes}
