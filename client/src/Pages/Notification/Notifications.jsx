@@ -9,6 +9,8 @@ import useAuth from "../../hooks/useAuth";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import { formatDateHeader } from "../../Helper/Formatters";
 import SectionLoader from "../../Components/SectionLoader";
+import homeApi from "../../api/homeApis";
+import AppointmentDetailsModal from "../../Components/Modal/UpcomingDashboardModal/AppointmentDetailsModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -40,6 +42,9 @@ const Notifications = () => {
   const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  // Appointment shown in a modal straight from a notification (read-only).
+  const [viewAppt, setViewAppt] = useState(null);
+  const [opening, setOpening] = useState(false);
 
   const loadNotifications = useCallback(() => {
     if (!userId || !accessToken) return;
@@ -90,8 +95,39 @@ const Notifications = () => {
   };
 
   // Primary action: mark read, then navigate to the mapped destination.
-  const handleAction = (notification) => {
+  // Show the appointment right here when the notification points at one; only
+  // route away when it doesn't carry an id we can load.
+  const handleAction = async (notification) => {
     markRead(notification);
+    const entityId =
+      notification?.entityId ??
+      notification?.data?.entityId ??
+      notification?.metadata?.entityId ??
+      null;
+    const isAppointment =
+      notification?.entityType === "APPOINTMENT" ||
+      String(notification?.type || "").includes("APPOINTMENT");
+
+    if (entityId && isAppointment) {
+      setOpening(true);
+      try {
+        const res = await homeApi.GetAppointmentById({
+          id: entityId,
+          accessToken,
+          refreshToken,
+        });
+        const appt = res?.data?.data ?? res?.data ?? null;
+        if (appt) {
+          setViewAppt({ originalData: appt });
+          return;
+        }
+      } catch {
+        // Fall through to routing below.
+      } finally {
+        setOpening(false);
+      }
+    }
+
     const action = getNotificationAction(notification);
     if (action?.path) {
       navigate(action.path, action.state ? { state: action.state } : undefined);
@@ -145,7 +181,11 @@ const Notifications = () => {
         <div className="notification-body">
           <div className="notification-top-row">
             <h3 className="notification-title">{notification.title || "Notification"}</h3>
-            <button className="notification-action" onClick={() => handleAction(notification)}>
+            <button
+              className="notification-action"
+              onClick={() => handleAction(notification)}
+              disabled={opening}
+            >
               {action?.label || "View details"}
             </button>
           </div>
@@ -212,6 +252,19 @@ const Notifications = () => {
           )}
         </div>
       </div>
+
+      {/* Opened straight from a notification — read-only details, no page change. */}
+      {viewAppt && (
+        <AppointmentDetailsModal
+          isOpen={!!viewAppt}
+          appointment={viewAppt}
+          onClose={() => setViewAppt(null)}
+          onReschedule={() => {
+            setViewAppt(null);
+            navigate("/dashboard", { state: { focusTab: "upcoming" } });
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 };
