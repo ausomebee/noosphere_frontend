@@ -54,8 +54,6 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
       const r = normalizeRescheduleRequest(raw, proposed);
 
       const serviceText = r.services.map((s) => s.serviceType).join(", ") || "N/A";
-      const truncatedServiceType =
-        serviceText.length > 20 ? `${serviceText.substring(0, 20)}...` : serviceText;
 
       const therapistNames = r.clinicians.map((c) => c.fullName).filter(Boolean);
       const serviceTypes = r.services.map((s) => s.serviceType).filter(Boolean);
@@ -74,7 +72,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
         clientId: r.clientId,
         clientName: clientDisplayName(r.client, "Unknown Client"),
         therapistName: therapistNames.join(", ") || "Unassigned",
-        serviceType: truncatedServiceType,
+        serviceType: serviceText,
         sessionType: r.session?.name || "N/A",
         prevDateTime: {
           date: r.previous.date || "N/A",
@@ -201,9 +199,9 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
   const columns = useMemo(
     () => [
       { header: "Client", key: "clientName", type: "text" },
-      { header: "Clinician(s)", key: "therapistName", type: "text" },
-      { header: "Service Type(s)", key: "serviceType", type: "text" },
-      { header: "Session Type", key: "sessionType", type: "text" },
+      { header: "Clinician(s)", key: "therapistName", type: "text", width: "clamp(150px, 16vw, 260px)" },
+      { header: "Service Type(s)", key: "serviceType", type: "text", width: "clamp(150px, 16vw, 260px)" },
+      { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
       { header: "Prev. Date & Time", key: "prevDateTime", type: "day_time" },
       { header: "New Date & Time", key: "newDateTime", type: "day_time" },
     ],

@@ -356,7 +356,16 @@ const TableBody = ({
             </th>
           )}
           {columns.map((col) => (
-            <th key={col.key || col.header}>{col.header}</th>
+            <th
+              key={col.key || col.header}
+              // A column can declare a responsive width (e.g. a clamp()), which
+              // also lets its cells wrap — needed for the columns that hold
+              // several clinicians or service codes.
+              className={col.width ? "table-col-wrap" : undefined}
+              style={col.width ? { width: col.width } : undefined}
+            >
+              {col.header}
+            </th>
           ))}
           {showActions && <th>Action</th>}
         </tr>
@@ -416,7 +425,8 @@ const TableBody = ({
                     primaryColumns.includes(col.header)
                       ? "primary-text"
                       : "secondary-text"
-                  }`}
+                  }${col.width ? " table-col-wrap" : ""}`}
+                  style={col.width ? { width: col.width } : undefined}
                 >
                   {renderCellContent(col, row, rowIndex)}
                 </td>

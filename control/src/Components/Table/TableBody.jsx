@@ -59,7 +59,15 @@ const TableBody = ({
               </th>
             )}
             {columns.map((col, index) => (
-              <th key={index}>{col.header}</th>
+              <th
+                key={index}
+                // A column can declare a responsive width, which also lets its
+                // cells wrap — for columns holding several values.
+                className={col.width ? "table-col-wrap" : undefined}
+                style={col.width ? { width: col.width } : undefined}
+              >
+                {col.header}
+              </th>
             ))}
             {showActions && <th>Action</th>}
           </tr>
@@ -108,7 +116,11 @@ const TableBody = ({
                   </td>
                 )}
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex} className="table-cell">
+                  <td
+                    key={colIndex}
+                    className={`table-cell${col.width ? " table-col-wrap" : ""}`}
+                    style={col.width ? { width: col.width } : undefined}
+                  >
                     {col.hasColumnActions ? (
                       <div className="action-menu">
                         <button

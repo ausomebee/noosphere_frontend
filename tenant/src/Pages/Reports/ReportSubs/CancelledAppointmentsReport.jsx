@@ -29,7 +29,6 @@ const CancelledAppointmentsReport = () => {
       const serviceText = (appt.appointmentServices || [])
         .map((as) => as.serviceCode?.code || "Unknown")
         .join(", ");
-      const truncated = serviceText.length > 20 ? serviceText.substring(0, 20) + "..." : serviceText;
 
       const cancelTime = appt.cancelTime ? new Date(appt.cancelTime) : null;
       const therapistNames = (appt.clinicians || []).map((c) => c.fullName);
@@ -39,7 +38,7 @@ const CancelledAppointmentsReport = () => {
         id: appt.id,
         clientName: appt.client ? `${appt.client.firstName || ""} ${appt.client.lastName || ""}`.trim() || "N/A" : "N/A",
         therapistName: therapistNames.join(", ") || "N/A",
-        serviceType: truncated || "N/A",
+        serviceType: serviceText || "N/A",
         sessionType: appt.session?.name || appt.serviceLocation || "N/A",
         date: appt.date ? formatDate(appt.date, dateFormat) : "N/A",
         time: `${formatTime(appt.startTime, timeFormat)} - ${formatTime(appt.endTime, timeFormat)}`,
@@ -90,9 +89,9 @@ const CancelledAppointmentsReport = () => {
 
   const columns = useMemo(() => [
     { header: "Client", key: "clientName" },
-    { header: "Therapist", key: "therapistName" },
-    { header: "Service Type(s)", key: "serviceType" },
-    { header: "Session Type", key: "sessionType" },
+    { header: "Therapist", key: "therapistName", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Service Type(s)", key: "serviceType", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Session Type", key: "sessionType", width: "clamp(130px, 13vw, 220px)" },
     { header: "Date", key: "date" },
     { header: "Time", key: "time" },
   ], []);

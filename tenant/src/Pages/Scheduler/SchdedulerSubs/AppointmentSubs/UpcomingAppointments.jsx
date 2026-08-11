@@ -143,17 +143,13 @@ const UpcomingAppointments = ({ setCounts }) => {
     return allExpandedAppointments.map((appt) => {
       const serviceText =
         appt.service?.map((s) => s.serviceType).join(", ") || "N/A";
-      const truncated =
-        serviceText.length > 20
-          ? serviceText.substring(0, 20) + "..."
-          : serviceText;
 
       return {
         id: appt.id,
         clientName: clientDisplayName(appt.client, "Unknown Client"),
         therapistName:
           appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
-        serviceType: truncated,
+        serviceType: serviceText,
         sessionType: appt.session?.name || "N/A",
         date: appt.date || "Unknown Date",
         time:
@@ -224,9 +220,9 @@ const UpcomingAppointments = ({ setCounts }) => {
   // Table columns
   const columns = [
     { header: "Client", key: "clientName", type: "text" },
-    { header: "Clinician(s)", key: "therapistName", type: "text" },
-    { header: "Service Type(s)", key: "serviceType", type: "text" },
-    { header: "Session Type", key: "sessionType", type: "text" },
+    { header: "Clinician(s)", key: "therapistName", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Service Type(s)", key: "serviceType", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
     { header: "Date", key: "date", type: "dateTime" },
     { header: "Time", key: "time", type: "text" },
   ];

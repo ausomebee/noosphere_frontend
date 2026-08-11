@@ -585,8 +585,8 @@ const Home = () => {
       <span style={{ whiteSpace: "pre-line" }}>{value}</span>
     );
     const cols = [
-      { key: "sessionType", title: "Session Type" },
-      { key: "serviceType", title: "Service Type(s)" },
+      { key: "sessionType", title: "Session Type", width: "clamp(130px, 13vw, 220px)" },
+      { key: "serviceType", title: "Service Type(s)", width: "clamp(150px, 16vw, 260px)" },
     ];
     // On the reschedule tab, show the previous date/time alongside the new one.
     if (activeTab === "reschedule") {
@@ -601,7 +601,11 @@ const Home = () => {
       title: activeTab === "reschedule" ? "New Date & Time" : "Date & Time",
       render: dayTime,
     });
-    cols.push({ key: "clinician", title: "Clinician(s)" });
+    cols.push({
+      key: "clinician",
+      title: "Clinician(s)",
+      width: "clamp(150px, 16vw, 260px)",
+    });
     return cols;
   }, [activeTab]);
 

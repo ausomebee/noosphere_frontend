@@ -457,9 +457,9 @@ const AppointmentsScheduleTab = ({ fullName }) => {
   }, [formattedAppointments]);
 
   const columns = [
-    { header: "Clinician(s)", key: "therapistName", type: "text" },
-    { header: "Service Type(s)", key: "serviceType", type: "text" },
-    { header: "Session Type", key: "sessionType", type: "text" },
+    { header: "Clinician(s)", key: "therapistName", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Service Type(s)", key: "serviceType", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
     { header: "Date", key: "date", type: "dateTime" },
     { header: "Time", key: "time", type: "text" },
   ];

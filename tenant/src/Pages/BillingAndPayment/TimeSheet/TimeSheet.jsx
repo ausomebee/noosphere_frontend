@@ -79,10 +79,10 @@ const TimeSheet = () => {
   const columns = useMemo(
     () => [
       { header: "Date", key: "dateTime", type: "date" },
-      { header: "Clinician(s)", key: "therapist", type: "text" },
+      { header: "Clinician(s)", key: "therapist", type: "text", width: "clamp(150px, 16vw, 260px)" },
       { header: "Client Name", key: "clientName", type: "text" },
       { header: "Total Hour(s)", key: "hours", type: "text" },
-      { header: "Session Type", key: "sessionType", type: "text" },
+      { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
       {
         header: "Client Status",
         key: "clientStatusText",

@@ -126,6 +126,16 @@
   border-bottom: 1px solid #ECECEC;
 }
 
+/* Columns that declare a width hold several values (clinicians, service
+   codes...). Let them wrap onto as many lines as they need instead of forcing
+   the table wide — nothing is hidden or truncated. */
+.custom-table th.table-col-wrap,
+.custom-table td.table-col-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
 .custom-table th {
   background-color: #F7F7F7;
   color: #333;

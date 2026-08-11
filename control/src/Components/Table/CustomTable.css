@@ -148,6 +148,15 @@
   white-space: nowrap;
 }
 
+/* Columns that declare a width hold several values — let them wrap onto as
+   many lines as needed instead of forcing the table wide. */
+.custom-table th.table-col-wrap,
+.custom-table td.table-col-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
 .custom-table th {
   background-color: #00215D;
   color: #fff;

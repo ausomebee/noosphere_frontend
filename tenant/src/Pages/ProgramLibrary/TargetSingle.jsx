@@ -871,7 +871,7 @@ const TargetSingle = () => {
     const columns = [
       { header: "Session", key: "sessions", type: "text" },
       { header: "Date", key: "dateTime", type: "day_time" },
-      { header: "Session Type", key: "sessionType", type: "text" },
+      { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
       { header: "Clinician", key: "clinician", type: "text" },
       { header: "Total Hours", key: "totalHours", type: "text" },
       { header: "Client Approval", key: "clientApproval", type: "text" },

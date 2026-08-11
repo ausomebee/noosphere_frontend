@@ -570,3 +570,11 @@
     font-size: 13px;
   }
 }
+/* Columns that declare a width hold several values (clinicians, service
+   codes...). Let them wrap onto as many lines as needed instead of forcing the
+   table wide — nothing is hidden or truncated. */
+.table-col-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}

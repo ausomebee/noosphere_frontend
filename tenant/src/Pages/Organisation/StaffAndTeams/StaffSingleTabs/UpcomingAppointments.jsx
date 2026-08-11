@@ -40,8 +40,8 @@ const UpcomingAppointments = ({ appointments, loading = false }) => {
         data={tableData}
         columns={[
           { header: "Client", key: "clientName" },
-          { header: "Service Type(s)", key: "serviceType" },
-          { header: "Session Type", key: "sessionType" },
+          { header: "Service Type(s)", key: "serviceType", width: "clamp(150px, 16vw, 260px)" },
+          { header: "Session Type", key: "sessionType", width: "clamp(130px, 13vw, 220px)" },
           { header: "Date", key: "date" },
           { header: "Time", key: "time" },
         ]}

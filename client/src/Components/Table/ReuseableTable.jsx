@@ -256,7 +256,13 @@ const ReusableTable = ({
               <tr>
                 {renderExpandedRow && <th className="expand-col"></th>}
                 {columns.map((col) => (
-                  <th key={col.key} style={col.style}>
+                  <th
+                    key={col.key}
+                    // A column can declare a responsive width, which also lets
+                    // its cells wrap — for columns holding several values.
+                    className={col.width ? "table-col-wrap" : undefined}
+                    style={col.width ? { ...col.style, width: col.width } : col.style}
+                  >
                     {col.title}
                   </th>
                 ))}
@@ -282,7 +288,12 @@ const ReusableTable = ({
                       </td>
                     )}
                     {columns.map((col) => (
-                      <td key={col.key} data-label={col.title}>
+                      <td
+                        key={col.key}
+                        data-label={col.title}
+                        className={col.width ? "table-col-wrap" : undefined}
+                        style={col.width ? { width: col.width } : undefined}
+                      >
                         {col.render
                           ? col.render(row[col.key], row)
                           : row[col.key]}
