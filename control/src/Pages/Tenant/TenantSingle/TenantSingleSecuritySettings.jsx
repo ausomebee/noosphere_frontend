@@ -15,8 +15,7 @@ import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
-
+import SectionLoader from "../../../Components/SectionLoader";
 const deactivationReasons = [
   { value: "", label: "Select an option" },
   { value: "Violation of Terms of Service", label: "Violation of Terms of Service" },
@@ -308,7 +307,7 @@ const TenantSingleSecuritySettings = () => {
   if (loading) {
     return (
       <div className="tenant-list-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }

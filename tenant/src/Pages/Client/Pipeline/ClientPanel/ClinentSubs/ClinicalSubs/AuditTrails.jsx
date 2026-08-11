@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import LoadingSpinner from "../../../../../../Components/LoadingSpinner";
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import useAuth from "../../../../../../hooks/useAuth";
@@ -10,6 +8,7 @@ import "./AuditTrails.css";
 import "../../../../../../Components/ManageColumn/ManageColumn.css";
 import api from "../../../../../../api/TemplateAndReportApi";
 import ErrorFallback from "../../../../../../Components/ErrorFallback";
+import SectionLoader from "../../../../../../Components/SectionLoader";
 
 const AuditTrails = () => {
   const location = useLocation();
@@ -234,7 +233,7 @@ const AuditTrails = () => {
 
         <div className="audit-trail-content">
           {loading && (
-            <LoadingSpinner />
+            <SectionLoader />
           )}
 
           {error && (

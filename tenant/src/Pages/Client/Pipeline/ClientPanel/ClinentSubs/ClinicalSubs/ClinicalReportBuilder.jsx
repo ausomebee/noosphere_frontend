@@ -1,6 +1,5 @@
 // ClinicalReportBuilder.jsx
 import React, { useEffect, useCallback, useState, useMemo } from "react";
-import LoadingSpinner from "../../../../../../Components/LoadingSpinner";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../../../../../hooks/useAuth";
 import usePermissions from "../../../../../../hooks/usePermissions";
@@ -79,6 +78,7 @@ import {
   resetSaveStates,
   SECTIONS_CONFIG,
 } from "../../../../../../ReduxStore/features/clinicalReportSlice";
+import SectionLoader from "../../../../../../Components/SectionLoader";
 
 // SECTION_COMPONENTS (must be before use)
 const SECTION_COMPONENTS = {
@@ -1246,7 +1246,7 @@ const ClinicalReportBuilder = () => {
               <h3 className="crb-preview-title">Document Preview</h3>
 
               {isLoading ? (
-                <LoadingSpinner />
+                <SectionLoader />
               ) : isSaving ? (
                 <div className="crb-empty-state">
                   <h3>Saving draft...</h3>
@@ -1372,7 +1372,7 @@ const ClinicalReportBuilder = () => {
           >
             <div className="p-6">
               {changeRequestsLoading ? (
-                <LoadingSpinner />
+                <SectionLoader />
               ) : changeRequests.length > 0 ? (
                 <div className="flex-col gap-16">
                   {changeRequests.map((cr, idx) => (

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import LoadingSpinner from "../../LoadingSpinner";
 import ReusableModal from "../ReusableModal";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -13,6 +12,7 @@ import payrollApi from "../../../api/payrollApi";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateRange } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import SectionLoader from "../../SectionLoader";
 
 const PreviewPayrollModal = ({
   isOpen,
@@ -239,7 +239,7 @@ const PreviewPayrollModal = ({
             )}
           </div>
           {loading ? (
-            <LoadingSpinner />
+            <SectionLoader />
           ) : (
             <div className="flex-1 overflow-auto">
               <table className="custom-table">

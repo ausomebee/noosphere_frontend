@@ -22,7 +22,6 @@ import Column from "./Column";
 import NewPipelineColumnModal from "../ReusableModal/PipelineModal/NewPipelineColumnModal";
 import AddClientModal from "../ReusableModal/ClientModal/AddClientModal";
 import DeleteConfirmationModal from "../ReusableModal/PipelineModal/DeleteConfirmationModal";
-import LoadingSpinner from "../LoadingSpinner";
 import "./DragAndDrop.css";
 import {
   updateColumnTaskIds,
@@ -45,6 +44,7 @@ import { FaPlus } from "react-icons/fa";
 import Button from "../Button/Button";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
+import SectionLoader from "../SectionLoader";
 
 const batchPromises = async (items, fn, concurrency = 3) => {
   const results = [];
@@ -732,7 +732,7 @@ const JiraBoard = () => {
   const hasColumns = columnOrder.length > 0;
 
   if (isLoading || status === "loading") {
-    return <LoadingSpinner />;
+    return <SectionLoader />;
   }
 
   if (status === "failed") {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../../LoadingSpinner";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -7,6 +6,7 @@ import { SelectInput } from "../../Input/Inputs";
 import { addStaffSchema } from "../../../Data/schemas";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import payrollApi from "../../../api/payrollApi";
+import SectionLoader from "../../SectionLoader";
 
 const AddStaffModal = ({
   isOpen,
@@ -104,7 +104,7 @@ const AddStaffModal = ({
     >
       <div className="flex flex-col gap-4">
         {loadingStaff ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : (
           <Controller
             name="selectedStaff"

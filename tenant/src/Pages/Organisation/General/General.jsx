@@ -18,8 +18,8 @@ import api from "../../../api/organisationApis";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import "../Organisation.css";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const General = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -313,7 +313,7 @@ const General = () => {
   /* -------------------------------------------------------------- */
   const renderLicenses = () => {
     if (loadingLicenses) {
-      return <LoadingSpinner />;
+      return <SectionLoader />;
     }
 
     if (!licenses.length)
@@ -407,7 +407,7 @@ const General = () => {
 
   const renderFiles = () => {
     if (loadingFiles) {
-      return <LoadingSpinner />;
+      return <SectionLoader />;
     }
 
     if (!files.length)
@@ -500,7 +500,7 @@ const General = () => {
         <div className="org-info-card">
           {loadingTenant ? (
             <div className="flex justify-center items-center w-full py-8">
-              <LoadingSpinner />
+              <SectionLoader />
             </div>
           ) : (
             <>

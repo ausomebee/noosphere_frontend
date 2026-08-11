@@ -13,7 +13,6 @@ import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
 import invoiceApi from "../../../api/InvoiceApi";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import { orgTypeOptions, companySizeOptions } from "../../../Data/selectOptions";
 import {
@@ -24,6 +23,7 @@ import {
   normalizeState,
   withCustomOption,
 } from "../../../Helper/geoOptions";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const getInitials = (name) => {
   if (!name) return "?";
@@ -266,7 +266,7 @@ const TenantSingleAccOverview = () => {
   if (loading) {
     return (
       <div className="tenant-list-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }

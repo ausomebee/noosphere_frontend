@@ -24,7 +24,6 @@ import AddProspectModal from "../ReusableModal/AddProspectModal";
 import MoveCandidateModal from "../ReusableModal/MoveCandidateModal";
 import AssignCandidateModal from "../ReusableModal/AssignCandidateModal";
 import DeleteConfirmationModal from "../ReusableModal/DeleteConfirmationModal";
-import LoadingSpinner from "../LoadingSpinner";
 import "./DragAndDrop.css";
 import {
   addColumn,
@@ -49,6 +48,7 @@ import { IoWarningOutline } from "react-icons/io5";
 import Button from "../Button/Button";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
+import SectionLoader from "../SectionLoader";
 
 const batchPromises = async (items, fn, concurrency = 3) => {
   const results = [];
@@ -886,7 +886,7 @@ const JiraBoard = () => {
   const hasColumns = columnOrder.length > 0;
 
   if (isLoading || status === "loading") {
-    return <LoadingSpinner />;
+    return <SectionLoader />;
   }
 
   if (status === "failed") {

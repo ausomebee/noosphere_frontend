@@ -9,7 +9,6 @@ import {
   IoAlertCircleOutline,
   IoCheckmarkCircleOutline,
 } from "react-icons/io5";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import Pagination from "../../Components/Table/Pagination";
 import usePageTitle from "../../hooks/usePageTitle";
 import useAuth from "../../hooks/useAuth";
@@ -17,6 +16,7 @@ import notificationApi from "../../api/notificationApi";
 import { onNotification } from "../../api/socketService";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
+import SectionLoader from "../../Components/SectionLoader";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -194,7 +194,7 @@ const Notifications = () => {
       {/* Body */}
       <div className="ctrl-notifications-body">
         {loading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : notifications.length === 0 ? (
           <div className="ctrl-notifications-empty">
             <IoNotificationsOutline size={48} />

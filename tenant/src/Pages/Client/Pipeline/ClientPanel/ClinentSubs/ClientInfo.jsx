@@ -1,6 +1,6 @@
 // src/pages/Client/ClinentSubs/ClientInfo.jsx
 import React, { useMemo, useState, useEffect } from "react";
-import { FaCog, FaChevronDown, FaChevronUp, FaSpinner } from "react-icons/fa";
+import { FaCog, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { FiChevronDown, FiEdit2 } from "react-icons/fi";
 import { HiOutlineCog6Tooth, HiOutlineTrash } from "react-icons/hi2";
 import { LuEye } from "react-icons/lu";
@@ -25,6 +25,7 @@ import { loadForm } from "../../../../../ReduxStore/features/formBuilderSlice";
 import { formatDate } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import usePermissions from "../../../../../hooks/usePermissions";
+import SectionLoader from "../../../../../Components/SectionLoader";
 
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
@@ -787,7 +788,7 @@ const DocumentsForms = () => {
                       {loading.requests ? (
                         <tr>
                           <td colSpan={5} className="text-center py-8">
-                            <FaSpinner className="animate-spin text-2xl text-black mx-auto" aria-hidden="true" />
+                            <SectionLoader minHeight={80} />
                           </td>
                         </tr>
                       ) : (

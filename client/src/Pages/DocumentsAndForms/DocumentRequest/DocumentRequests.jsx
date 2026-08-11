@@ -19,8 +19,7 @@ import SelectFromMyDocumentsModal from "../../../Components/Modal/SelectFromMyDo
 import api from "../../../api/documentsAndFormsApis";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
-
+import SectionLoader from "../../../Components/SectionLoader";
 const DocumentRequests = () => {
   const navigate = useNavigate();
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
@@ -546,7 +545,7 @@ const DocumentRequests = () => {
         )}
 
         {loadingDocs ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : documentRequests.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />
@@ -589,7 +588,7 @@ const DocumentRequests = () => {
         )}
 
         {loadingForms ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : formsData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />

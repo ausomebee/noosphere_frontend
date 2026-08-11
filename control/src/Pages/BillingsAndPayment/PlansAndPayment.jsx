@@ -17,10 +17,10 @@ import { showToast } from "../../Helper/ShowToast";
 import api1 from "../../api/FeatureApis";
 import api2 from "../../api/TenantApis";
 import api from "../../api/BillingApis";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
+import SectionLoader from "../../Components/SectionLoader";
 
 const PlansAndPayment = () => {
   const navigate = useNavigate();
@@ -773,7 +773,7 @@ const handleSavePlan = async (planData) => {
           className="flex justify-center items-center w-full"
           style={{ height: "50vh" }}
         >
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       ) : Object.keys(errors).length > 0 ? (
         <div className="text-center" style={{ color: "red" }}>

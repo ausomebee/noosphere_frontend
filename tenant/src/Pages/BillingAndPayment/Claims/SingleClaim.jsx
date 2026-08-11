@@ -6,9 +6,9 @@ import AccordionTable from "../../../Components/Table/AccordionTable";
 import "../BillingPayment.css";
 import api from "../../../api/billingAndPaymentsApi";
 import { showToast } from "../../../Helper/ShowToast";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const SingleClaim = () => {
   const navigate = useNavigate();
@@ -221,7 +221,7 @@ const SingleClaim = () => {
     return (
       <>
         <div className="flex justify-center items-center h-64">
-         <LoadingSpinner />
+         <SectionLoader />
         </div>
       </>
     );

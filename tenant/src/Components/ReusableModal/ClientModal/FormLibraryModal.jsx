@@ -1,12 +1,12 @@
 // src/components/ReusableModal/ClientModal/FormLibraryModal.jsx
 
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../../LoadingSpinner";
 import ReusableModal from "../ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 import Pagination from "../../Table/Pagination";
 import Button from "../../Button/Button";
+import SectionLoader from "../../SectionLoader";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -78,7 +78,7 @@ const FormLibraryModal = ({
 
         {/* Loading State */}
         {loading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : currentForms.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">

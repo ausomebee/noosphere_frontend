@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import LoadingSpinner from "../../LoadingSpinner";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ReusableModal from "../ReusableModal";
@@ -7,6 +6,7 @@ import { SelectInput } from "../../Input/Inputs";
 import { addIncomeSchema } from "../../../Data/schemas";
 import payrollApi from "../../../api/payrollApi";
 import { showApiError } from "../../../Helper/ShowToast";
+import SectionLoader from "../../SectionLoader";
 
 const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems, loading = false }) => {
   const [fetchedItems, setFetchedItems] = useState([]);
@@ -101,7 +101,7 @@ const AddIncomeItemModal = ({ isOpen, onClose, onSave, tenantId, accessToken, re
     >
       <div className="flex flex-col gap-4">
         {loadingItems ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : (
           <Controller
             name="incomeItem"

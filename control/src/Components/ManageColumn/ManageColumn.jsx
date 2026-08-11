@@ -36,8 +36,8 @@ import {
 import CustomTable from "../Table/CustomTable";
 import { showToast } from "../../Helper/ShowToast";
 import { formatDatePadded as formatDate } from "../../Helper/Formatters";
-import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
+import SectionLoader from "../SectionLoader";
 
 const ManageColumn = () => {
   const { pipelineStageId } = useParams();
@@ -848,7 +848,7 @@ const ManageColumn = () => {
           confirmButtonColor="#D92D20"
         />
 
-        {status === "loading" || isSaving ? <LoadingSpinner /> : null}
+        {status === "loading" || isSaving ? <SectionLoader /> : null}
       </div>
   );
 };

@@ -138,7 +138,6 @@ import React, { useState, useCallback } from "react";
 import { FaChevronRight, FaArrowLeft } from "react-icons/fa";
 import { FiCreditCard } from "react-icons/fi";
 import CustomTable from "../../Components/Table/CustomTable";
-import { SectionSpinner } from "../../Components/LoadingSpinner";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { showApiError } from "../../Helper/ShowToast";
 import { formatDate, formatTime } from "../../Helper/Formatters";
@@ -146,6 +145,7 @@ import useAuth from "../../hooks/useAuth";
 import usePermission from "../../hooks/usePermission";
 import api from "../../api/InvoiceApi";
 import "./BillingAndPayments.css";
+import SectionLoader from "../../Components/SectionLoader";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -432,13 +432,12 @@ const BillingReports = () => {
               ))}
             </ul>
           </>
-        ) : loading ? (
-          <SectionSpinner />
         ) : (
           <CustomTable
             data={reportData}
             columns={config.columns}
             filters={config.filters}
+            loading={loading}
             showActions={config.showActions}
             actions={
               config.showActions

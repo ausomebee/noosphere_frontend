@@ -6,7 +6,6 @@ import React, {
   useMemo,
 } from "react";
 import { useParams } from "react-router-dom";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import DOMPurify from "dompurify";
 import {
   FiType,
@@ -30,6 +29,7 @@ import { formatDate, formatLabel } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
 import "./ClientReportView.css";
 import ErrorFallback from "../../Components/ErrorFallback";
+import SectionLoader from "../../Components/SectionLoader";
 
 // ─── Helpers ──────────────────────────────────────────────
 const SKIP_KEYS = ["id", "clinicalReportId"];
@@ -484,7 +484,7 @@ const ClientReportView = () => {
   if (loading) {
     return (
       <div className="crv-page">
-        <LoadingSpinner />
+        <SectionLoader />
       </div>
     );
   }

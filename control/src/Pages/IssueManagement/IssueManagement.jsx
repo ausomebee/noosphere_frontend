@@ -22,11 +22,11 @@ import AddIssueModal from "../../Components/ReusableModal/AddAnIssueModal";
 import ViewIssue from "./ViewIssue";
 import api from "../../api/IssueApi";
 import api2 from "../../api/TenantApis";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
+import SectionLoader from "../../Components/SectionLoader";
 
 const IssueManagement = () => {
   const { accessToken, refreshToken } = useAuth();
@@ -679,7 +679,7 @@ const IssueManagement = () => {
 
   return (
     <>
-      {loading && <LoadingSpinner />}
+      {loading && <SectionLoader />}
       {(isIssueLoading || isAddingIssue) && (
         <div
           style={{
@@ -690,7 +690,7 @@ const IssueManagement = () => {
             zIndex: 1000,
           }}
         >
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       )}
       <div className="billing-board-header">

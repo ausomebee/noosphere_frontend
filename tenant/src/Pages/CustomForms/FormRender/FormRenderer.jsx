@@ -5,11 +5,11 @@ import { FaStar, FaRegStar } from "react-icons/fa";
 import api from "../../../api/customFormsApi";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { formatDate, formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import "./FormRenderer.css";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const FormRenderer = () => {
   const { id } = useParams();
@@ -643,7 +643,7 @@ const FormRenderer = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <SectionLoader />;
   }
 
   return (

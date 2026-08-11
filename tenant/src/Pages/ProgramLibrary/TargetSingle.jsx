@@ -9,7 +9,6 @@ import CustomTable from "../../Components/Table/CustomTable";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/ProgramLibraryApis";
 import ErrorFallback from "../../Components/ErrorFallback";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import { showToast } from "../../Helper/ShowToast";
 import {
   formatDate,
@@ -25,6 +24,7 @@ import PercentageCorrectModal from "../../Components/ReusableModal/DataCollectio
 import TrialsOpportunitiesModal from "../../Components/ReusableModal/DataCollectionModal/TrialsOpportunitiesModal";
 import TaskAnalysisModal from "../../Components/ReusableModal/DataCollectionModal/TaskAnalysisModal";
 import LatencyModal from "../../Components/ReusableModal/DataCollectionModal/LatencyModal";
+import SectionLoader from "../../Components/SectionLoader";
 
 const TargetSingle = () => {
   const navigate = useNavigate();
@@ -752,7 +752,7 @@ const TargetSingle = () => {
   );
 
   const renderBaselineTable = () => {
-    if (loading) return <LoadingSpinner />;
+    if (loading) return <SectionLoader />;
     if (!baselineData) {
       return renderEmptyState("Baseline Data", "Collect Baseline Data");
     }
@@ -801,7 +801,7 @@ const TargetSingle = () => {
   };
 
   const renderPerformanceGraph = () => {
-    if (loading) return <LoadingSpinner />;
+    if (loading) return <SectionLoader />;
     if (!hasPerformanceData || !showPerformanceGraph) {
       return renderEmptyState("Performance Data");
     }
@@ -841,7 +841,7 @@ const TargetSingle = () => {
           </div>
         </div>
         {performanceLoading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : performanceError ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500">{performanceError}</p>
@@ -863,7 +863,7 @@ const TargetSingle = () => {
   };
 
   const renderSessionData = () => {
-    if (loading) return <LoadingSpinner />;
+    if (loading) return <SectionLoader />;
     if (!hasSessionData) {
       return renderEmptyState("Session Data", "Collect Data");
     }
@@ -932,7 +932,7 @@ const TargetSingle = () => {
             </h1>
           </div>
           {loading ? (
-            <LoadingSpinner />
+            <SectionLoader />
           ) : targetInfo ? (
             <div className="bg-white-light2 rounded-lg w-full p-20 mb-6 grid grid-cols-3">
               <div className="mb-4">

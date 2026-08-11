@@ -1,5 +1,4 @@
 import usePageTitle from "../../hooks/usePageTitle";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import Pagination from "../../Components/Table/Pagination";
 
 const ITEMS_PER_PAGE = 10;
@@ -21,6 +20,7 @@ import { formatDateHeader, formatMsgTime } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
+import SectionLoader from "../../Components/SectionLoader";
 
 const ICON_MAP = {
   appointment: IoCalendarOutline,
@@ -183,7 +183,7 @@ const Notifications = () => {
       {/* Notification groups */}
       <div className="notifications-body">
         {loading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : notifications.length === 0 ? (
           <div className="notifications-empty">
             <IoNotificationsOutline size={48} />

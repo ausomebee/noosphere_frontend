@@ -20,12 +20,12 @@ import {
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
 import { showToast } from "../../Helper/ShowToast";
-import LoadingSpinner from "../LoadingSpinner";
 import api from "../../api/TenantApis";
 import { FiEdit2 } from "react-icons/fi";
 import { BsTrash } from "react-icons/bs";
 import { formatDate } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
+import SectionLoader from "../SectionLoader";
 
 const ManageColumn = () => {
   const { pipelineStageId } = useParams();
@@ -474,7 +474,7 @@ const ManageColumn = () => {
       />
 
       {(status === "loading" || isSaving || isCreatingCandidate) && (
-        <LoadingSpinner />
+        <SectionLoader />
       )}
     </div>
   );

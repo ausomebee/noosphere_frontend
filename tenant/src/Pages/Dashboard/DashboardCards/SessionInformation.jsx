@@ -1,6 +1,5 @@
 // src/pages/Dashboard/DashboardCards/SessionInformation.jsx
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import "../Dashboard.css";
@@ -10,6 +9,7 @@ import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis"; // Adjust path if needed
 import DashboardEmptyState from "./DashboardEmptyState";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const SessionInformation = ({ hasData, sessionType = "completedSessions", sessionPeriod = "month" }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -217,7 +217,7 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
   }
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <SectionLoader />;
   }
 
   if (error) {

@@ -1,7 +1,6 @@
 // src/pages/Client/ClientSubs/AuthorizationTab.jsx
 
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../../../../../Components/LoadingSpinner";
 import { FaPlus } from "react-icons/fa";
 import useAuth from "../../../../../hooks/useAuth";
 import Button from "../../../../../Components/Button/Button";
@@ -15,6 +14,7 @@ import { formatDate } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import usePermissions from "../../../../../hooks/usePermissions";
 import AccessDenied from "../../../../../Components/AccessDenied/AccessDenied";
+import SectionLoader from "../../../../../Components/SectionLoader";
 
 const AuthorizationTab = () => {
   const { dateFormat } = useFormatSettings();
@@ -383,7 +383,7 @@ const AuthorizationTab = () => {
       ) : (
         <>
       {loading && (
-        <LoadingSpinner />
+        <SectionLoader />
       )}
 
       {!loading && authorizations.length > 0 && (

@@ -7,8 +7,8 @@ import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import { showApiError } from "../../../Helper/ShowToast";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const TenantSingleFeature = () => {
   const { tenantId } = useParams();
@@ -41,7 +41,7 @@ const TenantSingleFeature = () => {
   if (loading) {
     return (
       <div className="tenant-list-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }

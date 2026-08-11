@@ -1,10 +1,10 @@
 import React, { Suspense, lazy } from "react";
 
 import "../../BillingAndPayments.css";
-import { SectionSpinner } from "../../../../Components/LoadingSpinner";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 import usePermission from "../../../../hooks/usePermission";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
+import SectionLoader from "../../../../Components/SectionLoader";
 
 const InvoiceManagement = lazy(() => import("./InvoiceManagement"));
 const PaymentManagement = lazy(() => import("./PaymentManagement"));
@@ -40,7 +40,7 @@ const AutoBilling = () => {
         ))}
       </div>
       <div className="auto-tab-content">
-        <Suspense fallback={<SectionSpinner />}>
+        <Suspense fallback={<SectionLoader />}>
           {activeTab === "invoice" && <InvoiceManagement />}
           {activeTab === "payment" && <PaymentManagement />}
         </Suspense>

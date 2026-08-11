@@ -5,9 +5,9 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput, RequiredMark } from "../../Input/Inputs";
 import { FiRefreshCcw } from "react-icons/fi";
-import { FaSpinner } from "react-icons/fa";
 import Button from "../../Button/Button";
 import { formatTimerDisplay } from "../../../Helper/Formatters";
+import SectionLoader from "../../SectionLoader";
 
 /* ----------  validation  ---------- */
 const frequencySchema = yup.object({
@@ -264,7 +264,7 @@ const RateModal = ({
         {/* Show loading indicator while submitting */}
         {submitting && (
           <div className="flex justify-center items-center py-4">
-            <FaSpinner className="animate-spin text-2xl text-black" aria-hidden="true" />
+            <SectionLoader minHeight={60} />
             <span className="ml-2 text-gray-600">Saving data...</span>
           </div>
         )}

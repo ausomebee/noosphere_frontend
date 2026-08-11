@@ -18,7 +18,6 @@ import ApproveTimeSheetModal from "../../../Components/ReusableModal/BillingAndP
 import api from "../../../api/billingAndPaymentsApi";
 import Modal from "../../../Components/ReusableModal/ReusableModal";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import usePermissions from "../../../hooks/usePermissions";
 import {
   formatDuration,
@@ -27,6 +26,7 @@ import {
   formatDateTime,
 } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import SectionLoader from "../../../Components/SectionLoader";
 
 // Document Modal Component
 const DocumentModal = ({ isOpen, onClose, document }) => {
@@ -1598,7 +1598,7 @@ const SingleTimeSheet = () => {
             height: "256px",
           }}
         >
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       </>
     );

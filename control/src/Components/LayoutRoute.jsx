@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import Layout from "../Pages/Layout/ControlLayout";
-import { SectionSpinner } from "./LoadingSpinner";
+import LoadingSpinner from "./LoadingSpinner";
 
 const LayoutRoute = () => (
   <Layout>
-    <Suspense fallback={<SectionSpinner />}>
+    <Suspense fallback={<LoadingSpinner />}>
       <Outlet />
     </Suspense>
   </Layout>

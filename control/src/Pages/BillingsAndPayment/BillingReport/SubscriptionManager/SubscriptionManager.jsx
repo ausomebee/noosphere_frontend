@@ -22,13 +22,13 @@ import apiInvoice from "../../../../api/InvoiceApi";
 import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
 import { createRoot } from "react-dom/client";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
-import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
 import debounce from "lodash/debounce";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
+import SectionLoader from "../../../../Components/SectionLoader";
 
 const SubscriptionManager = () => {
   const navigate = useNavigate();
@@ -787,7 +787,7 @@ const SubscriptionManager = () => {
 
   return (
     <>
-      {loading && <LoadingSpinner />}
+      {loading && <SectionLoader />}
       {(isPaymentLoading || isInvoiceLoading || isDownloadingInvoice) && (
         <div
           style={{
@@ -798,7 +798,7 @@ const SubscriptionManager = () => {
             zIndex: 1000,
           }}
         >
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       )}
       {showInvoiceModal && selectedInvoice && (

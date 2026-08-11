@@ -11,7 +11,6 @@ import { RxCross2 } from "react-icons/rx";
 import { LuCloudUpload } from "react-icons/lu";
 import { CheckboxInput, RadioInput, SelectInput } from "../Input/Inputs";
 import Button from "../Button/Button";
-import { SectionSpinner } from "../LoadingSpinner";
 import "./ProspectPanel.css";
 import "../ReusableModal/ReusableModal.css";
 import { frequencyOptions } from "../../Data/selectOptions";
@@ -53,6 +52,7 @@ import billingApi from "../../api/BillingApis";
 import invoiceApi from "../../api/InvoiceApi";
 import { showToast, showApiError } from "../../Helper/ShowToast";
 import { v4 as uuidv4 } from "uuid";
+import SectionLoader from "../SectionLoader";
 
 const getFrequencyPayload = (freq) => {
   if (freq === "monthly") return { billingFrequency: "Monthly", quantity: 1 };
@@ -1473,7 +1473,7 @@ const ProspectPanel = () => {
                     </div>
                   )}
                   {isLoadingHistory ? (
-                    <SectionSpinner />
+                    <SectionLoader />
                   ) : invoiceHistory.length === 0 && !generatedLink ? (
                     <p className="no-links-message">
                       No payment link generated yet. Go to Plan Settings to generate a link.

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { FaSpinner } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
@@ -10,6 +9,7 @@ import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import api from "../../../api/DashboardApis";
 import DashboardEmptyState from "./DashboardEmptyState";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const Authorizations = ({
   hasData,
@@ -206,7 +206,7 @@ const Authorizations = ({
                 {Number(totalAuthorizations) || 0}
               </p>
               {loading ? (
-                <FaSpinner className="animate-spin text-lg text-black" aria-hidden="true" />
+                <SectionLoader minHeight={80} />
               ) : (
                 <>
                   {authDetails.map((item, index) => (

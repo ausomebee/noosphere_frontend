@@ -14,8 +14,8 @@ import issueApi from "../../../api/IssueApi";
 import tenantApi from "../../../api/TenantApis";
 import { showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../hooks/usePersistedTab";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const TenantSingleIssueManagement = () => {
   const { tenantId } = useParams();
@@ -277,7 +277,7 @@ const TenantSingleIssueManagement = () => {
   if (loading) {
     return (
       <div className="tenant-list-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }

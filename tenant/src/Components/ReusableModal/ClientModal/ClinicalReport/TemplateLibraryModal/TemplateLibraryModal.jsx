@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../../../../LoadingSpinner";
 import useAuth from "../../../../../hooks/useAuth";
 import { FiX, FiFileText } from "react-icons/fi";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
 import "./TemplateLibraryModal.css";
 import api from "../../../../../api/TemplateAndReportApi";
+import SectionLoader from "../../../../SectionLoader";
 
 const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -118,7 +118,7 @@ const TemplateLibraryModal = ({ isOpen, onClose, onSelectTemplate }) => {
 
         <div className="template-library-content">
           {loading ? (
-            <LoadingSpinner />
+            <SectionLoader />
           ) : templates.length === 0 ? (
             <div className="template-empty">
               <p>No templates available</p>

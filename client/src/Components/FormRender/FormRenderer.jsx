@@ -7,7 +7,6 @@ import "./FormRenderer.css";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/documentsAndFormsApis";
 import api2 from "../../api/ImageUpload";
-import LoadingSpinner from "../LoadingSpinner";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   initializeResponse,
@@ -22,6 +21,7 @@ import {
 } from "../../ReduxStore/features/formResponseSlice";
 import { loadForm } from "../../ReduxStore/features/formBuilderSlice";
 import { mimeMap } from "../../Data/selectOptions";
+import SectionLoader from "../SectionLoader";
 
 const FormRenderer = () => {
   const dispatch = useDispatch();
@@ -490,7 +490,7 @@ const FormRenderer = () => {
     return (
       <div className="form-renderer">
         <div className="form-container">
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       </div>
     );

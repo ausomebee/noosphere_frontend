@@ -19,6 +19,7 @@ import { FiRefreshCw } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import Button from "../Button/Button";
 import { parse, isSameDay, isWithinInterval, isValid } from "date-fns";
+import SectionLoader from "../SectionLoader";
 
 const CustomTable = ({
   data,
@@ -40,6 +41,7 @@ const CustomTable = ({
   // When the data is paginated by the server, hide the table's own client-side
   // pagination and let the parent render <Pagination> driven by server pages.
   hidePagination = false,
+  loading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -503,6 +505,9 @@ const CustomTable = ({
         onFilterTypeSelect={onFilterTypeSelect}
       />
 
+      {loading ? (
+        <SectionLoader />
+      ) : (
       <TableBody
         columns={columns}
         currentData={currentData}
@@ -522,6 +527,7 @@ const CustomTable = ({
         hasStatusDot={hasStatusDot}
         startIndex={startIndex}
       />
+      )}
 
       {!hidePagination && (
         <Pagination

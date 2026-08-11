@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FiChevronLeft,
@@ -16,6 +15,7 @@ import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import "./FormResponses.css";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const FormResponses = () => {
   const { formId } = useParams();
@@ -172,7 +172,7 @@ const FormResponses = () => {
 
   if (loading) {
     return (
-      <LoadingSpinner />
+      <SectionLoader />
     );
   }
 

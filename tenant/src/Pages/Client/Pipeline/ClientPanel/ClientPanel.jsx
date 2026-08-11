@@ -11,9 +11,9 @@ import ClinicalReportsTab from "./ClinentSubs/ClinicalReports";
 
 import api from "../../../../api/clientPanelApis"; // adjust path
 import useAuth from "../../../../hooks/useAuth";
-import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
 import usePermissions from "../../../../hooks/usePermissions";
+import SectionLoader from "../../../../Components/SectionLoader";
 
 const ClientPanel = () => {
   const navigate = useNavigate();
@@ -101,7 +101,7 @@ const ClientPanel = () => {
     if (loading)
       return (
         <div className="p-8 text-center">
-          <LoadingSpinner />{" "}
+          <SectionLoader />{" "}
         </div>
       );
 

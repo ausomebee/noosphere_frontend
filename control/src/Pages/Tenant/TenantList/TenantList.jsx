@@ -9,9 +9,9 @@ import { showToast, showApiError } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import tenantApi from "../../../api/TenantApis";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import { formatDate } from "../../../Helper/Formatters";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const deactivationReasons = [
   { value: "", label: "Select an option" },
@@ -270,7 +270,7 @@ const TenantList = () => {
   if (loading) {
     return (
       <div className="tenant-page-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }

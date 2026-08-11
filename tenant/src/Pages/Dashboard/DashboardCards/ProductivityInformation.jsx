@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import Chart from "react-apexcharts";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import useAuth from "../../../hooks/useAuth";
 import api from "../../../api/DashboardApis";
 import DashboardEmptyState from "./DashboardEmptyState";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const ProductivityInformation = ({ hasData }) => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -111,7 +111,7 @@ const ProductivityInformation = ({ hasData }) => {
   }
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <SectionLoader />;
   }
 
   if (error) {

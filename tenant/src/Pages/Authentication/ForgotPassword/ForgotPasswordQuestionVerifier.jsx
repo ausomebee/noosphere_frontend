@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,6 +11,7 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const answerSchema = yup.object().shape({
   answer: yup
@@ -129,7 +129,7 @@ const ForgotPasswordQuestionVerifier = () => {
               {step === 2 && (
                 <>
                   {loading ? (
-                    <LoadingSpinner />
+                    <SectionLoader />
                   ) : isVerified ? (
                     <>
                       <div className="icon success-icon">✔</div>

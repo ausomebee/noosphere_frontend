@@ -3,12 +3,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import messageApi from "../../api/messageApi";
 import { emitNotificationRead, onNotification } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import { formatDateHeader } from "../../Helper/Formatters";
+import SectionLoader from "../../Components/SectionLoader";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -172,7 +172,7 @@ const Notifications = () => {
           </header>
 
           {loading ? (
-            <LoadingSpinner />
+            <SectionLoader />
           ) : allNotifications.length === 0 ? (
             <p style={{ color: "#5f6368", fontSize: "14px" }}>No notifications</p>
           ) : (

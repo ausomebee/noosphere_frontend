@@ -11,8 +11,7 @@ import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import { showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
-
+import SectionLoader from "../../../Components/SectionLoader";
 const LIMIT = 20;
 
 const TenantListUsageStatistics = () => {
@@ -198,7 +197,7 @@ const TenantListUsageStatistics = () => {
   if (loading) {
     return (
       <div className="tenant-payment-page">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }
@@ -359,7 +358,7 @@ const TenantListUsageStatistics = () => {
       {/* Server Requests Table */}
       <h3 className="tenant-header-gen">SERVER REQUESTS</h3>
       {serverLoading ? (
-        <SectionSpinner />
+        <SectionLoader />
       ) : (
         <>
           <CustomTable

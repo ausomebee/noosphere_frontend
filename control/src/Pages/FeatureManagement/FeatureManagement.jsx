@@ -22,9 +22,9 @@ import {
 } from "../../ReduxStore/features/featureManagementSlice";
 import { showToast } from "../../Helper/ShowToast";
 import "./FeatureManagement.css";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import usePersistedTab from "../../hooks/usePersistedTab";
+import SectionLoader from "../../Components/SectionLoader";
 
 // Thunks reject via rejectWithValue(error.message), so unwrap() throws a plain
 // string. Read the message from either shape so backend errors reach the toast.
@@ -296,7 +296,7 @@ const FeatureManagement = () => {
                 width: "100%",
               }}
             >
-              <LoadingSpinner />
+              <SectionLoader />
             </div>
           ) : featureGroups.length > 0 ? (
             <div className="feature-groups">
@@ -332,7 +332,7 @@ const FeatureManagement = () => {
               isOpen={modalState.createFeatureGroup}
               isLoading={isCreatingGroup}
             >
-              {isCreatingGroup && <LoadingSpinner />}
+              {isCreatingGroup && <SectionLoader />}
             </CreateFeatureGroupModal>
           )}
           {modalState.editFeatureGroup && (
@@ -348,7 +348,7 @@ const FeatureManagement = () => {
               isOpen={modalState.editFeatureGroup}
               isLoading={isUpdatingGroup}
             >
-              {isUpdatingGroup && <LoadingSpinner />}
+              {isUpdatingGroup && <SectionLoader />}
             </EditFeatureGroupModal>
           )}
           {modalState.deleteFeatureGroup && (
@@ -367,7 +367,7 @@ const FeatureManagement = () => {
               requirePassword={true}
               isLoading={isDeletingGroup}
             >
-              {isDeletingGroup && <LoadingSpinner />}
+              {isDeletingGroup && <SectionLoader />}
             </DeleteConfirmationModal>
           )}
           {modalState.createFeature && (
@@ -377,7 +377,7 @@ const FeatureManagement = () => {
               isOpen={modalState.createFeature}
               isLoading={isCreatingFeature}
             >
-              {isCreatingFeature && <LoadingSpinner />}
+              {isCreatingFeature && <SectionLoader />}
             </AddNewFeatureModal>
           )}
         </>

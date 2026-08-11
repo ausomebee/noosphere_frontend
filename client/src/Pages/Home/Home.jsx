@@ -18,12 +18,12 @@ import SuccessModal from "../../Components/Modal/SuccessModal";
 // API Functions
 import api from "../../api/homeApis";
 import ErrorFallback from "../../Components/ErrorFallback";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import usePersistedTab from "../../hooks/usePersistedTab";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
+import SectionLoader from "../../Components/SectionLoader";
 
 // ============================================================================
 // Main Home Component
@@ -763,7 +763,7 @@ const Home = () => {
     return (
       <DashboardLayout>
         <div className="home-content">
-          <LoadingSpinner />
+          <SectionLoader />
         </div>
       </DashboardLayout>
     );
@@ -799,46 +799,30 @@ const Home = () => {
         </div>
 
         <div className="home-table-section">
-          {loading.appointments ? (
-            <div style={{ 
-              background: "white", 
-              borderRadius: "12px", 
-              padding: "24px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
-            }}>
-              <div style={{ marginBottom: "24px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "600", margin: "0 0 4px" }}>
-                  My Appointments
-                </h2>
-                <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
-                  See and manage all your appointments here
-                </p>
-              </div>
-              <LoadingSpinner />
-            </div>
-          ) : (
-            <ReusableTable
-              title="My Appointments"
-              subtitle="See and manage all your appointments here"
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              columns={columns}
-              data={paginatedData}
-              searchPlaceholder="Search Appointments"
-              showFilters={true}
-              showViewToggle={true}
-              emptyState={{
-                icon: <EmptyAppointmentsSvg />,
-                title: "No appointments",
-                subtitle:
-                  "You don't have any appointments yet. New appointments will appear here",
-              }}
-              actions={getActions()}
-              pagination={{ currentPage, totalPages }}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          {/* The table renders its own loading ring, so the title, tabs and
+              filters stay put while the rows load (same as the tenant table). */}
+          <ReusableTable
+            title="My Appointments"
+            subtitle="See and manage all your appointments here"
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            columns={columns}
+            data={paginatedData}
+            loading={loading.appointments}
+            searchPlaceholder="Search Appointments"
+            showFilters={true}
+            showViewToggle={true}
+            emptyState={{
+              icon: <EmptyAppointmentsSvg />,
+              title: "No appointments",
+              subtitle:
+                "You don't have any appointments yet. New appointments will appear here",
+            }}
+            actions={getActions()}
+            pagination={{ currentPage, totalPages }}
+            onPageChange={setCurrentPage}
+          />
         </div>
 
         {/* === ALL MODALS === */}

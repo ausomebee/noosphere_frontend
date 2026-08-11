@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import LoadingSpinner from "../LoadingSpinner";
 import { IoClose, IoSend, IoCheckmark, IoCheckmarkDone } from "react-icons/io5";
 import "./MessageModal.css";
 import useAuth from "../../hooks/useAuth";
@@ -19,6 +18,7 @@ import {
 import { showToast } from "../../Helper/ShowToast";
 import { getInitials, formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
 import useFormatSettings from "../../hooks/useFormatSettings";
+import SectionLoader from "../SectionLoader";
 
 const getClientName = (client) =>
   client?.fullName ||
@@ -301,7 +301,7 @@ const MessageModal = ({ isOpen, onClose }) => {
           {/* Conversation list */}
           <div className="msg-conv-list">
             {loadingClients ? (
-              <LoadingSpinner />
+              <SectionLoader />
             ) : conversationList.length === 0 ? (
               <div className="msg-conv-loading">No conversations yet</div>
             ) : (

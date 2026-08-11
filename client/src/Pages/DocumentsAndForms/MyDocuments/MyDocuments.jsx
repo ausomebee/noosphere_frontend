@@ -2,7 +2,6 @@ import usePageTitle from "../../../hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import ReusableTable from "../../../Components/Table/ReuseableTable";
 import Button from "../../../Components/Button/Button";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import {
   IoAddOutline,
   IoFolderOutline,
@@ -24,6 +23,7 @@ import FolderFilesModal from "../../../Components/Modal/DocumentModal/FolderFile
 import useAuth from "../../../hooks/useAuth";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const MyDocuments = () => {
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
@@ -337,7 +337,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">Folders</h2>
 
         {foldersLoading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : foldersData.length === 0 ? (
           <div className="empty-state">
             <IoFolderOpenOutline size={48} className="empty-icon" />
@@ -405,7 +405,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">Recent</h2>
 
         {recentLoading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : recentFiles.length === 0 ? (
           <div className="empty-state">
             <IoDocumentTextOutline size={48} className="empty-icon" />
@@ -449,7 +449,7 @@ const MyDocuments = () => {
         <h2 className="section-heading">All files</h2>
 
         {allFilesLoading ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : allFilesData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentOutline size={48} className="empty-icon" />

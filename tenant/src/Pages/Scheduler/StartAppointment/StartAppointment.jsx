@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import LoadingSpinner from "../../../Components/LoadingSpinner";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
@@ -24,6 +23,7 @@ import ConfirmLeaveModal from "../../../Components/ReusableModal/StartAppointmen
 import { showToast } from "../../../Helper/ShowToast";
 import { formatDate, formatTime, formatDuration } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const StartAppointment = () => {
   const { clientId, appointmentId } = useParams();
@@ -577,7 +577,7 @@ const StartAppointment = () => {
 
   if (loading)
     return (
-      <LoadingSpinner />
+      <SectionLoader />
     );
   if (error)
     return <ErrorFallback message="Something went wrong loading the appointment. Please try again." onRetry={() => window.location.reload()} />;

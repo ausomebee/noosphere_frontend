@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import LoadingSpinner from "../../../../Components/LoadingSpinner";
 import useAuth from "../../../../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaArrowLeft, FaEdit, FaPlus } from "react-icons/fa";
@@ -14,6 +13,7 @@ import { formatCurrency } from "../../../../Helper/Formatters";
 import { toBackendServiceCode } from "../../../../Helper/payerServiceCode";
 import usePermissions from "../../../../hooks/usePermissions";
 import "../../BillingPayment.css";
+import SectionLoader from "../../../../Components/SectionLoader";
 
 const SingleViewPayer = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -457,7 +457,7 @@ const SingleViewPayer = () => {
       </h2>
       <div className="billing-info-card flex justify-between">
         {loadingPayer ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : (
           <>
             <OrgGrid data={payerData || {}} />

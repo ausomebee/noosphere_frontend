@@ -4,13 +4,13 @@ import ReusableTable from "../../Components/Table/ReuseableTable";
 import { FiEye, FiX } from "react-icons/fi";
 import Chart from "react-apexcharts";
 import "./Programs.css";
-import LoadingSpinner from "../../Components/LoadingSpinner";
 import DashboardLayout from "../../layouts/ClientLayout";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/programsApis";
 import Button from "../../Components/Button/Button";
 import ErrorFallback from "../../Components/ErrorFallback";
 import usePersistedTab from "../../hooks/usePersistedTab";
+import SectionLoader from "../../Components/SectionLoader";
 
 const Programs = () => {
   const { clientId, accessToken, refreshToken } = useAuth();
@@ -502,7 +502,7 @@ const Programs = () => {
         </div>
 
         {loadingPrograms ? (
-          <LoadingSpinner />
+          <SectionLoader />
         ) : programsError ? (
           <div className="error-state">{programsError}</div>
         ) : (
@@ -592,7 +592,7 @@ const TargetPerformanceModal = ({ modalState, onClose }) => {
 
         <div className="modal-chart-container-unique">
           {loading ? (
-            <LoadingSpinner />
+            <SectionLoader />
           ) : error ? (
             <ErrorFallback message="Something went wrong loading performance data. Please try again." />
           ) : performanceData ? (

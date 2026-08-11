@@ -14,11 +14,11 @@ import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear } from "../../../Helper/Formatters";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../../Pages/Tenant/TenantList/TenantListViewPayment";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import { createRoot } from "react-dom/client";
+import SectionLoader from "../../../Components/SectionLoader";
 
 // MM/dd/yyyy format required by CustomTable's date range filter parser
 const toFilterDate = (dateStr) => {
@@ -464,7 +464,7 @@ const TenantSingleBilling = () => {
   if (loading) {
     return (
       <div className="tenant-list-container">
-        <SectionSpinner />
+        <SectionLoader />
       </div>
     );
   }
@@ -595,11 +595,11 @@ const TenantSingleBilling = () => {
                 );
               })}
             </div>
-            {tabLoading ? <SectionSpinner /> : (
-              <CustomTable
+            <CustomTable
                 data={filteredInvoiceData}
                 columns={invoiceColumns}
                 filters={INVOICE_FILTERS}
+                loading={tabLoading}
                 onFilterTypeSelect={(type) => {
                   if (type === "clear_filters") {
                     setInvoiceFilters({ status: "", dateCreated: null, dueDate: null });
@@ -617,7 +617,6 @@ const TenantSingleBilling = () => {
                 itemsPerPage={10}
                 tableName="Invoices"
               />
-            )}
           </>
         ) : (
           <>
@@ -636,7 +635,7 @@ const TenantSingleBilling = () => {
                 );
               })}
             </div>
-            {tabLoading ? <SectionSpinner /> : (
+            {tabLoading ? <SectionLoader /> : (
               <CustomTable
                 data={filteredPaymentData}
                 columns={paymentColumns}

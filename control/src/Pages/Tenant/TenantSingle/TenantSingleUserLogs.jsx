@@ -7,8 +7,8 @@ import tenantApi from "../../../api/TenantApis";
 import useAuth from "../../../hooks/useAuth";
 import { showApiError } from "../../../Helper/ShowToast";
 import { formatDateTime as formatDate } from "../../../Helper/Formatters";
-import { SectionSpinner } from "../../../Components/LoadingSpinner";
 import usePersistedTab from "../../../hooks/usePersistedTab";
+import SectionLoader from "../../../Components/SectionLoader";
 
 const LIMIT = 20;
 
@@ -121,7 +121,7 @@ const TenantSingleUserLogs = () => {
         <h3 className="tenant-header-gen">ACTIVITY LOGS</h3>
 
         {loading ? (
-          <SectionSpinner />
+          <SectionLoader />
         ) : (
           <>
             <div className="tenants-tabs">
