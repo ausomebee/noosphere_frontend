@@ -106,6 +106,20 @@ const APPT = {
 const entityIdOf = (n) =>
   n?.entityId ?? n?.data?.entityId ?? n?.metadata?.entityId ?? null;
 
+// A reschedule notification carries the slot the client asked for. The
+// appointment record itself only knows the slot it currently occupies, so we
+// forward this to the destination for the "Requested date & time" column.
+const proposedSlotOf = (n) => {
+  const m = n?.metadata ?? n?.data ?? {};
+  if (!m.proposedDate && !m.proposedStartTime && !m.proposedEndTime) return null;
+  return {
+    date: m.proposedDate ?? null,
+    startTime: m.proposedStartTime ?? null,
+    endTime: m.proposedEndTime ?? null,
+    reason: m.reason ?? null,
+  };
+};
+
 // The client panel route needs BOTH ids. Read them only from explicit fields —
 // never guess from entityId (which is the document/auth/report id, not a client
 // id). When absent we fall back to the clients list, so nothing breaks.
@@ -135,7 +149,15 @@ const ACTIONS = {
   APPOINTMENT_START_REMINDER: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   APPOINTMENT_STARTED: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   RESCHEDULED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
-  NEW_RESCHEDULE_REQUEST: (id) => ({ label: "View request", path: "/scheduler/appointments", state: { focusTab: APPT.reschedule, focusId: id } }),
+  NEW_RESCHEDULE_REQUEST: (id, notif) => ({
+    label: "View request",
+    path: "/scheduler/appointments",
+    state: {
+      focusTab: APPT.reschedule,
+      focusId: id,
+      proposedSlot: proposedSlotOf(notif),
+    },
+  }),
   CANCELLED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.cancelled, focusId: id } }),
   COMPLETED_APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.past, focusId: id } }),
 

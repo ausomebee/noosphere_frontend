@@ -60,9 +60,12 @@ export default function useFocusAppointment(list, openFn, fetchById) {
     // 2) Fallback: use the row already in the loaded list.
     if (Array.isArray(list) && list.length) {
       const item = list.find((i) =>
-        [i?.id, i?.rawData?.id, i?.rawData?.appointmentId].some(
-          (c) => c != null && baseId(c) === target
-        )
+        [
+          i?.id,
+          i?.appointmentId,
+          i?.rawData?.id,
+          i?.rawData?.appointmentId,
+        ].some((c) => c != null && baseId(c) === target)
       );
       if (item) {
         consumedRef.current = true;

@@ -15,11 +15,17 @@ import api from "../../../../api/AppointmentApi";
 import { formatTime } from "../../../../Helper/Formatters";
 import { showToast } from "../../../../Helper/ShowToast";
 import useFormatSettings from "../../../../hooks/useFormatSettings";
+import {
+  clientDisplayName,
+  normalizeRescheduleRequest,
+} from "../../../../utils/appointmentDisplay";
+import { useLocation } from "react-router-dom";
 
 const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
   const { timeFormat } = useFormatSettings();
+  const location = useLocation();
   const role = authRole?.name ?? "Client";
 
   const [appointments, setAppointments] = useState([]);
@@ -40,34 +46,60 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
     setCountsRef.current = setCounts;
   }, [setCounts]);
 
-  const toTableRow = (apiAppt) => {
-    const service = (apiAppt.appointmentServices || []).map((as) => {
-      const modifier = as.modifiers?.modifier
-        ? ` (${as.modifiers.modifier})`
-        : "";
+  // Build a table row from a reschedule request (or, for the notification
+  // deep-link, a bare appointment plus the proposed slot). Both paths go
+  // through the same normaliser so the row shape is always identical.
+  const toTableRow = useCallback(
+    (raw, proposed = null) => {
+      const r = normalizeRescheduleRequest(raw, proposed);
 
-      const code = as.serviceCode?.code || "Unknown";
+      const serviceText = r.services.map((s) => s.serviceType).join(", ") || "N/A";
+      const truncatedServiceType =
+        serviceText.length > 20 ? `${serviceText.substring(0, 20)}...` : serviceText;
+
+      const therapistNames = r.clinicians.map((c) => c.fullName).filter(Boolean);
+      const serviceTypes = r.services.map((s) => s.serviceType).filter(Boolean);
+
+      const slotTime = (start, end) =>
+        start && end
+          ? `${formatTime(start, timeFormat)} - ${formatTime(end, timeFormat)}`
+          : "N/A";
 
       return {
-        serviceType: `${code}${modifier}`,
-        modifierType: as.modifiers?.modifier || "",
+        // Row id is the request id when we have one, else the appointment id.
+        id: r.requestId || r.appointmentId,
+        // The notification's entityId is the APPOINTMENT id, so keep it around
+        // for the deep-link to match against.
+        appointmentId: r.appointmentId,
+        clientId: r.clientId,
+        clientName: clientDisplayName(r.client, "Unknown Client"),
+        therapistName: therapistNames.join(", ") || "Unassigned",
+        serviceType: truncatedServiceType,
+        sessionType: r.session?.name || "N/A",
+        prevDateTime: {
+          date: r.previous.date || "N/A",
+          time: slotTime(r.previous.startTime, r.previous.endTime),
+        },
+        newDateTime: {
+          date: r.requested.date || "N/A",
+          time: slotTime(r.requested.startTime, r.requested.endTime),
+        },
+        // Raw requested date/time for the Modify modal to prefill. The modal
+        // (convertTo24Hour/toDateInput) normalizes these itself, so pass raw
+        // values — NOT formatTime() output, whose 12-hour "HH:MM:SS AM/PM"
+        // form the modal's parser rejects, leaving it blank.
+        date: r.requested.date,
+        startTime: r.requested.startTime,
+        endTime: r.requested.endTime,
+        reason: r.reason,
+        hasActions: true,
+        hasCheckbox: true,
+        therapistNames,
+        serviceTypes,
       };
-    });
-
-    const client = apiAppt.client || {};
-    const clientFullName = [client.firstName, client.lastName]
-      .filter(Boolean)
-      .join(" ") || "Unknown Client";
-
-    return {
-      ...apiAppt,
-      service: service.length > 0 ? service : [],
-      client: { ...client, fullName: clientFullName },
-      clinicians: apiAppt.clinicians || [],
-      session: apiAppt.session || { name: "Unknown Session" },
-      colourCode: apiAppt.colourCode || "#3B82F6",
-    };
-  };
+    },
+    [timeFormat],
+  );
 
   // Fetch reschedule requests
   const fetchRescheduleRequests = useCallback(async () => {
@@ -93,57 +125,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
             }));
 
       const rawData = response?.data?.data || [];
-      const transformed = rawData.map(toTableRow);
-
-      const mappedAppointments = transformed.map((appt) => {
-        const serviceText =
-          appt.service?.map((s) => s.serviceType).join(", ") || "N/A";
-        const truncatedServiceType =
-          serviceText.length > 20
-            ? serviceText.substring(0, 20) + "..."
-            : serviceText;
-
-        const therapistNames = appt.clinicians?.map((c) => c.fullName) || [];
-        const serviceTypes = appt.service?.map((s) => s.serviceType) || [];
-
-        return {
-          id: appt.id,
-          clientId: appt.clientId,
-          clientName: appt.client?.fullName || "Unknown Client",
-          therapistName:
-            therapistNames.length > 0
-              ? therapistNames.join(", ")
-              : "Unassigned",
-          serviceType: truncatedServiceType,
-          sessionType: appt.session?.name || "N/A",
-          prevDateTime: {
-            date: appt.previousDate || "N/A",
-            time:
-              appt.previousStartTime && appt.previousEndTime
-                ? `${formatTime(
-                    appt.previousStartTime, timeFormat,
-                  )} - ${formatTime(appt.previousEndTime, timeFormat)}`
-                : "N/A",
-          },
-          newDateTime: {
-            date: appt.date,
-            time: `${formatTime(appt.startTime, timeFormat)} - ${formatTime(
-              appt.endTime, timeFormat,
-            )}`,
-          },
-          // Raw client-requested date/time for the Modify modal to prefill.
-          // The modal (convertTo24Hour/toDateInput) normalizes these itself, so
-          // pass raw values here — NOT formatTime() output, whose 12-hour
-          // "HH:MM:SS AM/PM" form the modal's parser rejects, leaving it blank.
-          date: appt.date,
-          startTime: appt.startTime,
-          endTime: appt.endTime,
-          hasActions: true,
-          hasCheckbox: true,
-          therapistNames,
-          serviceTypes,
-        };
-      });
+      const mappedAppointments = rawData.map((r) => toTableRow(r));
 
       setAppointments(mappedAppointments);
       setCountsRef.current((prev) => ({
@@ -156,7 +138,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, userId, role, clientId, accessToken, refreshToken, timeFormat]);
+  }, [tenantId, userId, role, clientId, accessToken, refreshToken, toTableRow]);
 
   useEffect(() => {
     fetchRescheduleRequests();
@@ -374,7 +356,33 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
   }, [handleSelectionChange]);
 
   // Open the request's action modal when arriving from a notification.
-  useFocusAppointment(appointments, setActionRequest);
+  // Opened from a notification: its entityId is the appointment id, so fetch
+  // that appointment directly and pair it with the slot the client proposed
+  // (carried on the notification). This opens the modal without waiting for —
+  // or depending on — the request list.
+  const fetchRequestForNotification = useCallback(
+    async (appointmentId) => {
+      const proposed = location.state?.proposedSlot || null;
+      try {
+        const res = await api.GetClientAppointmentDetails({
+          Id: appointmentId,
+          accessToken,
+          refreshToken,
+        });
+        const appt = res?.data?.data ?? res?.data ?? null;
+        if (appt) return toTableRow(appt, proposed);
+      } catch {
+        // Fall through to the list match below.
+      }
+      // Fallback: the request may already be in the loaded list.
+      return (
+        appointments.find((a) => a.appointmentId === appointmentId) || null
+      );
+    },
+    [accessToken, refreshToken, toTableRow, appointments, location.state],
+  );
+
+  useFocusAppointment(appointments, setActionRequest, fetchRequestForNotification);
 
   const Actions = [
     {

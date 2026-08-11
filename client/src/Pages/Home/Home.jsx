@@ -385,10 +385,14 @@ const Home = () => {
               refreshToken,
             });
             
-            // Transform rescheduled appointments data (same structure as upcoming)
+            // A reschedule request wraps the appointment it refers to, so the
+            // client/clinicians/session/services live on `apt.appointment`.
+            // Fall back to the top level for a flat appointment payload.
             transformedData = response.data.data.map(apt => {
+              const base = apt.appointment || apt;
+
               // Get service types from appointmentServices array
-              const serviceTypes = apt.appointmentServices
+              const serviceTypes = base.appointmentServices
                 ?.map(service => {
                   const code = service.serviceCode?.code || "";
                   const description = service.serviceCode?.description || "";
@@ -397,40 +401,46 @@ const Home = () => {
                 .join(", ") || "N/A";
 
               // Get clinician names
-              const clinicians = apt.clinicians
+              const clinicians = base.clinicians
                 ?.map(c => c.fullName)
                 .join(", ") || "Not assigned";
 
-              // Format date and time
+              // Requested slot sits on the request; the appointment keeps the
+              // slot it currently occupies.
               const dateFormatted = formatDate(apt.date);
 
               const rescheduleTimeRange = apt.startTime
                 ? `${formatTime(apt.startTime)} - ${formatTime(apt.endTime)}`
                 : "";
 
+              const prevDate = apt.previousDate || base.previousDate || base.date;
+              const prevStart =
+                apt.previousStartTime || base.previousStartTime || base.startTime;
+              const prevEnd =
+                apt.previousEndTime || base.previousEndTime || base.endTime;
+
               return {
                 id: apt.id,
-                sessionType: apt.session?.name || "N/A",
+                appointmentId: apt.appointmentId || base.id,
+                sessionType: base.session?.name || "N/A",
                 serviceType: serviceTypes,
                 dateTime: `${dateFormatted}\n${rescheduleTimeRange}`,
                 clinician: clinicians,
-                rescheduled: apt.rescheduled,
-                rescheduleAccepted: apt.rescheduleAccepted,
-                rescheduleRejected: apt.rescheduleRejected,
-                previousDate: apt.previousDate,
-                previousStartTime: apt.previousStartTime,
-                previousEndTime: apt.previousEndTime,
-                prevDateTime: apt.previousDate
-                  ? `${formatDate(apt.previousDate)}${
-                      apt.previousStartTime
-                        ? `\n${formatTime(apt.previousStartTime)} - ${formatTime(
-                            apt.previousEndTime
-                          )}`
+                rescheduled: base.rescheduled,
+                rescheduleAccepted: base.rescheduleAccepted,
+                rescheduleRejected: base.rescheduleRejected,
+                previousDate: prevDate,
+                previousStartTime: prevStart,
+                previousEndTime: prevEnd,
+                prevDateTime: prevDate
+                  ? `${formatDate(prevDate)}${
+                      prevStart
+                        ? `\n${formatTime(prevStart)} - ${formatTime(prevEnd)}`
                         : ""
                     }`
                   : "—",
                 // Store original data for modals
-                originalData: apt,
+                originalData: base,
               };
             });
             break;
@@ -535,8 +545,13 @@ const Home = () => {
     // Wait for the fresh fetch to finish so we match against up-to-date rows,
     // not stale cached data.
     if (!focusId || loading.appointments || !currentTabData.length) return;
+    // A notification's entityId is the APPOINTMENT id, which for a reschedule
+    // request differs from the row id (the request id) — match either.
     const row = currentTabData.find(
-      (a) => a.id === focusId || a.originalData?.id === focusId
+      (a) =>
+        a.id === focusId ||
+        a.appointmentId === focusId ||
+        a.originalData?.id === focusId
     );
     if (!row) return;
     pendingFocusIdRef.current = null;
