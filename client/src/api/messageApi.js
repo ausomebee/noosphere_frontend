@@ -65,11 +65,13 @@ const GetNotifications = async ({ userId, userType = "CLIENT", accessToken, refr
 };
 
 // Mark a single message as read by its ID
-// PATCH /messages/read/:messageId
+// PATCH /messages/read/client/:messageId
 const MarkMessageAsRead = async ({ messageId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const response = await authFetch.patch(`${PLAIN_API_URL}/messages/read/${messageId}`);
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/messages/read/client/${messageId}`,
+    );
     return response;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Mark message as read failed");

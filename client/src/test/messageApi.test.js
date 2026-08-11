@@ -55,7 +55,7 @@ describe("messageApi", () => {
     it("patches correct endpoint", async () => {
       mockPatch.mockResolvedValue({ data: {} });
       await api.MarkMessageAsRead({ messageId: "m1", ...auth });
-      expect(mockPatch).toHaveBeenCalledWith(expect.stringContaining("/messages/read/m1"));
+      expect(mockPatch).toHaveBeenCalledWith(expect.stringContaining("/messages/read/client/m1"));
     });
 
     it("throws on failure", async () => {

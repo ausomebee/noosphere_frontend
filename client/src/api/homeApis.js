@@ -84,7 +84,7 @@ const GetClientUpcomingAppointments = async ({
 const GetAppointmentById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/${id}`);
+    const res = await authFetch.get(`${PLAIN_API_URL}/appointments/client/${id}`);
     return res;
   } catch (e) {
     throw new Error(
