@@ -266,7 +266,7 @@ const UpcomingAppointments = ({ setCounts }) => {
   const fetchApptForView = useCallback(
     async (id) => {
       try {
-        const res = await api.GetClientAppointmentDetails({
+        const res = await api.GetAppointmentById({
           Id: id,
           accessToken,
           refreshToken,

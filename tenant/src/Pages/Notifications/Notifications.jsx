@@ -230,7 +230,7 @@ const Notifications = () => {
   // Open the read-only appointment details behind a notification.
   const openAppointmentDetails = useCallback(
     async (appointmentId) => {
-      const res = await appointmentApi.GetClientAppointmentDetails({
+      const res = await appointmentApi.GetAppointmentById({
         Id: appointmentId,
         accessToken,
         refreshToken,

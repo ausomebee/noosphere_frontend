@@ -203,6 +203,14 @@ const GetAppointmentByStaffId = async ({
     );
   }
 };
+/**
+ * TENANT: every appointment belonging to a client.
+ *   GET /appointments/client/{clientId}
+ *
+ * Careful — the CLIENT app uses this same URL shape for a SINGLE appointment
+ * (`GET /appointments/client/{id}`). In the tenant app a single appointment is
+ * `GET /appointments/{id}` — see GetAppointmentById below.
+ */
 const GetAppointmentByClientId = async ({
   clientId,
   accessToken,
@@ -521,7 +529,11 @@ const GetClientProgramAndTargetsDetails = async ({
     );
   }
 };
-const GetClientAppointmentDetails = async ({
+/**
+ * TENANT: one appointment by its id.
+ *   GET /appointments/{id}
+ */
+const GetAppointmentById = async ({
   Id,
   accessToken,
   refreshToken,
@@ -597,6 +609,6 @@ export default {
   GetAllAppointments,
 
   GetClientProgramAndTargetsDetails,
-  GetClientAppointmentDetails,
+  GetAppointmentById,
   SubmitStartAppointment
 };

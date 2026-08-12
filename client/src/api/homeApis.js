@@ -79,8 +79,15 @@ const GetClientUpcomingAppointments = async ({
     );
   }
 };
-// Fetch a single appointment by its id, so the details modal shows accurate
-// date/time/service instead of relying on possibly-thin list rows.
+/**
+ * CLIENT: one appointment by its id.
+ *   GET /appointments/client/{id}
+ *
+ * Careful — the TENANT app uses this same URL shape to list ALL of a client's
+ * appointments (`GET /appointments/client/{clientId}`). Here it returns a
+ * single appointment, so the details modal shows accurate date/time/service
+ * instead of relying on possibly-thin list rows.
+ */
 const GetAppointmentById = async ({ id, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {

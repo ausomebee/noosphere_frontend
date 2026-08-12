@@ -362,7 +362,7 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
     async (appointmentId) => {
       const proposed = location.state?.proposedSlot || null;
       try {
-        const res = await api.GetClientAppointmentDetails({
+        const res = await api.GetAppointmentById({
           Id: appointmentId,
           accessToken,
           refreshToken,

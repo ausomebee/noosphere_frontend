@@ -119,7 +119,7 @@ const StartAppointment = () => {
         if (!accessToken) throw new Error("No access token found");
 
         const [appointmentRes, programsRes] = await Promise.all([
-          api.GetClientAppointmentDetails({
+          api.GetAppointmentById({
             Id: appointmentId,
             accessToken,
             refreshToken,
