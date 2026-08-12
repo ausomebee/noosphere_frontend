@@ -15,6 +15,8 @@ import usePermissions from "../../../../hooks/usePermissions";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import api from "../../../../api/AppointmentApi";
 import { format } from "date-fns";
+import { formatTime } from "../../../../Helper/Formatters";
+import useFormatSettings from "../../../../hooks/useFormatSettings";
 import expandForAppointments from "../../../../utils/expandForAppointments";
 import {
   clientDisplayName,
@@ -25,6 +27,7 @@ const UpcomingAppointments = ({ setCounts }) => {
   const navigate = useNavigate();
   const { tenantId, role: authRole, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
+  const { timeFormat } = useFormatSettings();
   const role = authRole?.name ?? "Client";
 
   // State
@@ -154,7 +157,7 @@ const UpcomingAppointments = ({ setCounts }) => {
         date: appt.date || "Unknown Date",
         time:
           appt.startTime && appt.endTime
-            ? `${appt.startTime} - ${appt.endTime}`
+            ? `${formatTime(appt.startTime, timeFormat)} - ${formatTime(appt.endTime, timeFormat)}`
             : "No Time",
         therapistNames: appt.clinicians?.map((c) => c.fullName) || [],
         serviceTypes: appt.service?.map((s) => s.serviceType) || [],
@@ -162,7 +165,7 @@ const UpcomingAppointments = ({ setCounts }) => {
         hasActions: true,
       };
     });
-  }, [allExpandedAppointments]);
+  }, [allExpandedAppointments, timeFormat]);
 
   // Filters
   const filters = useMemo(() => {
@@ -287,7 +290,7 @@ const UpcomingAppointments = ({ setCounts }) => {
           date: appt.date,
           time:
             appt.startTime && appt.endTime
-              ? `${appt.startTime} - ${appt.endTime}`
+              ? `${formatTime(appt.startTime, timeFormat)} - ${formatTime(appt.endTime, timeFormat)}`
               : "",
           therapistNames,
           rawData,
@@ -297,7 +300,7 @@ const UpcomingAppointments = ({ setCounts }) => {
         return null;
       }
     },
-    [accessToken, refreshToken],
+    [accessToken, refreshToken, timeFormat],
   );
 
   // When arriving from a notification, show read-only details (not the edit

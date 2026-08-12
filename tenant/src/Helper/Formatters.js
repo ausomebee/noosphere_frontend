@@ -136,16 +136,19 @@ const formatTimeFromDate = (d, timeFormat = "12-hour") => {
  */
 export const formatTime = (timeStr, timeFormat = "12-hour") => {
   if (!timeStr) return "N/A";
-  const [hours, minutes, seconds = "00"] = timeStr.split(":");
+  // Accepts "HH:MM" and "HH:MM:SS". Seconds are never shown — appointments are
+  // scheduled to the minute, so "04:07:00 PM" only added noise.
+  const [hours, minutes] = String(timeStr).split(":");
   const h = parseInt(hours, 10);
+  if (Number.isNaN(h) || minutes === undefined) return "N/A";
 
   if (timeFormat === "24-hour") {
-    return `${String(h).padStart(2, "0")}:${minutes}:${seconds}`;
+    return `${String(h).padStart(2, "0")}:${minutes}`;
   }
 
   const period = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 || 12;
-  return `${h12.toString().padStart(2, "0")}:${minutes}:${seconds} ${period}`;
+  return `${h12.toString().padStart(2, "0")}:${minutes} ${period}`;
 };
 
 /**

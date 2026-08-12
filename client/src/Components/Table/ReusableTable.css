@@ -578,3 +578,52 @@
   overflow-wrap: anywhere;
   vertical-align: top;
 }
+
+/* ===== Card (grid) view — toggled by the list/grid switch ===== */
+.data-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 4px;
+}
+
+.data-card {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.data-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.data-card-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.data-card-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.data-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}

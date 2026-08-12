@@ -28,7 +28,12 @@ const AppointmentDetailsModal = ({
     }
 
     try {
-      const normalizedTime = timeStr.replace(/:\d{2}$/, "");
+      // The API sends "HH:MM" (and sometimes "HH:MM:SS"). Trimming with a
+      // trailing-group regex ate the MINUTES off "16:07", so every time fell
+      // back to "now" — match the parts explicitly instead.
+      const parts = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if (!parts) return defaultDate;
+      const normalizedTime = `${parts[1].padStart(2, "0")}:${parts[2]}`;
       const parsedDate = parse(
         `${dateStr} ${normalizedTime}`,
         "yyyy-MM-dd HH:mm",

@@ -250,6 +250,42 @@ const ReusableTable = ({
             title={emptyState?.title}
             subtitle={emptyState?.subtitle}
           />
+        ) : viewType === "grid" ? (
+          /* Card view — the same rows and actions, laid out as cards. */
+          <div className="data-card-grid">
+            {data.map((row, rowIndex) => (
+              <article className="data-card" key={row.id || rowIndex}>
+                {columns.map((col) => (
+                  <div className="data-card-field" key={col.key}>
+                    <span className="data-card-label">{col.title}</span>
+                    <span className="data-card-value">
+                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                    </span>
+                  </div>
+                ))}
+                {actions && (
+                  <div className="data-card-actions">
+                    {actions.map((action, idx) =>
+                      action.render ? (
+                        <React.Fragment key={idx}>
+                          {action.render(row)}
+                        </React.Fragment>
+                      ) : null
+                    )}
+                    {actions.some((a) => a.menu) && (
+                      <button
+                        className="action-menu-btn"
+                        onClick={(e) => toggleActionMenu(row, e)}
+                        aria-label="More actions"
+                      >
+                        <FiMoreVertical size={18} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
         ) : (
           <table className="data-table">
             <thead>

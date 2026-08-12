@@ -123,19 +123,21 @@ describe("Formatters", () => {
       expect(formatTime("")).toBe("N/A");
     });
 
-    it("formats 12-hour", () => {
-      const result = formatTime("14:30:00", "12-hour");
-      expect(result).toMatch(/02:30:00 PM/);
+    it("formats 12-hour without seconds", () => {
+      expect(formatTime("14:30:00", "12-hour")).toBe("02:30 PM");
     });
 
-    it("formats 24-hour", () => {
-      const result = formatTime("14:30:00", "24-hour");
-      expect(result).toBe("14:30:00");
+    it("formats 24-hour without seconds", () => {
+      expect(formatTime("14:30:00", "24-hour")).toBe("14:30");
     });
 
     it("handles midnight", () => {
-      const result = formatTime("00:00:00", "12-hour");
-      expect(result).toMatch(/12:00:00 AM/);
+      expect(formatTime("00:00:00", "12-hour")).toBe("12:00 AM");
+    });
+
+    it("accepts HH:MM without seconds", () => {
+      expect(formatTime("16:07", "12-hour")).toBe("04:07 PM");
+      expect(formatTime("16:07", "24-hour")).toBe("16:07");
     });
   });
 
