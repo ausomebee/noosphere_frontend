@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
@@ -43,6 +43,14 @@ const Authorizations = ({
     Expiring: 1,
     Expired: 1,
   });
+  // Each tab tracks its own request so a pending or failed fetch reads as
+  // "loading" / "couldn't load" instead of looking like an empty list.
+  const [modalLoading, setModalLoading] = useState({});
+  const [modalError, setModalError] = useState({});
+  // Which status this modal session has already requested, so a tab fetches
+  // once per open instead of on every re-render.
+  const fetchedTabsRef = useRef(new Set());
+  const modalOpenedRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -110,7 +118,13 @@ const Authorizations = ({
       accessToken,
       refreshToken,
     });
-    return (response?.data?.data?.rows || []).map(toAuthRow);
+    // The endpoint has shipped more than one envelope shape, so accept the
+    // paginated `{ data: { rows } }` form as well as a bare array.
+    const payload = response?.data?.data ?? response?.data;
+    const rows = Array.isArray(payload)
+      ? payload
+      : payload?.rows || payload?.authorizations || [];
+    return rows.map(toAuthRow);
   };
 
   const fetchAuthorizationsByStatus = async (status) => {
@@ -119,7 +133,6 @@ const Authorizations = ({
       const formattedData = await loadAuthorizations(status);
       setAuthDetails(formattedData.slice(0, 3));
       setModalData(formattedData);
-      setModalLists((prev) => ({ ...prev, [status]: formattedData }));
     } catch (error) {
       console.error("Error fetching authorizations:", error);
     } finally {
@@ -127,40 +140,63 @@ const Authorizations = ({
     }
   };
 
-  // The modal shows all three statuses, so load the ones we don't have yet.
-  const fetchAllStatusesForModal = async () => {
+  // Calls the endpoint for one status. Each tab owns its own request, so the
+  // modal never depends on the card having been filtered first.
+  const loadModalTab = async (key) => {
+    fetchedTabsRef.current.add(key);
+    setModalLoading((prev) => ({ ...prev, [key]: true }));
+    setModalError((prev) => ({ ...prev, [key]: false }));
     try {
-      const statuses = ["active", "expiring", "expired"];
-      const results = await Promise.all(
-        statuses.map((s) => loadAuthorizations(s).catch(() => [])),
-      );
-      setModalLists({
-        active: results[0],
-        expiring: results[1],
-        expired: results[2],
-      });
-    } catch (error) {
-      console.error("Error fetching authorizations for modal:", error);
+      const rows = await loadAuthorizations(key);
+      setModalLists((prev) => ({ ...prev, [key]: rows }));
+    } catch (err) {
+      console.error(`Error fetching ${key} authorizations:`, err);
+      setModalError((prev) => ({ ...prev, [key]: true }));
+    } finally {
+      setModalLoading((prev) => ({ ...prev, [key]: false }));
     }
+  };
+
+  const retryModalTab = (key) => {
+    fetchedTabsRef.current.delete(key);
+    loadModalTab(key);
   };
 
   const handleViewMore = () => {
     setIsModalOpen(true);
   };
 
-  // The modal can be opened from here or from the dashboard's own "View more"
-  // button, so load every tab whenever it becomes visible.
+  // Whichever tab is showing fetches itself — immediately on open, and again
+  // on each tab switch. Opening lands on the tab matching the card's filter
+  // and drops the previous open's rows, so every open fetches fresh.
   useEffect(() => {
-    if (!isModalOpen || !tenantId || !accessToken) return;
-    const label =
-      selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
-    setModalTab(
-      ["Active", "Expiring", "Expired"].includes(label) ? label : "Active",
-    );
-    setTabPages({ Active: 1, Expiring: 1, Expired: 1 });
-    fetchAllStatusesForModal();
+    if (!isModalOpen) {
+      fetchedTabsRef.current.clear();
+      modalOpenedRef.current = false;
+      return;
+    }
+    if (!tenantId || !accessToken) return;
+
+    // Resolve the tab locally rather than reading it back from state, so the
+    // first fetch targets the right status instead of the stale one.
+    let tab = modalTab;
+    if (!modalOpenedRef.current) {
+      modalOpenedRef.current = true;
+      const label =
+        selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
+      tab = ["Active", "Expiring", "Expired"].includes(label)
+        ? label
+        : "Active";
+      setModalTab(tab);
+      setTabPages({ Active: 1, Expiring: 1, Expired: 1 });
+      setModalLists({ active: [], expiring: [], expired: [] });
+    }
+
+    const key = tab.toLowerCase();
+    if (fetchedTabsRef.current.has(key)) return;
+    loadModalTab(key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModalOpen]);
+  }, [isModalOpen, modalTab, tenantId]);
 
   const chartOptions = {
     chart: {
@@ -192,8 +228,9 @@ const Authorizations = ({
 
   const MODAL_PAGE_SIZE = 10;
 
-  // One tab's list: paginated, with its own page state.
-  const renderStatusList = (label, items) => {
+  // One tab's list: paginated, with its own page and request state.
+  const renderStatusList = (label, key) => {
+    const items = modalLists[key] || [];
     const page = tabPages[label] || 1;
     const totalPages = Math.max(1, Math.ceil(items.length / MODAL_PAGE_SIZE));
     const current = Math.min(page, totalPages);
@@ -201,6 +238,26 @@ const Authorizations = ({
       (current - 1) * MODAL_PAGE_SIZE,
       current * MODAL_PAGE_SIZE,
     );
+
+    if (modalLoading[key]) {
+      return <SectionLoader minHeight={200} />;
+    }
+
+    if (modalError[key]) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">
+            We couldn&apos;t load {label.toLowerCase()} authorizations.
+          </p>
+          <Button
+            label="Try again"
+            variant="secondary"
+            className="mx-auto block px-6 py-2"
+            onClick={() => retryModalTab(key)}
+          />
+        </div>
+      );
+    }
 
     if (!items.length) {
       return (
@@ -360,7 +417,7 @@ const Authorizations = ({
         onTabChange={setModalTab}
         tabs={MODAL_TABS.map(({ label, key }) => ({
           name: label,
-          content: renderStatusList(label, modalLists[key] || []),
+          content: renderStatusList(label, key),
         }))}
       >
         {null}
