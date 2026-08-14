@@ -1,7 +1,7 @@
 import axios from "axios";
 import { showToast } from "./ShowToast";
 import api from "../api/authApis";
-import { getStore } from "./storeRef";
+import { getStore, getPersistor } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
 
 
@@ -18,6 +18,22 @@ function onRefreshed(newToken) {
 // Add a request to the queue
 function addSubscriber(callback) {
   refreshSubscribers.push(callback);
+}
+
+// Release queued requests when the refresh failed, so they reject now instead
+// of hanging until the 30s timeout.
+function onRefreshFailed(refreshError) {
+  refreshSubscribers.forEach((callback) => callback(null, refreshError));
+  refreshSubscribers = [];
+}
+
+// Ends the session for real. Purging matters as much as the logout: form
+// drafts carry client data, and on a shared workstation they must not outlive
+// the session just because the user never clicked "Log out".
+function endSession() {
+  getStore()?.dispatch(logout());
+  getPersistor()?.purge();
+  showToast("Session expired. Please log in again.", "error");
 }
 
 const AxiosInterceptor = (accessToken, refreshToken) => {
@@ -78,22 +94,35 @@ const AxiosInterceptor = (accessToken, refreshToken) => {
                 },
               });
             } else {
+              // refreshAccessToken only resolves null when the server actively
+              // rejected the refresh token, so the session really is over.
               isRefreshing = false;
-              getStore()?.dispatch(logout());
-              showToast("Session expired. Please log in again.", "error");
+              onRefreshFailed(error);
+              endSession();
               return Promise.reject(error);
             }
           } catch (refreshError) {
             if (import.meta.env.DEV) console.error("Token refresh failed", refreshError);
             isRefreshing = false;
-            getStore()?.dispatch(logout());
-            showToast("Session expired. Please log in again.", "error");
+            onRefreshFailed(refreshError);
+            // Anything else — a network drop, or a 5xx from an API restarting
+            // mid-deploy — means we never reached the auth server. The refresh
+            // token is probably still good, so keep the user signed in and let
+            // the caller surface the original failure.
+            const status = refreshError?.response?.status;
+            if (status === 401 || status === 403) {
+              endSession();
+            }
             return Promise.reject(error);
           }
         }
 
-        return new Promise((resolve) => {
-          addSubscriber((newToken) => {
+        return new Promise((resolve, reject) => {
+          addSubscriber((newToken, refreshError) => {
+            if (!newToken) {
+              reject(refreshError || error);
+              return;
+            }
             resolve(
               authFetch({
                 ...originalRequest,

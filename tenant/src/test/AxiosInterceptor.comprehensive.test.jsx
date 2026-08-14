@@ -37,8 +37,11 @@ const mockStore = vi.hoisted(() => ({
   dispatch: vi.fn(),
 }));
 
+const mockPersistor = vi.hoisted(() => ({ purge: vi.fn() }));
+
 vi.mock("../Helper/storeRef", () => ({
   getStore: vi.fn(() => mockStore),
+  getPersistor: vi.fn(() => mockPersistor),
 }));
 
 vi.mock("../ReduxStore/features/authentication", () => ({
@@ -116,6 +119,50 @@ describe("AxiosInterceptor interceptor callbacks", () => {
       await expect(responseErrorCallback(error)).rejects.toEqual(error);
       expect(showToast).toHaveBeenCalledWith("Session expired. Please log in again.", "error");
       expect(mockStore.dispatch).toHaveBeenCalledWith(logout());
+      // Drafts carry client data — they must not outlive the session.
+      expect(mockPersistor.purge).toHaveBeenCalled();
+    });
+
+    it("keeps the session when the refresh call fails without a response", async () => {
+      api.refreshAccessToken.mockRejectedValue(new Error("Network Error"));
+      const { logout } = await import("../ReduxStore/features/authentication");
+
+      const error = {
+        response: { status: 401 },
+        config: { headers: {}, _retry: false },
+      };
+
+      await expect(responseErrorCallback(error)).rejects.toEqual(error);
+      // An API restarting mid-deploy must not sign everyone out.
+      expect(mockStore.dispatch).not.toHaveBeenCalledWith(logout());
+      expect(mockPersistor.purge).not.toHaveBeenCalled();
+    });
+
+    it("keeps the session when the refresh call returns a 502", async () => {
+      api.refreshAccessToken.mockRejectedValue({ response: { status: 502 } });
+      const { logout } = await import("../ReduxStore/features/authentication");
+
+      const error = {
+        response: { status: 401 },
+        config: { headers: {}, _retry: false },
+      };
+
+      await expect(responseErrorCallback(error)).rejects.toEqual(error);
+      expect(mockStore.dispatch).not.toHaveBeenCalledWith(logout());
+    });
+
+    it("ends the session when the refresh token itself is rejected", async () => {
+      api.refreshAccessToken.mockRejectedValue({ response: { status: 403 } });
+      const { logout } = await import("../ReduxStore/features/authentication");
+
+      const error = {
+        response: { status: 401 },
+        config: { headers: {}, _retry: false },
+      };
+
+      await expect(responseErrorCallback(error)).rejects.toEqual(error);
+      expect(mockStore.dispatch).toHaveBeenCalledWith(logout());
+      expect(mockPersistor.purge).toHaveBeenCalled();
     });
 
     it("handles refresh error gracefully", async () => {

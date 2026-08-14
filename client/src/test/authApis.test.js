@@ -91,10 +91,17 @@ describe("authApis", () => {
       expect(result).toBe("new-access-tok");
     });
 
-    it("returns null on failure", async () => {
-      axios.post.mockRejectedValue(new Error("Expired"));
+    it("returns null when the server rejects the refresh token", async () => {
+      axios.post.mockRejectedValue({ response: { status: 401 } });
       const result = await refreshAccessToken("bad-token", vi.fn());
       expect(result).toBeNull();
+    });
+
+    it('re-throws network failures so the session survives an API restart', async () => {
+      const { refreshAccessToken } = await import('../api/authApis');
+      axios.post.mockRejectedValueOnce(new Error('Network Error'));
+
+      await expect(refreshAccessToken('good-refresh', vi.fn())).rejects.toThrow('Network Error');
     });
 
     it("returns null when no accessToken in response", async () => {

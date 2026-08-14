@@ -30,6 +30,7 @@ vi.mock("../Helper/storeRef", () => ({
     getState: vi.fn(() => ({ auth: { refreshToken: "stored-refresh" } })),
     dispatch: vi.fn(),
   })),
+  getPersistor: vi.fn(() => ({ purge: vi.fn() })),
 }));
 
 vi.mock("../ReduxStore/features/authentication", () => ({

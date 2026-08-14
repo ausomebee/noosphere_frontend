@@ -165,8 +165,12 @@ export const refreshAccessToken = async (refreshToken, onSuccess) => {
       onSuccess?.({ accessToken, refreshToken: newRefreshToken });
       return accessToken;
     }
-  } catch {
-    // Token refresh failed — caller handles fallback
+  } catch (error) {
+    const status = error?.response?.status;
+    // Only an actively rejected refresh token ends the session. A network drop
+    // or a 5xx — the API restarting mid-deploy, say — leaves the token valid,
+    // so re-throw and let the interceptor keep the user signed in.
+    if (status !== 401 && status !== 403) throw error;
   }
   return null;
 };

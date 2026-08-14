@@ -6,8 +6,9 @@ import "./index.css";
 import "./styles/detail-view.css";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../src/ReduxStore/store.js";
-import { injectStore } from "./Helper/storeRef";
+import { injectStore, injectPersistor } from "./Helper/storeRef";
 injectStore(store);
+injectPersistor(persistor);
 import { ToastContainer } from "react-toastify";
 import { Provider } from "react-redux";
 

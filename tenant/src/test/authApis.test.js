@@ -231,12 +231,27 @@ describe('authApis', () => {
       expect(onSuccess).toHaveBeenCalledWith({ accessToken: 'new-token', refreshToken: 'new-refresh' });
     });
 
-    it('returns null on failure', async () => {
+    it('returns null when the server rejects the refresh token', async () => {
       const { refreshAccessToken } = await import('../api/authApis');
-      axios.post.mockRejectedValueOnce(new Error('fail'));
+      axios.post.mockRejectedValueOnce({ response: { status: 401 } });
 
       const result = await refreshAccessToken('bad-refresh', vi.fn());
       expect(result).toBeNull();
+    });
+
+    it('re-throws network failures so the session survives an API restart', async () => {
+      const { refreshAccessToken } = await import('../api/authApis');
+      axios.post.mockRejectedValueOnce(new Error('Network Error'));
+
+      await expect(refreshAccessToken('good-refresh', vi.fn())).rejects.toThrow('Network Error');
+    });
+
+    it('re-throws a 502 rather than reporting the token as rejected', async () => {
+      const { refreshAccessToken } = await import('../api/authApis');
+      const boom = { response: { status: 502 } };
+      axios.post.mockRejectedValueOnce(boom);
+
+      await expect(refreshAccessToken('good-refresh', vi.fn())).rejects.toEqual(boom);
     });
   });
 });
