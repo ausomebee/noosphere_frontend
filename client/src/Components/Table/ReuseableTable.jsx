@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
+import React, { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { IoSearchOutline, IoChevronDown, IoChevronUp } from "react-icons/io5";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
@@ -34,8 +34,13 @@ const ReusableTable = ({
   pagination,
   onPageChange,
   loading = false,
+  // [{ key, label }] — the button lists each key's distinct values and filters
+  // the rows locally. Without it the Filters button is hidden rather than dead.
+  filters = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilters, setActiveFilters] = useState({});
+  const [filterOpen, setFilterOpen] = useState(false);
   const [viewType, setViewType] = useState("list");
   const [expandedRows, setExpandedRows] = useState([]);
   const [openActionMenu, setOpenActionMenu] = useState(null);
@@ -53,6 +58,43 @@ const ReusableTable = ({
       onSearch?.(value);
     }, 300);
   }, [onSearch]);
+
+  // When the page doesn't handle searching itself, filter here so the search
+  // box and Filters button actually do something.
+  const visibleData = useMemo(() => {
+    let rows = Array.isArray(data) ? data : [];
+
+    if (!onSearch && searchTerm.trim()) {
+      const term = searchTerm.trim().toLowerCase();
+      rows = rows.filter((row) =>
+        columns.some((col) =>
+          String(row?.[col.key] ?? "").toLowerCase().includes(term),
+        ),
+      );
+    }
+
+    Object.entries(activeFilters).forEach(([key, value]) => {
+      if (value) rows = rows.filter((row) => String(row?.[key] ?? "") === value);
+    });
+
+    return rows;
+  }, [data, columns, searchTerm, onSearch, activeFilters]);
+
+  // Distinct values per configured filter, taken straight from the rows.
+  const filterOptions = useMemo(
+    () =>
+      filters.map((f) => ({
+        ...f,
+        values: [
+          ...new Set(
+            (data || [])
+              .map((row) => String(row?.[f.key] ?? "").trim())
+              .filter(Boolean),
+          ),
+        ].sort(),
+      })),
+    [filters, data],
+  );
 
   const toggleRowExpand = (rowId) => {
     setExpandedRows((prev) =>
@@ -213,11 +255,61 @@ const ReusableTable = ({
         </div>
 
         <div className="table-actions">
-          {showFilters && (
-            <button className="filter-btn">
-              <HiOutlineAdjustmentsHorizontal size={18} />
-              <span>Filters</span>
-            </button>
+          {showFilters && filterOptions.length > 0 && (
+            <div className="filter-wrap">
+              <button
+                type="button"
+                className="filter-btn"
+                onClick={() => setFilterOpen((o) => !o)}
+              >
+                <HiOutlineAdjustmentsHorizontal size={18} />
+                <span>Filters</span>
+                {Object.values(activeFilters).filter(Boolean).length > 0 && (
+                  <span className="filter-count">
+                    {Object.values(activeFilters).filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+
+              {filterOpen && (
+                <>
+                  <div
+                    className="filter-backdrop"
+                    onClick={() => setFilterOpen(false)}
+                  />
+                  <div className="filter-panel">
+                    {filterOptions.map((f) => (
+                      <label key={f.key} className="filter-field">
+                        <span>{f.label}</span>
+                        <select
+                          value={activeFilters[f.key] || ""}
+                          onChange={(e) =>
+                            setActiveFilters((prev) => ({
+                              ...prev,
+                              [f.key]: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">All</option>
+                          {f.values.map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                    <button
+                      type="button"
+                      className="filter-clear"
+                      onClick={() => setActiveFilters({})}
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
           {showViewToggle && (
             <div className="view-toggle">
@@ -244,7 +336,7 @@ const ReusableTable = ({
       <div className="table-wrapper">
         {loading ? (
           <SectionLoader />
-        ) : !data || data.length === 0 ? (
+        ) : !visibleData || visibleData.length === 0 ? (
           <EmptyState
             icon={emptyState?.icon}
             title={emptyState?.title}
@@ -253,7 +345,7 @@ const ReusableTable = ({
         ) : viewType === "grid" ? (
           /* Card view — the same rows and actions, laid out as cards. */
           <div className="data-card-grid">
-            {data.map((row, rowIndex) => (
+            {visibleData.map((row, rowIndex) => (
               <article className="data-card" key={row.id || rowIndex}>
                 {columns.map((col) => (
                   <div className="data-card-field" key={col.key}>
@@ -306,7 +398,7 @@ const ReusableTable = ({
               </tr>
             </thead>
             <tbody>
-              {data.map((row, rowIndex) => (
+              {visibleData.map((row, rowIndex) => (
                 <React.Fragment key={row.id || rowIndex}>
                   <tr
                     onClick={() => toggleRowExpand(row.id)}
@@ -375,7 +467,7 @@ const ReusableTable = ({
       </div>
 
       {/* Pagination */}
-      {data && data.length > 0 && renderPagination()}
+      {visibleData && visibleData.length > 0 && renderPagination()}
 
       {/* Row action menu — portaled to the body so the table's overflow never
           clips it (fixes the menu opening into empty/cut-off space). */}

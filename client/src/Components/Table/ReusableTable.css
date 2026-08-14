@@ -627,3 +627,57 @@
   padding-top: 12px;
   border-top: 1px solid #f1f5f9;
 }
+
+/* ===== Filters dropdown ===== */
+.filter-wrap { position: relative; }
+
+.filter-count {
+  margin-left: 6px;
+  background: #004aba;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+}
+
+.filter-backdrop { position: fixed; inset: 0; z-index: 40; }
+
+.filter-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  min-width: 240px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-field { display: flex; flex-direction: column; gap: 6px; }
+.filter-field span { font-size: 12px; color: #6b7280; font-weight: 600; }
+
+.filter-field select {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  background: #fff;
+  color: #1f2937;
+}
+
+.filter-clear {
+  border: none;
+  background: none;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 2px 0;
+}

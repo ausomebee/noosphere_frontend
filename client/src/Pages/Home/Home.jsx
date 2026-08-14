@@ -831,6 +831,10 @@ const Home = () => {
             loading={loading.appointments}
             searchPlaceholder="Search Appointments"
             showFilters={true}
+            filters={[
+              { key: "sessionType", label: "Session Type" },
+              { key: "clinician", label: "Clinician" },
+            ]}
             showViewToggle={true}
             emptyState={{
               icon: <EmptyAppointmentsSvg />,

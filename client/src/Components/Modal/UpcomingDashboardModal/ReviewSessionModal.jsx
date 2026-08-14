@@ -204,6 +204,20 @@ const SOAPNotesModal = ({ isOpen, onClose, note }) => {
 };
 
 // Session Data Modal
+// Which of the seven target types a session-data entry represents.
+const getTargetType = (entry) => {
+  const d = entry?.data;
+  if (!d) return null;
+  if (d.steps) return "Task Analysis";
+  if (d.trials?.[0]?.latency !== undefined) return "Latency";
+  if (d.trials && d.percentageCorrect !== undefined) return "Percentage Correct";
+  if (d.trials?.[0]?.performance !== undefined) return "Trials/Opportunities";
+  if (d.duration !== undefined && d.numberOfOccurrence !== undefined) return "Rate";
+  if (d.numberOfOccurrence !== undefined) return "Frequency";
+  if (d.duration !== undefined) return "Duration";
+  return null;
+};
+
 const SessionDataModal = ({ isOpen, onClose, sessionData }) => {
   if (!isOpen) return null;
 
@@ -321,34 +335,20 @@ const SessionDataModal = ({ isOpen, onClose, sessionData }) => {
                   >
                     Target {index + 1}
                   </h3>
-
-                  {/* Target ID */}
-                  {data.targetId && (
-                    <div
+                  {getTargetType(data) && (
+                    <span
                       style={{
-                        display: "flex",
-                        gap: "16px",
-                        flexWrap: "wrap",
-                        fontSize: "13px",
+                        display: "inline-block",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "#1d4ed8",
+                        background: "#eff6ff",
+                        padding: "3px 10px",
+                        borderRadius: "999px",
                       }}
                     >
-                      <div>
-                        <span style={{ fontWeight: "600", color: "#6b7280" }}>
-                          Target ID:{" "}
-                        </span>
-                        <span
-                          style={{
-                            color: "#3b82f6",
-                            fontFamily: "monospace",
-                            background: "#eff6ff",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          {data.targetId}
-                        </span>
-                      </div>
-                    </div>
+                      {getTargetType(data)}
+                    </span>
                   )}
                 </div>
 
