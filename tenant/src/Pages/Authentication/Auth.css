@@ -112,7 +112,9 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 500px;
-  min-height: 350px;
+  /* Deliberately no min-height. Short forms — a single email field, a 2FA
+     code — were being padded out to a fixed card height, leaving a large
+     empty gap under the last field. The card now hugs its content. */
   height: auto;
   padding: clamp(1rem, 4vw, 2rem);
   margin: 0 auto;
@@ -436,10 +438,6 @@
   .promo-section {
     text-align: left;
     padding-right: clamp(1rem, 4vw, 2rem);
-  }
-
-  .login-section {
-    min-height: 400px;
   }
 }
 
