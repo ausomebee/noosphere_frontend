@@ -679,7 +679,10 @@ const SessionFeedbackModal = ({
           refreshToken,
         });
 
-        setSessionDetails(response);
+        // The endpoint replies with { message, status, data }, so unwrap it —
+        // reading `sessionDetails.note` / `.sessionDatas` off the envelope left
+        // the SOAP notes and session data blank.
+        setSessionDetails(response?.data ?? response);
       } catch (error) {
         console.error("Failed to fetch session details:", error);
         setSessionDetails(appointment.originalData || appointment);
@@ -785,6 +788,17 @@ const SessionFeedbackModal = ({
       const npi =
         clinicians.length > 0 && clinicians[0].npi ? clinicians[0].npi : "N/A";
 
+      // The appointment carries its service codes — show them instead of "N/A".
+      const serviceTypes =
+        (apt.appointmentServices || [])
+          .map((as) => {
+            const code = as?.serviceCode?.code;
+            const modifier = as?.modifiers?.modifier;
+            return code ? `${code}${modifier ? ` (${modifier})` : ""}` : null;
+          })
+          .filter(Boolean)
+          .join(", ") || "N/A";
+
       const sessionDate = data.startTime
         ? format(new Date(data.startTime), "MM/dd/yyyy")
         : "N/A";
@@ -818,7 +832,7 @@ const SessionFeedbackModal = ({
         sessionStartTime,
         sessionEndTime,
         sessionType: session.name || "N/A",
-        serviceTypes: "N/A",
+        serviceTypes,
         location: apt.serviceLocation || "N/A",
         duration,
       };

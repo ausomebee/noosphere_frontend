@@ -145,13 +145,22 @@ const Authorizations = ({
   };
 
   const handleViewMore = () => {
+    setIsModalOpen(true);
+  };
+
+  // The modal can be opened from here or from the dashboard's own "View more"
+  // button, so load every tab whenever it becomes visible.
+  useEffect(() => {
+    if (!isModalOpen || !tenantId || !accessToken) return;
     const label =
       selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
-    setModalTab(["Active", "Expiring", "Expired"].includes(label) ? label : "Active");
+    setModalTab(
+      ["Active", "Expiring", "Expired"].includes(label) ? label : "Active",
+    );
     setTabPages({ Active: 1, Expiring: 1, Expired: 1 });
-    setIsModalOpen(true);
     fetchAllStatusesForModal();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
 
   const chartOptions = {
     chart: {
