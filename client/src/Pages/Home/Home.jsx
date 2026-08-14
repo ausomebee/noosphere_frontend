@@ -32,6 +32,8 @@ const Home = () => {
   usePageTitle("Dashboard");
   const [activeTab, setActiveTab] = usePersistedTab("client:home", "upcoming");
   const [currentPage, setCurrentPage] = useState(1);
+  // Which view the appointments table is in ("list" | "grid").
+  const [tableView, setTableView] = useState("list");
 
   // When arriving from a notification, focus the requested appointments tab
   // and remember which appointment to open once that tab's data has loaded.
@@ -495,7 +497,8 @@ const Home = () => {
     setSelectedServiceCode(selected);
   }, [authorizationData]);
 
-  const ITEMS_PER_PAGE = 10;
+  // Cards are smaller than rows, so the grid fits more per page than the table.
+  const ITEMS_PER_PAGE = tableView === "grid" ? 12 : 10;
 
   // Calculate awaiting count
   const awaitingCount = appointmentsData.awaiting.length;
@@ -506,12 +509,13 @@ const Home = () => {
     [appointmentsData, activeTab]
   );
   const totalPages = Math.max(1, Math.ceil(currentTabData.length / ITEMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
   const paginatedData = useMemo(() =>
     currentTabData.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
+      (page - 1) * ITEMS_PER_PAGE,
+      page * ITEMS_PER_PAGE
     ),
-    [currentTabData, currentPage]
+    [currentTabData, page, ITEMS_PER_PAGE]
   );
 
   // Open the details modal for a row, fetching the full appointment by id so
@@ -843,8 +847,12 @@ const Home = () => {
                 "You don't have any appointments yet. New appointments will appear here",
             }}
             actions={getActions()}
-            pagination={{ currentPage, totalPages }}
+            pagination={{ currentPage: page, totalPages }}
             onPageChange={setCurrentPage}
+            onViewChange={(view) => {
+              setTableView(view);
+              setCurrentPage(1);
+            }}
           />
         </div>
 

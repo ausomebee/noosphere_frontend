@@ -788,16 +788,33 @@ const SessionFeedbackModal = ({
       const npi =
         clinicians.length > 0 && clinicians[0].npi ? clinicians[0].npi : "N/A";
 
-      // The appointment carries its service codes — show them instead of "N/A".
+      // Service codes come from the authorization the session drew units from;
+      // fall back to the appointment's own services when the payload is the
+      // lighter list row that has no authorization attached.
+      const authServiceCodes = (data.authorizationsUsed || []).flatMap((auth) =>
+        (auth?.clientAuthorizationServices || []).map((svc) => {
+          const code = svc?.serviceCode?.code;
+          const modifier =
+            typeof svc?.modifiers === "string"
+              ? svc.modifiers
+              : svc?.modifiers?.modifier;
+          return code ? `${code}${modifier ? ` (${modifier})` : ""}` : null;
+        }),
+      );
+
+      const appointmentServiceCodes = (apt.appointmentServices || []).map((as) => {
+        const code = as?.serviceCode?.code;
+        const modifier = as?.modifiers?.modifier;
+        return code ? `${code}${modifier ? ` (${modifier})` : ""}` : null;
+      });
+
       const serviceTypes =
-        (apt.appointmentServices || [])
-          .map((as) => {
-            const code = as?.serviceCode?.code;
-            const modifier = as?.modifiers?.modifier;
-            return code ? `${code}${modifier ? ` (${modifier})` : ""}` : null;
-          })
-          .filter(Boolean)
-          .join(", ") || "N/A";
+        [...new Set(
+          (authServiceCodes.filter(Boolean).length
+            ? authServiceCodes
+            : appointmentServiceCodes
+          ).filter(Boolean),
+        )].join(", ") || "N/A";
 
       const sessionDate = data.startTime
         ? format(new Date(data.startTime), "MM/dd/yyyy")

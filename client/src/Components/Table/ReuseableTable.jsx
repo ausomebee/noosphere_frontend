@@ -37,6 +37,8 @@ const ReusableTable = ({
   // [{ key, label }] — the button lists each key's distinct values and filters
   // the rows locally. Without it the Filters button is hidden rather than dead.
   filters = [],
+  // Called with "list" | "grid" so the page can vary its page size per view.
+  onViewChange,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilters, setActiveFilters] = useState({});
@@ -315,14 +317,20 @@ const ReusableTable = ({
             <div className="view-toggle">
               <button
                 className={`view-btn ${viewType === "list" ? "active" : ""}`}
-                onClick={() => setViewType("list")}
+                onClick={() => {
+                  setViewType("list");
+                  onViewChange?.("list");
+                }}
                 aria-label="List view"
               >
                 <BsListUl size={18} />
               </button>
               <button
                 className={`view-btn ${viewType === "grid" ? "active" : ""}`}
-                onClick={() => setViewType("grid")}
+                onClick={() => {
+                  setViewType("grid");
+                  onViewChange?.("grid");
+                }}
                 aria-label="Grid view"
               >
                 <BsGrid size={16} />
