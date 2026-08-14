@@ -345,12 +345,20 @@ const PracticeSettings = () => {
       columns: DiagnosisCodesColumns,
       actions: DiagnosisCodesActions,
       tableName: "Diagnosis Codes",
+      // Flipping the Status switch does the same thing as the row menu's
+      // Activate/Deactivate — without this the switch renders disabled.
+      onToggleActive: hasPermission("deactivate_diagnosis_codes")
+        ? (row) => handleToggleDiagnosisCodeStatus(row.id, !row.isActive)
+        : undefined,
     },
     sessionTypes: {
       data: sessionTypes,
       columns: SessionTypesColumns,
       actions: SessionTypesActions,
       tableName: "Session Types",
+      onToggleActive: hasPermission("deactivate_session_types")
+        ? (row) => handleToggleSessionTypeStatus(row.id, !row.isActive)
+        : undefined,
     },
   };
 
@@ -420,6 +428,7 @@ const PracticeSettings = () => {
               data={tableConfig[view].data}
               columns={tableConfig[view].columns}
               actions={tableConfig[view].actions}
+              onToggleActive={tableConfig[view].onToggleActive}
               filters={filters}
               showActions={true}
               showCheckbox={false}

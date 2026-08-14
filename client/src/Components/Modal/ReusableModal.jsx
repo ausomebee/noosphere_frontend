@@ -22,6 +22,7 @@ const ReusableModal = ({
   primaryButtonLoading = false,
   activeTab,
   onTabChange,
+  showClose = false,
 }) => {
   const scrollPositionRef = useRef(0);
   const modalRef = useRef(null);
@@ -143,7 +144,7 @@ const ReusableModal = ({
             </div>
           </h1>
 
-          {tabs && tabs.length > 0 && (
+          {((tabs && tabs.length > 0) || showClose) && (
             <button
               type="button"
               className="modal-close-btn"
@@ -267,6 +268,7 @@ ReusableModal.propTypes = {
   primaryButtonLoading: PropTypes.bool,
   activeTab: PropTypes.string,
   onTabChange: PropTypes.func,
+  showClose: PropTypes.bool,
 };
 
 export default ReusableModal;

@@ -120,6 +120,26 @@ const ServiceCodes = () => {
   };
 
   // Dynamic actions per row - this function is called by CustomTable for each row
+  // Shared by the row menu and the Status switch, so flipping the switch works
+  // the same as choosing Activate/Deactivate from the menu.
+  const handleToggleActive = async (row) => {
+    try {
+      await api.UpdateServiceCodeActiveness({
+        id: row.id,
+        isActive: !row.isActive,
+        accessToken,
+        refreshToken,
+      });
+      await fetchServiceCodes();
+      showToast(
+        `Service code ${row.isActive ? "deactivated" : "activated"} successfully`,
+        "success",
+      );
+    } catch {
+      showToast("Failed to update service code status", "error");
+    }
+  };
+
   const getActionsForRow = (row) => [
     {
       type: "dropdown",
@@ -134,20 +154,7 @@ const ServiceCodes = () => {
         },
         hasPermission("deactivate_service_code") && {
           label: row.isActive ? "Deactivate" : "Activate",
-          onClick: async () => {
-            try {
-              await api.UpdateServiceCodeActiveness({
-                id: row.id,
-                isActive: !row.isActive,
-                accessToken,
-                refreshToken,
-              });
-              await fetchServiceCodes();
-              showToast(`Service code ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch {
-              showToast("Failed to update service code status", "error");
-            }
-          },
+          onClick: () => handleToggleActive(row),
         },
       ].filter(Boolean),
       className: "more-dropdown",
@@ -185,6 +192,9 @@ const ServiceCodes = () => {
           actions={getActionsForRow}
           filters={filters}
           tableName="Service Codes"
+          onToggleActive={
+            hasPermission("deactivate_service_code") ? handleToggleActive : undefined
+          }
           itemsPerPage={10}
           showActions={true}
           showCheckbox={false}

@@ -12,11 +12,12 @@ const CreateProgramsDomain = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    // description is optional — only send it when provided.
-    const payload = { name, tenantId, domainType };
-    const trimmed =
-      typeof description === "string" ? description.trim() : description;
-    if (trimmed) payload.description = trimmed;
+    // The user may leave the description blank, but the API rejects the request
+    // when the key is missing — so always send it, empty string included.
+    const payload = {
+      name, tenantId, domainType,
+      description: typeof description === "string" ? description.trim() : "",
+    };
 
     const response = await authFetch.post(`${PLAIN_API_URL}/domains`, payload);
     return response;
@@ -89,11 +90,12 @@ const CreateProgramsProgram = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    // description is optional — only send it when provided.
-    const payload = { name, domainId };
-    const trimmed =
-      typeof description === "string" ? description.trim() : description;
-    if (trimmed) payload.description = trimmed;
+    // The user may leave the description blank, but the API rejects the request
+    // when the key is missing — so always send it, empty string included.
+    const payload = {
+      name, domainId,
+      description: typeof description === "string" ? description.trim() : "",
+    };
 
     const response = await authFetch.post(`${PLAIN_API_URL}/programs`, payload);
     return response;

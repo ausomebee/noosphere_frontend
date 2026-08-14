@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
+import Pagination from "../../../Components/Table/Pagination";
 import "../Dashboard.css";
 import { Link } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
@@ -29,6 +30,19 @@ const Authorizations = ({
   const [authDetails, setAuthDetails] = useState([]);
   const [totalAuthorizations, setTotalAuthorizations] = useState(0);
   const [modalData, setModalData] = useState([]);
+  // The modal shows every status in its own tab, so keep a list per status
+  // plus the page each tab is on.
+  const [modalLists, setModalLists] = useState({
+    active: [],
+    expiring: [],
+    expired: [],
+  });
+  const [modalTab, setModalTab] = useState("Active");
+  const [tabPages, setTabPages] = useState({
+    Active: 1,
+    Expiring: 1,
+    Expired: 1,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -76,36 +90,36 @@ const Authorizations = ({
     }
   };
 
+  const toAuthRow = (auth) => ({
+    id: auth.id,
+    name:
+      [auth.tenantClient?.client?.firstName, auth.tenantClient?.client?.lastName]
+        .filter(Boolean)
+        .join(" ") || "Unknown Client",
+    details: `${auth.title} - ${auth.authorizationNumber}`,
+    date: formatDate(auth.startDate, dateFormat),
+    endDate: auth.endDate,
+    payer: auth.payerDetails?.payerName || "N/A",
+    insuranceType: auth.insurance?.name || "N/A",
+  });
+
+  const loadAuthorizations = async (status) => {
+    const response = await api.GetAllTenantClientAuthorization({
+      tenantId,
+      status,
+      accessToken,
+      refreshToken,
+    });
+    return (response?.data?.data?.rows || []).map(toAuthRow);
+  };
+
   const fetchAuthorizationsByStatus = async (status) => {
     try {
       setLoading(true);
-      const response = await api.GetAllTenantClientAuthorization({
-        tenantId,
-        status,
-        accessToken,
-        refreshToken,
-      });
-
-      if (response?.data?.data?.rows) {
-        const formattedData = response.data.data.rows.map((auth) => ({
-          id: auth.id,
-          name:
-            [
-              auth.tenantClient?.client?.firstName,
-              auth.tenantClient?.client?.lastName,
-            ]
-              .filter(Boolean)
-              .join(" ") || "Unknown Client",
-          details: `${auth.title} - ${auth.authorizationNumber}`,
-          date: formatDate(auth.startDate, dateFormat),
-          endDate: auth.endDate,
-          payer: auth.payerDetails?.payerName || "N/A",
-          insuranceType: auth.insurance?.name || "N/A",
-        }));
-
-        setAuthDetails(formattedData.slice(0, 3));
-        setModalData(formattedData);
-      }
+      const formattedData = await loadAuthorizations(status);
+      setAuthDetails(formattedData.slice(0, 3));
+      setModalData(formattedData);
+      setModalLists((prev) => ({ ...prev, [status]: formattedData }));
     } catch (error) {
       console.error("Error fetching authorizations:", error);
     } finally {
@@ -113,8 +127,30 @@ const Authorizations = ({
     }
   };
 
+  // The modal shows all three statuses, so load the ones we don't have yet.
+  const fetchAllStatusesForModal = async () => {
+    try {
+      const statuses = ["active", "expiring", "expired"];
+      const results = await Promise.all(
+        statuses.map((s) => loadAuthorizations(s).catch(() => [])),
+      );
+      setModalLists({
+        active: results[0],
+        expiring: results[1],
+        expired: results[2],
+      });
+    } catch (error) {
+      console.error("Error fetching authorizations for modal:", error);
+    }
+  };
+
   const handleViewMore = () => {
+    const label =
+      selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
+    setModalTab(["Active", "Expiring", "Expired"].includes(label) ? label : "Active");
+    setTabPages({ Active: 1, Expiring: 1, Expired: 1 });
     setIsModalOpen(true);
+    fetchAllStatusesForModal();
   };
 
   const chartOptions = {
@@ -136,15 +172,43 @@ const Authorizations = ({
     },
   };
 
-  const renderModalContent = () => (
-    <div className="auth-modal-content">
-      {modalData.length === 0 ? (
+  // Headline count follows the selected filter rather than always showing the
+  // grand total.
+  const filteredCount = (() => {
+    const label =
+      selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
+    const match = authorizationData.find((d) => d.label === label);
+    return Number(match?.value ?? totalAuthorizations) || 0;
+  })();
+
+  const MODAL_PAGE_SIZE = 10;
+
+  // One tab's list: paginated, with its own page state.
+  const renderStatusList = (label, items) => {
+    const page = tabPages[label] || 1;
+    const totalPages = Math.max(1, Math.ceil(items.length / MODAL_PAGE_SIZE));
+    const current = Math.min(page, totalPages);
+    const pageItems = items.slice(
+      (current - 1) * MODAL_PAGE_SIZE,
+      current * MODAL_PAGE_SIZE,
+    );
+
+    if (!items.length) {
+      return (
         <p className="text-center text-gray-500 py-8">
-          No authorizations found
+          No {label.toLowerCase()} authorizations found
         </p>
-      ) : (
+      );
+    }
+
+    return (
+      <div className="auth-modal-content">
+        <p className="text-sm text-gray-500 pb-2">
+          {items.length} {label.toLowerCase()} authorization
+          {items.length === 1 ? "" : "s"}
+        </p>
         <div className="auth-list">
-          {modalData.map((item, index) => (
+          {pageItems.map((item, index) => (
             <div
               key={item.id || index}
               className="auth-item flex items-center justify-between py-3 border-b "
@@ -175,9 +239,25 @@ const Authorizations = ({
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
+
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={current}
+            totalPages={totalPages}
+            onPageChange={(next) =>
+              setTabPages((prev) => ({ ...prev, [label]: next }))
+            }
+          />
+        )}
+      </div>
+    );
+  };
+
+  const MODAL_TABS = [
+    { label: "Active", key: "active" },
+    { label: "Expiring", key: "expiring" },
+    { label: "Expired", key: "expired" },
+  ];
 
   return (
     <>
@@ -203,7 +283,7 @@ const Authorizations = ({
             </div>
             <div className="auth-details">
               <p className="text-4xl font-semibold text-primary mb-2">
-                {Number(totalAuthorizations) || 0}
+                {filteredCount}
               </p>
               {loading ? (
                 <SectionLoader minHeight={80} />
@@ -264,14 +344,17 @@ const Authorizations = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Authorizations"
-        subTitle={`${
-          selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)
-        } Authorizations`}
         size="lg"
         secondaryButtonText="Close"
         onSecondaryButtonClick={() => setIsModalOpen(false)}
+        activeTab={modalTab}
+        onTabChange={setModalTab}
+        tabs={MODAL_TABS.map(({ label, key }) => ({
+          name: label,
+          content: renderStatusList(label, modalLists[key] || []),
+        }))}
       >
-        {renderModalContent()}
+        {null}
       </ReusableModal>
     </>
   );

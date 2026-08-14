@@ -46,7 +46,7 @@ const sessionTypeSchema = yup.object().shape({
     })
   ),
   location: yup.array().of(yup.string()).optional(),
-  staffRole: yup.string().optional(),
+  staffRole: yup.array().of(yup.string()).optional(),
 });
 
 // Utility to transform initial data for edit mode
@@ -80,8 +80,8 @@ const transformSessionTypeToFormData = (data) => {
     })(),
     location: Array.isArray(data.locationsAllowed) ? data.locationsAllowed : [],
     staffRole: Array.isArray(data.staffRolesAllowed)
-      ? data.staffRolesAllowed[0] || ""
-      : "",
+      ? data.staffRolesAllowed.filter(Boolean)
+      : [],
   };
 };
 
@@ -109,7 +109,7 @@ const AddSessionTypeModal = ({
     status: true,
     services: [{ serviceCodeId: "", modifier: "" }],
     location: [],
-    staffRole: "",
+    staffRole: [],
   };
 
   const {
@@ -253,7 +253,11 @@ const AddSessionTypeModal = ({
         name: data.name,
         category: data.category,
         service: transformedServices,
-        staffRolesAllowed: data.staffRole ? [data.staffRole] : [],
+        staffRolesAllowed: Array.isArray(data.staffRole)
+          ? data.staffRole.filter(Boolean)
+          : data.staffRole
+            ? [data.staffRole]
+            : [],
         locationsAllowed: data.location || [],
         defaultDuration: (data.hours || 0) * 60 + (data.minutes || 0),
         isBillable: data.billable,
@@ -358,6 +362,7 @@ const AddSessionTypeModal = ({
                     label={index === 0 ? "Modifier" : ""}
                     options={modifierSelectOptions}
                     placeholder="Select a modifier (optional)"
+                    isClearable
                     error={errors.services?.[index]?.modifier?.message}
                     {...field}
                   />
@@ -396,7 +401,8 @@ const AddSessionTypeModal = ({
                 emptyHint="No roles found. Create one in Organisation → Role & Permissions."
                 isLoading={loadingRoles}
                 error={errors.staffRole?.message}
-                placeholder="Select staff role"
+                isMulti
+                placeholder="Select staff role(s)"
                 {...field}
               />
             )}

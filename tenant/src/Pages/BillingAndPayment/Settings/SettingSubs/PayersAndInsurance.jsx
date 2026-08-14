@@ -199,6 +199,44 @@ const PayersAndInsurance = () => {
   ];
 
   // Dynamic actions for insurance types
+  // Shared by the row menu and the Status switch, so flipping the switch does
+  // the same thing as choosing Activate/Deactivate from the menu.
+  const handleToggleInsuranceTypeActive = async (row) => {
+    try {
+      await api.UpdateInsuranceTypeActiveness({
+        id: row.id,
+        isActive: !row.isActive,
+        accessToken,
+        refreshToken,
+      });
+      await fetchInsuranceTypes();
+      showToast(
+        `Insurance type ${row.isActive ? "deactivated" : "activated"} successfully`,
+        "success",
+      );
+    } catch {
+      showToast("Failed to update insurance type status", "error");
+    }
+  };
+
+  const handleTogglePayerActive = async (row) => {
+    try {
+      await api.UpdatePayerActiveness({
+        id: row.id,
+        isActive: !row.isActive,
+        accessToken,
+        refreshToken,
+      });
+      await fetchPayers();
+      showToast(
+        `Payer ${row.isActive ? "deactivated" : "activated"} successfully`,
+        "success",
+      );
+    } catch {
+      showToast("Failed to update payer status", "error");
+    }
+  };
+
   const getInsuranceTypeActionsForRow = (row) => [
     {
       type: "dropdown",
@@ -222,20 +260,7 @@ const PayersAndInsurance = () => {
         },
         hasPermission("deactivate_insurance_type") && {
           label: row.isActive ? "Deactivate" : "Activate",
-          onClick: async () => {
-            try {
-              await api.UpdateInsuranceTypeActiveness({
-                id: row.id,
-                isActive: !row.isActive,
-                accessToken,
-                refreshToken,
-              });
-              await fetchInsuranceTypes();
-              showToast(`Insurance type ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch {
-              showToast("Failed to update insurance type status", "error");
-            }
-          },
+          onClick: () => handleToggleInsuranceTypeActive(row),
           className: "remove",
         },
       ].filter(Boolean),
@@ -265,20 +290,7 @@ const PayersAndInsurance = () => {
         },
         hasPermission("deactivate_payer") && {
           label: row.isActive ? "Deactivate" : "Activate",
-          onClick: async () => {
-            try {
-              await api.UpdatePayerActiveness({
-                id: row.id,
-                isActive: !row.isActive,
-                accessToken,
-                refreshToken,
-              });
-              await fetchPayers();
-              showToast(`Payer ${row.isActive ? "deactivated" : "activated"} successfully`, "success");
-            } catch {
-              showToast("Failed to update payer status", "error");
-            }
-          },
+          onClick: () => handleTogglePayerActive(row),
           className: "remove",
         },
       ].filter(Boolean),
@@ -486,6 +498,7 @@ const PayersAndInsurance = () => {
               data={payerTableData}
               columns={payerTypeColumns}
               actions={getPayerActionsForRow}
+              onToggleActive={hasPermission("deactivate_payer") ? handleTogglePayerActive : undefined}
               tableName="Payers"
               itemsPerPage={10}
               showActions={true}
@@ -518,6 +531,7 @@ const PayersAndInsurance = () => {
               data={insuranceTypeTableData}
               columns={insuranceTypeColumns}
               actions={getInsuranceTypeActionsForRow}
+              onToggleActive={hasPermission("deactivate_insurance_type") ? handleToggleInsuranceTypeActive : undefined}
               tableName="Insurance Types"
               itemsPerPage={10}
               showActions={true}

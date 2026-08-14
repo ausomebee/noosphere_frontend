@@ -26,7 +26,7 @@ const UpdateActiveClient = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/client/${clientTenantId}/${active}`
+      `${PLAIN_API_URL}/client/tenant/${clientTenantId}/${active}`
     );
     return response;
   } catch (error) {
@@ -240,11 +240,13 @@ const CreateClientsProgram = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    // description is optional — only send it when provided.
-    const payload = { name, clientId };
-    const trimmed =
-      typeof description === "string" ? description.trim() : description;
-    if (trimmed) payload.description = trimmed;
+    // The user may leave the description blank, but the API rejects the request
+    // when the key is missing — so always send it, empty string included.
+    const payload = {
+      name,
+      clientId,
+      description: typeof description === "string" ? description.trim() : "",
+    };
 
     const response = await authFetch.post(
       `${PLAIN_API_URL}/programs/custom`,

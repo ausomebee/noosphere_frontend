@@ -748,6 +748,9 @@ const SessionFeedbackModal = ({
         feedback: feedback,
         signature: signatureData,
       });
+      // Close once the submission actually succeeded — the user shouldn't have
+      // to press Cancel afterwards.
+      onClose?.();
     } catch (error) {
       showToast(error.message || "Failed to submit. Please try again.", "error");
     } finally {
@@ -883,6 +886,7 @@ const SessionFeedbackModal = ({
         onClose={onClose}
         title="Session Information"
         size="xl"
+        showClose
         primaryButtonText="Save and Close"
         primaryButtonLoading={isLoading}
         onPrimaryButtonClick={handleSave}

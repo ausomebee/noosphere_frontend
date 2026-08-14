@@ -330,7 +330,9 @@ const SelectInput = ({
             Option,
             MultiValueContainer,
             IndicatorSeparator: () => null,
-            ClearIndicator: () => null,
+            // Keep the "×" when the field is clearable — hiding it left
+            // optional selects (e.g. Modifier) impossible to unset.
+            ...(isClearable ? {} : { ClearIndicator: () => null }),
             DropdownIndicator: () => null,
           }}
           styles={{

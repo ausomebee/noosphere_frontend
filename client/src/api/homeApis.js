@@ -178,7 +178,7 @@ const GetSingleSessionBySessionId = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/sessions/${sessionId}`,
+      `${PLAIN_API_URL}/sessions/client/${sessionId}`,
     );
     return response.data;
   } catch (error) {

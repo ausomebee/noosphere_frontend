@@ -164,11 +164,6 @@ const AccordionTableRobust = ({
     }
   };
 
-  const hasUtilization = (authId) => {
-    const services = getValues(`services.${authId}`) || [];
-    return services.some((s) => (s.utilization || 0) > 0);
-  };
-
   const getUtilizationColor = (p) => {
     if (p >= 90) return "#D92D20";
     if (p >= 70) return "#F79009";
@@ -213,7 +208,6 @@ const AccordionTableRobust = ({
               const isDropdownOpen = dropdownOpen === idx;
               const authId = row.id;
               const services = getValues(`services.${authId}`) || [];
-              const used = hasUtilization(authId);
               const avgUtilization = getAverageUtilization(authId);
 
               return (
@@ -301,7 +295,6 @@ const AccordionTableRobust = ({
                                 onEdit(row);
                                 setDropdownOpen(null);
                               }}
-                              disabled={used}
                             >
                               Edit Authorization
                             </button>
@@ -326,11 +319,6 @@ const AccordionTableRobust = ({
                             >
                               Delete Authorization
                             </button>
-                          )}
-                          {onEdit && used && (
-                            <div className="robust-note">
-                              Edit disabled — services already utilized
-                            </div>
                           )}
                         </div>
                       )}
@@ -363,7 +351,7 @@ const AccordionTableRobust = ({
                                           options={serviceCodes}
                                           emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
                                           placeholder="Select service code"
-                                          isDisabled={!isEditMode || used}
+                                          isDisabled={!isEditMode}
                                           isLoading={loadingServiceCodes}
                                         />
                                       )}
@@ -377,7 +365,8 @@ const AccordionTableRobust = ({
                                           {...field}
                                           options={modifierOptions}
                                           placeholder="Select modifier"
-                                          isDisabled={!isEditMode || used}
+                                          isClearable
+                                          isDisabled={!isEditMode}
                                         />
                                       )}
                                     />
@@ -390,7 +379,7 @@ const AccordionTableRobust = ({
                                           {...field}
                                           type="number"
                                           placeholder="Enter units"
-                                          disabled={!isEditMode || used}
+                                          disabled={!isEditMode}
                                         />
                                       )}
                                     />
@@ -403,7 +392,7 @@ const AccordionTableRobust = ({
                                           {...field}
                                           options={perOptions}
                                           placeholder="Select per"
-                                          isDisabled={!isEditMode || used}
+                                          isDisabled={!isEditMode}
                                         />
                                       )}
                                     />
@@ -430,7 +419,7 @@ const AccordionTableRobust = ({
 
                                     {isEditMode &&
                                       services.length > 1 &&
-                                      !used && (
+                                      (
                                         <button
                                           className="robust-remove-btn"
                                           onClick={(e) =>
@@ -449,7 +438,7 @@ const AccordionTableRobust = ({
                                 </div>
                               )}
 
-                              {isEditMode && !used && (
+                              {isEditMode && (
                                 <div className="robust-add-row">
                                   <Button
                                     label="Add Service Code"
@@ -460,7 +449,7 @@ const AccordionTableRobust = ({
                                 </div>
                               )}
 
-                              {hasChanges && isEditMode && !used && (
+                              {hasChanges && isEditMode && (
                                 <div className="flex justify-end mt-4">
                                   <Button
                                     label="Save Changes"

@@ -477,7 +477,7 @@ const GetStaffWithPayrollByDate = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/tenant/getstaffwithpayrollbydate/${tenantId}?startDate=${startDate}&endDate=${endDate}&paymentSchedule=${paymentSchedule}`
+      `${PLAIN_API_URL}/tenant/getstaffwithpayrollbydate/tenant/${tenantId}?startDate=${startDate}&endDate=${endDate}&paymentSchedule=${paymentSchedule}`
     );
     return response.data;
   } catch (error) {

@@ -723,6 +723,8 @@ const SingleTimeSheet = () => {
       const margin = 15;
       let yPos = margin;
       const lineHeight = 7;
+      // Line height that matches the 10pt body text used for notes/details.
+      const bodyLine = 5;
 
       // Helper function to add new page if needed
       const checkPageBreak = (requiredSpace) => {
@@ -1034,22 +1036,27 @@ const SingleTimeSheet = () => {
 
           // General notes
           if (sessionData.data?.notes) {
-            checkPageBreak(lineHeight * 2);
+            checkPageBreak(bodyLine * 3);
+            // autoTable leaves its own font size behind, so pin ours before
+            // drawing — otherwise the notes render huge and overlap.
+            doc.setFontSize(10);
             doc.setFont("helvetica", "bold");
-            doc.text("Notes:", margin, yPos);
-            yPos += 5;
+            doc.setTextColor(55, 65, 81);
+            doc.text("Notes", margin, yPos);
+            yPos += bodyLine;
 
             doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0);
             const noteLines = doc.splitTextToSize(
               sessionData.data.notes,
-              pageWidth - 2 * margin
+              pageWidth - 2 * margin - 5
             );
             noteLines.forEach((line) => {
-              checkPageBreak(lineHeight);
+              checkPageBreak(bodyLine);
               doc.text(line, margin + 5, yPos);
-              yPos += lineHeight;
+              yPos += bodyLine;
             });
-            yPos += 5;
+            yPos += 4;
           }
 
           // Render data table based on type
@@ -1184,23 +1191,42 @@ const SingleTimeSheet = () => {
             default:
               // Fallback for unknown data types
               if (sessionData.data) {
-                checkPageBreak(10);
-                doc.setFont("helvetica", "bold");
-                doc.text("Raw Data:", margin, yPos);
-                yPos += 6;
-
-                doc.setFont("helvetica", "normal");
-                const rawData = JSON.stringify(sessionData.data, null, 2);
-                const dataLines = doc.splitTextToSize(
-                  rawData,
-                  pageWidth - 2 * margin
+                // Render the remaining fields as aligned label/value rows.
+                // Dumping raw JSON was unreadable (and duplicated the notes).
+                const entries = Object.entries(sessionData.data).filter(
+                  ([key, value]) =>
+                    key !== "notes" &&
+                    value !== null &&
+                    value !== undefined &&
+                    value !== "" &&
+                    typeof value !== "object"
                 );
-                dataLines.forEach((line) => {
-                  checkPageBreak(lineHeight);
-                  doc.text(line, margin + 5, yPos);
-                  yPos += lineHeight;
-                });
-                yPos += 5;
+
+                if (entries.length) {
+                  checkPageBreak(bodyLine * (entries.length + 2));
+                  doc.setFontSize(10);
+                  doc.setFont("helvetica", "bold");
+                  doc.setTextColor(55, 65, 81);
+                  doc.text("Details", margin, yPos);
+                  yPos += bodyLine;
+
+                  const labelWidth = 45;
+                  entries.forEach(([key, value]) => {
+                    checkPageBreak(bodyLine);
+                    // "promptLevel" → "Prompt Level"
+                    const label = key
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (c) => c.toUpperCase())
+                      .trim();
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(107, 114, 128);
+                    doc.text(`${label}`, margin + 5, yPos);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(String(value), margin + 5 + labelWidth, yPos);
+                    yPos += bodyLine;
+                  });
+                  yPos += 4;
+                }
               }
               break;
           }

@@ -14,9 +14,6 @@ import "./Scheduler.css";
 import { SearchInput } from "../Input/Inputs";
 import Button from "../Button/Button";
 import { FaPlus } from "react-icons/fa";
-import { HiOutlineCog6Tooth } from "react-icons/hi2";
-import { LuPrinter } from "react-icons/lu";
-import { CgExport } from "react-icons/cg";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import api from "../../api/AppointmentApi";
 import { showToast, showApiError } from "../../Helper/ShowToast";
@@ -417,17 +414,6 @@ function CalendarScheduler({
           </div>
         </div>
 
-        <div className="cal-sched-right-controls">
-          <button className="cal-sched-icon-button">
-            <CgExport size={24} />
-          </button>
-          <button className="cal-sched-icon-button">
-            <LuPrinter size={24} />
-          </button>
-          <button className="cal-sched-icon-button">
-            <HiOutlineCog6Tooth size={24} />
-          </button>
-        </div>
       </div>
 
       <div className="cal-sched-content">

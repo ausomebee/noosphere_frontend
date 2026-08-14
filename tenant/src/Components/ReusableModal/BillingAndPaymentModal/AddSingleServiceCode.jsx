@@ -54,20 +54,14 @@ const serviceCodeSchema = yup.object().shape({
   }),
   modifiers: yup.array().of(
     yup.object().shape({
-      modifier: yup.string().when("mode", {
-        is: "view",
-        then: (schema) => schema.optional(),
-        otherwise: (schema) => schema.required("Modifier is required"),
-      }),
+      // Modifiers are optional: a service code is valid without one, and a
+      // half-filled row is dropped on save rather than blocking the form.
+      modifier: yup.string().optional(),
       ratePerUnit: yup
         .number()
         .typeError("Must be a number")
         .min(0, "Must be 0 or greater")
-        .when("mode", {
-          is: "view",
-          then: (schema) => schema.optional(),
-          otherwise: (schema) => schema.required("Rate per Unit is required"),
-        }),
+        .optional(),
     })
   ),
   billable: yup.boolean().when("mode", {
@@ -81,13 +75,14 @@ const serviceCodeSchema = yup.object().shape({
 const transformServiceCodeToFormData = (data, mode, serviceCodes = []) => {
   const matchingServiceCode = serviceCodes.find((sc) => sc.code === data.code);
   const codeSelection = matchingServiceCode ? data.code : "custom";
-  const modifiers =
-    Array.isArray(data.modifiers) && data.modifiers.length > 0
-      ? data.modifiers.map((m) => ({
-          modifier: m.modifier || "",
-          ratePerUnit: m.ratePerUnit || 0,
-        }))
-      : [{ modifier: "", ratePerUnit: 0 }];
+  // Only send rows the user actually filled in — an empty modifier row is
+  // just a leftover of the "Add Modifier" button.
+  const modifiers = (Array.isArray(data.modifiers) ? data.modifiers : [])
+    .filter((m) => m && m.modifier)
+    .map((m) => ({
+      modifier: m.modifier,
+      ratePerUnit: m.ratePerUnit || 0,
+    }));
 
   const formData = {
     mode,
@@ -479,6 +474,8 @@ const AddSingleServiceCodeModal = ({
                     <SelectInput
                       label="Modifier"
                       options={modifierOptions}
+                      placeholder="Select a modifier (optional)"
+                      isClearable
                       error={errors.modifiers?.[index]?.modifier?.message}
                       disabled={mode === "view"}
                       {...field}
