@@ -580,3 +580,16 @@
   margin: 0 8px;
 }
 
+
+/* Non-blocking warning under an authorized service: the code is inactive, or
+   the selected payer has no rate for it. Amber, not red — saving is allowed. */
+.service-code-warning {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid #d97706;
+  border-radius: 4px;
+  background-color: #fffbeb;
+  color: #92400e;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}

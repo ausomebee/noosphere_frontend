@@ -81,6 +81,10 @@ const AddAuthorizationModal = ({
       const payerList = (response?.data || []).map((p) => ({
         value: p.id,
         label: p.payerName,
+        // Kept so the form can flag an authorized service the payer doesn't
+        // actually cover — ratePerUnit lives on the payer's entry, so a code
+        // that's missing here can never be priced on a claim.
+        serviceCodes: p.serviceCodes || [],
       }));
       setPayers(payerList);
     } catch (err) {
@@ -154,6 +158,33 @@ const AddAuthorizationModal = ({
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // A service can be authorized but still be unbillable. Two ways that happens:
+  // the code has since been deactivated (so it isn't in the dropdown at all),
+  // or the selected payer has no entry for it — and since ratePerUnit lives on
+  // the payer's entry, there'd be no rate to put on a claim. Warn rather than
+  // block: authorizing ahead of payer setup is legitimate, and blocking would
+  // also trap the records that are already in this state.
+  const getServiceCodeWarning = (serviceCodeId) => {
+    if (!serviceCodeId) return null;
+
+    const known = serviceCodes.find((c) => c.value === serviceCodeId);
+    if (!known) {
+      return "This service code is inactive or no longer available. Select a current one before saving.";
+    }
+
+    const payerRecord = payers.find((p) => p.value === formData.payer);
+    if (!payerRecord) return null;
+
+    const covered = (payerRecord.serviceCodes || []).some(
+      (sc) => sc.serviceCodeId === serviceCodeId,
+    );
+    if (!covered) {
+      return `${payerRecord.label} has no rate configured for ${known.code}. Claims for this service may be denied.`;
+    }
+
+    return null;
   };
 
   const handleServiceChange = (index, field, value) => {
@@ -410,6 +441,14 @@ const AddAuthorizationModal = ({
                     )}
                   </div>
                 </div>
+
+                {/* Sits below the row so it can't disturb the fields' bottom
+                    alignment. */}
+                {getServiceCodeWarning(serviceItem.serviceCodeId) && (
+                  <p className="service-code-warning" role="status">
+                    {getServiceCodeWarning(serviceItem.serviceCodeId)}
+                  </p>
+                )}
               </div>
             ))}
           </div>
