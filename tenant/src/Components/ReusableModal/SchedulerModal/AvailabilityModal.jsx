@@ -4,6 +4,7 @@ import { SwitchInput, TextInput } from "../../Input/Inputs";
 import ReusableModal from "../../ReusableModal/ReusableModal";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Reusable Time Range Input Component
 const TimeRangeInput = React.memo(
   ({
@@ -166,11 +167,6 @@ const AvailabilityModal = ({
     },
     [onSave]
   );
-
-  const onValidationError = useCallback((errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  }, []);
 
   // Handle close
   const handleClose = useCallback(() => {

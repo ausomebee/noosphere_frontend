@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 const schema = yup.object().shape({
   teamName: yup.string().required("Team Name is required"),
   // Team members and team lead are optional — a team can be created without them.
@@ -58,11 +59,6 @@ const AddTeamsModal = ({
       }
     }
   }, [isOpen, mode, initialData, reset]);
-
-  const onValidationError = (errs) => {
-    const firstError = Object.values(errs)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const handleFormSubmit = async (data) => {
     setSubmitting(true);

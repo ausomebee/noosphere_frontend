@@ -5,9 +5,9 @@ import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput } from "../../Input/Inputs";
 import { newPayrollSchema } from "../../../Data/schemas";
 import PreviewPayrollModal from "./PreviewPayrollModal";
-import { showToast } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 const COMPENSATION_OPTIONS = [
   { value: "HOURLY", label: "Hourly" },
   { value: "SALARIED", label: "Salaried" },
@@ -42,11 +42,6 @@ const NewPayrollModal = ({ isOpen, onClose, onSave }) => {
   const onSubmit = (data) => {
     setPayrollData(data);
     setIsPreviewOpen(true);
-  };
-
-  const onValidationError = (errs) => {
-    const firstError = Object.values(errs)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handlePreviewSave = () => {

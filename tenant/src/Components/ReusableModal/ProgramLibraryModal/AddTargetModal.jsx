@@ -28,6 +28,7 @@ import { addTargetSchema as schema, MASTERY_OPTION_SLOTS, MASTERY_FIELDS } from 
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 import { RequiredMark } from "../../Input/Inputs";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 /* ---------- FileUploadArea Component ---------- */
 const getFileIcon = (fileName) => {
   if (!fileName || typeof fileName !== "string") {
@@ -457,15 +458,13 @@ const AddTargetModal = ({
 
   const onValidationError = (formErrors) => {
     const firstField = Object.keys(formErrors)[0];
-    const firstError = formErrors[firstField];
     const tab = fieldToTab[firstField];
     // Keep the modal open and move to the tab holding the first error so the
     // user can fix it in place instead of re-entering everything.
     if (tab) setActiveTab(tab);
-    showToast(
-      firstError?.message || "Please fix the highlighted fields",
-      "error",
-    );
+    // Message comes from the shared helper so nested field-array errors
+    // resolve to real text rather than the generic fallback.
+    showValidationErrors(formErrors);
   };
 
   const handlePrevious = () => {
