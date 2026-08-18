@@ -1871,17 +1871,19 @@ const SingleTimeSheet = () => {
                       </div>
                     )}
                     */}
-                    {hasPermission("nudge_client_for_approval") && (
-                      <div
-                        className="timesheet-dropdown-item"
-                        onClick={() => {
-                          setIsOpen(false);
-                          handleNudgeClient();
-                        }}
-                      >
-                        Nudge client for approval
-                      </div>
-                    )}
+                    {/* Nothing to nudge once the client has approved. */}
+                    {hasPermission("nudge_client_for_approval") &&
+                      timesheetData.clientApprovalStatus !== "APPROVED" && (
+                        <div
+                          className="timesheet-dropdown-item"
+                          onClick={() => {
+                            setIsOpen(false);
+                            handleNudgeClient();
+                          }}
+                        >
+                          Nudge client for approval
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -2332,13 +2334,14 @@ const SingleTimeSheet = () => {
                       <p style={{ color: "#6b7280", marginBottom: "16px" }}>
                         Awaiting client signature and approval for this session.
                       </p>
-                      {hasPermission("nudge_client_for_approval") && (
-                        <Button
-                          label="Send Reminder"
-                          variant="primary"
-                          onClick={handleNudgeClient}
-                        />
-                      )}
+                      {hasPermission("nudge_client_for_approval") &&
+                        timesheetData.clientApprovalStatus !== "APPROVED" && (
+                          <Button
+                            label="Send Reminder"
+                            variant="primary"
+                            onClick={handleNudgeClient}
+                          />
+                        )}
                     </div>
                   )}
                 </div>

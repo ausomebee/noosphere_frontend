@@ -511,3 +511,24 @@
   }
 }
 
+
+/* The busy state swaps the button label for this spinner. Without centering it
+   sat hard against the left edge of the (flex: 1) button. `animate-spin` is a
+   Tailwind class that doesn't reliably emit here, so the rotation is declared
+   outright. */
+.modal-btn-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.modal-btn-spinner .modal-spinner {
+  animation: modal-btn-spin 1s linear infinite;
+}
+
+@keyframes modal-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

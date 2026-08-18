@@ -46,7 +46,8 @@ const UploadDocumentModal = ({
     }
 
     const urls = uploadedFiles.map(f => f.url);
-    onFilesReady(urls);
+    // Returned so ReusableModal can await it and keep the buttons locked.
+    return onFilesReady(urls);
   };
 
   return (

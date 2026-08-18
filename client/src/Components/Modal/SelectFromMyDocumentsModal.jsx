@@ -87,7 +87,9 @@ const SelectFromMyDocumentsModal = ({
       .filter((doc) => selectedIds.has(doc.id))
       .map((doc) => doc.fileUrl);
 
-    onDocumentsSelected(selectedUrls);
+    // Returned so ReusableModal can await it and hold the buttons disabled —
+    // without this the confirm button stayed clickable mid-request.
+    return onDocumentsSelected(selectedUrls);
   };
 
   const getFileIcon = (type = "") => {

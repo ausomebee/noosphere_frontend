@@ -50,8 +50,9 @@ const NewFileModal = ({ isOpen, onClose, onCreate, folders = [] }) => {
       folderId: locationType === "folder" ? selectedFolderId : null,
     }));
 
-    onCreate(payloads);
-    onClose();
+    // Awaited so the buttons stay disabled for the whole request, and the
+    // modal only closes once it has actually finished.
+    return Promise.resolve(onCreate(payloads)).finally(() => onClose());
   };
 
   const handleClose = () => {
