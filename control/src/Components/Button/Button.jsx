@@ -26,7 +26,12 @@ const Button = React.memo(({
     const result = onClick?.(e);
     if (result && typeof result.then === "function") {
       setBusy(true);
-      Promise.resolve(result).finally(() => setBusy(false));
+      Promise.resolve(result)
+        .catch(() => {
+          // Already surfaced by the handler; swallowed so a
+          // deliberate re-throw isn't logged as unhandled.
+        })
+        .finally(() => setBusy(false));
     }
   };
 

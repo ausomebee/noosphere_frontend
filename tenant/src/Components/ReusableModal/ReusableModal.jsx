@@ -127,7 +127,12 @@ const ReusableModal = ({
     }
 
     if (result && typeof result.then === "function") {
-      Promise.resolve(result).finally(() => setSubmitting(false));
+      Promise.resolve(result)
+        .catch(() => {
+          // Already surfaced by the handler; swallowed so a
+          // deliberate re-throw isn't logged as unhandled.
+        })
+        .finally(() => setSubmitting(false));
       return;
     }
 

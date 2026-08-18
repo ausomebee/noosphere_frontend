@@ -40,17 +40,23 @@ const NewPipelineColumnModal = ({ isOpen, onClose, onSave, loading = false }) =>
       return;
     }
 
-    onSave({
-      name: draft.name.trim(),
-      // Only include description when the user actually entered one.
-      ...(draft.description?.trim()
-        ? { description: draft.description.trim() }
-        : {}),
-      colorCode: draft.colorCode,
+    // Returned so the modal keeps its buttons disabled for the whole request,
+    // and resolved before clearing up: this used to reset the draft and close
+    // the moment onSave was called, so a failed save shut the modal and threw
+    // away the typed name — the opposite of what the comment below intended.
+    return Promise.resolve(
+      onSave({
+        name: draft.name.trim(),
+        // Only include description when the user actually entered one.
+        ...(draft.description?.trim()
+          ? { description: draft.description.trim() }
+          : {}),
+        colorCode: draft.colorCode,
+      }),
+    ).then(() => {
+      dispatch(resetDraft()); // clear the draft only on a successful save
+      handleCloseModal();
     });
-
-    dispatch(resetDraft()); // clear the draft only on a successful save
-    handleCloseModal();
   };
 
   const handleCloseModal = () => {

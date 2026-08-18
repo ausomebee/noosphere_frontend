@@ -722,6 +722,8 @@ const JiraBoard = () => {
     } catch (error) {
       console.error("Failed to create stage:", error);
       showApiError(error, "CREATE_STAGE");
+      // Re-thrown so the modal keeps the typed column name and stays open.
+      throw error;
     } finally {
       stopLoading();
     }
