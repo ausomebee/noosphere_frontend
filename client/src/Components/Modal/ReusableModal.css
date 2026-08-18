@@ -232,9 +232,19 @@
   border-radius: 0.25rem;
 }
 
-.progress {
+/* The track carries the grey remainder; `.progress` is width-driven inside it.
+   `.progress` used to be `flex: 1`, which overrode its inline width and left
+   the bar looking full even at 0%. */
+.progress-track {
   flex: 1;
   height: 0.6rem;
+  background: #e5e7eb;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
   background: #004aba;
   border-radius: 0.25rem;
   transition: width 0.3s ease;

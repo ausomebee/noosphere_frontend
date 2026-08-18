@@ -17,9 +17,12 @@ const FileUploadArea = memo(
     onUploadStart,
     onUploadComplete,
     onUploadError,
+    onRemove = () => {},
     initialFiles = [],
     accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4",
     maxSizeMB = 50,
+    hint = "PDF, DOCX, JPG or PNG",
+    multiple = true,
     disabled = false,
   }) => {
     const [files, setFiles] = useState([]);
@@ -55,23 +58,34 @@ const FileUploadArea = memo(
 
     const getFileIcon = (name) => {
       const ext = name?.split(".").pop()?.toLowerCase();
-      if (ext === "pdf") return <BsFileEarmarkPdf className="text-red-600" />;
+      if (ext === "pdf")
+        return <BsFileEarmarkPdf size={20} className="text-red-600" />;
       if (["jpg", "jpeg", "png"].includes(ext))
-        return <FaImage className="text-green-600" />;
-      if (["mp4", "mov"].includes(ext))
-        return <FaPhotoVideo className="text-purple-600" />;
+        return <FaImage size={20} className="text-green-600" />;
+      if (["mp4", "mov", "avi"].includes(ext))
+        return <FaPhotoVideo size={20} className="text-purple-600" />;
       if (["doc", "docx"].includes(ext))
-        return <BsFileEarmarkPlay className="text-blue-600" />;
-      return <BsFileEarmarkPdf className="text-gray-600" />;
+        return <BsFileEarmarkPlay size={20} className="text-blue-600" />;
+      return <BsFileEarmarkPdf size={20} className="text-gray-600" />;
     };
+
+    // Files are matched by id rather than array index: index maths went stale
+    // as soon as a file was removed mid-upload, so progress landed on the
+    // wrong row.
+    const patchFile = (id, changes) =>
+      setFiles((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, ...changes } : f))
+      );
 
     /* ---------------- Core Upload Logic ---------------- */
     const handleFiles = async (selectedFiles) => {
       if (!selectedFiles?.length) return;
 
-      onUploadStart?.();
+      // A single-file picker still receives several on drag-and-drop, so cap
+      // it here rather than trusting the input's `multiple` attribute.
+      const incoming = multiple ? selectedFiles : selectedFiles.slice(0, 1);
 
-      const validFiles = selectedFiles
+      const validFiles = incoming
         .map((file) => {
           if (file.size / (1024 * 1024) > maxSizeMB) {
             showToast(`${file.name} is too large`, "error");
@@ -87,13 +101,22 @@ const FileUploadArea = memo(
         })
         .filter(Boolean);
 
+      if (!validFiles.length) return;
+
+      onUploadStart?.();
       setFiles((prev) => [...prev, ...validFiles]);
 
       const uploadedResults = [];
+      let failed = 0;
 
-      for (let i = 0; i < validFiles.length; i++) {
-        const item = validFiles[i];
-        const index = files.length + i;
+      for (const item of validFiles) {
+        // Creep the bar forward while the request is in flight so the upload
+        // doesn't look frozen, then let the real result finish it off.
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress = Math.min(progress + 10, 90);
+          patchFile(item.id, { progress });
+        }, 150);
 
         try {
           const formData = new FormData();
@@ -105,61 +128,60 @@ const FileUploadArea = memo(
             refreshToken,
           });
 
+          clearInterval(interval);
+
           if (res?.success && res.data?.[0]) {
             const uploaded = res.data[0];
-
-            setFiles((prev) =>
-              prev.map((f, idx) =>
-                idx === index
-                  ? {
-                      ...f,
-                      progress: 100,
-                      url: uploaded.url,
-                      filename: uploaded.filename,
-                    }
-                  : f
-              )
-            );
-
+            patchFile(item.id, {
+              progress: 100,
+              url: uploaded.url,
+              filename: uploaded.filename,
+            });
             uploadedResults.push({
               filename: uploaded.filename,
               url: uploaded.url,
             });
+          } else {
+            failed += 1;
+            patchFile(item.id, {
+              progress: 0,
+              error: true,
+              errorMessage: "Upload failed",
+            });
+            showToast(`Failed to upload ${item.name}`, "error");
           }
-        } catch {
-          setFiles((prev) =>
-            prev.map((f, idx) =>
-              idx === index
-                ? {
-                    ...f,
-                    error: true,
-                    errorMessage: "Upload failed",
-                    progress: 0,
-                  }
-                : f
-            )
-          );
-
-          onUploadError?.();
+        } catch (err) {
+          clearInterval(interval);
+          failed += 1;
+          patchFile(item.id, {
+            progress: 0,
+            error: true,
+            errorMessage: err?.message || "Upload failed",
+          });
           showToast(`Failed to upload ${item.name}`, "error");
-          return;
         }
       }
 
+      // Always report back, even when everything failed — the modal keeps its
+      // buttons disabled until it hears the upload finished one way or another.
+      if (failed) onUploadError?.();
       onUploadComplete?.(uploadedResults);
     };
 
     /* ---------------- Remove / Retry ---------------- */
     const handleRemoveFile = (idx) => {
-      setFiles((prev) => prev.filter((_, i) => i !== idx));
+      setFiles((prev) => {
+        const removed = prev[idx];
+        if (removed) onRemove(removed);
+        return prev.filter((_, i) => i !== idx);
+      });
     };
 
     const handleRetryFile = (idx) => {
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === idx ? { ...f, error: false, progress: 0 } : f
-        )
-      );
+      const target = files[idx];
+      if (!target?.file) return;
+      setFiles((prev) => prev.filter((_, i) => i !== idx));
+      handleFiles([target.file]);
     };
 
     /* ---------------- Render ---------------- */
@@ -170,59 +192,85 @@ const FileUploadArea = memo(
           onClick={() => !disabled && fileInputRef.current?.click()}
           onDrop={(e) => {
             e.preventDefault();
-            !disabled && handleFiles(Array.from(e.dataTransfer.files));
+            if (!disabled) handleFiles(Array.from(e.dataTransfer.files));
           }}
           onDragOver={(e) => e.preventDefault()}
         >
-          <BsCloudUpload size={48} className="mx-auto text-gray-400" />
-          <p className="text-sm text-blue-600 mt-2">
+          <div className="text-gray-400 mb-3 flex justify-center">
+            <BsCloudUpload size={48} />
+          </div>
+          <p className="text-sm font-medium text-blue-600">
             Click to upload or drag and drop
           </p>
+          <p className="text-xs text-gray-500 mt-1">{hint}</p>
+
           <input
             ref={fileInputRef}
             type="file"
             accept={accept}
-            multiple
+            multiple={multiple}
             hidden
+            disabled={disabled}
             onChange={(e) =>
-              e.target.files && handleFiles(Array.from(e.target.files))
+              e.target.files?.length && handleFiles(Array.from(e.target.files))
             }
           />
         </div>
 
         {files.length > 0 && (
-          <div className="file-list">
+          <div className="file-list mt-3">
             {files.map((file, idx) => (
               <div key={file.id} className="file-item">
                 <div className="file-header">
-                  {getFileIcon(file.name)}
-                  <span>{file.name} • {file.size}</span>
-                  {file.progress === 100 && !file.error && (
-                    <FaCheckCircle className="text-green-600" />
-                  )}
-                  <button type="button" aria-label="Remove file" onClick={() => handleRemoveFile(idx)}>
-                    <RiDeleteBin6Line />
-                  </button>
-                  {file.error && (
-                    <button type="button" aria-label="Retry upload" onClick={() => handleRetryFile(idx)}>
-                      <IoMdRefresh />
+                  <div className="file-info">
+                    {getFileIcon(file.name)}
+                    <span className="file-name">
+                      {file.name} • {file.size}
+                    </span>
+                  </div>
+                  <div className="file-actions">
+                    {file.progress === 100 && !file.error && (
+                      <FaCheckCircle size={16} className="file-success" />
+                    )}
+                    {file.error && (
+                      <button
+                        type="button"
+                        className="retry-file"
+                        onClick={() => handleRetryFile(idx)}
+                        aria-label="Retry upload"
+                      >
+                        <IoMdRefresh size={16} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="remove-file"
+                      onClick={() => handleRemoveFile(idx)}
+                      aria-label="Remove file"
+                    >
+                      <RiDeleteBin6Line size={16} />
                     </button>
-                  )}
+                  </div>
                 </div>
 
-                {!file.error && (
-                  <div className="progress-bar">
-                    <div
-                      className="progress"
-                      style={{ width: `${file.progress}%` }}
-                    />
+                {file.error ? (
+                  <span className="file-error">{file.errorMessage}</span>
+                ) : (
+                  <div
+                    className="progress-bar"
+                    role="progressbar"
+                    aria-valuenow={file.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div className="progress-track">
+                      <div
+                        className="progress"
+                        style={{ width: `${file.progress}%` }}
+                      />
+                    </div>
+                    <span className="progress-text">{file.progress}%</span>
                   </div>
-                )}
-
-                {file.error && (
-                  <p className="text-xs text-red-500">
-                    {file.errorMessage}
-                  </p>
                 )}
               </div>
             ))}

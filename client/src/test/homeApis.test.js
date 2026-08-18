@@ -111,7 +111,7 @@ describe("homeApis", () => {
         rateTherapist: 4, feedback: "Great", signature: "sig", ...authParams,
       });
       expect(mockPost).toHaveBeenCalledWith(
-        expect.stringContaining("/sessions-approval"),
+        expect.stringContaining("/sessions-approval/client"),
         expect.objectContaining({ sessionId: "s1", confirmDelivery: true }),
       );
     });

@@ -198,7 +198,7 @@ const ApproveSession = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.post(`${PLAIN_API_URL}/sessions-approval`, {
+    const res = await authFetch.post(`${PLAIN_API_URL}/sessions-approval/client`, {
       sessionId: sessionId,
       confirmDelivery: confirmDelivery,
       rateService: rateService,

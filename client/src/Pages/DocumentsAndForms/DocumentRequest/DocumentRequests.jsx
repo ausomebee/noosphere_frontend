@@ -20,6 +20,16 @@ import api from "../../../api/documentsAndFormsApis";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 import SectionLoader from "../../../Components/SectionLoader";
+
+// Statuses arrive uppercase (PENDING / OVERDUE / UPLOADED). Matched exactly so
+// the "Pending upload" wording isn't mistaken for an upload, and uploaded
+// outranks overdue — once the document is in, the row shouldn't still read red.
+const statusColorFor = (status) => {
+  const s = String(status || "").trim().toUpperCase();
+  if (s === "UPLOADED" || s === "COMPLETED" || s === "FILLED") return "success";
+  if (s === "OVERDUE") return "danger";
+  return "warning";
+};
 const DocumentRequests = () => {
   const navigate = useNavigate();
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
@@ -72,12 +82,7 @@ const DocumentRequests = () => {
           description: item.description || "—",
           allowMultiple: item.allowMultiple || false,
           status: item.status || "PENDING",
-          statusColor:
-            item.status === "OVERDUE"
-              ? "danger"
-              : item.status === "PENDING"
-                ? "warning"
-                : "success",
+          statusColor: statusColorFor(item.status),
           dueDate: item.dueDate,
           createdAt: item.createdAt,
           clientDocuments: item.clientDocuments || [],
@@ -111,7 +116,7 @@ const DocumentRequests = () => {
           name: item.form?.name || "Unnamed Form",
           dateReceived: item.createdAt ? formatDate(item.createdAt) : "—",
           status: item.status || "PENDING",
-          statusColor: item.status === "PENDING" ? "warning" : "success",
+          statusColor: statusColorFor(item.status),
         }));
 
         setFormsData(formattedForms);
@@ -146,12 +151,7 @@ const DocumentRequests = () => {
         description: item.description || "—",
         allowMultiple: item.allowMultiple || false,
         status: item.status || "PENDING",
-        statusColor:
-          item.status === "OVERDUE"
-            ? "danger"
-            : item.status === "PENDING"
-              ? "warning"
-              : "success",
+        statusColor: statusColorFor(item.status),
         dueDate: item.dueDate,
         createdAt: item.createdAt,
         clientDocuments: item.clientDocuments || [],

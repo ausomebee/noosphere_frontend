@@ -20,6 +20,7 @@ const ReusableModal = ({
   primaryButtonColor,
   secondaryButtonColor,
   primaryButtonLoading = false,
+  primaryButtonDisabled = false,
   activeTab,
   onTabChange,
   showClose = false,
@@ -92,6 +93,9 @@ const ReusableModal = ({
   // can't be double-clicked into a duplicate request.
   const [submitting, setSubmitting] = useState(false);
   const primaryBusy = primaryButtonLoading || submitting;
+  // Busy blocks both buttons; `primaryButtonDisabled` is for "nothing to
+  // submit yet" and must leave Cancel usable.
+  const primaryBlocked = primaryBusy || primaryButtonDisabled;
 
   const handleClose = () => {
     if (primaryBusy) return;
@@ -100,7 +104,7 @@ const ReusableModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (primaryBusy) return;
+    if (primaryBlocked) return;
     const result = onPrimaryButtonClick?.(e);
     if (result && typeof result.then === "function") {
       setSubmitting(true);
@@ -210,8 +214,10 @@ const ReusableModal = ({
                 style={{
                   backgroundColor: primaryButtonColor || "#004aba",
                   color: "#ffffff",
+                  opacity: primaryBlocked ? 0.5 : 1,
+                  cursor: primaryBlocked ? "not-allowed" : "pointer",
                 }}
-                disabled={primaryBusy}
+                disabled={primaryBlocked}
               >
                 {primaryBusy ? (
                   <span className="modal-btn-spinner">
@@ -266,6 +272,7 @@ ReusableModal.propTypes = {
   primaryButtonColor: PropTypes.string,
   secondaryButtonColor: PropTypes.string,
   primaryButtonLoading: PropTypes.bool,
+  primaryButtonDisabled: PropTypes.bool,
   activeTab: PropTypes.string,
   onTabChange: PropTypes.func,
   showClose: PropTypes.bool,

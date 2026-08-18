@@ -245,6 +245,12 @@
   background-color: #FFFAEB;
   color: #B54708;
 }
+/* Referenced by the document-request badges but never defined, so an overdue
+   row used to render with no colour at all. */
+.status-overdue {
+  background-color: #FEF3F2;
+  color: #B42318;
+}
 .status-approved {
   background-color: #ECFDF3;
   color: #027A48;

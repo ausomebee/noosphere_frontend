@@ -654,3 +654,10 @@ a:hover { color: var(--color-primary); }
 .role-back-button svg {
   flex-shrink: 0;
 }
+
+/* Toasts must clear every overlay. Modals portal to <body> and some sit as
+   high as z-index 1000000, so anything lower silently hides the toast behind
+   the modal that triggered it. */
+.Toastify__toast-container {
+  z-index: 2147483647 !important;
+}

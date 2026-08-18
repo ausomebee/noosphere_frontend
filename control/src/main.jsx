@@ -20,7 +20,7 @@ createRoot(document.getElementById("root")).render(
       <PersistGate loading={null} persistor={persistor}>
         <Router basename={import.meta.env.BASE_URL}>
           <App />
-          <ToastContainer style={{ zIndex: 99999 }} />
+          <ToastContainer />
         </Router>
       </PersistGate>
     </Provider>

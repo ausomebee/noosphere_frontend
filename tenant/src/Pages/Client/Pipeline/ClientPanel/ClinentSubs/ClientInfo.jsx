@@ -27,6 +27,20 @@ import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import usePermissions from "../../../../../hooks/usePermissions";
 import SectionLoader from "../../../../../Components/SectionLoader";
 
+// The API sends document-request statuses uppercase (PENDING / OVERDUE /
+// UPLOADED), so these are matched case-insensitively — comparing against
+// "Uploaded" meant an uploaded request never matched and fell through to the
+// amber "pending" badge. Matches are exact so the "Pending upload" default
+// isn't mistaken for an upload. Uploaded also outranks overdue: once the
+// document is in, the row shouldn't still read as late.
+const documentStatusClass = (status) => {
+  const s = String(status || "").trim().toUpperCase();
+  if (s === "UPLOADED" || s === "COMPLETED" || s === "FILLED")
+    return "status-active";
+  if (s === "OVERDUE") return "status-overdue";
+  return "status-pending";
+};
+
 // AssignedTo Component
 const AssignedTo = ({ assignees = [], maxVisible = 3 }) => {
   const visible = assignees.slice(0, maxVisible);
@@ -542,11 +556,7 @@ const DocumentsForms = () => {
       header: "Status",
       key: "status",
       render: (row) => (
-        <span
-          className={`status-label ${
-            row.status === "Uploaded" ? "status-active" : "status-pending"
-          }`}
-        >
+        <span className={`status-label ${documentStatusClass(row.status)}`}>
           {row.status}
         </span>
       ),
@@ -819,13 +829,9 @@ const DocumentsForms = () => {
                                 <td>{req.dueDate}</td>
                                 <td>
                                   <span
-                                    className={`status-label ${
-                                      req.status === "Uploaded"
-                                        ? "status-active"
-                                        : req.status === "OVERDUE"
-                                        ? "status-overdue"
-                                        : "status-pending"
-                                    }`}
+                                    className={`status-label ${documentStatusClass(
+                                      req.status
+                                    )}`}
                                   >
                                     {req.status}
                                   </span>
