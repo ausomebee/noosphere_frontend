@@ -372,6 +372,25 @@ const SelectInput = ({
               borderRadius: 12,
               padding: "0 6px",
               cursor: "pointer",
+              // A single select must stay on one line. The stylesheet sets
+              // flex-wrap: wrap here for multi-select chips, which pushed the
+              // clear "×" onto a second row under the value. Set through the
+              // styles prop because react-select injects these at runtime and
+              // they override plain CSS.
+              flexWrap: isMulti ? "wrap" : "nowrap",
+            }),
+            indicatorsContainer: (base) => ({
+              ...base,
+              flexShrink: 0,
+              alignItems: "center",
+              alignSelf: "center",
+            }),
+            clearIndicator: (base) => ({
+              ...base,
+              padding: 0,
+              marginLeft: 2,
+              display: "flex",
+              alignItems: "center",
             }),
             menu: (base) => ({
               ...base,
@@ -385,6 +404,9 @@ const SelectInput = ({
               padding: 0,
               flexWrap: isMulti ? "wrap" : "nowrap",
               overflow: "hidden",
+              // Lets a long label ellipsis rather than shoving the clear
+              // button out of the row.
+              minWidth: 0,
             }),
             multiValue: () => ({ background: "transparent" }),
             placeholder: (base) => ({ ...base, color: "#999" }),

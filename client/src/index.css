@@ -2035,7 +2035,11 @@ input:checked + .slider:before {
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 12px;
-  padding: 0;
+  /* The arrow is a background image on this element, painted at
+     `right 8px center`. This block is a second `.input-select` declaration, so
+     its padding shorthand was wiping the `padding-right: 30px` set further up —
+     leaving the value and placeholder running underneath the arrow. */
+  padding: 0 30px 0 0;
   min-height: 36px;
   display: flex;
   align-items: center;
