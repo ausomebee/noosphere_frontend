@@ -8,6 +8,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
 import api2 from "../../api/billingAndPaymentsApi";
 import { modifierOptions, perOptions } from "../../Data/selectOptions";
+import { utilizationDisplay } from "../../Helper/Formatters";
 
 const AccordionTable = ({
   data,
@@ -221,7 +222,10 @@ const AccordionTable = ({
     }
 
     if (col.type === "stage_completion" || col.key === "utilization") {
-      const percentage = parseInt(row[col.key]) || 0;
+      // parseInt truncated the fraction, so 0.2% (2 units of 1000) became a
+      // 0%-wide bar that read as "nothing used at all".
+      const { percent: percentage, width: barWidth, label } =
+        utilizationDisplay(row[col.key]);
       return (
         <div
           className="progress-container"
@@ -231,19 +235,19 @@ const AccordionTable = ({
             <div
               className={`progress-fills ${percentage >= 80 ? "high" : ""}`}
               style={{
-                width: `${percentage}%`,
+                width: `${barWidth}%`,
                 backgroundColor: percentage >= 80 ? "#D92D20" : "#004ABA",
               }}
             />
             <div
               className="progress-remaining"
               style={{
-                width: `${100 - percentage}%`,
+                width: `${100 - barWidth}%`,
                 backgroundColor: "#f7f7f7",
               }}
             />
           </div>
-          <span className="progress-texts">{`${percentage}%`}</span>
+          <span className="progress-texts">{label}</span>
         </div>
       );
     }

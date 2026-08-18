@@ -322,3 +322,22 @@ export const getInitials = (name) =>
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+/**
+ * Shapes a utilization percentage for a progress bar.
+ *
+ * Rounding to a whole percent made small-but-real usage disappear: 2 units of
+ * 1000 is 0.2%, which rounded to a 0%-wide bar and read as "nothing used".
+ * Any consumption now keeps a visible sliver, and sub-1% values show a decimal.
+ */
+export const utilizationDisplay = (value) => {
+  const percent = Math.min(Math.max(Number(value) || 0, 0), 100);
+  return {
+    percent,
+    width: percent > 0 ? Math.max(percent, 1.5) : 0,
+    label:
+      percent > 0 && percent < 1
+        ? `${percent.toFixed(1)}%`
+        : `${Math.round(percent)}%`,
+  };
+};

@@ -266,9 +266,7 @@ const SingleClaim = () => {
         authorization: auth.title || "N/A",
         authorizationNumber: auth.authorizationNumber || "N/A",
         utilization:
-          authorizedUnits > 0
-            ? Math.round((consumedUnits / authorizedUnits) * 100)
-            : 0,
+          authorizedUnits > 0 ? (consumedUnits / authorizedUnits) * 100 : 0,
         unitsSummary: `${consumedUnits} / ${authorizedUnits}`,
         date: formatDate(auth.startDate, dateFormat),
       };
@@ -459,7 +457,7 @@ const SingleClaim = () => {
       </div>
 
       <div className="mt-6">
-        <div className="billing-info-card">
+        <div>
           <h3 className="text-lg font-semibold mb-6 text-gray-400">
             Service Information
           </h3>

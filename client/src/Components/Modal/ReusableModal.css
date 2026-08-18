@@ -238,7 +238,7 @@
 .progress-track {
   flex: 1;
   height: 0.6rem;
-  background: #e5e7eb;
+  background: #f7f7f7;
   border-radius: 0.25rem;
   overflow: hidden;
 }

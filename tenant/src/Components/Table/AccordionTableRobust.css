@@ -265,7 +265,10 @@
 /* ==================== SERVICE ROW ==================== */
 .robust-service-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1.5fr auto;
+  /* Service code | Modifiers | Units | Units used | Units left | Per |
+     Utilization | actions. Every field gets an equal share so none stretches
+     at another's expense. */
+  grid-template-columns: repeat(6, minmax(0, 1fr)) 1.5fr auto;
   gap: 12px;
   align-items: center;
   padding: 16px;
@@ -289,7 +292,7 @@
   position: relative;
   flex: 1;
   height: 8px;
-  background-color: #e5e7eb;
+  background-color: #f7f7f7;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -399,21 +402,4 @@
 /* ==================== UTILITY ==================== */
 .robust-accordion-table tbody tr:last-child {
   border-bottom: none;
-}
-/* Read-only unit counts sitting alongside the editable service fields. Sized
-   like a field so the row stays aligned. */
-.unit-readout-group {
-  display: flex;
-  flex-direction: column;
-  min-width: 90px;
-}
-
-.unit-readout {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-  font-variant-numeric: tabular-nums;
 }

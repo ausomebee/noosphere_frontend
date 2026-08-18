@@ -1677,7 +1677,8 @@ const SingleTimeSheet = () => {
     timesheetData.authorizationsUsed?.map((auth, index) => {
       const totalUnits = auth.clientAuthorizationServices?.reduce((sum, s) => sum + (s.units || 0), 0) || 0;
       const usedUnits = auth.clientAuthorizationServices?.reduce((sum, s) => sum + (s.usedUnit || 0), 0) || 0;
-      const utilPct = totalUnits > 0 ? Math.round((usedUnits / totalUnits) * 100) : 0;
+      // Unrounded — the table formats it, so sub-1% usage stays visible.
+      const utilPct = totalUnits > 0 ? (usedUnits / totalUnits) * 100 : 0;
       return {
         id: auth.id || index,
         authorization: auth.title || auth.authorizationNumber || "N/A",

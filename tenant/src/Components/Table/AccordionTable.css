@@ -159,6 +159,10 @@
 .inner-service-table {
   width: 100%;
   border-collapse: collapse;
+  /* Fixed layout so every field column is the same width. With auto layout the
+     wider values pushed "Units left" out and squeezed "Per" until it
+     truncated. */
+  table-layout: fixed;
 }
 
 .inner-service-table th {
@@ -184,14 +188,14 @@
 }
 
 .service-row td {
-  padding: 8px 16px;
+  padding: 8px 10px;
 }
 
 /* Input Styles Integration */
 .service-row .select-input-container,
 .service-row .text-input-container {
   margin: 0;
-  min-width: 120px;
+  min-width: 0;
 }
 
 .service-row .select-input__control,
@@ -515,16 +519,4 @@
   .delete-btn {
     margin-top: 0;
   }
-}
-/* Read-only unit counts sitting beside the editable Units field. Height is
-   matched to the inputs on the same row so the cells line up. */
-.unit-readout {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  padding: 8px 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-  font-variant-numeric: tabular-nums;
 }

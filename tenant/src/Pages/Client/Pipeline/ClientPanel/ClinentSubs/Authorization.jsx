@@ -10,7 +10,7 @@ import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import api from "../../../../../api/clientPanelApis";
 import api2 from "../../../../../api/billingAndPaymentsApi";
 import { useParams } from "react-router-dom";
-import { formatDate } from "../../../../../Helper/Formatters";
+import { formatDate, utilizationDisplay } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import usePermissions from "../../../../../hooks/usePermissions";
 import AccessDenied from "../../../../../Components/AccessDenied/AccessDenied";
@@ -98,7 +98,7 @@ const AuthorizationTab = () => {
             0,
           ) || 0;
         const utilization =
-          totalUnits > 0 ? Math.round((usedUnits / totalUnits) * 100) : 0;
+          totalUnits > 0 ? (usedUnits / totalUnits) * 100 : 0;
 
         return {
           id: auth.id,
@@ -133,7 +133,7 @@ const AuthorizationTab = () => {
             usedUnits: svc.usedUnit || 0,
             per: svc.per || "SESSION",
             utilization:
-              svc.units > 0 ? Math.round((svc.usedUnit / svc.units) * 100) : 0,
+              svc.units > 0 ? (svc.usedUnit / svc.units) * 100 : 0,
           };
         });
       });
@@ -192,18 +192,21 @@ const AuthorizationTab = () => {
     {
       header: "Utilization",
       key: "utilization",
-      render: (row) => (
-        <div className="utilization-inline">
-          <div
-            className="utilization-fill-inline"
-            style={{
-              width: `${row.utilization}%`,
-              backgroundColor: row.utilization >= 80 ? "#D92D20" : "#004ABA",
-            }}
-          />
-          <span className="utilization-text-inline">{row.utilization}%</span>
-        </div>
-      ),
+      render: (row) => {
+        const util = utilizationDisplay(row.utilization);
+        return (
+          <div className="utilization-inline">
+            <div
+              className="utilization-fill-inline"
+              style={{
+                width: `${util.width}%`,
+                backgroundColor: util.percent >= 80 ? "#D92D20" : "#004ABA",
+              }}
+            />
+            <span className="utilization-text-inline">{util.label}</span>
+          </div>
+        );
+      },
     },
   ];
 

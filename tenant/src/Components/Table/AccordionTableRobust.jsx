@@ -7,6 +7,7 @@ import Pagination from "./Pagination";
 import Button from "../Button/Button";
 import { FaPlus, FaTrash, FaEllipsisV, FaSave } from "react-icons/fa";
 import { showToast } from "../../Helper/ShowToast";
+import { utilizationDisplay } from "../../Helper/Formatters";
 import "./AccordionTableRobust.css";
 import { modifierOptions, perOptions } from "../../Data/selectOptions";
 
@@ -244,24 +245,29 @@ const AccordionTableRobust = ({
                     {columns.map((col) => (
                       <td key={col.key} className="robust-cell">
                         {col.key === "utilization" ? (
-                          <div className="robust-utilization-column-wrapper">
-                            <div className="robust-utilization-column-bar">
-                              <div
-                                className="robust-utilization-column-fill"
-                                style={{
-                                  width: `${
-                                    row.utilization || avgUtilization
-                                  }%`,
-                                  backgroundColor: getUtilizationColor(
-                                    row.utilization || avgUtilization
-                                  ),
-                                }}
-                              />
-                            </div>
-                            <span className="robust-utilization-column-text">
-                              {row.utilization || avgUtilization}%
-                            </span>
-                          </div>
+                          (() => {
+                            const util = utilizationDisplay(
+                              row.utilization || avgUtilization
+                            );
+                            return (
+                              <div className="robust-utilization-column-wrapper">
+                                <div className="robust-utilization-column-bar">
+                                  <div
+                                    className="robust-utilization-column-fill"
+                                    style={{
+                                      width: `${util.width}%`,
+                                      backgroundColor: getUtilizationColor(
+                                        util.percent
+                                      ),
+                                    }}
+                                  />
+                                </div>
+                                <span className="robust-utilization-column-text">
+                                  {util.label}
+                                </span>
+                              </div>
+                            );
+                          })()
                         ) : col.render ? (
                           col.render(row)
                         ) : (
