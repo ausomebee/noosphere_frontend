@@ -1994,10 +1994,25 @@ input:checked + .slider:before {
 
 /* React-Select Overrides */
 .input-select .rs__control,
-.input-select .rs__value-container,
-.input-select .rs__indicators,
 .input-select .rs__menu {
   width: 100%;
+}
+
+/* The value fills the row but may shrink; `min-width: 0` lets a long label
+   ellipsis instead of shoving the indicators onto a second line. */
+.input-select .rs__value-container {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Indicators size to content and stay inline. They were pinned to width: 100%,
+   which — with the control set to flex-wrap: wrap — pushed them onto their own
+   row, so the clear "×" stacked underneath the dropdown arrow. */
+.input-select .rs__indicators {
+  width: auto;
+  flex: 0 0 auto;
+  align-self: center;
+  align-items: center;
 }
 
 .rs__menu-portal {
@@ -2131,8 +2146,30 @@ input:checked + .slider:before {
 .input-select .rs__clear-indicator {
   position: static;
   order: 1;
-  margin-left: 6px;
+  margin-left: 2px;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
+  color: #9ca3af;
+}
+
+.input-select .rs__clear-indicator:hover {
+  color: #6b7280;
+}
+
+/* Match the arrow's box so the two indicators read as a pair rather than one
+   floating above the other. */
+.input-select .rs__clear-indicator svg,
+.input-select .rs__dropdown-indicator svg {
+  width: 16px;
+  height: 16px;
+}
+
+.input-select .rs__dropdown-indicator {
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
 }
 
 .rs__option {

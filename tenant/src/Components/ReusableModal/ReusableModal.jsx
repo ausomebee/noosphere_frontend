@@ -104,14 +104,35 @@ const ReusableModal = ({
   const [submitting, setSubmitting] = useState(false);
   const primaryBusy = primaryButtonLoading || submitting;
 
+  // Held briefly for handlers that return nothing to await, so a rapid second
+  // click can't slip through before the request lands.
+  const submitGuardRef = useRef(null);
+  useEffect(() => () => clearTimeout(submitGuardRef.current), []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (primaryBusy) return;
-    const result = onPrimaryButtonClick?.(e);
-    if (result && typeof result.then === "function") {
-      setSubmitting(true);
-      Promise.resolve(result).finally(() => setSubmitting(false));
+
+    // Lock on every submit. Previously only a promise-returning handler locked
+    // the buttons, so a handler that fired a request without returning it left
+    // the primary button live and a second click sent a duplicate.
+    setSubmitting(true);
+
+    let result;
+    try {
+      result = onPrimaryButtonClick?.(e);
+    } catch (err) {
+      setSubmitting(false);
+      throw err;
     }
+
+    if (result && typeof result.then === "function") {
+      Promise.resolve(result).finally(() => setSubmitting(false));
+      return;
+    }
+
+    clearTimeout(submitGuardRef.current);
+    submitGuardRef.current = setTimeout(() => setSubmitting(false), 600);
   };
 
   const blockDrag = (e) => {
