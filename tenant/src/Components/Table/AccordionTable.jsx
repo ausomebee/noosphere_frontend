@@ -108,11 +108,17 @@ const AccordionTable = ({
 
       // Process each service in the row
       const processedServices = services.map((service) => {
+        const units = Number(service.units) || 0;
+        const usedUnit = Number(service.usedUnit) || 0;
         return {
           serviceCode: service.serviceCodeId || "",
           modifiers: service.modifiers || "",
-          units: service.units || "",
+          units: service.units ?? "",
           per: service.per || "SESSION",
+          // Consumption was being dropped here, so "units used" and "units
+          // remaining" could never be shown on timesheets or claims.
+          usedUnit,
+          remainingUnits: Math.max(units - usedUnit, 0),
         };
       });
 
@@ -463,6 +469,25 @@ const AccordionTable = ({
                                                   />
                                                 )}
                                               />
+                                            </td>
+                                            {/* Consumption, straight from the
+                                                authorization. Read-only —
+                                                the backend owns these. */}
+                                            <td>
+                                              <label className="input-group-label">
+                                                Units used
+                                              </label>
+                                              <div className="unit-readout">
+                                                {service.usedUnit ?? 0}
+                                              </div>
+                                            </td>
+                                            <td>
+                                              <label className="input-group-label">
+                                                Units left
+                                              </label>
+                                              <div className="unit-readout">
+                                                {service.remainingUnits ?? 0}
+                                              </div>
                                             </td>
                                             <td>
                                               <Controller

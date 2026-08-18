@@ -383,6 +383,30 @@ const AccordionTableRobust = ({
                                         />
                                       )}
                                     />
+                                    {/* Consumption is owned by the backend, so
+                                        these are read-outs, not fields — the
+                                        percentage bar alone never told you how
+                                        many units were actually left. */}
+                                    <div className="unit-readout-group">
+                                      <label className="input-group-label">
+                                        Units used
+                                      </label>
+                                      <div className="unit-readout">
+                                        {service?.usedUnits ?? 0}
+                                      </div>
+                                    </div>
+                                    <div className="unit-readout-group">
+                                      <label className="input-group-label">
+                                        Units left
+                                      </label>
+                                      <div className="unit-readout">
+                                        {Math.max(
+                                          (Number(service?.units) || 0) -
+                                            (Number(service?.usedUnits) || 0),
+                                          0
+                                        )}
+                                      </div>
+                                    </div>
                                     <Controller
                                       name={`services.${authId}.${sIdx}.per`}
                                       control={control}

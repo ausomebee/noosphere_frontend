@@ -254,7 +254,10 @@ const AuthorizationTab = () => {
         endDate: payload.endDate || null,
         payer: payload.payer,
         insuranceType: payload.insuranceType || null,
-        serviceCodes: payload.serviceCodes,
+        // The modal emits `service` (the create path at handleAddAuthorization
+        // already uses it). Reading `payload.serviceCodes` here sent undefined,
+        // so every edit dropped the service codes and units silently.
+        serviceCodes: payload.service,
         accessToken,
         refreshToken,
       });
@@ -362,7 +365,9 @@ const AuthorizationTab = () => {
         : "",
       payer: editingAuthData.payer || "",
       insuranceType: editingAuthData.insuranceType || "",
-      serviceCodes: services,
+      // Keyed `service` to match what the modal reads off initialData —
+      // `serviceCodes` here meant the edit form always opened with a blank row.
+      service: services,
     };
   };
 

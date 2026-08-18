@@ -8,6 +8,29 @@ import api2 from "../../../api/billingAndPaymentsApi";
 import useAuth from "../../../hooks/useAuth";
 import useReduxStateDraft from "../../../hooks/useReduxStateDraft";
 
+const EMPTY_SERVICE = { serviceCodeId: "", modifier: "", units: "", per: "" };
+
+// Shapes an authorization record into the form's own state.
+const toFormData = (data = {}) => ({
+  title: data.title || "",
+  authNumber: data.authNumber || "",
+  startDate: data.startDate || "",
+  endDate: data.endDate || "",
+  payer: data.payer || "",
+  insuranceType: data.insuranceType || "",
+  service:
+    data.service?.length > 0
+      ? data.service.map((item) => ({
+          serviceCodeId: item.serviceCodeId || "",
+          // The API returns this as a bare string on `modifiers`; hardcoding
+          // "" here used to drop the modifier on every edit.
+          modifier: item.modifier ?? item.modifiers ?? "",
+          units: item.units ?? "",
+          per: item.per || "",
+        }))
+      : [{ ...EMPTY_SERVICE }],
+});
+
 const AddAuthorizationModal = ({
   isOpen,
   onClose,
@@ -16,24 +39,7 @@ const AddAuthorizationModal = ({
   mode = "add",
   loading = false,
 }) => {
-  const [formData, setFormData] = useState({
-    title: initialData.title || "",
-    authNumber: initialData.authNumber || "",
-    startDate: initialData.startDate || "",
-    endDate: initialData.endDate || "",
-    payer: initialData.payer || "",
-    insuranceType: initialData.insuranceType || "",
-    // Changed key from serviceCodes → service
-    service:
-      initialData.service?.length > 0
-        ? initialData.service.map((item) => ({
-            serviceCodeId: item.serviceCodeId || "",
-            modifier: "", // we'll extract later if needed
-            units: item.units || "",
-            per: item.per || "",
-          }))
-        : [{ serviceCodeId: "", modifier: "", units: "", per: "" }],
-  });
+  const [formData, setFormData] = useState(() => toFormData(initialData));
 
   // Persist the in-progress authorization so an accidental Cancel/close keeps it.
   // Only in "add" mode — edit mode is driven by initialData of a specific record.
@@ -42,6 +48,17 @@ const AddAuthorizationModal = ({
     restore: setFormData,
     isOpen: isOpen && mode === "add",
   });
+
+  // This modal stays mounted, so the state initializer above only ever ran
+  // once — while no record was selected. Without re-seeding here, "Edit
+  // Authorization" always opened blank. Keyed on the serialized record so a
+  // different authorization re-populates the form.
+  const initialDataKey = JSON.stringify(initialData);
+  useEffect(() => {
+    if (!isOpen || mode !== "edit") return;
+    setFormData(toFormData(initialData));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mode, initialDataKey]);
 
   const [payers, setPayers] = useState([]);
   const [serviceCodes, setServiceCodes] = useState([]); // Full list with id + code

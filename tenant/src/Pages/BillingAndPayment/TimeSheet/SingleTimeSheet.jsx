@@ -1336,15 +1336,31 @@ const SingleTimeSheet = () => {
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
 
+          // Units live on each service, not on the authorization itself.
+          // Reading auth.totalUnits/unitsUsed/unitsRemaining — fields the API
+          // never sends — printed "N/A / 0 / N/A" on every export.
+          const authServices = auth.clientAuthorizationServices || [];
+          const authorizedUnits = authServices.reduce(
+            (sum, s) => sum + (Number(s.units) || 0),
+            0
+          );
+          const consumedUnits = authServices.reduce(
+            (sum, s) => sum + (Number(s.usedUnit) || 0),
+            0
+          );
+
           const authDetails = [
             ["Authorization #", auth.authorizationNumber || "N/A"],
             ["Title", auth.title || "N/A"],
             ["Start Date", formatDate(auth.startDate, dateFormat)],
             ["End Date", formatDate(auth.endDate, dateFormat)],
             ["Status", auth.isActive ? "Active" : "Inactive"],
-            ["Units Authorized", auth.totalUnits || "N/A"],
-            ["Units Used", auth.unitsUsed || "0"],
-            ["Units Remaining", auth.unitsRemaining || "N/A"],
+            ["Units Authorized", String(authorizedUnits)],
+            ["Units Used", String(consumedUnits)],
+            [
+              "Units Remaining",
+              String(Math.max(authorizedUnits - consumedUnits, 0)),
+            ],
           ];
 
           authDetails.forEach(([label, value]) => {
@@ -1666,24 +1682,27 @@ const SingleTimeSheet = () => {
       };
     }) || [];
 
-  // Prepare service data with serviceCodeId and per as requested
-  const serviceData =
-    timesheetData.authorizationsUsed?.[0]?.clientAuthorizationServices?.map(
-      (service, index) => ({
-        id: service.id || index,
-        serviceCode: service.serviceCode?.code || "N/A",
-        serviceCodeId: service.serviceCodeId || "",
-        modifiers: service.modifiers || "N/A",
-        units: service.units || 0,
-        usedUnit: service.usedUnit || 0,
-        per: service.per || "N/A",
-      })
-    ) || [];
-
-  // Create initialServiceData with the structure needed for AccordionTable
-  const initialServiceData = {
-    0: serviceData,
-  };
+  // AccordionTable keys its service lists by row index, so build one entry per
+  // authorization. Previously only authorizationsUsed[0] was read and pinned to
+  // key 0, so with two or more authorizations every row showed the first one's
+  // services and the rest rendered blank.
+  const initialServiceData = (timesheetData.authorizationsUsed || []).reduce(
+    (acc, auth, rowIndex) => {
+      acc[rowIndex] = (auth.clientAuthorizationServices || []).map(
+        (service, index) => ({
+          id: service.id || index,
+          serviceCode: service.serviceCode?.code || "N/A",
+          serviceCodeId: service.serviceCodeId || "",
+          modifiers: service.modifiers || "N/A",
+          units: service.units || 0,
+          usedUnit: service.usedUnit || 0,
+          per: service.per || "N/A",
+        })
+      );
+      return acc;
+    },
+    {}
+  );
 
   // Get client signature from sessionApprovals
   const clientSignature = timesheetData.sessionApprovals?.[0]?.signature;
@@ -2387,7 +2406,7 @@ const SingleTimeSheet = () => {
                     <AccordionTable
                       data={billingData}
                       columns={billingColumns}
-                      tableName="Diagnosis Codes"
+                      tableName="Service Codes"
                       itemsPerPage={5}
                       initialServiceData={initialServiceData}
                       isEditMode={false}

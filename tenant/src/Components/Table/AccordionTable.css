@@ -516,3 +516,15 @@
     margin-top: 0;
   }
 }
+/* Read-only unit counts sitting beside the editable Units field. Height is
+   matched to the inputs on the same row so the cells line up. */
+.unit-readout {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}

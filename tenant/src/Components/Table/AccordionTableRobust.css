@@ -400,3 +400,20 @@
 .robust-accordion-table tbody tr:last-child {
   border-bottom: none;
 }
+/* Read-only unit counts sitting alongside the editable service fields. Sized
+   like a field so the row stays aligned. */
+.unit-readout-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+}
+
+.unit-readout {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}
