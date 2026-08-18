@@ -172,3 +172,38 @@
     flex-direction: column;
   }
 }
+
+/* ---- History & Approvals -------------------------------------------------
+   Plain sentences rather than cards: each entry reads as a line of prose, with
+   the names, dates and subject picked out, and the verb carrying the status
+   colour. */
+.approval-line {
+  padding: 10px 0;
+}
+
+.approval-line + .approval-line {
+  border-top: 1px solid #f7f7f7;
+}
+
+.approval-entry {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.approval-subject {
+  color: #004aba;
+  font-weight: 600;
+}
+
+.approval-action {
+  font-weight: 600;
+}
+
+.approval-action.is-approved {
+  color: #027a48;
+}
+
+.approval-action.is-rejected {
+  color: #d92d20;
+}

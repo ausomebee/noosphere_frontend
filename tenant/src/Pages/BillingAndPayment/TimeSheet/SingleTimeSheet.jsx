@@ -1519,112 +1519,53 @@ const SingleTimeSheet = () => {
     return <div style={{ display: "flex" }}>{stars}</div>;
   };
 
-  // Render approval history entries
+  // Reads the entry's `action` — CREATED / APPROVED / REJECTED /
+  // CLIENT APPROVED, which is what the API actually sends. The old switch keyed
+  // off a `type` field that never existed, so every row fell through to the
+  // bare "ACTION by X on DATE" default.
   const renderApprovalEntry = (entry) => {
-    switch (entry.type) {
-      case "creation":
+    const action = String(entry.action || "").trim().toUpperCase();
+    const subject = <span className="approval-subject">Timesheet</span>;
+    const who = <span className="approval-subject">{entry.by || "Unknown"}</span>;
+    const when = <span className="approval-subject">{entry.date || "N/A"}</span>;
+    const client = <span className="approval-subject">{entry.for || "N/A"}</span>;
+
+    switch (action) {
+      case "CREATED":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">Timesheet</span> for{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.for || "N/A"}
-              </span>{" "}
-              {entry.action || "created"} on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>{" "}
-              by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} for {client} created on {when} by {who}
+          </span>
         );
-      case "submission":
-      case "resubmission":
+      case "CLIENT APPROVED":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action || "submitted"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            <span className="approval-action is-approved">Client approved</span>{" "}
+            {subject} for {client} on {when}
+          </span>
         );
-      case "return":
+      case "APPROVED":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action || "returned"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>{" "}
-              to{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.to || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject}{" "}
+            <span className="approval-action is-approved">approved</span> by{" "}
+            {who} on {when}
+          </span>
         );
-      case "update":
+      case "REJECTED":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action || "updated"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
-        );
-      case "approval":
-      case "rejection":
-        return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">Timesheet</span>{" "}
-              {entry.action || "processed"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject}{" "}
+            <span className="approval-action is-rejected">rejected</span> by{" "}
+            {who} on {when}
+          </span>
         );
       default:
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              {entry.action || "Action"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} {action ? action.toLowerCase() : "updated"} by {who} on{" "}
+            {when}
+          </span>
         );
     }
   };
@@ -2443,9 +2384,10 @@ const SingleTimeSheet = () => {
                 {timesheetData.timesheetHistories &&
                 timesheetData.timesheetHistories.length > 0 ? (
                   timesheetData.timesheetHistories.map((entry, index) => (
-                    <div key={entry.id || index} className="approval-item p-6">
+                    <div key={entry.id || index} className="approval-line">
                       {renderApprovalEntry({
                         ...entry,
+                        for: clientName,
                         date: formatDateTime(entry.createdAt || entry.date, dateFormat, timeFormat),
                         by: entry?.staff?.fullName || entry.by || "Unknown",
                         action: entry.action || "Updated",
