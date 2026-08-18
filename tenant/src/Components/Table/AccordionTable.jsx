@@ -105,6 +105,10 @@ const AccordionTable = ({
         const usedUnit = Number(service.usedUnit) || 0;
         return {
           serviceCode: service.serviceCodeId || "",
+          // The dropdown only carries active codes, so an id belonging to a
+          // deactivated one (97151, say) resolved to nothing and rendered an
+          // empty select. Keep the readable code for the read-only view.
+          serviceCodeLabel: service.serviceCode || "",
           modifiers: service.modifiers || "",
           units: service.units ?? "",
           per: service.per || "SESSION",
@@ -370,6 +374,17 @@ const AccordionTable = ({
                                             className="service-row"
                                           >
                                             <td>
+                                              {!isEditMode ? (
+                                                <TextInput
+                                                  label="Service Code"
+                                                  value={
+                                                    service.serviceCodeLabel ||
+                                                    "—"
+                                                  }
+                                                  readOnly
+                                                  disabled
+                                                />
+                                              ) : (
                                               <Controller
                                                 name={`services.${globalRowIndex}.${serviceIndex}.serviceCode`}
                                                 control={control}
@@ -390,18 +405,30 @@ const AccordionTable = ({
                                                     placeholder="Select Service Code"
                                                     isSearchable={true}
                                                     isDisabled={
-                                                      !isEditMode ||
                                                       loadingServiceCodes
                                                     }
                                                     isLoading={
                                                       loadingServiceCodes
                                                     }
-                                                    readOnly={!isEditMode}
                                                   />
                                                 )}
                                               />
+                                              )}
                                             </td>
                                             <td>
+                                              {!isEditMode ? (
+                                                <TextInput
+                                                  label="Modifiers"
+                                                  value={
+                                                    service.modifiers &&
+                                                    service.modifiers !== "N/A"
+                                                      ? service.modifiers
+                                                      : "—"
+                                                  }
+                                                  readOnly
+                                                  disabled
+                                                />
+                                              ) : (
                                               <Controller
                                                 name={`services.${globalRowIndex}.${serviceIndex}.modifiers`}
                                                 control={control}
@@ -420,11 +447,10 @@ const AccordionTable = ({
                                                     }}
                                                     placeholder="Select Modifier"
                                                     isSearchable={true}
-                                                    isDisabled={!isEditMode}
-                                                    readOnly={!isEditMode}
                                                   />
                                                 )}
                                               />
+                                              )}
                                             </td>
                                             <td>
                                               <Controller
@@ -455,21 +481,28 @@ const AccordionTable = ({
                                             {/* Consumption, straight from the
                                                 authorization. Read-only —
                                                 the backend owns these. */}
+                                            {/* Backend-owned, so these are
+                                                always disabled — but styled as
+                                                fields so the row lines up. */}
                                             <td>
-                                              <label className="input-group-label">
-                                                Units used
-                                              </label>
-                                              <div className="unit-readout">
-                                                {service.usedUnit ?? 0}
-                                              </div>
+                                              <TextInput
+                                                label="Units used"
+                                                value={String(
+                                                  service.usedUnit ?? 0
+                                                )}
+                                                readOnly
+                                                disabled
+                                              />
                                             </td>
                                             <td>
-                                              <label className="input-group-label">
-                                                Units left
-                                              </label>
-                                              <div className="unit-readout">
-                                                {service.remainingUnits ?? 0}
-                                              </div>
+                                              <TextInput
+                                                label="Units left"
+                                                value={String(
+                                                  service.remainingUnits ?? 0
+                                                )}
+                                                readOnly
+                                                disabled
+                                              />
                                             </td>
                                             <td>
                                               <Controller

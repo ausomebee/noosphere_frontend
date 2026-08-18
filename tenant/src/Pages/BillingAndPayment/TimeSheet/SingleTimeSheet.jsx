@@ -1665,6 +1665,10 @@ const SingleTimeSheet = () => {
   // Prepare billing data with fallbacks
   const billingColumns = [
     { key: "authorization", header: "Authorization" },
+    { key: "authorizationNumber", header: "Authorization #" },
+    // Utilization rounds to whole percent, so 2 of 1000 reads as "0%". The
+    // raw counts sit beside it so low usage isn't mistaken for none.
+    { key: "unitsSummary", header: "Units used / authorized" },
     { key: "utilization", header: "Utilization", type: "stage_completion" },
     { key: "dateCreated", header: "Date Created" },
   ];
@@ -1677,6 +1681,8 @@ const SingleTimeSheet = () => {
       return {
         id: auth.id || index,
         authorization: auth.title || auth.authorizationNumber || "N/A",
+        authorizationNumber: auth.authorizationNumber || "N/A",
+        unitsSummary: `${usedUnits} / ${totalUnits}`,
         utilization: utilPct,
         dateCreated: formatDate(auth.startDate, dateFormat),
       };

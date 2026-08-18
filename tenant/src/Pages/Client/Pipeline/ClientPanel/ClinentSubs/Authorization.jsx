@@ -125,6 +125,9 @@ const AuthorizationTab = () => {
             serviceCodeDisplay: `${codeInfo.code || "—"} - ${
               codeInfo.description || "No description"
             }`,
+            // Just the code — the full label with its description overflows a
+            // field-width input in the read-only view.
+            serviceCodeShort: codeInfo.code || "",
             modifier: svc.modifiers || "",
             units: (svc.units || 0).toString(),
             usedUnits: svc.usedUnit || 0,

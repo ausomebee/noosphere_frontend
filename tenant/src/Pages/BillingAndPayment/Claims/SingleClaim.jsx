@@ -249,11 +249,30 @@ const SingleClaim = () => {
 
   // Prepare table data (authorization name and date)
   const tableData =
-    claimData.authorizationsUsed?.map((auth, index) => ({
-      id: auth.id || index,
-      authorization: auth.title || "N/A",
-      date: formatDate(auth.startDate, dateFormat),
-    })) || [];
+    claimData.authorizationsUsed?.map((auth, index) => {
+      // Same summary the timesheet shows — units live per service, so the
+      // authorization's totals have to be derived.
+      const authServices = auth.clientAuthorizationServices || [];
+      const authorizedUnits = authServices.reduce(
+        (sum, s) => sum + (Number(s.units) || 0),
+        0,
+      );
+      const consumedUnits = authServices.reduce(
+        (sum, s) => sum + (Number(s.usedUnit) || 0),
+        0,
+      );
+      return {
+        id: auth.id || index,
+        authorization: auth.title || "N/A",
+        authorizationNumber: auth.authorizationNumber || "N/A",
+        utilization:
+          authorizedUnits > 0
+            ? Math.round((consumedUnits / authorizedUnits) * 100)
+            : 0,
+        unitsSummary: `${consumedUnits} / ${authorizedUnits}`,
+        date: formatDate(auth.startDate, dateFormat),
+      };
+    }) || [];
 
   // Prepare service data for accordion
   const initialServiceData = {};
@@ -274,7 +293,10 @@ const SingleClaim = () => {
 
   const columns = [
     { key: "authorization", header: "Authorization" },
-    { key: "date", header: "Date" },
+    { key: "authorizationNumber", header: "Authorization #" },
+    { key: "unitsSummary", header: "Units used / authorized" },
+    { key: "utilization", header: "Utilization", type: "stage_completion" },
+    { key: "date", header: "Start Date" },
   ];
 
   const displayData = {
@@ -437,8 +459,8 @@ const SingleClaim = () => {
       </div>
 
       <div className="mt-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-6 text-gray-400 text-center">
+        <div className="billing-info-card">
+          <h3 className="text-lg font-semibold mb-6 text-gray-400">
             Service Information
           </h3>
           <div>

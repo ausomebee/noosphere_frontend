@@ -341,35 +341,58 @@ const AccordionTableRobust = ({
                                     key={sIdx}
                                     className="robust-service-row"
                                   >
-                                    <Controller
-                                      name={`services.${authId}.${sIdx}.serviceCode`}
-                                      control={control}
-                                      render={({ field }) => (
-                                        <SelectInput
-                                          label="Service code"
-                                          {...field}
-                                          options={serviceCodes}
-                                          emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
-                                          placeholder="Select service code"
-                                          isDisabled={!isEditMode}
-                                          isLoading={loadingServiceCodes}
-                                        />
-                                      )}
-                                    />
-                                    <Controller
-                                      name={`services.${authId}.${sIdx}.modifier`}
-                                      control={control}
-                                      render={({ field }) => (
-                                        <SelectInput
-                                          label="Modifiers"
-                                          {...field}
-                                          options={modifierOptions}
-                                          placeholder="Select modifier"
-                                          isClearable
-                                          isDisabled={!isEditMode}
-                                        />
-                                      )}
-                                    />
+                                    {/* Read-only shows the stored code as text.
+                                        The dropdown only carries active codes,
+                                        so a deactivated one rendered blank. */}
+                                    {!isEditMode ? (
+                                      <TextInput
+                                        label="Service code"
+                                        value={
+                                          service?.serviceCodeShort ||
+                                          service?.serviceCodeDisplay ||
+                                          "—"
+                                        }
+                                        readOnly
+                                        disabled
+                                      />
+                                    ) : (
+                                      <Controller
+                                        name={`services.${authId}.${sIdx}.serviceCode`}
+                                        control={control}
+                                        render={({ field }) => (
+                                          <SelectInput
+                                            label="Service code"
+                                            {...field}
+                                            options={serviceCodes}
+                                            emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
+                                            placeholder="Select service code"
+                                            isLoading={loadingServiceCodes}
+                                          />
+                                        )}
+                                      />
+                                    )}
+                                    {!isEditMode ? (
+                                      <TextInput
+                                        label="Modifiers"
+                                        value={service?.modifier || "—"}
+                                        readOnly
+                                        disabled
+                                      />
+                                    ) : (
+                                      <Controller
+                                        name={`services.${authId}.${sIdx}.modifier`}
+                                        control={control}
+                                        render={({ field }) => (
+                                          <SelectInput
+                                            label="Modifiers"
+                                            {...field}
+                                            options={modifierOptions}
+                                            placeholder="Select modifier"
+                                            isClearable
+                                          />
+                                        )}
+                                      />
+                                    )}
                                     <Controller
                                       name={`services.${authId}.${sIdx}.units`}
                                       control={control}
@@ -387,26 +410,24 @@ const AccordionTableRobust = ({
                                         these are read-outs, not fields — the
                                         percentage bar alone never told you how
                                         many units were actually left. */}
-                                    <div className="unit-readout-group">
-                                      <label className="input-group-label">
-                                        Units used
-                                      </label>
-                                      <div className="unit-readout">
-                                        {service?.usedUnits ?? 0}
-                                      </div>
-                                    </div>
-                                    <div className="unit-readout-group">
-                                      <label className="input-group-label">
-                                        Units left
-                                      </label>
-                                      <div className="unit-readout">
-                                        {Math.max(
+                                    <TextInput
+                                      label="Units used"
+                                      value={String(service?.usedUnits ?? 0)}
+                                      readOnly
+                                      disabled
+                                    />
+                                    <TextInput
+                                      label="Units left"
+                                      value={String(
+                                        Math.max(
                                           (Number(service?.units) || 0) -
                                             (Number(service?.usedUnits) || 0),
                                           0
-                                        )}
-                                      </div>
-                                    </div>
+                                        )
+                                      )}
+                                      readOnly
+                                      disabled
+                                    />
                                     <Controller
                                       name={`services.${authId}.${sIdx}.per`}
                                       control={control}
