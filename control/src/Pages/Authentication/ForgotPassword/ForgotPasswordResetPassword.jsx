@@ -9,6 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./../SuperAdmin.css";
 import api from "../../../api/authApis";
 import { showToast } from "../../../Helper/ShowToast";
+import { showValidationErrors } from "../../../Helper/formErrors";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -97,7 +98,7 @@ const ForgotPasswordResetPassword = () => {
       <div className="auth-form-container">
         <h2>Set a new Password</h2>
         <p className="subtitle">Please create a new password</p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-group">
             <PasswordInput
               required

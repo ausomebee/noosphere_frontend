@@ -10,6 +10,7 @@ import "./SuperAdmin.css";
 import api from "../../api/authApis";
 import { showToast } from "../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   enable2FA: yup.boolean().required(),
@@ -84,7 +85,7 @@ const SuperAdmin2FASettings = () => {
           recommended. Please set the 2FA preferences for your organization
           below.
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-group settings-group">
             <div className="settings-item">
               <label className="settings-label">

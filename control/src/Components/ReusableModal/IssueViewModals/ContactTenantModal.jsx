@@ -8,6 +8,7 @@ import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
 import { showApiError } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     header: yup.string().trim().required("Header is required").max(100, "Header must not exceed 100 characters"),
@@ -125,7 +126,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isSaving || (uploading && !files.some((f) => !f.error && f.progress === 100))}
       primaryButtonLoading={isSaving}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         setFiles([]);
@@ -133,7 +134,7 @@ const ContactTenantModal = ({ isOpen, onClose, onSave }) => {
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <label>Header</label>
         <TextInput
           required

@@ -22,6 +22,7 @@ import {
 } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Updated validation schema
 const sessionTypeSchema = yup.object().shape({
   name: yup.string().required("Session name is required"),
@@ -296,7 +297,7 @@ const AddSessionTypeModal = ({
       primaryButtonText="Save Session Type"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
         onClose();

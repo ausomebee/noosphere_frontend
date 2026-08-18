@@ -15,6 +15,7 @@ import TenantLogo from "../../../../assets/Logo.svg";
 import { PasswordInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 
+import { showValidationErrors } from "../../../../Helper/formErrors";
 // Validation schema. Confirm is held to the same strength rules as the new password.
 const schema = yup.object().shape({
   newPassword: passwordSchema("New password"),
@@ -71,7 +72,7 @@ const SuperChangePassword = () => {
             <div className="login-section">
               <h2>Change your password</h2>
               <p>Before proceeding, you need to set a new password</p>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                 <PasswordInput
                   required
                   label="Password"

@@ -12,6 +12,7 @@ import { showToast, showApiError } from "../../../Helper/ShowToast";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 import SectionLoader from "../../../Components/SectionLoader";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const otpSchema = yup.object().shape({
   code: yup
     .string()
@@ -131,7 +132,7 @@ const ForgotPasswordAuthenticatorVerifier = () => {
                   <p className="subtitle">
                     Please generate a 6-digit code from your authenticator app and input it below
                   </p>
-                  <form onSubmit={handleSubmit(onSubmit)}>
+                  <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                     <div className="code-input-container">
                       {code.map((digit, index) => (
                         <React.Fragment key={index}>

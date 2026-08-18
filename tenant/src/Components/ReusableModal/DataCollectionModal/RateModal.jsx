@@ -9,6 +9,7 @@ import Button from "../../Button/Button";
 import { formatTimerDisplay } from "../../../Helper/Formatters";
 import SectionLoader from "../../SectionLoader";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 /* ----------  validation  ---------- */
 const frequencySchema = yup.object({
   numberOfOccurrence: yup
@@ -152,7 +153,7 @@ const RateModal = ({
       title="Rate"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       size="lg"
       primaryButtonLoading={submitting}

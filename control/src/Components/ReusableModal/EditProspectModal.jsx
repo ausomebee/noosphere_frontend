@@ -20,6 +20,7 @@ import {
 import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import "./ReusableModal.css";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 const validationSchema = yup.object().shape({
   company: yup.string().required("Company name is required"),
   contactPerson: yup.string().required("Contact person is required"),
@@ -201,7 +202,7 @@ const EditProspectModal = ({
       secondaryButtonText="Cancel"
       primaryButtonColor="#000000"
       secondaryButtonColor="#ffffff"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       primaryButtonLoading={isSubmitting}
     >

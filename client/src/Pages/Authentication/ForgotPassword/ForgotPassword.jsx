@@ -9,6 +9,7 @@ import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const forgotPasswordSchema = yup.object().shape({
   email: yup
@@ -63,7 +64,7 @@ const ForgotPassword = () => {
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <h1 className="text-center">Forgot Password?</h1>
         <p className="text-center mt-4">
           No worries. Enter your email and we'll send you reset instructions

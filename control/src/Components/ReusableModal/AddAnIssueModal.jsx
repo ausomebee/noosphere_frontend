@@ -16,6 +16,7 @@ import {
 import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 
 
+import { showValidationErrors } from "../../Helper/formErrors";
 // Yup schema for AddIssueModal
 const schema = yup.object().shape({
   tenant: yup.string().required("Company Name is required").trim(),
@@ -351,7 +352,7 @@ const AddIssueModal = ({
       primaryButtonText="Save Issue"
       secondaryButtonText="Cancel"
       primaryButtonLoading={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
         setFiles([]);

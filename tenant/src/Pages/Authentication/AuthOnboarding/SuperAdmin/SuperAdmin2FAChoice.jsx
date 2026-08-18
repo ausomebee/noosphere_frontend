@@ -10,6 +10,7 @@ import "../../Auth.css";
 import api from "../../../../api/authApis";
 import { showToast } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
+import { showValidationErrors } from "../../../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   enable2FA: yup.boolean().required(),
@@ -94,7 +95,7 @@ const SuperAdmin2FAChoice = () => {
                 authentication (2FA) is recommended. Please set the 2FA
                 preferences for your organization below.
               </p>
-              <form onSubmit={handleSubmit(onSubmit)} className="auth-form-container">
+              <form onSubmit={handleSubmit(onSubmit, showValidationErrors)} className="auth-form-container">
                 <div className="settings-group">
                   <div className="settings-item">
                     <label className="settings-label">

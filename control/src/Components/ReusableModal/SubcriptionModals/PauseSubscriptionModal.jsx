@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
   const [loading, setLoading] = useState(false);
 
@@ -82,13 +83,13 @@ const PauseSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
       primaryButtonText="Pause Subscription"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <label>
           Select Pause Type
           <RequiredMark required />

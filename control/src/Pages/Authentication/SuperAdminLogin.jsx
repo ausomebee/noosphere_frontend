@@ -13,6 +13,7 @@ import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 import api from "../../api/authApis";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -127,7 +128,7 @@ const AdminsLogin = () => {
         <p className="subtitle">
           Please enter the details sent to you via email
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-group">
             <TextInput
               required

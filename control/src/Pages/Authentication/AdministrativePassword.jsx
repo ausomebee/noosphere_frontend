@@ -13,6 +13,7 @@ import api from "../../api/authApis";
 import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 // Standalone onboarding step: set the administrator password. Kept separate
 // from the 2FA setup flow so changing the 2FA type never re-triggers it.
 // The administrative password deliberately keeps its own, stricter 12-character
@@ -78,7 +79,7 @@ const AdministrativePassword = () => {
         <p className="subtitle">
           Finish your sign-on process by setting your administrative password.
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-groups">
             <div className="password-info">
               <span className="shield-icon">

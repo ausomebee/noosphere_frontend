@@ -7,6 +7,7 @@ import * as yup from "yup";
 import { promptLevelOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const createValidationSchema = () => {
   return yup.object().shape({
@@ -102,7 +103,7 @@ const TrialsOpportunities = ({
       title="Trials/Opportunities"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       size="xl"
       primaryButtonLoading={submitting}

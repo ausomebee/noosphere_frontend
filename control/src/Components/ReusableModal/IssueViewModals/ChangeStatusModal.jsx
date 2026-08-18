@@ -7,6 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { issueStatusOptions as statusOptions } from "../../../Data/selectOptions";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
   const schema = yup.object().shape({
     statusFrom: yup.string().trim().required("Current status is required"),
@@ -65,13 +66,13 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
           required
           label="Change from"

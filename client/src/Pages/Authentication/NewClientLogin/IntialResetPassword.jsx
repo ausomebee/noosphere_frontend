@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import api from "../../../api/authApis";
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema. Both fields share the same rule set, so the confirm field
 // is held to the identical strength policy — not just "must match".
 const resetPasswordSchema = yup.object().shape({
@@ -61,7 +62,7 @@ const InitialResetPassword = () => {
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <h1 className="text-center">Please create a new and secure password</h1>
 
         <div className="py-24 space-y-5">

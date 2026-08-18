@@ -8,6 +8,7 @@ import { RadioInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 import "../../Auth.css";
 
+import { showValidationErrors } from "../../../../Helper/formErrors";
 // Admin self-choice 2FA screen. Shown when the organisation has NOT set 2FA
 // for all (setForAll = false), so each admin picks their own method. Unlike the
 // super-admin screen, there is no "enable for all" toggle. Completing the setup
@@ -67,7 +68,7 @@ const Admin2FAChoice = () => {
                 your sign-in.
               </p>
               <form
-                onSubmit={handleSubmit(onSubmit)}
+                onSubmit={handleSubmit(onSubmit, showValidationErrors)}
                 className="auth-form-container"
               >
                 <div className="settings-group">

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { ClientLogin } from "../../../ReduxStore/features/authentication";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema 
 const loginSchema = yup.object().shape({
   email: yup
@@ -63,7 +64,7 @@ const Login = () => {
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <h1 className="text-center">Welcome to your Client Portal!</h1>
         <p className="text-center mt-4">Please login to your account</p>
 

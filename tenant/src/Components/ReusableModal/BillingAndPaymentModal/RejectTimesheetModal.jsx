@@ -5,6 +5,7 @@ import { TextareaInput } from "../../Input/Inputs";
 import { useForm } from "react-hook-form";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const RejectTimeSheetModal = ({ isOpen, onClose, onSave }) => {
   const {
     register,
@@ -40,7 +41,7 @@ const RejectTimeSheetModal = ({ isOpen, onClose, onSave }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isSubmitting}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();

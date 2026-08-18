@@ -8,6 +8,7 @@ import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
+import { showValidationErrors } from "../../../Helper/formErrors";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -62,7 +63,7 @@ const ChangePassword = () => {
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <h1 className="text-center">Reset Password</h1>
         <p className="text-center mt-4">
           Please create a secure password for your account

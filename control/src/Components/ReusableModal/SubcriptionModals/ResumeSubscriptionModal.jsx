@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
   const [loading, setLoading] = useState(false);
 
@@ -75,13 +76,13 @@ const ResumeSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       primaryButtonText="Resume"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <label>
           Resumption Options
           <RequiredMark required />

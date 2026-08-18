@@ -10,6 +10,7 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Yup validation schema for OTP
 const otpSchema = yup.object().shape({
   code: yup
@@ -115,7 +116,7 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
         <p className="subtitle">
           Please generate a 6-digit code from your authenticator app and input it below
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="code-input-container">
             {code.map((digit, index) => (
               <React.Fragment key={index}>

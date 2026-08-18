@@ -6,6 +6,7 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput, TextInput } from "../../Input/Inputs";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const schema = yup.object().shape({
   programName: yup.string().required("Program Name is required"),
   programDescription: yup.string().optional(),
@@ -70,7 +71,7 @@ const AddProgramModal = ({ isOpen, onClose, onSubmit, mode, initialData }) => {
       title={mode === "edit" ? "Edit Program" : "Add a New Program"}
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, showValidationErrors)}
       onSecondaryButtonClick={handleClose}
       size="medium"
       primaryButtonLoading={submitting}

@@ -13,6 +13,7 @@ import {
 } from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const schema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -114,7 +115,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSave, initialValues }) => {
       title="Organisation Information"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(submit)}
+      onPrimaryButtonClick={handleSubmit(submit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       size="lg"
        primaryButtonLoading={isLoading}

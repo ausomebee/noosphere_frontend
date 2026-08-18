@@ -9,6 +9,7 @@ import { RadioInput } from "../../Components/Input/Inputs";
 import "./MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator.css";
 import "./SuperAdmin.css";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 // Admin self-choice 2FA screen — shown when the org has NOT set 2FA for all
 // (setForAll = false) and the admin has no method yet. No "set for all" option;
 // completing the setup page sets the admin's own authType + auth2FADone.
@@ -49,7 +50,7 @@ const Admin2FAChoice = () => {
           To protect your account, please choose how you'd like to secure your
           sign-in.
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="radio-group">
             <div className="radio-option">
               <RadioInput

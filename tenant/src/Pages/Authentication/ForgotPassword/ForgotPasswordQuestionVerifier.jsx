@@ -13,6 +13,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 import SectionLoader from "../../../Components/SectionLoader";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const answerSchema = yup.object().shape({
   answer: yup
     .string()
@@ -100,7 +101,7 @@ const ForgotPasswordQuestionVerifier = () => {
                   <p className="security-question">
                     {authQuestion || "No question available"}
                   </p>
-                  <form onSubmit={handleSubmit(onSubmit)}>
+                  <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                     <div className="auth-container">
                       <TextInput
                         required

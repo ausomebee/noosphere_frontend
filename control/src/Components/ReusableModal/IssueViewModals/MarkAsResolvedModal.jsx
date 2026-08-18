@@ -8,6 +8,7 @@ import * as yup from "yup";
 import { BsCloudUpload } from "react-icons/bs";
 import { showApiError } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     resolution: yup
@@ -134,7 +135,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isSaving || (uploading && !files.some((f) => !f.error && f.progress === 100))}
       primaryButtonLoading={isSaving}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         setFiles([]);
@@ -142,7 +143,7 @@ const MarkAsResolvedModal = ({ isOpen, onClose, onSave }) => {
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <TextareaInput
           required
           label="Resolution Description"

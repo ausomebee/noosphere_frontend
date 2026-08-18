@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => {
   const [loading, setLoading] = useState(false);
 
@@ -62,14 +63,14 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onSave, selectedItems }) => 
       primaryButtonText="Cancel"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       primaryButtonColor="#D92D20"
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <label>
           Cancellation Options
           <RequiredMark required />

@@ -12,6 +12,7 @@ import TenantLogo from "../../../../assets/Logo.svg";
 import { PasswordInput, TextInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 
+import { showValidationErrors } from "../../../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -86,7 +87,7 @@ const InitialSuperLogin = () => {
               <div className="login-section">
                 <h2>Welcome to NooSphere</h2>
                 <p>Please enter the details sent to you via email.</p>
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                   <TextInput
                     required
                     label="Email"

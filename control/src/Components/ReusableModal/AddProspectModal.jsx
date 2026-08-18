@@ -12,6 +12,7 @@ import { countryOptions, getStateOptions } from "../../Helper/geoOptions";
 import useReduxFormDraft from "../../hooks/useReduxFormDraft";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
 
+import { showValidationErrors } from "../../Helper/formErrors";
 const schema = yup.object().shape({
   companyName: yup.string().required("Company Name is required").trim(),
   contactPerson: yup.string().optional(),
@@ -206,7 +207,7 @@ const AddProspectModal = ({
       primaryButtonText="Save candidate"
       secondaryButtonText="Cancel"
       primaryButtonLoading={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={onClose}
     >
       <form className="">

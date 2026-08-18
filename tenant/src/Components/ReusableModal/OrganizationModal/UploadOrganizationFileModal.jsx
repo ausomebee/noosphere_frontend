@@ -15,6 +15,7 @@ import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { formatFileSize } from "../../../Helper/Formatters";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const documentSchema = yup.object({
   documentName: yup.string().required("Document name is required"),
@@ -194,7 +195,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset({ documentName: "", document: null });
         onClose();

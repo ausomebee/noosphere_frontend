@@ -15,6 +15,7 @@ import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema for single service code
 const serviceCodeSchema = yup.object().shape({
   mode: yup.string(),
@@ -370,7 +371,7 @@ const AddSingleServiceCodeModal = ({
       primaryButtonText={getPrimaryButtonText()}
       secondaryButtonText={getSecondaryButtonText()}
       onPrimaryButtonClick={
-        mode === "view" ? handleClose : handleSubmit(handleFormSubmit)
+        mode === "view" ? handleClose : handleSubmit(handleFormSubmit, showValidationErrors)
       }
       onSecondaryButtonClick={handleClose}
       size="md"

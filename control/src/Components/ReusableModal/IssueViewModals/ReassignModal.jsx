@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [] }) => {
   const schema = yup.object().shape({
     currentAssignee: yup.string().trim().required("Current assignee is required"),
@@ -75,13 +76,13 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
           required
           label="Current Assignee"

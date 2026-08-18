@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const AddCommentModal = ({ isOpen, onClose, onSave }) => {
   const schema = yup.object().shape({
     comment: yup.string().trim().required("Comment is required").max(500, "Comment must not exceed 500 characters"),
@@ -51,13 +52,13 @@ const AddCommentModal = ({ isOpen, onClose, onSave }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <TextareaInput
           required
           label="Comment"

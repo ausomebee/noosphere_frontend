@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
   const schema = yup.object().shape({
     categoryFrom: yup.string().trim().required("Current category is required"),
@@ -87,13 +88,13 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
           required
           label="Change from"

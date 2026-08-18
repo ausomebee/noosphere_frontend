@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { performanceOptions, promptLevelOptions } from "../../../Data/selectOptions";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const createValidationSchema = () => {
   return yup.object().shape({
@@ -97,7 +98,7 @@ const TaskAnalysisModal = ({
       title="Task Analysis"
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       size="2xl"
       primaryButtonLoading={submitting}

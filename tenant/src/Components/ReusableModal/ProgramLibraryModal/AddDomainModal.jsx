@@ -5,6 +5,7 @@ import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextareaInput, TextInput } from "../../Input/Inputs";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const schema = yup.object().shape({
   domainName: yup.string().required("Domain Name is required"),
   domainDescription: yup.string().optional(),
@@ -63,7 +64,7 @@ const AddDomainModal = ({
       title={mode === "edit" ? `Edit Domain (${type})` : `Add a new Domain (${type})`}
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, showValidationErrors)}
       onSecondaryButtonClick={onClose}
       size="medium"
       primaryButtonLoading={submitting}      // 👈 pass loading prop

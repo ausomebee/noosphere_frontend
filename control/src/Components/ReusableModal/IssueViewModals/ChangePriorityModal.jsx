@@ -7,6 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { basePriorityOptions, enterprisePriorityOptions } from "../../../Data/selectOptions";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selectedTenant }) => {
   const schema = yup.object().shape({
     priorityFrom: yup.string().trim().required("Current priority is required"),
@@ -92,13 +93,13 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset({ priorityFrom: initialPriority || "", priorityTo: "" });
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
           required
           label="Current Priority"

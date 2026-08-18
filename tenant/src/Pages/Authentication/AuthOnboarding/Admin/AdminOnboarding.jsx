@@ -17,6 +17,7 @@ import {
 import api from "../../../../api/authApis";
 import "../../../Authentication/Auth.css";
 
+import { showValidationErrors } from "../../../../Helper/formErrors";
 // Yup validation schema
 // Both password fields share one rule set, so the confirm field is held to the
 // identical strength policy — not just "must match".
@@ -125,7 +126,7 @@ const AdminOnboarding = () => {
               <p className="subtitle">
                 Please create your NooSphere password to continue
               </p>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                 <div className="form-group">
                   <TextInput
                     required

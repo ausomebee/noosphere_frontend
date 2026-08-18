@@ -7,6 +7,7 @@ import Button from "../../../Components/Button/Button";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
+import { showValidationErrors } from "../../../Helper/formErrors";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -55,7 +56,7 @@ const SetNewPassword = () => {
       <img src={Logo} alt="Noosphere Logo" className="Auth-logo" />
       <div className="auth-form-container">
         <h2>Set a new password</h2>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="input-group">
             <PasswordInput
               required

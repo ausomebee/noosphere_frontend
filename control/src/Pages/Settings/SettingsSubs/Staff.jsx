@@ -16,6 +16,7 @@ import roleApi from "../../../api/roleApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
 import { formatDate } from "../../../Helper/Formatters";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -357,7 +358,7 @@ const Staff = () => {
         title={editingStaff ? "Edit staff" : "Add a new staff"}
         primaryButtonText="Save"
         secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleSubmit(handleSave)}
+        onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
         onSecondaryButtonClick={handleCloseModal}
         primaryButtonLoading={isSubmitting}
       >

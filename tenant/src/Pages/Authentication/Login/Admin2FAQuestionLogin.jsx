@@ -13,6 +13,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Yup validation schema for security answer
 const answerSchema = yup.object().shape({
   answer: yup
@@ -92,7 +93,7 @@ const Admin2FAQuestionLogin = () => {
               <h2>Two-Factor Authentication</h2>
               <p className="subtitle">Please answer your security question</p>
               <p className="security-question">{authQuestion || "No question available"}</p>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                 <div className="auth-container">
                   <TextInput
                     required

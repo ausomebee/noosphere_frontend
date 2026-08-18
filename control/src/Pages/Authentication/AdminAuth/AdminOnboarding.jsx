@@ -12,6 +12,7 @@ import useAuth from "../../../hooks/useAuth";
 import { OnboardAdmin } from "../../../ReduxStore/features/authentication";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
+import { showValidationErrors } from "../../../Helper/formErrors";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -115,7 +116,7 @@ const AdminOnboarding = () => {
         <p className="subtitle">
           Please create your NooSphere password to continue
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-group">
             <TextInput
               required

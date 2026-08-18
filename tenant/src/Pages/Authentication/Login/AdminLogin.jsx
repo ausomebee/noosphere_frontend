@@ -14,6 +14,7 @@ import TenantLogo from "../../../assets/Logo.svg";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -151,7 +152,7 @@ const AdminCLogin = () => {
               <div className="login-section">
                 <h2>Welcome Back</h2>
                 <p>Please login to your account</p>
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                   <div className="mb-24">
                   <TextInput
                     required

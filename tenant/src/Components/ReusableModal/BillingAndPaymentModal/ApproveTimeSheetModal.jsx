@@ -4,6 +4,7 @@ import ReusableModal from "../ReusableModal";
 import { useForm } from "react-hook-form";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const ApproveTimeSheetModal = ({ isOpen, onClose, onSave }) => {
   const {
     handleSubmit,
@@ -32,7 +33,7 @@ const ApproveTimeSheetModal = ({ isOpen, onClose, onSave }) => {
       primaryButtonText="Approve"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isSubmitting}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();

@@ -12,6 +12,7 @@ import useAuth from "../../../hooks/useAuth";
 import departmentApi from "../../../api/departmentApis";
 import { SkeletonTable } from "../../../Components/LoadingSpinner";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const schema = yup.object().shape({
   name: yup.string().required("Department name is required").trim(),
   teamLeadId: yup.string().required("Department lead is required"),
@@ -271,7 +272,7 @@ const Departments = () => {
         title={editingDepartment ? "Edit department" : "Add a new department"}
         primaryButtonText="Save"
         secondaryButtonText="Cancel"
-        onPrimaryButtonClick={handleSubmit(handleSave)}
+        onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
         onSecondaryButtonClick={handleCloseModal}
         primaryButtonLoading={isSubmitting}
       >

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescription }) => {
   const schema = yup.object().shape({
     issueTitle: yup.string().trim().required("Issue title is required").max(100, "Title must not exceed 100 characters"),
@@ -55,13 +56,13 @@ const EditIssueModal = ({ isOpen, onClose, onSave, initialTitle, initialDescript
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
       primaryButtonLoading={loading}
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();
       }}
     >
-      <form className="modal-form" onSubmit={handleSubmit(onSubmit)}>
+      <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <TextInput
           required
           label="Issue Title"

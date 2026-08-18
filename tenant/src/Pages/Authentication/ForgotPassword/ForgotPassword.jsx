@@ -10,6 +10,7 @@ import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Yup validation schema for forgot password
 const forgotPasswordSchema = yup.object().shape({
   email: yup
@@ -82,7 +83,7 @@ const ForgetPassword = () => {
               <p className="subtitle">
                 Please enter your email to reset your password
               </p>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
                 <div className="auth-container">
                   <TextInput
                     required

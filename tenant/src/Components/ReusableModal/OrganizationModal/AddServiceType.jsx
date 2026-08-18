@@ -21,6 +21,7 @@ import {
 } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const serviceTypeSchema = yup.object({
   code: yup.string().required("Code is required"),
@@ -134,7 +135,7 @@ const AddServiceType = ({
       title={mode === "edit" ? "Edit Service Type" : "Add a Service Type"}
       primaryButtonText="Save"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(handleFormSubmit)}
+      onPrimaryButtonClick={handleSubmit(handleFormSubmit, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset();
         onClose();

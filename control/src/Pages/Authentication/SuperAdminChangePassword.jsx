@@ -10,6 +10,7 @@ import "./SuperAdmin.css";
 import api from "../../api/authApis";
 import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
+import { showValidationErrors } from "../../Helper/formErrors";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -68,7 +69,7 @@ const SuperAdminChangePassword = () => {
         <p className="subtitle">
           Before proceeding you need to set a new password
         </p>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
           <div className="form-group">
             <PasswordInput
               required

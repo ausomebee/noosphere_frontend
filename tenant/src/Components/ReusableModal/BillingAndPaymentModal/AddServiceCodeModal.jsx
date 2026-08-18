@@ -15,6 +15,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import { modifierOptions } from "../../../Data/selectOptions";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
 const serviceCodeSchema = yup.object().shape({
   code: yup.string().required("Service code is required"),
@@ -108,7 +109,7 @@ const AddServiceCodeModal = ({
       primaryButtonText="Save Service Code"
       secondaryButtonText="Cancel"
       primaryButtonDisabled={isLoading}
-      onPrimaryButtonClick={handleSubmit(handleSave)}
+      onPrimaryButtonClick={handleSubmit(handleSave, showValidationErrors)}
       onSecondaryButtonClick={() => {
         reset(defaultFormValues);
         onClose();

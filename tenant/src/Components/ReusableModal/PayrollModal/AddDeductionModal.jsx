@@ -8,6 +8,7 @@ import payrollApi from "../../../api/payrollApi";
 import { showApiError } from "../../../Helper/ShowToast";
 import SectionLoader from "../../SectionLoader";
 
+import { showValidationErrors } from "../../../Helper/formErrors";
 const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, refreshToken, prefetchedItems, loading = false }) => {
   const [fetchedItems, setFetchedItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(false);
@@ -94,7 +95,7 @@ const AddDeductionModal = ({ isOpen, onClose, onSave, tenantId, accessToken, ref
       title="Add Deduction"
       primaryButtonText="Continue"
       secondaryButtonText="Cancel"
-      onPrimaryButtonClick={handleSubmit(onSubmit)}
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
       onSecondaryButtonClick={handleClose}
       primaryButtonLoading={loading}
       size="medium"
