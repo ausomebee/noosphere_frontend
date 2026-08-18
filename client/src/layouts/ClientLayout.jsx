@@ -20,6 +20,7 @@ import "./DashboardLayout.css";
 import Logo from "../assets/Logo.svg";
 import { navConfig } from "../Data/selectOptions";
 
+import ConnectionStatus from "../Components/ConnectionStatus/ConnectionStatus";
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -52,7 +53,7 @@ const DashboardLayout = ({ children }) => {
   const dispatch = useDispatch();
 
   const { firstName, lastName, avatarUrl, userId, accessToken, refreshToken } = useAuth();
-  useSocket({
+  const { isConnected } = useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
     // Live-count incoming notifications even while the user is elsewhere in the
     // app, so the sidebar badge tells them something is waiting.
@@ -158,7 +159,7 @@ const DashboardLayout = ({ children }) => {
       <div className="dashboard-container">
         <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-profile">
-            <div className="profile-avatar">
+            <div className="profile-avatar conn-status-anchor">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} />
               ) : (
@@ -180,6 +181,7 @@ const DashboardLayout = ({ children }) => {
                   {lastName?.charAt(0)?.toUpperCase() || ""}
                 </div>
               )}
+              <ConnectionStatus isConnected={isConnected} />
             </div>
             <div className="profile-info">
               <h3>Welcome</h3>

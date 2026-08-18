@@ -146,6 +146,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Rounded here so the wrapper no longer needs overflow:hidden to make the
+     photo circular — that clip was also cutting off the presence badge. */
+  border-radius: 50%;
+}
+
+/* Two classes, so this beats `.profile-avatar { overflow: hidden }` above
+   regardless of stylesheet order. */
+.profile-avatar.conn-status-anchor {
+  overflow: visible;
 }
 
 .profile-info h3 {

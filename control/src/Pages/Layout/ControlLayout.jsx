@@ -24,6 +24,7 @@ import "./ControlLayout.css";
 import NoosphereLogo from "../../assets/NoosphereLogo.png";
 import useIdleTimeout from "../../hooks/useIdleTimeout";
 
+import ConnectionStatus from "../../Components/ConnectionStatus/ConnectionStatus";
 const Layout = ({ children }) => {
   useIdleTimeout();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -64,7 +65,7 @@ const Layout = ({ children }) => {
 
   // Live-count incoming notifications even while the admin is elsewhere in the
   // app, so the header bell badge tells them something is waiting.
-  useSocket({
+  const { isConnected } = useSocket({
     onNotification: () => setUnreadNotifications((c) => c + 1),
   });
 
@@ -480,8 +481,9 @@ const Layout = ({ children }) => {
               onClick={() => setIsProfileDropdownOpen((prev) => !prev)}
               style={{ position: "relative" }}
             >
-              <div className="user-avatar">
+              <div className="user-avatar conn-status-anchor">
                 {((user?.firstName?.[0] || "") + (user?.lastName?.[0] || "")).toUpperCase() || "?"}
+                <ConnectionStatus isConnected={isConnected} />
               </div>
               <div className="user-info">
                 <span className="user-name">

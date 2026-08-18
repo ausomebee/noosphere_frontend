@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import useAuth from "./useAuth";
-import { showToast } from "../Helper/ShowToast";
 import {
   connectSocket,
   disconnectSocket,
@@ -9,6 +8,7 @@ import {
   onChatMessage,
   onNotification,
   onTyping,
+  ensureConnected,
 } from "../api/socketService";
 
 /**
@@ -37,19 +37,23 @@ const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
       setIsConnected(true);
       registerUser({ userId, userType: "TENANT_STAFF" });
     };
-    const handleDisconnect = (reason) => {
+    // No toast on either edge. Backgrounding a tab throttles the heartbeat and
+    // drops the socket routinely, so toasting made normal behaviour look like a
+    // fault — and "connection restored" means nothing to a clinician. The
+    // status indicator carries this instead.
+    const handleDisconnect = () => {
       setIsConnected(false);
-      if (reason !== "io client disconnect") {
-        showToast("Connection lost. Reconnecting...", "error");
-      }
-    };
-    const handleReconnect = () => {
-      showToast("Connection restored", "success");
     };
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
-    socket.io.on("reconnect", handleReconnect);
+
+    // Coming back to a throttled tab, socket.io may still be waiting out its
+    // backoff — nudge it so the app isn't silently stale for a few seconds.
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") ensureConnected();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
 
     // Already connected (e.g. hot-reload)
     if (socket.connected) {
@@ -64,7 +68,7 @@ const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
     return () => {
       socket?.off("connect", handleConnect);
       socket?.off("disconnect", handleDisconnect);
-      socket?.io?.off("reconnect", handleReconnect);
+      document.removeEventListener("visibilitychange", handleVisibility);
       unsubMsg?.();
       unsubNotif?.();
     };

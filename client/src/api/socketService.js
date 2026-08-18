@@ -32,10 +32,30 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     query: { userId, tenantId },
     transports: ["websocket"],
     reconnection: true,
-    reconnectionAttempts: 10,
+    // Infinity, not 10: a backgrounded tab has its timers throttled, so the
+    // heartbeat misses and the server drops the socket. Capping attempts meant
+    // that after a long spell away the socket gave up for good and only a page
+    // reload brought notifications back.
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 2000,
+    reconnectionDelayMax: 10000,
+    randomizationFactor: 0.5,
   });
 
+  return socket;
+};
+
+/**
+ * Nudges a dropped socket to reconnect immediately.
+ *
+ * Returning to a backgrounded tab is the common case: the browser un-throttles
+ * timers, but socket.io may still be sitting on a backoff delay, so the app
+ * feels dead for a few seconds. Called on visibilitychange to close that gap.
+ */
+export const ensureConnected = () => {
+  if (socket && !socket.connected) {
+    socket.connect();
+  }
   return socket;
 };
 

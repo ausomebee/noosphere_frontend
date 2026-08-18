@@ -32,6 +32,7 @@ import MessageModal from "../Components/MessageModal/MessageModal";
 import useSocket from "../hooks/useSocket";
 import notificationApi from "../api/notificationApi";
 
+import ConnectionStatus from "../Components/ConnectionStatus/ConnectionStatus";
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   const location = useLocation();
   const { hasModule, hasPermission } = usePermissions();
@@ -269,7 +270,7 @@ const DashboardLayout = ({ children }) => {
   }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wire socket: register + listen for notifications and new messages
-  useSocket({
+  const { isConnected } = useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
     onNotification: () => setNotifCount((c) => c + 1),
   });
@@ -407,7 +408,10 @@ const DashboardLayout = ({ children }) => {
                   tabIndex={0}
                   aria-expanded={showProfileDropdown}
                 >
-                  <div className="user-avatar">{userInitials}</div>
+                  <div className="user-avatar conn-status-anchor">
+                    {userInitials}
+                    <ConnectionStatus isConnected={isConnected} />
+                  </div>
                   {!isMobile && (
                     <div className="user-info">
                       <span className="user-name">{displayName}</span>
