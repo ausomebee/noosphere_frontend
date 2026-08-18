@@ -8,6 +8,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { promptLevelOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Validation schema
 const createValidationSchema = () => {
   return yup.object().shape({
@@ -123,11 +124,6 @@ const PercentageCorrect = ({
     } catch {
       showToast("Failed to save data", "error");
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   return (

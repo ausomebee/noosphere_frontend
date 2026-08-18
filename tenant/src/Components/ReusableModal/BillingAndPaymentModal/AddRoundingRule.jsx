@@ -16,6 +16,7 @@ import { showToast } from "../../../Helper/ShowToast";
 import { standardRuleOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // ----------------- schema -----------------
 const roundingRuleSchema = yup.object().shape({
   ruleType: yup.string().required("Rule Type is required"),
@@ -144,11 +145,6 @@ const AddRoundingRule = ({
       setValue("ruleName", parentRole, { shouldValidate: true });
     }
   }, [ruleType, parentRole, setValue]);
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const handleFormSubmit = async (data) => {
     setSubmitting(true);

@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, CheckboxInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Yup validation schema
 const payrollCycleSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -100,11 +101,6 @@ const PayrollCycleModal = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   return (

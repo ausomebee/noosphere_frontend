@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextareaInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 const validationSchema = Yup.object({
   reason: Yup.string().required("Cancellation reason is required"),
 });
@@ -35,11 +36,6 @@ const CancelModal = ({ isOpen, onClose, onSave, appointments }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   return (

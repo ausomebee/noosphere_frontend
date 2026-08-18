@@ -19,10 +19,10 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoMdRefresh } from "react-icons/io";
 import { TextInput } from "../../Input/Inputs";
 import uploadApi from "../../../api/ImageUpload";
-import { showToast } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Yup validation schema
 const schema = yup.object().shape({
   documentName: yup.string().required("Document Name is required"),
@@ -269,11 +269,6 @@ const UploadTenantStaffDocumentModal = ({
       document: [],
     },
   });
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const handleFileUpload = useCallback(
     async (fileObj) => {

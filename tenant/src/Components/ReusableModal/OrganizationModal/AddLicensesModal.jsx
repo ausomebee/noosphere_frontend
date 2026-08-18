@@ -4,9 +4,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { TextInput, SelectInput } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
 import { getStateOptions } from "../../../Helper/geoOptions";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Professional licences are issued by US states.
 const stateOptions = getStateOptions("US");
 
@@ -58,11 +58,6 @@ const AddLicensesModal = ({ isOpen, onClose, onSave, initialValues }) => {
       });
     }
   }, [initialValues, reset]);
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const handleSave = async (data) => {
     setIsLoading(true);

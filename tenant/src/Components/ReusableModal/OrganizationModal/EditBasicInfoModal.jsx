@@ -7,7 +7,6 @@ import roleApi from "../../../api/roleApi";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput, SelectInput, SwitchInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
 import { genderOptions } from "../../../Data/selectOptions";
 import {
   countryOptions,
@@ -17,6 +16,7 @@ import {
 } from "../../../Helper/geoOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Validation schema for Basic Information fields
 const schema = yup.object().shape({
   fullName: yup.string().required("Full Name is required"),
@@ -166,11 +166,6 @@ const BasicInfoModal = ({
       });
     }
   }, [isOpen, initialData, reset]);
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const handleFormSubmit = async (data) => {
     setSubmitting(true);

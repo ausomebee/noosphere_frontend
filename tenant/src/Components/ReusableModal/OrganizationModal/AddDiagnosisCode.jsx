@@ -8,8 +8,8 @@ import {
   TextareaInput,
   SwitchInput,
 } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Validation schema
 const schema = yup.object().shape({
   diagnosisCode: yup.string().required("Diagnosis Code is required"),
@@ -57,11 +57,6 @@ const AddDiagnosisCode = ({
       status: initialData?.status ?? true,
     });
   }, [initialData, isOpen, reset]);
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const onSubmit = async (data) => {
     setSubmitting(true);

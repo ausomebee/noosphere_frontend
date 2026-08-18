@@ -31,6 +31,7 @@ import {
 import { formatDateForInput } from "../../../Helper/Formatters";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // ==================== SCHEMA ====================
 const schema = yup.object().shape({
   firstName: yup.string().required("First Name is required"),
@@ -622,11 +623,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   //     )
   //   );
   // };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
-  };
 
   const onFinalSubmit = async (data) => {
     setSubmitting(true);

@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextInput, TextareaInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Validation schema
 const insuranceTypeSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -38,11 +39,6 @@ const AddInsuranceTypeModal = ({ isOpen, onClose, onSave, mode = "add", initialD
     } catch {
       showToast("Failed to save insurance type", "error");
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handleClose = () => {

@@ -17,6 +17,7 @@ import {
 import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 const AddPayerModal = ({
   isOpen,
   onClose,
@@ -156,11 +157,6 @@ const AddPayerModal = ({
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   // ✅ Other handlers

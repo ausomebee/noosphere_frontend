@@ -8,6 +8,7 @@ import { showToast, showApiError } from "../../../Helper/ShowToast";
 import payrollApi from "../../../api/payrollApi";
 import SectionLoader from "../../SectionLoader";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 const AddStaffModal = ({
   isOpen,
   onClose,
@@ -78,11 +79,6 @@ const AddStaffModal = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const handleClose = () => {

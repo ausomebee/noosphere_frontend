@@ -6,6 +6,7 @@ import ReusableModal from "../ReusableModal";
 import { TextareaInput, TextInput } from "../../Input/Inputs";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Validation schema
 const frequencySchema = yup.object({
   numberOfOccurrence: yup
@@ -60,11 +61,6 @@ const FrequencyModal = ({
     } catch {
       showToast("Failed to save frequency data", "error");
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const incrementNumber = () => {

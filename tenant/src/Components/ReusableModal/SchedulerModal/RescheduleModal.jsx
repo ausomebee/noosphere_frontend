@@ -8,6 +8,7 @@ import { TextInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 
+import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
 // Utility function to convert 12-hour time (e.g., "1:30pm") to 24-hour format (e.g., "13:30")
 // Normalize any time representation to the "HH:MM" value an <input type="time">
 // needs. Handles 24h ("HH:MM" / "HH:MM:SS") and 12h ("10:00 AM", "10:00am")
@@ -159,11 +160,6 @@ const RescheduleModal = ({ isOpen, onClose, appointment, onSave }) => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const onValidationError = (errors) => {
-    const firstError = Object.values(errors)[0];
-    showToast(firstError?.message || "Please fill in all required fields", "error");
   };
 
   const renderMainForm = () => (
