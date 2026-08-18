@@ -336,8 +336,14 @@ export const utilizationDisplay = (value) => {
     percent,
     width: percent > 0 ? Math.max(percent, 1.5) : 0,
     label:
-      percent > 0 && percent < 1
-        ? `${percent.toFixed(1)}%`
-        : `${Math.round(percent)}%`,
+      percent === 0
+        ? "0%"
+        : // On a large authorization even one decimal rounds back to "0.0%"
+          // (2 units of 10,000), which reads as no usage at all.
+          percent < 0.1
+          ? "<0.1%"
+          : percent < 1
+            ? `${percent.toFixed(1)}%`
+            : `${Math.round(percent)}%`,
   };
 };
