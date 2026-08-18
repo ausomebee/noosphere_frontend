@@ -456,6 +456,10 @@ const handleSavePlan = async (planData) => {
     const errorMsg = err.message || "Failed to update plan";
     showToast(errorMsg, "error");
     if (import.meta.env.DEV) console.error("Update plan error:", err);
+    // Re-throw so the modal stays open on failure instead of closing, matching
+    // the create path above. Without it EditPricingModal saw a resolved promise
+    // and called handleClose(), discarding pricing edited across every tab.
+    throw err;
   } finally {
     setLoading(false);
   }

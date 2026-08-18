@@ -199,6 +199,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "ADD_COMMENT");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -217,6 +221,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "EDIT_ISSUE");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -237,6 +245,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "ADD_ATTACHMENT");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -254,6 +266,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "CHANGE_CATEGORY");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -271,6 +287,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "CHANGE_PRIORITY");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -288,6 +308,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "REASSIGN_ISSUE");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -305,6 +329,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "CHANGE_STATUS");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -327,6 +355,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "SEND_EMAIL");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
@@ -349,6 +381,10 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
       setModalOpen(null);
     } catch (err) {
       showApiError(err, "RESOLVE_ISSUE");
+      // Re-thrown so the modal keeps the user's input and stays open.
+      // Each IssueViewModal awaits this and its catch reads
+      // "Error handled by parent" — swallowing here broke that contract.
+      throw err;
     }
   };
 
