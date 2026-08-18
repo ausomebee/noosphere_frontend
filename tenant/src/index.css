@@ -2806,3 +2806,12 @@ input:checked + .slider:before {
   text-decoration: none;
   outline: 2px solid #fff;
 }
+
+/* `.input-select .rs__control` sets flex-wrap: wrap so multi-select chips can
+   flow onto new lines. At two classes it out-specifies anything react-select
+   generates (its emotion classes are single), so the styles prop could never
+   override it — which is why the clear "×" kept dropping below the value on a
+   single select. Three classes settles it. */
+.input-select.input-select-single .rs__control {
+  flex-wrap: nowrap;
+}

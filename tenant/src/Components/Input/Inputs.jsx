@@ -314,7 +314,7 @@ const SelectInput = ({
       {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <div className="select-input-wrapper">
         <Select
-          className={`input-select ${className}`}
+          className={`input-select ${isMulti ? "" : "input-select-single"} ${className}`}
           classNamePrefix="rs"
           options={cleanOptions}
           value={selected}
@@ -456,7 +456,7 @@ const SearchableSelectInput = ({
       {label && <label className="input-group-label">{label}<RequiredMark required={required} /></label>}
       <div className="select-input-wrapper">
         <Select
-          className={`input-select ${className}`}
+          className={`input-select input-select-single ${className}`}
           classNamePrefix="rs"
           options={cleanOptions}
           value={selected}
