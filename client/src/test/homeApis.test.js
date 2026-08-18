@@ -112,8 +112,35 @@ describe("homeApis", () => {
       });
       expect(mockPost).toHaveBeenCalledWith(
         expect.stringContaining("/sessions-approval/client"),
-        expect.objectContaining({ sessionId: "s1", confirmDelivery: true }),
+        expect.objectContaining({ sessionId: "s1", confirmDelivery: true, feedback: "Great" }),
       );
+    });
+
+    it("omits feedback entirely when it is empty", async () => {
+      mockPost.mockResolvedValue({ data: { success: true } });
+      await api.ApproveSession({
+        sessionId: "s1", confirmDelivery: true, rateService: 5,
+        rateTherapist: 4, feedback: "", signature: "sig", ...authParams,
+      });
+      expect(mockPost.mock.calls[0][1]).not.toHaveProperty("feedback");
+    });
+
+    it("omits feedback that is only whitespace", async () => {
+      mockPost.mockResolvedValue({ data: { success: true } });
+      await api.ApproveSession({
+        sessionId: "s1", confirmDelivery: true, rateService: 5,
+        rateTherapist: 4, feedback: "   ", signature: "sig", ...authParams,
+      });
+      expect(mockPost.mock.calls[0][1]).not.toHaveProperty("feedback");
+    });
+
+    it("trims feedback that has content", async () => {
+      mockPost.mockResolvedValue({ data: { success: true } });
+      await api.ApproveSession({
+        sessionId: "s1", confirmDelivery: true, rateService: 5,
+        rateTherapist: 4, feedback: "  Great  ", signature: "sig", ...authParams,
+      });
+      expect(mockPost.mock.calls[0][1].feedback).toBe("Great");
     });
 
     it("throws on failure", async () => {

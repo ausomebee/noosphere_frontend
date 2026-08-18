@@ -198,14 +198,24 @@ const ApproveSession = async ({
 }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
-    const res = await authFetch.post(`${PLAIN_API_URL}/sessions-approval/client`, {
+    const payload = {
       sessionId: sessionId,
       confirmDelivery: confirmDelivery,
       rateService: rateService,
       rateTherapist: rateTherapist,
-      feedback: feedback,
       signature: signature,
-    });
+    };
+
+    // Feedback is optional, so leave the key out entirely rather than posting
+    // an empty string — whitespace-only counts as nothing too.
+    const trimmedFeedback =
+      typeof feedback === "string" ? feedback.trim() : feedback;
+    if (trimmedFeedback) payload.feedback = trimmedFeedback;
+
+    const res = await authFetch.post(
+      `${PLAIN_API_URL}/sessions-approval/client`,
+      payload,
+    );
     return res;
   } catch (e) {
     throw new Error(e.response?.data?.message || "Session approval failed");

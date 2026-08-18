@@ -372,10 +372,14 @@ const SingleClaim = () => {
                 label="Client Name"
                 value={displayData.clientName || "--"}
               />
+              {/* Client Insurance ID hidden for now — `displayData.clientInsID`
+                  is still populated above, so restoring this is just a matter
+                  of uncommenting.
               <Field
                 label="Client Insurance ID"
                 value={displayData.clientInsID || "--"}
               />
+              */}
             </div>
             <div className="flex flex-col gap-2">
               <Field

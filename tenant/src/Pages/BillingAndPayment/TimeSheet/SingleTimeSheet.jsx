@@ -694,11 +694,11 @@ const SingleTimeSheet = () => {
   };
 
   // Document handlers
-  const handleViewSOAPNotes = () => {
+  const handleViewSessionNotes = () => {
     setSelectedDocument({
-      type: "SOAP Notes",
+      type: "Session Notes",
       content: timesheetData?.note || "No notes available",
-      title: "SOAP Notes - Session Documentation",
+      title: "Session Notes - Documentation",
     });
     setIsDocumentModalOpen(true);
   };
@@ -933,14 +933,14 @@ const SingleTimeSheet = () => {
       doc.setTextColor(0, 0, 0);
       yPos += 15;
 
-      // =========== SECTION 3: SOAP NOTES ===========
+      // =========== SECTION 3: SESSION NOTES ===========
       checkPageBreak(30);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("3. SOAP NOTES", margin, yPos);
+      doc.text("3. SESSION NOTES", margin, yPos);
       yPos += 10;
 
-      // SOAP Notes
+      // Session Notes
       checkPageBreak(15);
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
@@ -963,7 +963,7 @@ const SingleTimeSheet = () => {
         });
       } else {
         checkPageBreak(lineHeight);
-        doc.text("No SOAP notes available", margin + 5, yPos);
+        doc.text("No session notes available", margin + 5, yPos);
         yPos += lineHeight;
       }
       yPos += 15;
@@ -1889,6 +1889,9 @@ const SingleTimeSheet = () => {
                         Approve and Convert to Claim
                       </div>
                     )}
+                    {/* Reject action hidden for now. The modal, handler and
+                        API call below are all still wired up, so restoring
+                        this is just a matter of uncommenting.
                     {hasPermission("reject_timesheet") && (
                       <div
                         className="timesheet-dropdown-item timesheet-delete"
@@ -1900,6 +1903,7 @@ const SingleTimeSheet = () => {
                         Reject
                       </div>
                     )}
+                    */}
                     {hasPermission("nudge_client_for_approval") && (
                       <div
                         className="timesheet-dropdown-item"
@@ -2102,7 +2106,7 @@ const SingleTimeSheet = () => {
                   Documents & Data
                 </h3>
                 <div className="documents-list">
-                  {/* SOAP Notes */}
+                  {/* Session Notes */}
                   <div
                     className="document-item justify-between"
                     style={{ marginBottom: "16px" }}
@@ -2127,13 +2131,13 @@ const SingleTimeSheet = () => {
                         <line x1="16" y1="17" x2="8" y2="17"></line>
                         <polyline points="10 9 9 9 8 9"></polyline>
                       </svg>
-                      <span className="document-link">SOAP Notes</span>
+                      <span className="document-link">Session Notes</span>
                     </div>
                     <Button
                       label="View"
                       variant="secondary"
                       icon={<FaEye style={{ marginRight: "8px" }} />}
-                      onClick={handleViewSOAPNotes}
+                      onClick={handleViewSessionNotes}
                     />
                   </div>
 

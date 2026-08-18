@@ -42,8 +42,8 @@ const StarRating = ({ label, rating, onChange }) => {
   );
 };
 
-// SOAP Notes Modal
-const SOAPNotesModal = ({ isOpen, onClose, note }) => {
+// Session Notes Modal
+const SessionNotesModal = ({ isOpen, onClose, note }) => {
   if (!isOpen) return null;
 
   const modalContent = (
@@ -103,7 +103,7 @@ const SOAPNotesModal = ({ isOpen, onClose, note }) => {
               color: "#111827",
             }}
           >
-            SOAP Notes
+            Session Notes
           </h2>
           <button
             type="button"
@@ -661,7 +661,7 @@ const SessionFeedbackModal = ({
   const sigCanvas = useRef(null);
 
   // Modal states
-  const [showSOAPModal, setShowSOAPModal] = useState(false);
+  const [showSessionNotesModal, setShowSessionNotesModal] = useState(false);
   const [showSessionDataModal, setShowSessionDataModal] = useState(false);
 
   const { accessToken, refreshToken } = useAuth();
@@ -681,7 +681,7 @@ const SessionFeedbackModal = ({
 
         // The endpoint replies with { message, status, data }, so unwrap it —
         // reading `sessionDetails.note` / `.sessionDatas` off the envelope left
-        // the SOAP notes and session data blank.
+        // the session notes and session data blank.
         setSessionDetails(response?.data ?? response);
       } catch (error) {
         console.error("Failed to fetch session details:", error);
@@ -1015,7 +1015,7 @@ const SessionFeedbackModal = ({
                   <button
                     type="button"
                     onClick={(e) =>
-                      handleButtonClick(e, () => setShowSOAPModal(true))
+                      handleButtonClick(e, () => setShowSessionNotesModal(true))
                     }
                     style={{
                       display: "flex",
@@ -1031,7 +1031,7 @@ const SessionFeedbackModal = ({
                       fontWeight: "500",
                     }}
                   >
-                    SOAP Notes
+                    Session Notes
                   </button>
                   <button
                     type="button"
@@ -1382,10 +1382,10 @@ const SessionFeedbackModal = ({
         </div>
       </ReusableModal>
 
-      {/* SOAP Notes Modal */}
-      <SOAPNotesModal
-        isOpen={showSOAPModal}
-        onClose={() => setShowSOAPModal(false)}
+      {/* Session Notes Modal */}
+      <SessionNotesModal
+        isOpen={showSessionNotesModal}
+        onClose={() => setShowSessionNotesModal(false)}
         note={sessionDetails?.note}
       />
 
