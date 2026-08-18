@@ -714,12 +714,15 @@ const JiraBoard = () => {
 
         setIsDataLoaded(false); // Optional: trigger full reload if needed
       }
+
+      // Dismissed only on success — closing in `finally` discarded the typed
+      // column name when creation failed.
+      setShowAddColumnModal(false);
+      setAddColumnIndex(null);
     } catch (error) {
       console.error("Failed to create stage:", error);
       showApiError(error, "CREATE_STAGE");
     } finally {
-      setShowAddColumnModal(false);
-      setAddColumnIndex(null);
       stopLoading();
     }
   };

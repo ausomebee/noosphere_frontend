@@ -236,6 +236,12 @@ const ManageColumn = () => {
       } else {
         throw new Error("Failed to delete candidates.");
       }
+
+      // Dismissed only on success — closing in `finally` also fired on
+      // failure, hiding the error and discarding the selection.
+      setShowDeleteCandidateModal(false);
+      setSelectedCandidate(null);
+      setSelectedCandidates([]);
     } catch (err) {
       console.error("Candidate deletion failed:", err);
       showToast(
@@ -244,9 +250,6 @@ const ManageColumn = () => {
       );
     } finally {
       setIsSaving(false);
-      setShowDeleteCandidateModal(false);
-      setSelectedCandidate(null);
-      setSelectedCandidates([]);
     }
   };
 

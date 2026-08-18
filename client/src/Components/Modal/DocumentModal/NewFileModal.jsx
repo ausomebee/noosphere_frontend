@@ -50,9 +50,10 @@ const NewFileModal = ({ isOpen, onClose, onCreate, folders = [] }) => {
       folderId: locationType === "folder" ? selectedFolderId : null,
     }));
 
-    // Awaited so the buttons stay disabled for the whole request, and the
-    // modal only closes once it has actually finished.
-    return Promise.resolve(onCreate(payloads)).finally(() => onClose());
+    // Awaited so the buttons stay disabled for the whole request, and closed
+    // only once it succeeds — a `finally` here dismissed the modal on failure
+    // too, throwing away the uploaded files.
+    return Promise.resolve(onCreate(payloads)).then(() => onClose());
   };
 
   const handleClose = () => {

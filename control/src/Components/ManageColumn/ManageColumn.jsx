@@ -259,6 +259,12 @@ const ManageColumn = () => {
       } else {
         throw new Error("Failed to assign staff.");
       }
+
+      // Dismissed only on success — closing in `finally` also fired on
+      // failure, hiding the error and discarding the selection.
+      setShowAssignModal(false);
+      setSelectedCandidate(null);
+      setSelectedCandidates([]);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Staff assignment failed:", err);
       showToast(
@@ -267,9 +273,6 @@ const ManageColumn = () => {
       );
     } finally {
       setIsSaving(false);
-      setShowAssignModal(false);
-      setSelectedCandidate(null);
-      setSelectedCandidates([]);
     }
   };
 
@@ -302,6 +305,12 @@ const ManageColumn = () => {
       } else {
         throw new Error("Failed to move candidates.");
       }
+
+      // Dismissed only on success — closing in `finally` also fired on
+      // failure, hiding the error and discarding the selection.
+      setShowMoveModal(false);
+      setSelectedCandidate(null);
+      setSelectedCandidates([]);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Candidate move failed:", err);
       showToast(
@@ -310,9 +319,6 @@ const ManageColumn = () => {
       );
     } finally {
       setIsSaving(false);
-      setShowMoveModal(false);
-      setSelectedCandidate(null);
-      setSelectedCandidates([]);
     }
   };
 
@@ -342,6 +348,12 @@ const ManageColumn = () => {
       } else {
         throw new Error("Failed to delete candidates.");
       }
+
+      // Dismissed only on success — closing in `finally` also fired on
+      // failure, hiding the error and discarding the selection.
+      setShowDeleteCandidateModal(false);
+      setSelectedCandidate(null);
+      setSelectedCandidates([]);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Candidate deletion failed:", err);
       showToast(
@@ -350,9 +362,6 @@ const ManageColumn = () => {
       );
     } finally {
       setIsSaving(false);
-      setShowDeleteCandidateModal(false);
-      setSelectedCandidate(null);
-      setSelectedCandidates([]);
     }
   };
 
