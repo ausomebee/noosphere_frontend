@@ -220,10 +220,12 @@ const FileUploadArea = React.memo(
                 <span className="file-error">{file.errorMessage}</span>
               ) : (
                 <div className="progress-bar">
-                  <div
-                    className="progress"
-                    style={{ width: `${file.progress}%` }}
-                  ></div>
+                  <div className="progress-track">
+                    <div
+                      className="progress"
+                      style={{ width: `${file.progress}%` }}
+                    ></div>
+                  </div>
                   <span className="progress-text">{file.progress}%</span>
                 </div>
               )}

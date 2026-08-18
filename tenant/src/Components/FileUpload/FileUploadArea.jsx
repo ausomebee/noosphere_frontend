@@ -273,10 +273,12 @@ const FileUploadArea = memo(
                   <span className="file-error">{file.errorMessage}</span>
                 ) : (
                   <div className="progress-bar" role="progressbar" aria-valuenow={file.progress} aria-valuemin={0} aria-valuemax={100}>
-                    <div
-                      className="progress"
-                      style={{ width: `${file.progress}%` }}
-                    ></div>
+                    <div className="progress-track">
+                      <div
+                        className="progress"
+                        style={{ width: `${file.progress}%` }}
+                      ></div>
+                    </div>
                     <span className="progress-text">{file.progress}%</span>
                   </div>
                 )}

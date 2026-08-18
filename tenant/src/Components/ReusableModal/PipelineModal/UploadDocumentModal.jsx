@@ -130,10 +130,12 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload, loading = false }) => 
                   </span>
                 ) : (
                   <div className="progress-bar">
-                    <div
-                      className="progress"
-                      style={{ width: `${file.progress}%` }}
-                    ></div>
+                    <div className="progress-track">
+                      <div
+                        className="progress"
+                        style={{ width: `${file.progress}%` }}
+                      ></div>
+                    </div>
                     <span className="progress-text">{file.progress}%</span>
                   </div>
                 )}

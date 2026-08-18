@@ -130,7 +130,9 @@ const FileUploadArea = ({
               </div>
             </div>
             <div className="progress-bar">
-              <div className="progress" style={{ width: `${progress}%` }} />
+              <div className="progress-track">
+                <div className="progress" style={{ width: `${progress}%` }} />
+              </div>
               <span className="progress-text">{progress}%</span>
             </div>
           </div>
