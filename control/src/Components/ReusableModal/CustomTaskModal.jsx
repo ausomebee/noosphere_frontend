@@ -15,12 +15,17 @@ const CustomTaskModal = ({ isOpen, onClose, onSave, initialValues }) => {
   }, [isOpen, initialValues]);
 
   const handleSave = () => {
-    if (taskName.trim()) {
-      onSave({ name: taskName.trim(), required: isCompulsory });
+    if (!taskName.trim()) return;
+    // Returned so the modal holds its buttons disabled for the request, and
+    // resolved before clearing: this used to wipe the field and close the
+    // moment onSave was called, losing the entry when the save failed.
+    return Promise.resolve(
+      onSave({ name: taskName.trim(), required: isCompulsory }),
+    ).then(() => {
       setTaskName('');
       setIsCompulsory(false);
       onClose();
-    }
+    });
   };
 
   const handleClose = () => {

@@ -547,6 +547,8 @@ const ProspectPanel = () => {
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error adding task:", err);
       showToast("Failed to add task", "error");
+      // Re-thrown so the modal keeps the typed value and stays open.
+      throw err;
     }
   };
 
@@ -563,8 +565,10 @@ const ProspectPanel = () => {
       setCustomDocuments((prev) => [...prev, created]);
       setIsCustomDocModalOpen(false);
       showToast("Document added successfully!", "success");
-    } catch {
+    } catch (err) {
       showToast("Failed to add document", "error");
+      // Re-thrown so the modal keeps the typed value and stays open.
+      throw err;
     }
   };
 
@@ -751,8 +755,10 @@ const ProspectPanel = () => {
       );
       setEditingCustomTask(null);
       showToast("Custom task updated", "success");
-    } catch {
+    } catch (err) {
       showToast("Failed to update custom task", "error");
+      // Re-thrown so the modal keeps the typed value and stays open.
+      throw err;
     }
   };
 
@@ -773,8 +779,10 @@ const ProspectPanel = () => {
       );
       setEditingCustomDocument(null);
       showToast("Custom document updated", "success");
-    } catch {
+    } catch (err) {
       showToast("Failed to update custom document", "error");
+      // Re-thrown so the modal keeps the typed value and stays open.
+      throw err;
     }
   };
 

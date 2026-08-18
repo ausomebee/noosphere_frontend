@@ -15,12 +15,17 @@ const CustomDocumentModal = ({ isOpen, onClose, onSave, initialValues }) => {
   }, [isOpen, initialValues]);
 
   const handleSave = () => {
-    if (documentName.trim()) {
-      onSave({ name: documentName.trim(), required: isCompulsory });
+    if (!documentName.trim()) return;
+    // Returned so the modal holds its buttons disabled for the request, and
+    // resolved before clearing: this used to wipe the field and close the
+    // moment onSave was called, losing the entry when the save failed.
+    return Promise.resolve(
+      onSave({ name: documentName.trim(), required: isCompulsory }),
+    ).then(() => {
       setDocumentName('');
       setIsCompulsory(false);
       onClose();
-    }
+    });
   };
 
   const handleClose = () => {
