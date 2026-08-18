@@ -286,6 +286,10 @@ const ReportFileUpload = ({
           : uploaded;
         onChange?.(newValue);
         onUpload?.(newValue);
+      } else {
+        // Same trap: UploadImage returns { success: false } instead of
+        // throwing, so a failure used to leave the field silently unchanged.
+        throw new Error(res.error || "Upload failed");
       }
     } catch (err) {
       console.error("File upload failed:", err);

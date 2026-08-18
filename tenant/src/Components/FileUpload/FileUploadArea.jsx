@@ -107,6 +107,8 @@ const FileUploadArea = memo(
             refreshToken,
           });
 
+          clearInterval(interval);
+
           if (res.success && res.data?.[0]) {
             const uploaded = res.data[0];
 
@@ -129,8 +131,14 @@ const FileUploadArea = memo(
               filename: uploaded.filename,
               url: uploaded.url,
             });
+          } else {
+            // UploadImage resolves with { success: false } rather than
+            // throwing, so without this a failed upload passed silently and
+            // the simulated progress left the row showing 100% and a tick.
+            throw new Error(res.error || "Upload failed");
           }
         } catch (err) {
+          clearInterval(interval);
           setFiles((prev) =>
             prev.map((f, idx) =>
               idx === currentIndex
