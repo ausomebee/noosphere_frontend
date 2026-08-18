@@ -27,7 +27,6 @@ const AccordionTable = ({
     setCurrentPage(1);
   }, [data]);
   const [serviceRows, setServiceRows] = useState({});
-  const [hasChanges, setHasChanges] = useState(false);
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
 
@@ -81,17 +80,11 @@ const AccordionTable = ({
   // Watch form services to detect changes
   const formServices = watch("services");
 
-  // Track initial form state for comparison
-  const initialFormState = JSON.stringify(initialServiceData);
-
-  // Detect changes in form data
   useEffect(() => {
-    const currentFormState = JSON.stringify(formServices);
-    setHasChanges(currentFormState !== initialFormState);
     if (onServiceDataChange) {
       onServiceDataChange(formServices);
     }
-  }, [formServices, initialFormState, onServiceDataChange]);
+  }, [formServices, onServiceDataChange]);
 
   // Initialize service rows and form data
   useEffect(() => {
@@ -134,12 +127,6 @@ const AccordionTable = ({
     setExpandedRow(expandedRow === rowIndex ? null : rowIndex);
   };
 
-  const onSave = (globalRowIndex) => () => {
-    const rowServices = getValues(`services.${globalRowIndex}`);
-    reset({ services: getValues("services") });
-    setHasChanges(false);
-  };
-
   const addServiceRow = (globalRowIndex, e) => {
     e?.stopPropagation();
     const currentRowCount = serviceRows[globalRowIndex] || 1;
@@ -160,7 +147,6 @@ const AccordionTable = ({
 
     const updatedServices = [...currentServices, newService];
     setValue(`services.${globalRowIndex}`, updatedServices);
-    setHasChanges(true);
   };
 
   const removeServiceRow = (globalRowIndex, serviceIndex, e) => {
@@ -177,7 +163,6 @@ const AccordionTable = ({
     }));
 
     setValue(`services.${globalRowIndex}`, updatedServices);
-    setHasChanges(true);
   };
 
   const getServiceDataForRow = (globalRowIndex) => {
@@ -400,7 +385,6 @@ const AccordionTable = ({
                                                     onChange={(e) => {
                                                       if (isEditMode) {
                                                         field.onChange(e);
-                                                        setHasChanges(true);
                                                       }
                                                     }}
                                                     placeholder="Select Service Code"
@@ -432,7 +416,6 @@ const AccordionTable = ({
                                                     onChange={(e) => {
                                                       if (isEditMode) {
                                                         field.onChange(e);
-                                                        setHasChanges(true);
                                                       }
                                                     }}
                                                     placeholder="Select Modifier"
@@ -461,7 +444,6 @@ const AccordionTable = ({
                                                         field.onChange(
                                                           e.target.value
                                                         );
-                                                        setHasChanges(true);
                                                       }
                                                     }}
                                                     disabled={!isEditMode}
@@ -505,7 +487,6 @@ const AccordionTable = ({
                                                     onChange={(e) => {
                                                       if (isEditMode) {
                                                         field.onChange(e);
-                                                        setHasChanges(true);
                                                       }
                                                     }}
                                                     placeholder="Select Time Period"
@@ -551,14 +532,6 @@ const AccordionTable = ({
                                           addServiceRow(globalRowIndex, e)
                                         }
                                       />
-                                      {hasChanges && (
-                                        <Button
-                                          type="button"
-                                          label="Save"
-                                          variant="primary"
-                                          onClick={onSave(globalRowIndex)}
-                                        />
-                                      )}
                                     </div>
                                   )}
                                 </div>
