@@ -8,15 +8,6 @@ import reportsApi from "../../../api/reportsApi";
 import { showApiError } from "../../../Helper/ShowToast";
 import "../Reports.css";
 
-// The only address on a log entry is the tenant's own, so this is where the
-// account is registered rather than where the sign-in came from.
-const toLocation = (log) => {
-  const loc = log.tenant?.location || log.client?.location;
-  if (typeof loc === "string") return loc || "—";
-  if (!loc || typeof loc !== "object") return "—";
-  return [loc.city, loc.country].filter(Boolean).join(", ") || "—";
-};
-
 const toRow = (log) => {
   let extra = {};
   if (log.details && typeof log.details === "object") {
@@ -41,7 +32,6 @@ const toRow = (log) => {
       "—",
     ipAddress: extra.ipAddress || extra.ip || log.ipAddress || "—",
     userAgent: extra.userAgent || log.userAgent || "—",
-    location: extra.location || log.location || toLocation(log),
     outcome: extra.outcome || log.outcome || log.action || "—",
   };
 };
@@ -51,7 +41,6 @@ const columns = [
   { header: "Accessed by", key: "accessedBy", type: "accent", truncate: true },
   { header: "IP Address", key: "ipAddress", truncate: true },
   { header: "User Agent", key: "userAgent", truncate: true },
-  { header: "Location", key: "location", truncate: true },
   { header: "Outcome", key: "outcome" },
 ];
 
