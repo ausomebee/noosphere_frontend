@@ -86,6 +86,21 @@ const initialState = {
 const freshSectionData = () =>
   JSON.parse(JSON.stringify(initialState.sectionData));
 
+/**
+ * Most recent change request in a list, by createdAt.
+ *
+ * Falls back to the last element when timestamps are missing, since APIs that
+ * omit them almost always append.
+ */
+export const newestChangeRequest = (requests) => {
+  if (!Array.isArray(requests) || requests.length === 0) return null;
+  const withDates = requests.filter((r) => r?.createdAt);
+  if (withDates.length === 0) return requests[requests.length - 1];
+  return withDates.reduce((latest, r) =>
+    new Date(r.createdAt) > new Date(latest.createdAt) ? r : latest,
+  );
+};
+
 export const saveDraft = createAsyncThunk(
   "clinicalReport/saveDraft",
   async ({ reportData, api, tokens }, { rejectWithValue, getState }) => {
@@ -310,8 +325,11 @@ export const loadReport = createAsyncThunk(
           (data.clinicalReportChangeRequests &&
             data.clinicalReportChangeRequests.length > 0) ||
           data.status === "CHANGES_REQUESTED",
+        // Sorted rather than taking [0]: the array arrives in the API's own
+        // order, so the banner was showing whichever request happened to be
+        // first — the oldest — instead of the one the clinician needs to act on.
         changeRequestMessage:
-          data.clinicalReportChangeRequests?.[0]?.description ||
+          newestChangeRequest(data.clinicalReportChangeRequests)?.description ||
           (data.status === "CHANGES_REQUESTED"
             ? "Changes requested for this document."
             : ""),

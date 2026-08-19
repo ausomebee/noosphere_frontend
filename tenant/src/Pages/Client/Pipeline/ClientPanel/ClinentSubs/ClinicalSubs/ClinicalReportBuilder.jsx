@@ -905,7 +905,14 @@ const ClinicalReportBuilder = () => {
         accessToken,
         refreshToken,
       });
-      setChangeRequests(response?.data || []);
+      // Newest first — the API's order put the oldest at the top, so the
+      // request most in need of attention was buried at the bottom.
+      const list = response?.data || [];
+      setChangeRequests(
+        [...list].sort(
+          (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0),
+        ),
+      );
     } catch (err) {
       console.error("Failed to fetch change requests:", err);
     } finally {
