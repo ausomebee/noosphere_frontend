@@ -592,8 +592,15 @@ const ClinicalReportBuilder = () => {
   // Only approver in submittedForApproval can request changes
   const canRequestChange = mode === "submittedForApproval";
 
-  // Show view request if there's an active change request
-  const showViewChangeRequest = metadata?.hasChangesRequested === true;
+  // Once a report reaches signature it has moved past the point where a change
+  // request can be acted on, so it stops being surfaced — the alert was keyed
+  // only on hasChangesRequested, which stays true for the rest of the report's
+  // life, so a signed document still showed "View Change Request". The request
+  // itself remains in the audit trail.
+  const CHANGE_REQUEST_SETTLED_MODES = ["awaitingSignature", "clientSigned"];
+  const showViewChangeRequest =
+    metadata?.hasChangesRequested === true &&
+    !CHANGE_REQUEST_SETTLED_MODES.includes(mode);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
