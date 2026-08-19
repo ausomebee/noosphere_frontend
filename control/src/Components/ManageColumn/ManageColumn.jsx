@@ -868,7 +868,7 @@ const ManageColumn = () => {
           onClose={() => setShowDeleteStageModal(false)}
           onConfirm={handleDeleteStage}
           title="Delete this stage?"
-          message="The stage and its configuration will be removed. Candidates in it are moved to the first stage. This cannot be undone."
+          message="The stage and its configuration will be removed. This cannot be undone."
           confirmButtonText="Delete stage"
           confirmButtonColor="#D92D20"
           confirmButtonLoading={deletingStage}

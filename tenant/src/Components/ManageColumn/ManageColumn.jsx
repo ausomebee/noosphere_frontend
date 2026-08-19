@@ -14,6 +14,7 @@ import {
   updateDraft,
   resetDraft,
   fetchSinglePipelineStages,
+  fetchPipelineStages,
   fetchPipelineItems,
   deletePipelineItem,
   deletePipelineStage,
@@ -275,6 +276,21 @@ const ManageColumn = () => {
   const handleDeleteStage = async () => {
     setDeletingStage(true);
     try {
+      // The thunk decides whether to move candidates out by reading
+      // state.pipeline.columnOrder / columns. This screen only ever loads the
+      // one stage, so that order can be wrong — refresh the real stage list
+      // first, then reload this stage's items, because fetchPipelineStages
+      // resets every taskIds array to empty and the thunk needs them to know
+      // there are candidates to move.
+      if (pipeline?.id) {
+        await dispatch(
+          fetchPipelineStages({ pipelineId: pipeline.id, ...authTokens }),
+        ).unwrap();
+        await dispatch(
+          fetchPipelineItems({ stageId: pipelineStageId, ...authTokens }),
+        ).unwrap();
+      }
+
       await dispatch(
         deletePipelineStage({ id: pipelineStageId, ...authTokens }),
       ).unwrap();
@@ -487,7 +503,7 @@ const ManageColumn = () => {
         onClose={() => setShowDeleteStageModal(false)}
         onConfirm={handleDeleteStage}
         title="Delete this stage?"
-        message="The stage and its configuration will be removed. Candidates in it are moved to the first stage. This cannot be undone."
+        message="Candidates in this stage will be moved to the first stage. The first stage cannot be deleted while it still holds candidates. This cannot be undone."
         confirmButtonText="Delete stage"
         confirmButtonLoading={deletingStage}
       />
