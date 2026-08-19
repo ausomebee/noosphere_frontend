@@ -409,9 +409,21 @@
   border-top: 1px solid #e5e7eb;
   padding: 16px 24px;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 16px;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* The buttons live inside this wrapper, so the footer's own gap never applied
+   between them — it only separated the wrapper from the error message. Without
+   any rule here the actions sat flush against one another. */
+.crb-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .crb-btn {

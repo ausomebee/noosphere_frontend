@@ -1,46 +1,67 @@
 .alert {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.3rem 0.8rem;
-    border-radius: 12px;
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    font-weight: 500;
-    position: relative;
-    margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Was 0.3rem 0.8rem — barely 5px of vertical room, so the message sat tight
+     against the border and crowded the action button beside it. */
+  gap: 20px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.alert-message {
+  flex: 1;
+  min-width: 0;
+  color: #1a1a1a;
+  /* Long change-request text wraps rather than squeezing the button off. */
+  overflow-wrap: anywhere;
+}
+
+.alert-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Variants */
+.alert-default {
+  background-color: #f9f9f9;
+  border-color: #ccc;
+}
+
+.alert-info {
+  background-color: #e6f0ff;
+  border-color: #cce0ff;
+}
+
+.alert-warning {
+  background-color: #fff7e6;
+  border-color: #ffe0b2;
+}
+
+.alert-danger {
+  background-color: #ffe6e6;
+  border-color: #ffb3b3;
+}
+
+/* Narrow screens: the action drops under the message instead of shrinking it
+   to a sliver. */
+@media (max-width: 640px) {
+  .alert {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
-  
-  .alert-message {
-    flex: 1;
-    color: #1a1a1a;
-  }
-  
+
   .alert-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
   }
-  
-  /* Variants */
-  .alert-default {
-    background-color: #f9f9f9;
-    border-color: #ccc;
-  }
-  
-  .alert-info {
-    background-color: #e6f0ff;
-    border-color: #cce0ff;
-  }
-  
-  .alert-warning {
-    background-color: #fff7e6;
-    border-color: #ffe0b2;
-  }
-  
-  .alert-danger {
-    background-color: #ffe6e6;
-    border-color: #ffb3b3;
-  }
-  
+}

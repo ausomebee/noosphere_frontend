@@ -543,6 +543,14 @@ const slice = createSlice({
       .addCase(loadReport.pending, (s) => {
         s.isLoading = true;
         s.error = null;
+        // Cleared up front rather than on success: if the load fails the
+        // builder would otherwise sit there showing the previously opened
+        // report's sections under the new report's heading. The UI shows a
+        // loader while isLoading, so nothing flashes empty.
+        s.sectionData = freshSectionData();
+        s.activeSections = [];
+        s.expandedSections = [];
+        s.existingSectionIds = {};
       })
       .addCase(loadReport.fulfilled, (s, a) => {
         s.isLoading = false;
