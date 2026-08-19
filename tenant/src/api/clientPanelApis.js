@@ -162,6 +162,43 @@ const CreateClientDocumentsRequest = async ({
     );
   }
 };
+/**
+ * Reminds a client about an outstanding document request.
+ *   POST /client-requested-documents/nudge/{id}
+ * `id` is the document request's own id, not the client's.
+ */
+const NudgeClientDocumentRequest = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.post(
+      `${PLAIN_API_URL}/client-requested-documents/nudge/${id}`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to send nudge to client"
+    );
+  }
+};
+
+/**
+ * Withdraws an outstanding document request.
+ *   PATCH /client-requested-documents/{id}/cancel
+ */
+const CancelClientDocumentRequest = async ({ id, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/client-requested-documents/${id}/cancel`
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to cancel document request"
+    );
+  }
+};
+
 const GetAllClientDocumentRequested = async ({
   id,
   accessToken,
@@ -636,6 +673,8 @@ export default {
   GetSingleClientByClientId,
   UpdateClientPortalAccess,
   CreateClientDocuments,
+  NudgeClientDocumentRequest,
+  CancelClientDocumentRequest,
   UpdateClientDocuments,
   GetAllClientDocument,
   CreateClientDocumentsRequest,

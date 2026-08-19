@@ -282,6 +282,55 @@ const DocumentsForms = () => {
   const [docDropdownOpen, setDocDropdownOpen] = useState(false);
   const [formDropdownOpen, setFormDropdownOpen] = useState(false);
 
+  // Which request is mid-nudge, so its button can disable itself rather than
+  // firing a second reminder at the client.
+  const [nudgingRequestId, setNudgingRequestId] = useState(null);
+
+  const handleNudgeDocumentRequest = async (request) => {
+    if (!request?.id || nudgingRequestId) return;
+    setNudgingRequestId(request.id);
+    try {
+      await api2.NudgeClientDocumentRequest({
+        id: request.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast(`Reminder sent for "${request.name}"`, "success");
+    } catch (error) {
+      showApiError(error, "NUDGE_DOCUMENT_REQUEST");
+    } finally {
+      setNudgingRequestId(null);
+    }
+  };
+
+  // Cancelling withdraws the request from the client, so confirm first — it
+  // can't be undone from here.
+  const [cancellingRequestId, setCancellingRequestId] = useState(null);
+
+  const handleCancelDocumentRequest = async (request) => {
+    if (!request?.id || cancellingRequestId) return;
+
+    const confirmed = window.confirm(
+      `Cancel the request for "${request.name}"? The client will no longer be asked to upload it.`
+    );
+    if (!confirmed) return;
+
+    setCancellingRequestId(request.id);
+    try {
+      await api2.CancelClientDocumentRequest({
+        id: request.id,
+        accessToken,
+        refreshToken,
+      });
+      showToast(`Request for "${request.name}" cancelled`, "success");
+      await fetchDocumentRequests();
+    } catch (error) {
+      showApiError(error, "CANCEL_DOCUMENT_REQUEST");
+    } finally {
+      setCancellingRequestId(null);
+    }
+  };
+
   const handleDeleteDocument = async () => {
     if (!selectedDocumentRow) return;
 
@@ -946,13 +995,38 @@ const DocumentsForms = () => {
                                               {(req.status === "PENDING" || req.status === "OVERDUE") && (
                                                 <div className="flex gap-6 mt-2">
                                                   {hasPermission("nudge_client") && (
-                                                  <button className="text-primary font-600 text-base hover:underline cursor-pointer">
-                                                    Nudge
+                                                  <button
+                                                    type="button"
+                                                    className="text-primary font-600 text-base hover:underline cursor-pointer"
+                                                    onClick={() => handleNudgeDocumentRequest(req)}
+                                                    disabled={nudgingRequestId === req.id}
+                                                    /* Inline rather than Tailwind's
+                                                       disabled: variants, which don't
+                                                       reliably emit in this project. */
+                                                    style={
+                                                      nudgingRequestId === req.id
+                                                        ? { opacity: 0.5, cursor: "not-allowed" }
+                                                        : undefined
+                                                    }
+                                                  >
+                                                    {nudgingRequestId === req.id ? "Sending..." : "Nudge"}
                                                   </button>
                                                   )}
                                                   {hasPermission("cancel_document_request") && (
-                                                  <button className="text-red-600 font-600 text-base hover:underline cursor-pointer">
-                                                    Cancel request
+                                                  <button
+                                                    type="button"
+                                                    className="text-red-600 font-600 text-base hover:underline cursor-pointer"
+                                                    onClick={() => handleCancelDocumentRequest(req)}
+                                                    disabled={cancellingRequestId === req.id}
+                                                    style={
+                                                      cancellingRequestId === req.id
+                                                        ? { opacity: 0.5, cursor: "not-allowed" }
+                                                        : undefined
+                                                    }
+                                                  >
+                                                    {cancellingRequestId === req.id
+                                                      ? "Cancelling..."
+                                                      : "Cancel request"}
                                                   </button>
                                                   )}
                                                 </div>
