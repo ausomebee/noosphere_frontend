@@ -98,7 +98,7 @@ const FileUploadArea = ({
 
     const sizeMB = selected.size / 1024 / 1024;
     if (sizeMB > maxSizeMB) {
-      alert(`File must be ≤ ${maxSizeMB} MB`);
+      showToast(`File must be ≤ ${maxSizeMB} MB`, "error");
       return;
     }
 

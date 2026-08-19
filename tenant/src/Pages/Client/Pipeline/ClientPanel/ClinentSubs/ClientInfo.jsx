@@ -325,46 +325,28 @@ const DocumentsForms = () => {
     }
   };
 
+  // Selecting a row opens the confirmation modal; the delete only runs once
+  // that is confirmed. Previously an effect fired the delete the instant a row
+  // was selected, with a native confirm as the only thing standing in the way.
   const handleDeleteDocument = async () => {
     if (!selectedDocumentRow) return;
-
-    // Optional: Add nice confirmation dialog
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${selectedDocumentRow.name}"? This action cannot be undone.`
-    );
-
-    if (!confirmDelete) {
-      setSelectedDocumentRow(null);
-      return;
-    }
-
     try {
       await api2.deleteClientsDocument({
         id: selectedDocumentRow.id,
         accessToken,
         refreshToken,
       });
-
       showToast("Document deleted successfully", "success");
-
-      // Refresh the list
-      fetchDocuments();
-
-      // Clear selection
-      setSelectedDocumentRow(null);
+      await fetchDocuments();
     } catch (e) {
-      console.error("Delete error:", e);
       showToast(
         e.response?.data?.message || "Failed to delete document",
         "error"
       );
+      // Re-thrown so the modal stays open on failure.
+      throw e;
     }
   };
-  useEffect(() => {
-    if (selectedDocumentRow) {
-      handleDeleteDocument();
-    }
-  }, [selectedDocumentRow]);
 
   useEffect(() => {
     if (tenantId) {
@@ -1072,6 +1054,18 @@ const DocumentsForms = () => {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
         onSubmit={handleCreateRequest}
+      />
+
+      <DeleteModal
+        isOpen={Boolean(selectedDocumentRow)}
+        onClose={() => setSelectedDocumentRow(null)}
+        title="Delete document?"
+        message={
+          selectedDocumentRow
+            ? `"${selectedDocumentRow.name}" will be permanently removed. This can't be undone.`
+            : ""
+        }
+        onConfirm={handleDeleteDocument}
       />
 
       <DeleteModal

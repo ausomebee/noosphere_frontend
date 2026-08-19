@@ -23,6 +23,7 @@ import { loadForm } from "../../ReduxStore/features/formBuilderSlice";
 import { mimeMap } from "../../Data/selectOptions";
 import SectionLoader from "../SectionLoader";
 
+import ConfirmModal from "../Modal/ConfirmModal";
 const FormRenderer = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const FormRenderer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
   const [dragOver, setDragOver] = useState({});
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const sigRefs = useRef({});
 
   const parseFileSize = (sizeString) => {
@@ -461,12 +463,12 @@ const FormRenderer = () => {
     }
   };
 
-  const handleClear = () => {
-    if (window.confirm("Clear all data? This cannot be undone.")) {
-      dispatch(clearAllResponses());
-      Object.values(sigRefs.current).forEach((ref) => ref?.clear());
-      showToast("All responses cleared", "info");
-    }
+  const handleClear = () => setShowClearConfirm(true);
+
+  const handleConfirmClear = () => {
+    dispatch(clearAllResponses());
+    Object.values(sigRefs.current).forEach((ref) => ref?.clear());
+    showToast("All responses cleared", "info");
   };
 
   if (submitted) {
@@ -989,6 +991,15 @@ const FormRenderer = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={handleConfirmClear}
+        title="Clear all responses?"
+        message="Everything you've entered on this form will be removed, including signatures. This can't be undone."
+        confirmLabel="Clear all"
+      />
     </div>
   );
 };

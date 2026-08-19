@@ -8,6 +8,7 @@ import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 
+import { showToast } from "../../../Helper/ShowToast";
 const TimeSheet = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
@@ -112,7 +113,7 @@ const TimeSheet = () => {
           hasPermission("nudge_client_for_approval") && {
             label: "Nudge client for approval",
             onClick: (row) => {
-              alert(`Nudge sent for session with ${row.clientName}`);
+              showToast(`Nudge sent for session with ${row.clientName}`, "success");
             },
           },
         ].filter(Boolean),

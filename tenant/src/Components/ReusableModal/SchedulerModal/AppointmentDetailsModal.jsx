@@ -11,6 +11,7 @@ import { FiRefreshCw, FiEdit2 } from "react-icons/fi";
 import { format, parse, isValid } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
+import { showToast } from "../../../Helper/ShowToast";
 const AppointmentDetailsModal = ({
   isOpen,
   onClose,
@@ -159,14 +160,14 @@ const splitId = useCallback((id) => {
 // Updated handler
 const handleStartAppointment = () => {
   if (!appointment?.id || !appointment?.clientId) {
-    alert("Missing appointment or client ID");
+    showToast("Missing appointment or client ID", "error");
     return;
   }
 
   const { uuid: appointmentUuid } = splitId(appointment.id);
 
   if (!appointmentUuid) {
-    alert("Invalid appointment ID");
+    showToast("Invalid appointment ID", "error");
     return;
   }
 

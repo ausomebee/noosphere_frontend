@@ -3,13 +3,14 @@ import React, { useState } from "react";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { TextInput } from "../../Input/Inputs";
 
+import { showToast } from "../../../Helper/ShowToast";
 const TravelTimeModal = ({ isOpen, onClose, onSave, loading = false }) => {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const handleSave = () => {
     if (!start || !end) {
-      alert("Please select both start and end time");
+      showToast("Please select both start and end time", "error");
       return;
     }
 

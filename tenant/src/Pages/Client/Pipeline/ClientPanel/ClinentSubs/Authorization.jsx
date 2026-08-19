@@ -16,6 +16,7 @@ import usePermissions from "../../../../../hooks/usePermissions";
 import AccessDenied from "../../../../../Components/AccessDenied/AccessDenied";
 import SectionLoader from "../../../../../Components/SectionLoader";
 
+import DeleteModal from "../../../../../Components/ReusableModal/OrganizationModal/DeleteModal";
 const AuthorizationTab = () => {
   const { dateFormat } = useFormatSettings();
   const { hasPermission } = usePermissions();
@@ -27,6 +28,8 @@ const AuthorizationTab = () => {
   const [editingAuthData, setEditingAuthData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEditData, setLoadingEditData] = useState(false);
+  // Row awaiting delete confirmation.
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Tenant service codes for dropdowns
   const [tenantServiceCodes, setTenantServiceCodes] = useState([]);
@@ -330,20 +333,23 @@ const AuthorizationTab = () => {
     }
   };
 
-  // DELETE (soft)
-  const handleDelete = async (row) => {
-    if (!window.confirm("Are you sure you want to delete this authorization?")) return;
+  // DELETE (soft) — the row is held until the confirmation modal resolves.
+  const handleDelete = (row) => setDeleteTarget(row);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
       await api.SoftDeleteClientAuthorization({
-        id: row.id,
+        id: deleteTarget.id,
         accessToken,
         refreshToken,
       });
       showToast("Authorization deleted successfully", "success");
-      fetchAuthorizations();
+      await fetchAuthorizations();
     } catch (error) {
-      console.error(error);
       showApiError(error, "DELETE_AUTHORIZATION");
+      // Re-thrown so the modal stays open on failure.
+      throw error;
     }
   };
 
@@ -424,6 +430,18 @@ const AuthorizationTab = () => {
       )}
         </>
       )}
+
+      <DeleteModal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete authorization?"
+        message={
+          deleteTarget
+            ? `"${deleteTarget.name || "This authorization"}" will be removed. This can't be undone.`
+            : ""
+        }
+        onConfirm={handleConfirmDelete}
+      />
 
       <AddAuthorizationModal
         isOpen={isAddModalOpen}

@@ -31,6 +31,7 @@ import {
   fetchPipelineItems,
   updatePipelineItemActivity,
   deletePipelineItem,
+  deletePipelineStage,
   reassignCandidateToStaff,
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
@@ -41,6 +42,8 @@ import SectionLoader from "../SectionLoader";
 
 const ManageColumn = () => {
   const { pipelineStageId } = useParams();
+  const [showDeleteStageModal, setShowDeleteStageModal] = useState(false);
+  const [deletingStage, setDeletingStage] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pipeline, draft, status } = useSelector((state) => state.pipeline);
@@ -179,6 +182,28 @@ const ManageColumn = () => {
   );
 
   // Save basic info (name, description, color)
+  // Previously this button only navigated back and toasted "Stage deleted" —
+  // nothing was ever removed. It now dispatches the real thunk.
+  const handleDeleteStage = async () => {
+    setDeletingStage(true);
+    try {
+      await dispatch(
+        deletePipelineStage({ id: pipelineStageId, ...authTokens }),
+      ).unwrap();
+      showToast("Stage deleted", "success");
+      navigate(-1);
+    } catch (error) {
+      showToast(
+        error?.message || "Failed to delete stage. Please try again.",
+        "error",
+      );
+      // Re-thrown so the modal stays open on failure.
+      throw error;
+    } finally {
+      setDeletingStage(false);
+    }
+  };
+
   const handleSaveBasicInfo = async () => {
     if (!pipelineStageId) return;
 
@@ -516,12 +541,7 @@ const ManageColumn = () => {
                     variant="secondary-danger"
                     width="200px"
                     label="Delete this Column"
-                    onClick={() => {
-                      if (window.confirm("Delete this stage?")) {
-                        navigate(-1);
-                        showToast("Stage deleted", "success");
-                      }
-                    }}
+                    onClick={() => setShowDeleteStageModal(true)}
                   />
                 )}
                 {canEditStage && (
@@ -841,6 +861,17 @@ const ManageColumn = () => {
           columns={columnsForModal}
           taskIds={selectedCandidate ? [selectedCandidate.id] : selectedCandidates}
           dispatch={dispatch}
+        />
+
+        <DeleteConfirmationModal
+          isOpen={showDeleteStageModal}
+          onClose={() => setShowDeleteStageModal(false)}
+          onConfirm={handleDeleteStage}
+          title="Delete this stage?"
+          message="The stage and its configuration will be removed. Candidates in it are moved to the first stage. This cannot be undone."
+          confirmButtonText="Delete stage"
+          confirmButtonColor="#D92D20"
+          confirmButtonLoading={deletingStage}
         />
 
         <DeleteConfirmationModal

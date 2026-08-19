@@ -16,6 +16,7 @@ import {
   fetchSinglePipelineStages,
   fetchPipelineItems,
   deletePipelineItem,
+  deletePipelineStage,
   createCandidate,
 } from "../../ReduxStore/features/PipelineSlice";
 import CustomTable from "../Table/CustomTable";
@@ -29,6 +30,8 @@ import SectionLoader from "../SectionLoader";
 
 const ManageColumn = () => {
   const { pipelineStageId } = useParams();
+  const [showDeleteStageModal, setShowDeleteStageModal] = useState(false);
+  const [deletingStage, setDeletingStage] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pipeline, draft, status } = useSelector(
@@ -267,6 +270,28 @@ const ManageColumn = () => {
     },
   ];
 
+  // Previously this button only navigated back and toasted "Stage deleted" —
+  // nothing was ever removed. It now dispatches the same thunk the board uses.
+  const handleDeleteStage = async () => {
+    setDeletingStage(true);
+    try {
+      await dispatch(
+        deletePipelineStage({ id: pipelineStageId, ...authTokens }),
+      ).unwrap();
+      showToast("Stage deleted", "success");
+      navigate(-1);
+    } catch (error) {
+      showToast(
+        error?.message || "Failed to delete stage. Please try again.",
+        "error",
+      );
+      // Re-thrown so the modal stays open on failure.
+      throw error;
+    } finally {
+      setDeletingStage(false);
+    }
+  };
+
   const handleEditCandidate = (stageId, taskId) => {
     navigate(`/client/client-single/${pipelineStageId}/${taskId}`);
   };
@@ -387,12 +412,7 @@ const ManageColumn = () => {
                 variant="secondary-danger"
                 width="200px"
                 label="Delete this Column"
-                onClick={() => {
-                  if (window.confirm("Delete this stage?")) {
-                    navigate(-1);
-                    showToast("Stage deleted", "success");
-                  }
-                }}
+                onClick={() => setShowDeleteStageModal(true)}
               />
               <div className="save-button-container">
                 <Button
@@ -460,6 +480,16 @@ const ManageColumn = () => {
         onClose={() => setShowAddClientModal(false)}
         onSubmit={handleAddCandidate}
         initialData={null}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteStageModal}
+        onClose={() => setShowDeleteStageModal(false)}
+        onConfirm={handleDeleteStage}
+        title="Delete this stage?"
+        message="The stage and its configuration will be removed. Candidates in it are moved to the first stage. This cannot be undone."
+        confirmButtonText="Delete stage"
+        confirmButtonLoading={deletingStage}
       />
 
       <DeleteConfirmationModal
