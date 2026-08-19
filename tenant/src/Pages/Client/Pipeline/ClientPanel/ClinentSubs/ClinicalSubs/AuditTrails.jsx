@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import useAuth from "../../../../../../hooks/useAuth";
-import { formatDate } from "../../../../../../Helper/Formatters";
+import { formatDateTime } from "../../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../../hooks/useFormatSettings";
 import "./AuditTrails.css";
 import "../../../../../../Components/ManageColumn/ManageColumn.css";
@@ -22,7 +22,7 @@ const AuditTrails = () => {
   } = location.state || {};
   
   const { accessToken, refreshToken } = useAuth();
-  const { dateFormat } = useFormatSettings();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
 
   const [auditTrails, setAuditTrails] = useState([]);
@@ -59,165 +59,113 @@ const AuditTrails = () => {
 
   const formatAuditDate = (dateString) => {
     if (!dateString) return "N/A";
-    return formatDate(dateString, dateFormat);
+    return formatDateTime(dateString, dateFormat, timeFormat);
   };
 
+  // Each entry reads as a line of prose — the same treatment the timesheet
+  // history uses — with the names, dates and title picked out and the verb
+  // carrying the status colour.
   const renderAuditEntry = (entry) => {
-    const action = entry.action || entry.type || "";
-    const actionLower = action.toLowerCase();
+    const action = String(entry.action || entry.type || "").trim().toUpperCase();
+    const subject = (
+      <span className="approval-subject">
+        {entry.documentTitle || "Clinical report"}
+      </span>
+    );
+    const who = <span className="approval-subject">{entry.by || "Unknown"}</span>;
+    const when = <span className="approval-subject">{entry.date || "N/A"}</span>;
+    const client = (
+      <span className="approval-subject">
+        {entry.clientName || entry.for || "N/A"}
+      </span>
+    );
 
-    switch (actionLower) {
-      case "created":
-      case "creation":
+    switch (action) {
+      case "CREATED":
+      case "CREATION":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              <span className="text-blue-600 font-bold">
-                {entry.documentTitle || "Clinical report"}
-              </span>{" "}
-              for client{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.clientName || entry.for || "N/A"}
-              </span>{" "}
-              created on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>{" "}
-              by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} for {client} created on {when} by {who}
+          </span>
         );
 
-      case "submitted":
-      case "submission":
+      case "DRAFT":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document submitted for approval on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>{" "}
-              by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} saved as a draft by {who} on {when}
+          </span>
         );
 
-      case "approved":
-      case "approval":
+      case "EDITED":
+      case "UPDATED":
+      case "UPDATE":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document approved by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} edited by {who} on {when}
+          </span>
         );
 
-      case "sent":
-      case "sent_to_client":
+      case "SUBMITTED":
+      case "SUBMISSION":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document sent to client on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} submitted for approval by {who} on {when}
+          </span>
         );
 
-      case "requested":
-      case "change_requested":
+      case "APPROVED":
+      case "APPROVAL":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Client requested changes on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject}{" "}
+            <span className="approval-action is-approved">approved</span> by{" "}
+            {who} on {when}
+          </span>
         );
 
-      case "edited":
-      case "updated":
-      case "update":
+      case "REJECTED":
+      case "REJECTION":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document edited by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject}{" "}
+            <span className="approval-action is-rejected">rejected</span> by{" "}
+            {who} on {when}
+          </span>
         );
 
-      case "signed":
-      case "signature":
+      case "SENT":
+      case "SENT_TO_CLIENT":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document{" "}
-              <span className="text-green-600 font-bold">signed</span> by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject} sent to {client} on {when}
+          </span>
         );
 
-      case "rejected":
-      case "rejection":
+      case "REQUESTED":
+      case "CHANGE_REQUESTED":
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              Document rejected by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            <span className="approval-action is-rejected">Changes requested</span>{" "}
+            on {subject} by {who} on {when}
+          </span>
+        );
+
+      case "SIGNED":
+      case "SIGNATURE":
+        return (
+          <span className="approval-entry">
+            {subject} <span className="approval-action is-approved">signed</span>{" "}
+            by {who} on {when}
+          </span>
         );
 
       default:
         return (
-          <div className="approval-entry">
-            <span className="text-gray-700">
-              {entry.action || entry.description || "Action"} by{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.by || "Unknown"}
-              </span>{" "}
-              on{" "}
-              <span className="text-blue-600 font-bold">
-                {entry.date || "N/A"}
-              </span>
-            </span>
-          </div>
+          <span className="approval-entry">
+            {subject}{" "}
+            {action ? action.toLowerCase().replace(/_/g, " ") : "updated"} by{" "}
+            {who} on {when}
+          </span>
         );
     }
   };
@@ -250,44 +198,35 @@ const AuditTrails = () => {
           )}
 
           {!loading && !error && (
-            <div className="space-y-4">
+            <div className="audit-trail-list">
               {auditTrails && auditTrails.length > 0 ? (
                 auditTrails.map((entry, index) => (
-                  <div key={entry.id || index} className="audit-trail-item">
-                    <div className="audit-timeline">
-                      <div className="audit-dot"></div>
-                      {index < auditTrails.length - 1 && (
-                        <div className="audit-line"></div>
-                      )}
-                    </div>
-                    <div className="audit-details">
-                      <div className="approval-item p-6">
-                        {renderAuditEntry({
-                          ...entry,
-                          date: formatAuditDate(entry.createdAt || entry.date || entry.timestamp),
-                          // The API returns the actor under `staff` — none of
-                          // the previously checked paths exist on the payload,
-                          // so every entry read "by Unknown".
-                          by:
-                            entry?.staff?.fullName ||
-                            entry?.user?.fullName ||
-                            entry?.performedBy ||
-                            entry?.userName ||
-                            entry.by ||
-                            "Unknown",
-                          clientName: clientNameFromState,
-                          documentTitle: documentTitleFromState,
-                          action: entry.action || entry.type || entry.activity || "Updated",
-                        })}
-                      </div>
-                    </div>
+                  <div key={entry.id || index} className="approval-line">
+                    {renderAuditEntry({
+                      ...entry,
+                      date: formatAuditDate(
+                        entry.createdAt || entry.date || entry.timestamp
+                      ),
+                      // The API returns the actor under `staff` — none of
+                      // the previously checked paths exist on the payload,
+                      // so every entry read "by Unknown".
+                      by:
+                        entry?.staff?.fullName ||
+                        entry?.user?.fullName ||
+                        entry?.performedBy ||
+                        entry?.userName ||
+                        entry.by ||
+                        "Unknown",
+                      clientName: clientNameFromState,
+                      documentTitle: documentTitleFromState,
+                      action:
+                        entry.action || entry.type || entry.activity || "Updated",
+                    })}
                   </div>
                 ))
               ) : (
-                <div className="approval-item p-6" style={{ textAlign: "center" }}>
-                  <p style={{ color: "#6b7280" }}>
-                    No audit trail data available for this report.
-                  </p>
+                <div className="audit-trail-empty">
+                  <p>No audit trail data available for this report.</p>
                 </div>
               )}
             </div>
