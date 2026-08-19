@@ -252,17 +252,15 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
         {/* Clinician Signature — selecting a method used to store the choice
             and render nothing, so the signature itself could never be given. */}
-        <div className="report-builder-field">
-          <SignatureCapture
-            label="Clinician Signature"
-            required
-            readOnly={isReadOnly}
-            signatureType={formData.clinicianSignatureType}
-            value={formData.clinicianSignature}
-            onTypeChange={handleSignatureTypeSelect}
-            onChange={handleSignatureChange}
-          />
-        </div>
+        <SignatureCapture
+          label="Clinician Signature"
+          required
+          readOnly={isReadOnly}
+          signatureType={formData.clinicianSignatureType}
+          value={formData.clinicianSignature}
+          onTypeChange={handleSignatureTypeSelect}
+          onChange={handleSignatureChange}
+        />
         {touched.clinicianSignatureType && errors.clinicianSignatureType && (
           <div className="report-builder-error">
             {errors.clinicianSignatureType}

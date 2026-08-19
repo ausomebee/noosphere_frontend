@@ -1,18 +1,16 @@
-.sig-capture {
+/* The control column of a report field. The label sits to its left, supplied by
+   .report-builder-label, so this only owns what goes to the right of it. */
+.sig-body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
-}
-
-.sig-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #344054;
 }
 
 .sig-required {
   color: #d92d20;
+  margin-left: 2px;
 }
 
 /* ---- Mode selector ---- */
@@ -55,6 +53,7 @@
 /* ---- Typed ---- */
 .sig-typed-input {
   width: 100%;
+  max-width: 520px;
   padding: 10px 12px;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
@@ -71,6 +70,7 @@
 /* The preview is the signature as it will be stored — a script face so a typed
    name reads as a signature rather than as another form field. */
 .sig-typed-preview {
+  max-width: 520px;
   margin-top: 10px;
   padding: 14px 16px;
   border: 1px dashed #d0d5dd;
@@ -90,7 +90,8 @@
 
 .sig-canvas {
   width: 100%;
-  height: 160px;
+  max-width: 520px;
+  height: 150px;
   border: 1px dashed #d0d5dd;
   border-radius: 8px;
   background-color: #fcfcfd;
@@ -130,6 +131,7 @@
 
 /* ---- Uploaded ---- */
 .sig-upload-area {
+  max-width: 520px;
   border: 1px dashed #d0d5dd;
   border-radius: 8px;
   background-color: #fcfcfd;

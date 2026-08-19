@@ -146,8 +146,9 @@ const SignatureCapture = ({
 
   if (readOnly) {
     return (
-      <div className="sig-capture sig-readonly">
-        <span className="sig-label">{label}</span>
+      <div className="report-builder-field report-builder-field-file sig-readonly">
+        <label className="report-builder-label">{label}</label>
+        <div className="sig-body">
         {!value ? (
           <div className="sig-empty">Not signed</div>
         ) : isImageValue ? (
@@ -155,17 +156,22 @@ const SignatureCapture = ({
         ) : (
           <div className="sig-typed-preview">{value}</div>
         )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="sig-capture">
-      <span className="sig-label">
+    // Laid out as a standard report field — a 150px label on the left and the
+    // control on the right — so it lines up with Clinician role above it rather
+    // than stacking and breaking the column.
+    <div className="report-builder-field report-builder-field-file">
+      <label className="report-builder-label">
         {label}
         {required && <span className="sig-required"> *</span>}
-      </span>
+      </label>
 
+      <div className="sig-body">
       <div className="sig-types">
         {SIGNATURE_TYPES.map((type) => (
           <button
@@ -232,6 +238,7 @@ const SignatureCapture = ({
           {uploadError && <div className="sig-error">{uploadError}</div>}
         </div>
       )}
+      </div>
     </div>
   );
 };
