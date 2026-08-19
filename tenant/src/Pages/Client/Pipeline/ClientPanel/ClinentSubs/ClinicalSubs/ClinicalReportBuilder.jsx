@@ -981,17 +981,22 @@ const ClinicalReportBuilder = () => {
     if (!showViewChangeRequest) return null;
 
     return (
-      <Alert
-        message={
-          metadata?.changeRequestMessage ||
-          "A change request is active for this document."
-        }
-        variant="info"
-        primaryAction={{
-          label: "View Change Request",
-          onClick: handleViewChangeRequest,
-        }}
-      />
+      // Wrapped so the banner lines up with .crb-main below it. It sits as a
+      // direct child of .crb-container, which has no horizontal padding, so
+      // unwrapped it ran edge to edge while the content beneath was inset.
+      <div className="crb-alert-wrap">
+        <Alert
+          message={
+            metadata?.changeRequestMessage ||
+            "A change request is active for this document."
+          }
+          variant="info"
+          primaryAction={{
+            label: "View Change Request",
+            onClick: handleViewChangeRequest,
+          }}
+        />
+      </div>
     );
   };
 

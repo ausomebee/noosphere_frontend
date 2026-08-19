@@ -170,6 +170,20 @@
   width: 100%;
 }
 
+/* Mirrors .crb-main's inset and max-width so the change request banner sits on
+   the same left and right edges as the content below it. */
+.crb-alert-wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+}
+
+/* The gap below comes from .crb-main's own top padding — leaving the Alert's
+   default bottom margin in place stacked the two into a 48px gulf. */
+.crb-alert-wrap .alert {
+  margin-bottom: 0;
+}
+
 .crb-main {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -558,6 +572,10 @@
 
   .crb-section-content {
     padding: 16px;
+  }
+
+  .crb-alert-wrap {
+    padding: 16px 16px 0;
   }
 
   .crb-footer {
