@@ -643,7 +643,14 @@ const ClinicalReportsTab = ({ clientData }) => {
               label: "View Audit Trail",
               onClick: (row) => {
                 navigate("/clinical-report/audit-trails", {
-                  state: { reportId: row.id },
+                  state: {
+                    reportId: row.id,
+                    clientName: [client?.firstName, client?.lastName]
+                      .filter(Boolean)
+                      .join(" ")
+                      .trim(),
+                    documentTitle: row.documentTitle,
+                  },
                 });
               },
             },

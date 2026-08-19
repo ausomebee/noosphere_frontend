@@ -1252,7 +1252,13 @@ const ClinicalReportBuilder = () => {
               <div className="crb-metadata-footer">
                 <span
                   className="crb-version-link"
-                  onClick={() => navigate("/clinical-report/audit-trails", { state: { reportId: storedReportId } })}
+                  onClick={() => navigate("/clinical-report/audit-trails", {
+                      state: {
+                        reportId: storedReportId,
+                        clientName: metadata?.client?.name,
+                        documentTitle: metadata?.documentTitle,
+                      },
+                    })}
                 >
                   Document Version: {metadata.version || "v1"}
                   <div className="crb-metadata-footer-divider"></div>

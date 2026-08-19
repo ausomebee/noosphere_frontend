@@ -13,7 +13,13 @@ import SectionLoader from "../../../../../../Components/SectionLoader";
 const AuditTrails = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { reportId } = location.state || {};
+  // The history endpoint returns only the report's own events — no client and
+  // no title — so both are carried in from the page that opened this view.
+  const {
+    reportId,
+    clientName: clientNameFromState,
+    documentTitle: documentTitleFromState,
+  } = location.state || {};
   
   const { accessToken, refreshToken } = useAuth();
   const { dateFormat } = useFormatSettings();
@@ -66,7 +72,10 @@ const AuditTrails = () => {
         return (
           <div className="approval-entry">
             <span className="text-gray-700">
-              Initial assessment report for client{" "}
+              <span className="text-blue-600 font-bold">
+                {entry.documentTitle || "Clinical report"}
+              </span>{" "}
+              for client{" "}
               <span className="text-blue-600 font-bold">
                 {entry.clientName || entry.for || "N/A"}
               </span>{" "}
@@ -256,7 +265,18 @@ const AuditTrails = () => {
                         {renderAuditEntry({
                           ...entry,
                           date: formatAuditDate(entry.createdAt || entry.date || entry.timestamp),
-                          by: entry?.user?.fullName || entry?.performedBy || entry?.userName || entry.by || "Unknown",
+                          // The API returns the actor under `staff` — none of
+                          // the previously checked paths exist on the payload,
+                          // so every entry read "by Unknown".
+                          by:
+                            entry?.staff?.fullName ||
+                            entry?.user?.fullName ||
+                            entry?.performedBy ||
+                            entry?.userName ||
+                            entry.by ||
+                            "Unknown",
+                          clientName: clientNameFromState,
+                          documentTitle: documentTitleFromState,
                           action: entry.action || entry.type || entry.activity || "Updated",
                         })}
                       </div>
