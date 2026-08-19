@@ -80,6 +80,16 @@ import {
 } from "../../../../../../ReduxStore/features/clinicalReportSlice";
 import SectionLoader from "../../../../../../Components/SectionLoader";
 
+
+// Two-letter initials for the change request avatars. Falls back to the first
+// two characters for a single-word name, and to "?" for nothing usable.
+const initialsOf = (name) => {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 // SECTION_COMPONENTS (must be before use)
 const SECTION_COMPONENTS = {
   clientInformation: ClientInformationSection,
@@ -1405,51 +1415,68 @@ const ClinicalReportBuilder = () => {
             primaryButtonText="Close"
             onPrimaryButtonClick={() => setIsViewChangeModalOpen(false)}
           >
-            <div className="p-6">
+            <div>
               {changeRequestsLoading ? (
                 <SectionLoader />
               ) : changeRequests.length > 0 ? (
-                <div className="flex-col gap-16">
-                  {changeRequests.map((cr, idx) => (
-                    <div
-                      key={cr.id || idx}
-                      className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-12"
-                    >
-                      <p className="text-gray-700 mb-4 font-medium">
-                        Requested by:{" "}
-                        {cr.requester?.fullName ||
-                          cr.approver?.fullName ||
-                          cr.approverId ||
-                          "Approver"}
-                      </p>
-                      {cr.approver?.fullName && cr.requester?.fullName && (
-                        <p className="text-gray-600 mb-4 text-sm">
-                          Approver: {cr.approver.fullName}
-                        </p>
-                      )}
-                      <p className="text-gray-800 whitespace-pre-wrap">
-                        {cr.description || "No details provided."}
-                      </p>
-                      {cr.status && (
-                        <p className="text-sm text-gray-500 mt-4">
-                          Status:{" "}
-                          <span className="font-medium">
-                            {cr.status.replace(/_/g, " ")}
+                <ul className="cr-list">
+                  {changeRequests.map((cr, idx) => {
+                    const name =
+                      cr.requester?.fullName ||
+                      cr.approver?.fullName ||
+                      "Approver";
+                    const role =
+                      cr.requester?.fullName && cr.approver?.fullName
+                        ? `Approver: ${cr.approver.fullName}`
+                        : "Approver";
+                    // Anything still open reads amber; everything else has
+                    // been dealt with.
+                    const isOpen =
+                      !cr.status ||
+                      String(cr.status).toUpperCase() === "CHANGES_REQUESTED" ||
+                      String(cr.status).toUpperCase() === "PENDING";
+
+                    return (
+                      <li key={cr.id || idx} className="cr-item">
+                        <div className="cr-top">
+                          <span className="cr-avatar">{initialsOf(name)}</span>
+                          <div className="cr-who">
+                            <p className="cr-name">{name}</p>
+                            <p className="cr-meta">
+                              <span>{role}</span>
+                              {cr.createdAt && (
+                                <>
+                                  <span className="cr-dot" />
+                                  <span>
+                                    {formatDateTime(
+                                      cr.createdAt,
+                                      dateFormat,
+                                      timeFormat,
+                                    )}
+                                  </span>
+                                </>
+                              )}
+                            </p>
+                          </div>
+                          <span
+                            className={`cr-pill ${
+                              isOpen ? "cr-pill-open" : "cr-pill-done"
+                            }`}
+                          >
+                            {isOpen ? "Open" : "Addressed"}
                           </span>
-                        </p>
-                      )}
-                      {cr.createdAt && (
-                        <p className="text-sm text-gray-400 mt-4">
-                          {formatDateTime(cr.createdAt, dateFormat, timeFormat)}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                        </div>
+                        <div className="cr-body">
+                          {cr.description || "No details provided."}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               ) : (
-                <p className="text-gray-500">No change requests found.</p>
+                <p className="cr-empty">No change requests found.</p>
               )}
-              <p className="text-sm text-gray-500 mt-4">
+              <p className="cr-note">
                 {mode === "changeRequested"
                   ? "You can now make the requested changes and resubmit."
                   : "The creator has been notified to address these changes."}
