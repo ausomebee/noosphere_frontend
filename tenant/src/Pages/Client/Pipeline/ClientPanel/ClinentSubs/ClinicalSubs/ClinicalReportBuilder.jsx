@@ -816,19 +816,20 @@ const ClinicalReportBuilder = () => {
 
     const mergedSectionData = { ...sectionData, ...pendingUpdatesRef.current };
 
-    // A report carrying a consent section has to be signed before it goes out —
-    // publishing an unsigned clinical document was previously possible, with
-    // nothing on screen to say the signature was missing. Reports without that
-    // section are unaffected.
-    if (activeSections.includes("consentSignatures")) {
-      const consent = mergedSectionData.consentSignatures || {};
-      if (!consent.clinicianSignature) {
-        showToast(
-          "Sign the report before publishing — open Consent & Signatures and add your signature.",
-          "error",
-        );
-        return;
-      }
+    // Every report carries Consent & Signatures — the slice auto-appends it at
+    // payload time whether or not the clinician added it in the builder — so
+    // the signature is always required to publish. Gating this on
+    // activeSections left a hole: a report where the section was never added
+    // still shipped one, unsigned, with the check skipped entirely.
+    // Saving a draft is deliberately unaffected; the signature is only
+    // required when the report is submitted.
+    const consent = mergedSectionData.consentSignatures || {};
+    if (!consent.clinicianSignature) {
+      showToast(
+        "Sign the report before submitting — open Consent & Signatures and add your signature.",
+        "error",
+      );
+      return;
     }
 
     const reportData = {
