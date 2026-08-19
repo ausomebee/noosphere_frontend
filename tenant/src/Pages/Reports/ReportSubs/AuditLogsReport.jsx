@@ -14,20 +14,31 @@ const toRow = (log) => ({
     date: format(new Date(log.createdAt), "MM/dd/yyyy"),
     time: format(new Date(log.createdAt), "hh:mma"),
   },
-  admin: log.admin ? `${log.admin.firstName} ${log.admin.lastName}`.trim() : "—",
+  // `accessedBy` is the actor the API names directly; the admin relation only
+  // covers logs raised on an admin's behalf.
+  accessedBy:
+    log.accessedBy ||
+    (log.admin ? `${log.admin.firstName} ${log.admin.lastName}`.trim() : "") ||
+    "—",
+  module: log.module || log.feature || "—",
   action: log.action || "—",
-  details: log.details || "—",
-  reason: log.reason || "—",
-  feature: log.feature || log.module || "—",
+  // What was acted on. The API carries it in `details`, with `reason` as the
+  // fallback for entries that only explain why.
+  object: log.details || log.reason || "—",
+  ipAddress: log.ipAddress || "—",
+  userAgent: log.userAgent || "—",
+  outcome: log.outcome || "—",
 });
 
 const columns = [
   { header: "Timestamp", key: "timestamp", type: "day_time" },
-  { header: "Admin", key: "admin" },
-  { header: "Feature", key: "feature" },
-  { header: "Action", key: "action" },
-  { header: "Details", key: "details" },
-  { header: "Reason", key: "reason" },
+  { header: "Accessed by", key: "accessedBy", type: "accent", truncate: true },
+  { header: "Module Accessed", key: "module", truncate: true },
+  { header: "Action", key: "action", truncate: true },
+  { header: "Object", key: "object", truncate: true },
+  { header: "IP Address", key: "ipAddress", truncate: true },
+  { header: "User Agent", key: "userAgent", truncate: true },
+  { header: "Outcome", key: "outcome" },
 ];
 
 const PAGE_SIZE = 20;

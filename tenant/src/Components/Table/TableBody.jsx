@@ -241,6 +241,10 @@ const TableBody = ({
               disabled={!handleToggleActive}
             />
           );
+        // Reads as a link in the design but has nowhere to navigate to, so it
+        // is coloured without being interactive.
+        case "accent":
+          return <span className="table-accent-cell">{row[col.key] || "N/A"}</span>;
         case "day_time":
           return (
             <div className="day-time-cell">
@@ -425,8 +429,15 @@ const TableBody = ({
                     primaryColumns.includes(col.header)
                       ? "primary-text"
                       : "secondary-text"
-                  }${col.width ? " table-col-wrap" : ""}`}
+                  }${col.width ? " table-col-wrap" : ""}${
+                    col.truncate ? " table-cell-truncate" : ""
+                  }`}
                   style={col.width ? { width: col.width } : undefined}
+                  title={
+                    col.truncate && typeof row[col.key] === "string"
+                      ? row[col.key]
+                      : undefined
+                  }
                 >
                   {renderCellContent(col, row, rowIndex)}
                 </td>

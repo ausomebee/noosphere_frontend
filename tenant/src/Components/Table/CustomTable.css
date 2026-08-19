@@ -825,6 +825,19 @@
   text-align: left;
   cursor: pointer;
 }
+/* Opt-in per column via `truncate: true`; the full value is on the title. */
+.table-cell-truncate {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-accent-cell {
+  color: #004aba;
+  font-weight: 500;
+}
+
 .table-link-cell:hover {
   color: #004aba;
   text-decoration: underline;
