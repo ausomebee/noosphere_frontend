@@ -145,7 +145,7 @@ const FileUploadArea = ({
                 {getFileIcon(file.name)}
                 <span className="file-name">
                   {file.url ? (
-                    <a href={file.url} target="_blank" rel="noreferrer">
+                    <a href={file.url} target="_blank" rel="noopener">
                       {file.name}
                     </a>
                   ) : (

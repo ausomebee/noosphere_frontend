@@ -32,11 +32,12 @@ describe("DocumentViewer Component", () => {
     expect(document.querySelector("img")).toBeInTheDocument();
   });
 
-  it("uses Google Docs viewer for DOC files", () => {
+  // A third-party viewer fetches the file from its own servers, so the request
+  // never carries our origin and the referer-locked bucket denies it.
+  it("never hands a DOC file to a third-party viewer", () => {
     render(<DocumentViewer fileUrl="https://example.com/doc.docx" fileName="Word Doc" onClose={vi.fn()} />);
-    const iframe = document.querySelector("iframe");
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.getAttribute("src")).toContain("docs.google.com/gview");
+    expect(document.querySelector("iframe")).not.toBeInTheDocument();
+    expect(screen.getByText("Download File")).toBeInTheDocument();
   });
 
   it("shows download button for unsupported file types", () => {

@@ -16,18 +16,27 @@ import { useNotificationSettings } from "../../hooks/useNotificationSettings";
 import NotificationSettings from "../../Components/NotificationSettings/NotificationSettings";
 import { DEFAULT_AVATAR, validImageTypes } from "../../Data/selectOptions";
 
+// Drawn inline rather than fetched, so the fallback stays on our own page and
+// never leaves the domain the way a third-party avatar service would.
+const initialsAvatar = (initials) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120">` +
+      `<rect width="120" height="120" fill="#CCCCCC"/>` +
+      `<text x="50%" y="50%" dy=".35em" text-anchor="middle" ` +
+      `font-family="Arial, Helvetica, sans-serif" font-size="44" ` +
+      `fill="#666666">${initials}</text></svg>`
+  )}`;
+
 // Function to generate avatar URL with fallback
 const getAvatarUrl = (url, firstName, lastName) => {
   if (url && url.trim() !== "") {
     return url;
   }
 
-  // Optional: Generate initials-based avatar as fallback
-  // You can use a service like ui-avatars.com
   const initials =
     `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   if (initials) {
-    return `https://ui-avatars.com/api/?name=${initials}&size=120&background=CCCCCC&color=666666`;
+    return initialsAvatar(initials);
   }
 
   return DEFAULT_AVATAR;

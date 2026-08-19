@@ -97,18 +97,11 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
       );
     }
 
-    if (isDoc) {
-      const googleDocsViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-      return (
-        <iframe
-          src={googleDocsViewerUrl}
-          className="doc-viewer-iframe"
-          onLoad={() => setIsLoading(false)}
-          title={fileName}
-        />
-      );
-    }
-
+    // Word files used to render through docs.google.com/gview, which makes
+    // Google's servers fetch the file. That request does not come from our
+    // domain, so the referer-locked bucket answers it with Access Denied and
+    // the frame stays blank. Downloading keeps the request in the browser,
+    // where it carries our origin.
     return (
       <div className="doc-viewer-fallback">
         <svg
@@ -126,7 +119,11 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
         </svg>
-        <p>This file type cannot be previewed.</p>
+        <p>
+          {isDoc
+            ? "Word documents can't be previewed in the browser."
+            : "This file type cannot be previewed."}
+        </p>
         <button className="doc-viewer-btn" onClick={handleDownload}>
           <svg
             width="16"

@@ -53,6 +53,8 @@ const DashboardLayout = ({ children }) => {
   const dispatch = useDispatch();
 
   const { firstName, lastName, avatarUrl, userId, accessToken, refreshToken } = useAuth();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  useEffect(() => setAvatarFailed(false), [avatarUrl]);
   const { isConnected } = useSocket({
     onMessage: () => setMessageCount((c) => c + 1),
     // Live-count incoming notifications even while the user is elsewhere in the
@@ -160,8 +162,14 @@ const DashboardLayout = ({ children }) => {
         <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-profile">
             <div className="profile-avatar conn-status-anchor">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName} />
+              {avatarUrl && !avatarFailed ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  // Without this a denied or missing avatar renders as a broken
+                  // image, when the initials below are the better answer.
+                  onError={() => setAvatarFailed(true)}
+                />
               ) : (
                 <div
                   style={{
