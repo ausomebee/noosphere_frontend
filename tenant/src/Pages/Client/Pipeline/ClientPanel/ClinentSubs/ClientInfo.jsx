@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClientPortalSettingsModal from "../../../../../Components/ReusableModal/ClientModal/ClientAccessModal";
 import AddClientModal from "../../../../../Components/ReusableModal/ClientModal/AddClientModal";
 import NewDocumentRequestModal from "../../../../../Components/ReusableModal/ClientModal/NewDocumentRequestModal";
+import DeleteModal from "../../../../../Components/ReusableModal/OrganizationModal/DeleteModal";
 import api from "../../../../../api/TenantApis";
 import { showToast, showApiError } from "../../../../../Helper/ShowToast";
 import useAuth from "../../../../../hooks/useAuth";
@@ -303,31 +304,24 @@ const DocumentsForms = () => {
     }
   };
 
-  // Cancelling withdraws the request from the client, so confirm first — it
-  // can't be undone from here.
-  const [cancellingRequestId, setCancellingRequestId] = useState(null);
+  // Cancelling withdraws the request from the client and can't be undone here,
+  // so it goes through the shared confirmation modal.
+  const [cancelRequestTarget, setCancelRequestTarget] = useState(null);
 
-  const handleCancelDocumentRequest = async (request) => {
-    if (!request?.id || cancellingRequestId) return;
-
-    const confirmed = window.confirm(
-      `Cancel the request for "${request.name}"? The client will no longer be asked to upload it.`
-    );
-    if (!confirmed) return;
-
-    setCancellingRequestId(request.id);
+  const handleConfirmCancelRequest = async () => {
+    if (!cancelRequestTarget) return;
     try {
       await api2.CancelClientDocumentRequest({
-        id: request.id,
+        id: cancelRequestTarget.id,
         accessToken,
         refreshToken,
       });
-      showToast(`Request for "${request.name}" cancelled`, "success");
+      showToast(`Request for "${cancelRequestTarget.name}" cancelled`, "success");
       await fetchDocumentRequests();
     } catch (error) {
       showApiError(error, "CANCEL_DOCUMENT_REQUEST");
-    } finally {
-      setCancellingRequestId(null);
+      // Re-thrown so DeleteModal keeps itself open on failure.
+      throw error;
     }
   };
 
@@ -1016,17 +1010,9 @@ const DocumentsForms = () => {
                                                   <button
                                                     type="button"
                                                     className="text-red-600 font-600 text-base hover:underline cursor-pointer"
-                                                    onClick={() => handleCancelDocumentRequest(req)}
-                                                    disabled={cancellingRequestId === req.id}
-                                                    style={
-                                                      cancellingRequestId === req.id
-                                                        ? { opacity: 0.5, cursor: "not-allowed" }
-                                                        : undefined
-                                                    }
+                                                    onClick={() => setCancelRequestTarget(req)}
                                                   >
-                                                    {cancellingRequestId === req.id
-                                                      ? "Cancelling..."
-                                                      : "Cancel request"}
+                                                    Cancel request
                                                   </button>
                                                   )}
                                                 </div>
@@ -1086,6 +1072,19 @@ const DocumentsForms = () => {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
         onSubmit={handleCreateRequest}
+      />
+
+      <DeleteModal
+        isOpen={Boolean(cancelRequestTarget)}
+        onClose={() => setCancelRequestTarget(null)}
+        title="Cancel document request?"
+        message={
+          cancelRequestTarget
+            ? `"${cancelRequestTarget.name}" will be withdrawn and the client will no longer be asked to upload it.`
+            : ""
+        }
+        confirmLabel="Cancel request"
+        onConfirm={handleConfirmCancelRequest}
       />
 
       <FormLibraryModal
