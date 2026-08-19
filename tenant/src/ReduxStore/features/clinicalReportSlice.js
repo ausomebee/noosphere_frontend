@@ -79,6 +79,13 @@ const initialState = {
   publishSuccess: false,
 };
 
+
+// A deep copy of the empty section data. A shallow spread would hand out the
+// same nested objects that live on initialState, so a later edit could mutate
+// the defaults for every report created afterwards in the same session.
+const freshSectionData = () =>
+  JSON.parse(JSON.stringify(initialState.sectionData));
+
 export const saveDraft = createAsyncThunk(
   "clinicalReport/saveDraft",
   async ({ reportData, api, tokens }, { rejectWithValue, getState }) => {
@@ -336,6 +343,27 @@ const slice = createSlice({
         existingSectionIds = {},
       } = payload;
 
+      // The builder state is persisted, so whatever the last report left behind
+      // is still here. Starting a different document — or any new one — has to
+      // clear it, otherwise the previous report's sections carry over. That was
+      // possible across clients too: metadata was replaced so the header showed
+      // the new client while the clinical content underneath belonged to the
+      // previous one.
+      const meta0 = metadata || formData?.metadata;
+      const incomingReportId = id ?? null;
+      const incomingClient = meta0?.clientTenantId ?? null;
+      const isDifferentDocument =
+        mode === "new" ||
+        state.reportId !== incomingReportId ||
+        state.metadata?.clientTenantId !== incomingClient;
+
+      if (isDifferentDocument) {
+        state.sectionData = freshSectionData();
+        state.activeSections = [];
+        state.expandedSections = [];
+        state.existingSectionIds = {};
+      }
+
       state.reportId = id;
       state.mode = mode;
       state.activeTab = activeTab;
@@ -363,8 +391,13 @@ const slice = createSlice({
         };
       }
 
+      // Replaces rather than merges — merging let a section the incoming
+      // document doesn't have keep the previous document's content.
       if (formData?.sectionData) {
-        state.sectionData = { ...state.sectionData, ...formData.sectionData };
+        state.sectionData = {
+          ...freshSectionData(),
+          ...formData.sectionData,
+        };
       }
 
       if (formData?.activeSections) {
@@ -459,7 +492,10 @@ const slice = createSlice({
       state.existingSectionIds = payload;
     },
 
-    clearForm: () => ({ ...initialState }),
+    // Full wipe back to empty. The shallow spread here shared initialState's
+    // nested section objects by reference, so a later edit could mutate the
+    // defaults themselves.
+    clearForm: () => ({ ...initialState, sectionData: freshSectionData() }),
 
     resetSaveStates(state) {
       state.isSaving = false;
@@ -529,7 +565,7 @@ const slice = createSlice({
         s.activeSections = deduped.map((s) => s.sectionId);
         s.expandedSections = [...s.activeSections];
 
-        s.sectionData = { ...initialState.sectionData };
+        s.sectionData = freshSectionData();
         deduped.forEach((sec) => {
           s.sectionData[sec.sectionId] = sec.content;
         });
