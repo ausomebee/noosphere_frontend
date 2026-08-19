@@ -154,7 +154,10 @@ const CustomTable = ({
         (f) => f.value === filterValues.filter_type
       );
 
-      if (selectedFilter && selectedFilter.filterFunction) {
+      // Guarded on the type, not just truthiness: a non-function here used to
+      // be called anyway and throw, taking the table down rather than simply
+      // falling back to the default comparison below.
+      if (typeof selectedFilter?.filterFunction === "function") {
         filtered = filtered.filter((row) =>
           selectedFilter.filterFunction(row, filterValues.value)
         );

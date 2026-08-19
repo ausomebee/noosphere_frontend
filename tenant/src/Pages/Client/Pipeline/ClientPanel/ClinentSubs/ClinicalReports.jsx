@@ -676,18 +676,31 @@ const ClinicalReportsTab = ({ clientData }) => {
     { header: "Last Updated", key: "lastUpdated", type: "text" },
   ];
 
+  // CustomTable invokes filterFunction — these were the string "includes",
+  // which is truthy, so the table entered the custom-filter branch and tried to
+  // call a string. That threw and took the whole table down.
+  const matches = (field) => (row, value) =>
+    !value ||
+    String(row?.[field] ?? "")
+      .toLowerCase()
+      .includes(String(value).toLowerCase());
+
   const filters = useMemo(
     () => [
       {
         value: "documentTitle",
         label: "Document Title",
-        filterFunction: "includes",
+        filterFunction: matches("documentTitle"),
       },
-      { value: "createdBy", label: "Created By", filterFunction: "includes" },
+      {
+        value: "createdBy",
+        label: "Created By",
+        filterFunction: matches("createdBy"),
+      },
       {
         value: "approverSupervisor",
         label: "Approver/Supervisor",
-        filterFunction: "includes",
+        filterFunction: matches("approverSupervisor"),
       },
     ],
     [],
