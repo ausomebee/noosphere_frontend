@@ -6,9 +6,11 @@ import {
   ReportSelect,
 } from "../../../../../../../../Components/Input/ReportInput/ReportBuilderInputs";
 import Button from "../../../../../../../../Components/Button/Button";
-import { FiEdit, FiImage, FiType } from "react-icons/fi";
 import "./ConsentSignaturesSection.css";
 import { RxCross2 } from "react-icons/rx";
+import SignatureCapture from "../../../../../../../../Components/SignatureCapture/SignatureCapture";
+import { formatDate } from "../../../../../../../../Helper/Formatters";
+import useFormatSettings from "../../../../../../../../hooks/useFormatSettings";
 import { RequiredMark } from "../../../../../../../../Components/Input/Inputs";
 
 // Relationship to Client Options
@@ -28,13 +30,6 @@ const CLINICIAN_ROLE_OPTIONS = [
   { value: "assistant-bcba", label: "Assistant BCBA" },
   { value: "clinical-supervisor", label: "Clinical Supervisor" },
   { value: "other-clinician", label: "Other authorized clinician" },
-];
-
-// Signature Types
-const SIGNATURE_TYPES = [
-  { value: "type", label: "Type", icon: <FiType size={20} /> },
-  { value: "draw", label: "Draw", icon: <FiEdit size={20} /> },
-  { value: "image", label: "Image", icon: <FiImage size={20} /> },
 ];
 
 // Yup Validation
@@ -59,6 +54,7 @@ const consentSchema = Yup.object().shape({
 });
 
 const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = false }) => {
+  const { dateFormat } = useFormatSettings();
   const [formData, setFormData] = useState({
     consentStatement: data.consentStatement || "",
     servicesConsented: data.servicesConsented || "",
@@ -112,7 +108,38 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
 
   const handleSignatureTypeSelect = (type) => {
     if (isReadOnly) return;
-    handleFieldChange("clinicianSignatureType", type);
+    // Switching method drops any signature already captured, so the stored
+    // value can never disagree with the selected type.
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        clinicianSignatureType: type,
+        clinicianSignature: "",
+        clinicianSignatureDate: "",
+      };
+      onChange(updated);
+      return updated;
+    });
+  };
+
+  // The date is stamped when the signature is captured rather than when the
+  // report is saved — it records when the clinician signed.
+  const handleSignatureChange = (signature) => {
+    if (isReadOnly) return;
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        clinicianSignature: signature,
+        clinicianSignatureDate: signature
+          ? prev.clinicianSignatureDate || new Date().toISOString()
+          : "",
+      };
+      onChange(updated);
+      return updated;
+    });
+    if (touched.clinicianSignature) {
+      validateField("clinicianSignature", signature);
+    }
   };
 
   return (
@@ -223,28 +250,18 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
           <div className="report-builder-error">{errors.clinicianRole}</div>
         )}
 
-        {/* Clinician Signature Type Selection */}
+        {/* Clinician Signature — selecting a method used to store the choice
+            and render nothing, so the signature itself could never be given. */}
         <div className="report-builder-field">
-          <label className="report-builder-label">
-            Clinician Signature
-            <RequiredMark required />
-          </label>
-          <div className="signature-type-selector">
-            {SIGNATURE_TYPES.map((type) => (
-              <button
-                key={type.value}
-                type="button"
-                className={`signature-type-btn ${
-                  formData.clinicianSignatureType === type.value ? "active" : ""
-                }`}
-                onClick={() => handleSignatureTypeSelect(type.value)}
-                disabled={isReadOnly}
-              >
-                <div className="signature-type-icon">{type.icon}</div>
-                <span className="signature-type-label">{type.label}</span>
-              </button>
-            ))}
-          </div>
+          <SignatureCapture
+            label="Clinician Signature"
+            required
+            readOnly={isReadOnly}
+            signatureType={formData.clinicianSignatureType}
+            value={formData.clinicianSignature}
+            onTypeChange={handleSignatureTypeSelect}
+            onChange={handleSignatureChange}
+          />
         </div>
         {touched.clinicianSignatureType && errors.clinicianSignatureType && (
           <div className="report-builder-error">
@@ -252,13 +269,17 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
           </div>
         )}
 
-        {/* Clinician Signature Date - Auto-generated */}
+        {/* Stamped when the signature is captured. */}
         <div className="report-builder-field">
           <label className="report-builder-label">
             Clinician Signature date
           </label>
           <div className="auto-generated-field">
-            <span>Auto-generated</span>
+            <span>
+              {formData.clinicianSignatureDate
+                ? formatDate(formData.clinicianSignatureDate, dateFormat)
+                : "Set when signed"}
+            </span>
           </div>
         </div>
 

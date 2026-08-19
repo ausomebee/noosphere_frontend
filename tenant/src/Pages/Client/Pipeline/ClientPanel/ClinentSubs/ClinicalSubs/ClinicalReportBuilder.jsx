@@ -816,6 +816,21 @@ const ClinicalReportBuilder = () => {
 
     const mergedSectionData = { ...sectionData, ...pendingUpdatesRef.current };
 
+    // A report carrying a consent section has to be signed before it goes out —
+    // publishing an unsigned clinical document was previously possible, with
+    // nothing on screen to say the signature was missing. Reports without that
+    // section are unaffected.
+    if (activeSections.includes("consentSignatures")) {
+      const consent = mergedSectionData.consentSignatures || {};
+      if (!consent.clinicianSignature) {
+        showToast(
+          "Sign the report before publishing — open Consent & Signatures and add your signature.",
+          "error",
+        );
+        return;
+      }
+    }
+
     const reportData = {
       reportId: storedReportId,
       metadata,

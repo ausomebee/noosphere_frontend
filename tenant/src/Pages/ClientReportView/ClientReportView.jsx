@@ -32,7 +32,19 @@ import ErrorFallback from "../../Components/ErrorFallback";
 import SectionLoader from "../../Components/SectionLoader";
 
 // ─── Helpers ──────────────────────────────────────────────
-const SKIP_KEYS = ["id", "clinicalReportId"];
+// Sections are rendered generically — every key in the content object is
+// printed — so anything the client shouldn't see has to be named here.
+// The clinician's signature is withheld: it's their mark on the document, not
+// information for the reader, and renderContentValue would otherwise detect
+// the base64 and render the actual signature image. Their name, role and the
+// date it was signed stay visible, so the client can still see who signed and
+// when.
+const SKIP_KEYS = [
+  "id",
+  "clinicalReportId",
+  "clinicianSignature",
+  "clinicianSignatureType",
+];
 
 const isHTMLString = (str) =>
   typeof str === "string" && /<[a-z][\s\S]*>/i.test(str);
