@@ -9,7 +9,9 @@ import * as yup from "yup";
 import { showValidationErrors } from "../../../Helper/formErrors";
 const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [] }) => {
   const schema = yup.object().shape({
-    currentAssignee: yup.string().trim().required("Current assignee is required"),
+    // An issue can arrive with no assignee, and this field is read-only,
+    // so requiring it made those issues impossible to change.
+    currentAssignee: yup.string().trim(),
     newAssignee: yup.string().trim().required("New assignee is required").notOneOf([yup.ref("currentAssignee")], "New assignee must be different from the current assignee"),
   });
 
@@ -51,7 +53,7 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
   }, [isOpen, initialAssignee, staffList, setValue, reset]);
 
   const onSubmit = async (data) => {
-    if (data.currentAssignee && data.newAssignee) {
+    if (data.newAssignee) {
       setLoading(true);
       try {
         await onSave(data.newAssignee);
@@ -84,7 +86,6 @@ const ReassignModal = ({ isOpen, onClose, onSave, initialAssignee, staffList = [
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
-          required
           label="Current Assignee"
           {...register("currentAssignee")}
           options={staffOptions}

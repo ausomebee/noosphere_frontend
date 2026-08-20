@@ -10,7 +10,9 @@ import { basePriorityOptions, enterprisePriorityOptions } from "../../../Data/se
 import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selectedTenant }) => {
   const schema = yup.object().shape({
-    priorityFrom: yup.string().trim().required("Current priority is required"),
+    // An issue can arrive with no priority, and this field is read-only,
+    // so requiring it made those issues impossible to change.
+    priorityFrom: yup.string().trim(),
     priorityTo: yup
       .string()
       .trim()
@@ -68,7 +70,7 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
   }, [isOpen, initialPriority, setValue, priorityOptions]);
 
   const onSubmit = async (data) => {
-    if (data.priorityTo && data.priorityFrom === initialPriority) {
+    if (data.priorityTo) {
       setLoading(true);
       try {
         await onSave(data.priorityTo);
@@ -101,10 +103,10 @@ const ChangePriorityModal = ({ isOpen, onClose, onSave, initialPriority, selecte
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
-          required
           label="Current Priority"
           {...register("priorityFrom")}
-          options={[{ value: "", label: "Select current priority" }, ...priorityOptions]}
+          // Reads as an instruction the user cannot follow on a read-only field.
+          options={[{ value: "", label: "None set" }, ...priorityOptions]}
           error={errors.priorityFrom?.message}
           disabled={true}
         />

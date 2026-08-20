@@ -19,6 +19,7 @@ import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa"
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { formatDate, formatFileSize } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import { toProgressEntry } from "./progressTrack";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import "./SupportRequests.css";
 
@@ -69,7 +70,7 @@ const SupportRequests = () => {
   const navigate = useNavigate();
   const { tenantId, userId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
-  const { dateFormat } = useFormatSettings();
+  const { dateFormat, timeFormat } = useFormatSettings();
 
   usePageTitle("Support Requests");
   const [requests, setRequests] = useState([]);
@@ -486,17 +487,30 @@ const SupportRequests = () => {
           <div className="progress-track-list">
             {progressData.length > 0 ? (
               progressData.map((item, idx) => (
-                <div key={idx} className="progress-track-item">
-                  {item.message || item.action} on{" "}
-                  <span className="track-date">
-                    {formatDate(item.createdAt || item.date, dateFormat)}
-                  </span>
-                  {item.person && (
+                <div key={item.logId || idx} className="progress-track-item">
+                {(() => {
+                  const entry = toProgressEntry(item, dateFormat, timeFormat);
+                  return (
                     <>
-                      {" "}
-                      to <span className="track-person">{item.person}</span>
+                      <div className="track-headline">
+                        {entry.person && (
+                          <span className="track-person">{entry.person}</span>
+                        )}
+                        {entry.person ? " " : ""}
+                        {entry.action}
+                        {entry.failed && (
+                          <span className="track-status failed"> Failed</span>
+                        )}
+                      </div>
+                      {entry.reason && (
+                        <div className="track-reason">{entry.reason}</div>
+                      )}
+                      {entry.when && (
+                        <div className="track-date">{entry.when}</div>
+                      )}
                     </>
-                  )}
+                  );
+                })()}
                 </div>
               ))
             ) : (

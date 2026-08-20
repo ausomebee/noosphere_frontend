@@ -173,8 +173,28 @@
   font-weight: 500;
 }
 
+.progress-track-item .track-headline {
+  color: #333;
+}
+
+.progress-track-item .track-reason {
+  color: #667085;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.progress-track-item .track-date {
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
 .progress-track-item .track-status {
   font-weight: 500;
+}
+
+.progress-track-item .track-status.failed {
+  color: #d92d20;
 }
 
 .progress-track-item .track-status.resolved {

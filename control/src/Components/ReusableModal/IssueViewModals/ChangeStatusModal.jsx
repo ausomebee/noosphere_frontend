@@ -10,7 +10,9 @@ import { issueStatusOptions as statusOptions } from "../../../Data/selectOptions
 import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
   const schema = yup.object().shape({
-    statusFrom: yup.string().trim().required("Current status is required"),
+    // An issue can arrive with no status, and this field is read-only,
+    // so requiring it made those issues impossible to change.
+    statusFrom: yup.string().trim(),
     statusTo: yup.string().trim().required("New status is required").notOneOf([yup.ref("statusFrom")], "New status must be different from the current status"),
   });
 
@@ -41,7 +43,7 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
   }, [isOpen, initialStatus, setValue, reset]);
 
   const onSubmit = async (data) => {
-    if (data.statusFrom && data.statusTo) {
+    if (data.statusTo) {
       setLoading(true);
       try {
         await onSave(data.statusTo);
@@ -74,7 +76,6 @@ const ChangeStatusModal = ({ isOpen, onClose, onSave, initialStatus }) => {
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
-          required
           label="Change from"
           {...register("statusFrom")}
           options={statusOptions}

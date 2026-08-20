@@ -7,8 +7,9 @@ import { showToast } from "../../../Helper/ShowToast";
 import { FiArrowLeft, FiFileText, FiExternalLink } from "react-icons/fi";
 import { LuPrinter } from "react-icons/lu";
 import { RiFileUploadLine } from "react-icons/ri";
-import { formatDateTime, formatDate } from "../../../Helper/Formatters";
+import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import { toProgressEntry } from "./progressTrack";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import usePermissions from "../../../hooks/usePermissions";
 import "./ViewRequestDetails.css";
@@ -284,30 +285,30 @@ const ViewRequestDetails = () => {
           <div className="progress-track-list">
             {logs.length > 0 ? (
               logs.map((item, idx) => (
-                <div key={idx} className="progress-track-item">
-                  {item.message || item.action}
-                  {item.person && (
+                <div key={item.logId || idx} className="progress-track-item">
+                {(() => {
+                  const entry = toProgressEntry(item, dateFormat, timeFormat);
+                  return (
                     <>
-                      {" "}
-                      <span className="track-person">{item.person}</span>
+                      <div className="track-headline">
+                        {entry.person && (
+                          <span className="track-person">{entry.person}</span>
+                        )}
+                        {entry.person ? " " : ""}
+                        {entry.action}
+                        {entry.failed && (
+                          <span className="track-status failed"> Failed</span>
+                        )}
+                      </div>
+                      {entry.reason && (
+                        <div className="track-reason">{entry.reason}</div>
+                      )}
+                      {entry.when && (
+                        <div className="track-date">{entry.when}</div>
+                      )}
                     </>
-                  )}
-                  {item.status && (
-                    <>
-                      {" "}
-                      <span
-                        className={`track-status ${item.status.toLowerCase()}`}
-                      >
-                        {item.status}
-                      </span>
-                    </>
-                  )}{" "}
-                  on{" "}
-                  <span className="track-date">
-                    {item.createdAt
-                      ? formatDate(item.createdAt, dateFormat)
-                      : "N/A"}
-                  </span>
+                  );
+                })()}
                 </div>
               ))
             ) : (

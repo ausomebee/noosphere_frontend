@@ -9,7 +9,9 @@ import * as yup from "yup";
 import { showValidationErrors } from "../../../Helper/formErrors";
 const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
   const schema = yup.object().shape({
-    categoryFrom: yup.string().trim().required("Current category is required"),
+    // An issue can arrive with no category, and this field is read-only,
+    // so requiring it made those issues impossible to change.
+    categoryFrom: yup.string().trim(),
     categoryTo: yup.string().trim().required("New category is required").notOneOf([yup.ref("categoryFrom")], "New category must be different from the current category"),
   });
 
@@ -63,7 +65,7 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
   }, [isOpen, initialCategory, setValue, reset]);
 
   const onSubmit = async (data) => {
-    if (data.categoryFrom && data.categoryTo) {
+    if (data.categoryTo) {
       setLoading(true);
       try {
         await onSave(data.categoryTo);
@@ -96,7 +98,6 @@ const ChangeCategoryModal = ({ isOpen, onClose, onSave, initialCategory }) => {
     >
       <form className="modal-form" onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
         <SelectInput
-          required
           label="Change from"
           {...register("categoryFrom")}
           options={categoryOptions}
