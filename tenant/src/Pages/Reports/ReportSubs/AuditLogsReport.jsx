@@ -20,7 +20,7 @@ const toRow = (log) => ({
     log.accessedBy ||
     (log.admin ? `${log.admin.firstName} ${log.admin.lastName}`.trim() : "") ||
     "—",
-  module: log.module || log.feature || "—",
+  feature: log.feature || log.module || "—",
   action: log.action || "—",
   // What was acted on. The API carries it in `details`, with `reason` as the
   // fallback for entries that only explain why.
@@ -33,7 +33,7 @@ const toRow = (log) => ({
 const columns = [
   { header: "Timestamp", key: "timestamp", type: "day_time" },
   { header: "Accessed by", key: "accessedBy", type: "accent", truncate: true },
-  { header: "Module Accessed", key: "module", truncate: true },
+  { header: "Module Accessed", key: "feature", truncate: true },
   { header: "Action", key: "action", truncate: true },
   { header: "Object", key: "object", truncate: true },
   { header: "IP Address", key: "ipAddress", truncate: true },
