@@ -19,7 +19,7 @@ import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa"
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { formatDate, formatFileSize } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
-import { toProgressEntry } from "./progressTrack";
+import { loggedByName, toProgressEntry } from "./progressTrack";
 import usePagedList from "../../../hooks/usePagedList";
 import Pagination from "../../../Components/Table/Pagination";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
@@ -150,12 +150,7 @@ const SupportRequests = () => {
         req.description?.length > 30
           ? req.description.substring(0, 30) + "..."
           : req.description || "N/A",
-      loggedBy:
-        [req.loggedBy?.firstName, req.loggedBy?.lastName]
-          .filter(Boolean)
-          .join(" ") ||
-        req.loggedBy?.fullName ||
-        "N/A",
+      loggedBy: loggedByName(req),
       dateReported: formatDate(req.createdAt, dateFormat),
       status: req.status || "Not Started",
       hasActions: true,

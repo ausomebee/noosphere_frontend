@@ -9,7 +9,7 @@ import { LuPrinter } from "react-icons/lu";
 import { RiFileUploadLine } from "react-icons/ri";
 import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
-import { toProgressEntry } from "./progressTrack";
+import { loggedByName, toProgressEntry } from "./progressTrack";
 import usePagedList from "../../../hooks/usePagedList";
 import Pagination from "../../../Components/Table/Pagination";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
@@ -178,11 +178,7 @@ const ViewRequestDetails = () => {
             <tr>
               <td className="field-label">Logged by</td>
               <td className="field-value">
-                {[request.loggedBy?.firstName, request.loggedBy?.lastName]
-                  .filter(Boolean)
-                  .join(" ") ||
-                  request.loggedBy?.fullName ||
-                  "N/A"}
+                {loggedByName(request)}
               </td>
             </tr>
             <tr>

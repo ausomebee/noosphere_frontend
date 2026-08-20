@@ -62,3 +62,23 @@ export const toProgressEntry = (log, dateFormat, timeFormat, issueName) => {
 };
 
 export default toProgressEntry;
+
+/**
+ * Who raised a support request.
+ *
+ * `loggedBy` is null whenever no admin logged it — which means the tenant
+ * raised it themselves, so their own name is the answer rather than "N/A".
+ */
+export const loggedByName = (request) => {
+  const admin = [request?.loggedBy?.firstName, request?.loggedBy?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return (
+    admin ||
+    request?.loggedBy?.fullName ||
+    request?.tenant?.companyName ||
+    "N/A"
+  );
+};

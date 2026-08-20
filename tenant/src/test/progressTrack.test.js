@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { toProgressEntry } from "../Pages/HelpAndSupport/SupportRequests/progressTrack";
+import {
+  loggedByName,
+  toProgressEntry,
+} from "../Pages/HelpAndSupport/SupportRequests/progressTrack";
 
 // Shapes taken from a live issue-with-Logs response.
 const log = {
@@ -61,5 +64,38 @@ describe("toProgressEntry", () => {
 
   it("never renders an empty action", () => {
     expect(toProgressEntry({}, "MM/DD/YYYY", "12-hour").action).toBe("Updated");
+  });
+});
+
+describe("loggedByName", () => {
+  it("names the admin who logged it", () => {
+    expect(
+      loggedByName({
+        loggedBy: { firstName: "ajibola", lastName: "oluwagbemileke" },
+        tenant: { companyName: "Candidate 1" },
+      })
+    ).toBe("ajibola oluwagbemileke");
+  });
+
+  it("falls back to the tenant when no admin logged it", () => {
+    // The Data Issues case: loggedBy and adminLoggedById are both null.
+    expect(
+      loggedByName({
+        loggedBy: null,
+        adminLoggedById: null,
+        tenant: { companyName: "Candidate 1" },
+      })
+    ).toBe("Candidate 1");
+  });
+
+  it("accepts a fullName shape", () => {
+    expect(loggedByName({ loggedBy: { fullName: "Mr Team Lead" } })).toBe(
+      "Mr Team Lead"
+    );
+  });
+
+  it("only says N/A when nothing at all is known", () => {
+    expect(loggedByName({})).toBe("N/A");
+    expect(loggedByName(undefined)).toBe("N/A");
   });
 });
