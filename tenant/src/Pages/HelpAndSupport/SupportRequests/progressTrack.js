@@ -1,5 +1,20 @@
 import { formatDateTime } from "../../../Helper/Formatters";
 
+const UUID =
+  /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+
+/**
+ * The API writes the raw record id into the action ("updated issue
+ * 7ad4d5f8-bd19-48cc-8c98-b2b6f9cdc684"). Nobody reading a progress track
+ * wants a UUID, so it becomes the issue's name where we know it, and is
+ * dropped entirely where we don't.
+ */
+const readableAction = (action, issueName) =>
+  String(action || "")
+    .replace(UUID, issueName || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 // Names arrive lowercase from the API ("ajibola oluwagbemileke").
 const titleCase = (name) =>
   String(name || "")
@@ -19,7 +34,7 @@ const titleCase = (name) =>
  * `action`. All of that is dropped here rather than at the call site, so both
  * places that render the track stay in step.
  */
-export const toProgressEntry = (log, dateFormat, timeFormat) => {
+export const toProgressEntry = (log, dateFormat, timeFormat, issueName) => {
   const person =
     titleCase(log?.accessedBy) ||
     titleCase(
@@ -27,7 +42,9 @@ export const toProgressEntry = (log, dateFormat, timeFormat) => {
     ) ||
     "";
 
-  const action = log?.action || log?.message || log?.details || "Updated";
+  const action =
+    readableAction(log?.action || log?.message || log?.details, issueName) ||
+    "Updated";
   const outcome = String(log?.outcome || "").toUpperCase();
 
   return {

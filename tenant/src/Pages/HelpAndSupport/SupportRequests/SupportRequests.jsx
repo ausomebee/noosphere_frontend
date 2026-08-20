@@ -500,7 +500,12 @@ const SupportRequests = () => {
               trackPage.pageItems.map((item, idx) => (
                 <div key={item.logId || idx} className="progress-track-item">
                 {(() => {
-                  const entry = toProgressEntry(item, dateFormat, timeFormat);
+                  const entry = toProgressEntry(
+                    item,
+                    dateFormat,
+                    timeFormat,
+                    progressTitle
+                  );
                   return (
                     <>
                       <div className="track-headline">
