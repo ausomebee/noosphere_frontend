@@ -43,3 +43,30 @@ export const sortNewestFirst = (requests) =>
   [...(requests || [])].sort(
     (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
   );
+
+/**
+ * Who raised a change request, and in what capacity.
+ *
+ * `requester` is a plain string on the payload, not an object — reading
+ * `.fullName` off it always yielded undefined, so a request raised by a client
+ * fell through to the literal "Approver" and their name never appeared. The
+ * client's own name is nested a level deeper, under `client.client`.
+ */
+export const changeRequestAuthor = (request) => {
+  const nested = request?.client?.client;
+  const clientName = [nested?.firstName, nested?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const requester =
+    typeof request?.requester === "string"
+      ? request.requester.trim()
+      : request?.requester?.fullName;
+
+  return {
+    name: requester || clientName || request?.approver?.fullName || "Unknown",
+    // A request carries either a clientTenantId or an approverId, never both.
+    role: request?.clientTenantId || clientName ? "Client" : "Approver",
+  };
+};

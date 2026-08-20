@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  changeRequestAuthor,
   isChangeRequestOpen,
   lastSubmittedAtFrom,
   sortNewestFirst,
@@ -97,5 +98,52 @@ describe("sortNewestFirst", () => {
     ];
     sortNewestFirst(input);
     expect(input.map((r) => r.id)).toEqual(["a", "b"]);
+  });
+});
+
+// Shapes taken from a live /clinical-report-change-requests/report/:id response.
+describe("changeRequestAuthor", () => {
+  it("names the client who raised it", () => {
+    expect(
+      changeRequestAuthor({
+        clientTenantId: "3e88c605-82b8-4eec-adc5-e54f36e462e4",
+        approverId: null,
+        client: { client: { firstName: "Tenant Staff Created", lastName: "TSC" } },
+        approver: null,
+        requester: "Tenant Staff Created TSC",
+      })
+    ).toEqual({ name: "Tenant Staff Created TSC", role: "Client" });
+  });
+
+  it("names the approver who raised it", () => {
+    expect(
+      changeRequestAuthor({
+        clientTenantId: null,
+        approverId: "45730bb2-1645-4215-8890-fdbb6b50acf8",
+        client: null,
+        approver: { fullName: "Mr Team Lead" },
+        requester: "Mr Team Lead",
+      })
+    ).toEqual({ name: "Mr Team Lead", role: "Approver" });
+  });
+
+  it("falls back to the nested client name when requester is missing", () => {
+    expect(
+      changeRequestAuthor({
+        clientTenantId: "abc",
+        client: { client: { firstName: "Ada", lastName: "Obi" } },
+      })
+    ).toEqual({ name: "Ada Obi", role: "Client" });
+  });
+
+  it("falls back to the approver object when requester is missing", () => {
+    expect(
+      changeRequestAuthor({ approver: { fullName: "Mr Team Lead" } })
+    ).toEqual({ name: "Mr Team Lead", role: "Approver" });
+  });
+
+  it("never shows a blank name", () => {
+    expect(changeRequestAuthor({}).name).toBe("Unknown");
+    expect(changeRequestAuthor(undefined).name).toBe("Unknown");
   });
 });

@@ -38,6 +38,7 @@ import ReviewSection from "./DocumentSections/ReviewSection/ReviewSection";
 import DischargeSection from "./DocumentSections/DischargeSection/DischargeSection";
 import ConsentSignaturesSection from "./DocumentSections/ConsentSignaturesSection/ConsentSignaturesSection";
 import {
+  changeRequestAuthor,
   isChangeRequestOpen as isRequestOpen,
   lastSubmittedAtFrom,
   sortNewestFirst,
@@ -1483,14 +1484,7 @@ const ClinicalReportBuilder = () => {
               ) : changeRequests.length > 0 ? (
                 <ul className="cr-list">
                   {changeRequests.map((cr, idx) => {
-                    const name =
-                      cr.requester?.fullName ||
-                      cr.approver?.fullName ||
-                      "Approver";
-                    const role =
-                      cr.requester?.fullName && cr.approver?.fullName
-                        ? `Approver: ${cr.approver.fullName}`
-                        : "Approver";
+                    const { name, role } = changeRequestAuthor(cr);
                     // The API carries no status on a change request, so the
                     // old check on `cr.status` marked every one of them open.
                     // Open means raised since the last submission.
