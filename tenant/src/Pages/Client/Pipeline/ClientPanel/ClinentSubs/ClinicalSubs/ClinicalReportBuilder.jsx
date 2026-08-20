@@ -37,6 +37,11 @@ import GeneralizationSection from "./DocumentSections/GeneralizationSection/Gene
 import ReviewSection from "./DocumentSections/ReviewSection/ReviewSection";
 import DischargeSection from "./DocumentSections/DischargeSection/DischargeSection";
 import ConsentSignaturesSection from "./DocumentSections/ConsentSignaturesSection/ConsentSignaturesSection";
+import {
+  isChangeRequestOpen as isRequestOpen,
+  lastSubmittedAtFrom,
+  sortNewestFirst,
+} from "./changeRequestStatus";
 import { showToast } from "../../../../../../Helper/ShowToast";
 import Button from "../../../../../../Components/Button/Button";
 import Alert from "../../../../../../Components/Alert/Alert";
@@ -557,6 +562,10 @@ const ClinicalReportBuilder = () => {
   const [isViewChangeModalOpen, setIsViewChangeModalOpen] = useState(false);
   const [changeRequests, setChangeRequests] = useState([]);
   const [changeRequestsLoading, setChangeRequestsLoading] = useState(false);
+  // Timestamp of the report's most recent submission for approval, used to
+  // work out which change requests the creator has already answered.
+  const [lastSubmittedAt, setLastSubmittedAt] = useState(null);
+  const [changeRequestsResolved, setChangeRequestsResolved] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isResubmitting, setIsResubmitting] = useState(false);
 
@@ -608,9 +617,23 @@ const ClinicalReportBuilder = () => {
   // life, so a signed document still showed "View Change Request". The request
   // itself remains in the audit trail.
   const CHANGE_REQUEST_SETTLED_MODES = ["awaitingSignature", "clientSigned"];
+
+  const isChangeRequestOpen = useCallback(
+    (request) => isRequestOpen(request, lastSubmittedAt),
+    [lastSubmittedAt],
+  );
+
+  const openChangeRequests = useMemo(
+    () => changeRequests.filter(isChangeRequestOpen),
+    [changeRequests, isChangeRequestOpen],
+  );
+
   const showViewChangeRequest =
     metadata?.hasChangesRequested === true &&
-    !CHANGE_REQUEST_SETTLED_MODES.includes(mode);
+    !CHANGE_REQUEST_SETTLED_MODES.includes(mode) &&
+    // Until the lookup resolves we cannot tell open from answered. Holding the
+    // banner back for that moment beats showing it and snatching it away.
+    (!changeRequestsResolved || openChangeRequests.length > 0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -917,12 +940,7 @@ const ClinicalReportBuilder = () => {
       });
       // Newest first — the API's order put the oldest at the top, so the
       // request most in need of attention was buried at the bottom.
-      const list = response?.data || [];
-      setChangeRequests(
-        [...list].sort(
-          (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0),
-        ),
-      );
+      setChangeRequests(sortNewestFirst(response?.data));
     } catch (err) {
       console.error("Failed to fetch change requests:", err);
     } finally {
@@ -934,6 +952,44 @@ const ClinicalReportBuilder = () => {
     fetchChangeRequests();
     setIsViewChangeModalOpen(true);
   }, [fetchChangeRequests]);
+
+  // The submission times live in the report's history, which is the only record
+  // of when the creator answered a request. Fetched once per report, and only
+  // for reports that actually have change requests.
+  const refreshChangeRequestState = useCallback(async () => {
+    if (!storedReportId || metadata?.hasChangesRequested !== true) {
+      setChangeRequestsResolved(true);
+      return;
+    }
+    try {
+      const [requests, history] = await Promise.all([
+        api.GetAllClinicalReportChangeRequests({
+          reportId: storedReportId,
+          accessToken,
+          refreshToken,
+        }),
+        api.GetClinicalReportAuditTrails({
+          reportId: storedReportId,
+          accessToken,
+          refreshToken,
+        }),
+      ]);
+
+      setLastSubmittedAt(lastSubmittedAtFrom(history?.data));
+      setChangeRequests(sortNewestFirst(requests?.data));
+    } catch (err) {
+      console.error("Failed to resolve change request state:", err);
+      // Fall back to the banner rather than hiding a request that may be live.
+      setLastSubmittedAt(null);
+    } finally {
+      setChangeRequestsResolved(true);
+    }
+  }, [storedReportId, metadata?.hasChangesRequested, accessToken, refreshToken]);
+
+  useEffect(() => {
+    setChangeRequestsResolved(false);
+    refreshChangeRequestState();
+  }, [refreshChangeRequestState]);
 
   // Approve document
   const handleApprove = useCallback(async () => {
@@ -1435,12 +1491,10 @@ const ClinicalReportBuilder = () => {
                       cr.requester?.fullName && cr.approver?.fullName
                         ? `Approver: ${cr.approver.fullName}`
                         : "Approver";
-                    // Anything still open reads amber; everything else has
-                    // been dealt with.
-                    const isOpen =
-                      !cr.status ||
-                      String(cr.status).toUpperCase() === "CHANGES_REQUESTED" ||
-                      String(cr.status).toUpperCase() === "PENDING";
+                    // The API carries no status on a change request, so the
+                    // old check on `cr.status` marked every one of them open.
+                    // Open means raised since the last submission.
+                    const isOpen = isChangeRequestOpen(cr);
 
                     return (
                       <li key={cr.id || idx} className="cr-item">
