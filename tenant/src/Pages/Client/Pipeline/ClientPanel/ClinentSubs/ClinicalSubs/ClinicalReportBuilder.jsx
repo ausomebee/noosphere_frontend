@@ -929,6 +929,37 @@ const ClinicalReportBuilder = () => {
     }
   }, [changeRequestText, storedReportId, metadata, accessToken, refreshToken, navigate]);
 
+  // Opening the modal is what counts as seeing them, so this runs from the
+  // view fetch only — never from the background check that decides whether the
+  // banner shows, which nobody has read yet.
+  const markChangeRequestsViewed = useCallback(
+    (list) => {
+      const unseen = (list || []).filter((cr) => cr?.viewed === false && cr?.id);
+      if (unseen.length === 0) return;
+
+      unseen.forEach((cr) => {
+        api
+          .MarkClinicalReportChangeRequestViewed({
+            changeRequestId: cr.id,
+            accessToken,
+            refreshToken,
+          })
+          .then(() => {
+            setChangeRequests((prev) =>
+              prev.map((item) =>
+                item.id === cr.id ? { ...item, viewed: true } : item,
+              ),
+            );
+          })
+          .catch((err) => {
+            // A read receipt is not worth interrupting the user for.
+            console.error("Failed to mark change request as viewed:", err);
+          });
+      });
+    },
+    [accessToken, refreshToken],
+  );
+
   // Fetch change requests for the View modal
   const fetchChangeRequests = useCallback(async () => {
     if (!storedReportId) return;
@@ -941,7 +972,9 @@ const ClinicalReportBuilder = () => {
       });
       // Newest first — the API's order put the oldest at the top, so the
       // request most in need of attention was buried at the bottom.
-      setChangeRequests(sortNewestFirst(response?.data));
+      const list = sortNewestFirst(response?.data);
+      setChangeRequests(list);
+      markChangeRequestsViewed(list);
     } catch (err) {
       console.error("Failed to fetch change requests:", err);
     } finally {

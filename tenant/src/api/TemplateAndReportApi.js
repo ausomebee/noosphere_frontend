@@ -366,6 +366,24 @@ const GetClinicalReportChangeRequests = async ({
   }
 };
 
+const MarkClinicalReportChangeRequestViewed = async ({
+  changeRequestId,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.patch(
+      `${PLAIN_API_URL}/clinical-report-change-requests/${changeRequestId}/view`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.message || "Mark Clinical Report Change Request Viewed failed",
+    );
+  }
+};
+
 const GetClinicalReportChangeRequestById = async ({
   changeRequestId,
   accessToken,
@@ -490,6 +508,7 @@ export default {
   GetClinicalReportAuditTrails,
   GetClinicalReportChangeRequests,
   GetClinicalReportChangeRequestById,
+  MarkClinicalReportChangeRequestViewed,
   WithdrawClientClinicalReport,
   NudgeClientForReport,
   ApproveClinicalReport,
