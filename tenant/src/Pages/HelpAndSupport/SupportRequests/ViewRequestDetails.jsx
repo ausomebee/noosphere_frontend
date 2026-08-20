@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
@@ -10,6 +10,8 @@ import { RiFileUploadLine } from "react-icons/ri";
 import { formatDateTime } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import { toProgressEntry } from "./progressTrack";
+import usePagedList from "../../../hooks/usePagedList";
+import Pagination from "../../../Components/Table/Pagination";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import usePermissions from "../../../hooks/usePermissions";
 import "./ViewRequestDetails.css";
@@ -69,6 +71,17 @@ const ViewRequestDetails = () => {
     }
   };
 
+  // Declared above the early returns below — a hook must run on every render.
+  const orderedLogs = useMemo(
+    () =>
+      // Newest first; the API returns oldest first, burying the latest step.
+      [...(request?.Logs || [])].sort(
+        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+      ),
+    [request]
+  );
+  const trackPage = usePagedList(orderedLogs);
+
   if (loading) {
     return (
       <>
@@ -94,7 +107,6 @@ const ViewRequestDetails = () => {
   }
 
   const attachments = request.attachments || [];
-  const logs = request.Logs || [];
 
   return (
     <>
@@ -277,14 +289,18 @@ const ViewRequestDetails = () => {
         <ReusableModal
           isOpen={isProgressModalOpen}
           onClose={() => setIsProgressModalOpen(false)}
-          title="Progress Track"
+          title={`Progress Track${
+            request.issueName || request.title
+              ? ` — ${request.issueName || request.title}`
+              : ""
+          }`}
           secondaryButtonText="Close"
           onSecondaryButtonClick={() => setIsProgressModalOpen(false)}
           size="md"
         >
           <div className="progress-track-list">
-            {logs.length > 0 ? (
-              logs.map((item, idx) => (
+            {trackPage.total > 0 ? (
+              trackPage.pageItems.map((item, idx) => (
                 <div key={item.logId || idx} className="progress-track-item">
                 {(() => {
                   const entry = toProgressEntry(item, dateFormat, timeFormat);
@@ -317,6 +333,13 @@ const ViewRequestDetails = () => {
               </p>
             )}
           </div>
+          {trackPage.showPagination && (
+            <Pagination
+              currentPage={trackPage.page}
+              totalPages={trackPage.totalPages}
+              onPageChange={trackPage.setPage}
+            />
+          )}
         </ReusableModal>
       </div>
     </>

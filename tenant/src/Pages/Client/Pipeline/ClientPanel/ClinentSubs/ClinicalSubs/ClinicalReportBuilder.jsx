@@ -37,6 +37,8 @@ import GeneralizationSection from "./DocumentSections/GeneralizationSection/Gene
 import ReviewSection from "./DocumentSections/ReviewSection/ReviewSection";
 import DischargeSection from "./DocumentSections/DischargeSection/DischargeSection";
 import ConsentSignaturesSection from "./DocumentSections/ConsentSignaturesSection/ConsentSignaturesSection";
+import usePagedList from "../../../../../../hooks/usePagedList";
+import Pagination from "../../../../../../Components/Table/Pagination";
 import {
   changeRequestAuthor,
   isChangeRequestOpen as isRequestOpen,
@@ -624,6 +626,8 @@ const ClinicalReportBuilder = () => {
     [lastSubmittedAt],
   );
 
+  const changeRequestPage = usePagedList(changeRequests);
+
   const openChangeRequests = useMemo(
     () => changeRequests.filter(isChangeRequestOpen),
     [changeRequests, isChangeRequestOpen],
@@ -984,8 +988,9 @@ const ClinicalReportBuilder = () => {
 
   const handleViewChangeRequest = useCallback(() => {
     fetchChangeRequests();
+    changeRequestPage.setPage(1);
     setIsViewChangeModalOpen(true);
-  }, [fetchChangeRequests]);
+  }, [fetchChangeRequests, changeRequestPage]);
 
   // The submission times live in the report's history, which is the only record
   // of when the creator answered a request. Fetched once per report, and only
@@ -1514,9 +1519,9 @@ const ClinicalReportBuilder = () => {
             <div>
               {changeRequestsLoading ? (
                 <SectionLoader />
-              ) : changeRequests.length > 0 ? (
+              ) : changeRequestPage.total > 0 ? (
                 <ul className="cr-list">
-                  {changeRequests.map((cr, idx) => {
+                  {changeRequestPage.pageItems.map((cr, idx) => {
                     const { name, role } = changeRequestAuthor(cr);
                     // The API carries no status on a change request, so the
                     // old check on `cr.status` marked every one of them open.
@@ -1562,6 +1567,13 @@ const ClinicalReportBuilder = () => {
                 </ul>
               ) : (
                 <p className="cr-empty">No change requests found.</p>
+              )}
+              {changeRequestPage.showPagination && (
+                <Pagination
+                  currentPage={changeRequestPage.page}
+                  totalPages={changeRequestPage.totalPages}
+                  onPageChange={changeRequestPage.setPage}
+                />
               )}
               <p className="cr-note">
                 {mode === "changeRequested"

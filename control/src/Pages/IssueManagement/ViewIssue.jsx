@@ -56,9 +56,13 @@ const ViewIssue = ({ issue, onBack, staffList = [], tenant= [] }) => {
         category: data.category || "N/A",
         priority: data.priority || "N/A",
         status: data.status || "Not Started",
-        loggedBy: data.loggedBy
-          ? `${data.loggedBy.firstName || ""} ${data.loggedBy.lastName || ""}`.trim() || "Unknown"
-          : "Unknown",
+        loggedBy:
+          (data.loggedBy
+            ? `${data.loggedBy.firstName || ""} ${data.loggedBy.lastName || ""}`.trim()
+            : "") ||
+          // No admin logged it, so it came from the tenant themselves.
+          data.tenant?.companyName ||
+          "Unknown",
         assignedTo: data.assignedTo
           ? `${data.assignedTo.firstName || ""} ${data.assignedTo.lastName || ""}`.trim() || "Unassigned"
           : "Unassigned",

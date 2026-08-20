@@ -9,6 +9,8 @@ import "../../../../../../Components/ManageColumn/ManageColumn.css";
 import api from "../../../../../../api/TemplateAndReportApi";
 import ErrorFallback from "../../../../../../Components/ErrorFallback";
 import SectionLoader from "../../../../../../Components/SectionLoader";
+import Pagination from "../../../../../../Components/Table/Pagination";
+import usePagedList from "../../../../../../hooks/usePagedList";
 
 const AuditTrails = () => {
   const location = useLocation();
@@ -26,6 +28,7 @@ const AuditTrails = () => {
 
 
   const [auditTrails, setAuditTrails] = useState([]);
+  const trailPage = usePagedList(auditTrails, 10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -199,8 +202,8 @@ const AuditTrails = () => {
 
           {!loading && !error && (
             <div className="audit-trail-list">
-              {auditTrails && auditTrails.length > 0 ? (
-                auditTrails.map((entry, index) => (
+              {trailPage.total > 0 ? (
+                trailPage.pageItems.map((entry, index) => (
                   <div key={entry.id || index} className="approval-line">
                     {renderAuditEntry({
                       ...entry,
@@ -228,6 +231,13 @@ const AuditTrails = () => {
                 <div className="audit-trail-empty">
                   <p>No audit trail data available for this report.</p>
                 </div>
+              )}
+              {trailPage.showPagination && (
+                <Pagination
+                  currentPage={trailPage.page}
+                  totalPages={trailPage.totalPages}
+                  onPageChange={trailPage.setPage}
+                />
               )}
             </div>
           )}

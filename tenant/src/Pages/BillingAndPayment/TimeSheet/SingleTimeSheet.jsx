@@ -12,6 +12,8 @@ import "../BillingPayment.css";
 import { useNavigate, useParams } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import AccordionTable from "../../../Components/Table/AccordionTable";
+import Pagination from "../../../Components/Table/Pagination";
+import usePagedList from "../../../hooks/usePagedList";
 import Button from "../../../Components/Button/Button";
 import RejectTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/RejectTimesheetModal";
 import ApproveTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/ApproveTimeSheetModal";
@@ -605,6 +607,9 @@ const SingleTimeSheet = () => {
 
   // Data states
   const [timesheetData, setTimesheetData] = useState(null);
+  // Declared here rather than beside the history tab, which sits below an
+  // early return — a hook has to run on every render.
+  const historyPage = usePagedList(timesheetData?.timesheetHistories);
   const [loading, setLoading] = useState(true);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [counts, setCounts] = useState({
@@ -2384,9 +2389,8 @@ const SingleTimeSheet = () => {
           <div>
             <div className="p-6">
               <div className="space-y-4">
-                {timesheetData.timesheetHistories &&
-                timesheetData.timesheetHistories.length > 0 ? (
-                  timesheetData.timesheetHistories.map((entry, index) => (
+                {historyPage.total > 0 ? (
+                  historyPage.pageItems.map((entry, index) => (
                     <div key={entry.id || index} className="approval-line">
                       {renderApprovalEntry({
                         ...entry,
@@ -2408,6 +2412,13 @@ const SingleTimeSheet = () => {
                   </div>
                 )}
               </div>
+              {historyPage.showPagination && (
+                <Pagination
+                  currentPage={historyPage.page}
+                  totalPages={historyPage.totalPages}
+                  onPageChange={historyPage.setPage}
+                />
+              )}
             </div>
           </div>
         )}

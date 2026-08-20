@@ -20,6 +20,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { formatDate, formatFileSize } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import { toProgressEntry } from "./progressTrack";
+import usePagedList from "../../../hooks/usePagedList";
+import Pagination from "../../../Components/Table/Pagination";
 import AccessDenied from "../../../Components/AccessDenied/AccessDenied";
 import "./SupportRequests.css";
 
@@ -91,6 +93,8 @@ const SupportRequests = () => {
   // Progress track modal
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [progressData, setProgressData] = useState([]);
+  const [progressTitle, setProgressTitle] = useState("");
+  const trackPage = usePagedList(progressData);
 
   // Fetch tickets
   const fetchTickets = useCallback(async () => {
@@ -306,7 +310,14 @@ const SupportRequests = () => {
   // Progress modal
   const handleViewProgress = (row) => {
     const logs = row.rawData?.Logs || [];
-    setProgressData(logs);
+    // Newest first — the API returns oldest first, which buries the latest step.
+    setProgressData(
+      [...logs].sort(
+        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+      )
+    );
+    setProgressTitle(row.rawData?.issueName || row.rawData?.title || "");
+    trackPage.setPage(1);
     setIsProgressModalOpen(true);
   };
 
@@ -479,14 +490,14 @@ const SupportRequests = () => {
         <ReusableModal
           isOpen={isProgressModalOpen}
           onClose={() => setIsProgressModalOpen(false)}
-          title="Progress Track"
+          title={`Progress Track${progressTitle ? ` — ${progressTitle}` : ""}`}
           secondaryButtonText="Close"
           onSecondaryButtonClick={() => setIsProgressModalOpen(false)}
           size="md"
         >
           <div className="progress-track-list">
-            {progressData.length > 0 ? (
-              progressData.map((item, idx) => (
+            {trackPage.total > 0 ? (
+              trackPage.pageItems.map((item, idx) => (
                 <div key={item.logId || idx} className="progress-track-item">
                 {(() => {
                   const entry = toProgressEntry(item, dateFormat, timeFormat);
@@ -519,6 +530,13 @@ const SupportRequests = () => {
               </p>
             )}
           </div>
+          {trackPage.showPagination && (
+            <Pagination
+              currentPage={trackPage.page}
+              totalPages={trackPage.totalPages}
+              onPageChange={trackPage.setPage}
+            />
+          )}
         </ReusableModal>
       </div>
     </>

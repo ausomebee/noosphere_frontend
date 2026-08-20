@@ -202,9 +202,13 @@ const TenantSingleIssueManagement = () => {
         category: issue.category || "—",
         severity: issue.priority || "—",
         status: issue.status || "—",
-        logged_by: issue.loggedBy
-          ? `${issue.loggedBy.firstName || ""} ${issue.loggedBy.lastName || ""}`.trim() || "—"
-          : "—",
+        logged_by:
+          (issue.loggedBy
+            ? `${issue.loggedBy.firstName || ""} ${issue.loggedBy.lastName || ""}`.trim()
+            : "") ||
+          // No admin logged it, so it came from the tenant themselves.
+          issue.tenant?.companyName ||
+          "—",
         assigned_to: issue.assignedTo
           ? `${issue.assignedTo.firstName || ""} ${issue.assignedTo.lastName || ""}`.trim() || "—"
           : "—",
