@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import invoiceApi from "../../api/InvoiceApi";
+
+// The test-card crib is for us, not for payers. Gate it on the publishable key
+// so it disappears by itself the moment a live key is configured.
+const IS_TEST_MODE = (import.meta.env.VITE_STRIPE_PK || "").startsWith("pk_test");
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -14,7 +19,7 @@ const CARD_ELEMENT_OPTIONS = {
   },
 };
 
-const StripeForm = ({ amount, currency, tenantId, email, onSuccess, onError }) => {
+const StripeForm = ({ token, amount, currency, tenantId, email, onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [name, setName] = useState("");
@@ -33,44 +38,70 @@ const StripeForm = ({ amount, currency, tenantId, email, onSuccess, onError }) =
     setCardError(null);
 
     const cardElement = elements.getElement(CardElement);
+    const billingDetails = { name: name.trim(), ...(email ? { email } : {}) };
 
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement,
-      billing_details: { name: name.trim(), ...(email ? { email } : {}) },
-    });
+    try {
+      // 1. Ask the server for a PaymentIntent. It derives the amount from the
+      //    invoice behind the token, so nothing here can change what is
+      //    charged. Done before touching the card so a dead or already-paid
+      //    link fails without an authorisation attempt.
+      const intent = await invoiceApi.CreateStripePaymentIntent({ token });
 
-    if (error) {
-      setCardError(error.message);
+      // 2. Tokenise. This is only for the receipt: confirmCardPayment's
+      //    client-side response doesn't expand the charge, so the brand and
+      //    last 4 have to come from the PaymentMethod.
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement,
+        billing_details: billingDetails,
+      });
+      if (pmError) throw pmError;
+
+      // 3. The actual charge. Handles the 3-D Secure challenge itself when the
+      //    intent comes back as requires_action.
+      const { error: confirmError, paymentIntent } =
+        await stripe.confirmCardPayment(intent.clientSecret, {
+          payment_method: paymentMethod.id,
+        });
+      if (confirmError) throw confirmError;
+
+      // Anything other than succeeded is not a payment — never report it as one.
+      if (paymentIntent?.status !== "succeeded") {
+        throw new Error(
+          `Payment was not completed (status: ${paymentIntent?.status || "unknown"}). You have not been charged.`
+        );
+      }
+
+      onSuccess({
+        status: "Successful",
+        // Real Stripe identifiers now — these resolve in the dashboard.
+        paymentIntentId: paymentIntent.id,
+        transactionId: paymentIntent.id,
+        transactionRef: paymentIntent.latest_charge || paymentIntent.id,
+        last4: paymentMethod.card?.last4,
+        cardBrand: paymentMethod.card?.brand
+          ? paymentMethod.card.brand.charAt(0).toUpperCase() + paymentMethod.card.brand.slice(1)
+          : "Card",
+        name: name.trim(),
+        token: paymentMethod.id,
+        tenantId,
+        paymentMethod: "stripe",
+        amount,
+        currency,
+      });
+    } catch (err) {
+      const message = err?.message || "Payment failed. Please try again.";
+      setCardError(message);
       onError?.({
         status: "failed",
-        error: error.message,
+        error: message,
         name: name.trim(),
         paymentMethod: "stripe",
         cardType: "Unknown",
       });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const result = {
-      status: "Successful",
-      transactionId: `txn_${Date.now()}`,
-      transactionRef: `ref_${paymentMethod.id}`,
-      last4: paymentMethod.card.last4,
-      cardBrand: paymentMethod.card.brand
-        ? paymentMethod.card.brand.charAt(0).toUpperCase() + paymentMethod.card.brand.slice(1)
-        : "Card",
-      name: name.trim(),
-      token: paymentMethod.id,
-      tenantId,
-      paymentMethod: "stripe",
-      amount,
-      currency,
-    };
-
-    onSuccess(result);
-    setLoading(false);
   };
 
   return (
@@ -96,9 +127,11 @@ const StripeForm = ({ amount, currency, tenantId, email, onSuccess, onError }) =
 
       {cardError && <p className="payment-form-error">{cardError}</p>}
 
-      <div className="stripe-test-hint">
-        <span>Test card:</span> 4242 4242 4242 4242 &nbsp;|&nbsp; Any future date &nbsp;|&nbsp; Any CVV
-      </div>
+      {IS_TEST_MODE && (
+        <div className="stripe-test-hint">
+          <span>Test card:</span> 4242 4242 4242 4242 &nbsp;|&nbsp; Any future date &nbsp;|&nbsp; Any CVV
+        </div>
+      )}
 
       <button
         type="submit"

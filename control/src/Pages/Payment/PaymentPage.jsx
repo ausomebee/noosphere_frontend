@@ -16,6 +16,14 @@ const stripePromise = import.meta.env.VITE_STRIPE_PK
   : null;
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || "";
 
+// PayPal captures in the browser and then records the result through
+// /billing/pay-payment-link, which now answers 410 Gone. Left enabled, a payer
+// would be charged by PayPal and never activated, with no webhook to reconcile
+// it (only Stripe has one). Flip this back to true once the backend exposes a
+// verified PayPal confirm endpoint and PayPalForm posts { token, orderId } to
+// it the way StripeForm does.
+const PAYPAL_ENABLED = false;
+
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const StripeIcon = () => (
   <svg viewBox="0 0 48 30" width="48" height="30" fill="none">
@@ -165,22 +173,33 @@ const PaymentPage = () => {
   const handleSuccess = async (result) => {
     setRecording(true);
     try {
-      await invoiceApi.RecordPayment({
-        tenantId: invoice.tenantId,
-        invoiceId: invoice.id,
-        planId: invoice.planId,
-        billingCycle: invoice.billingFrequency === "Monthly" ? "MONTHLY" : "YEARLY",
-        endDate: calculateEndDate(invoice.billingFrequency, invoice.quantity),
-        transactionId: result.transactionId || "",
-        transactionRef: result.transactionRef || "",
-        amount: invoice.total,
-        cardType: result.cardBrand || result.paymentMethod || "Unknown",
-        lastFourDigits: result.last4 || "N/A",
-        gatewayToken: result.token || "",
-        holderName: result.name || "",
-        paymentStatus: "Successful",
-        gateway: result.paymentMethod || "stripe",
-      });
+      if (result.paymentMethod === "stripe") {
+        // Stripe has already taken the money. The server re-reads the
+        // PaymentIntent and does the recording, subscription and activation
+        // itself — we only tell it which intent to verify, we never assert
+        // that the payment succeeded.
+        await invoiceApi.ConfirmPayment({
+          token,
+          paymentIntentId: result.paymentIntentId,
+        });
+      } else {
+        await invoiceApi.RecordPayment({
+          tenantId: invoice.tenantId,
+          invoiceId: invoice.id,
+          planId: invoice.planId,
+          billingCycle: invoice.billingFrequency === "Monthly" ? "MONTHLY" : "YEARLY",
+          endDate: calculateEndDate(invoice.billingFrequency, invoice.quantity),
+          transactionId: result.transactionId || "",
+          transactionRef: result.transactionRef || "",
+          amount: invoice.total,
+          cardType: result.cardBrand || result.paymentMethod || "Unknown",
+          lastFourDigits: result.last4 || "N/A",
+          gatewayToken: result.token || "",
+          holderName: result.name || "",
+          paymentStatus: "Successful",
+          gateway: result.paymentMethod || "stripe",
+        });
+      }
       showToast("Payment successful! Your subscription is now active.", "success");
       setPaymentResult(result);
       setPaymentError(null);
@@ -196,9 +215,13 @@ const PaymentPage = () => {
 
   const handleError = async (error) => {
     if (import.meta.env.DEV) console.error("Payment error:", error.error);
-    const errorMsg = "Payment failed. Please try again.";
+    const errorMsg = error.error || "Payment failed. Please try again.";
     setPaymentError(errorMsg);
     showToast(errorMsg, "error");
+    // Stripe failures are recorded server-side from the
+    // payment_intent.payment_failed webhook; posting them from here would
+    // double-record and hit an endpoint that answers 400 for a Failed status.
+    if (error.paymentMethod === "stripe") return;
     try {
       await invoiceApi.RecordPayment({
         tenantId: invoice.tenantId,
@@ -517,12 +540,13 @@ const PaymentPage = () => {
                       <CardBrands />
                     </div>
                     <div className="pp-method-right">
-                      <span className="pp-method-popular">Popular</span>
+                      {PAYPAL_ENABLED && <span className="pp-method-popular">Popular</span>}
                       <ArrowRight />
                     </div>
                   </div>
                 </button>
 
+                {PAYPAL_ENABLED && (
                 <button className="pp-method-card pp-method-card--paypal" onClick={() => setSelectedMethod("paypal")}>
                   <div className="pp-method-card-inner">
                     <div className="pp-method-icon-wrap pp-method-icon-paypal">
@@ -537,6 +561,7 @@ const PaymentPage = () => {
                     </div>
                   </div>
                 </button>
+                )}
               </div>
             )}
 
@@ -544,12 +569,12 @@ const PaymentPage = () => {
             {selectedMethod === "stripe" && (
               <div className="pp-form-card">
                 <Elements stripe={stripePromise}>
-                  <StripeForm amount={amount} currency={currency} tenantId={tenantId} email={payerEmail} onSuccess={handleSuccess} onError={handleError} />
+                  <StripeForm token={token} amount={amount} currency={currency} tenantId={tenantId} email={payerEmail} onSuccess={handleSuccess} onError={handleError} />
                 </Elements>
               </div>
             )}
 
-            {selectedMethod === "paypal" && (
+            {PAYPAL_ENABLED && selectedMethod === "paypal" && (
               <div className="pp-form-card">
                 <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID, currency: currency || "USD" }}>
                   <PayPalForm amount={amount} currency={currency} tenantId={tenantId} email={payerEmail} onSuccess={handleSuccess} onError={handleError} />

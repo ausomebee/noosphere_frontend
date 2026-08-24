@@ -202,6 +202,46 @@ describe('InvoiceApi', () => {
     });
   });
 
+  describe('CreateStripePaymentIntent', () => {
+    it('returns the client secret', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ clientSecret: 'pi_1_secret_x', paymentIntentId: 'pi_1' }) });
+      const result = await InvoiceApi.CreateStripePaymentIntent({ token: 'tok' });
+      expect(result.clientSecret).toBe('pi_1_secret_x');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/billing/stripe/create-payment-intent'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ token: 'tok' }) })
+      );
+    });
+    it('throws the server message on non-ok response', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Invoice already paid' }) });
+      await expect(InvoiceApi.CreateStripePaymentIntent({ token: 'tok' })).rejects.toThrow('Invoice already paid');
+    });
+    it('throws rather than returning a secretless body', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ status: 'ok' }) });
+      await expect(InvoiceApi.CreateStripePaymentIntent({ token: 'tok' })).rejects.toThrow(/client secret/i);
+    });
+    it('survives a non-JSON error page from an undeployed route', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.reject(new SyntaxError('Unexpected token <')) });
+      await expect(InvoiceApi.CreateStripePaymentIntent({ token: 'tok' })).rejects.toThrow(/could not start/i);
+    });
+  });
+
+  describe('ConfirmPayment', () => {
+    it('posts the payment intent id for server-side verification', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ status: 'ok', data: { id: 1 } }) });
+      const result = await InvoiceApi.ConfirmPayment({ token: 'tok', paymentIntentId: 'pi_1' });
+      expect(result).toEqual({ status: 'ok', data: { id: 1 } });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/billing/stripe/confirm-payment'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ token: 'tok', paymentIntentId: 'pi_1' }) })
+      );
+    });
+    it('throws the server message on non-ok response', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'PaymentIntent not succeeded' }) });
+      await expect(InvoiceApi.ConfirmPayment({ token: 'tok', paymentIntentId: 'pi_1' })).rejects.toThrow('PaymentIntent not succeeded');
+    });
+  });
+
   describe('ValidatePaymentToken', () => {
     it('validates token via fetch', async () => {
       global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ valid: true }) });

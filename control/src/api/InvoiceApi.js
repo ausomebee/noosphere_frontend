@@ -132,6 +132,60 @@ const GetCountForPayment = async({
 
 
 
+// These two endpoints are unauthenticated — the payment-link token in the body
+// is the credential — so they use plain fetch like the rest of the public
+// payment flow. A missing/undeployed route answers with an HTML error page, so
+// parse defensively rather than letting response.json() throw a SyntaxError
+// that would surface to the payer as "Unexpected token <".
+const readJson = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+// Step 1 of the card flow. The server reads the amount off the invoice behind
+// the token and creates the PaymentIntent with its secret key; the browser only
+// ever receives the client_secret, never sets the price.
+const CreateStripePaymentIntent = async ({ token }) => {
+  try {
+    const response = await fetch(`${PLAIN_API_URL}/billing/stripe/create-payment-intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const data = await readJson(response);
+    if (!response.ok) {
+      throw new Error(data?.message || "We could not start this payment. Please try again or contact support.");
+    }
+    if (!data?.clientSecret) {
+      throw new Error("Payment could not be started (no client secret returned).");
+    }
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "We could not start this payment.");
+  }
+};
+
+// Step 3. The server re-reads the PaymentIntent from Stripe and does the
+// recording/activation itself — we are telling it which intent to check, not
+// asserting that the payment succeeded.
+const ConfirmPayment = async ({ token, paymentIntentId }) => {
+  try {
+    const response = await fetch(`${PLAIN_API_URL}/billing/stripe/confirm-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, paymentIntentId }),
+    });
+    const data = await readJson(response);
+    if (!response.ok) throw new Error(data?.message || "Failed to confirm payment");
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to confirm payment");
+  }
+};
+
 const RecordPayment = async ({ tenantId, invoiceId, planId, billingCycle, endDate, transactionId, transactionRef, amount, cardType, lastFourDigits, gatewayToken, holderName, paymentStatus, gateway }) => {
   try {
     const response = await fetch(`${PLAIN_API_URL}/billing/pay-payment-link`, {
@@ -247,6 +301,8 @@ export default {
   GetCountForInvoice,
   GetCountForPayment,
   RecordPayment,
+  CreateStripePaymentIntent,
+  ConfirmPayment,
   GeneratePaymentLink,
   RegeneratePaymentLink,
   GetInvoiceHistory,
