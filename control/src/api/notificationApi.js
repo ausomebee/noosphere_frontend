@@ -2,15 +2,14 @@ import AxiosInterceptor from "../Helper/AxiosInterceptor";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
-// NOTE: `userType` defaults to "ADMIN" for the control (super-admin) app.
-// This is an assumption to confirm with the backend — the tenant app uses
-// "TENANT_STAFF" and the client app uses "CLIENT". If the backend expects a
-// different discriminator for control users, update the default below.
+// The route is namespaced by app ("admin" here, "client" in the client app)
+// and takes the role as its last segment, which is "ADMIN" for the control
+// (super-admin) app — confirmed against the backend.
 const getNotifications = async ({ userId, userType = "ADMIN", accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.get(
-      `${PLAIN_API_URL}/notifications/user/${userId}/${userType}`
+      `${PLAIN_API_URL}/notifications/user/admin/${userId}/${userType}`
     );
     return response.data;
   } catch (error) {
