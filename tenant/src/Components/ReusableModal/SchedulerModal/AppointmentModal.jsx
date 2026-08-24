@@ -966,178 +966,6 @@ const AppointmentModal = ({
           error={errors.date?.message}
         />
       </div>
-
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Controller
-            name="startTime"
-            control={control}
-            render={({ field }) => (
-              <TextInput
-                required
-                label="Start Time"
-                type="time"
-                value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value)}
-                onBlur={field.onBlur}
-                placeholder="HH:MM"
-                width="full"
-                error={errors.startTime?.message}
-              />
-            )}
-          />
-        </div>
-        <div className="flex-1">
-          <Controller
-            name="endTime"
-            control={control}
-            render={({ field }) => (
-              <TextInput
-                required
-                label="End Time"
-                type="time"
-                value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value)}
-                onBlur={field.onBlur}
-                placeholder="HH:MM"
-                width="full"
-                error={errors.endTime?.message}
-              />
-            )}
-          />
-        </div>
-      </div>
-
-      <Controller
-        name="clinicians"
-        control={control}
-        render={({ field }) => (
-          <SelectInput
-            label="Clinician(s) *"
-            options={clinicianOptions}
-            emptyHint={
-              loadingAvailableStaff
-                ? "Checking availability…"
-                : "No clinicians are free for this date and time. Try a different slot."
-            }
-            placeholder={
-              isSlotComplete
-                ? "Select Clinician(s)"
-                : "Pick the date and time first"
-            }
-            className="rounded-12px"
-            isMulti={true}
-            disabled={!isSlotComplete}
-            isLoading={loadingAvailableStaff}
-            error={errors.clinicians?.message}
-            {...field}
-          />
-        )}
-      />
-      <p className="text-xs text-gray-500 mb-4">
-        {availableStaffError
-          ? availableStaffError
-          : !isSlotComplete
-          ? "Pick the appointment date, start time and end time first — only clinicians who are free for that slot are listed."
-          : loadingAvailableStaff
-          ? "Checking who is free for this slot…"
-          : `Showing the ${clinicianOptions.length} clinician${
-              clinicianOptions.length === 1 ? "" : "s"
-            } free on ${slotDate} between ${startTime} and ${endTime}. Changing the date or time refreshes this list.`}
-      </p>
-      {warnings.some((w) => w.type === "clinicianRole") && (
-        <div className="text-yellow-800 text-sm mb-4">
-          {warnings
-            .filter((w) => w.type === "clinicianRole")
-            .map((warning, index) => (
-              <p key={index}>{warning.message}</p>
-            ))}
-        </div>
-      )}
-      <p className="text-base text-gray-600 font-semibold">
-        Service and CPT Code(s)
-      </p>
-      {fields.length === 0 ? (
-        <p className="text-sm text-gray-500 italic">
-          No services defined for this session type.
-        </p>
-      ) : (
-        fields.map((item, index) => (
-          <div key={item.id} className="flex gap-4 items-start mb-4">
-            <div className="flex-1">
-              <Controller
-                name={`service.${index}.serviceCodeId`}
-                control={control}
-                render={({ field }) => (
-                  <SelectInput
-                    required={index === 0}
-                    label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
-                    options={serviceCodeOptions}
-                    emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
-                    isLoading={loadingServiceCodes}
-                    placeholder={
-                      loadingServiceCodes
-                        ? "Loading codes..."
-                        : "Select service code"
-                    }
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.service?.[index]?.serviceCodeId?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </div>
-            <div className="flex-1">
-              <Controller
-                name={`service.${index}.modifier`}
-                control={control}
-                render={({ field }) => (
-                  <SelectInput
-                    label={index === 0 ? "Modifier" : ""}
-                    options={modifierSelectOptions}
-                    placeholder="Select modifier (optional)"
-                    isClearable
-                    value={field.value}
-                    onChange={field.onChange}
-                    {...field}
-                  />
-                )}
-              />
-            </div>
-            {/* Mirrors an input-group (same label element + spacing) so the
-                button centres on the select box itself, not the label or any
-                error text below it. */}
-            <div className="shrink-0">
-              {/* Blank label reserves the same line height as the real field
-                  labels, so the button lines up with the select box. */}
-              {index === 0 && (
-                <label className="input-group-label" aria-hidden="true">
-                  {" "}
-                </label>
-              )}
-              {/* Matches the select box height (min-height 36 + 1px borders). */}
-              <div className="flex items-center" style={{ minHeight: 38 }}>
-                <button
-                  type="button"
-                  className="h-9 w-9 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors"
-                  onClick={() => remove(index)}
-                  aria-label="Remove service code"
-                  title="Remove service code"
-                >
-                  <FaTrash size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))
-      )}
-      <Button
-        icon={<FaPlus />}
-        variant="secondary"
-        label="Add Service Code"
-        onClick={() => append({ serviceCodeId: "", modifier: "" })}
-      />
       <div className="py-2 px-2 rounded-md bg-gray-100 mb-6 mt-6">
         <CheckboxInput
           label="This is a recurring event"
@@ -1488,6 +1316,177 @@ const AppointmentModal = ({
         )}
       </div>
 
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Controller
+            name="startTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                required
+                label="Start Time"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.startTime?.message}
+              />
+            )}
+          />
+        </div>
+        <div className="flex-1">
+          <Controller
+            name="endTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                required
+                label="End Time"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.endTime?.message}
+              />
+            )}
+          />
+        </div>
+      </div>
+
+      <Controller
+        name="clinicians"
+        control={control}
+        render={({ field }) => (
+          <SelectInput
+            label="Clinician(s) *"
+            options={clinicianOptions}
+            emptyHint={
+              loadingAvailableStaff
+                ? "Checking availability…"
+                : "No clinicians are free for this date and time. Try a different slot."
+            }
+            placeholder={
+              isSlotComplete
+                ? "Select Clinician(s)"
+                : "Pick the date and time first"
+            }
+            className="rounded-12px"
+            isMulti={true}
+            disabled={!isSlotComplete}
+            isLoading={loadingAvailableStaff}
+            error={errors.clinicians?.message}
+            {...field}
+          />
+        )}
+      />
+      <p className="text-xs text-gray-500 mb-4">
+        {availableStaffError
+          ? availableStaffError
+          : !isSlotComplete
+          ? "Pick the appointment date, start time and end time first — only clinicians who are free for that slot are listed."
+          : loadingAvailableStaff
+          ? "Checking who is free for this slot…"
+          : `Showing the ${clinicianOptions.length} clinician${
+              clinicianOptions.length === 1 ? "" : "s"
+            } free on ${slotDate} between ${startTime} and ${endTime}. Changing the date or time refreshes this list.`}
+      </p>
+      {warnings.some((w) => w.type === "clinicianRole") && (
+        <div className="text-yellow-800 text-sm mb-4">
+          {warnings
+            .filter((w) => w.type === "clinicianRole")
+            .map((warning, index) => (
+              <p key={index}>{warning.message}</p>
+            ))}
+        </div>
+      )}
+      <p className="text-base text-gray-600 font-semibold">
+        Service and CPT Code(s)
+      </p>
+      {fields.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">
+          No services defined for this session type.
+        </p>
+      ) : (
+        fields.map((item, index) => (
+          <div key={item.id} className="flex gap-4 items-start mb-4">
+            <div className="flex-1">
+              <Controller
+                name={`service.${index}.serviceCodeId`}
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    required={index === 0}
+                    label={index === 0 ? "Service Code (CPT/HCPCS)" : ""}
+                    options={serviceCodeOptions}
+                    emptyHint="No service codes found. Create one in Billing & Payments → Settings → Service Codes."
+                    isLoading={loadingServiceCodes}
+                    placeholder={
+                      loadingServiceCodes
+                        ? "Loading codes..."
+                        : "Select service code"
+                    }
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.service?.[index]?.serviceCodeId?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+            <div className="flex-1">
+              <Controller
+                name={`service.${index}.modifier`}
+                control={control}
+                render={({ field }) => (
+                  <SelectInput
+                    label={index === 0 ? "Modifier" : ""}
+                    options={modifierSelectOptions}
+                    placeholder="Select modifier (optional)"
+                    isClearable
+                    value={field.value}
+                    onChange={field.onChange}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+            {/* Mirrors an input-group (same label element + spacing) so the
+                button centres on the select box itself, not the label or any
+                error text below it. */}
+            <div className="shrink-0">
+              {/* Blank label reserves the same line height as the real field
+                  labels, so the button lines up with the select box. */}
+              {index === 0 && (
+                <label className="input-group-label" aria-hidden="true">
+                  {" "}
+                </label>
+              )}
+              {/* Matches the select box height (min-height 36 + 1px borders). */}
+              <div className="flex items-center" style={{ minHeight: 38 }}>
+                <button
+                  type="button"
+                  className="h-9 w-9 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors"
+                  onClick={() => remove(index)}
+                  aria-label="Remove service code"
+                  title="Remove service code"
+                >
+                  <FaTrash size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+      <Button
+        icon={<FaPlus />}
+        variant="secondary"
+        label="Add Service Code"
+        onClick={() => append({ serviceCodeId: "", modifier: "" })}
+      />
       <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
         <Controller
           name="billable"
