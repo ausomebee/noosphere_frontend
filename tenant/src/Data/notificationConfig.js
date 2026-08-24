@@ -9,6 +9,29 @@
 // destination can focus the record.
 // ---------------------------------------------------------------------------
 
+// The backend's NotificationEntityType enum, mirrored verbatim. ENTITY_FALLBACK
+// keys are checked against this in dev — the config had drifted onto names the
+// backend never sends (DOCUMENT, REPORT, TICKET), so those fallbacks silently
+// never fired.
+export const NOTIFICATION_ENTITY_TYPE = Object.freeze({
+  APPOINTMENT: "APPOINTMENT",
+  ISSUE: "ISSUE",
+  SUBSCRIPTION: "SUBSCRIPTION",
+  INVOICE: "INVOICE",
+  PAYMENT: "PAYMENT",
+  TENANT: "TENANT",
+  PLAN: "PLAN",
+  CLIENT: "CLIENT",
+  DOCUMENT_REQUEST: "DOCUMENT_REQUEST",
+  FORM: "FORM",
+  AUTHORIZATION: "AUTHORIZATION",
+  CLINICAL_REPORT: "CLINICAL_REPORT",
+  LICENSE: "LICENSE",
+  TIMESHEET: "TIMESHEET",
+  PAYER: "PAYER",
+  PAYROLL: "PAYROLL",
+});
+
 // Section header label per type.
 export const TYPE_LABEL = {
   UPCOMING_APPOINTMENT: "UPCOMING APPOINTMENT",
@@ -30,6 +53,7 @@ export const TYPE_LABEL = {
   AUTHORIZATION_UTILIZATION_80_PERCENT: "AUTHORIZATION UTILIZATION",
   AUTHORIZATION_UTILIZATION_ZERO: "AUTHORIZATION UTILIZATION",
   REPORT_APPROVAL_REQUEST_TO_SUPERVISOR: "REPORT APPROVAL REQUEST",
+  REPORT_CHANGE_REQUESTED_BY_SUPERVISOR: "REPORT CHANGE REQUESTED",
   REPORT_APPROVED_BY_SUPERVISOR: "REPORT APPROVED",
   CLIENT_REPORT_SIGNED: "CLIENT REPORT SIGNED",
   CLIENT_REPORT_CHANGE_REQUEST: "REPORT CHANGE REQUEST",
@@ -71,6 +95,7 @@ export const TYPE_ORDER = [
   "AUTHORIZATION_UTILIZATION_80_PERCENT",
   "AUTHORIZATION_UTILIZATION_ZERO",
   "REPORT_APPROVAL_REQUEST_TO_SUPERVISOR",
+  "REPORT_CHANGE_REQUESTED_BY_SUPERVISOR",
   "REPORT_APPROVED_BY_SUPERVISOR",
   "CLIENT_REPORT_SIGNED",
   "CLIENT_REPORT_CHANGE_REQUEST",
@@ -173,6 +198,7 @@ const ACTIONS = {
   AUTHORIZATION_UTILIZATION_80_PERCENT: clientScoped("View authorization", "authorization"),
   AUTHORIZATION_UTILIZATION_ZERO: clientScoped("View authorization", "authorization"),
   REPORT_APPROVAL_REQUEST_TO_SUPERVISOR: clientScoped("View report", "clinicalReports"),
+  REPORT_CHANGE_REQUESTED_BY_SUPERVISOR: clientScoped("View report", "clinicalReports"),
   REPORT_APPROVED_BY_SUPERVISOR: clientScoped("View report", "clinicalReports"),
   CLIENT_REPORT_SIGNED: clientScoped("View report", "clinicalReports"),
   CLIENT_REPORT_CHANGE_REQUEST: clientScoped("View report", "clinicalReports"),
@@ -209,19 +235,37 @@ const ACTIONS = {
 
 // Fallback by entityType, so a notification still gets a working "view" action
 // even if its exact `type` string isn't in ACTIONS (new/renamed types).
+// Keys must be members of NOTIFICATION_ENTITY_TYPE. DOCUMENT, REPORT and TICKET
+// were not in the backend enum, so those three fallbacks could never fire;
+// they are DOCUMENT_REQUEST, CLINICAL_REPORT and ISSUE respectively. Entity
+// types outside the tenant's domain (TENANT, PLAN, SUBSCRIPTION, INVOICE) are
+// deliberately absent — this app has no route for them.
 const ENTITY_FALLBACK = {
   APPOINTMENT: (id) => ({ label: "View appointment", path: "/scheduler/appointments", state: { focusTab: APPT.upcoming, focusId: id } }),
   CLIENT: clientScoped("View client", "clientInformation"),
-  DOCUMENT: clientScoped("View documents", "clientInformation"),
+  DOCUMENT_REQUEST: clientScoped("View documents", "clientInformation"),
   AUTHORIZATION: clientScoped("View authorization", "authorization"),
-  REPORT: clientScoped("View report", "clinicalReports"),
+  CLINICAL_REPORT: clientScoped("View report", "clinicalReports"),
   FORM: (id) => (id ? { label: "View responses", path: `/custom-forms/forms/responses/${id}` } : { label: "View forms", path: "/custom-forms/forms" }),
   LICENSE: () => ({ label: "View licenses", path: "/organization/general" }),
   TIMESHEET: (id) => (id ? { label: "View timesheet", path: `/billing/timesheets/${id}` } : { label: "View timesheets", path: "/billing/timesheets" }),
   PAYER: () => ({ label: "View payers", path: "/organization/practice-settings" }),
   PAYROLL: () => ({ label: "View payroll", path: "/payroll/payroll-setup" }),
-  TICKET: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
+  // The tenant sees an issue it raised as a support request.
+  ISSUE: (id) => (id ? { label: "View request", path: `/help/support-requests/${id}` } : { label: "View requests", path: "/help/support-requests" }),
 };
+
+// Dev-only guard: a fallback keyed on a name the backend never sends is dead
+// code that looks alive, which is exactly how the previous keys survived.
+if (import.meta.env.DEV) {
+  Object.keys(ENTITY_FALLBACK)
+    .filter((key) => !NOTIFICATION_ENTITY_TYPE[key])
+    .forEach((key) =>
+      console.error(
+        `[notificationConfig] ENTITY_FALLBACK key "${key}" is not a NotificationEntityType; it will never match.`
+      )
+    );
+}
 
 // Resolve the action for a notification. Returns { label, path, state? } or null.
 export const getNotificationAction = (notif) => {

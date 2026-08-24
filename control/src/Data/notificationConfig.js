@@ -10,6 +10,29 @@
 // All paths below are verified against control/src/Components/Allroutes.jsx.
 // ---------------------------------------------------------------------------
 
+// The backend's NotificationEntityType enum, mirrored verbatim. ENTITY_FALLBACK
+// keys are checked against this in dev — three modules had drifted onto names
+// the backend never sends (DOCUMENT, REPORT, TICKET, FEATURE, PRODUCT), so
+// those fallbacks silently never fired.
+export const NOTIFICATION_ENTITY_TYPE = Object.freeze({
+  APPOINTMENT: "APPOINTMENT",
+  ISSUE: "ISSUE",
+  SUBSCRIPTION: "SUBSCRIPTION",
+  INVOICE: "INVOICE",
+  PAYMENT: "PAYMENT",
+  TENANT: "TENANT",
+  PLAN: "PLAN",
+  CLIENT: "CLIENT",
+  DOCUMENT_REQUEST: "DOCUMENT_REQUEST",
+  FORM: "FORM",
+  AUTHORIZATION: "AUTHORIZATION",
+  CLINICAL_REPORT: "CLINICAL_REPORT",
+  LICENSE: "LICENSE",
+  TIMESHEET: "TIMESHEET",
+  PAYER: "PAYER",
+  PAYROLL: "PAYROLL",
+});
+
 // Section header label per type.
 export const TYPE_LABEL = {
   PAYMENT_MADE_FOR_PLAN: "PAYMENT MADE",
@@ -22,6 +45,11 @@ export const TYPE_LABEL = {
   SUBSCRIPTION_PAUSED: "SUBSCRIPTION PAUSED",
   SUBSCRIPTION_CANCELLED: "SUBSCRIPTION CANCELLED",
   SUBSCRIPTION_AUTO_RENEWED: "SUBSCRIPTION AUTO-RENEWED",
+  SUBSCRIPTION_CREATED: "SUBSCRIPTION CREATED",
+  SUBSCRIPTION_RESUMED: "SUBSCRIPTION RESUMED",
+  SUBSCRIPTION_CANCELLATION_SCHEDULED: "CANCELLATION SCHEDULED",
+  SUBSCRIPTION_PAUSE_SCHEDULED: "PAUSE SCHEDULED",
+  SUBSCRIPTION_RESUME_SCHEDULED: "RESUME SCHEDULED",
   ISSUE_SUBMITTED: "ISSUE SUBMITTED",
   ISSUE_ASSIGNED: "ISSUE ASSIGNED",
   ISSUE_ASSIGNED_ADMIN: "ISSUE ASSIGNED",
@@ -44,6 +72,11 @@ export const TYPE_ORDER = [
   "SUBSCRIPTION_PAUSED",
   "SUBSCRIPTION_CANCELLED",
   "SUBSCRIPTION_AUTO_RENEWED",
+  "SUBSCRIPTION_CREATED",
+  "SUBSCRIPTION_RESUMED",
+  "SUBSCRIPTION_CANCELLATION_SCHEDULED",
+  "SUBSCRIPTION_PAUSE_SCHEDULED",
+  "SUBSCRIPTION_RESUME_SCHEDULED",
   "ISSUE_SUBMITTED",
   "ISSUE_ASSIGNED",
   "ISSUE_ASSIGNED_ADMIN",
@@ -85,6 +118,11 @@ const ACTIONS = {
   SUBSCRIPTION_PAUSED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
   SUBSCRIPTION_CANCELLED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
   SUBSCRIPTION_AUTO_RENEWED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  SUBSCRIPTION_CREATED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  SUBSCRIPTION_RESUMED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  SUBSCRIPTION_CANCELLATION_SCHEDULED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  SUBSCRIPTION_PAUSE_SCHEDULED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
+  SUBSCRIPTION_RESUME_SCHEDULED: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
 
   // ---- Issues (land on the issues section, carry entityId as focusId) ----
   ISSUE_SUBMITTED: (id) => ({ label: "View issue", path: "/issues", state: { focusId: id } }),
@@ -99,6 +137,11 @@ const ACTIONS = {
 
 // Fallback by entityType, so a notification still gets a working "view" action
 // even if its exact `type` string isn't in ACTIONS (new/renamed types).
+// Keys must be members of NOTIFICATION_ENTITY_TYPE. The previous FEATURE and
+// PRODUCT keys are not in the backend enum, so those fallbacks could never
+// fire; INVOICE is in the enum and was missing. Entity types outside control's
+// domain (APPOINTMENT, CLIENT, TIMESHEET, …) are deliberately absent — this app
+// has no route for them.
 const ENTITY_FALLBACK = {
   ISSUE: (id) => ({ label: "View issue", path: "/issues", state: { focusId: id } }),
   TENANT: (id) => (id
@@ -107,9 +150,20 @@ const ENTITY_FALLBACK = {
   PLAN: () => ({ label: "View plans", path: "/billing-payments/plans-pricing" }),
   SUBSCRIPTION: () => ({ label: "View subscription", path: "/billing-payments/subscription-manager" }),
   PAYMENT: () => ({ label: "View payment", path: "/billing-payments/invoice-payments" }),
-  FEATURE: () => ({ label: "View features", path: "/features" }),
-  PRODUCT: () => ({ label: "View features", path: "/features" }),
+  INVOICE: () => ({ label: "View invoice", path: "/billing-payments/invoice-payments" }),
 };
+
+// Dev-only guard: a fallback keyed on a name the backend never sends is dead
+// code that looks alive, which is exactly how the previous keys survived.
+if (import.meta.env.DEV) {
+  Object.keys(ENTITY_FALLBACK)
+    .filter((key) => !NOTIFICATION_ENTITY_TYPE[key])
+    .forEach((key) =>
+      console.error(
+        `[notificationConfig] ENTITY_FALLBACK key "${key}" is not a NotificationEntityType; it will never match.`
+      )
+    );
+}
 
 // Resolve the action for a notification. Returns { label, path, state? } or null.
 export const getNotificationAction = (notif) => {

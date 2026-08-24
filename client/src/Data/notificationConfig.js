@@ -1,4 +1,29 @@
 // ---------------------------------------------------------------------------
+// The backend's NotificationEntityType enum, mirrored verbatim. ENTITY_FALLBACK
+// keys are checked against this in dev — the config had drifted onto names the
+// backend never sends (DOCUMENT, REPORT), so those fallbacks silently never
+// fired.
+// ---------------------------------------------------------------------------
+export const NOTIFICATION_ENTITY_TYPE = Object.freeze({
+  APPOINTMENT: "APPOINTMENT",
+  ISSUE: "ISSUE",
+  SUBSCRIPTION: "SUBSCRIPTION",
+  INVOICE: "INVOICE",
+  PAYMENT: "PAYMENT",
+  TENANT: "TENANT",
+  PLAN: "PLAN",
+  CLIENT: "CLIENT",
+  DOCUMENT_REQUEST: "DOCUMENT_REQUEST",
+  FORM: "FORM",
+  AUTHORIZATION: "AUTHORIZATION",
+  CLINICAL_REPORT: "CLINICAL_REPORT",
+  LICENSE: "LICENSE",
+  TIMESHEET: "TIMESHEET",
+  PAYER: "PAYER",
+  PAYROLL: "PAYROLL",
+});
+
+// ---------------------------------------------------------------------------
 // Notification type → section header label
 // ---------------------------------------------------------------------------
 export const TYPE_LABEL = {
@@ -79,13 +104,30 @@ const ACTIONS = {
 
 // Fallback by entityType, so a notification still gets a working "view" action
 // even if its exact `type` string isn't in ACTIONS (new/renamed types).
+// Keys must be members of NOTIFICATION_ENTITY_TYPE. DOCUMENT and REPORT were
+// not in the backend enum, so those two fallbacks could never fire; they are
+// DOCUMENT_REQUEST and CLINICAL_REPORT. Entity types outside the client's
+// domain (TENANT, PLAN, TIMESHEET, …) are deliberately absent — this app has no
+// route for them.
 const ENTITY_FALLBACK = {
   APPOINTMENT: (id) => ({ label: "View details", path: "/dashboard", state: { focusTab: "upcoming", focusId: id } }),
-  DOCUMENT: () => ({ label: "View request", path: "/documents" }),
+  DOCUMENT_REQUEST: () => ({ label: "View request", path: "/documents" }),
   FORM: (id) => (id ? { label: "Fill form", path: `/forms/renderer/${id}` } : { label: "View forms", path: "/documents" }),
   AUTHORIZATION: () => ({ label: "View overview", path: "/dashboard" }),
-  REPORT: () => ({ label: "View", path: "/dashboard" }),
+  CLINICAL_REPORT: () => ({ label: "View", path: "/dashboard" }),
 };
+
+// Dev-only guard: a fallback keyed on a name the backend never sends is dead
+// code that looks alive, which is exactly how the previous keys survived.
+if (import.meta.env.DEV) {
+  Object.keys(ENTITY_FALLBACK)
+    .filter((key) => !NOTIFICATION_ENTITY_TYPE[key])
+    .forEach((key) =>
+      console.error(
+        `[notificationConfig] ENTITY_FALLBACK key "${key}" is not a NotificationEntityType; it will never match.`
+      )
+    );
+}
 
 // Resolve the action for a notification: { label, path, state? } or null.
 export const getNotificationAction = (notif) => {
