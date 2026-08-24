@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./TenantSingle.css";
 import CustomTable from "../../../Components/Table/CustomTable";
 import tenantApi from "../../../api/TenantApis";
@@ -38,6 +38,39 @@ const TenantSingleUserLogs = () => {
   const [grouped, setGrouped] = useState({});
   const [activeTab, setActiveTab] = usePersistedTab("control:tenantUserLogs", "All");
   const tabsRef = useRef(null);
+  const [overflow, setOverflow] = useState({ left: false, right: false });
+
+  // Drives which arrows render. A 1px tolerance keeps the far-end arrow from
+  // lingering on fractional scroll positions.
+  const syncOverflow = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setOverflow({ left: el.scrollLeft > 1, right: el.scrollLeft < max - 1 });
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    syncOverflow();
+    el.addEventListener("scroll", syncOverflow, { passive: true });
+    // Catches window resizes. It does not fire when the tab list itself
+    // changes — the row's own box stays the same width while its scrollWidth
+    // grows — so `grouped` is a dependency to re-measure when tabs are added.
+    const observer = new ResizeObserver(syncOverflow);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", syncOverflow);
+      observer.disconnect();
+    };
+  }, [syncOverflow, loading, grouped]);
+
+  const scrollTabs = (direction) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    // Roughly a screenful, so a long row is a few clicks rather than many.
+    el.scrollBy({ left: direction * Math.max(160, el.clientWidth * 0.7), behavior: "smooth" });
+  };
 
   // usePersistedTab can restore a tab that sits past the right edge of the
   // scrolling row. Nudge it into view rather than leaving the row looking as
@@ -135,27 +168,51 @@ const TenantSingleUserLogs = () => {
           <SectionLoader />
         ) : (
           <>
-            <div className="tenants-tabs tenants-tabs--scroll" ref={tabsRef}>
-              {/* All tab */}
-              <button
-                className={`tenants-tab ${activeTab === "All" ? "active" : ""}`}
-                onClick={() => setActiveTab("All")}
-              >
-                <span>All</span>
-                {counts.All > 0 && <span className="tab-count">{counts.All}</span>}
-              </button>
-
-              {/* One tab per feature key */}
-              {featureKeys.map((key) => (
+            <div className="tenants-tabs-scroller">
+              {overflow.left && (
                 <button
-                  key={key}
-                  className={`tenants-tab ${activeTab === key ? "active" : ""}`}
-                  onClick={() => setActiveTab(key)}
+                  type="button"
+                  className="tenants-tabs-arrow"
+                  onClick={() => scrollTabs(-1)}
+                  aria-label="Scroll tabs left"
                 >
-                  <span>{capitalize(key)}</span>
-                  {counts[key] > 0 && <span className="tab-count">{counts[key]}</span>}
+                  <FaChevronLeft />
                 </button>
-              ))}
+              )}
+
+              <div className="tenants-tabs tenants-tabs--scroll" ref={tabsRef}>
+                {/* All tab */}
+                <button
+                  className={`tenants-tab ${activeTab === "All" ? "active" : ""}`}
+                  onClick={() => setActiveTab("All")}
+                >
+                  <span>All</span>
+                  {counts.All > 0 && <span className="tab-count">{counts.All}</span>}
+                </button>
+
+                {/* One tab per feature key */}
+                {featureKeys.map((key) => (
+                  <button
+                    key={key}
+                    className={`tenants-tab ${activeTab === key ? "active" : ""}`}
+                    onClick={() => setActiveTab(key)}
+                  >
+                    <span>{capitalize(key)}</span>
+                    {counts[key] > 0 && <span className="tab-count">{counts[key]}</span>}
+                  </button>
+                ))}
+              </div>
+
+              {overflow.right && (
+                <button
+                  type="button"
+                  className="tenants-tabs-arrow"
+                  onClick={() => scrollTabs(1)}
+                  aria-label="Scroll tabs right"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
             </div>
 
             <CustomTable
