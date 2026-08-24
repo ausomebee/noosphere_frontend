@@ -25,9 +25,34 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import DatePicker from "react-multi-date-picker";
 import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
+import appointmentApi from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import { locationOptions, modifierOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
+
+// Date object or parseable string → "yyyy-MM-dd" ("" when unusable), the shape
+// the availability endpoint expects.
+const toIsoDate = (value) => {
+  if (!value) return "";
+  const parsed = value instanceof Date ? value : new Date(value);
+  return isNaN(parsed.getTime()) ? "" : format(parsed, "yyyy-MM-dd");
+};
+
+// "14:30:00" / "9:5" → "14:30" / "09:05". Shared by the edit-mode reset and the
+// availability lookup so both compare times in the same shape.
+const normalizeTime = (time) => {
+  if (!time) return "";
+  if (typeof time === "string") {
+    const timeWithoutSeconds = time.replace(/:\d{2}$/, "");
+    const parts = timeWithoutSeconds.split(":");
+    if (parts.length === 2) {
+      const hours = parts[0].padStart(2, "0");
+      const minutes = parts[1].padStart(2, "0");
+      return `${hours}:${minutes}`;
+    }
+  }
+  return time;
+};
 
 const AppointmentModal = ({
   isOpen,
@@ -46,6 +71,12 @@ const AppointmentModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [serviceCodes, setServiceCodes] = useState([]);
   const [loadingServiceCodes, setLoadingServiceCodes] = useState(false);
+  // Clinicians free for the picked date + time window, from the availability
+  // endpoint. `null` means "not fetched yet" (slot incomplete), which is what
+  // the hint under the Clinician(s) field keys off.
+  const [availableStaff, setAvailableStaff] = useState(null);
+  const [loadingAvailableStaff, setLoadingAvailableStaff] = useState(false);
+  const [availableStaffError, setAvailableStaffError] = useState("");
 
   const { tenantId, accessToken, refreshToken } = useAuth();
 
@@ -92,18 +123,6 @@ const AppointmentModal = ({
           }`.trim() || "Unknown Client",
       })),
     [clients]
-  );
-
-  const clinicianOptions = useMemo(
-    () =>
-      staff
-        .filter((s) => s.active !== false)
-        .map((s) => ({
-          value: s.id,
-          label: s.fullName,
-          role: s.roleId,
-        })),
-    [staff]
   );
 
   const sessionTypeOptions = useMemo(
@@ -374,6 +393,115 @@ const AppointmentModal = ({
   const endType = watch("endType");
   const sessionType = watch("sessionType");
   const clinicians = watch("clinicians");
+  const date = watch("date");
+  const startTime = watch("startTime");
+  const endTime = watch("endTime");
+
+  // The availability endpoint needs the full slot, so only call it once the
+  // date and both times are filled in and well-formed.
+  const isTime = (v) => /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v || "");
+  const slotDate = useMemo(() => toIsoDate(date), [date]);
+  const isSlotComplete = Boolean(slotDate) && isTime(startTime) && isTime(endTime);
+
+  // Re-query whenever the slot changes so the list always reflects the day and
+  // window currently in the form.
+  useEffect(() => {
+    if (!isOpen || !tenantId || !accessToken) return;
+    if (!isSlotComplete) {
+      setAvailableStaff(null);
+      setAvailableStaffError("");
+      return;
+    }
+
+    let cancelled = false;
+    // Debounced: typing a time fires an onChange per keystroke/arrow press.
+    const timer = setTimeout(async () => {
+      setLoadingAvailableStaff(true);
+      setAvailableStaffError("");
+      try {
+        const response = await appointmentApi.GetAvailableTenantStaff({
+          tenantId,
+          date: slotDate,
+          startTime,
+          endTime,
+          accessToken,
+          refreshToken,
+        });
+        if (cancelled) return;
+        const payload = response?.data?.data ?? response?.data ?? [];
+        setAvailableStaff(Array.isArray(payload) ? payload : []);
+      } catch (error) {
+        if (cancelled) return;
+        setAvailableStaff([]);
+        setAvailableStaffError(
+          error.message || "Could not load available clinicians."
+        );
+      } finally {
+        if (!cancelled) setLoadingAvailableStaff(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    isOpen,
+    tenantId,
+    accessToken,
+    refreshToken,
+    isSlotComplete,
+    slotDate,
+    startTime,
+    endTime,
+  ]);
+
+  // While the appointment being edited still sits on its original slot, its
+  // assigned clinicians stay selectable even if availability leaves them out —
+  // their own booking is what makes them look busy. Move the slot and they
+  // have to pass the same availability check as everyone else.
+  const isOriginalSlot =
+    isEditMode &&
+    Boolean(initialData) &&
+    slotDate === toIsoDate(initialData.date) &&
+    startTime === normalizeTime(initialData.startTime) &&
+    endTime === normalizeTime(initialData.endTime);
+
+  const clinicianOptions = useMemo(() => {
+    const toOption = (s) => ({
+      value: s.id,
+      // The availability endpoint returns the same staff records as the plain
+      // staff list, but fall back to the name parts in case fullName is absent.
+      label:
+        s.fullName ||
+        `${s.firstName || ""} ${s.lastName || ""}`.trim() ||
+        "Unknown Clinician",
+      role: s.roleId,
+    });
+    const options = (availableStaff || [])
+      .filter((s) => s.active !== false)
+      .map(toOption);
+
+    if (isOriginalSlot && Array.isArray(initialData?.clinicianIds)) {
+      const seen = new Set(options.map((o) => o.value));
+      staff
+        .filter(
+          (s) => initialData.clinicianIds.includes(s.id) && !seen.has(s.id)
+        )
+        .forEach((s) => options.push(toOption(s)));
+    }
+    return options;
+  }, [availableStaff, staff, isOriginalSlot, initialData]);
+
+  // Drop clinicians who are no longer free once the slot moves, so the form
+  // can't submit an assignment the availability check just invalidated.
+  useEffect(() => {
+    if (!availableStaff || !Array.isArray(clinicians) || !clinicians.length)
+      return;
+    const allowed = new Set(clinicianOptions.map((o) => o.value));
+    const kept = clinicians.filter((id) => allowed.has(id));
+    if (kept.length !== clinicians.length) setValue("clinicians", kept);
+  }, [availableStaff, clinicianOptions, clinicians, setValue]);
 
   // The fetched tenant service codes don't always include the seeded codes a
   // session type references, so react-select can't render a selected value
@@ -482,20 +610,6 @@ const AppointmentModal = ({
   useEffect(() => {
     if (!isEditMode || !initialData) return;
 
-    const normalizeTime = (time) => {
-      if (!time) return "";
-      if (typeof time === "string") {
-        const timeWithoutSeconds = time.replace(/:\d{2}$/, "");
-        const parts = timeWithoutSeconds.split(":");
-        if (parts.length === 2) {
-          const hours = parts[0].padStart(2, "0");
-          const minutes = parts[1].padStart(2, "0");
-          return `${hours}:${minutes}`;
-        }
-      }
-      return time;
-    };
-
     // Map service correctly: use serviceCodeId and modifierType → modifier
     const mappedServices = (initialData.service || []).map((svc) => ({
       serviceCodeId: svc.serviceCodeId || "",
@@ -503,9 +617,8 @@ const AppointmentModal = ({
     }));
 
     const formattedData = {
-      date: initialData.date
-        ? format(new Date(initialData.date), "yyyy-MM-dd")
-        : new Date().toISOString().split("T")[0],
+      date:
+        toIsoDate(initialData.date) || new Date().toISOString().split("T")[0],
       startTime: normalizeTime(initialData.startTime),
       endTime: normalizeTime(initialData.endTime),
       client: initialData.clientId || "",
@@ -842,6 +955,59 @@ const AppointmentModal = ({
           />
         )}
       />
+      <div className="mt-6">
+        <TextInput
+          required
+          label="Date"
+          type="date"
+          {...register("date")}
+          placeholder="Select a Date"
+          width="full"
+          error={errors.date?.message}
+        />
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Controller
+            name="startTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                required
+                label="Start Time"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.startTime?.message}
+              />
+            )}
+          />
+        </div>
+        <div className="flex-1">
+          <Controller
+            name="endTime"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                required
+                label="End Time"
+                type="time"
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                placeholder="HH:MM"
+                width="full"
+                error={errors.endTime?.message}
+              />
+            )}
+          />
+        </div>
+      </div>
+
       <Controller
         name="clinicians"
         control={control}
@@ -849,15 +1015,36 @@ const AppointmentModal = ({
           <SelectInput
             label="Clinician(s) *"
             options={clinicianOptions}
-            emptyHint="No clinicians found. Create one in Organisation → Staff & Teams."
-            placeholder="Select Clinician(s)"
+            emptyHint={
+              loadingAvailableStaff
+                ? "Checking availability…"
+                : "No clinicians are free for this date and time. Try a different slot."
+            }
+            placeholder={
+              isSlotComplete
+                ? "Select Clinician(s)"
+                : "Pick the date and time first"
+            }
             className="rounded-12px"
             isMulti={true}
+            disabled={!isSlotComplete}
+            isLoading={loadingAvailableStaff}
             error={errors.clinicians?.message}
             {...field}
           />
         )}
       />
+      <p className="text-xs text-gray-500 mb-4">
+        {availableStaffError
+          ? availableStaffError
+          : !isSlotComplete
+          ? "Pick the appointment date, start time and end time first — only clinicians who are free for that slot are listed."
+          : loadingAvailableStaff
+          ? "Checking who is free for this slot…"
+          : `Showing the ${clinicianOptions.length} clinician${
+              clinicianOptions.length === 1 ? "" : "s"
+            } free on ${slotDate} between ${startTime} and ${endTime}. Changing the date or time refreshes this list.`}
+      </p>
       {warnings.some((w) => w.type === "clinicianRole") && (
         <div className="text-yellow-800 text-sm mb-4">
           {warnings
@@ -951,18 +1138,6 @@ const AppointmentModal = ({
         label="Add Service Code"
         onClick={() => append({ serviceCodeId: "", modifier: "" })}
       />
-      <div className="mt-6">
-        <TextInput
-          required
-          label="Date"
-          type="date"
-          {...register("date")}
-          placeholder="Select a Date"
-          width="full"
-          error={errors.date?.message}
-        />
-      </div>
-
       <div className="py-2 px-2 rounded-md bg-gray-100 mb-6 mt-6">
         <CheckboxInput
           label="This is a recurring event"
@@ -1313,46 +1488,6 @@ const AppointmentModal = ({
         )}
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Controller
-            name="startTime"
-            control={control}
-            render={({ field }) => (
-              <TextInput
-                required
-                label="Start Time"
-                type="time"
-                value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value)}
-                onBlur={field.onBlur}
-                placeholder="HH:MM"
-                width="full"
-                error={errors.startTime?.message}
-              />
-            )}
-          />
-        </div>
-        <div className="flex-1">
-          <Controller
-            name="endTime"
-            control={control}
-            render={({ field }) => (
-              <TextInput
-                required
-                label="End Time"
-                type="time"
-                value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value)}
-                onBlur={field.onBlur}
-                placeholder="HH:MM"
-                width="full"
-                error={errors.endTime?.message}
-              />
-            )}
-          />
-        </div>
-      </div>
       <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
         <Controller
           name="billable"

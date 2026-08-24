@@ -156,6 +156,30 @@ const GetTenantStaffByTenantId = async ({
   }
 };
 
+const GetAvailableTenantStaff = async ({
+  tenantId,
+  date,
+  startTime,
+  endTime,
+  accessToken,
+  refreshToken,
+}) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  try {
+    const response = await authFetch.get(
+      `${PLAIN_API_URL}/tenant/tenant/staff/${tenantId}/available`,
+      { params: { date, startTime, endTime } }
+    );
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Get available tenant staff failed"
+    );
+  }
+};
+
 const GetAllAppointments = async ({ tenantId, accessToken, refreshToken }) => {
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
@@ -592,6 +616,7 @@ export default {
   GetClientByTenantId,
   GetSessionTypeActiveByTenantId,
   GetTenantStaffByTenantId,
+  GetAvailableTenantStaff,
   GetAppointmentByTenantId,
   GetAppointmentByStaffId,
   GetAppointmentByClientId,
