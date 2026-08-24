@@ -479,7 +479,9 @@
 .action-menu {
   position: relative;
   display: inline-block;
-  z-index: 100;
+  /* No z-index here on purpose: a stacking context at this level would confine
+     .action-dropdown's 9999 to it, leaving the menu to compete with the sticky
+     header on this element's value instead of its own. */
 }
 
 .action-cell {

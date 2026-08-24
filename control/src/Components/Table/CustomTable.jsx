@@ -2,6 +2,7 @@ import React, {
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useCallback,
 } from "react";
@@ -20,6 +21,10 @@ import { RxCross2 } from "react-icons/rx";
 import Button from "../Button/Button";
 import { parse, isSameDay, isWithinInterval, isValid } from "date-fns";
 import SectionLoader from "../SectionLoader";
+
+// Floor for a menu squeezed into a tight gap — it scrolls rather than
+// collapsing to a sliver.
+const MIN_DROPDOWN_HEIGHT = 80;
 
 const CustomTable = ({
   data,
@@ -235,57 +240,71 @@ const CustomTable = ({
     printTableData(filteredData, columns, tableName);
   }, [filteredData, columns, tableName]);
 
-  const toggleDropdown = useCallback(
-    (rowIndex, colIndex) => {
-      const key = `${rowIndex}-${colIndex}`;
-      setOpenDropdown((prev) => (prev === key ? null : key));
-      if (openDropdown !== key) {
-        setTimeout(() => positionDropdown(rowIndex, colIndex), 0);
-      }
-    },
-    [openDropdown]
-  );
-
-  const positionDropdown = (rowIndex, colIndex) => {
+  // Positioning is handled by the layout effect below rather than a timeout
+  // here, so the menu is placed before its first paint instead of after it.
+  const toggleDropdown = useCallback((rowIndex, colIndex) => {
     const key = `${rowIndex}-${colIndex}`;
+    setOpenDropdown((prev) => (prev === key ? null : key));
+  }, []);
+
+  const positionDropdown = useCallback((key) => {
     const button = menuRefs.current[key]?.button;
     const dropdown = menuRefs.current[key]?.dropdown;
     if (!button || !dropdown) return;
+
     const buttonRect = button.getBoundingClientRect();
-    const dropdownHeight = dropdown.scrollHeight || 150;
-    const dropdownWidth = dropdown.offsetWidth || 180;
-    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
-    const spaceAbove = buttonRect.top - 10;
+
+    // The header is sticky, so a menu flipped upwards would be drawn across it
+    // and read as though it had opened inside the header. Never place the menu
+    // above this line; shrink it instead.
+    const headerBottom =
+      tableContainerRef.current
+        ?.querySelector(".custom-table thead")
+        ?.getBoundingClientRect().bottom ?? 0;
+    const topLimit = Math.max(headerBottom + 2, 4);
 
     dropdown.style.position = "fixed";
     dropdown.style.zIndex = "9999";
     dropdown.style.overflowY = "auto";
-
-    // Align left edge of dropdown to left of button
-    const leftPos = buttonRect.left - dropdownWidth - 4;
-    dropdown.style.left = `${Math.max(leftPos, 4)}px`;
+    dropdown.style.bottom = "auto";
     dropdown.style.right = "auto";
+    // Clear any cap from a previous placement so scrollHeight reports the
+    // menu's natural height rather than the height it was last squeezed into.
+    dropdown.style.maxHeight = "";
 
-    if (spaceBelow >= dropdownHeight) {
+    const dropdownHeight = dropdown.scrollHeight || 150;
+    const dropdownWidth = dropdown.offsetWidth || 180;
+    const spaceBelow = window.innerHeight - buttonRect.bottom - 10;
+    const spaceAbove = buttonRect.top - topLimit;
+
+    dropdown.style.left = `${Math.max(buttonRect.left - dropdownWidth - 4, 4)}px`;
+
+    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
       dropdown.style.top = `${buttonRect.bottom + 2}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceBelow}px`;
-    } else if (spaceAbove >= dropdownHeight) {
-      dropdown.style.top = `${buttonRect.top - dropdownHeight - 2}px`;
-      dropdown.style.bottom = "auto";
-      dropdown.style.maxHeight = `${spaceAbove}px`;
+      dropdown.style.maxHeight = `${Math.max(spaceBelow, MIN_DROPDOWN_HEIGHT)}px`;
     } else {
-      if (spaceBelow >= spaceAbove) {
-        dropdown.style.top = `${buttonRect.bottom + 2}px`;
-        dropdown.style.bottom = "auto";
-        dropdown.style.maxHeight = `${spaceBelow}px`;
-      } else {
-        dropdown.style.top = `${buttonRect.top - Math.min(dropdownHeight, spaceAbove) - 2}px`;
-        dropdown.style.bottom = "auto";
-        dropdown.style.maxHeight = `${spaceAbove}px`;
-      }
+      const top = Math.max(buttonRect.top - dropdownHeight - 2, topLimit);
+      dropdown.style.top = `${top}px`;
+      dropdown.style.maxHeight = `${Math.max(buttonRect.top - top - 2, MIN_DROPDOWN_HEIGHT)}px`;
     }
-  };
+  }, []);
+
+  // The menu is position: fixed, so it does not travel with its row. Without
+  // this it stayed pinned to the viewport while the table scrolled underneath,
+  // stranding it over the header.
+  useLayoutEffect(() => {
+    if (!openDropdown) return;
+    const reposition = () => positionDropdown(openDropdown);
+    reposition();
+    // Capture phase, so scrolling any scrollable ancestor counts — not just the
+    // window.
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [openDropdown, positionDropdown]);
 
   const toggleExportDropdown = useCallback(() => {
     setExportDropdownOpen((prev) => !prev);
