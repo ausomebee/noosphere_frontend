@@ -679,6 +679,38 @@
   text-align: center;
 }
 
+/* Tab rows whose length is data-driven (one tab per feature, so the count is
+   unknown up front) keep each tab at its natural width and scroll sideways
+   instead of squeezing every tab into the container. `.tenants-tab` sets
+   `flex: 1`, which caps the row at the container width and makes the parent's
+   overflow-x unreachable, so the flex has to be undone here — adding overflow
+   alone would do nothing. */
+.tenants-tabs--scroll {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: auto;
+  scrollbar-width: thin;
+}
+.tenants-tabs--scroll .tenants-tab {
+  flex: 0 0 auto;
+}
+/* The base row hides its scrollbar; here it is the only cue that more tabs
+   exist off-screen, so show a slim one. */
+.tenants-tabs--scroll::-webkit-scrollbar {
+  display: block;
+  height: 4px;
+}
+.tenants-tabs--scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tenants-tabs--scroll::-webkit-scrollbar-thumb {
+  background: #d5d5d5;
+  border-radius: 2px;
+}
+.tenants-tabs--scroll::-webkit-scrollbar-thumb:hover {
+  background: #bdbdbd;
+}
+
 .tenants-tab:hover {
   color: #333;
 }

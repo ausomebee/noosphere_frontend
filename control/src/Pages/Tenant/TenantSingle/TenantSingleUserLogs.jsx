@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import "./TenantSingle.css";
@@ -37,6 +37,17 @@ const TenantSingleUserLogs = () => {
   const [tenantName, setTenantName] = useState("");
   const [grouped, setGrouped] = useState({});
   const [activeTab, setActiveTab] = usePersistedTab("control:tenantUserLogs", "All");
+  const tabsRef = useRef(null);
+
+  // usePersistedTab can restore a tab that sits past the right edge of the
+  // scrolling row. Nudge it into view rather than leaving the row looking as
+  // though nothing is selected. block: "nearest" keeps the page from jumping.
+  useEffect(() => {
+    if (loading) return;
+    tabsRef.current
+      ?.querySelector(".tenants-tab.active")
+      ?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [activeTab, loading]);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -124,7 +135,7 @@ const TenantSingleUserLogs = () => {
           <SectionLoader />
         ) : (
           <>
-            <div className="tenants-tabs">
+            <div className="tenants-tabs tenants-tabs--scroll" ref={tabsRef}>
               {/* All tab */}
               <button
                 className={`tenants-tab ${activeTab === "All" ? "active" : ""}`}
