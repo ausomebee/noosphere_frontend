@@ -2,8 +2,8 @@
 
 **Application:** Noosphere Tenant Portal
 **Module:** Tenant (`/tenant`)
-**Version:** 1.0.0
-**Date:** April 9, 2026
+**Version:** 1.1.0
+**Date:** September 1, 2026
 **Prepared By:** QA Team
 **Environment:** https://noospherehub.net/tenant
 
@@ -283,7 +283,37 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 **Expected Results:**
 - Authenticator: shows QR code, user scans, enters verification code
 - Security Question: shows question selection and answer input
+- The super-admin screen includes an "enable for all admins" option
 - After successful setup → redirect to `/dashboard`
+
+---
+
+### TC-AUTH-009a: Admin — Self-Choice 2FA (`/auth/2fa/choice`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+| **Precondition** | The organization has **not** set 2FA for all (`setForAll = false`), and the admin has no 2FA method of their own yet |
+
+A separate screen from the super-admin's `/auth/2fa-settings`: each admin picks their own method, and there is no organization-wide write.
+
+**Steps:**
+1. Log in as an admin meeting the precondition
+2. Inspect the default selection
+3. Choose "Authenticator App" and submit
+4. Repeat, choosing "Security Question"
+5. Attempt to submit with no method selected
+6. Inspect the page for an "enable for all" control
+7. Complete the setup page and check the admin's record
+
+**Expected Results:**
+- `AdminLogin` routes the user to `/auth/2fa/choice`
+- The authenticator (`qrCode`) option is pre-selected by default
+- Choosing the authenticator navigates to `/auth/2fa/authenticator`
+- Choosing the security question navigates to `/auth/2fa/security-question`
+- Submitting with no selection shows "Please select a 2FA method"; a value other than `qrCode` or `securityQuestion` is rejected as "Invalid 2FA method"
+- There is **no** "enable for all admins" toggle on this screen
+- Completing setup sets only that admin's own `authType` and `auth2FADone`; no organization-wide setting is written
 
 ---
 
@@ -698,26 +728,56 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 **Steps:**
 1. Click "New Appointment" button (or click a time slot on calendar)
 2. Appointment modal opens
-3. Fill in:
+3. Fill in, in the order the form presents them:
    - Client (searchable dropdown)
    - Session Type
    - Date
+   - Recurrence (recurring-event box, directly under Date)
    - Start Time, End Time
    - Clinician(s)
    - Location
    - Is Billable (toggle)
    - Requires Travel (toggle)
    - Colour Code
-   - Is Recurring (toggle)
 4. If recurring: set recurrence type (daily/weekly), end type (on date / after N occurrences)
 5. Click "Create Appointment"
 
 **Expected Results:**
+- Field order reads Date -> recurrence -> Start/End Time -> Clinician(s). The recurring-event box sits directly under Date, not after the service codes
 - All fields validate (required fields, time conflicts)
 - Toast: success
 - Appointment appears on calendar
 - If recurring, multiple appointments are created
 - Modal closes after success
+
+---
+
+### TC-SCHED-005a: Appointment Modal — Availability-Filtered Clinicians
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+| **Precondition** | At least two clinicians, one of whom is already booked for the slot under test |
+
+The Clinician(s) field lists only clinicians actually free for the chosen slot, fetched from `GET /tenant/tenant/staff/:tenantId/available?date&startTime&endTime` rather than the full tenant staff list.
+
+**Steps:**
+1. Open the appointment modal and leave the date and/or times blank
+2. Fill in Date, Start Time, and End Time
+3. Change the date, then change the time window
+4. Choose a slot for which one clinician is already booked
+5. Open an existing appointment for edit without changing its slot
+6. Open an existing appointment for edit and move it to a slot where its assigned clinician is not free
+
+**Expected Results:**
+- While the slot is incomplete, the clinician select is **disabled** and the note explains that the slot must be picked first
+- Once date, start time, and end time are all present, the availability request fires and the select is enabled
+- The note shows a loading state during the request, an error state if it fails, and "N clinicians free on `<date>`" on success
+- The request is re-issued whenever the date or the time window changes
+- A clinician already booked for that slot is **not** listed
+- When editing an appointment that stays on its original slot, its own assigned clinicians remain selectable -- their own booking must not read as a conflict against them
+- When the slot moves and an assigned clinician is no longer available, that selection is dropped from the field
+- Date and time are sent in the same format the slot comparison uses, so a clinician is never wrongly shown as unavailable because of a format mismatch
 
 ---
 
@@ -1226,6 +1286,53 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
+### TC-CLIENT-011a: Clinical Report — Change Request Lifecycle
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+| **Precondition** | A report that has been submitted for approval and had at least one change requested by a supervisor |
+
+The API carries no status field on a change request, so open/closed is derived from timestamps: a request is open from the moment it is raised until the creator next submits the report for approval.
+
+**Steps:**
+1. As a supervisor, raise a change request on a submitted report
+2. As the creator, view the report while it sits back in draft
+3. As the creator, resubmit the report for approval
+4. As the supervisor, raise a second change request after that resubmission
+5. Inspect a change request with no `createdAt`
+6. Inspect a report that has never been submitted
+7. View a list of several change requests
+
+**Expected Results:**
+- The request shows as **open** from the moment it is raised, and stays open while the report sits in draft
+- Resubmitting the report **closes** the outstanding change request
+- A request raised after the last submission opens as a new outstanding request
+- An undated request, an unparseable date, and a never-submitted report all count as **open** -- it is better to surface a request that may be live than to hide one
+- Requests are listed newest first, so the one most in need of attention leads
+
+---
+
+### TC-CLIENT-011b: Clinical Report — Change Request Author and Viewed State
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Raise a change request as a **supervisor/approver** and view it on the report
+2. Raise a change request as a **client** and view it on the report
+3. Open the change-request details modal, close it, and reload the report
+
+**Expected Results:**
+- A supervisor-raised request shows the approver's name with the role "Approver"
+- A **client-raised request shows the client's own name**, with the role "Client" -- not the literal word "Approver". The client's name is nested under `client.client`, and `requester` is a plain string on the payload rather than an object
+- A request with neither resolvable falls back to "Unknown"
+- A request carries either a `clientTenantId` or an `approverId`, never both, and the role reflects whichever is present
+- Opening the details modal marks the requests as viewed, and they remain marked after a reload
+
+---
+
 ### TC-CLIENT-012: Clinical Report Builder
 
 | Field | Value |
@@ -1337,11 +1444,18 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 | **Priority** | Medium |
 
 **Steps:**
-1. Navigate to `/report/client-view/:reportId` (no auth required)
+1. Open the shared report link, `/report/client-view/:token` (no login required)
+2. Inspect the URL
+3. Open a link whose token has expired
+4. Open a link with a malformed token
 
 **Expected Results:**
 - Clinical report renders in read-only mode
 - No authentication required (link-based access)
+- The URL segment is a **signed JWT, not the report id**. The report id is the token's `id` claim, so it never appears in the URL and cannot be edited to reach another report
+- The page decodes the payload for the report id and expiry, validates the token via `ValidateClientReportToken`, and then uses the token itself as both access and refresh token for the report fetch
+- An expired token is refused and the report is not fetched
+- A malformed token yields no report id and the page shows its error state rather than a blank screen
 - Professional formatting for viewing/printing
 
 ---
@@ -1823,6 +1937,46 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
+### TC-ORG-014a: Practice Settings — Tab Set and Permissions
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+Practice Settings now hosts the three panels that previously lived on the removed Billing Settings page.
+
+**Steps:**
+1. Log in as a user holding all five view permissions and open `/organization/practice-settings`
+2. Log in again as users holding only some of them
+3. Log in as a user holding none of them
+
+**Expected Results:**
+- Five tabs are available, in this order: **Diagnosis Codes** (`view_diagnosis_codes`), **Session Types** (`view_session_types`), **Service Codes** (`view_service_codes_list`), **Rounding Rules** (`view_rounding_rules_list`), **Payers & Insurance** (`view_payers_list`)
+- Each tab is shown only when the user holds its permission; the others are absent, not merely disabled
+- The first tab the user can see is selected by default
+- A user holding none of the five permissions sees the page render nothing at all
+
+---
+
+### TC-ORG-014b: Practice Settings — Tab Persistence
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Open `/organization/practice-settings` and select the "Rounding Rules" tab
+2. Refresh the page
+3. Close the browser tab entirely, then reopen the page
+4. On the same browser, log in as a user who lacks `view_rounding_rules_list` and open the page
+
+**Expected Results:**
+- After the refresh, the "Rounding Rules" tab is still selected (stored in `sessionStorage` under `tab:tenant:practiceSettings`)
+- After closing and reopening the browser tab, the selection resets to the first visible tab -- `sessionStorage` does not survive a tab close
+- For the user lacking the permission, the stored tab is **not** restored; the page falls back to the first tab they can see
+
+---
+
 ### TC-ORG-015: Role & Permissions
 
 | Field | Value |
@@ -2034,7 +2188,9 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
-### TC-BILL-009: Billing Settings — Service Codes
+### TC-BILL-009: Practice Settings — Service Codes
+
+> **Moved.** Billing settings are no longer a page of their own. The standalone `BillingSettings` page has been removed and `/billing/settings` now redirects to `/organization/practice-settings`, where Service Codes, Rounding Rules, and Payers & Insurance appear as tabs alongside Diagnosis Codes and Session Types. The panels themselves are unchanged.
 
 | Field | Value |
 |-------|-------|
@@ -2042,17 +2198,20 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 **Steps:**
 1. Navigate to `/billing/settings`
-2. View "Service Codes" section
-3. Add a new service code
+2. Confirm the redirect to `/organization/practice-settings`
+3. Open the "Service Codes" tab
+4. Add a new service code
 
 **Expected Results:**
+- `/billing/settings` redirects to `/organization/practice-settings` (replace, so Back does not bounce), keeping old links and bookmarks working
 - Service codes listed
 - Add modal: code, description, modifiers (modifier1-4)
 - Created code available in authorizations
+- The tab is shown only to users holding `view_service_codes_list`
 
 ---
 
-### TC-BILL-010: Billing Settings — Add Single Service Code
+### TC-BILL-010: Practice Settings — Add Single Service Code
 
 | Field | Value |
 |-------|-------|
@@ -2070,7 +2229,7 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
-### TC-BILL-011: Billing Settings — Payers & Insurance
+### TC-BILL-011: Practice Settings — Payers & Insurance
 
 | Field | Value |
 |-------|-------|
@@ -2094,7 +2253,7 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 | **Priority** | Medium |
 
 **Steps:**
-1. Click on a payer → `/billing/settings/view-payer/:id/:payerName`
+1. From the Payers & Insurance tab of `/organization/practice-settings`, click on a payer → `/organization/practice-settings/view-payer/:id/:payerName`
 
 **Expected Results:**
 - Payer details displayed
@@ -2103,7 +2262,7 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
-### TC-BILL-013: Billing Settings — Rounding Rules
+### TC-BILL-013: Practice Settings — Rounding Rules
 
 | Field | Value |
 |-------|-------|
@@ -2120,7 +2279,7 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
-### TC-BILL-014: Billing Settings — Insurance Types
+### TC-BILL-014: Practice Settings — Insurance Types
 
 | Field | Value |
 |-------|-------|
@@ -2587,6 +2746,49 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
+### TC-HELP-003a: Support Request — Progress Track
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+| **Precondition** | A support request with several activity-log entries, including at least one whose action text embeds a record UUID |
+
+**Steps:**
+1. Open a support request and open its Progress Track
+2. Read each entry's action text
+3. Inspect an entry for an issue whose name is not known to the client
+4. Inspect the person shown against each entry
+5. Inspect the entries for any internal or agent-specific data
+6. Open a track with more than five entries
+
+**Expected Results:**
+- Action text shows the **issue's name** where the API embedded a raw UUID (e.g. "updated issue 7ad4d5f8-…" reads as "updated issue `<name>`")
+- Where the name is not known, the UUID is **dropped entirely** rather than displayed, and the leftover whitespace is collapsed
+- An entry with no usable action text falls back to "Updated"
+- Person names are title-cased for display even though the API returns them lowercase (e.g. "ajibola oluwagbemileke" reads as "Ajibola Oluwagbemileke")
+- The person is read from `accessedBy`, falling back to the admin's first and last name
+- **None of the following are visible anywhere in the track:** `ipAddress` or `userAgent` (they belong to the support agent, not the tenant), `location` (an internal endpoint path such as `/api/v1/issue/issue/reassign`), `feature` (the same string on every row), or `details` (which only repeats `action`)
+- The track is paginated inside the modal at 5 entries per page; reopening the modal returns to the first page
+- A filtered or shortened list never leaves the view stranded on an out-of-range page
+
+---
+
+### TC-HELP-003b: Support Requests — "Logged By" Fallback
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Open the support requests list
+2. Locate a request with no admin recorded against it
+
+**Expected Results:**
+- The "Logged By" column falls back to the tenant's own name rather than rendering blank
+- Requests that do have an admin still show that admin's name
+
+---
+
 ### TC-HELP-004: Knowledge Base
 
 | Field | Value |
@@ -2764,6 +2966,140 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 ---
 
+### TC-NOTIF-004: Notifications Page — Access, Pagination and Mark All
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Log in as a user whose role grants no modules and navigate to `/notifications`
+2. Load an account with 25 notifications
+3. Click "Mark all as read"
+4. Load an account with no notifications
+
+**Expected Results:**
+- The page loads for the module-less user -- `/notifications` sits outside every `ModuleGuard` and raises no "You don't have access to this module" toast
+- `SectionLoader` shows while the list loads
+- Pagination appears at 10 per page; each page is grouped by date within that page ("Today", "Yesterday", "Weekday, Mon D", or "Earlier" for an undated item)
+- "Mark all as read" updates every card immediately, fires one request per unread item, then refetches so the list reflects the persisted state
+- With nothing unread, neither the count badge nor the "Mark all as read" button is rendered
+- The empty account shows the empty state and no pagination
+
+---
+
+### TC-NOTIF-005: Appointment Notifications Open a Modal in Place
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+| **Precondition** | Appointments exist in the upcoming, past, reschedule-request, and cancelled states |
+
+Appointment notifications navigate to `/scheduler/appointments` carrying `focusTab` and `focusId` in navigation state; the destination tab then opens the row's modal via `useFocusAppointment`.
+
+**Steps:**
+1. From `/notifications`, click the action on each appointment notification type in turn
+2. After a modal opens, switch to another sub-tab and back
+3. Trigger a notification for an appointment that is not present in the destination tab's loaded list
+
+**Expected Results:**
+
+| Notification type | Sub-tab focused | Modal opened |
+|-------------------|-----------------|--------------|
+| `UPCOMING_APPOINTMENT`, `APPOINTMENT_START_REMINDER`, `APPOINTMENT_STARTED`, `RESCHEDULED_APPOINTMENT` | Upcoming | `AppointmentViewModal` |
+| `NEW_RESCHEDULE_REQUEST` | Reschedule Requests | `RescheduleRequestActionModal` |
+| `COMPLETED_APPOINTMENT` | Past | `PastAppointmentDetailsModal` |
+| `CANCELLED_APPOINTMENT` | Cancelled | The tab's own details view |
+
+- The modal opens **exactly once**; switching sub-tabs and returning does not re-open it, because the navigation state is cleared after the first open
+- On the Upcoming and Reschedule Requests tabs, a fallback fetch resolves the row so the modal still opens when it is absent from the loaded list (the list endpoint 404'd, or the appointment lives on another tab)
+- Normal navigation to `/scheduler/appointments` without a notification opens no modal at all
+
+---
+
+### TC-NOTIF-006: Appointment Modals Opened From Notifications
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Open `AppointmentViewModal` from an Upcoming notification and from a Past notification
+2. Inspect a row whose previous/new date and time arrive as objects
+3. Inspect a row with missing values
+4. Dismiss via the close control, then repeat and dismiss by clicking the backdrop
+5. Repeat as a user lacking start / edit / reschedule / cancel permissions
+6. From `PastAppointmentDetailsModal`, follow the onward action
+7. From `RescheduleRequestActionModal`, use Accept, Modify, and Reject in turn
+
+**Expected Results:**
+- `AppointmentViewModal` renders correctly for both row shapes, never a half-populated edit form
+- Object-valued date/time fields render as `date · time`, not as a React child error
+- Missing values render as an em dash
+- Both the close control and the backdrop dismiss the modal
+- Only the action buttons the caller supplies are rendered; permission-gated actions are absent for users who lack them
+- `PastAppointmentDetailsModal` leads onward to the timesheet, and formats dates as `MMM dd, yyyy`
+- `RescheduleRequestActionModal`'s Accept, Modify, and Reject behave identically to the same actions on a Reschedule Requests table row
+
+---
+
+### TC-NOTIF-007: Client-Scoped Notification Deep-Links
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+The client panel needs two ids, so a client-scoped notification deep-links only when the payload carries both.
+
+**Steps:**
+1. Click the action on notifications carrying both `clientId` and `tenantClientId`, for each group below
+2. Repeat with a payload missing one of the two ids
+
+**Expected Results:**
+
+| Notification types | Label | Client panel tab |
+|--------------------|-------|------------------|
+| `CLIENT_PROFILE_CREATION` | View client | Client Information |
+| `DOCUMENT_REQUEST_CREATED`, `DOCUMENT_REQUEST_COMPLETED`, `DOCUMENT_REQUEST_NUDGE` | View documents | Client Information |
+| `AUTHORIZATION_CREATION`, `AUTHORIZATION_EXPIRY_1_MONTH`, `AUTHORIZATION_EXPIRY_1_WEEK`, `AUTHORIZATION_UTILIZATION_80_PERCENT`, `AUTHORIZATION_UTILIZATION_ZERO` | View authorization | Authorization |
+| `REPORT_APPROVAL_REQUEST_TO_SUPERVISOR`, `REPORT_CHANGE_REQUESTED_BY_SUPERVISOR`, `REPORT_APPROVED_BY_SUPERVISOR`, `CLIENT_REPORT_SIGNED`, `CLIENT_REPORT_CHANGE_REQUEST` | View report | Clinical Reports |
+
+- With both ids present, the action navigates to `/client/client-single/{clientId}/{tenantClientId}` and focuses the listed tab
+- With either id missing, it falls back to `/clients/client-list` rather than producing a broken URL
+
+---
+
+### TC-NOTIF-008: Single-Id and Fallback Notification Deep-Links
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Click the action on each single-id notification type, first with an `entityId` and then without one
+2. Send a notification with an unrecognized `type` but a valid `entityType`
+3. Send a notification with `entityType: "TENANT"`, `"PLAN"`, `"SUBSCRIPTION"`, or `"INVOICE"`
+4. Run the app in development and watch the console
+
+**Expected Results:**
+
+| Notification types | With an id | Without an id |
+|--------------------|-----------|---------------|
+| `FORM_FILLED` | `/custom-forms/forms/responses/{id}` | `/custom-forms/forms` |
+| `FORM_CREATED` | -- | `/custom-forms/forms` |
+| `TIMESHEET_CREATED`, `TIMESHEET_CHANGE_REQUESTED`, `TIMESHEET_APPROVED`, `TIMESHEET_REJECTED` | `/billing/timesheets/{id}` | `/billing/timesheets` |
+| `TICKET_SUBMITTED`, `TICKET_STATUS_IN_PROGRESS`, `TICKET_STATUS_RESOLVED`, `TICKET_WITHDRAWN` | `/help/support-requests/{id}` | `/help/support-requests` |
+| `ORGANIZATION_LICENSE_EXPIRY_SOON`, `ORGANIZATION_LICENSE_EXPIRED` | -- | `/organization/general` |
+| `PAYER_AUTHORIZATION_EXPIRY_SOON` | -- | `/organization/practice-settings` |
+| `UPCOMING_PAYROLL`, `NEW_PAYROLL_RUN` | -- | `/payroll/payroll-setup` |
+
+- An unrecognized `type` still resolves an action through its `entityType` fallback (`APPOINTMENT`, `CLIENT`, `DOCUMENT_REQUEST`, `AUTHORIZATION`, `CLINICAL_REPORT`, `FORM`, `LICENSE`, `TIMESHEET`, `PAYER`, `PAYROLL`, `ISSUE`); an `ISSUE` resolves to the tenant's own support request
+- `TENANT`, `PLAN`, `SUBSCRIPTION`, and `INVOICE` resolve **no** action -- the tenant app has no route for them. The card marks read without navigating
+- No `[notificationConfig] ENTITY_FALLBACK key "..." is not a NotificationEntityType` errors appear in the dev console
+- Every configured destination matches a route in `Components/Allroutes.jsx`; none lands on the 404 page
+
+---
+
 ---
 
 ## Module 14: Layout, Navigation & Permissions
@@ -2794,8 +3130,31 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 
 **Expected Results:**
 - Toast: "You don't have access to this module"
-- Page does NOT render (blank/redirected)
+- Page does NOT render -- `ModuleGuard` returns nothing; it does not redirect
 - Only permitted modules visible in sidebar
+- `/notifications` remains reachable, as it sits outside every `ModuleGuard`
+
+---
+
+### TC-NAV-002a: View Permission — AccessDenied Within a Module
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+Hiding a nav link is only half of view gating. Content the user may not view must be blocked too, so a direct URL cannot reveal it.
+
+**Steps:**
+1. Log in as a user who has access to a module but lacks a specific `view_*` permission within it
+2. Confirm the corresponding nav link or tab is hidden
+3. Paste the direct URL for that page into the address bar
+4. Repeat for several permission-gated pages and panels across the app
+
+**Expected Results:**
+- The nav link or tab is absent
+- The direct URL loads the page shell but the content is replaced by the `AccessDenied` panel: a centred lock icon above "You don't have permission to view this."
+- **No table rows, record details, or client data are rendered behind or around the panel**
+- Where a page passes a custom `message`, that wording is shown instead of the default
 
 ---
 
@@ -2862,7 +3221,80 @@ The Noosphere Tenant Portal is the primary application used by ABA therapy pract
 2. Reconnect → online banner for 3 seconds
 
 **Expected Results:**
-- Banners display correctly and auto-dismiss
+- Offline banner reads "You are offline — check your connection" and stays for as long as the browser reports offline
+- Online banner reads "Back online" and auto-dismisses after 3 seconds
+- Going offline again clears any pending online-banner timer
+- Nothing is shown in the normal connected case
+
+---
+
+### TC-NAV-006a: Socket Presence Badge (ConnectionStatus)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+The socket's state is shown passively on the avatar rather than as a toast. The former "Connection lost" / "Connection restored" toasts were removed because they fired on every tab switch.
+
+**Steps:**
+1. Log in and locate the presence badge on the user avatar in the header
+2. Hover it, then reach it with the keyboard alone
+3. Drop the network briefly and watch the badge
+4. Switch to another browser tab for several minutes, then return
+5. Use a screen reader on the badge
+
+**Expected Results:**
+- Online tooltip reads "You're online. Messages and notifications arrive live."
+- Offline tooltip reads "You're offline. Reconnecting now — nothing is lost, and updates resume on their own."
+- The badge is focusable (`tabIndex={0}`) so the tooltip is reachable by keyboard, not hover alone
+- **No toast is raised on either disconnect or reconnect**, including after backgrounding the tab
+- On returning to the tab the socket reconnects on its own (`visibilitychange` → `ensureConnected()`) and the badge returns to online
+- The badge exposes `role="status"` and `aria-live="polite"` with a screen-reader-only copy of the tooltip text
+- This badge is distinct from the network banner: the banner reports the browser's connectivity, the badge reports the socket
+
+---
+
+### TC-NAV-007: Modal Draft Persistence
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+An accidental Cancel or close must not lose in-progress input. Drafts are held in the persisted `formDrafts` Redux slice.
+
+**Steps:**
+1. Open a modal form (for example Add Prospect, Add Client, Add Staff, or Add Authorization) and fill in several fields
+2. Close the modal with Cancel, then reopen it
+3. Repeat, but reload the browser before reopening
+4. Fill the form in fully and submit successfully, then reopen the modal
+5. Fill in a password or attach a file, close, and reopen
+6. Leave a draft untouched for longer than 7 days, then reopen the modal
+
+**Expected Results:**
+- Reopening restores what was typed
+- The draft survives a page reload (it rides through `redux-persist`)
+- After a **successful submit** the draft is cleared and the modal reopens empty
+- Password fields and file attachments are **never** persisted
+- A draft older than its 7-day TTL is not restored
+- Each modal keeps its own draft under its own key; drafts do not leak between modals
+
+---
+
+### TC-NAV-008: Stale Chunk Recovery After Deploy
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Load the app, then deploy a new build so the hashed chunk filenames change
+2. Without refreshing, navigate to a route whose chunk has not yet been loaded
+3. Simulate a genuine, persistent chunk failure (for example by blocking the asset) and navigate again
+
+**Expected Results:**
+- The failed dynamic import triggers a single page reload, which pulls the fresh `index.html` and the route then loads -- the user does not see a blank screen
+- A genuine failure does **not** loop: the `chunkReloadAttempted` flag in `sessionStorage` allows only one reload, after which the error surfaces
+- The flag is cleared once an import succeeds
 
 ---
 

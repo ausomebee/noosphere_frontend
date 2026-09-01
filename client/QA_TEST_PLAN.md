@@ -2,8 +2,8 @@
 
 **Application:** Noosphere Client Portal
 **Module:** Client (`/client`)
-**Version:** 1.0.0
-**Date:** April 9, 2026
+**Version:** 1.1.0
+**Date:** September 1, 2026
 **Prepared By:** QA Team
 **Environment:** https://noospherehub.net/client
 
@@ -935,6 +935,25 @@ This document provides a comprehensive test plan for all features of the Client 
 
 ---
 
+### TC-DASH-025a: Dashboard — Tab Selection Persists Across Refresh
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Select a tab other than the default (for example "Completed")
+2. Refresh the page
+3. Close the browser tab entirely, then reopen the dashboard
+4. Open the dashboard in a private window
+
+**Expected Results:**
+- After the refresh the same tab is still selected (stored in `sessionStorage` under a `tab:` key)
+- After closing and reopening the browser tab, the selection resets to the default -- `sessionStorage` does not survive a tab close
+- In a private window, or with site data blocked, the page still loads and simply falls back to the default tab; storage errors do not break the page
+
+---
+
 ### TC-DASH-026: Success Modal Display
 
 | Field | Value |
@@ -1324,6 +1343,35 @@ This document provides a comprehensive test plan for all features of the Client 
 - Form is marked as submitted
 - User cannot re-submit (submitted state is displayed)
 - User is navigated back to documents page
+
+---
+
+### TC-DOC-011a: Form Renderer — Clear All Responses
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+| **Precondition** | A multi-page form with several answered fields and at least one signature |
+
+Confirmation is a styled in-product dialog (`ConfirmModal`), not a native `window.confirm`.
+
+**Steps:**
+1. Fill in fields across several pages, including a signature
+2. Navigate to the last page and locate the Clear button
+3. Click it and read the dialog
+4. Cancel the dialog
+5. Click it again and confirm
+6. Force the clear action to fail, and confirm again
+
+**Expected Results:**
+- The Clear button is shown on the **last page only**
+- The dialog is an in-product modal, not a browser confirm box: it is styled like the rest of the product and dismisses with the rest of the UI
+- Title reads "Clear all responses?"
+- Message reads "Everything you've entered on this form will be removed, including signatures. This can't be undone."
+- The confirm button is labelled "Clear all"
+- Cancelling leaves every answer and signature intact
+- Confirming clears all responses, resets the signature canvases, and shows an info toast
+- If the confirm action **fails**, the modal stays open with its message on screen rather than dismissing as though it had worked
 
 ---
 
@@ -1918,6 +1966,33 @@ This document provides a comprehensive test plan for all features of the Client 
 
 ---
 
+### TC-RT-005: Connection Status Presence Badge
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+| **Precondition** | Client is logged in |
+
+Socket state is shown passively on the avatar. The former "Connection lost" / "Connection restored" toasts were removed because they fired on every tab switch -- browsers throttle background timers, so the heartbeat misses and the socket drops as a matter of course.
+
+**Steps:**
+1. Locate the presence badge on the avatar in the header
+2. Hover it, then reach it using the keyboard alone
+3. Disconnect the network briefly and watch the badge
+4. Switch to another browser tab for several minutes, then return
+5. Use a screen reader on the badge
+
+**Expected Results:**
+- Online tooltip reads "You're online. Messages and notifications arrive live."
+- Offline tooltip reads "You're offline. Reconnecting now — nothing is lost, and updates resume on their own."
+- The badge is focusable, so the tooltip is reachable by keyboard rather than hover alone
+- **No toast appears on disconnect or reconnect**, including after backgrounding the tab
+- Returning to the tab reconnects the socket automatically and the badge returns to online
+- The badge exposes `role="status"` and `aria-live="polite"` with a screen-reader-only copy of the text
+- This is distinct from the offline banner, which reports the browser's connectivity rather than the socket
+
+---
+
 ## Module 9: Security & Session Management
 
 ### TC-SEC-001: Idle Timeout
@@ -2206,6 +2281,68 @@ This document provides a comprehensive test plan for all features of the Client 
 - Error message shown on failure
 - User can retry the upload
 - No data corruption
+
+---
+
+### TC-PERF-006: Loading Indicator Tiers
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Low |
+
+**Steps:**
+1. Throttle the network and navigate between routes
+2. Throttle the network and load a page whose individual cards fetch separately (the dashboard)
+3. Observe a table while its rows load
+
+**Expected Results:**
+- A route transition shows the full-page loader (the animated logo)
+- A section within a page shows `SectionLoader` -- a ring with a "Loading..." label -- not a full-page loader
+- The section loader reserves its space, so the surrounding layout does not jump when content arrives
+- A table renders its own row-level indicator
+- Loaders expose `role="status"` and `aria-live="polite"`
+
+---
+
+### TC-PERF-007: Inline Fetch Failure (ErrorFallback)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+An error boundary catches *render* errors; a failed fetch does not throw during render and is handled separately.
+
+**Steps:**
+1. Force a section's data request to fail
+2. Read the panel that replaces the section
+3. Click "Try Again" after restoring the connection
+4. Force a failure on a section whose retry handler is not supplied
+
+**Expected Results:**
+- The failed section is replaced inline by the error panel: a red warning icon, an "Oops!" heading, and the message
+- The rest of the page keeps working -- one failed section does not blank the route
+- Where a retry handler exists, a "Try Again" button is shown and re-runs the fetch successfully
+- Where none is supplied, no "Try Again" button is rendered
+- With no message supplied, the panel falls back to "Something went wrong. Please try again."
+
+---
+
+### TC-PERF-008: Stale Chunk Recovery After Deploy
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Load the app, then deploy a new build so the hashed chunk filenames change
+2. Without refreshing, navigate to a route whose chunk has not yet loaded
+3. Simulate a genuine, persistent chunk failure and navigate again
+
+**Expected Results:**
+- The failed dynamic import triggers a single page reload that pulls the fresh `index.html`, and the route then loads -- the client does not see a blank screen
+- A genuine failure does **not** loop: the `chunkReloadAttempted` flag in `sessionStorage` permits only one reload, after which the error surfaces
+- The flag is cleared once an import succeeds
+- The form renderer route is eagerly imported and is unaffected
 
 ---
 

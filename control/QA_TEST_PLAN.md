@@ -1,8 +1,8 @@
 # Noosphere Control Module -- Comprehensive QA Test Plan
 
 **Module:** Control (Super Admin Panel)
-**Last Updated:** 2026-04-09
-**Version:** 1.0
+**Last Updated:** 2026-09-01
+**Version:** 1.1
 
 ---
 
@@ -29,6 +29,7 @@
 19. [Permission & Authorization Guards](#19-permission--authorization-guards)
 20. [Session, Token & Idle Timeout](#20-session-token--idle-timeout)
 21. [Cross-Cutting Concerns](#21-cross-cutting-concerns)
+22. [Notifications](#22-notifications)
 
 ---
 
@@ -43,7 +44,14 @@
 | 1.1.3 | Login with wrong password | Enter valid email, incorrect password, click Login | Error toast displays server-provided error message. User remains on login page. |
 | 1.1.4 | Login with empty fields | Leave email and/or password empty, click Login | Form validation prevents submission. Inline validation messages appear on empty fields. |
 | 1.1.5 | Login with malformed email | Enter "notanemail" as email, click Login | Form validation rejects the input. Inline error message indicates invalid email format. |
-| 1.1.6 | 2FA redirect after login | Login with credentials for an account that has 2FA enabled | After successful credential check, user is redirected to the appropriate 2FA route (`/SA/2fa-question/login` or `/SA/2fa-authentication/login`) based on configured 2FA method. |
+| 1.1.6 | 2FA redirect after login | Login with credentials for an account that has 2FA enabled and already completed (`auth2FADone`) | After successful credential check, user is redirected to the appropriate 2FA route (`/SA/2fa-question/login` or `/SA/2fa-authentication/login`) based on the effective 2FA method. |
+| 1.1.7 | 2FA master switch disabled | Configure super-admin choices with `isEnabled: false`, then log in | 2FA is skipped entirely. User goes straight to `/tenants/pipeline` regardless of `auth2FADone` or configured method. |
+| 1.1.8 | Forced setup when "set for all" is on | With `setForAll: true` and the org method set to Authenticator, log in as an admin whose `auth2FADone` is false | User is redirected to `/2fa/authenticator` for forced setup, using the organization's method rather than their own `authType`. |
+| 1.1.9 | Forced setup after the method changes for all | Complete 2FA as an admin, then have the super admin change the org 2FA method for all; log in again | `auth2FADone` is false again, so the user is routed back into setup for the new method. |
+| 1.1.10 | New super admin with no method chosen | Log in as a brand-new super admin (`superAdmin` true, `auth2FADone` false, no effective type) | User is redirected to `/SA/change-password` for password onboarding, not to a 2FA route. |
+| 1.1.11 | Non-privileged admin picks their own method | With `setForAll: false`, log in as a regular admin who has no `authType` yet | User is redirected to `/2fa/choice` to choose their own method. |
+| 1.1.12 | Completed 2FA with no effective type | Log in as a user with `auth2FADone` true but no effective 2FA type | User goes straight to `/tenants/pipeline`. |
+| 1.1.13 | Backend error message is surfaced | Trigger a login rejection that returns a specific backend message | The toast shows the backend's message rather than a generic one; a rejection with no message falls back to "Login failed". |
 
 ### 1.2 Change Password (`/SA/change-password`)
 
@@ -115,6 +123,39 @@
 | 1.9.2 | Set initial password | Enter valid password and confirm, submit | `PATCH /admin/setpassword` called with id and password. Success toast. User redirected to login page. |
 | 1.9.3 | Password validation | Enter a password that does not meet requirements | Inline validation error. Form does not submit. |
 | 1.9.4 | Invalid userId in URL | Navigate with a non-existent userId | `AdminVerifyToken` or initial load fails. Error message displayed. |
+
+### 1.10 Administrative Password (`/SA/administrative-password`)
+
+A standalone onboarding step reached from `/SA/change-password`, kept separate from the 2FA setup flow so that changing the 2FA type never re-triggers it.
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 1.10.1 | Reached from change password | Complete the form at `/SA/change-password` | User is redirected to `/SA/administrative-password`, not to `/SA/2fa-settings`. |
+| 1.10.2 | Successful administrative password set | Enter the correct old administrator password, a new password of 12+ characters, and a matching confirmation, submit | `SuperAdministrativePassword` is called with `id`, `oldAdministratorPassword`, and `newAdministratorPassword`. Success toast "Administrator password set successfully!" displayed. |
+| 1.10.3 | New password below 12 characters | Enter an 11-character new password, submit | Validation error "New password must be at least 12 characters". Form does not submit. Note this is stricter than the shared 8-character policy used elsewhere. |
+| 1.10.4 | Confirmation below 12 characters | Enter a valid 12+ character new password but an 11-character confirmation | The confirm field raises its own length error, not only a "must match" error -- it is held to the same rule as the password it confirms. |
+| 1.10.5 | Mismatched confirmation | Enter a valid new password and a different, also-valid confirmation | Validation error "Passwords must match". Form does not submit. |
+| 1.10.6 | Missing old password | Leave the old administrator password blank, submit | Validation error "Password is required". |
+| 1.10.7 | Wrong old password | Enter an incorrect old administrator password, submit | Server error surfaced. Password is not changed. |
+| 1.10.8 | Not re-triggered by a 2FA change | Complete this step, then change the 2FA method and log in again | The administrative password step is not shown again. |
+| 1.10.9 | Strength checklist states the real minimum | Start typing in the New Administrator Password field | A strength checklist appears and its first rule reads **"At least 12 characters"**, not 8. |
+| 1.10.10 | Checklist agrees with the schema | Enter an 11-character password satisfying every other rule | The length rule shows as unmet and the meter does **not** read Strong. Submitting is rejected with the same 12-character message. The checklist and the schema never disagree. |
+| 1.10.11 | Full policy enforced, not length alone | Enter a 12+ character password missing an uppercase letter, then one missing a digit, then one missing a special character | Each is rejected. The screen enforces uppercase, lowercase, digit, and special character in addition to the 12-character minimum. |
+| 1.10.12 | Meter reaches Strong only at the real threshold | Enter a password satisfying all five rules at 12+ characters | All five rules show as met and the meter reads Strong. |
+
+### 1.11 Admin 2FA Choice (`/2fa/choice`)
+
+The admin self-choice screen, shown when the organization has not set 2FA for all admins and the admin has no method yet.
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 1.11.1 | Page reached under the right conditions | Log in with `setForAll: false` as an admin with no `authType` | User lands on `/2fa/choice`. |
+| 1.11.2 | Default selection | Load the page | The `qrCode` (Authenticator) option is pre-selected. |
+| 1.11.3 | Choose authenticator | Select the authenticator option, submit | User is navigated to `/2fa/authenticator`. |
+| 1.11.4 | Choose security question | Select the security question option, submit | User is navigated to `/2fa/security-question`. |
+| 1.11.5 | No "set for all" option | Inspect the page | There is no "enable for all admins" toggle -- unlike `/SA/2fa-settings`. Completing setup sets only this admin's own `authType` and `auth2FADone`, with no global write. |
+| 1.11.6 | Submit with no method selected | Clear the selection if possible and submit | Validation error "Please select a 2FA method". Form does not submit. |
+| 1.11.7 | Invalid method value rejected | Attempt to submit a value other than `qrCode` or `securityQuestion` | Validation rejects it with "Invalid 2FA method". |
 
 ---
 
@@ -508,18 +549,30 @@
 
 **Route:** `/payment/:token`
 **Component:** PaymentPage, StripeForm, PayPalForm
-**APIs:** `InvoiceApi.ValidatePaymentToken`, `InvoiceApi.RecordPayment`
+**APIs:** `InvoiceApi.ValidatePaymentToken`, `InvoiceApi.CreateStripePaymentIntent`, `InvoiceApi.ConfirmPayment`, `InvoiceApi.RecordPayment`
+
+Card payments run through a real Stripe PaymentIntent. The browser never asserts that a payment succeeded; the server re-reads the intent and performs the recording, subscription creation, and tenant activation. **PayPal is currently disabled** behind `PAYPAL_ENABLED = false`.
 
 | # | Test Case | Steps | Expected Result |
 |---|-----------|-------|-----------------|
 | 10.1 | Validate payment token | Navigate to `/payment/:token` | `ValidatePaymentToken` called with token from URL. On success, payment form loads showing invoice details (amount, plan, tenant info). |
 | 10.2 | Invalid payment token | Navigate with expired/invalid token | `ValidatePaymentToken` throws error. Error message "Invalid or expired payment token" displayed. Payment form not shown. |
-| 10.3 | Pay with Stripe (credit card) | Select Stripe payment option, enter card number, expiry, CVC, cardholder name, submit | Stripe processes payment. On success, `RecordPayment` called with transactionId, transactionRef, amount, cardType, lastFourDigits, gatewayToken, holderName, paymentStatus, gateway="stripe". Success confirmation page shown. |
-| 10.4 | Stripe payment failure | Enter declined card number, submit | Stripe returns error. Error message displayed (e.g., "Your card was declined"). `RecordPayment` not called. |
-| 10.5 | Pay with PayPal | Select PayPal option, complete PayPal flow | PayPal processes payment. On success, `RecordPayment` called with gateway="paypal" and PayPal transaction details. Success page shown. |
-| 10.6 | PayPal payment cancellation | Start PayPal flow, click cancel in PayPal window | User returned to payment page. No payment recorded. Message indicates payment was cancelled. |
-| 10.7 | Payment for specific invoice | Token resolves to a specific invoiceId and planId | Payment recorded with correct invoiceId, planId, billingCycle, endDate. Invoice status updated to "paid". |
-| 10.8 | Network error during payment | Lose connection during payment submission | Error handling catches the failure. User sees network error message. No duplicate charges. |
+| 10.3 | Pay with Stripe (credit card) | Select Stripe payment option, enter card number, expiry, CVC, cardholder name, submit | `POST /billing/stripe/create-payment-intent` returns a client secret; `stripe.confirmCardPayment` performs the charge; on `succeeded`, `POST /billing/stripe/confirm-payment` is called with `{ token, paymentIntentId }`. Success confirmation page shown. |
+| 10.4 | The charge appears in Stripe | Complete a successful card payment, then open the Stripe dashboard | A real PaymentIntent (`pi_…`) exists for the correct amount. The receipt's Transaction ID matches that `pi_…` identifier and resolves in the dashboard. |
+| 10.5 | Amount cannot be tampered with client-side | Intercept the request and attempt to alter the charge amount from the browser | The amount is derived server-side from the invoice behind the token. The attempted change has no effect on what is charged. |
+| 10.6 | Intent is created before the card is touched | Use a payment link for an invoice that is already paid, or a dead link | The create-intent call fails first and no card authorization is attempted. |
+| 10.7 | 3-D Secure challenge | Use a Stripe test card that requires authentication (`requires_action`) | `confirmCardPayment` presents the 3-D Secure challenge. On successful authentication the payment completes; on failure it does not. |
+| 10.8 | Non-succeeded status is never reported as success | Force an intent that ends in any status other than `succeeded` | Error "Payment was not completed (status: ...). You have not been charged." No confirm call is made, no invoice is marked paid, and no tenant is activated. |
+| 10.9 | Stripe payment failure | Enter a declined card number, submit | Stripe returns an error and the message is shown inline and as a toast. **`RecordPayment` is not called from the browser** -- Stripe failures are recorded server-side by the `payment_intent.payment_failed` webhook. |
+| 10.10 | Cardholder name required | Leave the cardholder name blank, submit | "Cardholder name is required." No intent is created and no charge is attempted. |
+| 10.11 | Card brand and last 4 on the receipt | Complete a successful payment | The receipt shows the correct card brand (capitalized) and last four digits, taken from the tokenized PaymentMethod. |
+| 10.12 | PayPal is not offered | Load the payment page | The PayPal method tile, its "Popular" badge, and the PayPal form are all absent. Only the card option is selectable. |
+| 10.13 | Legacy PayPal record endpoint is retired | Attempt to record a payment through `/billing/pay-payment-link` | The endpoint answers **410 Gone**. This is why PayPal is disabled: a payer would be charged and never activated, with no webhook to reconcile it. |
+| 10.14 | Test-card hint hidden on live keys | Configure a live publishable key (not starting with `pk_test`) and load the page | The 4242 test-card hint is not rendered. With a `pk_test` key it is shown. |
+| 10.15 | Payment for specific invoice | Token resolves to a specific invoiceId and planId | After server-side confirmation the payment is recorded against the correct invoiceId, planId, billingCycle, and endDate. Invoice status updated to "paid" and the tenant activated. |
+| 10.16 | Network error during payment | Lose connection during payment submission | Error handling catches the failure. User sees a network error message. No duplicate charges -- the primary button is locked for the duration of the submit. |
+| 10.17 | Double-click protection | Double-click the pay button rapidly | Only one charge is attempted. The primary button locks on the first click and stays locked until the request settles. |
+| 10.18 | Stripe key not configured | Unset `VITE_STRIPE_PK` and load the page | `stripePromise` is `null`; the card form does not initialize. |
 
 ---
 
@@ -820,6 +873,20 @@
 
 ## 20. Session, Token & Idle Timeout
 
+### 20.0 Logout Destination and Teardown
+
+Both logout paths -- the header's Log out button and the idle timeout -- must run the same teardown and land on the sign-in form.
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 20.0.1 | Log out button lands on the login page | Click Log out from the profile dropdown | The browser lands on `/`, showing the super-admin sign-in form. It must **not** land on the 404 page -- there is no `/auth/login` route. |
+| 20.0.2 | Idle timeout lands on the login page | Leave the session idle for 30 minutes | Same as above: the user ends on `/` and the sign-in form, not the 404 page. |
+| 20.0.3 | Persisted state is purged on logout | Log out, then inspect localStorage and reload | The `persist:control-root` entry no longer holds the signed-out user's auth slice, and reloading does not rehydrate them into a signed-in state. |
+| 20.0.4 | Socket is closed on logout | Open DevTools' WS panel, then log out | The WebSocket closes. No further `newNotification` frames arrive and no reconnection is attempted. |
+| 20.0.5 | Socket is closed on idle timeout | Establish a socket connection, then let the session idle out | The WebSocket closes as part of the timeout teardown. An idled-out session must not keep a live connection registered as `ADMIN` or go on receiving notifications. |
+| 20.0.6 | Teardown order | Instrument the logout path | The socket is disconnected **first**, while the token that authorized it is still in state, then `logout()`, then `persistor.purge()`, then navigation. |
+| 20.0.7 | Both paths behave identically | Compare the button path and the timeout path | Both produce the same end state: socket closed, Redux cleared, persisted state purged, sitting on `/`. |
+
 **Hooks:** `useAuth`, `useIdleTimeout`
 **Helper:** `AxiosInterceptor`, `refreshAccessToken`
 
@@ -906,11 +973,96 @@
 
 ---
 
+## 22. Notifications
+
+**Route:** `/notifications` (outside every `ModuleGuard` -- available to any authenticated admin)
+**Component:** `Pages/Notifications/Notifications.jsx`
+**APIs:** `GET /notifications/user/admin/{userId}/{userType}`, `PATCH /notifications/read/admin/{id}`
+**Real-time:** `onNotification()` from `api/socketService`; the admin is registered on the socket as `"ADMIN"`.
+
+### 22.1 Access and Loading
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.1.1 | Reachable without any module permission | Log in as an admin whose role grants no modules, navigate to `/notifications` | The page loads. It is not blocked by `ModuleGuard` and shows no "You don't have access to this module" toast. |
+| 22.1.2 | Loading indicator | Throttle the network and load the page | `SectionLoader` is shown in the body while the list loads. |
+| 22.1.3 | Empty state | Log in as an admin with no notifications | A bell icon with the text "No notifications" is shown. No pagination is rendered. |
+| 22.1.4 | Correct role segment in the request | Inspect the network call on load | The request is `GET /notifications/user/admin/{userId}/ADMIN` -- namespaced `admin`, with the role as the final segment. |
+| 22.1.5 | Payload shape tolerance | Return the list wrapped as `{ data: { data: [...] } }`, as `{ data: [...] }`, and as a bare array | All three render identically. Items arriving wrapped as `{ notification: {...} }` are unwrapped correctly. |
+
+### 22.2 Display, Grouping and Pagination
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.2.1 | Sorted newest first | Load a mix of notifications with different `createdAt` values | The newest appears first. |
+| 22.2.2 | Date group headers | Include notifications from today, yesterday, and last week | Groups are headed "Today", "Yesterday", and a "Weekday, Mon D" label respectively. |
+| 22.2.3 | Missing or invalid date | Include a notification with no `createdAt` | It is grouped under "Earlier" rather than crashing the page. |
+| 22.2.4 | Relative timestamps | Inspect notifications aged seconds, minutes, hours, days, and over a week | They read "just now", "N minutes ago", "N hours ago", "N days ago", and an absolute `Mon D, YYYY` date respectively. Singular and plural are handled ("1 minute ago", not "1 minutes ago"). |
+| 22.2.5 | Pagination at 10 per page | Load 25 notifications | Pagination appears; each page shows at most 10, grouped by date within that page. |
+| 22.2.6 | No pagination for a short list | Load fewer than 11 notifications | The pagination control is not rendered. |
+| 22.2.7 | Unread styling | Compare a read and an unread notification | The unread card carries the unread modifier styling. |
+| 22.2.8 | Unread count badge | Load with some unread notifications | The header shows the unread count. With none unread, neither the count badge nor "Mark all as read" is shown. |
+| 22.2.9 | Body text fallbacks | Provide notifications carrying only `content`, only `description`, and only `body` | Each renders its text. A notification with no title falls back to "Notification". |
+
+### 22.3 Icons
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.3.1 | Payment icon | Load a `PAYMENT_MADE_FOR_PLAN` or `PRODUCT_ACCESS` notification | The card icon is the card icon. |
+| 22.3.2 | Tenant icon | Load `TENANT_CREATED` | The business icon is shown. |
+| 22.3.3 | Plan icon | Load `PLAN_CREATED` | The pricetags icon is shown. |
+| 22.3.4 | Subscription icon | Load `SUBSCRIPTION_PAUSED` | The refresh icon is shown. |
+| 22.3.5 | Issue icon | Load `ISSUE_SUBMITTED` | The alert icon is shown. |
+| 22.3.6 | Success beats issue | Load `ISSUE_RESOLVED` | The **success** (checkmark) icon is shown, not the issue icon -- the `RESOLVED` test runs before the `ISSUE` test. |
+| 22.3.7 | Success on auto-renewal | Load `SUBSCRIPTION_AUTO_RENEWED` | The success icon is shown rather than the subscription icon, for the same reason. |
+| 22.3.8 | Unknown type | Load a notification with an unrecognized type | The generic system bell icon is shown. |
+
+### 22.4 Live Updates
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.4.1 | New notification arrives | With the page open, trigger a notification server-side | It is prepended to the list immediately, with no refresh and no refetch. |
+| 22.4.2 | Duplicate id is merged, not duplicated | Push a notification whose `id` already exists in the list | The existing entry is updated in place. No duplicate row appears. |
+| 22.4.3 | Header bell badge increments | With the page closed, trigger a notification | The bell badge in `ControlLayout` increments. |
+| 22.4.4 | Reconnect after backgrounding | Background the tab for several minutes, then return | The socket reconnects on `visibilitychange`. No "connection lost" toast is raised at any point. |
+| 22.4.5 | Presence badge reflects socket state | Disconnect the network briefly and watch the avatar badge | The `ConnectionStatus` badge switches to offline with the message "You're offline. Reconnecting now -- nothing is lost, and updates resume on their own.", then back to online. |
+
+### 22.5 Read State
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.5.1 | Mark one as read | Click the action button on an unread notification | The card updates to read immediately (optimistic) and `PATCH /notifications/read/admin/{id}` is called. |
+| 22.5.2 | Already-read notification | Click the action on a read notification | No mark-as-read request is made; navigation still happens. |
+| 22.5.3 | Mark-as-read failure is non-blocking | Force the PATCH to fail | The UI stays marked read and no error toast is shown -- the failure is deliberately swallowed. |
+| 22.5.4 | Mark all as read | Click "Mark all as read" with several unread | All cards update immediately, one PATCH fires per unread item in parallel, and the list is then refetched so it reflects the persisted state. |
+| 22.5.5 | Mark all with nothing unread | Click "Mark all as read" when everything is read | The button is not rendered; no requests are made. |
+
+### 22.6 Actions and Deep-Linking
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 22.6.1 | Payment notification | Click the action on `PAYMENT_MADE_FOR_PLAN` | Label reads "View payment"; navigates to `/billing-payments/invoice-payments`. |
+| 22.6.2 | Product access notification | Click the action on `PRODUCT_ACCESS` | Label reads "View features"; navigates to `/features`. |
+| 22.6.3 | Tenant notification with an id | Click the action on `TENANT_CREATED` carrying an `entityId` | Navigates to `/tenants/tenant-lists/overview/{entityId}`. |
+| 22.6.4 | Tenant notification without an id | Click the action on `TENANT_DEACTIVATED` with no `entityId` | Falls back to `/tenants/tenant-list`. |
+| 22.6.5 | Plan notifications | Click the action on `PLAN_CREATED`, `PLAN_DEACTIVATED`, and `PLAN_DELETED` | All navigate to `/billing-payments/plans-pricing` with the label "View plans". |
+| 22.6.6 | Subscription notifications | Click the action on each of the eight `SUBSCRIPTION_*` types | All navigate to `/billing-payments/subscription-manager` with the label "View subscription". |
+| 22.6.7 | Issue notifications carry focus state | Click the action on each of the eight `ISSUE_*` types | Navigates to `/issues` with `{ focusId: entityId }` in navigation state, so the destination can focus the record. |
+| 22.6.8 | `entityId` read from nested payloads | Provide `entityId` at the top level, under `data`, and under `metadata` in turn | All three resolve to the same destination. |
+| 22.6.9 | Entity fallback for an unknown type | Send a notification with an unrecognized `type` but `entityType: "INVOICE"` | The action falls back to "View invoice" at `/billing-payments/invoice-payments`. |
+| 22.6.10 | Entity fallbacks for each supported type | Repeat 22.6.9 for `ISSUE`, `TENANT`, `PLAN`, `SUBSCRIPTION`, and `PAYMENT` | Each resolves to its documented destination. |
+| 22.6.11 | Out-of-domain entity types | Send a notification with `entityType: "APPOINTMENT"` or `"CLIENT"` | No action is resolved. The card shows the default "View details" label and clicking it marks read without navigating -- the control app has no route for these. |
+| 22.6.12 | No type and no entity type | Send a notification with neither | Card shows "View details"; clicking marks read only. |
+| 22.6.13 | Dead fallback key guard (dev only) | Run the app in development | No `[notificationConfig] ENTITY_FALLBACK key "..." is not a NotificationEntityType` errors appear in the console. Any that do indicate a fallback that can never fire. |
+| 22.6.14 | Every configured path resolves | Walk every destination in `notificationConfig.js` | Each path matches a route declared in `Components/Allroutes.jsx`; none lands on the 404 page. |
+
+---
+
 ## Test Environment Requirements
 
 - **Browsers:** Chrome (latest), Firefox (latest), Safari (latest), Edge (latest)
 - **Test accounts:** Super Admin account, Staff account with full permissions, Staff account with partial permissions, Staff account with no permissions
-- **Payment testing:** Stripe test mode API keys, PayPal sandbox account
+- **Payment testing:** Stripe test mode API keys (a `pk_test` publishable key), including cards that decline and cards that require 3-D Secure. A PayPal sandbox account is **not** required -- PayPal is disabled behind `PAYPAL_ENABLED = false`.
 - **Data requirements:** At least 5 tenants (mix of active/inactive), at least 3 plans (different types), at least 10 issues (various statuses), pipeline with 3+ stages and 5+ prospects, 2+ feature groups with 10+ features
 - **Network conditions:** Test on normal network and throttled network (slow 3G) for loading states
 
@@ -920,6 +1072,7 @@
 2. **Pipeline drag-and-drop** -- Complex state management during drag operations; test with rapid successive drags
 3. **Bulk operations** -- Selecting and operating on many items (50+) at once; verify performance and correct API payloads
 4. **Auto-billing toggle interactions** -- Multiple toggles depend on each other; verify correct state after toggling combinations
-5. **Payment processing** -- Stripe/PayPal integration failures; test edge cases (declined cards, PayPal timeouts, duplicate submissions)
+5. **Payment processing** -- Stripe PaymentIntent failures; test edge cases (declined cards, 3-D Secure challenges, any non-`succeeded` intent status, duplicate submissions). Verify that a successful payment appears in the Stripe dashboard as a real `pi_…` intent, and that a *failed* payment is never recorded from the browser -- that path belongs to the `payment_intent.payment_failed` webhook
 6. **Permission-gated UI** -- Ensure all 70+ permission keys correctly hide/show UI elements; missing guards create unauthorized access
-7. **Administrator password for destructive actions** -- Plan deletion, feature group deletion, plan activation/deactivation all require admin password; verify this cannot be bypassed
+7. **Real-time notifications** -- Socket delivery, duplicate-id merging, and the deep-link map in `notificationConfig.js`; a destination that no longer matches a declared route sends the admin to a 404
+8. **Administrator password for destructive actions** -- Plan deletion, feature group deletion, plan activation/deactivation all require admin password; verify this cannot be bypassed
