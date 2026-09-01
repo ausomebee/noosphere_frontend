@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../../ReduxStore/features/authentication";
+import { persistor } from "../../ReduxStore/store";
 import tenantApi from "../../api/TenantApis";
 import useAuth from "../../hooks/useAuth";
 import usePermission from "../../hooks/usePermission";
@@ -72,7 +73,11 @@ const Layout = ({ children }) => {
   const handleLogout = () => {
     disconnectSocket();
     dispatch(logout());
-    navigate("/auth/login");
+    // Without the purge, redux-persist rehydrated the signed-out user's auth
+    // slice from localStorage on the next load. Matches tenant/client.
+    persistor.purge();
+    // The login page is "/" — there is no /auth/login route.
+    navigate("/");
   };
 
   useEffect(() => {
