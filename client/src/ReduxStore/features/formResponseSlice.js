@@ -20,37 +20,6 @@ const initialState = {
   version: 1,
 };
 
-// Helper: Serialize file info → drop actual File object + store previewUrl if exists
-const serializeFileInfo = (fileItems) => {
-  if (!Array.isArray(fileItems)) return [];
-  return fileItems.map((item) => {
-    const { previewUrl, ...rest } = item;
-
-    // Revoke preview URL if it was created (cleanup)
-    if (previewUrl && !item.url) { // only revoke if not yet uploaded
-      try {
-        URL.revokeObjectURL(previewUrl);
-      } catch {
-        // Silent fail - URL might already be revoked
-      }
-    }
-
-    return {
-      ...rest,
-      filename: item.filename,
-      size: item.file?.size,
-      type: item.file?.type,
-      lastModified: item.file?.lastModified,
-      progress: item.progress || 0,
-      url: item.url || null,
-      error: item.error || false,
-      errorMessage: item.errorMessage || null,
-      previewUrl: item.previewUrl || null, // keep for rehydration (but won't work after refresh)
-      _wasUploaded: !!item.url,
-    };
-  });
-};
-
 // Helper: Deserialize → safe, no File restoration
 const deserializeFileInfo = (fileInfo) => {
   if (!fileInfo) return [];
@@ -232,7 +201,10 @@ const formResponsePersistConfig = {
     "submitted",
     "submissionId",
     "submittedAt",
-    // Note: files are NOT in whitelist → we handle serialization manually
+    // Files are deliberately NOT persisted: a File object cannot be
+    // serialized, so it would not survive a reload anyway. Saved file
+    // metadata is rehydrated by deserializeFileInfo in loadSavedResponse,
+    // which returns each entry with `file: null`.
   ],
 };
 
