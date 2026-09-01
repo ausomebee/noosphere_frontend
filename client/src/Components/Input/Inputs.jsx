@@ -785,11 +785,13 @@ RadioInput.propTypes = {
   error: PropTypes.string,
 };
 
-const TimeInput = ({
-  value = { hours: 0, minutes: 0, seconds: 0 },
-  onChange,
-  disabled,
-}) => {
+// A stable module-level default. Inlining the literal in the destructure gave
+// `value` a fresh identity on every render, so the `[value]` effect below fired
+// forever whenever TimeInput was used without a `value` prop. React 19 ignores
+// `TimeInput.defaultProps`, which used to hide this.
+const ZERO_TIME = Object.freeze({ hours: 0, minutes: 0, seconds: 0 });
+
+const TimeInput = ({ value = ZERO_TIME, onChange, disabled = false }) => {
   const [time, setTime] = useState(value);
 
   useEffect(() => {
@@ -856,11 +858,6 @@ TimeInput.propTypes = {
   }),
   onChange: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
-};
-
-TimeInput.defaultProps = {
-  value: { hours: 0, minutes: 0, seconds: 0 },
-  disabled: false,
 };
 
 const CustomDatePickerInput = ({
