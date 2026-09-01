@@ -1,0 +1,257 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+
+import DocumentViewer from "../Components/FileUpload/DocumentViewer";
+
+/**
+ * Branch coverage for the document preview overlay.
+ *
+ * It portals into document.body, so queries go through `document.body` rather
+ * than the render container. The arms driven here are the file-type routing
+ * (PDF frame, image, Word/other fallback), the download-then-open-in-a-tab
+ * path, and the same scroll-lock / inert-root bookkeeping the modal does.
+ */
+
+const noop = () => {};
+const body = () => document.body;
+
+const open = (props) =>
+  render(
+    <DocumentViewer isOpen fileUrl="https://x/a.pdf" fileName="a.pdf" onClose={noop} {...props} />
+  );
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  document.body.innerHTML = "";
+  document.body.style.cssText = "";
+  global.URL.createObjectURL = vi.fn(() => "blob:x");
+  global.URL.revokeObjectURL = vi.fn();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("open and closed", () => {
+  it("renders nothing while closed", () => {
+    render(<DocumentViewer isOpen={false} fileUrl="https://x/a.pdf" onClose={noop} />);
+    expect(body().querySelector(".doc-viewer-overlay")).toBeNull();
+  });
+
+  it("renders the overlay when open", () => {
+    open({});
+    expect(body().querySelector('[role="dialog"]')).toBeInTheDocument();
+  });
+
+  it("falls back to a generic title when the file has no name", () => {
+    open({ fileName: undefined });
+    expect(screen.getByText("Document Preview")).toBeInTheDocument();
+  });
+
+  it("uses the file name as the title when there is one", () => {
+    open({ fileName: "Consent form.pdf" });
+    expect(screen.getByText("Consent form.pdf")).toBeInTheDocument();
+  });
+});
+
+describe("file type routing", () => {
+  it("shows a PDF in a frame and clears the loader once it loads", () => {
+    open({ fileUrl: "https://x/a.pdf" });
+    const frame = body().querySelector(".doc-viewer-iframe");
+    expect(frame).toBeInTheDocument();
+    expect(body().querySelector(".doc-viewer-loading")).toBeInTheDocument();
+    fireEvent.load(frame);
+    expect(body().querySelector(".doc-viewer-loading")).toBeNull();
+  });
+
+  it("ignores a query string when reading the extension", () => {
+    open({ fileUrl: "https://x/a.pdf?token=abc" });
+    expect(body().querySelector(".doc-viewer-iframe")).toBeInTheDocument();
+  });
+
+  it.each(["jpg", "jpeg", "png", "gif", "webp"])("shows a .%s as an image", (ext) => {
+    open({ fileUrl: `https://x/a.${ext}`, fileName: `a.${ext}` });
+    expect(body().querySelector(".doc-viewer-image")).toBeInTheDocument();
+  });
+
+  it("clears the loader when an image loads, and also when it fails", () => {
+    const { unmount } = open({ fileUrl: "https://x/a.png" });
+    fireEvent.load(body().querySelector(".doc-viewer-image"));
+    expect(body().querySelector(".doc-viewer-loading")).toBeNull();
+    unmount();
+
+    open({ fileUrl: "https://x/b.png" });
+    fireEvent.error(body().querySelector(".doc-viewer-image"));
+    expect(body().querySelector(".doc-viewer-loading")).toBeNull();
+  });
+
+  it("gives an unnamed image a stand-in alt text", () => {
+    open({ fileUrl: "https://x/a.png", fileName: undefined });
+    expect(body().querySelector(".doc-viewer-image").alt).toBe("Document preview");
+  });
+
+  it.each(["doc", "docx"])("explains that a .%s cannot be previewed", (ext) => {
+    open({ fileUrl: `https://x/a.${ext}`, fileName: `a.${ext}` });
+    expect(screen.getByText(/Word documents can't be previewed/i)).toBeInTheDocument();
+  });
+
+  it("shows a generic message for any other file type", () => {
+    open({ fileUrl: "https://x/a.zip", fileName: "a.zip" });
+    expect(screen.getByText(/cannot be previewed/i)).toBeInTheDocument();
+  });
+
+  it("treats a url with no extension as unpreviewable", () => {
+    open({ fileUrl: undefined, fileName: undefined });
+    expect(screen.getByText("This file type cannot be previewed.")).toBeInTheDocument();
+  });
+});
+
+describe("download", () => {
+  const captureAnchors = () => {
+    const anchors = [];
+    const orig = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag) => {
+      const el = orig(tag);
+      if (tag === "a") {
+        el.click = vi.fn();
+        anchors.push(el);
+      }
+      return el;
+    });
+    return anchors;
+  };
+
+  it("saves the blob under the file's own name", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    const anchors = captureAnchors();
+    open({ fileName: "report.pdf" });
+    fireEvent.click(screen.getByLabelText("Download file"));
+    await waitFor(() => expect(anchors.length).toBe(1));
+    expect(anchors[0].download).toBe("report.pdf");
+  });
+
+  it("falls back to a generic name when the file has none", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    const anchors = captureAnchors();
+    open({ fileName: undefined });
+    fireEvent.click(screen.getByLabelText("Download file"));
+    await waitFor(() => expect(anchors.length).toBe(1));
+    expect(anchors[0].download).toBe("document");
+  });
+
+  it("opens the file in a new tab when the fetch fails", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("offline"));
+    const openTab = vi.spyOn(window, "open").mockImplementation(() => {});
+    open({ fileUrl: "https://x/a.pdf" });
+    fireEvent.click(screen.getByLabelText("Download file"));
+    await waitFor(() =>
+      expect(openTab).toHaveBeenCalledWith("https://x/a.pdf", "_blank")
+    );
+  });
+
+  it("offers the same download from the unpreviewable fallback", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    const anchors = captureAnchors();
+    open({ fileUrl: "https://x/a.docx", fileName: "a.docx" });
+    fireEvent.click(screen.getByText("Download File"));
+    await waitFor(() => expect(anchors.length).toBe(1));
+  });
+});
+
+describe("closing", () => {
+  it("closes on a backdrop click", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.click(body().querySelector(".doc-viewer-overlay"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores a click inside the panel", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.click(body().querySelector(".doc-viewer-modal"));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("closes on the close button", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.click(screen.getByLabelText("Close document viewer"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes on Escape and ignores every other key", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.keyDown(document, { key: "a" });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops listening for Escape once closed", () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <DocumentViewer isOpen fileUrl="https://x/a.pdf" onClose={onClose} />
+    );
+    rerender(<DocumentViewer isOpen={false} fileUrl="https://x/a.pdf" onClose={onClose} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe("page bookkeeping while open", () => {
+  it("locks the body and restores the scroll position on close", () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 90 });
+
+    const { unmount } = open({});
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.top).toBe("-90px");
+
+    unmount();
+    expect(document.body.style.overflow).toBe("");
+    expect(scrollTo).toHaveBeenCalledWith(0, 90);
+  });
+
+  it("leaves the body alone when it never opened", () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const { unmount } = render(
+      <DocumentViewer isOpen={false} fileUrl="https://x/a.pdf" onClose={noop} />
+    );
+    expect(document.body.style.overflow).toBe("");
+    unmount();
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("marks #root inert while open and clears it on unmount", () => {
+    const root = document.createElement("div");
+    root.id = "root";
+    document.body.appendChild(root);
+
+    const { unmount } = open({});
+    expect(root.hasAttribute("inert")).toBe(true);
+    unmount();
+    expect(root.hasAttribute("inert")).toBe(false);
+  });
+
+  it("copes with an app that has no #root element", () => {
+    expect(() => {
+      const { unmount } = open({});
+      unmount();
+    }).not.toThrow();
+  });
+
+  it("shows the loader again when the file changes", () => {
+    const { rerender } = render(
+      <DocumentViewer isOpen fileUrl="https://x/a.pdf" fileName="a.pdf" onClose={noop} />
+    );
+    fireEvent.load(body().querySelector(".doc-viewer-iframe"));
+    expect(body().querySelector(".doc-viewer-loading")).toBeNull();
+
+    rerender(
+      <DocumentViewer isOpen fileUrl="https://x/b.pdf" fileName="b.pdf" onClose={noop} />
+    );
+    expect(body().querySelector(".doc-viewer-loading")).toBeInTheDocument();
+  });
+});
