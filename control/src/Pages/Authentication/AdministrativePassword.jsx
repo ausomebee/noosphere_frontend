@@ -14,22 +14,35 @@ import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../Helper/formErrors";
+import {
+  passwordSchema as strongPassword,
+  confirmPasswordSchema,
+} from "../../Helper/passwordValidation";
+
 // Standalone onboarding step: set the administrator password. Kept separate
 // from the 2FA setup flow so changing the 2FA type never re-triggers it.
+//
 // The administrative password deliberately keeps its own, stricter 12-character
 // policy rather than the shared 8-character one. The confirm field is held to
 // the same rule as the password it confirms — not just "must match".
+//
+// Both fields now go through the shared password schema at that raised minimum,
+// so this screen enforces the full policy (upper, lower, digit, special) rather
+// than length alone, and the checklist rendered below is built from the same
+// minimum. Previously the rule was invisible: the fields showed no checklist at
+// all, so the first a user heard of "12 characters" was a failed submit.
+const ADMIN_PASSWORD_MIN_LENGTH = 12;
+
 const passwordSchema = yup.object().shape({
   oldAdministratorPassword: yup.string().required("Password is required"),
-  newAdministratorPassword: yup
-    .string()
-    .required("New password is required")
-    .min(12, "New password must be at least 12 characters"),
-  confirmNewAdministratorPassword: yup
-    .string()
-    .required("Please confirm your new password")
-    .min(12, "New password must be at least 12 characters")
-    .oneOf([yup.ref("newAdministratorPassword")], "Passwords must match"),
+  newAdministratorPassword: strongPassword(
+    "New password",
+    ADMIN_PASSWORD_MIN_LENGTH,
+  ),
+  confirmNewAdministratorPassword: confirmPasswordSchema(
+    "newAdministratorPassword",
+    ADMIN_PASSWORD_MIN_LENGTH,
+  ),
 });
 
 const AdministrativePassword = () => {
@@ -124,6 +137,8 @@ const AdministrativePassword = () => {
                   label="New Administrator Password"
                   id="newAdministratorPassword"
                   placeholder="Enter new password"
+                  showStrength
+                  minLength={ADMIN_PASSWORD_MIN_LENGTH}
                   {...register("newAdministratorPassword")}
                   className={`input-text ${
                     errors.newAdministratorPassword ? "input-error" : ""

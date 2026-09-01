@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import {
+  buildPasswordRules,
+  DEFAULT_PASSWORD_MIN_LENGTH,
+} from "../../Helper/passwordPolicy";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import "./Inputs.css";
@@ -303,26 +307,17 @@ RadioInput.propTypes = {
 };
 
 // Password Input Component
-// Shared password policy: min 8 + uppercase + lowercase + digit + special char.
-// "Special" is any non-alphanumeric character. This must stay in lockstep with
-// `passwordSchema` in src/Helper/passwordValidation.js — if the two drift, this
-// checklist can mark a rule unmet for a password the schema happily accepts.
-export const SPECIAL_CHAR_REGEX = /[^A-Za-z0-9]/;
-
-export const PASSWORD_RULES = [
-  { test: (v) => (v || "").length >= 8, label: "At least 8 characters" },
-  { test: (v) => /[A-Z]/.test(v || ""), label: "One uppercase letter" },
-  { test: (v) => /[a-z]/.test(v || ""), label: "One lowercase letter" },
-  { test: (v) => /\d/.test(v || ""), label: "One number" },
-  { test: (v) => SPECIAL_CHAR_REGEX.test(v || ""), label: "One special character" },
-];
-
-const PasswordStrength = ({ value }) => {
+// The policy itself lives in src/Helper/passwordPolicy.js so that this checklist
+// and `passwordSchema` in src/Helper/passwordValidation.js read the same rules
+// without either importing the other. If they drifted, this checklist could
+// mark a rule unmet for a password the schema accepts, or call one Strong that
+// the schema then rejects.
+const PasswordStrength = ({ value, minLength = DEFAULT_PASSWORD_MIN_LENGTH }) => {
   if (!value) return null;
-  const score = PASSWORD_RULES.filter((r) => r.test(value)).length;
-  const pct = (score / PASSWORD_RULES.length) * 100;
-  const label =
-    score <= 2 ? "Weak" : score < PASSWORD_RULES.length ? "Medium" : "Strong";
+  const rules = buildPasswordRules(minLength);
+  const score = rules.filter((r) => r.test(value)).length;
+  const pct = (score / rules.length) * 100;
+  const label = score <= 2 ? "Weak" : score < rules.length ? "Medium" : "Strong";
   // Brand-themed via CSS vars (control = black, tenant/client = blue).
   const brand = "var(--button-primary-color, var(--color-primary, #004aba))";
   const muted = "var(--color-muted, #98a2b3)";
@@ -333,7 +328,7 @@ const PasswordStrength = ({ value }) => {
       </div>
       <span style={{ fontSize: 12, color: brand, fontWeight: 600 }}>{label} password</span>
       <ul style={{ listStyle: "none", padding: 0, margin: "4px 0 0", fontSize: 11 }}>
-        {PASSWORD_RULES.map((r) => {
+        {rules.map((r) => {
           const ok = r.test(value);
           return (
             <li key={r.label} style={{ color: ok ? brand : muted }}>
@@ -346,7 +341,10 @@ const PasswordStrength = ({ value }) => {
   );
 };
 
-PasswordStrength.propTypes = { value: PropTypes.string };
+PasswordStrength.propTypes = {
+  value: PropTypes.string,
+  minLength: PropTypes.number,
+};
 
 // Confirm-password indicator. The confirm field enforces the SAME strength rules
 // as the password field (see confirmPasswordSchema), so repeating the whole
@@ -390,6 +388,10 @@ const PasswordInput = ({
   error = "",
   type: _type,
   showStrength = false,
+  // Override the length rule the checklist shows. Defaults to the shared
+  // policy; the administrator password screen passes its stricter minimum so
+  // the checklist matches the schema that will actually judge the input.
+  minLength = DEFAULT_PASSWORD_MIN_LENGTH,
   // Pass the password field's current value to render a "passwords match"
   // indicator under a confirm-password field.
   matchValue,
@@ -465,7 +467,9 @@ const PasswordInput = ({
           )}
         </button>
       </div>
-      {showStrength && <PasswordStrength value={currentValue} />}
+      {showStrength && (
+        <PasswordStrength value={currentValue} minLength={minLength} />
+      )}
       {matchValue !== undefined && (
         <PasswordMatch
           value={currentValue}
@@ -484,6 +488,7 @@ PasswordInput.propTypes = {
   onBlur: PropTypes.func,
   placeholder: PropTypes.string,
   showStrength: PropTypes.bool,
+  minLength: PropTypes.number,
   matchValue: PropTypes.string,
   className: PropTypes.string,
   error: PropTypes.string,
