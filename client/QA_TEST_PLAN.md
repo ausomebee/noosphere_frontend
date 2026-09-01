@@ -26,8 +26,12 @@
 13. [Module 10: Cross-Browser & Responsive Testing](#module-10-cross-browser--responsive-testing)
 14. [Module 11: Performance & Error Handling](#module-11-performance--error-handling)
 15. [Module 12: Accessibility](#module-12-accessibility)
-16. [Defect Severity Classification](#defect-severity-classification)
-17. [Sign-Off](#sign-off)
+16. [Module 13: Shared UI, Layout & Table](#module-13-shared-ui-layout--table)
+17. [Module 14: Document & Session Modals](#module-14-document--session-modals)
+18. [Module 15: State, Hooks & Utilities](#module-15-state-hooks--utilities)
+19. [Appendix A: Coverage Traceability Matrix](#appendix-a-coverage-traceability-matrix)
+20. [Defect Severity Classification](#defect-severity-classification)
+21. [Sign-Off](#sign-off)
 
 ---
 
@@ -2400,6 +2404,789 @@ An error boundary catches *render* errors; a failed fetch does not throw during 
 - Text meets WCAG AA contrast ratio (4.5:1 for normal text)
 - Status badges are distinguishable
 - Error states are not indicated by color alone
+
+---
+
+## Module 13: Shared UI, Layout & Table
+
+### TC-UI-001: Full Page Loader (`Components/FullPageLoader.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Throttle the network and navigate between lazy-loaded routes
+2. Reload the app while the subdomain is still being detected
+3. Inspect with a screen reader
+
+**Expected Results:**
+- Full viewport (100vh x 100vw) white overlay with the logo breathing animation
+- Shown as the Suspense fallback for lazy routes and while `App.jsx` reports the subdomain slice as loading
+- Carries `role="status"` and `aria-live="polite"` with screen-reader-only loading text
+
+---
+
+### TC-UI-002: Not Found Page (`Components/NotFound.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Navigate to `/does-not-exist` while logged in, then while logged out
+2. Click "Go Home"
+
+**Expected Results:**
+- The catch-all route renders the 404 illustration, a large blue "404", a "Page not found" subtitle, and a descriptive paragraph
+- "Go Home" navigates via `useNavigate()` back to the dashboard
+- The page renders full-height and centred on both desktop and mobile
+
+---
+
+### TC-UI-003: Route Error Boundary (`Components/RouteErrorBoundary.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Force a render-time exception inside one route
+2. Click "Reload Page"
+3. Navigate to a different route afterwards
+
+**Expected Results:**
+- Only that route is replaced by "Something went wrong" plus a "Reload Page" button -- the sidebar, header, and the rest of the app stay usable
+- The whole application does not blank out
+- Reloading resets the boundary's internal state and the route renders normally again
+- A *data-fetch* failure does not reach this boundary; it renders `ErrorFallback` inline instead (see TC-PERF-007)
+
+---
+
+### TC-UI-004: Application Root (`App.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Load the app from a tenant subdomain
+2. Force an uncaught render error anywhere in the tree
+3. Open a document from any page
+
+**Expected Results:**
+- On mount the root detects the subdomain and dispatches it into the `subDomain` slice; `FullPageLoader` shows until that resolves
+- The whole tree is wrapped in the global `ErrorBoundary`, so an uncaught render error shows the fallback rather than a blank page
+- `DocumentViewerProvider` wraps the routes, so the document viewer context is available from every page
+- Routes are loaded lazily inside a `Suspense` boundary with `FullPageLoader` as the fallback
+
+---
+
+### TC-UI-005: Client Layout (`layouts/ClientLayout.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. Sign in and inspect the layout on desktop, then at 768px and below
+2. Confirm which pages render inside it
+3. Open the message and notification icons
+
+**Expected Results:**
+- Exported as `DashboardLayout`; sidebar, header, and content area render correctly
+- Home, Programs, DocumentsAndForms, Notifications, and Profile each render inside it; the form renderer deliberately does **not**, so a form fills the screen
+- The avatar carries the `ConnectionStatus` badge; message and bell icons show their unread counts
+- Below 768px the sidebar collapses to a drawer toggle
+
+---
+
+### TC-UI-006: Auth Layout (`Pages/Authentication/AuthLayout.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Visit login, initial login, initial reset password, and forgot password
+2. Resize to 1024px, 768px, and 480px
+3. Compare heading sizes against the Control app's auth pages
+
+**Expected Results:**
+- All four pages share the split layout: illustration left, logo above a 380px-wide form right
+- At <= 768px the illustration is **hidden** and the form takes the full width
+- At <= 480px headings drop to 20px and subtitles to 12px
+- Headings render at 24px/600 and the subtitle immediately after at 14px -- they do not fall back to the browser's default 2em, and the rule does not leak onto error messages further down the form
+
+---
+
+### TC-UI-007: Reusable Table (`Components/Table/ReuseableTable.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. On the dashboard, use the tab bar, search box, and view toggle
+2. Type quickly into search and watch the request timing
+3. Page through a list of more than 30 rows
+4. Expand a row where a custom expansion renderer is supplied
+5. View a tab with no data
+
+**Expected Results:**
+- Tabs render with count badges; the search input is debounced at 300ms so typing does not fire a request per keystroke
+- The list/grid view toggle switches presentation without losing the current tab
+- Pagination shows first, last, and the surrounding pages rather than every page number
+- Expandable rows render the supplied custom content; row action dropdowns open in place
+- Empty tabs show the customised empty state with its icon
+- The table has no checkboxes and no export controls -- those exist only in the Control and Tenant tables
+
+---
+
+### TC-UI-008: Empty Appointment Illustration (`Components/Svgs/EmptyAppointmentSvg.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Low |
+
+**Steps:**
+1. Sign in as a client with no appointments on each of the five dashboard tabs
+
+**Expected Results:**
+- The `EmptyAppointmentSvg` illustration renders above the "No appointments" heading
+- It scales without distortion on mobile and is not announced as meaningful content to a screen reader
+
+---
+
+### TC-UI-009: File Upload Area (`Components/FileUpload/FileUploadArea.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Drag a file onto the drop zone; then use the browse control instead
+2. Drop an unsupported file type
+3. Drop several files where multiple selection is allowed, and where it is not
+4. Remove a file from the pending list
+
+**Expected Results:**
+- Both drag-and-drop and click-to-browse add the file
+- The drop zone shows an active state while a file is dragged over it
+- Unsupported types are rejected with a message naming the accepted formats
+- With `allowMultiple` false, a second file replaces the first rather than appending
+- Pending files can be removed individually before submitting
+
+---
+
+### TC-UI-010: Document Viewer (`Components/FileUpload/DocumentViewer.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Click a file name in My Documents to preview it
+2. Download the document from within the viewer
+3. Close the viewer and confirm it unmounts
+4. Open a document whose URL 404s
+
+**Expected Results:**
+- The viewer opens over the page showing the document and its name
+- Download fetches the file as a blob; where that fails it falls back to `window.open()`
+- In the Client app the viewer is rendered **only while open** (unlike Control and Tenant, which always render it)
+- A broken URL surfaces an error state rather than an indefinite spinner
+
+### TC-UI-011: Shared Input Kit (`Components/Input/Inputs.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. On any form, fill a text, textarea, checkbox, switch, radio and search field, and mark one of each required
+2. Type into a password field with the strength meter shown, then into its confirm field, and leave the confirm field while the two differ
+3. Open a single select and a multi select, choose and clear values, and open one that has no options
+4. Open a searchable select and type to filter
+5. Open a screen that uses the hours:minutes:seconds `TimeInput` **without a preset value** and leave it on screen
+6. Open a date field and click the read-only text box
+
+**Expected Results:**
+- A required field shows the shared asterisk and carries `aria-required`; an optional one carries neither
+- The password meter grades Weak / Medium / Strong against the five shared rules; the confirm field shows a tick as soon as the two agree and holds the mismatch warning until the field is left
+- Selects report changes as `{ target: { name, value } }`; a multi select reports an array; a manually-added blank placeholder option is dropped in favour of the built-in placeholder; an empty list shows the caller's hint, or "No options"
+- **`TimeInput` with no `value` prop renders once and stays still.** Its default `{ hours: 0, minutes: 0, seconds: 0 }` comes from a shared frozen constant; an inline default produced a new object each render and spun the component in an endless re-render loop. Hours clamp to 0-23, minutes and seconds to 0-59, and unparseable input floors to 0
+- The date field is read-only and opens its picker on click, focusing itself; a validation error renders whether it arrives as a string or as a yup `{ message }` object
+
+---
+
+## Module 14: Document & Session Modals
+
+### TC-MOD-001: New Folder Modal (`Components/Modal/DocumentModal/NewFolderModal.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Click New > New Folder, enter a name, submit
+2. Submit with the name blank
+3. Use the pencil icon on an existing folder to rename it
+
+**Expected Results:**
+- Create mode calls `onCreate` with `{ name }` and the folder appears in the Folders grid
+- A blank name is rejected before any request is made
+- Rename mode calls `onRename` with the `folderId` and the new name, and the card updates in place
+
+---
+
+### TC-MOD-002: New File Modal (`Components/Modal/DocumentModal/NewFileModal.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Click New > New File, attach one or more files, submit
+2. Attach a file into a specific folder
+3. Watch the button while the upload is in flight, and double-click it
+
+**Expected Results:**
+- `onCreate` receives an array of payloads shaped `{ name, url, size, fileType, folderId }` and `CreateNewFile()` is called
+- Files uploaded from inside a folder carry that `folderId`; files uploaded from All Files carry none
+- The primary button locks while the request is in flight, so a double-click cannot create duplicates
+
+---
+
+### TC-MOD-003: Folder Contents Modal (`Components/Modal/DocumentModal/FolderFileModal.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Click a folder card
+2. Open a file from inside the folder
+3. Open an empty folder
+
+**Expected Results:**
+- The modal fetches the folder's contents via `GetAllFilesInFolder(folderId)` and lists them
+- Clicking a file opens it in the document viewer
+- An empty folder shows an empty state rather than a blank panel
+
+---
+
+### TC-MOD-004: Client Document Upload Modal (`Components/Modal/ClientDocumentUploadModal.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. From a document request, choose to upload a new document
+2. Attach files, then remove one
+3. Submit with nothing attached
+4. Submit with files attached
+
+**Expected Results:**
+- Uses `FileUploadArea` for selection and lists the attached files with remove controls
+- A blue summary reads "{count} file(s) ready to attach"
+- The "Attach Documents" button is **disabled** while no files are attached
+- On submit `onFilesReady` fires and the request moves to its completed state
+- `allowMultiple` is honoured -- a single-document request accepts only one file
+
+---
+
+### TC-MOD-005: Review Session Modal (`Components/Modal/UpcomingDashboardModal/ReviewSessionModal.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. From the Awaiting feedback tab, click "Review Session"
+2. Review the session information grid
+3. Submit with no rating, then with no signature
+4. Complete ratings, confirm delivery, sign, and submit
+5. Close the modal without submitting, then reopen it
+
+**Expected Results:**
+- The information grid shows Date, Client Name with Insurance ID, Clinician(s) with NPI, start and end times, total duration, session type, service types, and location
+- Star ratings, the delivery confirmation, and a signature are all required before submission is accepted
+- Signature capture accepts drawing and image upload, and the Clear control resets the canvas
+- On success the session leaves the Awaiting feedback tab and its badge count decrements
+- Reopening after closing starts clean -- ratings, confirmation, and signature are all reset
+
+---
+
+## Module 15: State, Hooks & Utilities
+
+### TC-STATE-001: Root Reducer and Slice Wiring (`ReduxStore/rootReducer.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Inspect the Redux state tree in DevTools
+2. Reload the page and compare which branches survive
+
+**Expected Results:**
+- The tree has exactly four branches: `auth`, `subDomain`, `formBuilder`, and `formResponse`
+- The auth slice is mounted as **`auth`** here, not `authentication` as in Control and Tenant
+- Only `auth`, `formBuilder`, and `formResponse` are whitelisted for persistence; `subDomain` is re-detected on every boot and is deliberately not persisted
+
+---
+
+### TC-STATE-002: Form Builder Slice (`ReduxStore/features/formBuilderSlice.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Open a shared form from Documents & Forms
+2. Reload the page mid-form
+
+**Expected Results:**
+- The form schema fetched from the backend is stored in `formBuilder` and drives the rendered fields
+- The schema survives a reload, so the form does not have to be re-fetched to render
+
+---
+
+### TC-STATE-003: Form Response Slice (`ReduxStore/features/formResponseSlice.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. Fill several pages of a form, including a file upload and a signature
+2. Reload the browser and reopen the form
+3. Submit the form, then reopen it
+
+**Expected Results:**
+- State holds `formId`, `tenantId`, `submittedBy`, `responses`, `files`, `signatures`, `signatureMode`, `currentPage`, `submitted`, `submissionId`, and `submittedAt`
+- After the reload the answers, signatures, signature mode, and current page are all restored
+- **Files are not restored** -- `File` objects cannot be serialised, so they are excluded from persistence and must be re-attached
+- After a successful submit the form shows its submitted state and cannot be resubmitted
+
+---
+
+### TC-HOOK-001: Page Title (`hooks/usePageTitle.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Low |
+
+**Steps:**
+1. Visit each page and read the browser tab
+2. Navigate away from a page that sets a title
+
+**Expected Results:**
+- The tab reads "{Page} | Noosphere" on every page that sets one
+- The previous title is restored on unmount, so a stale title never persists after navigation
+
+---
+
+### TC-HOOK-002: Unsaved Changes Guard (`hooks/useUnsavedChanges.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Start filling a form, then close the browser tab or reload
+2. Repeat with no changes made
+3. Submit successfully, then reload
+
+**Expected Results:**
+- With unsaved input the browser's own confirmation dialog appears before leaving
+- With nothing dirty no dialog appears
+- After a successful submit the dirty flag is cleared and leaving is not blocked
+
+---
+
+### TC-HOOK-003: Document Viewer Context (`hooks/useDocumentViewer.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Open a document from My Documents, then from a document request
+2. Call the download action from each
+3. Close the viewer
+
+**Expected Results:**
+- `openDocument(url, name)` opens the same viewer regardless of which page called it
+- `downloadDocument(url, name)` downloads via blob, falling back to `window.open()`
+- `closeDocument()` closes it and, in the Client app, unmounts the viewer entirely
+
+---
+
+### TC-HOOK-004: Notification Settings (`hooks/useNotificationSettings.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Open Profile > notification preferences and count the toggles
+2. Flip one toggle and watch it immediately
+3. Force the update request to fail
+4. Sign in as a client who has never saved preferences
+
+**Expected Results:**
+- 13 preference toggles are listed
+- A toggle flips **optimistically** and only that toggle shows its own loading state (`loadingKeys`), not the whole list
+- A failed update **reverts** that toggle to its previous value and surfaces an error
+- A client with no saved settings gets defaults created with everything enabled
+
+---
+
+### TC-HOOK-005: Persisted Tab (`hooks/usePersistedTab.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+Covered behaviourally in TC-DASH-025a; this case checks the hook's own guarantees.
+
+**Steps:**
+1. Select a non-default tab and refresh
+2. Inspect `sessionStorage`
+3. Block site data in the browser, then reload
+
+**Expected Results:**
+- The selection is stored under a `tab:` prefixed key in `sessionStorage`
+- Reads and writes are wrapped so that a browser blocking site data degrades to plain `useState` behaviour instead of throwing
+- A stored value outside the allowed tab list falls back to the default
+
+---
+
+### TC-HOOK-006: Socket Hook (`hooks/useSocket.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Sign in and inspect the WebSocket frames in DevTools
+2. Trigger a message and a notification from the tenant side
+3. Sign out
+
+**Expected Results:**
+- The socket registers the user as `"CLIENT"` and returns `{ isConnected }`
+- `onMessage` increments the message badge and `onNotification` increments the bell badge
+- The effect re-runs on changes to `userId`, `accessToken`, or `tenantId`
+- On logout the socket disconnects and the initialization guard resets so the next login reconnects cleanly
+
+---
+
+### TC-API-001: Profile & Settings API (`api/profileAndSettingsApi.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Update profile details, upload an avatar, and change the password
+2. Load and then change notification preferences
+3. Force each request to return a backend error message
+
+**Expected Results:**
+- The seven endpoints behave as documented: `GetClientDetails`, `UpdateClientDetails`, `UploadProfileImage`, `UpdatePassword`, `GetNotificationSettings`, `CreateNotificationSettings`, and `UpdateNotificationSettings`
+- Each surfaces the backend's own message on failure rather than a generic one
+- A successful avatar upload updates the header and sidebar avatar without a reload
+
+---
+
+### TC-UTIL-001: Device Fingerprint (`Helper/fingerprint.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Sign in and inspect `localStorage` for `x-fingerprint`, and the login request headers
+2. Sign out and sign in again
+3. Clear `localStorage` and sign in again
+4. Test in a browser without `crypto.randomUUID`
+
+**Expected Results:**
+- A UUID is generated on first use, stored under `x-fingerprint`, and sent with the login request
+- The **same** value is reused on subsequent logins -- it is not regenerated per session
+- Clearing storage produces a new fingerprint, which the backend may treat as a new device
+- Where `crypto.randomUUID` is unavailable the fallback generator still produces a valid UUID
+
+---
+
+### TC-UTIL-002: Subdomain Detection (`Helper/getSubdomain.jsx`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. Load the app at `tenant.noospherehub.net`
+2. Load at plain `localhost:5173`
+3. Load at `mypractice.localhost:5173`
+4. Load at `www.` prefixed host
+5. Inspect `localStorage` after each
+
+**Expected Results:**
+- A real subdomain is detected and written to `localStorage` under `subDomain`
+- Plain `localhost` yields no subdomain and **removes** any stored value rather than leaving a stale one
+- `tenant.localhost` is supported so subdomains can be exercised in local development
+- `www` is not treated as a tenant subdomain
+
+---
+
+### TC-UTIL-003: Empty Payload Stripping (`Helper/omitEmpty.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Submit a profile update leaving optional fields blank
+2. Submit one where an optional field is explicitly `false` or `0`
+3. Inspect the request payloads
+
+**Expected Results:**
+- `undefined`, `null`, empty or whitespace-only strings, and empty arrays are removed from the payload
+- `false` and `0` are **kept** -- they are meaningful values, not blanks
+- Nesting is left untouched, so a required nested object is never stripped
+
+---
+
+### TC-UTIL-004: Form Error Messages (`Helper/formErrors.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Submit a form failing a top-level field rule
+2. Submit one failing a rule nested inside an object schema or a field array
+
+**Expected Results:**
+- The toast names the actual failing rule in both cases
+- A nested failure does **not** produce an empty toast -- the helper walks past the parent container, which carries no message of its own, to the real message underneath
+
+---
+
+### TC-UTIL-005: Store Reference (`Helper/storeRef.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | High |
+
+**Steps:**
+1. Let an access token expire, then trigger any authenticated request
+2. Force the refresh call itself to fail
+
+**Expected Results:**
+- The Axios interceptor reads the current tokens through the injected store reference, outside React, and refreshes successfully
+- Concurrent requests during a refresh queue rather than each triggering their own refresh
+- When refresh fails the interceptor dispatches logout, purges the persisted state, and redirects to login
+
+---
+
+### TC-UTIL-006: Static Options and Config (`Data/selectOptions.js`)
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Low |
+
+**Steps:**
+1. Compare the sidebar entries against `navConfig`
+2. Upload files of several types and inspect their icons and colours
+3. Sign in as a client with no avatar
+4. Attempt to upload a disallowed image type as an avatar
+
+**Expected Results:**
+- Sidebar navigation is driven by `navConfig`; no hardcoded duplicate list disagrees with it
+- File icons and colours come from `mimeMap` and `fileTypeColors` and are consistent across My Documents and Recent
+- A client with no avatar falls back to `DEFAULT_AVATAR`
+- Avatar uploads are restricted to `validImageTypes`
+
+---
+
+### TC-STATE-004: Routes, Auth State and Session Guards
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Critical |
+
+**Steps:**
+1. Inspect the route table in `Components/AllRoutes.jsx` against the pages that exist
+2. Sign in and read the values `hooks/useAuth.js` exposes
+3. Leave the session idle for 30 minutes (`hooks/useIdleTimeout.js`)
+4. Deploy a new build, then navigate to a not-yet-loaded route
+
+**Expected Results:**
+- Every protected route is individually wrapped in `ProtectedRoute`; there is no `LayoutRoute` in this app
+- `useAuth` reads from `state.auth` and exposes `userId`, `clientId`, `tenantClientId`, `tenantId`, `firstName`, `lastName`, and `avatarUrl`, taking the client ids from the first entry of `tenantLinks[]`
+- Idle timeout at 30 minutes disconnects the socket, dispatches logout, purges the persisted state, and returns to `/`; activity (`mousemove`, `keydown`, `click`, `scroll`, `touchstart`) resets the timer
+- A stale lazy chunk after a deploy triggers exactly one guarded reload rather than a blank screen
+
+---
+
+### TC-UTIL-007: Formatters, Password Rules and Notification Config
+
+| Field | Value |
+|-------|-------|
+| **Priority** | Medium |
+
+**Steps:**
+1. Compare dates, times, and durations across the dashboard, programs, and documents (`Helper/Formatters.js`)
+2. Set a new password on the reset screens and watch the checklist (`Helper/passwordValidation.js`)
+3. Open the notification centre and compare each type's label and action (`Data/notificationConfig.js`)
+4. Inspect the socket lifecycle in DevTools (`api/socketService.js`)
+
+**Expected Results:**
+- Dates, times, and durations render in one consistent format everywhere; session durations convert to an h/m form
+- The password checklist and the schema agree: minimum length, uppercase, lowercase, digit, and one special character, with the confirm field held to the same rules rather than only "must match"
+- Each notification type shows its configured label and its action routes to the right page
+- The socket uses websocket transport only, reconnects indefinitely with a 2s delay backing off to 10s, and re-checks on `visibilitychange`
+
+---
+
+## Appendix A: Coverage Traceability Matrix
+
+This matrix exists so coverage can be audited rather than asserted. Every source module in the application is listed against the test area that exercises it; a module with no entry is a coverage gap, and a new module added to the codebase must gain a row here.
+
+Every source module under `client/src` and the test area that exercises it. 83 modules.
+
+### (root) (1)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `App` | `App.jsx` | TC-UI-004 |
+
+### Components (32)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `Alert` | `Components/Alert/Alert.jsx` | Module 13 |
+| `AllRoutes` | `Components/AllRoutes.jsx` | Module 13 |
+| `Button` | `Components/Button/Button.jsx` | Module 13 |
+| `AuthorizationCard` | `Components/Cards/Dashboard/Authorization/AuthorizationCard.jsx` | Module 2 |
+| `OverviewCard` | `Components/Cards/Dashboard/Overview/OverviewCard.jsx` | Module 2 |
+| `ConnectionStatus` | `Components/ConnectionStatus/ConnectionStatus.jsx` | Module 13 |
+| `ErrorFallback` | `Components/ErrorFallback.jsx` | Module 13 |
+| `DocumentViewer` | `Components/FileUpload/DocumentViewer.jsx` | TC-UI-009, TC-UI-010 |
+| `FileUploadArea` | `Components/FileUpload/FileUploadArea.jsx` | TC-UI-009, TC-UI-010 |
+| `FormRenderer` | `Components/FormRender/FormRenderer.jsx` | Module 4 |
+| `FullPageLoader` | `Components/FullPageLoader.jsx` | Module 13 |
+| `Inputs` | `Components/Input/Inputs.jsx` | TC-UI-011 |
+| `LoadingSpinner` | `Components/LoadingSpinner.jsx` | Module 13 |
+| `ClientDocumentUploadModal` | `Components/Modal/ClientDocumentUploadModal.jsx` | Module 14 |
+| `ConfirmModal` | `Components/Modal/ConfirmModal.jsx` | Module 14 |
+| `FolderFileModal` | `Components/Modal/DocumentModal/FolderFileModal.jsx` | Module 14 |
+| `NewFileModal` | `Components/Modal/DocumentModal/NewFileModal.jsx` | Module 14 |
+| `NewFolderModal` | `Components/Modal/DocumentModal/NewFolderModal.jsx` | Module 14 |
+| `MessageModal` | `Components/Modal/MessageModal.jsx` | Module 14 |
+| `ReusableModal` | `Components/Modal/ReusableModal.jsx` | Module 14 |
+| `SelectFromMyDocumentsModal` | `Components/Modal/SelectFromMyDocumentsModal.jsx` | Module 14 |
+| `SuccessModal` | `Components/Modal/SuccessModal.jsx` | Module 14 |
+| `AppointmentDetailsModal` | `Components/Modal/UpcomingDashboardModal/AppointmentDetailsModal.jsx` | Module 2, Module 14 |
+| `RescheduleModal` | `Components/Modal/UpcomingDashboardModal/RescheduleModal.jsx` | Module 2, Module 14 |
+| `ReviewSessionModal` | `Components/Modal/UpcomingDashboardModal/ReviewSessionModal.jsx` | Module 2, Module 14 |
+| `NotFound` | `Components/NotFound.jsx` | Module 13 |
+| `NotificationSettings` | `Components/NotificationSettings/NotificationSettings.jsx` | Module 6 |
+| `ProtectedRoute` | `Components/ProtectedRoute.jsx` | Module 13 |
+| `RouteErrorBoundary` | `Components/RouteErrorBoundary.jsx` | Module 13 |
+| `SectionLoader` | `Components/SectionLoader.jsx` | Module 13 |
+| `EmptyAppointmentSvg` | `Components/Svgs/EmptyAppointmentSvg.jsx` | TC-UI-008 |
+| `ReuseableTable` | `Components/Table/ReuseableTable.jsx` | TC-UI-007 |
+
+### Data (2)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `notificationConfig` | `Data/notificationConfig.js` | Module 15 (TC-UTIL-*) |
+| `selectOptions` | `Data/selectOptions.js` | Module 15 (TC-UTIL-*) |
+
+### Helper (10)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `AxiosInterceptor` | `Helper/AxiosInterceptor.jsx` | Module 15 (TC-UTIL-*) |
+| `ErrorBoundary` | `Helper/ErrorBoundary.jsx` | Module 15 (TC-UTIL-*) |
+| `Formatters` | `Helper/Formatters.js` | Module 15 (TC-UTIL-*) |
+| `ShowToast` | `Helper/ShowToast.jsx` | Module 15 (TC-UTIL-*) |
+| `fingerprint` | `Helper/fingerprint.js` | Module 15 (TC-UTIL-*) |
+| `formErrors` | `Helper/formErrors.js` | Module 15 (TC-UTIL-*) |
+| `getSubdomain` | `Helper/getSubdomain.jsx` | Module 15 (TC-UTIL-*) |
+| `omitEmpty` | `Helper/omitEmpty.js` | Module 15 (TC-UTIL-*) |
+| `passwordValidation` | `Helper/passwordValidation.js` | Module 15 (TC-UTIL-*) |
+| `storeRef` | `Helper/storeRef.js` | Module 15 (TC-UTIL-*) |
+
+### Pages (15)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `AuthLayout` | `Pages/Authentication/AuthLayout.jsx` | Module 1, TC-UI-006 |
+| `ChangePassword` | `Pages/Authentication/ForgotPassword/ChangePassword.jsx` | Module 1, TC-UI-006 |
+| `CheckEmail` | `Pages/Authentication/ForgotPassword/CheckEmail.jsx` | Module 1, TC-UI-006 |
+| `ForgotPassword` | `Pages/Authentication/ForgotPassword/ForgotPassword.jsx` | Module 1, TC-UI-006 |
+| `ClientLogin` | `Pages/Authentication/Login/ClientLogin.jsx` | Module 1, TC-UI-006 |
+| `IntialLogin` | `Pages/Authentication/NewClientLogin/IntialLogin.jsx` | Module 1, TC-UI-006 |
+| `IntialResetPassword` | `Pages/Authentication/NewClientLogin/IntialResetPassword.jsx` | Module 1, TC-UI-006 |
+| `IntialResetSuccessful` | `Pages/Authentication/NewClientLogin/IntialResetSuccessful.jsx` | Module 1, TC-UI-006 |
+| `DocumentRequests` | `Pages/DocumentsAndForms/DocumentRequest/DocumentRequests.jsx` | Module 4 |
+| `DocumentsAndForms` | `Pages/DocumentsAndForms/DocumentsAndForms.jsx` | Module 4 |
+| `MyDocuments` | `Pages/DocumentsAndForms/MyDocuments/MyDocuments.jsx` | Module 4 |
+| `Home` | `Pages/Home/Home.jsx` | Module 2 |
+| `Notifications` | `Pages/Notification/Notifications.jsx` | Module 5 |
+| `Profile` | `Pages/Profile/Profile.jsx` | Module 6 |
+| `Programs` | `Pages/Programs/Programs.jsx` | Module 3 |
+
+### ReduxStore (6)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `authentication` | `ReduxStore/features/authentication.js` | Module 15 (TC-STATE-*) |
+| `formBuilderSlice` | `ReduxStore/features/formBuilderSlice.js` | Module 15 (TC-STATE-*) |
+| `formResponseSlice` | `ReduxStore/features/formResponseSlice.js` | Module 15 (TC-STATE-*) |
+| `tenantSlice` | `ReduxStore/features/tenantSlice.js` | Module 15 (TC-STATE-*) |
+| `rootReducer` | `ReduxStore/rootReducer.js` | Module 15 (TC-STATE-*) |
+| `store` | `ReduxStore/store.js` | Module 15 (TC-STATE-*) |
+
+### api (8)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `ImageUpload` | `api/ImageUpload.js` | Modules 2-6, TC-API-001 |
+| `authApis` | `api/authApis.js` | Modules 2-6, TC-API-001 |
+| `documentsAndFormsApis` | `api/documentsAndFormsApis.js` | Modules 2-6, TC-API-001 |
+| `homeApis` | `api/homeApis.js` | Modules 2-6, TC-API-001 |
+| `messageApi` | `api/messageApi.js` | Modules 2-6, TC-API-001 |
+| `profileAndSettingsApi` | `api/profileAndSettingsApi.js` | Modules 2-6, TC-API-001 |
+| `programsApis` | `api/programsApis.js` | Modules 2-6, TC-API-001 |
+| `socketService` | `api/socketService.js` | Modules 2-6, TC-API-001 |
+
+### hooks (8)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `useAuth` | `hooks/useAuth.js` | Module 15 (TC-HOOK-*) |
+| `useDocumentViewer` | `hooks/useDocumentViewer.jsx` | Module 15 (TC-HOOK-*) |
+| `useIdleTimeout` | `hooks/useIdleTimeout.js` | Module 15 (TC-HOOK-*) |
+| `useNotificationSettings` | `hooks/useNotificationSettings.jsx` | Module 15 (TC-HOOK-*) |
+| `usePageTitle` | `hooks/usePageTitle.js` | Module 15 (TC-HOOK-*) |
+| `usePersistedTab` | `hooks/usePersistedTab.js` | Module 15 (TC-HOOK-*) |
+| `useSocket` | `hooks/useSocket.js` | Module 15 (TC-HOOK-*) |
+| `useUnsavedChanges` | `hooks/useUnsavedChanges.js` | Module 15 (TC-HOOK-*) |
+
+### layouts (1)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `ClientLayout` | `layouts/ClientLayout.jsx` | Module 7, TC-UI-005 |
 
 ---
 

@@ -30,6 +30,9 @@
 20. [Session, Token & Idle Timeout](#20-session-token--idle-timeout)
 21. [Cross-Cutting Concerns](#21-cross-cutting-concerns)
 22. [Notifications](#22-notifications)
+23. [Authentication Screens in Detail](#23-authentication-screens-in-detail)
+24. [Shared UI, Hooks & Utilities](#24-shared-ui-hooks--utilities)
+25. [Appendix A: Coverage Traceability Matrix](#appendix-a-coverage-traceability-matrix)
 
 ---
 
@@ -1055,6 +1058,327 @@ Both logout paths -- the header's Log out button and the idle timeout -- must ru
 | 22.6.12 | No type and no entity type | Send a notification with neither | Card shows "View details"; clicking marks read only. |
 | 22.6.13 | Dead fallback key guard (dev only) | Run the app in development | No `[notificationConfig] ENTITY_FALLBACK key "..." is not a NotificationEntityType` errors appear in the console. Any that do indicate a fallback that can never fire. |
 | 22.6.14 | Every configured path resolves | Walk every destination in `notificationConfig.js` | Each path matches a route declared in `Components/Allroutes.jsx`; none lands on the 404 page. |
+
+---
+
+## 23. Authentication Screens in Detail
+
+Section 1 covers the auth flows end to end. These cases pin down each individual screen.
+
+### 23.1 Password and 2FA Setup Screens
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 23.1.1 | Change password screen (`SuperAdminChangePassword.jsx`) | Reach `/SA/change-password` on first login | Two fields (new + confirm). Validation requires 8+ characters with uppercase, lowercase, digit and special character, and the strength checklist is shown. On success it routes to `/SA/administrative-password`. |
+| 23.1.2 | 2FA settings screen (`SuperAdmin2FASettings.jsx`) | Open `/SA/2fa-settings` | Shows the "enable for all users" toggle and a method radio (Authenticator marked Recommended, or Security Question). Saving calls `SuperAdminChoices()` and routes to the matching setup screen. |
+| 23.1.3 | Admin self-choice screen (`Admin2FAChoice.jsx`) | Reach `/2fa/choice` | Radio of `qrCode` / `securityQuestion`, defaulting to `qrCode`, with **no** "set for all" option. Routes to `/2fa/authenticator` or `/2fa/security-question`. |
+| 23.1.4 | Authenticator setup (`SuperAdmin2FAMicrosoftAuthenticator.jsx`) | Walk the full 5-step flow | QR plus manual secret key; first OTP; a **second, different** OTP that is rejected if identical to the first; success confirmation; administrative password step; "You're all set!". |
+| 23.1.5 | OTP input behaviour | Type, paste, and backspace across the six digits | Fields render as XXX-XXX, auto-advance on entry, accept a pasted 6-digit code across all boxes at once, and backspace moves to the previous box. |
+| 23.1.6 | Security question setup (`SuperAdmin2FAQuestion.jsx`) | Walk the 4-step flow | Dropdown of 20 predefined questions plus answer and confirm-answer fields; answer requires 3+ characters and must match. Calls `Admin2FACreateSecretMessage()`. |
+| 23.1.7 | Security-question policy differs from authenticator | Compare the administrative password step in both flows | Both require 12+ characters, but the Security Question flow validates length only, without the strong-pattern regex the Authenticator flow applies. Confirm this is intended before release. |
+
+### 23.2 2FA Login Screens
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 23.2.1 | Authenticator login (`SuperAdmin2FAAuthenticatorLogin.jsx`) | Enter a valid TOTP at `/SA/2fa-authentication/login` | Calls `Admin2FAVerify()` and navigates to `/tenants/pipeline`. |
+| 23.2.2 | Authenticator login help link | Click "Can't access authenticator app?" | Known limitation: the link is currently unimplemented. Confirm it is either wired up or removed before release. |
+| 23.2.3 | Security question login (`SuperAdmin2FAQuestionLogin.jsx`) | Answer at `/SA/2fa-question/login` | Requires 3+ characters, calls `Admin2FAVerifySecretMessage()`, navigates to `/tenants/pipeline`. |
+| 23.2.4 | Security question help link | Click "Forgot answer?" | Known limitation: unimplemented. Same check as 23.2.2. |
+
+### 23.3 Password Reset Screens
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 23.3.1 | Reset confirmation (`ForgotPasswordConfirmation.jsx`) | Request a reset | Shows "An email with reset instructions has been sent to your email address" and a "Go to email" button that opens the default mail client. |
+| 23.3.2 | Reset form (`ForgotPasswordResetPassword.jsx`) | Follow the emailed link to `/SA/reset-password/:userId` | New + confirm fields, 8+ characters with the strong pattern and the strength checklist. After reset, navigation follows the same 2FA branching as login. |
+| 23.3.3 | Reset success (`PasswordResetSuccessful.jsx`) | Complete a reset | Success page with a link back to login. |
+| 23.3.4 | Reset failure (`PasswordResetFailed.jsx`) | Follow an expired or invalid link | Failure page explaining the link is no longer valid, with a route to request a new one. |
+| 23.3.5 | Token-based reset (`SetNewPassword.jsx`) | Open the generic reset with a token in the query string | Password + confirm (8+ characters). On success navigates to `/SA/2fa-question/login`. |
+
+---
+
+## 24. Shared UI, Hooks & Utilities
+
+### 24.1 Shared UI Components
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 24.1.1 | Application root (`App.jsx`) | Load the app; force an uncaught render error | The tree is wrapped in `ErrorBoundary` and `DocumentViewerProvider`; an uncaught error shows the fallback rather than a blank page. |
+| 24.1.2 | Full page loader (`FullPageLoader.jsx`) | Throttle the network and change routes | Full-viewport loader with the black Noosphere logo at 180px, `role="status"`, `aria-live="polite"`. |
+| 24.1.3 | Not found (`NotFound.jsx`) | Navigate to `/nope` | 404 illustration, "Page not found", and a "Go Home" control back to the dashboard. |
+| 24.1.4 | Route error boundary (`RouteErrorBoundary.jsx`) | Force a render error inside one route | Only that route is replaced by "Something went wrong" and a "Reload Page" button; sidebar and header stay usable. |
+| 24.1.5 | Inline fetch error (`ErrorFallback.jsx`) | Make a section's request fail | The section is replaced by the red "Oops!" panel with the message, plus a "Try Again" button where a retry handler is supplied. The rest of the page keeps working. |
+| 24.1.6 | Document viewer (`ReusableModal/DocumentViewer.jsx`) | Preview and download a tenant document | Opens in place and downloads via blob with a `window.open()` fallback. In Control the viewer is always mounted, unlike the Client app. |
+| 24.1.7 | Send email modal (`ReusableModal/SendEmailModal.jsx`) | Email a prospect with and without an address on file | Covered in detail at 3.x; confirm the modal sends through `SendProspectEmail` with no local mail client involved, and blocks when no recipient exists. |
+| 24.1.8 | Kanban board (`JiraBoard/JiraBoard.jsx`) | Drag prospects between stages; open a modal while dragging is possible | Cards move and persist. While **any** modal is open the board goes inert and cannot be dragged, including modals opened from a column's own state. A failed pipeline load shows `ErrorFallback` with a retry wired to the board's own fetch. |
+| 24.1.9 | Tenant payment view (`Pages/Tenant/TenantList/TenantListViewPayment.jsx`) | Open a tenant's billing tab and view payment information | Payment details render for the selected tenant; the component is shared with the Billing Manager and shows the same values in both places. |
+| 24.1.10 | Pricing form hook (`Pages/BillingsAndPayment/usePricingForm.jsx`) | Create a plan, then edit an existing one | The hook seeds the form from the plan being edited and resets cleanly between plans, so a previous plan's pricing never leaks into the next. |
+
+### 24.2 Hooks
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 24.2.1 | Page title (`usePageTitle.js`) | Visit each page, then navigate away | Tab reads "{Page} \| Noosphere"; the previous title is restored on unmount. |
+| 24.2.2 | Unsaved changes (`useUnsavedChanges.js`) | Edit a form then reload; repeat with nothing changed | The browser confirmation appears only while the form is dirty. |
+| 24.2.3 | Document viewer context (`useDocumentViewer.jsx`) | Open a document from two different pages | Both use the same viewer via `openDocument`, `closeDocument`, and `downloadDocument`. |
+| 24.2.4 | Persisted tab (`usePersistedTab.js`) | Select a non-default tab, refresh, then close and reopen the browser tab | The selection survives the refresh via `sessionStorage` and resets when the tab is closed. A stored tab the user lacks permission for falls back to the default. |
+| 24.2.5 | Socket hook (`useSocket.js`) | Sign in and watch the WS frames | Registers as `"ADMIN"`, returns `{ isConnected }`, subscribes to notifications only (no chat), reconnects indefinitely, and re-checks on `visibilitychange`. |
+| 24.2.6 | Modal registry (`modalRegistry.js`) | Open a modal from the board, and one from a column's own state | `useAnyModalOpen()` reports true in both cases and the board goes inert; the count returns to zero when every modal closes, and resets on reload. |
+| 24.2.7 | Form draft persistence (`useReduxFormDraft.js`) | Fill a modal, Cancel, reopen; then submit successfully and reopen | Input is restored after a cancel and survives a reload; it is cleared after a successful submit. Passwords and file inputs are never persisted, and drafts expire after 7 days. |
+
+### 24.3 State and Utilities
+
+| # | Test Case | Steps | Expected Result |
+|---|-----------|-------|-----------------|
+| 24.3.1 | Root reducer (`ReduxStore/rootReducer.js`) | Inspect the state tree | Four branches: `authentication`, `pipeline`, `featureManagement`, `formDrafts`. |
+| 24.3.2 | Form drafts slice (`features/formDraftsSlice.js`) | Save and clear a modal draft | Shaped `{ [key]: { values, savedAt } }`, keyed per modal; `setFormDraft` and `clearFormDraft` behave as documented and the slice survives a reload. |
+| 24.3.3 | Store reference (`Helper/storeRef.js`) | Let a token expire, then fire several requests at once | The interceptor reads tokens outside React through the injected store, refreshes once, and queues the concurrent requests rather than refreshing per request. |
+| 24.3.4 | Form error messages (`Helper/formErrors.js`) | Fail a top-level rule, then one nested in an object schema or field array | The toast names the real failing rule in both cases and is never empty. |
+| 24.3.5 | Centralized error copy (`Helper/errorMessages.js`) | Trigger the same failure from two different places | Both show identical wording, drawn from the shared message map rather than hand-written per call site. |
+| 24.3.6 | Colour contrast (`Helper/colorContrast.js`) | Pick a very light and a very dark colour for a pipeline stage | Label text flips between black and white to stay legible, following the WCAG relative-luminance rule. |
+| 24.3.7 | Country and region options (`Helper/geoOptions.js`) | Open the country dropdown, choose one, then check its states | Countries and their regions come from `country-region-data`, not a hand-maintained list. Option values are display names, and the normalisers still accept ISO codes. Changing country resets the region. |
+| 24.3.8 | Image upload (`api/ImageUpload.js`) | Upload a logo or avatar | The file uploads through the interceptor-backed helper and the returned URL is used immediately without a reload. |
+| 24.3.9 | Table export utilities (`utils/TableUtils.jsx`) | Export a filtered table to CSV and PDF, then print | All three respect the **current filter and search**, not the unfiltered set. Column headers match the on-screen table. |
+| 24.3.10 | Static data and options (`Data/selectOptions.js`) | Compare sidebar entries and dropdown contents against the config | Navigation and dropdown options are driven by the shared config; no hardcoded duplicate disagrees with it. |
+| 24.3.11 | Chart and demo data (`Data/speedChartData.js`, `Data/resourceData.js`, `Data/RandomDatas.js`) | Load Performance Monitoring with a live backend | Charts render from live metrics. Any placeholder series still sourced from these files is identified, so demo data is not mistaken for real measurements. |
+
+---
+
+## Appendix A: Coverage Traceability Matrix
+
+This matrix exists so coverage can be audited rather than asserted. Every source module in the application is listed against the test area that exercises it; a module with no entry is a coverage gap, and a new module added to the codebase must gain a row here.
+
+Every source module under `control/src` and the test area that exercises it. 184 modules.
+
+### (root) (1)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `App` | `App.jsx` | 24.1.1 |
+
+### Components (76)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `AccessDenied` | `Components/AccessDenied/AccessDenied.jsx` | Section 18, 24.1 |
+| `Alert` | `Components/Alert/Alert.jsx` | Section 18, 24.1 |
+| `Allroutes` | `Components/Allroutes.jsx` | Section 18, 24.1 |
+| `StackedBarChart` | `Components/BarChart/StackedBarChart.jsx` | Section 18, 24.1 |
+| `Button` | `Components/Button/Button.jsx` | Section 18, 24.1 |
+| `ColorPicker` | `Components/ColorPicker.jsx` | Section 18, 24.1 |
+| `ConnectionStatus` | `Components/ConnectionStatus/ConnectionStatus.jsx` | Section 18, 24.1 |
+| `ErrorFallback` | `Components/ErrorFallback.jsx` | Section 18, 24.1 |
+| `ErrorTypeChart` | `Components/ErrorTypeChart/ErrorTypeChart.jsx` | Section 18, 24.1 |
+| `ExportPrintActions` | `Components/ExportPrintActions/ExportPrintActions.jsx` | Section 18, 24.3 |
+| `FullPageLoader` | `Components/FullPageLoader.jsx` | Section 18, 24.1 |
+| `Gauge` | `Components/Guages/Gauge.jsx` | Section 18, 24.1 |
+| `Inputs` | `Components/Input/Inputs.jsx` | Section 18, 24.1 |
+| `SubscriptionInvoice` | `Components/Invoice/SubscriptionInvoice.jsx` | Section 18, 24.1 |
+| `Board` | `Components/JiraBoard/Board.jsx` | Section 3, 24.1 |
+| `Column` | `Components/JiraBoard/Column.jsx` | Section 3, 24.1 |
+| `EmptyState` | `Components/JiraBoard/EmptyState.jsx` | Section 3, 24.1 |
+| `JiraBoard` | `Components/JiraBoard/JiraBoard.jsx` | Section 3, 24.1 |
+| `Task` | `Components/JiraBoard/Task.jsx` | Section 3, 24.1 |
+| `LayoutRoute` | `Components/LayoutRoute.jsx` | Section 18, 24.1 |
+| `LoadingSpinner` | `Components/LoadingSpinner.jsx` | Section 18, 24.1 |
+| `ManageColumn` | `Components/ManageColumn/ManageColumn.jsx` | Section 3, 24.1 |
+| `NotFound` | `Components/NotFound.jsx` | Section 18, 24.1 |
+| `ProspectPanel` | `Components/ProspectPanel/ProspectPanel.jsx` | Section 3, 24.1 |
+| `ProtectedRoute` | `Components/ProtectedRoute.jsx` | Section 18, 24.1 |
+| `ResourceUtilizationUsage` | `Components/ResourceUtilizationUsage/ResourceUtilizationUsage.jsx` | Section 18, 24.1 |
+| `AddAnIssueModal` | `Components/ReusableModal/AddAnIssueModal.jsx` | Section 18, 24.1 |
+| `AddFeatureModal` | `Components/ReusableModal/AddFeatureModal.jsx` | Section 18, 24.1 |
+| `AddNewFeatureModal` | `Components/ReusableModal/AddNewFeatureModal.jsx` | Section 18, 24.1 |
+| `AddProspectModal` | `Components/ReusableModal/AddProspectModal.jsx` | Section 18, 24.1 |
+| `AssignCandidateModal` | `Components/ReusableModal/AssignCandidateModal.jsx` | Section 18, 24.1 |
+| `AssignPlanModal` | `Components/ReusableModal/AssignPlanModal.jsx` | Section 18, 24.1 |
+| `ChangePlanModal` | `Components/ReusableModal/ChangePlanModal.jsx` | Section 18, 24.1 |
+| `CreateFeatureGroupModal` | `Components/ReusableModal/CreateFeatureGroupModal.jsx` | Section 18, 24.1 |
+| `CustomDocumentModal` | `Components/ReusableModal/CustomDocumentModal.jsx` | Section 18, 24.1 |
+| `CustomTaskModal` | `Components/ReusableModal/CustomTaskModal.jsx` | Section 18, 24.1 |
+| `DeleteConfirmationModal` | `Components/ReusableModal/DeleteConfirmationModal.jsx` | Section 18, 24.1 |
+| `DeletePlanModal` | `Components/ReusableModal/DeletePlanModal.jsx` | Section 18, 24.1 |
+| `DocumentViewer` | `Components/ReusableModal/DocumentViewer.jsx` | Section 18, 24.1 |
+| `EditFeatureGroupModal` | `Components/ReusableModal/EditFeatureGroupModal.jsx` | Section 18, 24.1 |
+| `EditFeatureModal` | `Components/ReusableModal/EditFeatureModal.jsx` | Section 18, 24.1 |
+| `EditPricingModal` | `Components/ReusableModal/EditPricingModal.jsx` | Section 18, 24.1 |
+| `EditProspectModal` | `Components/ReusableModal/EditProspectModal.jsx` | Section 18, 24.1 |
+| `GeneratePaymentLinkModal` | `Components/ReusableModal/GeneratePaymentLinkModal.jsx` | Section 18, 24.1 |
+| `AddAttachmentModal` | `Components/ReusableModal/IssueViewModals/AddAttachmentModal.jsx` | Section 18, 24.1 |
+| `AddCommentModal` | `Components/ReusableModal/IssueViewModals/AddCommentModal.jsx` | Section 18, 24.1 |
+| `ChangeCategoryModal` | `Components/ReusableModal/IssueViewModals/ChangeCategoryModal.jsx` | Section 18, 24.1 |
+| `ChangePriorityModal` | `Components/ReusableModal/IssueViewModals/ChangePriorityModal.jsx` | Section 18, 24.1 |
+| `ChangeStatusModal` | `Components/ReusableModal/IssueViewModals/ChangeStatusModal.jsx` | Section 18, 24.1 |
+| `ContactTenantModal` | `Components/ReusableModal/IssueViewModals/ContactTenantModal.jsx` | Section 18, 24.1 |
+| `EditIssueModal` | `Components/ReusableModal/IssueViewModals/EditIssueModal.jsx` | Section 18, 24.1 |
+| `MarkAsResolvedModal` | `Components/ReusableModal/IssueViewModals/MarkAsResolvedModal.jsx` | Section 18, 24.1 |
+| `ReassignModal` | `Components/ReusableModal/IssueViewModals/ReassignModal.jsx` | Section 18, 24.1 |
+| `MoveCandidateModal` | `Components/ReusableModal/MoveCandidateModal.jsx` | Section 18, 24.1 |
+| `MoveFeatureModal` | `Components/ReusableModal/MoveFeatureModal.jsx` | Section 18, 24.1 |
+| `NewPipelineColumnModal` | `Components/ReusableModal/NewPipelineColumnModal.jsx` | Section 18, 24.1 |
+| `PricingModal` | `Components/ReusableModal/PricingModal.jsx` | Section 18, 24.1 |
+| `ReusableModal` | `Components/ReusableModal/ReusableModal.jsx` | Section 18, 24.1 |
+| `SecondDeleteConfirmationModal` | `Components/ReusableModal/SecondDeleteConfirmationModal.jsx` | Section 18, 24.1 |
+| `SendEmailModal` | `Components/ReusableModal/SendEmailModal.jsx` | Section 18, 24.1 |
+| `StatusChangeModal` | `Components/ReusableModal/StatusChangeModal.jsx` | Section 18, 24.1 |
+| `CancelSubscriptionModal` | `Components/ReusableModal/SubcriptionModals/CancelSubscriptionModal.jsx` | Section 18, 24.1 |
+| `PauseSubscriptionModal` | `Components/ReusableModal/SubcriptionModals/PauseSubscriptionModal.jsx` | Section 18, 24.1 |
+| `ResumeSubscriptionModal` | `Components/ReusableModal/SubcriptionModals/ResumeSubscriptionModal.jsx` | Section 18, 24.1 |
+| `TableFilterDateModal` | `Components/ReusableModal/TableFilterDateModal.jsx` | Section 18, 24.1 |
+| `TableFilterModal` | `Components/ReusableModal/TableFilterModal.jsx` | Section 18, 24.1 |
+| `ToggleActiveModal` | `Components/ReusableModal/ToggleActiveModal.jsx` | Section 18, 24.1 |
+| `UploadDocumentModal` | `Components/ReusableModal/UploadDocumentModal.jsx` | Section 18, 24.1 |
+| `RouteErrorBoundary` | `Components/RouteErrorBoundary.jsx` | Section 18, 24.1 |
+| `SectionLoader` | `Components/SectionLoader.jsx` | Section 18, 24.1 |
+| `SpeedChart` | `Components/SpeedChart/SpeedChart.jsx` | Section 18, 24.1 |
+| `CustomTable` | `Components/Table/CustomTable.jsx` | Section 18, 24.3 |
+| `DateFilterModal` | `Components/Table/DateFilterModal.jsx` | Section 18, 24.3 |
+| `Pagination` | `Components/Table/Pagination.jsx` | Section 18, 24.3 |
+| `TableBody` | `Components/Table/TableBody.jsx` | Section 18, 24.3 |
+| `TableHeader` | `Components/Table/TableHeader.jsx` | Section 18, 24.3 |
+
+### Data (6)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `RandomDatas` | `Data/RandomDatas.js` | Section 24.3 |
+| `notificationConfig` | `Data/notificationConfig.js` | Section 24.3 |
+| `permissionsConfig` | `Data/permissionsConfig.js` | Section 24.3 |
+| `resourceData` | `Data/resourceData.js` | Section 24.3 |
+| `selectOptions` | `Data/selectOptions.js` | Section 24.3 |
+| `speedChartData` | `Data/speedChartData.js` | Section 24.3 |
+
+### Helper (11)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `AxiosInterceptor` | `Helper/AxiosInterceptor.jsx` | Section 24.3 |
+| `ErrorBoundary` | `Helper/ErrorBoundary.jsx` | Section 24.3 |
+| `Formatters` | `Helper/Formatters.js` | Section 24.3 |
+| `ShowToast` | `Helper/ShowToast.jsx` | Section 24.3 |
+| `colorContrast` | `Helper/colorContrast.js` | Section 24.3 |
+| `errorMessages` | `Helper/errorMessages.js` | Section 24.3 |
+| `formErrors` | `Helper/formErrors.js` | Section 24.3 |
+| `geoOptions` | `Helper/geoOptions.js` | Section 24.3 |
+| `passwordPolicy` | `Helper/passwordPolicy.js` | Section 24.3 |
+| `passwordValidation` | `Helper/passwordValidation.js` | Section 24.3 |
+| `storeRef` | `Helper/storeRef.js` | Section 24.3 |
+
+### Pages (57)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `SuperAdmin2FAQuestion` | `Pages/Authentication/2FAQuestion/SuperAdmin2FAQuestion.jsx` | Section 1, Section 23 |
+| `Admin2FAChoice` | `Pages/Authentication/Admin2FAChoice.jsx` | Section 1, Section 23 |
+| `AdminOnboarding` | `Pages/Authentication/AdminAuth/AdminOnboarding.jsx` | Section 1, Section 23 |
+| `AdministrativePassword` | `Pages/Authentication/AdministrativePassword.jsx` | Section 1, Section 23 |
+| `ForgotPassword` | `Pages/Authentication/ForgotPassword/ForgotPassword.jsx` | Section 1, Section 23 |
+| `ForgotPasswordConfirmation` | `Pages/Authentication/ForgotPassword/ForgotPasswordConfirmation.jsx` | Section 1, Section 23 |
+| `ForgotPasswordResetPassword` | `Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword.jsx` | Section 1, Section 23 |
+| `PasswordResetFailed` | `Pages/Authentication/ForgotPassword/PasswordResetFailed.jsx` | Section 1, Section 23 |
+| `PasswordResetSuccessful` | `Pages/Authentication/ForgotPassword/PasswordResetSuccessful.jsx` | Section 1, Section 23 |
+| `SetNewPassword` | `Pages/Authentication/ForgotPassword/SetNewPassword.jsx` | Section 1, Section 23 |
+| `SuperAdmin2FAAuthenticatorLogin` | `Pages/Authentication/MicrosoftAuth/SuperAdmin2FAAuthenticatorLogin.jsx` | Section 1, Section 23 |
+| `SuperAdmin2FAMicrosoftAuthenticator` | `Pages/Authentication/MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator.jsx` | Section 1, Section 23 |
+| `SuperAdmin2FAQuestionLogin` | `Pages/Authentication/SuperAdmin2FAQuestionLogin.jsx` | Section 1, Section 23 |
+| `SuperAdmin2FASettings` | `Pages/Authentication/SuperAdmin2FASettings.jsx` | Section 1, Section 23 |
+| `SuperAdminChangePassword` | `Pages/Authentication/SuperAdminChangePassword.jsx` | Section 1, Section 23 |
+| `SuperAdminLogin` | `Pages/Authentication/SuperAdminLogin.jsx` | Section 1, Section 23 |
+| `BillingManager` | `Pages/BillingsAndPayment/BillingManager.jsx` | Section 6, 9 |
+| `AutoBilling` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/AutoBilling.jsx` | Section 6, 9 |
+| `InvoiceManagement` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/InvoiceManagement.jsx` | Section 6, 9 |
+| `PaymentManagement` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/PaymentManagement.jsx` | Section 6, 9 |
+| `BillingReportTable` | `Pages/BillingsAndPayment/BillingReport/BillingReportTable.jsx` | Section 6, 9 |
+| `SubscriptionManager` | `Pages/BillingsAndPayment/BillingReport/SubscriptionManager/SubscriptionManager.jsx` | Section 6, 9 |
+| `BillingReports` | `Pages/BillingsAndPayment/BillingReports.jsx` | Section 6, 9 |
+| `EnterpriseTable` | `Pages/BillingsAndPayment/EnterpriseTable.jsx` | Section 5 |
+| `PlanCard` | `Pages/BillingsAndPayment/PlanCard.jsx` | Section 5 |
+| `PlansAndPayment` | `Pages/BillingsAndPayment/PlansAndPayment.jsx` | Section 5 |
+| `SubscriberList` | `Pages/BillingsAndPayment/SubscriberList.jsx` | Section 5-9 |
+| `usePricingForm` | `Pages/BillingsAndPayment/usePricingForm.jsx` | Section 5-9 |
+| `FeatureManagement` | `Pages/FeatureManagement/FeatureManagement.jsx` | Section 12 |
+| `FeatureGroup` | `Pages/FeatureManagement/FeatureSubComps/FeatureGroup.jsx` | Section 12 |
+| `FeatureRow` | `Pages/FeatureManagement/FeatureSubComps/FeatureRow.jsx` | Section 12 |
+| `FeatureUsageStatistic` | `Pages/FeatureManagement/FeatureSubComps/FeatureUsageStatistic.jsx` | Section 12 |
+| `IssueManagement` | `Pages/IssueManagement/IssueManagement.jsx` | Section 11 |
+| `ViewIssue` | `Pages/IssueManagement/ViewIssue.jsx` | Section 11 |
+| `ControlLayout` | `Pages/Layout/ControlLayout.jsx` | Section 21, 24.1 |
+| `Notifications` | `Pages/Notifications/Notifications.jsx` | Section 22 |
+| `PayPalForm` | `Pages/Payment/PayPalForm.jsx` | Section 10 |
+| `PaymentPage` | `Pages/Payment/PaymentPage.jsx` | Section 10 |
+| `StripeForm` | `Pages/Payment/StripeForm.jsx` | Section 10 |
+| `MainPerformance` | `Pages/Performance/MainPerformance.jsx` | Section 13 |
+| `ControlSettings` | `Pages/Settings/ControlSettings.jsx` | Section 14-17 |
+| `SecuritySettings` | `Pages/Settings/SecuritySettings.jsx` | Section 14-17 |
+| `Departments` | `Pages/Settings/SettingsSubs/Departments.jsx` | Section 14-17 |
+| `Permissions` | `Pages/Settings/SettingsSubs/Permissions.jsx` | Section 14-17 |
+| `RoleConfiguration` | `Pages/Settings/SettingsSubs/RoleConfiguration.jsx` | Section 14-17 |
+| `Roles` | `Pages/Settings/SettingsSubs/Roles.jsx` | Section 14-17 |
+| `Staff` | `Pages/Settings/SettingsSubs/Staff.jsx` | Section 14-17 |
+| `TenantList` | `Pages/Tenant/TenantList/TenantList.jsx` | Section 2 |
+| `TenantListUsageStatistics` | `Pages/Tenant/TenantList/TenantListUsageStatistics.jsx` | Section 2 |
+| `TenantListViewPayment` | `Pages/Tenant/TenantList/TenantListViewPayment.jsx` | Section 2 |
+| `TenantPipeline` | `Pages/Tenant/TenantPipeline/TenantPipeline.jsx` | Section 3, 24.1 |
+| `TenantSingleAccOverview` | `Pages/Tenant/TenantSingle/TenantSingleAccOverview.jsx` | Section 4 |
+| `TenantSingleBilling` | `Pages/Tenant/TenantSingle/TenantSingleBilling.jsx` | Section 4 |
+| `TenantSingleFeature` | `Pages/Tenant/TenantSingle/TenantSingleFeature.jsx` | Section 4 |
+| `TenantSingleIssueManagement` | `Pages/Tenant/TenantSingle/TenantSingleIssueManagement.jsx` | Section 4 |
+| `TenantSingleSecuritySettings` | `Pages/Tenant/TenantSingle/TenantSingleSecuritySettings.jsx` | Section 4 |
+| `TenantSingleUserLogs` | `Pages/Tenant/TenantSingle/TenantSingleUserLogs.jsx` | Section 4 |
+
+### ReduxStore (6)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `PipelineSlice` | `ReduxStore/features/PipelineSlice.js` | Section 24.3 |
+| `authentication` | `ReduxStore/features/authentication.js` | Section 24.3 |
+| `featureManagementSlice` | `ReduxStore/features/featureManagementSlice.js` | Section 24.3 |
+| `formDraftsSlice` | `ReduxStore/features/formDraftsSlice.js` | Section 24.3 |
+| `rootReducer` | `ReduxStore/rootReducer.js` | Section 24.3 |
+| `store` | `ReduxStore/store.js` | Section 24.3 |
+
+### api (16)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `AutoBillingInvoiceAPIs` | `api/AutoBillingInvoiceAPIs.js` | Sections 2-17 (per feature) |
+| `AutoBillingPandAApis` | `api/AutoBillingPandAApis.js` | Sections 2-17 (per feature) |
+| `BillingApis` | `api/BillingApis.js` | Sections 2-17 (per feature) |
+| `FeatureApis` | `api/FeatureApis.js` | Sections 2-17 (per feature) |
+| `ImageUpload` | `api/ImageUpload.js` | Sections 2-17 (per feature) |
+| `InvoiceApi` | `api/InvoiceApi.js` | Sections 2-17 (per feature) |
+| `IssueApi` | `api/IssueApi.js` | Sections 2-17 (per feature) |
+| `SubcriptionApis` | `api/SubcriptionApis.js` | Sections 2-17 (per feature) |
+| `TenantApis` | `api/TenantApis.js` | Sections 2-17 (per feature) |
+| `authApis` | `api/authApis.js` | Sections 2-17 (per feature) |
+| `departmentApis` | `api/departmentApis.js` | Sections 2-17 (per feature) |
+| `notificationApi` | `api/notificationApi.js` | Sections 2-17 (per feature) |
+| `performanceApi` | `api/performanceApi.js` | Sections 2-17 (per feature) |
+| `roleApis` | `api/roleApis.js` | Sections 2-17 (per feature) |
+| `socketService` | `api/socketService.js` | Sections 2-17 (per feature) |
+| `staffApis` | `api/staffApis.js` | Sections 2-17 (per feature) |
+
+### hooks (10)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `modalRegistry` | `hooks/modalRegistry.js` | Section 24.2 |
+| `useAuth` | `hooks/useAuth.js` | Section 24.2 |
+| `useDocumentViewer` | `hooks/useDocumentViewer.jsx` | Section 24.2 |
+| `useIdleTimeout` | `hooks/useIdleTimeout.js` | Section 24.2 |
+| `usePageTitle` | `hooks/usePageTitle.js` | Section 24.2 |
+| `usePermission` | `hooks/usePermission.js` | Section 24.2 |
+| `usePersistedTab` | `hooks/usePersistedTab.js` | Section 24.2 |
+| `useReduxFormDraft` | `hooks/useReduxFormDraft.js` | Section 24.2 |
+| `useSocket` | `hooks/useSocket.js` | Section 24.2 |
+| `useUnsavedChanges` | `hooks/useUnsavedChanges.js` | Section 24.2 |
+
+### utils (1)
+
+| Module | Path | Covered by |
+|--------|------|-----------|
+| `TableUtils` | `utils/TableUtils.jsx` | Section 24.3 |
 
 ---
 
