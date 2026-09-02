@@ -96,7 +96,15 @@ vi.mock("../Components/ReusableModal/OrganizationModal/DeleteModal", () => ({
     return received.isOpen ? (
       <div data-testid="delete-modal">
         <p>{received.message}</p>
-        <button onClick={() => received.onConfirm()}>{received.confirmLabel || "Delete"}</button>
+        {/* The real DeleteModal awaits onConfirm inside ReusableModal, which
+            swallows the rejection because the handlers re-throw deliberately to
+            keep the modal open. Dropping the promise here instead would leak an
+            unhandled rejection and fail the run even though every test passes. */}
+        <button
+          onClick={() => Promise.resolve(received.onConfirm()).catch(() => {})}
+        >
+          {received.confirmLabel || "Delete"}
+        </button>
       </div>
     ) : null;
   },
