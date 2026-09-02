@@ -30,7 +30,6 @@ export default defineConfig({
           'vendor-pdf': ['jspdf', 'html2canvas'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'yup'],
           'vendor-ui': ['react-select', 'react-toastify', 'react-icons'],
-          'vendor-payments': ['@stripe/stripe-js', '@stripe/react-stripe-js', '@paypal/react-paypal-js'],
         },
       },
     },

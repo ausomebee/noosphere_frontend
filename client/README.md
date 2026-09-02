@@ -472,6 +472,5 @@ terserOptions: {
 | `vendor-pdf` | jsPDF, html2canvas | varies |
 | `vendor-forms` | React Hook Form, Yup | ~20KB |
 | `vendor-ui` | React Select, React Toastify, React Icons | ~39KB |
-| `vendor-payments` | Stripe.js, PayPal SDK | varies |
 
 Vendor chunks are cached long-term by browsers. Only application code chunks change between deployments, minimizing download size for returning users.

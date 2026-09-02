@@ -71,7 +71,7 @@ The patient/caregiver-facing application. Provides clients with access to their 
 | **Charts** | ApexCharts | 4.5 | Interactive data visualization |
 | **PDF Export** | jsPDF + html2canvas | 3.0 / 1.4 | Client-side PDF generation |
 | **Rich Text** | ContentEditable + DOMPurify | 3.3 | Sanitized rich text editing |
-| **Payments** | Stripe.js + PayPal SDK | 7.x / 8.x | Payment processing (control module) |
+| **Payments** | Stripe.js + PayPal SDK | 7.x / 8.x | Payment processing (control only) |
 | **Drag and Drop** | @dnd-kit | 6.x | Kanban boards and sortable lists |
 | **Styling** | Component-scoped CSS | - | CSS files per component |
 | **Testing** | Vitest + React Testing Library | - | Unit and component testing |
@@ -218,7 +218,7 @@ All three modules use Vite with manual chunk splitting to optimize caching. Not 
 | `vendor-pdf` | jsPDF, html2canvas | All three; ~592KB, only fetched when exporting |
 | `vendor-forms` | React Hook Form, Yup | All three |
 | `vendor-ui` | React Select, React Toastify, React Icons | All three |
-| `vendor-payments` | Stripe.js, PayPal SDK | Only in control and client |
+| `vendor-payments` | Stripe.js, PayPal SDK | Only in control |
 | `vendor-dnd` | @dnd-kit | **Only in control.** Tenant depends on @dnd-kit for its Kanban board but does not split it into its own chunk; client does not use it at all |
 | `vendor-geo` | country-region-data | Only in control |
 
