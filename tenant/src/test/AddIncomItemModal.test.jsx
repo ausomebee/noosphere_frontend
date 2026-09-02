@@ -72,7 +72,11 @@ const renderModal = ({ prefetchedItems = NOT_PREFETCHED, ...props } = {}) => {
 
 const picker = () => document.body.querySelector(".select-input-wrapper");
 
-const openMenu = () => {
+const openMenu = async () => {
+  // The select replaces a loader once the rows land, so it is not in the DOM
+  // merely because the request has been issued -- waiting on the call alone
+  // leaves this helper dereferencing null on a slower runner.
+  await waitFor(() => expect(picker()).not.toBeNull());
   const input = picker().querySelector("input");
   fireEvent.focus(input);
   fireEvent.keyDown(input, { key: "ArrowDown", keyCode: 40 });
@@ -89,8 +93,8 @@ const menuLabels = () => {
   return options.length ? Array.from(options).map((o) => o.textContent) : [menu.textContent];
 };
 
-const choose = (label) => {
-  openMenu();
+const choose = async (label) => {
+  await openMenu();
   const option = Array.from(lastMenu().querySelectorAll(".rs__option")).find(
     (o) => o.textContent === label
   );
@@ -133,7 +137,7 @@ describe("the modal shell", () => {
   it("closes and clears from Cancel", async () => {
     const { onClose, onSave } = renderModal();
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    choose("Signing bonus ($500)");
+    await choose("Signing bonus ($500)");
     fireEvent.click(secondary());
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onSave).not.toHaveBeenCalled();
@@ -180,7 +184,7 @@ describe("loading the income items", () => {
     payroll.getIncomeItems.mockResolvedValue([percentItem]);
     renderModal();
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuLabels()).toEqual(["Commission (12%)"]));
   });
 
@@ -188,7 +192,7 @@ describe("loading the income items", () => {
     payroll.getIncomeItems.mockResolvedValue({ items: [flatItem] });
     renderModal();
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     expect(menuLabels()[0]).toContain("No income items found");
   });
 
@@ -196,7 +200,7 @@ describe("loading the income items", () => {
     payroll.getIncomeItems.mockResolvedValue(null);
     renderModal();
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     expect(menuLabels()[0]).toContain("No income items found");
   });
 
@@ -207,7 +211,7 @@ describe("loading the income items", () => {
     await waitFor(() =>
       expect(toast.showApiError).toHaveBeenCalledWith(err, "LOAD_INCOME_ITEMS")
     );
-    openMenu();
+    await openMenu();
     expect(menuLabels()[0]).toContain("No income items found");
   });
 
@@ -216,7 +220,7 @@ describe("loading the income items", () => {
     renderModal({ prefetchedItems: PREFETCHED });
     await waitFor(() => expect(picker()).not.toBeNull());
     expect(payroll.getIncomeItems).not.toHaveBeenCalled();
-    openMenu();
+    await openMenu();
     expect(menuLabels()).toEqual(["Commission (12%)"]);
   });
 
@@ -226,7 +230,7 @@ describe("loading the income items", () => {
     const NONE_PREFETCHED = [];
     renderModal({ prefetchedItems: NONE_PREFETCHED });
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuLabels()).toEqual(["Signing bonus ($500)"]));
   });
 });
@@ -235,7 +239,7 @@ describe("the option labels", () => {
   const openOn = async (items) => {
     const view = renderModal({ prefetchedItems: items });
     await waitFor(() => expect(picker()).not.toBeNull());
-    openMenu();
+    await openMenu();
     return view;
   };
 
@@ -299,7 +303,7 @@ describe("choosing an item", () => {
   it("hands the whole item back and closes", async () => {
     const { onSave, onClose } = renderModal();
     await waitFor(() => expect(payroll.getIncomeItems).toHaveBeenCalled());
-    choose("Signing bonus ($500)");
+    await choose("Signing bonus ($500)");
     expect(chosen()).toBe("Signing bonus ($500)");
     await submit();
     await waitFor(() => expect(onSave).toHaveBeenCalledWith(flatItem));
@@ -325,7 +329,7 @@ describe("choosing an item", () => {
       />
     );
     await waitFor(() => expect(picker()).not.toBeNull());
-    choose("Signing bonus ($500)");
+    await choose("Signing bonus ($500)");
     rerender(
       <AddIncomeItemModal
         isOpen

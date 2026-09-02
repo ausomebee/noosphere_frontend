@@ -55,7 +55,11 @@ const wrapper = () => document.body.querySelector(".select-input-wrapper");
 const primary = () => document.body.querySelector(".modal-btn:not(.modal-btn-secondary)");
 const secondary = () => document.body.querySelector(".modal-btn-secondary");
 
-const openMenu = () => {
+const openMenu = async () => {
+  // The select replaces a loader once the rows land, so it is not in the DOM
+  // merely because the request has been issued -- waiting on the call alone
+  // leaves this helper dereferencing null on a slower runner.
+  await waitFor(() => expect(wrapper()).not.toBeNull());
   const input = wrapper().querySelector("input");
   fireEvent.focus(input);
   fireEvent.keyDown(input, { key: "ArrowDown", keyCode: 40 });
@@ -68,8 +72,8 @@ const menuText = () => {
   return options.length ? Array.from(options).map((o) => o.textContent) : [menu.textContent];
 };
 
-const choose = (label) => {
-  openMenu();
+const choose = async (label) => {
+  await openMenu();
   const menus = document.body.querySelectorAll(".rs__menu");
   const option = Array.from(
     menus[menus.length - 1].querySelectorAll(".rs__option")
@@ -117,7 +121,7 @@ describe("the modal shell", () => {
   it("clears the picker and closes from Cancel", async () => {
     const { onClose } = renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
+    await choose("Ada Lovelace");
     fireEvent.click(secondary());
     expect(onClose).toHaveBeenCalled();
     expect(chips()).toEqual([]);
@@ -126,7 +130,7 @@ describe("the modal shell", () => {
   it("clears the picker and closes from Escape", async () => {
     const { onClose } = renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
+    await choose("Ada Lovelace");
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
     expect(chips()).toEqual([]);
@@ -178,7 +182,7 @@ describe("loading the eligible staff", () => {
     api.GetStaffByPaymentSchedule.mockResolvedValue([staff({ fullName: "Grace Hopper" })]);
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuText()).toEqual(["Grace Hopper"]));
   });
 
@@ -192,7 +196,7 @@ describe("loading the eligible staff", () => {
     });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() =>
       expect(menuText()).toEqual(["Ada Lovelace", "Katherine Johnson"])
     );
@@ -204,7 +208,7 @@ describe("loading the eligible staff", () => {
     });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuText()).toEqual(["Grace Hopper"]));
   });
 
@@ -214,7 +218,7 @@ describe("loading the eligible staff", () => {
     });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuText()).toEqual(["Hopper"]));
   });
 
@@ -222,7 +226,7 @@ describe("loading the eligible staff", () => {
     api.GetStaffByPaymentSchedule.mockResolvedValue({ data: [{ id: "s-1" }] });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     await waitFor(() => expect(menuText()).toEqual(["Unknown"]));
   });
 
@@ -230,7 +234,7 @@ describe("loading the eligible staff", () => {
     api.GetStaffByPaymentSchedule.mockResolvedValue({ data: [] });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     expect(menuText()[0]).toContain("No staff found");
   });
 
@@ -238,7 +242,7 @@ describe("loading the eligible staff", () => {
     api.GetStaffByPaymentSchedule.mockResolvedValue({ data: { staff: [] } });
     renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    openMenu();
+    await openMenu();
     expect(menuText()[0]).toContain("No staff found");
   });
 
@@ -249,7 +253,7 @@ describe("loading the eligible staff", () => {
     await waitFor(() =>
       expect(toast.showApiError).toHaveBeenCalledWith(err, "LOAD_PAYROLL_STAFF")
     );
-    openMenu();
+    await openMenu();
     expect(menuText()[0]).toContain("No staff found");
   });
 });
@@ -272,8 +276,8 @@ describe("choosing staff", () => {
     });
     const { onSave, onClose } = renderModal();
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
-    choose("Alan Turing");
+    await choose("Ada Lovelace");
+    await choose("Alan Turing");
     expect(chips()).toEqual(["Ada Lovelace", "Alan Turing"]);
     await submit();
     await waitFor(() => expect(onSave).toHaveBeenCalledWith(["s-1", "s-2"]));
@@ -286,7 +290,7 @@ describe("choosing staff", () => {
     const { onSave } = renderModal();
     onSave.mockRejectedValue(new Error("Payroll already locked"));
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
+    await choose("Ada Lovelace");
     await submit();
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith("Failed to add staff", "error")
@@ -303,7 +307,7 @@ describe("choosing staff", () => {
       })
     );
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
+    await choose("Ada Lovelace");
     fireEvent.click(primary());
     await waitFor(() => expect(primary()).toBeDisabled());
     await act(async () => {
@@ -317,7 +321,7 @@ describe("choosing staff", () => {
   it("cannot submit at all in single-select mode", async () => {
     const { onSave } = renderModal({ isMultiple: false });
     await waitFor(() => expect(api.GetStaffByPaymentSchedule).toHaveBeenCalled());
-    choose("Ada Lovelace");
+    await choose("Ada Lovelace");
     expect(chips()).toEqual([]);
     expect(wrapper().querySelector(".rs__single-value")).toHaveTextContent("Ada Lovelace");
     await submit();

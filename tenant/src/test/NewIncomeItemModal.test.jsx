@@ -270,6 +270,7 @@ describe("validation", () => {
 
   it("refuses a rate that is not a number at all", async () => {
     renderModal({ mode: "edit", initialData: NAN_RATE_ITEM });
+    await waitFor(() => expect(nameInput()).not.toHaveValue(""));
     fireEvent.click(saveButton());
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith("Rate must be a number", "error")
@@ -278,6 +279,7 @@ describe("validation", () => {
 
   it("refuses a pay amount that is not a number at all", async () => {
     renderModal({ mode: "edit", initialData: NAN_UNIT_ITEM });
+    await waitFor(() => expect(nameInput()).not.toHaveValue(""));
     fireEvent.click(saveButton());
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith("Unit must be a number", "error")
@@ -325,6 +327,14 @@ describe("validation", () => {
     // Time based and Percentage based share the `rate.unit` input, so the error
     // would survive the switch if the clearErrors effect were not running.
     renderModal({ mode: "edit", initialData: NAN_UNIT_ITEM });
+    // The message only renders inside the Time based block, so it needs the
+    // reset() that loads `initialData` to have landed first. Validation itself
+    // runs either way -- which is why the toast-based test above survives this
+    // and this one does not.
+    await waitFor(() => {
+      expect(nameInput()).toHaveValue("Broken hours");
+      expect(field("rate.unit")).not.toBeNull();
+    });
     fireEvent.click(saveButton());
     await screen.findByText("Unit must be a number");
     chooseOption(0, "Percentage based");
