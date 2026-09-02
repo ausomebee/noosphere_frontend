@@ -18,6 +18,83 @@ import { payerSchema, transformPayerToFormData } from "./addPayerSchema";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
 import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
+
+/**
+ * The modifier rows for one service code.
+ *
+ * `useFieldArray` used to be called inside a `Controller`'s render prop, which
+ * ESLint flags as a hook inside a callback. It did not actually break at
+ * runtime: react-hook-form's Controller is `e => e.render(useController(e))`,
+ * so the callback runs synchronously inside Controller's own render and the
+ * hook attached to that instance in a stable order. But the correctness of it
+ * rested entirely on that undocumented detail — memoize or defer `render` in a
+ * future version and the hook order goes with it, silently.
+ *
+ * Calling the hook at the top level of a real component removes the dependency
+ * on that detail. The `Controller` wrapper was inert regardless: its render
+ * prop ignored the `field` it was handed.
+ */
+const ServiceCodeModifiers = ({ control, register, errors, index, mode }) => {
+  const {
+    fields: modifierFields,
+    append: appendModifier,
+    remove: removeModifier,
+  } = useFieldArray({ control, name: `serviceCodes[${index}].modifiers` });
+
+  const modifierErrors = errors.serviceCodes?.[index]?.modifiers;
+
+  return (
+    <div>
+      {modifierFields.map((row, modIndex) => (
+        <div key={row.id} className="flex gap-4 items-end mb-2">
+          <div className="flex-1">
+            <Controller
+              name={`serviceCodes[${index}].modifiers[${modIndex}].modifier`}
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Modifier"
+                  options={modifierOptions}
+                  error={modifierErrors?.[modIndex]?.modifier?.message}
+                  disabled={mode === "view"}
+                  {...field}
+                />
+              )}
+            />
+          </div>
+          <div className="flex-1">
+            <TextInput
+              label="Rate per Unit"
+              type="number"
+              {...register(`serviceCodes[${index}].modifiers[${modIndex}].ratePerUnit`)}
+              error={modifierErrors?.[modIndex]?.ratePerUnit?.message}
+              placeholder="Enter Rate per Unit"
+              disabled={mode === "view"}
+            />
+          </div>
+          {mode !== "view" && (
+            <button
+              type="button"
+              className="modal-row-delete-btn"
+              onClick={() => removeModifier(modIndex)}
+              aria-label="Remove Modifier"
+            >
+              <FaTrash />
+            </button>
+          )}
+        </div>
+      ))}
+      <Button
+        icon={<FaPlus />}
+        variant="secondary"
+        label="Add Modifier"
+        onClick={() => appendModifier({ modifier: "", ratePerUnit: 0 })}
+        disabled={mode === "view"}
+      />
+    </div>
+  );
+};
+
 const AddPayerModal = ({
   isOpen,
   onClose,
@@ -435,65 +512,12 @@ const AddPayerModal = ({
               </div>
               
               <p className="text-base text-gray-600 font-semibold">Modifiers</p>
-              <Controller
-                name={`serviceCodes[${index}].modifiers`}
+              <ServiceCodeModifiers
                 control={control}
-                render={() => {
-                  const { fields: modifierFields, append: appendModifier, remove: removeModifier } = useFieldArray({
-                    control,
-                    name: `serviceCodes[${index}].modifiers`,
-                  });
-                  return (
-                    <div>
-                      {modifierFields.map((modField, modIndex) => (
-                        <div key={modField.id} className="flex gap-4 items-end mb-2">
-                          <div className="flex-1">
-                            <Controller
-                              name={`serviceCodes[${index}].modifiers[${modIndex}].modifier`}
-                              control={control}
-                              render={({ field: modField }) => (
-                                <SelectInput
-                                  label="Modifier"
-                                  options={modifierOptions}
-                                  error={errors.serviceCodes?.[index]?.modifiers?.[modIndex]?.modifier?.message}
-                                  disabled={mode === "view"}
-                                  {...modField}
-                                />
-                              )}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <TextInput
-                              label="Rate per Unit"
-                              type="number"
-                              {...register(`serviceCodes[${index}].modifiers[${modIndex}].ratePerUnit`)}
-                              error={errors.serviceCodes?.[index]?.modifiers?.[modIndex]?.ratePerUnit?.message}
-                              placeholder="Enter Rate per Unit"
-                              disabled={mode === "view"}
-                            />
-                          </div>
-                          {mode !== "view" && (
-                            <button
-                              type="button"
-                              className="modal-row-delete-btn"
-                              onClick={() => removeModifier(modIndex)}
-                              aria-label="Remove Modifier"
-                            >
-                              <FaTrash />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        icon={<FaPlus />}
-                        variant="secondary"
-                        label="Add Modifier"
-                        onClick={() => appendModifier({ modifier: "", ratePerUnit: 0 })}
-                        disabled={mode === "view"}
-                      />
-                    </div>
-                  );
-                }}
+                register={register}
+                errors={errors}
+                index={index}
+                mode={mode}
               />
               <div className="py-2 px-2 rounded-md bg-gray-150 mt-6 mb-6">
                 <Controller

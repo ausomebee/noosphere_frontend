@@ -5,7 +5,9 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  // `dist` and `coverage` are build output; `graphify-out` is a local
+  // knowledge-graph cache. None of it is ours to lint.
+  { ignores: ['dist', 'coverage', 'graphify-out'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
