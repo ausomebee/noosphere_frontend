@@ -524,11 +524,21 @@ describe('the invoice tab', () => {
 });
 
 describe('the payment tab', () => {
-  const openPayments = async () => {
+  // Same race as the payment view below: the request being issued does not mean
+  // its rows have rendered, so the assertions have to wait for the payment ids
+  // themselves rather than for the call.
+  // `expectEmpty` is for the cases that deliberately starve the table: there
+  // are no payment ids to wait for, so the settled state is a row count of 0.
+  const openPayments = async ({ expectEmpty = false } = {}) => {
     await renderPage();
     fireEvent.click(tabButton('Payments'));
     await waitFor(() =>
       expect(mocks.invoiceApi.GetPaymentByAllAndStatus).toHaveBeenCalled()
+    );
+    await waitFor(() =>
+      expectEmpty
+        ? expect(screen.getByTestId('table-rows').textContent).toBe('0')
+        : expect(screen.getByTestId('table-first-row').textContent).toContain('PAY00')
     );
   };
 
@@ -572,7 +582,7 @@ describe('the payment tab', () => {
 
   it('shows an empty table when the payment response carries no data', async () => {
     mocks.invoiceApi.GetPaymentByAllAndStatus.mockResolvedValue({});
-    await openPayments();
+    await openPayments({ expectEmpty: true });
     expect(screen.getByTestId('table-rows').textContent).toBe('0');
   });
 
@@ -607,7 +617,7 @@ describe('the payment tab', () => {
 
   it('renders an empty table when the payment list rejects', async () => {
     mocks.invoiceApi.GetPaymentByAllAndStatus.mockRejectedValue(new Error('down'));
-    await openPayments();
+    await openPayments({ expectEmpty: true });
     expect(screen.getByTestId('table-rows').textContent).toBe('0');
   });
 
@@ -782,12 +792,23 @@ describe('viewing an invoice', () => {
 });
 
 describe('viewing a payment', () => {
-  const openPaymentView = async () => {
-    const view = await renderPage();
+  // The table probe hands `props.data[0]` to the action, so waiting only for
+  // the request to have been *issued* is not enough: until its rows have
+  // rendered the action fires against `undefined` and never reaches the API.
+  // Waiting on the formatted payment id is what proves the payment rows are in.
+  const showPaymentRows = async () => {
     fireEvent.click(tabButton('Payments'));
     await waitFor(() =>
       expect(mocks.invoiceApi.GetPaymentByAllAndStatus).toHaveBeenCalled()
     );
+    await waitFor(() =>
+      expect(screen.getByTestId('table-first-row').textContent).toContain('PAY00')
+    );
+  };
+
+  const openPaymentView = async () => {
+    const view = await renderPage();
+    await showPaymentRows();
     fireEvent.click(screen.getByTestId('action-view-payment'));
     await waitFor(() => expect(screen.getByTestId('payment-view')).toBeInTheDocument());
     return view;
@@ -889,10 +910,7 @@ describe('viewing a payment', () => {
 
   it('looks up a payment for a row that carries no payment id', async () => {
     await renderPage();
-    fireEvent.click(tabButton('Payments'));
-    await waitFor(() =>
-      expect(mocks.invoiceApi.GetPaymentByAllAndStatus).toHaveBeenCalled()
-    );
+    await showPaymentRows();
     fireEvent.click(screen.getByTestId('bare-view-payment'));
     await waitFor(() => expect(screen.getByTestId('payment-view')).toBeInTheDocument());
     expect(mocks.invoiceApi.GetPaymentById).toHaveBeenCalledWith(
@@ -904,10 +922,7 @@ describe('viewing a payment', () => {
     vi.stubEnv('DEV', false);
     mocks.invoiceApi.GetPaymentById.mockRejectedValue(new Error('gone'));
     await renderPage();
-    fireEvent.click(tabButton('Payments'));
-    await waitFor(() =>
-      expect(mocks.invoiceApi.GetPaymentByAllAndStatus).toHaveBeenCalled()
-    );
+    await showPaymentRows();
     fireEvent.click(screen.getByTestId('action-view-payment'));
     await waitFor(() => expect(mocks.invoiceApi.GetPaymentById).toHaveBeenCalled());
     expect(console.error).not.toHaveBeenCalled();
@@ -916,10 +931,7 @@ describe('viewing a payment', () => {
   it('stays on the table when the payment request rejects', async () => {
     mocks.invoiceApi.GetPaymentById.mockRejectedValue(new Error('gone'));
     await renderPage();
-    fireEvent.click(tabButton('Payments'));
-    await waitFor(() =>
-      expect(mocks.invoiceApi.GetPaymentByAllAndStatus).toHaveBeenCalled()
-    );
+    await showPaymentRows();
     fireEvent.click(screen.getByTestId('action-view-payment'));
     await waitFor(() => expect(mocks.invoiceApi.GetPaymentById).toHaveBeenCalled());
     expect(screen.queryByTestId('payment-view')).not.toBeInTheDocument();
