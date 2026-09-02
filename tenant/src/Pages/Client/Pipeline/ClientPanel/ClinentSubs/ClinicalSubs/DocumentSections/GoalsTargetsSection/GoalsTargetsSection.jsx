@@ -463,6 +463,7 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                 placeholder="Enter a description..."
                 value={goal.goalStatement}
                 onChange={(val) => updateGoal(goal.id, "goalStatement", val)}
+                onBlur={() => handleBlur(goal.id, "goalStatement")}
                 readOnly={isReadOnly}
               />
               {touched[`${goal.id}-goalStatement`] &&
@@ -628,6 +629,9 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                               val
                             )
                           }
+                          onBlur={() =>
+                            handleBlur(target.id, "targetStatement", true)
+                          }
                           readOnly={isReadOnly}
                         />
                         {touched[`${target.id}-targetStatement`] &&
@@ -688,6 +692,9 @@ const GoalsTargetsSection = ({ data = [], onChange, onRemoveSection, isReadOnly 
                               "masteryCriteria",
                               val
                             )
+                          }
+                          onBlur={() =>
+                            handleBlur(target.id, "masteryCriteria", true)
                           }
                           readOnly={isReadOnly}
                         />

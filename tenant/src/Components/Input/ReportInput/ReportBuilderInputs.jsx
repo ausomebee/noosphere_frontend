@@ -13,6 +13,8 @@ const ReportTextInput = ({
   placeholder,
   value,
   onChange,
+  onBlur,
+  readOnly = false,
   type = "text",
 }) => {
   return (
@@ -26,16 +28,35 @@ const ReportTextInput = ({
         className="report-builder-input"
         placeholder={placeholder}
         value={value}
+        readOnly={readOnly}
         onChange={(e) => onChange?.(e.target.value)}
+        onBlur={onBlur}
       />
     </div>
   );
 };
 
 // Select Component
-const ReportSelect = ({ label, placeholder, options, value, onChange, required = false }) => {
+const ReportSelect = ({
+  label,
+  placeholder,
+  options,
+  value,
+  onChange,
+  onBlur,
+  readOnly = false,
+  required = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((opt) => opt.value === value);
+
+  // Closing the dropdown is what counts as leaving the field: the button keeps
+  // focus while the list is open, so a native blur would fire on every option
+  // click and mark the field touched before a choice has been made.
+  const close = () => {
+    setIsOpen(false);
+    onBlur?.();
+  };
 
   return (
     <div className="report-builder-field">
@@ -47,7 +68,8 @@ const ReportSelect = ({ label, placeholder, options, value, onChange, required =
         <button
           type="button"
           className={`report-builder-select-button ${isOpen ? "open" : ""}`}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => (isOpen ? close() : !readOnly && setIsOpen(true))}
+          disabled={readOnly}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
@@ -62,10 +84,7 @@ const ReportSelect = ({ label, placeholder, options, value, onChange, required =
 
         {isOpen && (
           <>
-            <div
-              className="report-builder-select-overlay"
-              onClick={() => setIsOpen(false)}
-            />
+            <div className="report-builder-select-overlay" onClick={close} />
             <div className="report-builder-select-dropdown">
               {options.map((option) => (
                 <div
@@ -75,7 +94,7 @@ const ReportSelect = ({ label, placeholder, options, value, onChange, required =
                   }`}
                   onClick={() => {
                     onChange?.(option.value);
-                    setIsOpen(false);
+                    close();
                   }}
                 >
                   {option.label}
@@ -97,8 +116,17 @@ const ReportMultiSelect = ({
   options,
   value = [],
   onChange,
+  onBlur,
+  readOnly = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // As with the single select, closing the list is what counts as leaving the
+  // field — the button holds focus for as long as the list is open.
+  const close = () => {
+    setIsOpen(false);
+    onBlur?.();
+  };
 
   const handleToggle = (optionValue) => {
     const newValue = value.includes(optionValue)
@@ -122,7 +150,8 @@ const ReportMultiSelect = ({
         <button
           type="button"
           className={`report-builder-select-button ${isOpen ? "open" : ""}`}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => (isOpen ? close() : !readOnly && setIsOpen(true))}
+          disabled={readOnly}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
@@ -137,10 +166,7 @@ const ReportMultiSelect = ({
 
         {isOpen && (
           <>
-            <div
-              className="report-builder-select-overlay"
-              onClick={() => setIsOpen(false)}
-            />
+            <div className="report-builder-select-overlay" onClick={close} />
             <div className="report-builder-multi-select-dropdown">
               {options.map((option) => (
                 <label
@@ -175,6 +201,8 @@ const ReportCheckboxGrid = ({
   options,
   value,
   onChange,
+  onBlur,
+  readOnly = false,
   layout = "single",
 }) => {
   const handleToggle = (optionValue) => {
@@ -201,7 +229,9 @@ const ReportCheckboxGrid = ({
               type="checkbox"
               className="report-builder-checkbox-input"
               checked={value.includes(option.value)}
+              disabled={readOnly}
               onChange={() => handleToggle(option.value)}
+              onBlur={onBlur}
             />
             <span className="report-builder-checkbox-custom"></span>
             <span className="report-builder-checkbox-text">{option.label}</span>
@@ -212,7 +242,15 @@ const ReportCheckboxGrid = ({
   );
 };
 
-const ReportRadioGroup = ({ label, options, value, onChange, required = false }) => {
+const ReportRadioGroup = ({
+  label,
+  options,
+  value,
+  onChange,
+  onBlur,
+  readOnly = false,
+  required = false,
+}) => {
    return (
     <div className="report-builder-field">
       <label className="report-builder-label">
@@ -226,7 +264,9 @@ const ReportRadioGroup = ({ label, options, value, onChange, required = false })
               type="radio"
               className="report-builder-radio-input"
               checked={value === option.value}
+              disabled={readOnly}
               onChange={() => onChange?.(option.value)}
+              onBlur={onBlur}
             />
             <span className="report-builder-radio-custom"></span>
             <span className="report-builder-radio-text">{option.label}</span>

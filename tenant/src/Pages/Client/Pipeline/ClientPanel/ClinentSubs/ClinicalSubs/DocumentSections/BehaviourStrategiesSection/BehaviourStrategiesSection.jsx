@@ -305,6 +305,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
                 options={STRATEGY_TYPES}
                 value={strategy.strategyType}
                 onChange={(val) => updateStrategy(strategy.id, "strategyType", val)}
+                onBlur={() => handleBlur(strategy.id, "strategyType")}
                 readOnly={isReadOnly}
               />
               {touched[`${strategy.id}-strategyType`] &&
@@ -397,6 +398,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
                 onChange={(val) =>
                   updateStrategy(strategy.id, "responsibleStaff", val)
                 }
+                onBlur={() => handleBlur(strategy.id, "responsibleStaff")}
                 readOnly={isReadOnly}
               />
               {touched[`${strategy.id}-responsibleStaff`] &&
@@ -415,6 +417,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
                 onChange={(val) =>
                   updateStrategy(strategy.id, "fidelityRequirements", val)
                 }
+                onBlur={() => handleBlur(strategy.id, "fidelityRequirements")}
                 readOnly={isReadOnly}
               />
               {touched[`${strategy.id}-fidelityRequirements`] &&
@@ -454,6 +457,7 @@ const BehaviourStrategiesSection = ({ data = [], onChange, onRemoveSection, isRe
                 options={DATA_COLLECTED_OPTIONS}
                 value={strategy.dataCollected}
                 onChange={(val) => updateStrategy(strategy.id, "dataCollected", val)}
+                onBlur={() => handleBlur(strategy.id, "dataCollected")}
                 readOnly={isReadOnly}
               />
               {touched[`${strategy.id}-dataCollected`] &&

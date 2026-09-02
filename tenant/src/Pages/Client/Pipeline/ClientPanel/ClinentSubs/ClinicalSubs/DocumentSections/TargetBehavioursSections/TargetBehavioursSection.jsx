@@ -406,6 +406,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 onChange={(val) =>
                   updateBehavior(behavior.id, "operationalDefinition", val)
                 }
+                onBlur={() => handleBlur(behavior.id, "operationalDefinition")}
                 readOnly={isReadOnly}
               />
               {touched[`${behavior.id}-operationalDefinition`] &&
@@ -424,6 +425,7 @@ const TargetBehavioursSection = ({ data = [], onChange, onRemoveSection, isReadO
                 onChange={(val) =>
                   updateBehavior(behavior.id, "direction", val)
                 }
+                onBlur={() => handleBlur(behavior.id, "direction")}
                 readOnly={isReadOnly}
               />
               {touched[`${behavior.id}-direction`] &&

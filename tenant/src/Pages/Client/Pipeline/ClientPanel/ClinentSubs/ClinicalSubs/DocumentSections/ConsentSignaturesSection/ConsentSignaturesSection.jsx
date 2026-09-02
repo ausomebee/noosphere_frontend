@@ -260,6 +260,7 @@ const ConsentSignaturesSection = ({ data = {}, onChange, onRemoveSection, isRead
           value={formData.clinicianSignature}
           onTypeChange={handleSignatureTypeSelect}
           onChange={handleSignatureChange}
+          onBlur={() => handleFieldBlur("clinicianSignatureType")}
         />
         {touched.clinicianSignatureType && errors.clinicianSignatureType && (
           <div className="report-builder-error">

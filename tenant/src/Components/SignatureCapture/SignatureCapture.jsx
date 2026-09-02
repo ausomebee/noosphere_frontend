@@ -109,6 +109,7 @@ const SignatureCapture = ({
   value,
   onTypeChange,
   onChange,
+  onBlur,
   readOnly = false,
   label = "Signature",
   required = false,
@@ -165,7 +166,15 @@ const SignatureCapture = ({
     // Laid out as a standard report field — a 150px label on the left and the
     // control on the right — so it lines up with Clinician role above it rather
     // than stacking and breaking the column.
-    <div className="report-builder-field report-builder-field-file">
+    // The control is a block of buttons and inputs rather than one field, so
+    // "leaving it" means focus landing outside the block entirely -- moving
+    // between the type buttons must not count as a blur.
+    <div
+      className="report-builder-field report-builder-field-file"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) onBlur?.();
+      }}
+    >
       <label className="report-builder-label">
         {label}
         {required && <span className="sig-required"> *</span>}
@@ -247,6 +256,7 @@ SignatureCapture.propTypes = {
   signatureType: PropTypes.oneOf(["type", "draw", "image", ""]),
   value: PropTypes.string,
   onTypeChange: PropTypes.func.isRequired,
+  onBlur: PropTypes.func,
   onChange: PropTypes.func.isRequired,
   readOnly: PropTypes.bool,
   label: PropTypes.string,

@@ -210,7 +210,7 @@ const AppointmentModal = ({
     }),
     recurrenceDays: Yup.array().when(
       ["isRecurring", "recurrenceType", "customRecurrenceUnit"],
-      (isRecurring, recurrenceType, customRecurrenceUnit, schema) =>
+      ([isRecurring, recurrenceType, customRecurrenceUnit], schema) =>
         isRecurring &&
         (recurrenceType === "week" ||
           (recurrenceType === "custom" && customRecurrenceUnit === "week"))
@@ -226,14 +226,14 @@ const AppointmentModal = ({
       )
       .when(
         ["isRecurring", "recurrenceType"],
-        (isRecurring, recurrenceType, schema) =>
+        ([isRecurring, recurrenceType], schema) =>
           isRecurring && recurrenceType === "custom"
             ? schema.required("Recurrence interval is required")
             : Yup.string()
       ),
     customRecurrenceUnit: Yup.string().when(
       ["isRecurring", "recurrenceType"],
-      (isRecurring, recurrenceType, schema) =>
+      ([isRecurring, recurrenceType], schema) =>
         isRecurring && recurrenceType === "custom"
           ? schema
               .required("Recurrence unit is required")
@@ -250,10 +250,12 @@ const AppointmentModal = ({
           "customRecurrencePosition",
         ],
         (
-          isRecurring,
-          recurrenceType,
-          customRecurrenceUnit,
-          customRecurrencePosition,
+          [
+            isRecurring,
+            recurrenceType,
+            customRecurrenceUnit,
+            customRecurrencePosition,
+          ],
           schema
         ) =>
           isRecurring &&
@@ -268,7 +270,7 @@ const AppointmentModal = ({
       ),
     customRecurrencePosition: Yup.string().when(
       ["isRecurring", "recurrenceType", "customRecurrenceUnit"],
-      (isRecurring, recurrenceType, customRecurrenceUnit, schema) =>
+      ([isRecurring, recurrenceType, customRecurrenceUnit], schema) =>
         isRecurring &&
         recurrenceType === "custom" &&
         customRecurrenceUnit === "month"
@@ -285,10 +287,12 @@ const AppointmentModal = ({
         "customRecurrencePosition",
       ],
       (
-        isRecurring,
-        recurrenceType,
-        customRecurrenceUnit,
-        customRecurrencePosition,
+        [
+          isRecurring,
+          recurrenceType,
+          customRecurrenceUnit,
+          customRecurrencePosition,
+        ],
         schema
       ) =>
         isRecurring &&
@@ -326,7 +330,7 @@ const AppointmentModal = ({
       .transform((value, originalValue) =>
         originalValue === "" ? undefined : value
       )
-      .when(["isRecurring", "endType"], (isRecurring, endType, schema) =>
+      .when(["isRecurring", "endType"], ([isRecurring, endType], schema) =>
         isRecurring && endType === "after"
           ? schema
               .required("Number of occurrences is required")

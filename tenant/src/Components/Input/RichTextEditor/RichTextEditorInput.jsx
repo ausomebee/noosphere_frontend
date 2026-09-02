@@ -12,6 +12,8 @@ const RichTextEditor = ({
   placeholder = "Enter a description...",
   value = "",
   onChange,
+  onBlur,
+  readOnly = false,
 }) => {
   const editorRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -77,6 +79,7 @@ const RichTextEditor = ({
   };
 
   const handleInput = (e) => {
+    if (readOnly) return;
     const htmlContent = e.currentTarget.innerHTML;
     if (onChange) {
       onChange(htmlContent);
@@ -92,6 +95,7 @@ const RichTextEditor = ({
 
   const handleBlur = () => {
     setIsFocused(false);
+    onBlur?.();
   };
 
   return (
@@ -105,8 +109,10 @@ const RichTextEditor = ({
         {/* Editor Content - FIRST */}
         <div
           ref={editorRef}
-          className={`editor-content ${isFocused ? "focused" : ""}`}
-          contentEditable
+          className={`editor-content ${isFocused ? "focused" : ""} ${
+            readOnly ? "read-only" : ""
+          }`}
+          contentEditable={!readOnly}
           onInput={handleInput}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -117,6 +123,7 @@ const RichTextEditor = ({
         />
 
         {/* Toolbar - BELOW content */}
+        {!readOnly && (
         <div className={`editor-toolbar ${isFocused ? "focused" : ""}`}>
           <div className="toolbar-group">
             <button
@@ -205,6 +212,7 @@ const RichTextEditor = ({
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import {
   ReportSelect,
   ReportRadioGroup,
   ReportFileUpload,
-  ReportMultiSelect,
 } from "../../../../../../../../Components/Input/ReportInput/ReportBuilderInputs";
 import Button from "../../../../../../../../Components/Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
@@ -40,6 +39,9 @@ const sectionSchema = Yup.object().shape({
   serviceLocation: Yup.string().required("Service location is required"),
   otherClientInformation: Yup.string(),
 });
+
+const toSingleLocation = (value) =>
+  Array.isArray(value) ? value[0] || "" : value;
 
 const ClientInformationSection = ({
   data,
@@ -107,7 +109,12 @@ const ClientInformationSection = ({
           : formData.diagnoses,
       intakeDate: data.intakeDate || formData.intakeDate,
       referralSource: data.referralSource || formData.referralSource,
-      serviceLocation: data.serviceLocation || formData.serviceLocation,
+      // Reports saved before this field became a single select stored an
+      // array. Without this they would load blank and then fail validation
+      // against `Yup.string()` with yup's own raw wording.
+      serviceLocation: toSingleLocation(
+        data.serviceLocation || formData.serviceLocation
+      ),
       otherClientInformation:
         data.otherClientInformation !== undefined
           ? data.otherClientInformation
@@ -368,6 +375,9 @@ const ClientInformationSection = ({
                 onChange={(value) =>
                   handleDiagnosisChange(diagnosis.id, "primaryDiagnosis", value)
                 }
+                onBlur={() =>
+                  handleDiagnosisFieldBlur(diagnosis.id, "primaryDiagnosis")
+                }
                 readOnly={isReadOnly}
               />
               {touchedFields[`diagnoses[${index}].primaryDiagnosis`] &&
@@ -433,19 +443,21 @@ const ClientInformationSection = ({
         options={referralSourceOptions}
         value={formData.referralSource}
         onChange={(value) => handleFieldChange("referralSource", value)}
+        onBlur={() => handleFieldBlur("referralSource")}
         readOnly={isReadOnly}
       />
       {touchedFields.referralSource && errors.referralSource && (
         <div className="report-builder-error">{errors.referralSource}</div>
       )}
 
-      <ReportMultiSelect
+      <ReportSelect
         required
         label="Service Location"
         placeholder="Select an option"
         options={serviceLocationOptions}
         value={formData.serviceLocation}
         onChange={(value) => handleFieldChange("serviceLocation", value)}
+        onBlur={() => handleFieldBlur("serviceLocation")}
         readOnly={isReadOnly}
       />
       {touchedFields.serviceLocation && errors.serviceLocation && (
