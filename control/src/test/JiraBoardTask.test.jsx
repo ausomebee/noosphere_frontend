@@ -128,3 +128,16 @@ describe('Task hook stability', () => {
     spy.mockRestore();
   });
 });
+
+describe('how a card is styled', () => {
+  it('marks itself selected when the board says so', () => {
+    renderTask({ selected: true });
+    expect(card().className).toContain('selected');
+  });
+
+  it('is unmarked otherwise', () => {
+    renderTask({ selected: false });
+    expect(card().className).not.toContain('selected');
+    expect(card().className).not.toContain('dragging');
+  });
+});

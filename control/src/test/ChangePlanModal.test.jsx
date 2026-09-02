@@ -171,3 +171,30 @@ describe('ChangePlanModal', () => {
     expect(changeTo.value).toBe('');
   });
 });
+
+describe('ChangePlanModal failure logging', () => {
+  it('keeps a failed save out of the production console', async () => {
+    vi.stubEnv('DEV', false);
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onSave = vi.fn().mockRejectedValue(new Error('nope'));
+    const onClose = vi.fn();
+    render(
+      <ChangePlanModal
+        isOpen={true}
+        onClose={onClose}
+        onSave={onSave}
+        currentPlanId="plan-1"
+        plans={plans}
+      />
+    );
+    fireEvent.change(screen.getByTestId('select-Change to'), { target: { value: 'plan-2' } });
+    fireEvent.click(screen.getByText('Save'));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(spy).not.toHaveBeenCalled();
+    // The modal stays open so the admin can retry.
+    expect(onClose).not.toHaveBeenCalled();
+    spy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+});

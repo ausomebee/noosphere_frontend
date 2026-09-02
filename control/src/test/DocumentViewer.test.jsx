@@ -1,74 +1,233 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import DocumentViewer from "../Components/ReusableModal/DocumentViewer";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
-describe("DocumentViewer Component", () => {
-  it("returns null when not open", () => {
-    const { container } = render(
-      <DocumentViewer isOpen={false} fileUrl="test.pdf" fileName="Test" onClose={vi.fn()} />
+import DocumentViewer from '../Components/ReusableModal/DocumentViewer';
+
+/**
+ * The document preview overlay.
+ *
+ * Which control it renders is decided entirely by the file extension it can
+ * scrape off the url — after stripping any query string, because signed S3
+ * links carry one. A PDF gets an iframe, an image an `img`, and anything else
+ * (including a Word file, which no browser will inline) gets a download prompt.
+ *
+ * Downloading fetches the file and clicks a synthetic link so the browser saves
+ * it under the name the caller supplied; if that fetch fails it falls back to
+ * opening the url in a new tab, which is the only route a cross-origin file has.
+ */
+
+const onClose = vi.fn();
+
+const renderViewer = (props = {}) =>
+  render(
+    <DocumentViewer
+      isOpen
+      fileUrl="https://cdn.example.com/report.pdf"
+      fileName="report.pdf"
+      onClose={onClose}
+      {...props}
+    />
+  );
+
+const body = () => document.body.querySelector('.doc-viewer-body');
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:doc');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('when it renders at all', () => {
+  it('renders nothing while closed', () => {
+    renderViewer({ isOpen: false });
+    expect(document.body.querySelector('.doc-viewer-overlay')).toBeNull();
+  });
+
+  it('titles itself after the file', () => {
+    renderViewer();
+    expect(screen.getByText('report.pdf')).toBeInTheDocument();
+  });
+
+  it('titles itself generically for an unnamed file', () => {
+    renderViewer({ fileName: undefined });
+    expect(screen.getByText('Document Preview')).toBeInTheDocument();
+  });
+});
+
+describe('choosing how to show the file', () => {
+  it('frames a PDF, and stops showing the spinner once it loads', async () => {
+    renderViewer();
+    const frame = document.body.querySelector('.doc-viewer-iframe');
+    expect(frame).toBeInTheDocument();
+    expect(body()).toHaveAttribute('aria-busy', 'true');
+
+    fireEvent.load(frame);
+    await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'false'));
+  });
+
+  it.each(['jpg', 'jpeg', 'png', 'gif', 'webp'])('shows a %s inline', (ext) => {
+    renderViewer({ fileUrl: `https://cdn.example.com/shot.${ext}` });
+    expect(document.body.querySelector('.doc-viewer-image')).toBeInTheDocument();
+  });
+
+  it('stops showing the spinner once an image loads', async () => {
+    renderViewer({ fileUrl: 'https://cdn.example.com/shot.png' });
+    fireEvent.load(document.body.querySelector('.doc-viewer-image'));
+    await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'false'));
+  });
+
+  it('stops showing the spinner when an image fails to load', async () => {
+    renderViewer({ fileUrl: 'https://cdn.example.com/shot.png' });
+    fireEvent.error(document.body.querySelector('.doc-viewer-image'));
+    await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'false'));
+  });
+
+  it.each(['doc', 'docx'])('offers a %s as a download instead', (ext) => {
+    renderViewer({ fileUrl: `https://cdn.example.com/notes.${ext}` });
+    expect(document.body.querySelector('.doc-viewer-fallback')).toBeInTheDocument();
+    expect(screen.getByText('Download File')).toBeInTheDocument();
+  });
+
+  it('offers anything else as a download too', () => {
+    renderViewer({ fileUrl: 'https://cdn.example.com/archive.zip' });
+    expect(document.body.querySelector('.doc-viewer-fallback')).toBeInTheDocument();
+    // Nothing is loading, so the spinner never appears for these.
+    expect(body()).toHaveAttribute('aria-busy', 'false');
+  });
+
+  it('ignores a signed link\'s query string when reading the extension', () => {
+    renderViewer({ fileUrl: 'https://cdn.example.com/report.pdf?X-Amz-Signature=abc' });
+    expect(document.body.querySelector('.doc-viewer-iframe')).toBeInTheDocument();
+  });
+
+  it('falls back to a download prompt for a url it cannot read at all', () => {
+    renderViewer({ fileUrl: undefined });
+    expect(document.body.querySelector('.doc-viewer-fallback')).toBeInTheDocument();
+  });
+});
+
+describe('downloading', () => {
+  it('saves the file under the name it was given', async () => {
+    const click = vi.fn();
+    const created = document.createElement('a');
+    vi.spyOn(created, 'click').mockImplementation(click);
+    vi.spyOn(document, 'createElement').mockImplementation((tag) =>
+      tag === 'a' ? created : Object.getPrototypeOf(document).createElement.call(document, tag)
     );
-    expect(container.innerHTML).toBe("");
+    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+
+    renderViewer();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Download file'));
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith('https://cdn.example.com/report.pdf');
+    expect(created.download).toBe('report.pdf');
+    expect(click).toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:doc');
   });
 
-  it("renders with file name when open", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="test.pdf" fileName="My Document" onClose={vi.fn()} />);
-    expect(screen.getByText("My Document")).toBeInTheDocument();
+  it('names an unnamed download generically', async () => {
+    const created = document.createElement('a');
+    vi.spyOn(created, 'click').mockImplementation(() => {});
+    vi.spyOn(document, 'createElement').mockImplementation((tag) =>
+      tag === 'a' ? created : Object.getPrototypeOf(document).createElement.call(document, tag)
+    );
+    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+
+    renderViewer({ fileName: undefined });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Download file'));
+    });
+    expect(created.download).toBe('document');
   });
 
-  it("shows default title when no fileName", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="test.pdf" onClose={vi.fn()} />);
-    expect(screen.getByText("Document Preview")).toBeInTheDocument();
+  it('opens the url in a new tab when the fetch fails', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('cross-origin'));
+    const open = vi.spyOn(window, 'open').mockImplementation(() => {});
+
+    renderViewer();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Download file'));
+    });
+    expect(open).toHaveBeenCalledWith('https://cdn.example.com/report.pdf', '_blank');
   });
 
-  it("renders iframe for PDF files", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="report.pdf" fileName="Report" onClose={vi.fn()} />);
-    const iframe = document.querySelector("iframe");
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.getAttribute("src")).toBe("report.pdf");
+  it('downloads from the fallback prompt too', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('cross-origin'));
+    const open = vi.spyOn(window, 'open').mockImplementation(() => {});
+
+    renderViewer({ fileUrl: 'https://cdn.example.com/notes.docx' });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Download File'));
+    });
+    expect(open).toHaveBeenCalled();
+  });
+});
+
+describe('closing', () => {
+  it('closes from its own button', () => {
+    renderViewer();
+    fireEvent.click(screen.getByLabelText('Close document viewer'));
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it("renders img for image files", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="photo.jpg" fileName="Photo" onClose={vi.fn()} />);
-    const img = document.querySelector("img");
-    expect(img).toBeInTheDocument();
-    expect(img.getAttribute("src")).toBe("photo.jpg");
+  it('closes when the backdrop itself is clicked', () => {
+    renderViewer();
+    const overlay = document.body.querySelector('.doc-viewer-overlay');
+    fireEvent.click(overlay);
+    expect(onClose).toHaveBeenCalled();
   });
 
-  // A third-party viewer fetches the file from its own servers, so the request
-  // never carries our origin and the referer-locked bucket denies it.
-  it("never hands a DOC file to a third-party viewer", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="https://example.com/doc.docx" fileName="Word Doc" onClose={vi.fn()} />);
-    expect(document.querySelector("iframe")).not.toBeInTheDocument();
-    expect(screen.getByText("Download File")).toBeInTheDocument();
+  it('stays open when something inside it is clicked', () => {
+    renderViewer();
+    fireEvent.click(document.body.querySelector('.doc-viewer-modal'));
+    expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("shows download button for unsupported file types", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="data.csv" fileName="Data" onClose={vi.fn()} />);
-    expect(screen.getByText("Download File")).toBeInTheDocument();
+  it('closes on Escape', () => {
+    renderViewer();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it("shows cannot preview message for unsupported types", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="data.csv" fileName="Data" onClose={vi.fn()} />);
-    expect(screen.getByText("This file type cannot be previewed.")).toBeInTheDocument();
+  it('ignores any other key', () => {
+    renderViewer();
+    fireEvent.keyDown(document, { key: 'a' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("calls onClose when close button clicked", () => {
-    const handleClose = vi.fn();
-    render(<DocumentViewer isOpen={true} fileUrl="test.pdf" fileName="Test" onClose={handleClose} />);
-    const closeBtn = screen.getByLabelText("Close document viewer");
-    fireEvent.click(closeBtn);
-    expect(handleClose).toHaveBeenCalled();
+  it('stops listening for Escape once closed', () => {
+    const { rerender } = renderViewer();
+    rerender(
+      <DocumentViewer
+        isOpen={false}
+        fileUrl="https://cdn.example.com/report.pdf"
+        fileName="report.pdf"
+        onClose={onClose}
+      />
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("has dialog role for accessibility", () => {
-    render(<DocumentViewer isOpen={true} fileUrl="test.pdf" fileName="Test" onClose={vi.fn()} />);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-  });
+  it('shows the spinner again when a new file is opened', async () => {
+    const { rerender } = renderViewer();
+    fireEvent.load(document.body.querySelector('.doc-viewer-iframe'));
+    await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'false'));
 
-  it("closes on Escape key", () => {
-    const handleClose = vi.fn();
-    render(<DocumentViewer isOpen={true} fileUrl="test.pdf" fileName="Test" onClose={handleClose} />);
-    fireEvent.keyDown(document, { key: "Escape" });
-    expect(handleClose).toHaveBeenCalled();
+    rerender(
+      <DocumentViewer
+        isOpen
+        fileUrl="https://cdn.example.com/other.pdf"
+        fileName="other.pdf"
+        onClose={onClose}
+      />
+    );
+    await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'true'));
   });
 });

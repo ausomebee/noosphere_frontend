@@ -273,3 +273,21 @@ describe('non-auth failures are passed straight through', () => {
     expect(requestFn({ headers: {} }).headers.Authorization).toBe('Bearer my-token');
   });
 });
+
+describe('the refresh failure log', () => {
+  it('keeps quiet about a failed refresh in production', async () => {
+    vi.stubEnv('DEV', false);
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    refreshAccessToken.mockRejectedValue(new Error('network down'));
+    AxiosInterceptor('at', 'rt');
+    const err = authError();
+    await expect(responseErrFn(err)).rejects.toBe(err);
+
+    const ours = spy.mock.calls.filter(
+      ([first]) => typeof first === 'string' && first.includes('Token refresh failed')
+    );
+    expect(ours).toHaveLength(0);
+    spy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+});

@@ -273,3 +273,26 @@ describe('non-auth failures are passed straight through', () => {
     expect(requestFn({ headers: {} }).headers.Authorization).toBe('Bearer my-token');
   });
 });
+
+describe('a refresh that fails without an error object', () => {
+  it('rejects a queued request with the failure that queued it', async () => {
+    // `refreshAccessToken` rejecting with nothing leaves the queued callback
+    // with no error of its own, so it has to fall back to the 401 that put it
+    // in the queue.
+    let fail;
+    refreshAccessToken.mockImplementation(
+      () => new Promise((_r, rej) => { fail = () => rej(undefined); })
+    );
+    AxiosInterceptor('at', 'rt');
+
+    const firstError = authError();
+    const secondError = authError();
+    const first = responseErrFn(firstError);
+    const second = responseErrFn(secondError);
+    expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+
+    fail();
+    await expect(first).rejects.toBe(firstError);
+    await expect(second).rejects.toBe(secondError);
+  });
+});

@@ -199,3 +199,57 @@ describe('Column hook stability', () => {
     expect(col()).toBeNull();
   });
 });
+
+describe('the column menu under the keyboard', () => {
+  // Headless UI 2.2.1 opens a Menu on a bare click and marks the focused entry
+  // "active"; each entry styles itself off that, which is the only way those
+  // arms are reached.
+  const openMenu = () => fireEvent.click(screen.getByLabelText('Column menu'));
+
+  it('highlights each entry as focus moves down the menu', () => {
+    renderColumn({ permissions: ['edit_pipeline_stage', 'delete_pipeline_stage'] });
+    openMenu();
+
+    const add = screen.getByText(/Add new candidate/);
+    fireEvent.mouseEnter(add);
+    expect(add.className).toContain('menu-item-active');
+
+    const manage = screen.getByText('Manage column');
+    fireEvent.mouseEnter(manage);
+    expect(manage.className).toContain('menu-item-active');
+
+    const remove = screen.getByText('Delete column');
+    fireEvent.mouseEnter(remove);
+    expect(remove.className).toContain('menu-item-delete-active');
+  });
+
+  it('leaves an unfocused entry unstyled', () => {
+    renderColumn({ permissions: ['edit_pipeline_stage'] });
+    openMenu();
+    expect(screen.getByText('Manage column').className).not.toContain('menu-item-active');
+  });
+});
+
+describe('a column full of candidates', () => {
+  const many = (n) => {
+    const ids = Array.from({ length: n }, (_, i) => `t${i}`);
+    return {
+      column: { ...column, taskIds: ids },
+      tasks: Object.fromEntries(ids.map((id) => [id, { company: id, progress: 0 }])),
+    };
+  };
+
+  it('scrolls the list once it reaches ten candidates', () => {
+    const { column: c, tasks: t } = many(10);
+    renderColumn({ column: c, tasks: t, columns: { c1: c } });
+    expect(document.body.querySelector('.task-list').className).toContain('task-list-scroll');
+  });
+
+  it('leaves a shorter list unscrolled', () => {
+    const { column: c, tasks: t } = many(3);
+    renderColumn({ column: c, tasks: t, columns: { c1: c } });
+    expect(document.body.querySelector('.task-list').className).not.toContain(
+      'task-list-scroll'
+    );
+  });
+});

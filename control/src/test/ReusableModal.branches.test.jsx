@@ -377,3 +377,44 @@ describe('ReusableModal footer', () => {
     expect(container.ownerDocument.querySelector('.modal-buttons')).toHaveClass('stacked');
   });
 });
+
+describe('the two arms nothing else reaches', () => {
+  it('swallows a click that arrives while a submit is already in flight', async () => {
+    const onPrimaryButtonClick = vi.fn(() => new Promise(() => {}));
+    open({ primaryButtonText: 'Save', onPrimaryButtonClick });
+
+    const save = screen.getByRole('button', { name: 'Save' });
+    await act(async () => { fireEvent.click(save); });
+    expect(onPrimaryButtonClick).toHaveBeenCalledTimes(1);
+
+    // The button is disabled by then, so the guard is reached by dispatching
+    // the click straight at the node rather than through the pointer.
+    await act(async () => { save.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    expect(onPrimaryButtonClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('wraps focus backwards from the first control to the last', async () => {
+    open({ primaryButtonText: 'Save', secondaryButtonText: 'Cancel' });
+    const focusable = document.body.querySelectorAll(
+      '.modal-content button, .modal-content input'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    first.focus();
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    await waitFor(() => expect(document.activeElement).toBe(last));
+  });
+
+  it('leaves focus alone when shift-tabbing from anywhere else', () => {
+    open({ primaryButtonText: 'Save', secondaryButtonText: 'Cancel' });
+    const focusable = document.body.querySelectorAll('.modal-content button');
+    const last = focusable[focusable.length - 1];
+
+    last.focus();
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+});
