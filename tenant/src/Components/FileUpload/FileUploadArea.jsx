@@ -24,6 +24,28 @@ const FileUploadArea = memo(
   }) => {
     const [files, setFiles] = useState([]);
     const fileInputRef = useRef(null);
+    // One progress ticker runs per file for as long as a second and a half. They
+    // are collected here so unmounting stops all of them: otherwise they carry on
+    // setting state, and toasting, against a component that is already gone.
+    const progressIntervalsRef = useRef(new Set());
+
+    const trackInterval = (id) => {
+      progressIntervalsRef.current.add(id);
+      return id;
+    };
+
+    const stopInterval = (id) => {
+      clearInterval(id);
+      progressIntervalsRef.current.delete(id);
+    };
+
+    useEffect(
+      () => () => {
+        progressIntervalsRef.current.forEach(clearInterval);
+        progressIntervalsRef.current.clear();
+      },
+      []
+    );
 
     const { accessToken, refreshToken } = useSelector(
       (s) => s.authentication?.user || {}
@@ -87,15 +109,17 @@ const FileUploadArea = memo(
 
         // Simulate progress
         let progress = 0;
-        const interval = setInterval(() => {
-          progress += 10;
-          setFiles((prev) =>
-            prev.map((f, idx) =>
-              idx === currentIndex ? { ...f, progress } : f
-            )
-          );
-          if (progress >= 100) clearInterval(interval);
-        }, 150);
+        const interval = trackInterval(
+          setInterval(() => {
+            progress += 10;
+            setFiles((prev) =>
+              prev.map((f, idx) =>
+                idx === currentIndex ? { ...f, progress } : f
+              )
+            );
+            if (progress >= 100) stopInterval(interval);
+          }, 150)
+        );
 
         try {
           const formData = new FormData();
@@ -193,19 +217,21 @@ const FileUploadArea = memo(
         );
       });
       let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        setFiles((prev) =>
-          prev.map((f, i) => (i === idx ? { ...f, progress } : f))
-        );
-        if (progress >= 100) {
-          clearInterval(interval);
-          showToast({
-            message: `Retry upload simulation completed for ${files[idx].name}`,
-            type: "success",
-          });
-        }
-      }, 300);
+      const interval = trackInterval(
+        setInterval(() => {
+          progress += 10;
+          setFiles((prev) =>
+            prev.map((f, i) => (i === idx ? { ...f, progress } : f))
+          );
+          if (progress >= 100) {
+            stopInterval(interval);
+            showToast({
+              message: `Retry upload simulation completed for ${files[idx].name}`,
+              type: "success",
+            });
+          }
+        }, 300)
+      );
     };
 
     return (

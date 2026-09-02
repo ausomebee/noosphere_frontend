@@ -13,6 +13,7 @@ export default defineConfig(({ command }) => ({
   test: {
     globals: true,
     environment: 'jsdom',
+    testTimeout: 15000,
     setupFiles: './src/test/setup.js',
     css: true,
     // Count every source file, not only the ones a test happens to import.

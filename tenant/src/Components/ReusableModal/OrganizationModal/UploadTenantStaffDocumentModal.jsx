@@ -45,6 +45,23 @@ const FileUploadArea = React.memo(
   }) => {
     const [file, setFile] = useState(null);
     const fileInputRef = useRef(null);
+    // The progress ticker runs for three seconds after a file is chosen. Without
+    // a handle to clear it, closing the modal mid-upload leaves it setting state
+    // on an unmounted component -- and in a torn-down test environment that
+    // surfaces as a bare "window is not defined".
+    const progressIntervalRef = useRef(null);
+
+    const startProgress = () => {
+      clearInterval(progressIntervalRef.current);
+      let progress = 0;
+      progressIntervalRef.current = setInterval(() => {
+        progress += 10;
+        setFile((prev) => (prev ? { ...prev, progress } : prev));
+        if (progress >= 100) clearInterval(progressIntervalRef.current);
+      }, 300);
+    };
+
+    useEffect(() => () => clearInterval(progressIntervalRef.current), []);
 
     // Initialize file from initialFile
     useEffect(() => {
@@ -136,12 +153,7 @@ const FileUploadArea = React.memo(
       onFileChange([newFile]);
 
       if (!newFile.error) {
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += 10;
-          setFile((prev) => (prev ? { ...prev, progress } : prev));
-          if (progress >= 100) clearInterval(interval);
-        }, 300);
+        startProgress();
       }
 
       if (fileInputRef.current) fileInputRef.current.value = null;
@@ -162,12 +174,7 @@ const FileUploadArea = React.memo(
       };
       setFile(newFile);
       onFileChange([newFile]);
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        setFile((prev) => (prev ? { ...prev, progress } : prev));
-        if (progress >= 100) clearInterval(interval);
-      }, 300);
+      startProgress();
     };
 
     return (

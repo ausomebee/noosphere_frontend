@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    testTimeout: 15000,
     setupFiles: './src/setupTests.js',
     css: true,
     // Count every source file, not only the ones a test happens to import.

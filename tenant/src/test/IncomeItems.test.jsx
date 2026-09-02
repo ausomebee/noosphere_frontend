@@ -291,8 +291,12 @@ describe("adding and editing an item", () => {
         refreshToken: "rt",
       })
     );
+    // The modal closes and the list reloads only once the create resolves, so
+    // the call having been made is not yet proof either has happened.
+    await waitFor(() =>
+      expect(screen.queryByTestId("item-modal")).not.toBeInTheDocument()
+    );
     expect(toastMock.showToast).toHaveBeenCalledWith("Income item created successfully", "success");
-    expect(screen.queryByTestId("item-modal")).not.toBeInTheDocument();
     expect(apiMock.GetIncomeItemsByTenantId.mock.calls.length).toBeGreaterThan(1);
   });
 

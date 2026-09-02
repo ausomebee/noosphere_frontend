@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -44,3 +45,10 @@ Object.assign(navigator, {
     readText: vi.fn().mockResolvedValue(''),
   },
 });
+
+// CI runs these suites on a two-core runner where a render or an async yup
+// resolver can take longer than Testing Library's 1s default, which showed up
+// as findBy/waitFor timeouts that never reproduce locally. The assertions are
+// unchanged -- only how long they are willing to wait -- and the 15s test
+// timeout keeps a genuinely stuck test failing rather than hanging.
+configure({ asyncUtilTimeout: 4000 });
