@@ -484,7 +484,7 @@ A separate screen from the super-admin's `/auth/2fa-settings`: each admin picks 
   - Clicking "Login" button navigates to `/` (login page)
 - **On failure**:
   - Toast with `error?.response?.data?.message` or "Verification failed."
-  - Step 2 displays: red X icon, heading "Unable to verify your identity", message "Unfortunately we cannot verify your identity. Please contact the support team for further assistance", support email "Email: support@noosphere.com", and a "Try Again" button
+  - Step 2 displays: red X icon, heading "Unable to verify your identity", and a role-aware message from `Helper/accountAccessMessage.jsx`. An **Admin or Owner** sees "Unfortunately we cannot verify your identity. Please contact support@noospherehub.com for further assistance" with the address as a blue `mailto:` link; **any other role** (or an unknown one) sees "...Please contact your system administrator for further assistance" with no address, because we do not hold that admin's email. A "Try Again" button is rendered underneath by the page itself.
   - Clicking "Try Again" returns to Step 1 (code entry form) to allow retry
 - Loading spinner on button while API call is in progress
 
@@ -3606,8 +3606,6 @@ Every modal below is opened from the flows already covered in Modules 2-13. Thes
 | TC-MOD-025 | `BillingAndPaymentModal/AddServiceCodeModal.jsx` | Creates a service code with a dynamic modifier array; the code becomes selectable on authorizations and payers. |
 | TC-MOD-026 | `BillingAndPaymentModal/AddInsuranceTypeModal.jsx` | Creates an insurance type; supports add, edit, and view modes. |
 | TC-MOD-027 | `BillingAndPaymentModal/AddRoundingRule.jsx` | Creates a standard or custom rounding rule; the custom branch requires the unit configuration, the standard branch auto-fills its description. |
-| TC-MOD-028 | `BillingAndPaymentModal/AddClaimModal.jsx` | Creates a claim from approved timesheet lines; the claim appears in the Claims list with the correct payer and amount. |
-| TC-MOD-029 | `BillingAndPaymentModal/RequestTimeSheetModal.jsx` | Requests a change to a submitted timesheet; the timesheet moves to a change-requested state and notifies the owner. |
 | TC-MOD-030 | `BillingAndPaymentModal/ApproveTimeSheetModal.jsx` | Supervisor approval; the timesheet becomes approved and converts to a claim. |
 | TC-MOD-031 | `BillingAndPaymentModal/RejectTimesheetModal.jsx` | Rejection requires a reason; the reason reaches the timesheet owner. |
 | TC-MOD-032 | `PayrollModal/NewPayrollModal.jsx` | Creates a payroll run for a cycle and date range. |
@@ -3623,7 +3621,6 @@ Every modal below is opened from the flows already covered in Modules 2-13. Thes
 | TC-MOD-037 | `SettingsModal/FormLibraryModal.jsx` | Browses the form template library and imports a template into Custom Forms. |
 | TC-MOD-038 | `PipelineModal/NewPipelineColumnModal.jsx` | Adds a pipeline stage; the column appears on the board in the chosen position with its colour applied. |
 | TC-MOD-039 | `PipelineModal/UploadDocumentModal.jsx` | Uploads a document against a pipeline item; it counts toward that stage's required-document progress. |
-| TC-MOD-040 | `PipelineModal/PricingModal.jsx` | Sets pricing on a pipeline item; the value carries through to the generated payment link. |
 | TC-MOD-041 | `DeleteConfirmationModal.jsx` | Names the record being deleted; cancelling changes nothing; deleting removes it and refreshes the list. |
 | TC-MOD-042 | `RejectConfirmationModal.jsx` | Requires a reason before the reject action is enabled. |
 | TC-MOD-043 | Validation schemas (`addPayerSchema.js`, `addStaffSchema.js`, `addTargetSchema.js`) | Each modal's required fields, formats, and cross-field rules come from its schema; a nested or field-array failure still surfaces a specific message rather than an empty toast. |
@@ -3674,7 +3671,7 @@ Each section of the Report Builder (`ClinicalSubs/DocumentSections/`) is authore
 | TC-INP-002 | `Input/RichTextEditor/RichTextEditorInput.jsx` | Toolbar applies body text, subheading, bold, italic, underline, and bulleted or numbered lists. Buttons light to match the caret's current formatting. **Stored HTML is sanitized on load**, so a report containing script markup cannot execute when reopened. |
 | TC-INP-003 | `ColorPicker.jsx` | Picks a hex colour for a pipeline stage or appointment; the chosen colour is applied and its label text stays legible against it. |
 | TC-INP-004 | `SignatureCapture/SignatureCapture.jsx` | Type, Draw, and Image modes all produce a stored signature; the draw pad emits a base64 PNG data URI on stroke end; uploads above 5 MB are refused. |
-| TC-INP-005 | `Input/Inputs.jsx` | The shared kit: required fields carry the asterisk and `aria-required`; the password meter grades against the five shared rules and the confirm field holds its mismatch warning until blur; selects report `{ target: { name, value } }` (an array in multi mode) and drop a manually-added blank placeholder option. **`TimeInput` used with no `value` prop renders once and stays still** -- its `{ hours: 0, minutes: 0, seconds: 0 }` default comes from a shared frozen constant, because an inline default gave `value` a new identity each render and spun the component in an endless re-render loop. Hours clamp to 0-23, minutes and seconds to 0-59. |
+| TC-INP-005 | `Input/Inputs.jsx` | The shared kit: required fields carry the asterisk and `aria-required`; the password meter grades against the five shared rules and the confirm field holds its mismatch warning until blur; selects report `{ target: { name, value } }` (an array in multi mode) and drop a manually-added blank placeholder option; the read-only date field opens its picker on click and renders a yup `{ message }` error object as well as a plain string. |
 
 ### 23.3 Shared UI and Files
 
@@ -3684,7 +3681,6 @@ Each section of the Report Builder (`ClinicalSubs/DocumentSections/`) is authore
 | TC-SUI-002 | `Layout/TenantLayout.jsx` | Exports `Sidebar`, `DashboardLayout`, and `LayoutRoute`. Sidebar entries are permission-filtered, a parent hides when all its children are filtered out, and the avatar carries the connection badge. Collapses below 992px. |
 | TC-SUI-003 | `FullPageLoader.jsx` | Full-viewport branded loader used as the route Suspense fallback. |
 | TC-SUI-004 | `NotFound.jsx` | Catch-all 404 with a route back to the dashboard. |
-| TC-SUI-005 | `RouteErrorBoundary.jsx` | A render error in one route is contained to that route; the rest of the app stays usable. |
 | TC-SUI-006 | `ErrorFallback.jsx` | A failed section fetch renders inline with a message naming what failed, plus "Try Again" where a retry handler exists. |
 | TC-SUI-007 | `JiraBoard/JiraBoard.jsx` | Drag-and-drop moves clients between stages and persists. The board goes inert while **any** modal is open. A failed load shows `ErrorFallback` wired to the board's own fetch. |
 | TC-SUI-008 | `FileUpload/FileUploadArea.jsx` | Drag-drop and browse both work; unsupported types are rejected naming the accepted formats; single-file mode replaces rather than appends. |
@@ -3733,14 +3729,12 @@ Each section of the Report Builder (`ClinicalSubs/DocumentSections/`) is authore
 | TC-HK-002 | `useSocket.js` | Registers as `"TENANT_STAFF"`, returns `{ isConnected, socket, disconnect, onTyping }`, reconnects indefinitely, and re-checks on `visibilitychange`. |
 | TC-HK-003 | `useIdleTimeout.js` | 30 minutes of inactivity disconnects the socket, logs out, purges persisted state, and returns to `/`. |
 | TC-HK-004 | `usePageTitle.js` | Tab title follows the page and is restored on unmount. |
-| TC-HK-005 | `useUnsavedChanges.js` | Warns before leaving only while the form is dirty. |
 | TC-HK-006 | `useDocumentViewer.jsx` | One shared viewer opens from any page, with blob download and `window.open()` fallback. |
 | TC-HK-007 | `useFormatSettings.js` | Returns the org's date, time, and currency formats, fetched once and cached in Redux rather than re-fetched per component. |
 | TC-HK-008 | `usePersistedTab.js` | Tab selection survives a refresh; record-scoped panels keep a tab per record; a permission-gated stored tab falls back to the default. |
 | TC-HK-009 | `usePagedList.js` | Modal lists page at 5 per page, reset to page 1 when reopened, and never strand the view on an out-of-range page after filtering. |
 | TC-HK-010 | `useReduxFormDraft.js` and `useReduxStateDraft.js` | React-hook-form and controlled-state modals both restore drafts after an accidental close, exclude passwords and files, expire after 7 days, and clear on successful submit. |
 | TC-HK-011 | `modalRegistry.js` | `useAnyModalOpen()` is true while any modal is open, including one opened from a column's own state, and resets on reload. |
-| TC-HK-012 | `usePortal.jsx` | Modals and dropdowns render into a portal container and are not clipped by an overflowing parent. |
 
 ### 25.3 API Modules
 
@@ -3775,10 +3769,8 @@ Each section of the Report Builder (`ClinicalSubs/DocumentSections/`) is authore
 | TC-UT-012 | `utils/appointmentDisplay.js` | Client names and service codes on appointment rows derive from the payload, with a safe fallback; nothing renders as "Unknown" for a code that exists. |
 | TC-UT-013 | `utils/expand.js` and `utils/expandForAppointments.js` | Recurring masters expand into instances within the -30 to +180 day window, consistently on the calendar, the dashboard card, and the appointments list. |
 | TC-UT-014 | `utils/TableUtils.jsx` | CSV, PDF, and print exports respect the current filter and search. |
-| TC-UT-015 | `utils/getInputCoords.jsx` and `utils/useDropdownAchors.jsx` | Dropdowns and popovers anchor to their trigger, stay attached on scroll and resize, and flip rather than overflow at a viewport edge. |
 | TC-UT-016 | `Data/permissionsConfig.js` | Every permission key used in the UI exists in the config, and every configured key is reachable from the role editor. |
 | TC-UT-017 | `Data/selectOptions.js` and `Data/schemas.js` | Dropdown options and shared validation schemas are sourced centrally; no screen hardcodes a diverging copy. |
-| TC-UT-018 | `Data/mockData.js` | Confirm no production screen renders from mock data; any remaining use is identified before release. |
 
 ---
 
@@ -3826,7 +3818,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `MessageModal` | `Components/MessageModal/MessageModal.jsx` | Module 15 |
 | `NotFound` | `Components/NotFound.jsx` | Module 23.3 |
 | `ProtectedRoute` | `Components/ProtectedRoute.jsx` | Module 23.3 |
-| `AddClaimModal` | `Components/ReusableModal/BillingAndPaymentModal/AddClaimModal.jsx` | Module 21 |
 | `AddInsuranceTypeModal` | `Components/ReusableModal/BillingAndPaymentModal/AddInsuranceTypeModal.jsx` | Module 21 |
 | `AddPayerModal` | `Components/ReusableModal/BillingAndPaymentModal/AddPayerModal.jsx` | Module 21 |
 | `AddRoundingRule` | `Components/ReusableModal/BillingAndPaymentModal/AddRoundingRule.jsx` | Module 21 |
@@ -3834,7 +3825,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `AddSingleServiceCode` | `Components/ReusableModal/BillingAndPaymentModal/AddSingleServiceCode.jsx` | Module 21 |
 | `ApproveTimeSheetModal` | `Components/ReusableModal/BillingAndPaymentModal/ApproveTimeSheetModal.jsx` | Module 21 |
 | `RejectTimesheetModal` | `Components/ReusableModal/BillingAndPaymentModal/RejectTimesheetModal.jsx` | Module 21 |
-| `RequestTimeSheetModal` | `Components/ReusableModal/BillingAndPaymentModal/RequestTimeSheetModal.jsx` | Module 21 |
 | `addPayerSchema` | `Components/ReusableModal/BillingAndPaymentModal/addPayerSchema.js` | Module 21 |
 | `AddClientModal` | `Components/ReusableModal/ClientModal/AddClientModal.jsx` | Module 21 |
 | `ClientAccessModal` | `Components/ReusableModal/ClientModal/ClientAccessModal.jsx` | Module 21 |
@@ -3858,7 +3848,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `AddDiagnosisCode` | `Components/ReusableModal/OrganizationModal/AddDiagnosisCode.jsx` | Module 21 |
 | `AddLicensesModal` | `Components/ReusableModal/OrganizationModal/AddLicensesModal.jsx` | Module 21 |
 | `AddOrganizaionModal` | `Components/ReusableModal/OrganizationModal/AddOrganizaionModal.jsx` | Module 21 |
-| `AddServiceType` | `Components/ReusableModal/OrganizationModal/AddServiceType.jsx` | Module 21 |
 | `AddSessionTypeModal` | `Components/ReusableModal/OrganizationModal/AddSessionTypeModal.jsx` | Module 21 |
 | `AddStaffModal` | `Components/ReusableModal/OrganizationModal/AddStaffModal.jsx` | Module 21 |
 | `AddTeamsModal` | `Components/ReusableModal/OrganizationModal/AddTeamsModal.jsx` | Module 21 |
@@ -3878,8 +3867,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `PreviewPayrollModal` | `Components/ReusableModal/PayrollModal/PreviewPayrollModal.jsx` | Module 21 |
 | `DeleteConfirmationModal` | `Components/ReusableModal/PipelineModal/DeleteConfirmationModal.jsx` | Module 21 |
 | `NewPipelineColumnModal` | `Components/ReusableModal/PipelineModal/NewPipelineColumnModal.jsx` | Module 21 |
-| `UploadDocumentModal` | `Components/ReusableModal/PipelineModal/UploadDocumentModal.jsx` | Module 21 |
-| `PricingModal` | `Components/ReusableModal/PricingModal.jsx` | Module 21 |
 | `AddDomainModal` | `Components/ReusableModal/ProgramLibraryModal/AddDomainModal.jsx` | Module 21 |
 | `AddProgramModal` | `Components/ReusableModal/ProgramLibraryModal/AddProgramModal.jsx` | Module 21 |
 | `AddTargetModal` | `Components/ReusableModal/ProgramLibraryModal/AddTargetModal.jsx` | Module 21 |
@@ -3900,7 +3887,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `ConfirmCancelModal` | `Components/ReusableModal/StartAppointmentModal/ConfirmCancelModal.jsx` | Module 21 |
 | `ConfirmLeaveModal` | `Components/ReusableModal/StartAppointmentModal/ConfirmLeaveModal.jsx` | Module 21 |
 | `TravelTimeModal` | `Components/ReusableModal/StartAppointmentModal/TravelTimeModal.jsx` | Module 21 |
-| `RouteErrorBoundary` | `Components/RouteErrorBoundary.jsx` | Module 23.3 |
 | `SectionLoader` | `Components/SectionLoader.jsx` | Module 23.3 |
 | `SignatureCapture` | `Components/SignatureCapture/SignatureCapture.jsx` | Module 23.2 |
 | `AccordionTable` | `Components/Table/AccordionTable.jsx` | Module 23.1 |
@@ -3917,7 +3903,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 
 | Module | Path | Covered by |
 |--------|------|-----------|
-| `mockData` | `Data/mockData.js` | Module 25.4 |
 | `notificationConfig` | `Data/notificationConfig.js` | Module 25.4 |
 | `permissionsConfig` | `Data/permissionsConfig.js` | Module 25.4 |
 | `schemas` | `Data/schemas.js` | Module 25.4 |
@@ -4034,7 +4019,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `ViewBreakDown` | `Pages/Payroll/Payroll/ViewBreakDown.jsx` | Module 8, Module 24 |
 | `PayrollSettings` | `Pages/Payroll/PayrollSetting/PayrollSettings.jsx` | Module 8, Module 24 |
 | `Deductions` | `Pages/Payroll/PayrollSetting/PayrollSettingsSubs/Deductions.jsx` | Module 8, Module 24 |
-| `EmployeePaymentSchedules` | `Pages/Payroll/PayrollSetting/PayrollSettingsSubs/EmployeePaymentSchedules.jsx` | Module 8, Module 24 |
 | `IncomeItems` | `Pages/Payroll/PayrollSetting/PayrollSettingsSubs/IncomeItems.jsx` | Module 8, Module 24 |
 | `PayrollCycles` | `Pages/Payroll/PayrollSetting/PayrollSettingsSubs/PayrollCycles.jsx` | Module 8, Module 24 |
 | `DomainLibrary` | `Pages/ProgramLibrary/DomainLibrary.jsx` | Module 5, Module 24 |
@@ -4096,7 +4080,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `customFormsApi` | `api/customFormsApi.js` | Module 25.3 |
 | `generalSettingsApi` | `api/generalSettingsApi.js` | Module 25.3 |
 | `helpAndSupportApi` | `api/helpAndSupportApi.js` | Module 25.3 |
-| `messageApi` | `api/messageApi.js` | Module 25.3 |
 | `notificationApi` | `api/notificationApi.js` | Module 25.3 |
 | `organisationApis` | `api/organisationApis.js` | Module 25.3 |
 | `organisationStaffApis` | `api/organisationStaffApis.js` | Module 25.3 |
@@ -4119,11 +4102,9 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `usePagedList` | `hooks/usePagedList.js` | Module 25.2 |
 | `usePermissions` | `hooks/usePermissions.js` | Module 25.2 |
 | `usePersistedTab` | `hooks/usePersistedTab.js` | Module 25.2 |
-| `usePortal` | `hooks/usePortal.jsx` | Module 25.2 |
 | `useReduxFormDraft` | `hooks/useReduxFormDraft.js` | Module 25.2 |
 | `useReduxStateDraft` | `hooks/useReduxStateDraft.js` | Module 25.2 |
 | `useSocket` | `hooks/useSocket.js` | Module 25.2 |
-| `useUnsavedChanges` | `hooks/useUnsavedChanges.js` | Module 25.2 |
 
 ### utils (6)
 
@@ -4133,8 +4114,6 @@ Every source module under `tenant/src` and the test area that exercises it. 298 
 | `appointmentDisplay` | `utils/appointmentDisplay.js` | Module 25.4 |
 | `expand` | `utils/expand.js` | Module 25.4 |
 | `expandForAppointments` | `utils/expandForAppointments.js` | Module 25.4 |
-| `getInputCoords` | `utils/getInputCoords.jsx` | Module 25.4 |
-| `useDropdownAchors` | `utils/useDropdownAchors.jsx` | Module 25.4 |
 
 ---
 

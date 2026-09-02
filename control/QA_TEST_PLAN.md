@@ -538,7 +538,7 @@ The admin self-choice screen, shown when the organization has not set 2FA for al
 
 | # | Test Case | Steps | Expected Result |
 |---|-----------|-------|-----------------|
-| 9.1 | View invoice report | Navigate to reports page, select invoices tab | `GetReportInvoices` called with page=1, pageSize=100. BillingReportTable renders with invoice data. |
+| 9.1 | View invoice report | Navigate to reports page, select invoices tab | `GetReportInvoices` called with page=1, pageSize=100. `BillingReports.jsx` renders the invoice rows in the shared `CustomTable`. |
 | 9.2 | Paginate invoice report | Click next page | API called with incremented page. New data displayed. |
 | 9.3 | View payment report | Select payments tab | `GetReportPayments` called. Table shows payment transactions. |
 | 9.4 | View deactivation logs | Select deactivation logs tab | `GetDeactivationLogs` called. Table shows tenant deactivation history: tenant name, reason, details, deactivated by, date. |
@@ -659,7 +659,7 @@ Card payments run through a real Stripe PaymentIntent. The browser never asserts
 | # | Test Case | Steps | Expected Result |
 |---|-----------|-------|-----------------|
 | 12.3.1 | Add feature to group (AddNewFeatureModal) | Click "Add Feature" on a group, fill name, description, select applicable plans (multi-select), set managedBy, submit | `CreateFeature` called with featureGroupId, name, description, active, applicablePlans, managedBy. Feature row appears in the group. |
-| 12.3.2 | Add feature (AddFeatureModal -- existing feature) | Open AddFeatureModal, select existing feature to add to plan | `AssignFeatureToPlan` called. Feature's applicablePlans updated. |
+| 12.3.2 | Add feature (`AddNewFeatureModal.jsx` -- existing feature) | Open the add-feature modal, select an existing feature to add to a plan | `AssignFeatureToPlan` called. Feature's applicablePlans updated. |
 | 12.3.3 | Edit feature (EditFeatureModal) | Click edit on a feature row, modify fields, save | `UpdateFeature` called with id and updated fields. Feature row updates. |
 | 12.3.4 | Delete feature | Click delete, enter admin password, confirm | `DeleteFeature` called with id and administratorPassword. Feature removed from list. |
 | 12.3.5 | Enable/disable feature toggle | Click the active/inactive toggle on a feature row | `EnableOrDisableFeature` called with id and new active boolean. Toggle state updates. All tenants on applicable plans gain/lose access to the feature. |
@@ -680,7 +680,7 @@ Card payments run through a real Stripe PaymentIntent. The browser never asserts
 | 13.1 | Load performance dashboard | Navigate to `/performance` | All five API calls made. Dashboard renders with: general metrics (response time, throughput, uptime), API error rate, resource utilization (CPU, memory, disk, bandwidth). |
 | 13.2 | View general metrics | Observe top metrics section | SpeedChart/Gauge components display response time, request throughput. Values match API data. |
 | 13.3 | View general timeseries | Observe line chart section | StackedBarChart or line chart renders historical performance data over time. X-axis shows time intervals. |
-| 13.4 | View API error rate | Observe error rate section | ErrorTypeChart displays error categories (4xx, 5xx) with counts and percentages. |
+| 13.4 | View API error rate | Observe the error rate section on Performance Monitoring | `StackedBarChart` renders the categories and series returned by `performanceApi`; while the fetch is in flight a `Skeleton` placeholder holds the space. |
 | 13.5 | View resource utilization | Observe resource section | ResourceUtilizationUsage component shows CPU usage %, memory usage %, disk usage, bandwidth. Gauges or progress bars reflect values. |
 | 13.6 | View resource timeseries | Observe resource trends chart | Historical resource usage rendered in chart format. |
 | 13.7 | API failure handling | One or more performance APIs fail | Failed sections display error state or fallback UI. Other sections still render. No page crash. |
@@ -1107,7 +1107,6 @@ Section 1 covers the auth flows end to end. These cases pin down each individual
 | 24.1.1 | Application root (`App.jsx`) | Load the app; force an uncaught render error | The tree is wrapped in `ErrorBoundary` and `DocumentViewerProvider`; an uncaught error shows the fallback rather than a blank page. |
 | 24.1.2 | Full page loader (`FullPageLoader.jsx`) | Throttle the network and change routes | Full-viewport loader with the black Noosphere logo at 180px, `role="status"`, `aria-live="polite"`. |
 | 24.1.3 | Not found (`NotFound.jsx`) | Navigate to `/nope` | 404 illustration, "Page not found", and a "Go Home" control back to the dashboard. |
-| 24.1.4 | Route error boundary (`RouteErrorBoundary.jsx`) | Force a render error inside one route | Only that route is replaced by "Something went wrong" and a "Reload Page" button; sidebar and header stay usable. |
 | 24.1.5 | Inline fetch error (`ErrorFallback.jsx`) | Make a section's request fail | The section is replaced by the red "Oops!" panel with the message, plus a "Try Again" button where a retry handler is supplied. The rest of the page keeps working. |
 | 24.1.6 | Document viewer (`ReusableModal/DocumentViewer.jsx`) | Preview and download a tenant document | Opens in place and downloads via blob with a `window.open()` fallback. In Control the viewer is always mounted, unlike the Client app. |
 | 24.1.7 | Send email modal (`ReusableModal/SendEmailModal.jsx`) | Email a prospect with and without an address on file | Covered in detail at 3.x; confirm the modal sends through `SendProspectEmail` with no local mail client involved, and blocks when no recipient exists. |
@@ -1120,7 +1119,6 @@ Section 1 covers the auth flows end to end. These cases pin down each individual
 | # | Test Case | Steps | Expected Result |
 |---|-----------|-------|-----------------|
 | 24.2.1 | Page title (`usePageTitle.js`) | Visit each page, then navigate away | Tab reads "{Page} \| Noosphere"; the previous title is restored on unmount. |
-| 24.2.2 | Unsaved changes (`useUnsavedChanges.js`) | Edit a form then reload; repeat with nothing changed | The browser confirmation appears only while the form is dirty. |
 | 24.2.3 | Document viewer context (`useDocumentViewer.jsx`) | Open a document from two different pages | Both use the same viewer via `openDocument`, `closeDocument`, and `downloadDocument`. |
 | 24.2.4 | Persisted tab (`usePersistedTab.js`) | Select a non-default tab, refresh, then close and reopen the browser tab | The selection survives the refresh via `sessionStorage` and resets when the tab is closed. A stored tab the user lacks permission for falls back to the default. |
 | 24.2.5 | Socket hook (`useSocket.js`) | Sign in and watch the WS frames | Registers as `"ADMIN"`, returns `{ isConnected }`, subscribes to notifications only (no chat), reconnects indefinitely, and re-checks on `visibilitychange`. |
@@ -1141,7 +1139,6 @@ Section 1 covers the auth flows end to end. These cases pin down each individual
 | 24.3.8 | Image upload (`api/ImageUpload.js`) | Upload a logo or avatar | The file uploads through the interceptor-backed helper and the returned URL is used immediately without a reload. |
 | 24.3.9 | Table export utilities (`utils/TableUtils.jsx`) | Export a filtered table to CSV and PDF, then print | All three respect the **current filter and search**, not the unfiltered set. Column headers match the on-screen table. |
 | 24.3.10 | Static data and options (`Data/selectOptions.js`) | Compare sidebar entries and dropdown contents against the config | Navigation and dropdown options are driven by the shared config; no hardcoded duplicate disagrees with it. |
-| 24.3.11 | Chart and demo data (`Data/speedChartData.js`, `Data/resourceData.js`, `Data/RandomDatas.js`) | Load Performance Monitoring with a live backend | Charts render from live metrics. Any placeholder series still sourced from these files is identified, so demo data is not mistaken for real measurements. |
 
 ---
 
@@ -1169,7 +1166,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `ColorPicker` | `Components/ColorPicker.jsx` | Section 18, 24.1 |
 | `ConnectionStatus` | `Components/ConnectionStatus/ConnectionStatus.jsx` | Section 18, 24.1 |
 | `ErrorFallback` | `Components/ErrorFallback.jsx` | Section 18, 24.1 |
-| `ErrorTypeChart` | `Components/ErrorTypeChart/ErrorTypeChart.jsx` | Section 18, 24.1 |
 | `ExportPrintActions` | `Components/ExportPrintActions/ExportPrintActions.jsx` | Section 18, 24.3 |
 | `FullPageLoader` | `Components/FullPageLoader.jsx` | Section 18, 24.1 |
 | `Gauge` | `Components/Guages/Gauge.jsx` | Section 18, 24.1 |
@@ -1188,7 +1184,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `ProtectedRoute` | `Components/ProtectedRoute.jsx` | Section 18, 24.1 |
 | `ResourceUtilizationUsage` | `Components/ResourceUtilizationUsage/ResourceUtilizationUsage.jsx` | Section 18, 24.1 |
 | `AddAnIssueModal` | `Components/ReusableModal/AddAnIssueModal.jsx` | Section 18, 24.1 |
-| `AddFeatureModal` | `Components/ReusableModal/AddFeatureModal.jsx` | Section 18, 24.1 |
 | `AddNewFeatureModal` | `Components/ReusableModal/AddNewFeatureModal.jsx` | Section 18, 24.1 |
 | `AddProspectModal` | `Components/ReusableModal/AddProspectModal.jsx` | Section 18, 24.1 |
 | `AssignCandidateModal` | `Components/ReusableModal/AssignCandidateModal.jsx` | Section 18, 24.1 |
@@ -1229,7 +1224,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `TableFilterModal` | `Components/ReusableModal/TableFilterModal.jsx` | Section 18, 24.1 |
 | `ToggleActiveModal` | `Components/ReusableModal/ToggleActiveModal.jsx` | Section 18, 24.1 |
 | `UploadDocumentModal` | `Components/ReusableModal/UploadDocumentModal.jsx` | Section 18, 24.1 |
-| `RouteErrorBoundary` | `Components/RouteErrorBoundary.jsx` | Section 18, 24.1 |
 | `SectionLoader` | `Components/SectionLoader.jsx` | Section 18, 24.1 |
 | `SpeedChart` | `Components/SpeedChart/SpeedChart.jsx` | Section 18, 24.1 |
 | `CustomTable` | `Components/Table/CustomTable.jsx` | Section 18, 24.3 |
@@ -1242,12 +1236,9 @@ Every source module under `control/src` and the test area that exercises it. 184
 
 | Module | Path | Covered by |
 |--------|------|-----------|
-| `RandomDatas` | `Data/RandomDatas.js` | Section 24.3 |
 | `notificationConfig` | `Data/notificationConfig.js` | Section 24.3 |
 | `permissionsConfig` | `Data/permissionsConfig.js` | Section 24.3 |
-| `resourceData` | `Data/resourceData.js` | Section 24.3 |
 | `selectOptions` | `Data/selectOptions.js` | Section 24.3 |
-| `speedChartData` | `Data/speedChartData.js` | Section 24.3 |
 
 ### Helper (11)
 
@@ -1289,7 +1280,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `AutoBilling` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/AutoBilling.jsx` | Section 6, 9 |
 | `InvoiceManagement` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/InvoiceManagement.jsx` | Section 6, 9 |
 | `PaymentManagement` | `Pages/BillingsAndPayment/BillingReport/AutoBilling/PaymentManagement.jsx` | Section 6, 9 |
-| `BillingReportTable` | `Pages/BillingsAndPayment/BillingReport/BillingReportTable.jsx` | Section 6, 9 |
 | `SubscriptionManager` | `Pages/BillingsAndPayment/BillingReport/SubscriptionManager/SubscriptionManager.jsx` | Section 6, 9 |
 | `BillingReports` | `Pages/BillingsAndPayment/BillingReports.jsx` | Section 6, 9 |
 | `EnterpriseTable` | `Pages/BillingsAndPayment/EnterpriseTable.jsx` | Section 5 |
@@ -1312,7 +1302,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `ControlSettings` | `Pages/Settings/ControlSettings.jsx` | Section 14-17 |
 | `SecuritySettings` | `Pages/Settings/SecuritySettings.jsx` | Section 14-17 |
 | `Departments` | `Pages/Settings/SettingsSubs/Departments.jsx` | Section 14-17 |
-| `Permissions` | `Pages/Settings/SettingsSubs/Permissions.jsx` | Section 14-17 |
 | `RoleConfiguration` | `Pages/Settings/SettingsSubs/RoleConfiguration.jsx` | Section 14-17 |
 | `Roles` | `Pages/Settings/SettingsSubs/Roles.jsx` | Section 14-17 |
 | `Staff` | `Pages/Settings/SettingsSubs/Staff.jsx` | Section 14-17 |
@@ -1372,7 +1361,6 @@ Every source module under `control/src` and the test area that exercises it. 184
 | `usePersistedTab` | `hooks/usePersistedTab.js` | Section 24.2 |
 | `useReduxFormDraft` | `hooks/useReduxFormDraft.js` | Section 24.2 |
 | `useSocket` | `hooks/useSocket.js` | Section 24.2 |
-| `useUnsavedChanges` | `hooks/useUnsavedChanges.js` | Section 24.2 |
 
 ### utils (1)
 

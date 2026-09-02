@@ -2444,25 +2444,6 @@ An error boundary catches *render* errors; a failed fetch does not throw during 
 
 ---
 
-### TC-UI-003: Route Error Boundary (`Components/RouteErrorBoundary.jsx`)
-
-| Field | Value |
-|-------|-------|
-| **Priority** | High |
-
-**Steps:**
-1. Force a render-time exception inside one route
-2. Click "Reload Page"
-3. Navigate to a different route afterwards
-
-**Expected Results:**
-- Only that route is replaced by "Something went wrong" plus a "Reload Page" button -- the sidebar, header, and the rest of the app stay usable
-- The whole application does not blank out
-- Reloading resets the boundary's internal state and the route renders normally again
-- A *data-fetch* failure does not reach this boundary; it renders `ErrorFallback` inline instead (see TC-PERF-007)
-
----
-
 ### TC-UI-004: Application Root (`App.jsx`)
 
 | Field | Value |
@@ -2608,14 +2589,12 @@ An error boundary catches *render* errors; a failed fetch does not throw during 
 2. Type into a password field with the strength meter shown, then into its confirm field, and leave the confirm field while the two differ
 3. Open a single select and a multi select, choose and clear values, and open one that has no options
 4. Open a searchable select and type to filter
-5. Open a screen that uses the hours:minutes:seconds `TimeInput` **without a preset value** and leave it on screen
-6. Open a date field and click the read-only text box
+5. Open a date field and click the read-only text box
 
 **Expected Results:**
 - A required field shows the shared asterisk and carries `aria-required`; an optional one carries neither
 - The password meter grades Weak / Medium / Strong against the five shared rules; the confirm field shows a tick as soon as the two agree and holds the mismatch warning until the field is left
 - Selects report changes as `{ target: { name, value } }`; a multi select reports an array; a manually-added blank placeholder option is dropped in favour of the built-in placeholder; an empty list shows the caller's hint, or "No options"
-- **`TimeInput` with no `value` prop renders once and stays still.** Its default `{ hours: 0, minutes: 0, seconds: 0 }` comes from a shared frozen constant; an inline default produced a new object each render and spun the component in an endless re-render loop. Hours clamp to 0-23, minutes and seconds to 0-59, and unparseable input floors to 0
 - The date field is read-only and opens its picker on click, focusing itself; a validation error renders whether it arrives as a string or as a yup `{ message }` object
 
 ---
@@ -2786,24 +2765,6 @@ An error boundary catches *render* errors; a failed fetch does not throw during 
 **Expected Results:**
 - The tab reads "{Page} | Noosphere" on every page that sets one
 - The previous title is restored on unmount, so a stale title never persists after navigation
-
----
-
-### TC-HOOK-002: Unsaved Changes Guard (`hooks/useUnsavedChanges.js`)
-
-| Field | Value |
-|-------|-------|
-| **Priority** | High |
-
-**Steps:**
-1. Start filling a form, then close the browser tab or reload
-2. Repeat with no changes made
-3. Submit successfully, then reload
-
-**Expected Results:**
-- With unsaved input the browser's own confirmation dialog appears before leaving
-- With nothing dirty no dialog appears
-- After a successful submit the dirty flag is cleared and leaving is not blocked
 
 ---
 
@@ -3082,7 +3043,6 @@ Every source module under `client/src` and the test area that exercises it. 83 m
 | `FormRenderer` | `Components/FormRender/FormRenderer.jsx` | Module 4 |
 | `FullPageLoader` | `Components/FullPageLoader.jsx` | Module 13 |
 | `Inputs` | `Components/Input/Inputs.jsx` | TC-UI-011 |
-| `LoadingSpinner` | `Components/LoadingSpinner.jsx` | Module 13 |
 | `ClientDocumentUploadModal` | `Components/Modal/ClientDocumentUploadModal.jsx` | Module 14 |
 | `ConfirmModal` | `Components/Modal/ConfirmModal.jsx` | Module 14 |
 | `FolderFileModal` | `Components/Modal/DocumentModal/FolderFileModal.jsx` | Module 14 |
@@ -3098,7 +3058,6 @@ Every source module under `client/src` and the test area that exercises it. 83 m
 | `NotFound` | `Components/NotFound.jsx` | Module 13 |
 | `NotificationSettings` | `Components/NotificationSettings/NotificationSettings.jsx` | Module 6 |
 | `ProtectedRoute` | `Components/ProtectedRoute.jsx` | Module 13 |
-| `RouteErrorBoundary` | `Components/RouteErrorBoundary.jsx` | Module 13 |
 | `SectionLoader` | `Components/SectionLoader.jsx` | Module 13 |
 | `EmptyAppointmentSvg` | `Components/Svgs/EmptyAppointmentSvg.jsx` | TC-UI-008 |
 | `ReuseableTable` | `Components/Table/ReuseableTable.jsx` | TC-UI-007 |
@@ -3180,7 +3139,6 @@ Every source module under `client/src` and the test area that exercises it. 83 m
 | `usePageTitle` | `hooks/usePageTitle.js` | Module 15 (TC-HOOK-*) |
 | `usePersistedTab` | `hooks/usePersistedTab.js` | Module 15 (TC-HOOK-*) |
 | `useSocket` | `hooks/useSocket.js` | Module 15 (TC-HOOK-*) |
-| `useUnsavedChanges` | `hooks/useUnsavedChanges.js` | Module 15 (TC-HOOK-*) |
 
 ### layouts (1)
 
