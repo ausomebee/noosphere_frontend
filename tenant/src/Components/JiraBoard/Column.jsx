@@ -33,17 +33,13 @@ const Column = ({
 }) => {
   const { hasPermission } = usePermissions();
 
-  // Early return if column is invalid
-  if (!column || !column.id) {
-    if (import.meta.env.DEV) console.warn("Invalid column prop received:", column);
-    return null;
-  }
-
-
-  // Safe access to column properties
-  const columnId = column.id;
-  const columnTitle = column.title || "Unnamed Column";
-  const taskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
+  // Read defensively: every hook below runs even for an invalid column, so the
+  // guard can sit after them. Bailing out before the hooks would end the render
+  // with fewer hooks than the previous one -- `usePermissions` has already run --
+  // and React throws "Rendered fewer hooks than expected", taking the board down.
+  const columnId = column?.id;
+  const columnTitle = column?.title || "Unnamed Column";
+  const taskIds = Array.isArray(column?.taskIds) ? column.taskIds : [];
 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const navigate = useNavigate();
@@ -157,6 +153,12 @@ const Column = ({
       columns,
     ]
   );
+
+  // Every hook above this line, without exception.
+  if (!column || !column.id) {
+    if (import.meta.env.DEV) console.warn("Invalid column prop received:", column);
+    return null;
+  }
 
   return (
     <div

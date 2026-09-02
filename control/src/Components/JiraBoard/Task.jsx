@@ -12,14 +12,18 @@ const Task = React.memo(({
   selected,
   toggleSelection,
 }) => {
-  if (!task) {
-    return null;
-  }
-
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
     data: { type: 'Task' },
   });
+
+  // Every hook above this line. Nothing calls a hook before it today, so an
+  // earlier return happens to be survivable -- but add one hook above and a
+  // task going missing would end the render with fewer hooks than the last,
+  // which React throws on.
+  if (!task) {
+    return null;
+  }
 
   const style = {
     transform: CSS.Transform.toString(transform),

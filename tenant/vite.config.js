@@ -15,6 +15,20 @@ export default defineConfig(({ command }) => ({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    // Count every source file, not only the ones a test happens to import.
+    // Without this, the denominator moves whenever someone adds an import and
+    // the percentage says more about which files were reached than about how
+    // well the code is tested.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{js,jsx}'],
+      exclude: [
+        'src/test/**',
+        'src/**/*.test.{js,jsx}',
+        'src/setupTests.js',
+        'src/main.jsx',
+      ],
+    },
   },
   build: {
     chunkSizeWarningLimit: 500,

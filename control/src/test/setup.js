@@ -15,6 +15,18 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock ResizeObserver -- jsdom has no implementation, and @headlessui/react's
+// Menu and dnd-kit both construct one on mount.
+class ResizeObserverMock {
+  constructor() {
+    this.observe = vi.fn();
+    this.unobserve = vi.fn();
+    this.disconnect = vi.fn();
+  }
+}
+window.ResizeObserver = ResizeObserverMock;
+globalThis.ResizeObserver = ResizeObserverMock;
+
 // Mock IntersectionObserver
 class IntersectionObserverMock {
   constructor() {

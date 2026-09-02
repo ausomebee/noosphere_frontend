@@ -234,7 +234,7 @@ The dev server port is not pinned; Vite starts at 5173 and takes the next free p
 
 Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npm run test:coverage` for a coverage report.
 
-Branch coverage sits at **98.10%** across 568 tests. There is no `coverage` block in `vitest.config.js`, so only files a test imports are counted — importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it. The branches that remain uncovered are unreachable by construction.
+Branch coverage sits at **9.80%** across 588 tests, measured against every source file — `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']` so the denominator does not move when someone adds an import. What is covered is redux slices, the API wrappers and the shared component kit; the pages are largely untested, and that is where most of the branches are.
 
 Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 

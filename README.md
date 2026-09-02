@@ -352,17 +352,27 @@ Control's `npm test` starts a watcher when you run it locally. It still behaves 
 
 ### Coverage
 
-All three modules sit at or above 98% branch coverage:
+Each module's `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']`, so **every source file counts whether or not a test imports it**. That matters: without it, only imported files are counted, and the percentage measures which files a test happened to reach rather than how well the code is tested. Read any figure from before that setting with suspicion.
+
+Branch coverage against the whole codebase:
 
 | Module | Branches | Tests |
 | --- | --- | --- |
-| control | 98.10% | 568 |
-| tenant | 98.40% | 1064 |
-| client | 98.36% | 847 |
+| control | 9.80% (750/7,649) | 588 |
+| tenant | 10.63% (1,686/15,859) | 1,083 |
+| client | 28.39% (894/3,148) | 816 |
 
-None of the modules configures a `coverage` block in `vitest.config.js`, so **only files a test imports are counted**. Importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it.
+The coverage is not spread evenly, and the shape is more informative than the total — the tested layers are genuinely well covered, the screens are not tested at all:
 
-The remaining uncovered branches are unreachable by construction — `import.meta.env.DEV` false arms, guards behind a DOM-disabled button, and fallback messages on errors that always carry a message.
+| Layer | control | tenant | client |
+| --- | --- | --- | --- |
+| Redux slices | 2% | 97% | 9% |
+| API wrappers | 28% | 9% | 95% |
+| Helpers | 57% | 78% | 78% |
+| Shared components | 19% | 13% | 34% |
+| Pages / screens | 0% | 1% | 0% |
+
+Raising the total means testing pages, which is where the bulk of the branches live: `PlansAndPayment.jsx` (370 branches), `SingleTimeSheet.jsx` (497), `FormRenderer.jsx` (340), and others like them are all at zero.
 
 ### Manual QA
 

@@ -31,15 +31,13 @@ const Column = React.memo(({
 }) => {
   const { hasPermission } = usePermission();
 
-  // Early return if column is invalid
-  if (!column || !column.id) {
-    return null;
-  }
-
-  // Safe access to column properties
-  const columnId = column.id;
-  const columnTitle = column.title || 'Unnamed Column';
-  const taskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
+  // Read defensively: every hook below runs even for an invalid column, so the
+  // guard can sit after them. Bailing out before the hooks would end the render
+  // with fewer hooks than the previous one -- `usePermission` has already run --
+  // and React throws "Rendered fewer hooks than expected", taking the board down.
+  const columnId = column?.id;
+  const columnTitle = column?.title || 'Unnamed Column';
+  const taskIds = Array.isArray(column?.taskIds) ? column.taskIds : [];
 
   const [showAddProspectModal, setShowAddProspectModal] = useState(false);
   const navigate = useNavigate();
@@ -141,6 +139,11 @@ const Column = React.memo(({
       columns,
     ]
   );
+
+  // Every hook above this line, without exception.
+  if (!column || !column.id) {
+    return null;
+  }
 
   return (
     <div

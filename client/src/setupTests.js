@@ -37,3 +37,13 @@ if (typeof window !== "undefined") {
     configurable: true,
   });
 }
+
+// Mock ResizeObserver -- jsdom has no implementation. Plain no-ops rather than
+// vi.fn(): nothing asserts on the calls, and this file has no vitest globals.
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserverMock;
+globalThis.ResizeObserver = ResizeObserverMock;

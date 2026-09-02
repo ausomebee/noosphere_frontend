@@ -15,11 +15,6 @@ const Task = ({
   const { hasPermission } = usePermissions();
   const canMoveCandidate = hasPermission("manage_candidate_in_pipeline");
 
-  if (!task) {
-    if (import.meta.env.DEV) console.warn(`Task with ID ${id} is undefined`);
-    return null;
-  }
-
   const {
     attributes,
     listeners,
@@ -32,6 +27,20 @@ const Task = ({
     data: { type: "Task" },
     disabled: !canMoveCandidate,
   });
+
+  // Record where the pointer went down so onClick can tell a genuine click from
+  // the trailing click that fires at the end of a drag. Capture phase is used so
+  // it runs without overriding dnd-kit's own pointer listeners.
+  const pointerDownPos = useRef(null);
+
+  // Every hook above this line, without exception. `usePermissions` already ran
+  // before this guard, so bailing out any earlier ends the render with fewer
+  // hooks than the previous one and React throws "Rendered fewer hooks than
+  // expected" -- taking the whole board down with it.
+  if (!task) {
+    if (import.meta.env.DEV) console.warn(`Task with ID ${id} is undefined`);
+    return null;
+  }
 
   // Only attach drag listeners when the user can actually persist a move.
   const dragListeners = canMoveCandidate ? listeners : undefined;
@@ -49,11 +58,6 @@ const Task = ({
       console.warn("onViewCandidate function is not available");
     }
   };
-
-  // Record where the pointer went down so onClick can tell a genuine click from
-  // the trailing click that fires at the end of a drag. Capture phase is used so
-  // it runs without overriding dnd-kit's own pointer listeners.
-  const pointerDownPos = useRef(null);
 
   return (
     <div
