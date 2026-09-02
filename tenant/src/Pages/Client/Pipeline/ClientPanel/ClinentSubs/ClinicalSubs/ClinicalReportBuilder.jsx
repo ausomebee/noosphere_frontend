@@ -71,7 +71,6 @@ import {
   publishReport,
   selectMetadata,
   selectActiveSections,
-  selectExpandedSections,
   selectSectionData,
   selectActionMenuOpen,
   selectActiveDragId,
@@ -539,7 +538,6 @@ const ClinicalReportBuilder = () => {
 
   const metadata = useSelector(selectMetadata);
   const activeSections = useSelector(selectActiveSections);
-  const expandedSections = useSelector(selectExpandedSections);
   const sectionData = useSelector(selectSectionData);
   const actionMenuOpen = useSelector(selectActionMenuOpen);
   const activeDragId = useSelector(selectActiveDragId);

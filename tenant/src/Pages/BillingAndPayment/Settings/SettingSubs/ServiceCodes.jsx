@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
@@ -11,7 +10,6 @@ import usePermissions from "../../../../hooks/usePermissions";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 
 const ServiceCodes = () => {
-  const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
 

@@ -135,21 +135,6 @@ const ClientInformationSection = ({
   }, [data]); // Only re-run when data prop changes
 
   // Validate form
-  const validateForm = async () => {
-    try {
-      await sectionSchema.validate(formData, { abortEarly: false });
-      setErrors({});
-      return true;
-    } catch (err) {
-      const validationErrors = {};
-      err.inner.forEach((error) => {
-        validationErrors[error.path] = error.message;
-      });
-      setErrors(validationErrors);
-      return false;
-    }
-  };
-
   // Validate single field
   const validateField = async (fieldName, value) => {
     try {

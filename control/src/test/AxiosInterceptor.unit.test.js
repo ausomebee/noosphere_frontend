@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 let requestFn;
-let requestErrFn;
 let responseFn;
 let responseErrFn;
 
@@ -11,9 +10,8 @@ vi.mock('axios', () => ({
       const instance = vi.fn();
       instance.interceptors = {
         request: {
-          use: vi.fn((fn, err) => {
+          use: vi.fn((fn) => {
             requestFn = fn;
-            requestErrFn = err;
           }),
         },
         response: {

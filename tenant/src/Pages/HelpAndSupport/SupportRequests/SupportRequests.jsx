@@ -92,8 +92,8 @@ const SupportRequests = () => {
 
   // Progress track modal
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-  const [progressData, setProgressData] = useState([]);
-  const [progressTitle, setProgressTitle] = useState("");
+  const [progressData] = useState([]);
+  const [progressTitle] = useState("");
   const trackPage = usePagedList(progressData);
 
   // Fetch tickets
@@ -303,19 +303,6 @@ const SupportRequests = () => {
   };
 
   // Progress modal
-  const handleViewProgress = (row) => {
-    const logs = row.rawData?.Logs || [];
-    // Newest first — the API returns oldest first, which buries the latest step.
-    setProgressData(
-      [...logs].sort(
-        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
-      )
-    );
-    setProgressTitle(row.rawData?.issueName || row.rawData?.title || "");
-    trackPage.setPage(1);
-    setIsProgressModalOpen(true);
-  };
-
   if (!hasPermission("view_support_request_list")) return <AccessDenied />;
 
   return (

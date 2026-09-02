@@ -591,7 +591,6 @@ const JiraBoard = () => {
     const column = columns[selectedColumnId];
     const columnIndex = columnOrder.indexOf(selectedColumnId);
     const isFirstColumn = columnIndex === 0;
-    const isLastColumn = columnIndex === columnOrder.length - 1;
     const hasTasks = column.taskIds && column.taskIds.length > 0;
 
     if (isFirstColumn && hasTasks) {

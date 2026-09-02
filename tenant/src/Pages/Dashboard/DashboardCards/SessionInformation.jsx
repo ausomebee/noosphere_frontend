@@ -43,9 +43,6 @@ const SessionInformation = ({ hasData, sessionType = "completedSessions", sessio
   // Generate full list of periods with zero-filling
   const generateFullPeriods = (data, period) => {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-11
-
     let expectedPeriods = [];
     let formatLabel = (dateStr) => dateStr;
 

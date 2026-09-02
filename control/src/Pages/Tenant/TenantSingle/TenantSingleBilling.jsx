@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { parse, isWithinInterval, isSameDay, isValid } from "date-fns";
 import "./TenantSingle.css";
 import Button from "../../../Components/Button/Button";
@@ -86,7 +86,6 @@ const PAYMENT_FILTERS = [
 
 const TenantSingleBilling = () => {
   const { tenantId } = useParams();
-  const navigate = useNavigate();
   const { accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermission();
 

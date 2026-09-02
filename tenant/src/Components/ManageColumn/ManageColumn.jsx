@@ -308,10 +308,6 @@ const ManageColumn = () => {
     }
   };
 
-  const handleEditCandidate = (stageId, taskId) => {
-    navigate(`/client/client-single/${pipelineStageId}/${taskId}`);
-  };
-
   return (
     <div className="manage-column-container">
       {/* Header */}

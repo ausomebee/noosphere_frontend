@@ -115,12 +115,7 @@ const FormRenderer = () => {
           doc.setFillColor(...white);
           doc.setDrawColor(...borderColor);
         }
-        // Draw path manually
-        const [first, ...rest] = points;
-        let path = `${first[0]} ${first[1]} m `;
-        rest.forEach(([px, py]) => { path += `${px} ${py} l `; });
-        path += "h";
-        // Use triangle approach instead for compatibility
+        // Drawn as a filled polygon of triangles from the centre, for jsPDF compatibility.
         // Draw as filled polygon via triangles from center
         if (filled) {
           doc.setFillColor(...amber);

@@ -12,7 +12,6 @@ import api from "../../../../../../api/clientPanelApis";
 import useAuth from "../../../../../../hooks/useAuth";
 import usePermissions from "../../../../../../hooks/usePermissions";
 
-
 const ViewPrograms = () => {
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
@@ -392,70 +391,3 @@ const ViewPrograms = () => {
 };
 
 export default ViewPrograms;
-
-// At the very end of your file, replace buildTargetFormData:
-async function buildTargetFormData(data, mode) {
-  const fd = new FormData();
-
-  if (mode === "edit" && data.id) {
-    fd.append("id", data.id.toString());
-  }
-  fd.append("name", data.name || "");
-  fd.append("description", data.description || "");
-  fd.append("programId", data.programId);
-  fd.append("sd", data.sd || "");
-  fd.append("expectedResponse", data.expectedResponse || "");
-  fd.append("teachingProcedure", data.teachingProcedure || "");
-  fd.append("dataCollectionType", data.dataCollectionType || "");
-  fd.append("baselineDataRequired", Boolean(data.baselineDataRequired));
-  fd.append("initialStatus", data.statusAndAdmin || "");
-  fd.append("notes", data.note || "");
-  fd.append("masteryMetric", data.masteryMetric || "");
-
-  // Use the array-form key so a single selection still arrives as an array
-  // (the backend requires promptingStrategy to be an array).
-  (data.promptingStrategy || []).forEach((str) =>
-    fd.append("promptingStrategy[]", JSON.stringify({ label: str, value: str }))
-  );
-  if (data.promptOthers) fd.append("promptOthers", data.promptOthers);
-
-  if (data.dataCollectionType === "Task Analysis" && data.taskSteps?.length) {
-    data.taskSteps.forEach((step) => fd.append("taskSteps", step));
-  }
-
-  if (
-    data.dataCollectionType === "Percentage Correct" &&
-    data.percentageCorrectTrialSession
-  ) {
-    fd.append("numberOfTrials", Number(data.percentageCorrectTrialSession));
-  }
-  if (
-    data.dataCollectionType === "Latency" &&
-    data.percentageCorrectTrialSession
-  ) {
-    fd.append("numberOfTrials", Number(data.percentageCorrectTrialSession));
-  }
-  if (
-    data.dataCollectionType === "Task Analysis" &&
-    data.trialOrOpportunitiesSession
-  ) {
-    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
-  }
-  if (
-    data.trialOrOpportunitiesSession &&
-    data.dataCollectionType !== "Task Analysis"
-  ) {
-    fd.append("numberOfTrials", Number(data.trialOrOpportunitiesSession));
-    fd.append("numberOfTasks", Number(data.trialOrOpportunitiesSession));
-  }
-
-  fd.append("masteryCriteria", JSON.stringify(data.masteryCriteria || {}));
-
-  if (data.attachment instanceof File) {
-    fd.append("attachment", data.attachment, data.attachment.name);
-  } else {
-    fd.append("attachment", "");
-  }
-
-  return fd;
-}

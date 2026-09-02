@@ -66,10 +66,6 @@ const InitialSuperLogin = () => {
     }
   };
 
-  const forgotPassword = () => {
-    navigate("/forgot-password");
-  };
-
   return (
     <div className="page-wrapper">
       <div className="page-container">
@@ -111,11 +107,9 @@ const InitialSuperLogin = () => {
                     type="submit"
                     loading={loading}
                   />
-                  {/* <p className="cant-access">
-                    <a href="#" onClick={forgotPassword}>
-                      Forgot Password?
-                    </a>
-                  </p> */}
+                  {/* A "Forgot Password?" link is parked here. Its handler was
+                      removed with the rest of the unused code; recover it from
+                      git history when the link is re-enabled. */}
                 </form>
               </div>
             </div>

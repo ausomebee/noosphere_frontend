@@ -12,7 +12,7 @@ import { showToast } from "../../../Helper/ShowToast";
 const TOTP_PERIOD_MS = 30_000;
 
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
-  const { userId, user } = useAuth();
+  const { userId } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

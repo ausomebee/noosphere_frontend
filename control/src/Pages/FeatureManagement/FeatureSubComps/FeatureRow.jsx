@@ -27,7 +27,7 @@ import "../FeatureManagement.css";
 const getErrorMessage = (err) =>
   typeof err === "string" ? err : err?.message || "";
 
-const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
+const FeatureRow = ({ feature, groupTitle }) => {
   const dispatch = useDispatch();
   const { accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermission();
@@ -191,11 +191,6 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
       });
   };
 
-  const handleViewStatisticsClick = () => {
-    onViewStatistics({ featureId: feature.id, featureName: feature.name, groupTitle });
-    setIsRowDropdownOpen(false);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (rowDropdownRef.current && !rowDropdownRef.current.contains(event.target)) {
@@ -252,15 +247,13 @@ const FeatureRow = ({ feature, groupTitle, onViewStatistics }) => {
             {isRowDropdownOpen && (
               <div className="dropdown-menu dropdown-menu-row">
                 <div className="dropdown-items">
-                  {/* Hidden for now: Feature Statistics page shows dummy data
-                      and the graph table view is unresponsive.
-                  <button
-                    onClick={handleViewStatisticsClick}
-                    className="dropdown-item"
-                  >
-                    View Feature Statistics
-                  </button>
-                  */}
+                  {/* "View Feature Statistics" is parked: the statistics page
+                      shows dummy data and its graph table view is unresponsive.
+                      The button, its handler, and the `onViewStatistics` prop
+                      were removed rather than left commented out; recover them
+                      from git history when the page is ready. FeatureManagement
+                      still renders FeatureUsageStatistic, so only the entry
+                      point needs rebuilding. */}
                   <button
                     onClick={() => {
                       setModalState({ ...modalState, moveFeature: true });

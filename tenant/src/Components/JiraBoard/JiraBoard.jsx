@@ -91,8 +91,6 @@ const JiraBoard = () => {
     );
   };
 
-  const clearSelection = () => setSelectedTaskIds([]);
-
   const startLoading = () => setLoadingCount((prev) => prev + 1);
   const stopLoading = () => setLoadingCount((prev) => Math.max(0, prev - 1));
 

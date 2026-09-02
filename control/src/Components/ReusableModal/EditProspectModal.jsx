@@ -8,7 +8,6 @@ import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
 import { updateCandidate } from "../../ReduxStore/features/PipelineSlice";
 import { showToast } from "../../Helper/ShowToast";
-import { useNavigate } from "react-router-dom";
 import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
 import {
   countryOptions,
@@ -74,7 +73,6 @@ const EditProspectModal = ({
   staffList = [],
   stages = [],
 }) => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { accessToken, refreshToken, userId: adminId } = useAuth();
 

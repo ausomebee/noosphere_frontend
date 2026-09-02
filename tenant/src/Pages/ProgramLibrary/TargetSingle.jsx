@@ -65,8 +65,6 @@ const TargetSingle = () => {
   // Refs for positioning dropdowns
   const exportButtonRef = useRef(null);
   const exportDropdownRef = useRef(null);
-  const tableContainerRef = useRef(null);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);

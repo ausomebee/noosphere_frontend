@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Button from "../../../../Components/Button/Button";
 import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
@@ -17,7 +16,6 @@ const standardRuleDescriptions = {
 };
 
 const RoundingRules = () => {
-  const navigate = useNavigate();
   const { tenantId, accessToken, refreshToken } = useAuth();
   const { hasPermission } = usePermissions();
 

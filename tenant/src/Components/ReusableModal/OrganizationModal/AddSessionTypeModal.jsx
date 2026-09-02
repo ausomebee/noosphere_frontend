@@ -136,8 +136,6 @@ const AddSessionTypeModal = ({
     name: "services",
   });
 
-  const services = watch("services");
-
   // Seeded service codes referenced by a session type may not be in the
   // fetched list, so merge in the serviceCode objects embedded in the record
   // being edited; otherwise the select can't render the populated value.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Button from "../../../../../Components/Button/Button";
@@ -177,8 +177,6 @@ const QuestionAndAnswer2FA = () => {
       setLoading(false);
     }
   };
-
-  const values = useWatch({ control });
 
   // Handle security question form submission
   const onSecuritySubmit = async (data) => {

@@ -54,7 +54,6 @@ import {
   loadTemplate,
   selectTemplateMetadata,
   selectActiveSections,
-  selectExpandedSections,
   selectSectionData,
   selectActionMenuOpen,
   selectActiveDragId,
@@ -62,7 +61,6 @@ import {
   selectSaveSuccess,
   selectError,
   selectActiveSectionsWithData,
-  selectTemplateMode,
   selectTemplateId,
   SECTIONS_CONFIG,
   resetSaveStates, // ← added here
@@ -436,7 +434,6 @@ const ClinicalReportTemplateBuilder = () => {
 
   const templateMetadata = useSelector(selectTemplateMetadata);
   const activeSections = useSelector(selectActiveSections);
-  const expandedSections = useSelector(selectExpandedSections);
   const sectionData = useSelector(selectSectionData);
   const actionMenuOpen = useSelector(selectActionMenuOpen);
   const activeDragId = useSelector(selectActiveDragId);
@@ -447,7 +444,6 @@ const ClinicalReportTemplateBuilder = () => {
     (state) => state.clinicalReportTemplate?.isLoading || false,
   );
   const sectionsWithData = useSelector(selectActiveSectionsWithData);
-  const templateMode = useSelector(selectTemplateMode);
   const storedTemplateId = useSelector(selectTemplateId);
 
   const [templateTitle, setTemplateTitle] = useState("");

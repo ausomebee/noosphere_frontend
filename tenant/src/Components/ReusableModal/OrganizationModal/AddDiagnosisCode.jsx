@@ -32,7 +32,6 @@ const AddDiagnosisCode = ({
     handleSubmit,
     control,
     reset,
-    watch,
     formState: { errors },
   } = useForm({
     mode: "onTouched",
@@ -47,8 +46,6 @@ const AddDiagnosisCode = ({
   });
 
   // Watch status value for dynamic label
-  const statusValue = watch("status");
-
   // Reset form when modal opens or initial data changes
   useEffect(() => {
     reset({

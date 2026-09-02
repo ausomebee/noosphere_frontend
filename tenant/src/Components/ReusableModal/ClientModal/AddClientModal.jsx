@@ -255,8 +255,6 @@ const AddClientModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     }),
   });
 
-  const documentName = watch("documentName");
-
   const handleFileUpload = useCallback(
     (uploadedFiles) => {
       const file = uploadedFiles[0]; // Safe because maxFiles={1}

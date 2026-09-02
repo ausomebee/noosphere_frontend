@@ -34,19 +34,6 @@ const AddNewFeatureModal = ({ isOpen, onClose, onSave, isLoading }) => {
     }));
   };
 
-  const handlePlanCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    setFormData((prevData) => {
-      const updatedPlans = checked
-        ? [...prevData.plans, value]
-        : prevData.plans.filter((plan) => plan !== value);
-      return {
-        ...prevData,
-        plans: updatedPlans,
-      };
-    });
-  };
-
   const handleStatusChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({

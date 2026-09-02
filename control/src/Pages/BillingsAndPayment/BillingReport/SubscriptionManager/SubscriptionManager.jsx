@@ -20,13 +20,11 @@ import SubscriptionInvoice from "../../../../Components/Invoice/SubscriptionInvo
 import api from "../../../../api/SubcriptionApis";
 import apiInvoice from "../../../../api/InvoiceApi";
 import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
-import { createRoot } from "react-dom/client";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
-import debounce from "lodash/debounce";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
 import SectionLoader from "../../../../Components/SectionLoader";
 
@@ -37,7 +35,7 @@ const SubscriptionManager = () => {
 
   const [activeTab, setActiveTab] = usePersistedTab("control:subscriptionManager", "all");
   const [, setFilterValue] = useState("");
-  const [checkboxSelectedRows, setCheckboxSelectedRows] = useState([]);
+  const [, setCheckboxSelectedRows] = useState([]);
   const [selectSelectedNames, setSelectSelectedNames] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set());
   const [selectedItems, setSelectedItems] = useState([]);
@@ -59,7 +57,7 @@ const SubscriptionManager = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [isInvoiceLoading, setIsInvoiceLoading] = useState(false);
-  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [isDownloadingInvoice] = useState(false);
   const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState(null);
 
@@ -108,8 +106,6 @@ const SubscriptionManager = () => {
   }, []);
 
   const formatPaymentId = useCallback((id) => `PAY00${id}`, []);
-  const formatInvoiceId = useCallback((id) => `invoice_${id}`, []);
-
   const handleFilterChange = useCallback((key, value) => {
     setFilterValue(value);
     setActiveTab("all");
@@ -283,75 +279,6 @@ const SubscriptionManager = () => {
         setIsInvoiceLoading(false);
       }
     },
-    [accessToken, refreshToken, extractIdNumber, formatDate, formatNumber]
-  );
-
-  const debouncedDownloadInvoice = useCallback(
-    debounce(async (row) => {
-      setIsDownloadingInvoice(true);
-      try {
-        const invoiceId = extractIdNumber(row.invoiceId);
-        const response = await apiInvoice.GetInvoiceById({
-          id: invoiceId,
-          accessToken,
-          refreshToken,
-        });
-        const invoiceData = response.data || {};
-
-        const invoice = {
-          companyName: "noosphere",
-          companyAddress: invoiceData.companyAddress,
-          invoiceId: invoiceData.invoiceId || invoiceId,
-          dueDate: formatDate(invoiceData.dueDate),
-          billingFrequency: invoiceData.billingFrequency,
-          customerInfo: invoiceData.customerInfo,
-          items: (invoiceData.items || []).map((item, index) => ({
-            id: `${index + 1}`,
-            description: item.description,
-            rate: formatNumber(item.rate?.price || 0, true),
-            quantity: item.quantity,
-            price: formatNumber(item.price || 0, true),
-          })),
-          total: formatNumber(invoiceData.total || 0, true),
-        };
-
-        const tempContainer = document.createElement("div");
-        tempContainer.style.position = "absolute";
-        tempContainer.style.left = "-9999px";
-        tempContainer.style.width = "700px";
-        document.body.appendChild(tempContainer);
-
-        const root = createRoot(tempContainer);
-        root.render(<SubscriptionInvoice {...invoice} />);
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const html2canvas = (await import("html2canvas")).default;
-        const { jsPDF } = await import("jspdf");
-
-        const canvas = await html2canvas(tempContainer, { scale: 1 }); // Reduced scale for performance
-        const imgData = canvas.toDataURL("image/png");
-
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
-        });
-        const pdfWidth = 210;
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`invoice_${invoiceId}.pdf`);
-
-        root.unmount();
-        document.body.removeChild(tempContainer);
-        showToast("Invoice downloaded successfully", "success");
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("Error generating PDF:", err);
-        showToast("Failed to download invoice. Please try again.", "error");
-      } finally {
-        setIsDownloadingInvoice(false);
-      }
-    }, 500),
     [accessToken, refreshToken, extractIdNumber, formatDate, formatNumber]
   );
 
@@ -592,17 +519,6 @@ const SubscriptionManager = () => {
     [selectSelectedNames, updateSelections]
   );
 
-  const handleSelectChange = useCallback(
-    (e) => {
-      const selectedOptions = Array.from(e.target.selectedOptions).map(
-        (option) => option.value
-      );
-      setSelectSelectedNames(selectedOptions);
-      updateSelections(checkboxSelectedRows, selectedOptions, selectedItems);
-    },
-    [checkboxSelectedRows, selectedItems, updateSelections]
-  );
-
   const renderBulkActions = useMemo(() => {
     if (selectedItems.length === 0) {
       return null;
@@ -772,15 +688,6 @@ const SubscriptionManager = () => {
       }
     },
     [adminId, accessToken, refreshToken, fetchData]
-  );
-
-  const selectOptions = useMemo(
-    () =>
-      getFilteredData.map((item) => ({
-        value: item.companyName,
-        label: item.companyName,
-      })),
-    [getFilteredData]
   );
 
   if (!hasPermission("view_subscriptions")) return <AccessDenied />;

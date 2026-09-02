@@ -591,11 +591,9 @@ const SingleTimeSheet = () => {
   const { timesheetId } = useParams();
 
   // Auth state
-  const { role: roleObj, userId, accessToken, refreshToken, user } = useAuth();
+  const { userId, accessToken, refreshToken, user } = useAuth();
   const { hasPermission } = usePermissions();
   const { dateFormat, timeFormat } = useFormatSettings();
-  const role = roleObj?.name ?? "Client";
-
   // State
   const [activeTab, setActiveTab] = useState("timeSheetDetails");
   const [isOpen, setIsOpen] = useState(false);

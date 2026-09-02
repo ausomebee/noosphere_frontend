@@ -238,8 +238,6 @@ const AddTargetModal = ({
   const dataCollectionType = watch("dataCollectionType");
   const masteryMetric = watch("masteryMetric");
   const trialOrOpportunitiesSession = watch("trialOrOpportunitiesSession");
-  const masteryCriteriaOption = watch("masteryCriteriaOption");
-
   /* ---------- Auto-save to Redux and Track Changes ---------- */
   useEffect(() => {
     if (!isOpen) return;

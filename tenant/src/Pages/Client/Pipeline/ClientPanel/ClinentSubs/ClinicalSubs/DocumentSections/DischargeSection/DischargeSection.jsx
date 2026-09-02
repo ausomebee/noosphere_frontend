@@ -51,21 +51,6 @@ const DischargeSection = ({ data = {}, onChange, onRemoveSection, isReadOnly = f
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  const validateForm = async () => {
-    try {
-      await dischargeSchema.validate(formData, { abortEarly: false });
-      setErrors({});
-      return true;
-    } catch (err) {
-      const validationErrors = {};
-      err.inner.forEach((error) => {
-        validationErrors[error.path] = error.message;
-      });
-      setErrors(validationErrors);
-      return false;
-    }
-  };
-
   const validateField = async (fieldName, value) => {
     try {
       await Yup.reach(dischargeSchema, fieldName).validate(value);

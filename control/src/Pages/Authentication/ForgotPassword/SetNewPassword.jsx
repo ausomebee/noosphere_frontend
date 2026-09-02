@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -24,12 +24,7 @@ const setPasswordSchema = yup.object().shape({
 
 const SetNewPassword = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading] = useState(false);
-
-  // Extract reset token from URL query parameters
-  const query = new URLSearchParams(location.search);
-  const token = query.get("token");
 
   // Form setup with react-hook-form and yup
   const {

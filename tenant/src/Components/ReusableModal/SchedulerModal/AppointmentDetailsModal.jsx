@@ -8,7 +8,7 @@ import React, {
 import Button from "../../Button/Button";
 import { RxCross2 } from "react-icons/rx";
 import { FiRefreshCw, FiEdit2 } from "react-icons/fi";
-import { format, parse, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
 import { showToast } from "../../../Helper/ShowToast";
@@ -41,39 +41,6 @@ const splitId = useCallback((id) => {
       setModalSize({ width: rect.width, height: rect.height });
     }
   }, [isOpen]);
-
-  const parseTime = (timeStr, dateStr) => {
-    const defaultDate = new Date();
-    if (
-      !timeStr ||
-      !dateStr ||
-      typeof timeStr !== "string" ||
-      typeof dateStr !== "string"
-    ) {
-      return defaultDate;
-    }
-
-    try {
-      const normalizedTime = timeStr.replace(/:\d{2}$/, "");
-      const parsedDate = parse(
-        `${dateStr} ${normalizedTime}`,
-        "yyyy-MM-dd HH:mm",
-        new Date()
-      );
-      if (!isValid(parsedDate)) {
-        return defaultDate;
-      }
-      return parsedDate;
-    } catch {
-      const [h, m] = timeStr.split(":");
-      const d = new Date(dateStr);
-      if (!isValid(d)) {
-        return defaultDate;
-      }
-      d.setHours(Number(h) || 0, Number(m?.slice(0, 2)) || 0, 0, 0);
-      return isValid(d) ? d : defaultDate;
-    }
-  };
 
   const adjustedPosition = useMemo(() => {
     if (!isOpen || !appointment || !position || !position.x || !position.y) {
@@ -121,10 +88,6 @@ const splitId = useCallback((id) => {
   if (!isOpen || !appointment) return null;
 
   // Parse and format start and end times
-  const start = parseTime(appointment.startTime, appointment.date);
-  const end = parseTime(appointment.endTime, appointment.date);
-  const startTime = isValid(start) ? format(start, "h:mm a") : "Invalid Time";
-  const endTime = isValid(end) ? format(end, "h:mm a") : "Invalid Time";
   const getRecurrenceDescription = () => {
     if (!appointment.isRecurring || !appointment.recurrence)
       return "Does not repeat";

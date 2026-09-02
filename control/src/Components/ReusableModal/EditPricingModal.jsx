@@ -34,22 +34,6 @@ const EditPricingModal = ({ isOpen, onClose, onSave, plan, features = [], admins
         }))
       : [];
 
-    const mergedFeatures = [
-      ...planFeatures,
-      ...(Array.isArray(features)
-        ? features.map((f, i) => ({
-            id: String(f.id || `feature-${i}`),
-            name: f.name || "Unnamed Feature",
-          }))
-        : []),
-    ].reduce((acc, f) => {
-      // Remove duplicates by id or name
-      if (!acc.some((existing) => existing.id === f.id || existing.name === f.name)) {
-        acc.push(f);
-      }
-      return acc;
-    }, []);
-
     return {
       name: plan.name || "Unnamed Plan",
       type: plan.type === "enterprise" ? "Enterprise" : "Standard",

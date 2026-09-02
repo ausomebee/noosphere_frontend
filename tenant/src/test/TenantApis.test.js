@@ -29,7 +29,7 @@ describe("TenantApis", () => {
       const mockGet = vi.fn().mockResolvedValue({ data: { id: 1 } });
       AxiosInterceptor.mockReturnValue({ get: mockGet, post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() });
 
-      const result = await api.GetPipelineByTenantId({ tenantId: "t1", ...tokens });
+      await api.GetPipelineByTenantId({ tenantId: "t1", ...tokens });
       expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pipeline/tenant/tenant/t1"));
     });
 
@@ -100,7 +100,7 @@ describe("TenantApis", () => {
     it("calls DELETE with ids payload", async () => {
       const mockDel = vi.fn().mockResolvedValue({ data: { success: true } });
       AxiosInterceptor.mockReturnValue({ get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: mockDel });
-      const result = await api.DeletePipelineItem({ ids: ["i1", "i2"], ...tokens });
+      await api.DeletePipelineItem({ ids: ["i1", "i2"], ...tokens });
       expect(mockDel).toHaveBeenCalledWith(expect.stringContaining("/pipeline/multi/tenant/item"), { data: { ids: ["i1", "i2"] } });
     });
     it("throws on error", async () => {

@@ -19,7 +19,7 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
 
   // Transform appointmentServices → service array
   const toTableRow = (apiAppt) => ({
@@ -100,10 +100,6 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
     return allAppointments.slice(start, end);
   }, [allAppointments, currentPage]);
 
-
-  const loadMore = () => {
-    setCurrentPage((prev) => prev + 1);
-  };
 
   // Format for CustomTable
   const tableData = paginatedData.map((appt) => ({
@@ -192,17 +188,9 @@ const UpcomingAppointments = ({ hasData, setCount }) => {
         tableName=""
       />
 
-      {/* Uncomment when you want "Load more" */}
-      {/* {hasMore && (
-        <div className="text-center mt-4">
-          <Button
-            label="Load more"
-            variant="ghost"
-            onClick={loadMore}
-            className="text-sm"
-          />
-        </div>
-      )} */}
+      {/* A "Load more" button is parked here. Its handler and the
+          setCurrentPage it drove were removed with the rest of the unused
+          code; recover them from git history when paging is re-enabled. */}
     </div>
   );
 };

@@ -103,7 +103,7 @@ describe("AxiosInterceptor interceptor callbacks", () => {
         config: { headers: {}, _retry: false },
       };
 
-      const result = await responseErrorCallback(error);
+      await responseErrorCallback(error);
       expect(api.refreshAccessToken).toHaveBeenCalledWith("stored-refresh", expect.any(Function));
     });
 

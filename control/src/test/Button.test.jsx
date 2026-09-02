@@ -45,8 +45,8 @@ describe('Button', () => {
   it('renders icon on the right when specified', () => {
     render(<Button label="Next" icon={<FaPlus data-testid="icon" />} iconPosition="right" />);
     const button = screen.getByRole('button');
-    const icon = screen.getByTestId('icon');
-    const label = screen.getByText('Next');
+    expect(screen.getByTestId('icon')).toBeInTheDocument();
+    expect(screen.getByText('Next')).toBeInTheDocument();
     // Icon should come after label in DOM
     expect(button.innerHTML.indexOf('Next')).toBeLessThan(button.innerHTML.indexOf('icon'));
   });

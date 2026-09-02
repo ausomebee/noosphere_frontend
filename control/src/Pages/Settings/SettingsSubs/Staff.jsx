@@ -139,14 +139,6 @@ const Staff = () => {
     return map;
   }, [roles]);
 
-  const deptMap = useMemo(() => {
-    const map = {};
-    departments.forEach((d) => {
-      map[d.id] = d.name;
-    });
-    return map;
-  }, [departments]);
-
   const departmentOptions = useMemo(
     () => [
       { value: "", label: "Select department" },
