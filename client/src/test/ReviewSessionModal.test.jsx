@@ -31,6 +31,19 @@ vi.mock("react-signature-canvas", () => ({
 import SessionFeedbackModal from "../Components/Modal/UpcomingDashboardModal/ReviewSessionModal";
 import authReducer from "../ReduxStore/features/authentication";
 
+// `waitFor` resolves as soon as its callback stops throwing, and `querySelector`
+// returns null rather than throwing -- so awaiting one directly never waits at
+// all. On a slower runner that hands back null and the next line dies with
+// "Unable to fire a click event - please provide a DOM element". This asserts
+// the value before handing it back, which is what makes the wait real.
+const waitForValue = (read) =>
+  waitFor(() => {
+    const value = read();
+    expect(value).toBeTruthy();
+    return value;
+  });
+
+
 /**
  * The awaiting-feedback review sheet.
  *
@@ -543,7 +556,7 @@ describe("the feedback form", () => {
 
   it("records the delivery confirmation", async () => {
     await renderModal();
-    const box = await waitFor(() =>
+    const box = await waitForValue(() =>
       document.body.querySelector('input[type="checkbox"]')
     );
     fireEvent.click(box);

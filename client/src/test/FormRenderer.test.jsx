@@ -50,6 +50,19 @@ import formBuilderReducer from "../ReduxStore/features/formBuilderSlice";
 import formResponseReducer from "../ReduxStore/features/formResponseSlice";
 import authReducer from "../ReduxStore/features/authentication";
 
+// `waitFor` resolves as soon as its callback stops throwing, and `querySelector`
+// returns null rather than throwing -- so awaiting one directly never waits at
+// all. On a slower runner that hands back null and the next line dies with
+// "Unable to fire a click event - please provide a DOM element". This asserts
+// the value before handing it back, which is what makes the wait real.
+const waitForValue = (read) =>
+  waitFor(() => {
+    const value = read();
+    expect(value).toBeTruthy();
+    return value;
+  });
+
+
 /**
  * The shared-form renderer.
  *
@@ -192,7 +205,7 @@ describe("field types", () => {
 
   it("renders a short text field and records what is typed", async () => {
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     expect(input.value).toBe("Ada");
   });
@@ -307,7 +320,7 @@ describe("required fields on submit", () => {
 describe("submitting", () => {
   it("sends the answers and reports success", async () => {
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     submit();
 
@@ -340,7 +353,7 @@ describe("submitting", () => {
   it("reports a failed submit without navigating away", async () => {
     createResponse.mockRejectedValue(new Error("server said no"));
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     submit();
     await waitFor(() => expect(showToast).toHaveBeenCalledWith("server said no", "error"));
@@ -402,7 +415,7 @@ describe("reading the file-upload configuration", () => {
 
   it("maps a known type to its mime type and an unknown one to an extension", async () => {
     await uploadField([{ maxFiles: "1", allowedTypes: ["PDF", "heic"] }]);
-    const accept = await waitFor(
+    const accept = await waitForValue(
       () => document.body.querySelector('input[type="file"]').accept
     );
     expect(accept).toContain(".heic");
@@ -572,7 +585,7 @@ describe("uploading files to a field", () => {
 
   it("accepts files dropped onto the field", async () => {
     await uploadForm();
-    const zone = await waitFor(() => document.body.querySelector(".upload-trigger"));
+    const zone = await waitForValue(() => document.body.querySelector(".upload-trigger"));
     fireEvent.dragOver(zone, { dataTransfer: { files: [] } });
     fireEvent.dragLeave(zone, { dataTransfer: { files: [] } });
     await act(async () => {
@@ -583,7 +596,7 @@ describe("uploading files to a field", () => {
 
   it("ignores an empty drop", async () => {
     await uploadForm();
-    const zone = await waitFor(() => document.body.querySelector(".upload-trigger"));
+    const zone = await waitForValue(() => document.body.querySelector(".upload-trigger"));
     await act(async () => {
       fireEvent.drop(zone, { dataTransfer: { files: [] } });
     });
@@ -694,7 +707,7 @@ describe("signatures", () => {
     await waitFor(() => expect(screen.getByText("Image")).toBeInTheDocument());
     fireEvent.click(screen.getByText("Image"));
 
-    const input = await waitFor(() =>
+    const input = await waitForValue(() =>
       document.body.querySelector(".signature-image-upload input")
     );
     await act(async () => {
@@ -716,7 +729,7 @@ describe("signatures", () => {
     await sigForm();
     await waitFor(() => expect(screen.getByText("Image")).toBeInTheDocument());
     fireEvent.click(screen.getByText("Image"));
-    const input = await waitFor(() =>
+    const input = await waitForValue(() =>
       document.body.querySelector(".signature-image-upload input")
     );
     await act(async () => { fireEvent.change(input, { target: { files: [] } }); });
@@ -741,7 +754,7 @@ describe("the other field types", () => {
 
   it("records a dropdown choice", async () => {
     await renderForm([field({ fieldType: "dropdown", label: "Choose", options: ["A", "B"] })]);
-    const select = await waitFor(() => document.body.querySelector("select"));
+    const select = await waitForValue(() => document.body.querySelector("select"));
     fireEvent.change(select, { target: { value: "B" } });
     await act(async () => { submit(); });
     expect(createResponse.mock.calls[0][0].responseFields).toEqual([
@@ -751,7 +764,7 @@ describe("the other field types", () => {
 
   it("records a paragraph answer", async () => {
     await renderForm([field({ fieldType: "paragraph", label: "Notes" })]);
-    const box = await waitFor(() => document.body.querySelector("textarea"));
+    const box = await waitForValue(() => document.body.querySelector("textarea"));
     fireEvent.change(box, { target: { value: "  Some notes  " } });
     await act(async () => { submit(); });
     expect(createResponse.mock.calls[0][0].responseFields).toEqual([
@@ -883,7 +896,7 @@ describe("paging a long form", () => {
 describe("clearing the form", () => {
   it("asks before wiping everything, and can be called off", async () => {
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
 
     fireEvent.click(screen.getByText("Clear Form"));
@@ -901,7 +914,7 @@ describe("clearing the form", () => {
       field({ id: "q1", fieldType: "shortText", label: "Name" }),
       field({ id: "q2", fieldType: "signature", label: "Sign", signature: [{ allowUpload: true }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
 
     fireEvent.click(screen.getByText("Clear Form"));
@@ -920,7 +933,7 @@ describe("clearing the form", () => {
 describe("after submitting", () => {
   it("shows the thank-you screen and offers a way back", async () => {
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     await act(async () => { submit(); });
 
@@ -933,7 +946,7 @@ describe("after submitting", () => {
   it("routes to the documents page a moment later", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     await act(async () => { submit(); });
 
@@ -944,7 +957,7 @@ describe("after submitting", () => {
   it("reads the submission id from either response shape", async () => {
     createResponse.mockResolvedValue({ data: { data: { id: "nested-1" } } });
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     await act(async () => { submit(); });
     await waitFor(() =>
@@ -955,7 +968,7 @@ describe("after submitting", () => {
   it("reports a failure that carries no message", async () => {
     createResponse.mockRejectedValue({});
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     await act(async () => { submit(); });
     expect(showToast).toHaveBeenCalledWith("Submission failed", "error");
@@ -1186,7 +1199,7 @@ describe("odds and ends of submitting", () => {
 
   it("drops an answer that was typed and then erased", async () => {
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     fireEvent.change(input, { target: { value: "" } });
     await act(async () => { submit(); });
@@ -1198,7 +1211,7 @@ describe("odds and ends of submitting", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "1" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
     await act(async () => {
       fireEvent.change(input, {
         target: { files: [new File(["x"], "a.pdf", { type: "application/pdf" })] },
@@ -1216,7 +1229,7 @@ describe("odds and ends of submitting", () => {
     await renderForm([
       field({ fieldType: "checkbox", label: "Pick any", isRequired: true, options: ["A"] }),
     ]);
-    const box = await waitFor(() => document.body.querySelector('input[type="checkbox"]'));
+    const box = await waitForValue(() => document.body.querySelector('input[type="checkbox"]'));
     fireEvent.click(box);
     await act(async () => { submit(); });
     expect(createResponse).toHaveBeenCalled();
@@ -1240,7 +1253,7 @@ describe("odds and ends of submitting", () => {
     let settle;
     createResponse.mockReturnValue(new Promise((r) => { settle = r; }));
     await renderForm();
-    const input = await waitFor(() => document.body.querySelector('input[type="text"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
     fireEvent.change(input, { target: { value: "Ada" } });
     await act(async () => { submit(); });
 
@@ -1260,7 +1273,7 @@ describe("odds and ends of uploading", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "3" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
 
     uploadImage.mockResolvedValue({
       success: true,
@@ -1289,7 +1302,7 @@ describe("odds and ends of uploading", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "1" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
     await act(async () => {
       fireEvent.change(input, { target: { files: [pdf("a.pdf")] } });
     });
@@ -1308,7 +1321,7 @@ describe("odds and ends of uploading", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "1" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
     await act(async () => { fireEvent.change(input, { target: { files: [zero] } }); });
     await waitFor(() => expect(screen.getByText("—")).toBeInTheDocument());
   });
@@ -1317,7 +1330,7 @@ describe("odds and ends of uploading", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "1" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
     await act(async () => { fireEvent.change(input, { target: { files: [] } }); });
     expect(uploadImage).not.toHaveBeenCalled();
   });
@@ -1391,7 +1404,7 @@ describe("the last few shapes the renderer defends against", () => {
       field({ id: "q1", fieldType: "checkbox", label: "Pick", options: ["A"] }),
       field({ id: "q2", fieldType: "shortText", label: "Answer me", isRequired: true }),
     ]);
-    const box = await waitFor(() => document.body.querySelector('input[type="checkbox"]'));
+    const box = await waitForValue(() => document.body.querySelector('input[type="checkbox"]'));
     fireEvent.click(box);
     submit();
     await waitFor(() =>
@@ -1442,7 +1455,7 @@ describe("a second upload batch that fails as well", () => {
     await renderForm([
       field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "3" }] }),
     ]);
-    const input = await waitFor(() => document.body.querySelector('input[type="file"]'));
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
 
     await act(async () => {
       fireEvent.change(input, { target: { files: [pdf("a.pdf")] } });
