@@ -8,16 +8,20 @@ The Control Panel is the super admin application for managing the Noosphere plat
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
 - [Scripts](#scripts)
+- [Testing](#testing)
 - [Authentication](#authentication)
 - [Key Modules in Detail](#key-modules-in-detail)
 - [Payment Integrations](#payment-integrations)
 - [Conventions and Patterns](#conventions-and-patterns)
 - [API Layer](#api-layer)
 - [State Management](#state-management)
+- [Real-time Features](#real-time-features)
 
 ## Features
 
-### Dashboard
+### Performance Dashboard
+
+Served at `/performance` from `Pages/Performance/MainPerformance.jsx`. There is no separate `Pages/Dashboard/`.
 
 - Platform-wide metrics and overview statistics
 - Session speed charts with period filtering (year, month, week, day)
@@ -49,6 +53,7 @@ The Control Panel is the super admin application for managing the Noosphere plat
 - **Invoice Management** — generate, view, and track invoices
 - **Payment Management** — retry failed payments, configure payment settings
 - **Billing Reports** — revenue reports with date filtering and export
+- **Auto-Billing Settings** — automated invoice and renewal configuration
 - **Plans and Payment** — plan catalog management (Basic, Standard, Pro, Enterprise)
 - **Subscriber List** — all paying tenants with subscription status
 - **Payment Link Generation** — Stripe and PayPal payment links for tenant onboarding
@@ -71,8 +76,16 @@ The Control Panel is the super admin application for managing the Noosphere plat
 ### Settings
 
 - **Security** — 2FA configuration (security questions, authenticator app), password policies
+- **Roles and Permissions** — role list plus a `RoleConfiguration` editor for creating and editing roles
 - **Staff** — platform admin management with roles and departments
 - **Departments** — organizational structure for support staff
+
+### Notifications and Real-time
+
+- Socket.IO connection opened on login, registered as an `ADMIN` client
+- Real-time notification delivery with duplicate-id merging
+- Notification centre with per-type labels and deep links into the app
+- Connection status surfaced in the layout; the socket is disconnected on logout **and** on idle timeout
 
 ### Authentication
 
@@ -80,24 +93,31 @@ The Control Panel is the super admin application for managing the Noosphere plat
 - Two-factor authentication (security questions or authenticator app)
 - Forgot password flow with email verification
 - Password reset with token validation
+- Administrator password re-entry gates destructive actions (plan deletion, feature-group deletion, plan activation and deactivation) and enforces a 12-character minimum
 
 ## Project Structure
 
 ```text
 src/
 ├── api/                         API service files
-│   ├── authApis.js              Super admin authentication
+│   ├── authApis.js              Super admin authentication, token refresh
 │   ├── TenantApis.js            Tenant CRUD, logs, usage statistics
 │   ├── BillingApis.js           Subscription and billing operations
+│   ├── SubcriptionApis.js       Subscription plans and renewals
 │   ├── InvoiceApi.js            Invoice generation, payment links
-│   ├── IssueApis.js             Issue management CRUD
+│   ├── AutoBillingInvoiceAPIs.js  Automated invoice runs
+│   ├── AutoBillingPandAApis.js  Automated plans-and-agreements billing
+│   ├── IssueApi.js              Issue management CRUD
 │   ├── FeatureApis.js           Feature flag management
-│   ├── StaffApis.js             Platform staff management
-│   └── ...
+│   ├── staffApis.js             Platform staff management
+│   ├── departmentApis.js        Support departments
+│   ├── roleApis.js              Roles and permissions
+│   ├── notificationApi.js       Notification fetch, read, settings
+│   ├── performanceApi.js        Platform performance metrics
+│   └── socketService.js         Socket.IO connection and event handlers
 ├── assets/                      Logos, images
 ├── Components/                  Reusable UI components
 │   ├── BarChart/                Stacked bar chart with ApexCharts
-│   ├── ErrorTypeChart/          Error distribution visualization
 │   ├── ManageColumn/            Column configuration, drag-and-drop
 │   ├── ProspectPanel/           Prospect detail panel (1,349 lines)
 │   ├── ResourceUtilizationUsage/  System resource monitoring
@@ -115,23 +135,39 @@ src/
 │   │   ├── MoveCandidateModal.jsx
 │   │   └── ReusableModal.jsx    Base modal wrapper
 │   ├── Table/                   CustomTable with filtering, export
-│   ├── LoadingSpinner.jsx       Full-page, section, and skeleton loaders
+│   ├── LoadingSpinner.jsx       Full-page loader plus Skeleton, SkeletonText
+│   │                            and SkeletonTable placeholders
 │   └── ProtectedRoute.jsx       Auth guard
 ├── Data/                        Centralized static data
 │   ├── selectOptions.js         All dropdown options (org types, priorities,
 │   │                            statuses, plans, chart periods, etc.)
-│   ├── RandomDatas.js           Development mock table data
-│   ├── resourceData.js          Resource utilization chart data
-│   ├── speedChartData.js        Speed metrics chart data
+│   ├── notificationConfig.js    NOTIFICATION_ENTITY_TYPE and the deep-link map
+│   │                            behind getNotificationAction
 │   └── permissionsConfig.js     Super admin permission structure
 ├── Helper/                      Utility modules
 │   ├── AxiosInterceptor.jsx     Token refresh with request queuing (30s timeout)
 │   ├── ErrorBoundary.jsx        React error boundary with refresh button
 │   ├── Formatters.js            Centralized date/time formatters (7 exports)
-│   └── ShowToast.jsx            Toast notification utility
+│   ├── ShowToast.jsx            Toast notification utility
+│   ├── errorMessages.js         Fallback copy keyed by failure type
+│   ├── formErrors.js            Field-level error extraction for forms
+│   ├── passwordPolicy.js        Shared password rules, so the strength
+│   │                            checklist and the yup schema cannot drift
+│   ├── passwordValidation.js    Yup password + confirm-password schemas
+│   ├── colorContrast.js         Keeps label text legible on a chosen colour
+│   ├── geoOptions.js            Country/region option data
+│   └── storeRef.js              Lazy store/persistor refs, so non-React
+│                                modules can dispatch without a cycle
 ├── hooks/                       Custom React hooks
 │   ├── useAuth.js               Authentication state
-│   └── useIdleTimeout.js        30-min idle session timeout
+│   ├── useIdleTimeout.js        30-min idle session timeout
+│   ├── useSocket.js             Socket.IO connection lifecycle
+│   ├── usePermission.js         Permission checks for UI gating
+│   ├── useDocumentViewer.jsx    Shared document preview/download context
+│   ├── usePageTitle.js          Per-route document title
+│   ├── usePersistedTab.js       Remembers the active tab across reloads
+│   ├── useReduxFormDraft.js     Auto-saving form drafts into Redux
+│   └── modalRegistry.js         Tracks open modals so the board goes inert
 ├── Pages/                       Route-level page components
 │   ├── Authentication/          Login, ForgotPassword, SetNewPassword,
 │   │                            2FA flows (security questions, authenticator)
@@ -139,18 +175,24 @@ src/
 │   │                            SubscriptionManager, InvoiceManagement,
 │   │                            PaymentManagement, PlansAndPayment,
 │   │                            SubscriberList
-│   ├── Dashboard/               Platform metrics dashboard
+│   ├── Performance/             MainPerformance — the platform metrics
+│   │                            dashboard, served at `/performance`
+│   ├── FeatureManagement/       Feature flags and feature groups
 │   ├── IssueManagement/         IssueManagement list, ViewIssue detail
+│   ├── Notifications/           Notification centre
 │   ├── Layout/                  ControlLayout with sidebar, secondary nav,
 │   │                            and tenant-context navigation
 │   ├── Payment/                 Stripe + PayPal payment page (public)
-│   ├── Settings/                SecuritySettings, Staff, Departments
+│   ├── Settings/                SecuritySettings, Staff, Departments,
+│   │                            roles and permissions with RoleConfiguration
 │   └── Tenant/                  TenantList, TenantSingle (overview, billing,
-│                                issues, user logs, usage statistics)
+│                                issues, user logs, security, usage statistics)
 ├── ReduxStore/                  Redux Toolkit state management
 │   ├── features/
 │   │   ├── authentication.js    Super admin auth state
-│   │   └── featureManagementSlice.js  Feature flags state
+│   │   ├── featureManagementSlice.js  Feature flags state
+│   │   ├── PipelineSlice.js     Prospect pipeline stages and cards
+│   │   └── formDraftsSlice.js   Auto-saved form drafts, keyed per form
 │   ├── rootReducer.js
 │   └── store.js                 Store with redux-persist (v0.1.0)
 ├── styles/                      Global CSS
@@ -174,12 +216,27 @@ VITE_PAYPAL_CLIENT_ID=your_paypal_client_id
 ## Scripts
 
 ```bash
-npm install       # Install dependencies
-npm run dev       # Start dev server at http://localhost:5174/control/
-npm run build     # Production build (output: dist/)
-npm run preview   # Preview production build locally
-npm test          # Run unit tests with Vitest
+npm install            # Install dependencies
+npm run dev            # Start dev server at http://localhost:5174/control/
+npm run build          # Production build (output: dist/)
+npm run preview        # Preview production build locally
+npm run lint           # ESLint
+npm test               # Vitest in WATCH mode (unlike tenant and client)
+npm run test:run       # Single run — this is the one CI-equivalent command
+npm run test:coverage  # Single run with a coverage report
 ```
+
+Note that `npm test` here starts a watcher, where the same command in tenant and client runs once and exits. Use `npm run test:run` for a one-shot run. CI still gets a single run from `npm test` because Vitest falls back to run mode without a TTY.
+
+The dev server port is not pinned; Vite starts at 5173 and takes the next free port, so 5174 is only what you get when the tenant module is already running.
+
+## Testing
+
+Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npm run test:coverage` for a coverage report.
+
+Branch coverage sits at **98.10%** across 568 tests. There is no `coverage` block in `vitest.config.js`, so only files a test imports are counted — importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it. The branches that remain uncovered are unreachable by construction.
+
+Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 
 ## Authentication
 
@@ -254,7 +311,7 @@ Comprehensive billing analytics with:
 | Convention | Detail |
 | --- | --- |
 | **Formatting** | All date/time formatting via `Helper/Formatters.js` with 7 format variants |
-| **Static Data** | All dropdown options in `Data/selectOptions.js` (14 exports) |
+| **Static Data** | All dropdown options in `Data/selectOptions.js` (16 exports) |
 | **Error Feedback** | Every catch block includes `showToast()` or state-based error display |
 | **Console Logging** | All console statements guarded with `import.meta.env.DEV` |
 | **Form Validation** | React Hook Form + Yup schemas |
@@ -274,14 +331,27 @@ All API calls use the shared `AxiosInterceptor` pattern:
 
 ## State Management
 
-Redux Toolkit with 2 slices:
+Redux Toolkit with 4 slices:
 
 | Slice | Purpose |
 | --- | --- |
 | `authentication` | Super admin auth state with tokens and user info |
 | `featureManagement` | Feature flags and feature groups state |
+| `pipeline` | Prospect pipeline stages and cards |
+| `formDrafts` | Auto-saved form drafts, keyed per form |
 
-Persisted via redux-persist (version 0.1.0) with automatic migration on version changes.
+Persisted via redux-persist under the namespaced key `control-root`, so it cannot collide with the tenant and client stores when all three are served from the same origin. `APP_VERSION` is `0.1.0`; the migration wipes persisted state whenever that string changes, and distinguishes a cold cache from a genuine version mismatch so a first-time visitor is not treated as an upgrade.
+
+## Real-time Features
+
+Socket.IO integration provides:
+
+- **Notifications** for tenant, billing, and issue events, delivered without a page refresh
+- **Duplicate-id merging** so a notification that arrives over both the socket and the initial fetch is shown once
+- **Deep links** from a notification to the screen it refers to, via `Data/notificationConfig.js`
+- **Connection status** shown in the layout
+
+The connection lifecycle is owned by the `useSocket` hook over `api/socketService.js`. The socket is torn down first on both logout paths — the layout's Log out button and `useIdleTimeout` — before Redux state is cleared, so an idle session cannot keep a live connection registered as `ADMIN` and go on receiving notifications after logout.
 
 ### Build Optimization
 
@@ -295,3 +365,4 @@ Manual chunk splitting separates vendor libraries for optimal browser caching:
 - `vendor-forms` — React Hook Form, Yup
 - `vendor-ui` — React Select, React Toastify, React Icons
 - `vendor-payments` — Stripe, PayPal SDKs
+- `vendor-geo` — country-region-data (control only)

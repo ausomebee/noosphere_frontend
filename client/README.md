@@ -8,6 +8,7 @@ The Client Portal is the patient and caregiver-facing application within the Noo
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
 - [Scripts](#scripts)
+- [Testing](#testing)
 - [Authentication](#authentication)
 - [Key Modules in Detail](#key-modules-in-detail)
 - [Conventions and Patterns](#conventions-and-patterns)
@@ -96,7 +97,7 @@ When a session is completed and awaiting feedback, the client can:
   - Authorizations (expiring, expired, units exhausted)
   - Clinical reports (signature requested)
 - Mark as read with optimistic UI updates
-- Type-based grouping and ordering
+- Sorted newest-first and grouped by date (Today, Yesterday, weekday headers); each row's heading is the `title` the backend sends
 
 ### Profile
 
@@ -140,9 +141,11 @@ src/
 │   │   ├── FormRenderer.jsx     Field-type-aware rendering (977 lines)
 │   │   └── FormRenderer.css
 │   ├── Input/                   Input components
-│   │   ├── Inputs.jsx           TextInput, SelectInput, TextareaInput,
-│   │   │                        CheckboxInput, SwitchInput, TimeInput
-│   │   └── Inputs.css
+│   │   └── Inputs.jsx           RequiredMark, TextInput, PasswordInput,
+│   │                            SelectInput, SearchableSelectInput,
+│   │                            CheckboxInput, SwitchInput, TextareaInput,
+│   │                            SearchInput, RadioInput,
+│   │                            CustomDatePickerInput
 │   ├── Modal/                   All modal dialogs
 │   │   ├── DocumentModal/       NewFileModal, NewFolderModal, FolderFileModal,
 │   │   │                        DocumentViewer, SelectFromMyDocumentsModal
@@ -155,32 +158,52 @@ src/
 │   │   └── SuccessModal.jsx     Dynamic success feedback with SVG animation
 │   ├── NotificationSettings/    Notification preference toggles
 │   ├── Table/                   ReusableTable with tabs, pagination, search
+│   ├── Cards/                   Dashboard cards (overview, authorization)
+│   ├── Button/                  Button with an automatic in-flight busy state
+│   ├── Alert/                   Inline alert banners
+│   ├── FileUpload/              Drag-and-drop upload and the document viewer
+│   ├── Svgs/                    Inline illustrations (empty states)
+│   ├── AllRoutes.jsx            Route table with lazy-loaded pages
+│   ├── ConnectionStatus/        Socket connection badge
+│   ├── ErrorFallback.jsx        Inline fallback for a failed section fetch
+│   ├── FullPageLoader.jsx       Branded route-level Suspense fallback
+│   ├── NotFound.jsx             Catch-all 404
+│   ├── SectionLoader.jsx        Section-level loading ring
 │   └── ProtectedRoute.jsx       Auth guard for routes
 │
 ├── Data/                        Centralized static data
 │   ├── selectOptions.js         Navigation config, MIME map, file colors,
 │   │                            avatar default, image type validation
-│   └── notificationConfig.js    TYPE_LABEL mapping, TYPE_ORDER array,
+│   └── notificationConfig.js    NOTIFICATION_ENTITY_TYPE, the deep-link map
+│                                behind getNotificationAction, and the
 │                                notification preference items (13 toggles)
 │
 ├── Helper/                      Utility modules
 │   ├── AxiosInterceptor.jsx     Token refresh with request queuing (30s timeout),
 │   │                            device fingerprint header injection
 │   ├── ErrorBoundary.jsx        React error boundary with "Refresh Page" button
-│   ├── Formatters.js            Centralized date/time formatters (7 exports):
-│   │                            formatDate, formatDateShort, formatDateTime,
+│   ├── Formatters.js            Centralized date/time formatters (6 exports):
+│   │                            formatDate, formatDateShort,
 │   │                            formatTimeFromDate, formatTime, formatDateHeader,
 │   │                            formatMsgTime
 │   ├── ShowToast.jsx            Toast notification utility with deduplication
 │   ├── getSubdomain.jsx         Tenant subdomain extraction from hostname
-│   └── fingerprint.js           Device fingerprint UUID for session tracking
+│   ├── fingerprint.js           Device fingerprint UUID for session tracking
+│   ├── formErrors.js            Field-level error extraction for forms
+│   ├── passwordValidation.js    Yup password + confirm-password schemas
+│   ├── omitEmpty.js             Strips empty fields before a PATCH
+│   └── storeRef.js              Lazy store/persistor refs, so non-React
+│                                modules can dispatch without a cycle
 │
 ├── hooks/                       Custom React hooks
 │   ├── useAuth.js               Auth state (clientId, tenantClientId, tenantId,
 │   │                            accessToken, refreshToken)
 │   ├── useIdleTimeout.js        30-min idle auto-logout with event cleanup
 │   ├── useNotificationSettings.jsx  Notification preferences CRUD with API sync
-│   └── useSocket.js             Socket.IO connection lifecycle with event handlers
+│   ├── useSocket.js             Socket.IO connection lifecycle with event handlers
+│   ├── useDocumentViewer.jsx    Shared document preview/download context
+│   ├── usePageTitle.js          Per-route document title
+│   └── usePersistedTab.js       Remembers the active tab across reloads
 │
 ├── layouts/                     Application shell
 │   ├── ClientLayout.jsx         Bottom navigation (mobile), sidebar (desktop),
@@ -205,20 +228,23 @@ src/
 │
 ├── ReduxStore/                  Redux Toolkit state management
 │   ├── features/
-│   │   └── authentication.js    Client auth state with token migration support
+│   │   ├── authentication.js    Client auth state with token migration support
+│   │   ├── formBuilderSlice.js  Shared-form structure as rendered
+│   │   ├── formResponseSlice.js In-progress answers to a shared form
+│   │   └── tenantSlice.js       Subdomain state
 │   ├── rootReducer.js
-│   └── store.js                 Store with redux-persist (v1.0.0),
-│                                whitelisted slices: auth, formBuilder, formResponse
+│   └── store.js                 Store with redux-persist under the namespaced
+│                                key `client-root`, APP_VERSION 1.0.0
 │
-├── test/                        Unit tests (Vitest + RTL)
-│   ├── AuthorizationCard.test.jsx
-│   ├── OverviewCard.test.jsx
-│   ├── ReusableTable.test.jsx
-│   ├── SuccessModal.test.jsx
-│   └── ...
-│
-└── utils/                       (reserved for future utilities)
+└── test/                        Unit tests (Vitest + RTL)
+    ├── AuthorizationCard.test.jsx
+    ├── OverviewCard.test.jsx
+    ├── ReusableTable.test.jsx
+    ├── SuccessModal.test.jsx
+    └── ...
 ```
+
+There is no `src/utils/` in this module; the CSV/PDF/print export helpers that tenant and control keep there do not exist here.
 
 ## Environment Variables
 
@@ -233,12 +259,26 @@ The Socket.IO connection URL is automatically derived from the API URL origin.
 ## Scripts
 
 ```bash
-npm install       # Install dependencies
-npm run dev       # Start dev server at http://localhost:5175/client/
-npm run build     # Production build (output: dist/)
-npm run preview   # Preview production build locally
-npm test          # Run unit tests with Vitest
+npm install         # Install dependencies
+npm run dev         # Start dev server at http://localhost:5175/client/
+npm run build       # Production build (output: dist/)
+npm run preview     # Preview production build locally
+npm run lint        # ESLint
+npm test            # Run the suite once
+npm run test:watch  # Watch mode
 ```
+
+There is no `test:coverage` script in this module — run `npx vitest run --coverage` for a coverage report.
+
+The dev server port is not pinned; Vite starts at 5173 and takes the next free port, so 5175 is only what you get when tenant and control are already running.
+
+## Testing
+
+Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npx vitest run --coverage` for a coverage report.
+
+Branch coverage sits at **98.36%** across 847 tests. There is no `coverage` block in `vitest.config.js`, so only files a test imports are counted — importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it. The branches that remain uncovered are unreachable by construction.
+
+Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 
 ## Authentication
 

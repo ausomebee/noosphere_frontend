@@ -8,6 +8,7 @@ The Tenant Portal is the primary application for ABA (Applied Behavior Analysis)
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
 - [Scripts](#scripts)
+- [Testing](#testing)
 - [Authentication and Authorization](#authentication-and-authorization)
 - [Tenant Format Settings](#tenant-format-settings)
 - [Key Modules in Detail](#key-modules-in-detail)
@@ -133,9 +134,14 @@ src/
 │   ├── notificationApi.js       Notification fetch, read, settings
 │   ├── organisationApis.js      Staff, teams, pipeline
 │   ├── organisationStaffApis.js Staff CRUD, documents, licenses
-│   ├── payrollApis.js           Payroll cycles, income, deductions
-│   ├── programLibraryApis.js    Programs, targets, session data
+│   ├── payrollApi.js            Payroll cycles, income, deductions
+│   ├── ProgramLibraryApis.js    Programs, targets, session data
 │   ├── roleApi.js               Roles, permissions, module access
+│   ├── chatApi.js               Chat threads and history
+│   ├── helpAndSupportApi.js     Support requests and their detail views
+│   ├── reportsApi.js            Cancelled/rescheduled reports, audit logs
+│   ├── TemplateAndReportApi.js  Clinical report templates and reports
+│   ├── ImageUpload.js           File upload utility
 │   ├── socketService.js         Socket.IO connection and event handlers
 │   └── TenantApis.js            Tenant info, service types
 │
@@ -146,20 +152,29 @@ src/
 │   ├── CalendarScheduler/       Day, Week, Month views with event rendering
 │   ├── FileUpload/              Drag-and-drop file upload with progress
 │   ├── Input/                   TextInput, SelectInput, CheckboxInput,
-│   │                            SwitchInput, RadioInput, TimeInput,
+│   │                            SwitchInput, RadioInput,
 │   │                            RichTextEditor, ReportBuilderInputs
 │   ├── JiraBoard/               Kanban board with drag-and-drop columns
 │   ├── LoadingSpinner.jsx       Full-page and inline loading indicators
 │   ├── ManageColumn/            Column configuration and filtering
 │   ├── MessageModal/            Real-time chat modal
 │   ├── ProtectedRoute.jsx       Auth guard for routes
+│   ├── AccessDenied/            Shown when a role lacks a module
+│   ├── Alert/                   Inline alert banners
+│   ├── Allroutes.jsx            Route table with lazy-loaded pages
+│   ├── ColorPicker.jsx          Stage/appointment colour picker
+│   ├── ConnectionStatus/        Socket connection badge
+│   ├── ErrorFallback.jsx        Inline fallback for a failed section fetch
+│   ├── FullPageLoader.jsx       Branded route-level Suspense fallback
+│   ├── NotFound.jsx             Catch-all 404
+│   ├── SectionLoader.jsx        Section-level loading ring
+│   ├── SignatureCapture/        Draw, type, or upload a signature
 │   ├── ReusableModal/           All modal dialogs organized by domain:
 │   │   ├── BillingAndPaymentModal/
 │   │   ├── ClientModal/
 │   │   ├── DataCollectionModal/
 │   │   ├── OrganizationModal/
 │   │   ├── PayrollModal/
-│   │   ├── PricingModal.jsx
 │   │   ├── ProgramLibraryModal/
 │   │   ├── SchedulerModal/
 │   │   └── ReusableModal.jsx    Base modal wrapper
@@ -170,24 +185,43 @@ src/
 ├── Data/                        Centralized static data constants
 │   ├── selectOptions.js         All dropdown/select option arrays
 │   ├── permissionsConfig.js     Role permission structure (11 modules)
-│   ├── mockData.js              Development mock data
+│   ├── notificationConfig.js    Notification type labels, ordering, and the
+│   │                            deep-link map used by the notification centre
 │   └── schemas.js               Shared Yup validation schemas
 │
 ├── Helper/                      Utility modules
 │   ├── AxiosInterceptor.jsx     Axios with token refresh queue (30s timeout)
 │   ├── ErrorBoundary.jsx        React error boundary with fallback UI
-│   ├── Formatters.js            20+ formatting functions (date, time,
+│   ├── Formatters.js            23 formatting functions (date, time,
 │   │                            currency, duration, file size, labels)
 │   ├── ShowToast.jsx            Toast notification utility (react-toastify)
-│   └── getSubdomain.jsx         Tenant subdomain extraction with validation
+│   ├── getSubdomain.jsx         Tenant subdomain extraction with validation
+│   ├── errorMessages.js         Fallback copy keyed by failure type
+│   ├── formErrors.js            Field-level error extraction for forms
+│   ├── passwordValidation.js    Yup password + confirm-password schemas
+│   ├── accountAccessMessage.jsx Copy for suspended/expired account states
+│   ├── colorContrast.js         Keeps label text legible on a chosen colour
+│   ├── geoOptions.js            Country/region option data
+│   ├── omitEmpty.js             Strips empty fields before a PATCH
+│   ├── payerServiceCode.js      Payer/service-code rate and modifier lookup
+│   └── storeRef.js              Lazy store/persistor refs, so non-React
+│                                modules can dispatch without a cycle
 │
 ├── hooks/                       Custom React hooks
 │   ├── useAuth.js               Authentication state (user, tokens, tenant)
 │   ├── useFormatSettings.js     Tenant format preferences from Redux/API
 │   ├── useIdleTimeout.js        30-min idle auto-logout with cleanup
-│   ├── usePermissions.js        Role-based permission checking
-│   ├── usePortal.jsx            DOM portal for modals/popups
-│   └── useSocket.js             Socket.IO connection lifecycle
+│   ├── usePermissions.js        Role-based permission checking, including
+│   │                            legacy-to-module-specific key aliasing
+│   ├── useSocket.js             Socket.IO connection lifecycle
+│   ├── useDocumentViewer.jsx    Shared document preview/download context
+│   ├── useFocusAppointment.js   Deep-links a notification to a calendar slot
+│   ├── usePagedList.js          Pagination state for list screens
+│   ├── usePageTitle.js          Per-route document title
+│   ├── usePersistedTab.js       Remembers the active tab across reloads
+│   ├── useReduxFormDraft.js     Auto-saving form drafts into Redux
+│   ├── useReduxStateDraft.js    Auto-saving arbitrary draft state
+│   └── modalRegistry.js         Tracks open modals so the board goes inert
 │
 ├── Layout/                      Application shell
 │   ├── DashboardLayout.css
@@ -222,6 +256,7 @@ src/
 │   │   ├── clinicalReportSlice.js
 │   │   ├── clinicalReportTemplateSlice.js
 │   │   ├── formBuilderSlice.js
+│   │   ├── formDraftsSlice.js   Auto-saved form drafts, keyed per form
 │   │   ├── roleDraftSlice.js
 │   │   └── tenantSlice.js       Subdomain state
 │   ├── rootReducer.js           Combined reducers
@@ -232,6 +267,7 @@ src/
 └── utils/
     ├── expand.js                Appointment recurrence expansion
     ├── expandForAppointments.js Wrapper for date range expansion
+    ├── appointmentDisplay.js    Shared appointment label/colour derivation
     └── TableUtils.jsx           CSV, PDF, and print export utilities
 ```
 
@@ -246,12 +282,25 @@ VITE_API_URL=https://your-api-url.com/api/v1
 ## Scripts
 
 ```bash
-npm install       # Install dependencies
-npm run dev       # Start dev server at http://localhost:5173/tenant/
-npm run build     # Production build (output: dist/)
-npm run preview   # Preview production build locally
-npm test          # Run unit tests with Vitest
+npm install            # Install dependencies
+npm run dev            # Start dev server at http://localhost:5173/tenant/
+npm run build          # Production build (output: dist/)
+npm run preview        # Preview production build locally
+npm run lint           # ESLint
+npm test               # Run the suite once
+npm run test:watch     # Watch mode
+npm run test:coverage  # Single run with a coverage report
 ```
+
+The dev server port is not pinned; Vite starts at 5173 and takes the next free port if something already holds it.
+
+## Testing
+
+Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npm run test:coverage` for a coverage report.
+
+Branch coverage sits at **98.40%** across 1064 tests. There is no `coverage` block in `vitest.config.js`, so only files a test imports are counted — importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it. The branches that remain uncovered are unreachable by construction.
+
+Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 
 ## Authentication and Authorization
 
@@ -311,7 +360,7 @@ Appointments support recurrence patterns: daily, weekly (with day selection), an
 
 ### Data Collection
 
-Six specialized modals for ABA session data recording:
+Seven specialized modals for ABA session data recording, one per data type:
 
 - **FrequencyModal** — simple event counter with increment/decrement
 - **RateModal** — events per time unit with built-in timer
@@ -375,7 +424,7 @@ The `AxiosInterceptor` provides:
 
 ## State Management
 
-Redux Toolkit with 11 slices:
+Redux Toolkit with 12 slices:
 
 | Slice | Purpose |
 | --- | --- |
@@ -389,9 +438,10 @@ Redux Toolkit with 11 slices:
 | `clinicalReportTemplate` | Template builder state |
 | `formBuilder` | Custom form builder state |
 | `roleDraft` | Role/permissions creation draft |
+| `formDrafts` | Auto-saved form drafts, keyed per form |
 | `subDomain` | Tenant subdomain |
 
-All slices are persisted via `redux-persist` to survive page reloads. On logout, `persistor.purge()` clears all persisted data.
+All slices are persisted via `redux-persist` under the namespaced key `tenant-root`, so the tenant store cannot collide with the control or client stores when they are served from the same origin. `APP_VERSION` is `0.0.0`; the migration wipes persisted state whenever that string changes, and distinguishes a cold cache from a genuine version mismatch so a first-time visitor is not treated as an upgrade. On logout, `persistor.purge()` clears everything.
 
 ## Real-time Features
 

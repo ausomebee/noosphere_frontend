@@ -1,5 +1,25 @@
 # Backend WebSocket & Chat/Notification Implementation Guide
 
+> **Status: original proposal, superseded in places.** This document was written to
+> specify the backend socket layer before it was built. The implementation that
+> shipped diverges from it, so treat the code blocks below as background rather
+> than as the current contract. The event names the frontend actually uses are in
+> `src/api/socketService.js`; the table below is the authoritative summary.
+>
+> | Event | Direction | Notes |
+> | --- | --- | --- |
+> | `register` | client -> server | Sent on connect with the user and tenant ids. The guide below assumes a JWT handshake instead. |
+> | `chatMessage` | both | As described below. |
+> | `createConversation` | client -> server | Replaces the guide's `joinConversation` / `leaveConversation` pair. |
+> | `typing` | both | As described below. |
+> | `messagesRead` | both | Replaces the guide's `markAsRead`. |
+> | `newNotification` | server -> client | The guide calls this `notification`. |
+> | `notificationRead` | both | As described below. |
+> | `userOnline` / `userOffline` | server -> client | As described below. |
+>
+> The guide's `newMessageNotification` and `error` events are not used by any of
+> the three frontends.
+
 ## Current State
 
 You have a basic `SocketService` class. Below is the **complete upgraded version** with all the socket events needed for **Chat** and **Notifications**, plus the **REST endpoints** and **database schemas** required.

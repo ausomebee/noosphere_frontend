@@ -34,9 +34,11 @@ Each application is a fully standalone Vite + React 19 project with its own `pac
 
 The applications are deployed to separate subpaths:
 
-- `/tenant/` — Tenant Portal (accessed by clinic staff via `{subdomain}.noosphere.com/tenant/`)
-- `/control/` — Control Panel (accessed by platform super admins via `app.noosphere.com/control/`)
-- `/client/` — Client Portal (accessed by patients/caregivers via `{subdomain}.noosphere.com/client/`)
+- `/tenant/` — Tenant Portal (accessed by clinic staff via `{subdomain}.nooshere.org/tenant/`)
+- `/control/` — Control Panel (accessed by platform super admins via `nooshere.org/control/`)
+- `/client/` — Client Portal (accessed by patients/caregivers via `{subdomain}.nooshere.org/client/`)
+
+The root domain is `nooshere.org`; it is hard-coded in `Helper/getSubdomain.jsx` in the tenant and client modules, which treat `nooshere.org` and `www.nooshere.org` as "no tenant".
 
 ## Module Descriptions
 
@@ -79,7 +81,7 @@ The patient/caregiver-facing application. Provides clients with access to their 
 
 ### Prerequisites
 
-- **Node.js** 18.0 or higher
+- **Node.js** 20 (the version CI builds and tests with; no `engines` field is declared, so anything ≥18 will likely work, but 20 is what is verified)
 - **npm** 9.0 or higher
 - Access to the Noosphere backend API (running and accessible)
 
@@ -113,13 +115,15 @@ cd control && npm run dev
 cd client && npm run dev
 ```
 
-Default development URLs:
+Each module sets a Vite `base`, so the dev server serves it from a subpath:
 
-| Module | URL |
-| --- | --- |
-| Tenant | `http://localhost:5173/tenant/` |
-| Control | `http://localhost:5174/control/` |
-| Client | `http://localhost:5175/client/` |
+| Module | Vite `base` | URL |
+| --- | --- | --- |
+| Tenant | `/tenant/` | `http://localhost:5173/tenant/` |
+| Control | `/control/` | `http://localhost:5174/control/` |
+| Client | `/client/` | `http://localhost:5175/client/` |
+
+No module pins a `server.port`, so Vite starts at 5173 and takes the next free port for each one after it. The ports above are what you get when you start them in the order shown; start them in a different order and the numbers move.
 
 ## Environment Configuration
 
@@ -161,9 +165,16 @@ Vite automatically loads the appropriate file based on the `--mode` flag.
 
 ### Branch Strategy
 
-- `master` — production-ready code
-- `feature/*` — feature branches for new development
-- Always create pull requests for code review before merging
+Three long-lived branches, each wired to an environment by `.github/workflows/deploy-frontend.yml`:
+
+| Branch | Environment | Deploys on |
+| --- | --- | --- |
+| `develop` | development | every push |
+| `pre-prod` | preprod | every push |
+| `master` | production | every push |
+
+- `feature/*` — feature branches, merged into `develop`
+- **There is no pull-request gate.** A push to any of the three branches builds, tests, and deploys straight to that environment, so run the tests and a build locally before pushing.
 
 ### Code Conventions
 
@@ -197,43 +208,51 @@ Each module outputs to its own `dist/` directory.
 
 ### Build Optimization
 
-All three modules use Vite with manual chunk splitting to optimize caching:
+All three modules use Vite with manual chunk splitting to optimize caching. Not every module declares every chunk — the "Where" column says which do:
 
-| Chunk | Contents | Caching Benefit |
+| Chunk | Contents | Where |
 | --- | --- | --- |
-| `vendor-react` | React, ReactDOM, React Router | Changes rarely; cached long-term |
-| `vendor-redux` | Redux Toolkit, React Redux, redux-persist | Changes rarely |
-| `vendor-charts` | ApexCharts, react-apexcharts | ~577KB; isolated for lazy loading |
-| `vendor-pdf` | jsPDF, html2canvas | Only loaded when exporting PDFs |
-| `vendor-forms` | React Hook Form, Yup | Form infrastructure |
-| `vendor-ui` | React Select, React Toastify, React Icons | UI component libraries |
-| `vendor-payments` | Stripe.js, PayPal SDK | Only in control/client modules |
-| `vendor-dnd` | @dnd-kit | Only in control/tenant (Kanban boards) |
+| `vendor-react` | React, ReactDOM, React Router | All three; changes rarely, so it caches long-term |
+| `vendor-redux` | Redux Toolkit, React Redux, redux-persist | All three |
+| `vendor-charts` | ApexCharts, react-apexcharts | All three; ~577KB, isolated so it loads lazily |
+| `vendor-pdf` | jsPDF, html2canvas | All three; ~592KB, only fetched when exporting |
+| `vendor-forms` | React Hook Form, Yup | All three |
+| `vendor-ui` | React Select, React Toastify, React Icons | All three |
+| `vendor-payments` | Stripe.js, PayPal SDK | Only in control and client |
+| `vendor-dnd` | @dnd-kit | **Only in control.** Tenant depends on @dnd-kit for its Kanban board but does not split it into its own chunk; client does not use it at all |
+| `vendor-geo` | country-region-data | Only in control |
 
 The client module additionally uses Terser to strip all `console` statements and `debugger` calls in production builds.
 
 ### Deployment
 
-The three modules are deployed as static files to separate subpaths on your web server or CDN:
+Deployment is automated by `.github/workflows/deploy-frontend.yml`. A push to `develop`, `pre-prod`, or `master` runs a single job on Node 20 that:
+
+1. Picks the target host and SSH key from the branch (`DEV_`/`PREPROD_`/`PROD_EC2_HOST_FRONTEND` secrets)
+2. For each of client, control, and tenant in turn: `npm ci`, `npm test`, `npm run build`, with that environment's `VITE_*` secrets injected as build-time env
+3. SSHes to the EC2 box, recreates and empties `/var/www/{client,control,tenant}`
+4. SCPs each `dist/` into its directory (`strip_components: 2`)
+5. Rewrites `/etc/nginx/conf.d/frontend.conf` to (re)insert a `location = /` liveness probe returning `200 OK`, runs `nginx -t`, and reloads nginx
+
+Because step 3 empties the target directories before the uploads, a run that fails partway through step 4 leaves that environment serving nothing until the next successful deploy. A run that fails *before* step 3 — an SSH timeout, say — changes nothing on the box.
+
+The resulting layout on the server is:
 
 ```text
-/tenant/   -> tenant/dist/
-/control/  -> control/dist/
-/client/   -> client/dist/
+/var/www/tenant/   <- tenant/dist/
+/var/www/control/  <- control/dist/
+/var/www/client/   <- client/dist/
 ```
 
-Your web server (Nginx, Apache, CloudFront, etc.) must be configured to:
-1. Serve each module from its respective subpath
-2. Handle client-side routing by falling back to `index.html` for all routes within each subpath
-3. Set appropriate cache headers for vendor chunks (long-term caching)
+nginx serves each module from its matching subpath and falls back to that module's `index.html` for client-side routes.
 
 ## Multi-Tenant Architecture
 
 Noosphere uses **subdomain-based tenant isolation**:
 
-- `acme.noosphere.com/tenant/` — ACME Corp's tenant portal
-- `acme.noosphere.com/client/` — ACME Corp's client portal
-- `app.noosphere.com/control/` — Super admin control panel (no subdomain)
+- `acme.nooshere.org/tenant/` — ACME Corp's tenant portal
+- `acme.nooshere.org/client/` — ACME Corp's client portal
+- `nooshere.org/control/` — Super admin control panel (no subdomain; the control module has no `getSubdomain` at all)
 
 ### How It Works
 
@@ -263,7 +282,7 @@ Although the three modules are independent applications, they follow identical a
 | **Idle Timeout** | `hooks/useIdleTimeout.js` | Automatically logs out the user after 30 minutes of inactivity. Listens for mousemove, keydown, click, scroll, and touchstart events. Cleans up timers and event listeners on unmount. |
 | **Protected Routes** | `Components/ProtectedRoute.jsx` | Redirects unauthenticated users to the login page. |
 | **Select Options** | `Data/selectOptions.js` | Single source of truth for all dropdown/select option arrays. |
-| **Redux Store** | `ReduxStore/store.js` | Redux Toolkit with redux-persist for state persistence across page reloads. Version-controlled migration support. |
+| **Redux Store** | `ReduxStore/store.js` | Redux Toolkit with redux-persist for state persistence across page reloads. Each module writes to its own namespaced key (`control-root`, `tenant-root`, `client-root`) so the three never collide when served from the same origin. A version-controlled migration wipes persisted state when `APP_VERSION` changes; the three versions are set independently (control `0.1.0`, tenant `0.0.0`, client `1.0.0`). |
 
 ## Security
 
@@ -302,27 +321,60 @@ Although the three modules are independent applications, they follow identical a
 
 ## Testing
 
-Each module uses Vitest with React Testing Library:
+Each module uses Vitest with React Testing Library. Test files live in `src/test/` within each module.
 
 ```bash
-# Run tests for a specific module
-cd tenant && npm test
-cd control && npm test
-cd client && npm test
+# Run the suite once
+cd tenant  && npm test
+cd client  && npm test
+cd control && npx vitest run
 
-# Run tests in watch mode
-cd tenant && npx vitest --watch
+# Watch mode
+cd tenant  && npm run test:watch
+cd client  && npm run test:watch
+cd control && npm test
+
+# With a coverage report
+cd tenant  && npm run test:coverage
+cd control && npm run test:coverage
+cd client  && npx vitest run --coverage
 ```
 
-Test files are located in `src/test/` within each module.
+The scripts are not identical across the three modules, which is worth knowing before you wire anything to them:
+
+| Module | `npm test` | `test:watch` | `test:coverage` |
+| --- | --- | --- | --- |
+| tenant | `vitest run` (single run) | yes | yes |
+| client | `vitest run` (single run) | yes | no — use `npx vitest run --coverage` |
+| control | `vitest` (**watch mode** in a TTY) | no — `test:run` instead | yes |
+
+Control's `npm test` starts a watcher when you run it locally. It still behaves as a single run in CI, because Vitest falls back to run mode when there is no TTY.
+
+### Coverage
+
+All three modules sit at or above 98% branch coverage:
+
+| Module | Branches | Tests |
+| --- | --- | --- |
+| control | 98.10% | 568 |
+| tenant | 98.40% | 1064 |
+| client | 98.36% | 847 |
+
+None of the modules configures a `coverage` block in `vitest.config.js`, so **only files a test imports are counted**. Importing a previously untested file grows the denominator, which means adding a test can lower the reported percentage before it raises it.
+
+The remaining uncovered branches are unreachable by construction — `import.meta.env.DEV` false arms, guards behind a DOM-disabled button, and fallback messages on errors that always carry a message.
+
+### Manual QA
+
+Each module also carries a manual test plan at `<module>/QA_TEST_PLAN.md`, with an appendix mapping every source file to the cases that cover it.
 
 ## Contributing
 
-1. Create a feature branch from `master`: `git checkout -b feature/your-feature`
+1. Create a feature branch from `develop`: `git checkout -b feature/your-feature`
 2. Make your changes following the conventions documented above
-3. Ensure all three modules build successfully: `npm run build` in each
-4. Run tests: `npm test` in each module
-5. Create a pull request with a clear description of changes
+3. Run lint, tests, and a build in each module you touched — `npx eslint .`, `npx vitest run`, `npx vite build`
+4. Merge into `develop`. Remember that the push itself deploys to the development environment; there is no pull-request gate to catch a mistake first
+5. Promote `develop` -> `pre-prod` -> `master` once each environment looks right
 
 ### Key Rules
 

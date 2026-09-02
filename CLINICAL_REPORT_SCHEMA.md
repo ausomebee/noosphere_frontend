@@ -251,7 +251,7 @@ any number, including none (`[]`).
       "order": 4
     },
     {
-      "section": "Monitoring Data",
+      "section": "Monitoring & Data Collection",
       "content": {
         "dataCollectionOverview": "rbt",
         "behaviorsTargetsMonitored": "Sample behaviors targets monitored 1",
@@ -292,7 +292,7 @@ any number, including none (`[]`).
       "order": 6
     },
     {
-      "section": "Crisis & Safety",
+      "section": "Crisis & Safety Plan",
       "content": [
         {
           "id": "Sample id 1",
@@ -348,7 +348,7 @@ any number, including none (`[]`).
       "order": 7
     },
     {
-      "section": "Generalization",
+      "section": "Generalization & Maintenance",
       "content": {
         "targetBehaviors": [
           "item-one",
@@ -464,12 +464,12 @@ rest are single objects.
 | `behaviourStrategies` | Behaviour Strategies | **array of objects** |
 | `clientInformation` | Client Information | object |
 | `consentSignatures` | Consent & Signatures | object |
-| `crisisSafety` | Crisis & Safety | **array of objects** |
+| `crisisSafety` | Crisis & Safety Plan | **array of objects** |
 | `discharge` | Discharge | object |
-| `generalization` | Generalization | object |
+| `generalization` | Generalization & Maintenance | object |
 | `goalsTargets` | Goals & Targets | object |
 | `implementationNotes` | Implementation Notes | object |
-| `monitoringData` | Monitoring Data | object |
+| `monitoringData` | Monitoring & Data Collection | object |
 | `review` | Review | object |
 | `targetBehaviours` | Target Behaviours | **array of objects** |
 
@@ -587,7 +587,7 @@ Nested repeatable entry (each element of the array inside this section):
 - *Relationship* — `self`, `parent`, `legal-guardian`, `caregiver`, `foster-parent`, `authorized-rep`, `other`
 - *Clinician  Role* — `bcba`, `assistant-bcba`, `clinical-supervisor`, `other-clinician`
 
-## Crisis & Safety
+## Crisis & Safety Plan
 
 `sectionData.crisisSafety` — **array of objects**, one per entry
 
@@ -644,7 +644,7 @@ Nested repeatable entry (each element of the array inside this section):
 | `supportingDocuments` | Supporting Documents | string | no |
 | `reviewNotes` | Review Notes | string (rich text / HTML) | no |
 
-## Generalization
+## Generalization & Maintenance
 
 `sectionData.generalization` — object
 
