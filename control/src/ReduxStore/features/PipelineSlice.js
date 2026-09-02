@@ -942,14 +942,10 @@ export const {
   deleteColumn,
 } = pipelineSlice.actions;
 
-export const selectPipeline = (state) => state.pipeline.pipeline;
 export const selectColumns = (state) => state.pipeline.columns;
-export const selectColumnOrder = (state) => state.pipeline.columnOrder;
 export const selectDraft = (state) => state.pipeline.draft;
-export const selectStaffList = (state) => state.pipeline.staffList;
 export const selectStages = (state) => state.pipeline.stages;
 export const selectStatus = (state) => state.pipeline.status;
-export const selectError = (state) => state.pipeline.error;
 export const selectPipelineItem = (state) => state.pipeline.pipelineItem;
 
 export default pipelineSlice.reducer;

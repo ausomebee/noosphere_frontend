@@ -629,7 +629,6 @@ export const selectSectionData = (s) =>
   s.clinicalReport?.sectionData || initialState.sectionData;
 export const selectExistingSectionIds = (s) =>
   s.clinicalReport?.existingSectionIds || {};
-export const selectMode = (s) => s.clinicalReport?.mode || "new";
 export const selectReportId = (s) => s.clinicalReport?.reportId;
 export const selectActionMenuOpen = (s) => s.clinicalReport?.actionMenuOpen;
 export const selectActiveDragId = (s) => s.clinicalReport?.activeDragId;

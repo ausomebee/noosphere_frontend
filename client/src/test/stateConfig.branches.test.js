@@ -21,8 +21,6 @@ import reducer, {
 import {
   getNotificationAction,
   NOTIFICATION_ENTITY_TYPE,
-  TYPE_LABEL,
-  TYPE_ORDER,
   notificationItems,
 } from "../Data/notificationConfig";
 
@@ -285,12 +283,6 @@ describe("notificationConfig action resolution", () => {
     }
     expect(NOTIFICATION_ENTITY_TYPE.DOCUMENT).toBeUndefined();
     expect(NOTIFICATION_ENTITY_TYPE.REPORT).toBeUndefined();
-  });
-
-  it("gives every ordered type a label", () => {
-    for (const type of TYPE_ORDER) {
-      expect(TYPE_LABEL[type]).toBeTruthy();
-    }
   });
 
   it("exposes the preference items the settings screen renders", () => {

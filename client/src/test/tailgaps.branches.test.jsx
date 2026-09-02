@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import ReusableModal from "../Components/Modal/ReusableModal";
 import ReusableTable from "../Components/Table/ReuseableTable";
 import AuthorizationCard from "../Components/Cards/Dashboard/Authorization/AuthorizationCard";
-import { SearchableSelectInput, TimeInput } from "../Components/Input/Inputs";
+import { SearchableSelectInput } from "../Components/Input/Inputs";
 
 /**
  * The last reachable arms in the client app: the modal's backwards focus wrap,
@@ -121,50 +121,3 @@ describe("SearchableSelectInput empty hint", () => {
   });
 });
 
-describe("TimeInput", () => {
-  it("renders with no value prop without re-rendering itself forever", () => {
-    // Regression guard: the destructured default used to be an inline object
-    // literal, which gave `value` a fresh identity every render and made the
-    // [value] effect loop.
-    const onChange = vi.fn();
-    const { container } = render(<TimeInput onChange={onChange} />);
-    expect(container.querySelectorAll("input")).toHaveLength(3);
-    expect(screen.getByText("00:00:00")).toBeInTheDocument();
-  });
-
-  it("clamps hours to 23 and minutes and seconds to 59", () => {
-    const onChange = vi.fn();
-    const { container } = render(<TimeInput onChange={onChange} />);
-    const [h, m, s] = container.querySelectorAll("input");
-    fireEvent.change(h, { target: { value: "99" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 23 }));
-    fireEvent.change(m, { target: { value: "99" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ minutes: 59 }));
-    fireEvent.change(s, { target: { value: "99" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ seconds: 59 }));
-  });
-
-  it("floors a negative or unparseable entry to zero", () => {
-    const onChange = vi.fn();
-    const { container } = render(<TimeInput onChange={onChange} />);
-    const [h] = container.querySelectorAll("input");
-    fireEvent.change(h, { target: { value: "-5" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 0 }));
-    fireEvent.change(h, { target: { value: "abc" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 0 }));
-  });
-
-  it("follows the value prop when the parent changes it, zero-padded", () => {
-    const { rerender } = render(
-      <TimeInput value={{ hours: 1, minutes: 2, seconds: 3 }} onChange={noop} />
-    );
-    expect(screen.getByText("01:02:03")).toBeInTheDocument();
-    rerender(<TimeInput value={{ hours: 5, minutes: 6, seconds: 7 }} onChange={noop} />);
-    expect(screen.getByText("05:06:07")).toBeInTheDocument();
-  });
-
-  it("renders disabled when asked", () => {
-    const { container } = render(<TimeInput onChange={noop} disabled />);
-    expect(container.querySelectorAll("input")[0]).toBeDisabled();
-  });
-});

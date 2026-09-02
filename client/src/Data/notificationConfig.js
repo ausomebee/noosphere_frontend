@@ -24,48 +24,6 @@ export const NOTIFICATION_ENTITY_TYPE = Object.freeze({
 });
 
 // ---------------------------------------------------------------------------
-// Notification type → section header label
-// ---------------------------------------------------------------------------
-export const TYPE_LABEL = {
-  APPOINTMENT_SCHEDULED:                   "NEW APPOINTMENT",
-  APPOINTMENT_ABOUT_TO_START:              "UPCOMING APPOINTMENT",
-  APPOINTMENT_RESCHEDULED:                 "RESCHEDULED APPOINTMENT",
-  APPOINTMENT_STARTED:                     "APPOINTMENT START",
-  APPOINTMENT_CANCELLED:                   "CANCELLED APPOINTMENTS",
-  APPOINTMENT_COMPLETED_AWAITING_FEEDBACK: "COMPLETED APPOINTMENT AWAITING FEEDBACK",
-  DOCUMENT_REQUESTED:                      "DOCUMENT REQUEST",
-  DOCUMENT_REQUEST_NUDGE:                  "DOCUMENT REQUEST NUDGE",
-  FORM_SHARED:                             "FORM REQUEST",
-  AUTHORIZATION_EXPIRY_30_DAYS:            "AUTHORIZATION EXPIRY - 30 DAYS",
-  AUTHORIZATION_EXPIRY_7_DAYS:             "AUTHORIZATION EXPIRY - 7 DAYS",
-  AUTHORIZATION_EXPIRED:                   "AUTHORIZATION EXPIRED",
-  AUTHORIZATION_UNITS_ALMOST_EXHAUSTED:    "AUTHORIZATION UTILIZATION",
-  AUTHORIZATION_UNITS_EXHAUSTED:           "AUTHORIZATION UTILIZATION",
-  SIGNATURE_REQUESTED:                     "CLIENT REPORT SIGNATURE REQUEST",
-};
-
-// ---------------------------------------------------------------------------
-// Display order for notification type sections
-// ---------------------------------------------------------------------------
-export const TYPE_ORDER = [
-  "APPOINTMENT_SCHEDULED",
-  "APPOINTMENT_ABOUT_TO_START",
-  "APPOINTMENT_RESCHEDULED",
-  "APPOINTMENT_STARTED",
-  "APPOINTMENT_CANCELLED",
-  "APPOINTMENT_COMPLETED_AWAITING_FEEDBACK",
-  "DOCUMENT_REQUESTED",
-  "DOCUMENT_REQUEST_NUDGE",
-  "FORM_SHARED",
-  "AUTHORIZATION_EXPIRY_30_DAYS",
-  "AUTHORIZATION_EXPIRY_7_DAYS",
-  "AUTHORIZATION_EXPIRED",
-  "AUTHORIZATION_UNITS_ALMOST_EXHAUSTED",
-  "AUTHORIZATION_UNITS_EXHAUSTED",
-  "SIGNATURE_REQUESTED",
-];
-
-// ---------------------------------------------------------------------------
 // Action mapping: notification type → { label, path, state } (or null).
 // The backend attaches `entityId` (id of the related record); it deep-links the
 // single-param routes and is carried in nav state for state-driven pages.

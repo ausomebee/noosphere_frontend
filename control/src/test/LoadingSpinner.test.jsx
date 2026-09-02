@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import LoadingSpinner, {
-  SectionSpinner,
   Skeleton,
   SkeletonText,
-  SkeletonCard,
   SkeletonTable,
 } from '../Components/LoadingSpinner';
 
@@ -13,13 +11,6 @@ describe('LoadingSpinner', () => {
     const { container } = render(<LoadingSpinner />);
     expect(container.querySelector('.loading-spinner-container')).toBeInTheDocument();
     expect(container.querySelector('.loading-spinner')).toBeInTheDocument();
-  });
-});
-
-describe('SectionSpinner', () => {
-  it('renders section spinner', () => {
-    const { container } = render(<SectionSpinner />);
-    expect(container.querySelector('.section-spinner-container')).toBeInTheDocument();
   });
 });
 
@@ -61,14 +52,6 @@ describe('SkeletonText', () => {
     const { container } = render(<SkeletonText lines={3} />);
     const shimmers = container.querySelectorAll('.skeleton-shimmer');
     expect(shimmers[2]).toHaveStyle({ width: '60%' });
-  });
-});
-
-describe('SkeletonCard', () => {
-  it('renders with default dimensions', () => {
-    const { container } = render(<SkeletonCard />);
-    const el = container.querySelector('.skeleton-shimmer');
-    expect(el).toHaveStyle({ width: '100%', height: '80px', borderRadius: '8px' });
   });
 });
 

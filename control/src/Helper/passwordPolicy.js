@@ -40,4 +40,3 @@ export const buildPasswordRules = (minLength = DEFAULT_PASSWORD_MIN_LENGTH) => [
 ];
 
 /** The rules at the shared default, for callers that need no override. */
-export const PASSWORD_RULES = buildPasswordRules();

@@ -3,10 +3,8 @@ import formResponseReducer, {
   initializeResponse, setResponse, setCurrentPage, clearAllResponses,
   markAsSubmitted, setSignature, setSignatureMode, setFilesForField,
   setFileUploadStatus, clearResponseField, setLoading, setError, resetFormResponse,
-  selectFormResponse, selectResponses, selectFiles, selectSignatures,
-  selectCurrentPage, selectIsSubmitted, selectSubmissionId, selectIsLoading,
-  selectError, selectFileCount, selectHasResponse,
-} from "../ReduxStore/features/formResponseSlice";
+  selectIsLoading,
+  selectError, } from "../ReduxStore/features/formResponseSlice";
 
 const initialState = {
   formId: null, tenantId: null, submittedBy: null, responses: {}, files: {},
@@ -185,44 +183,11 @@ describe("formResponse slice", () => {
       },
     };
 
-    it("selectFormResponse returns full slice", () => {
-      expect(selectFormResponse(mockState)).toBe(mockState.formResponse);
-    });
-    it("selectResponses returns responses", () => {
-      expect(selectResponses(mockState)).toEqual({ field1: "value1" });
-    });
-    it("selectFiles returns files", () => {
-      expect(selectFiles(mockState)).toEqual({ field1: [{ name: "a.pdf" }, { name: "b.pdf" }] });
-    });
-    it("selectSignatures returns signatures", () => {
-      expect(selectSignatures(mockState)).toEqual({ field2: "sig-data" });
-    });
-    it("selectCurrentPage returns currentPage", () => {
-      expect(selectCurrentPage(mockState)).toBe(2);
-    });
-    it("selectIsSubmitted returns submitted", () => {
-      expect(selectIsSubmitted(mockState)).toBe(true);
-    });
-    it("selectSubmissionId returns submissionId", () => {
-      expect(selectSubmissionId(mockState)).toBe("sub1");
-    });
     it("selectIsLoading returns isLoading", () => {
       expect(selectIsLoading(mockState)).toBe(true);
     });
     it("selectError returns error", () => {
       expect(selectError(mockState)).toBe("Something went wrong");
-    });
-    it("selectFileCount returns file count for field", () => {
-      expect(selectFileCount(mockState, "field1")).toBe(2);
-    });
-    it("selectFileCount returns 0 for missing field", () => {
-      expect(selectFileCount(mockState, "missing")).toBe(0);
-    });
-    it("selectHasResponse returns true for existing field", () => {
-      expect(selectHasResponse(mockState, "field1")).toBe(true);
-    });
-    it("selectHasResponse returns false for missing field", () => {
-      expect(selectHasResponse(mockState, "missing")).toBe(false);
     });
   });
 

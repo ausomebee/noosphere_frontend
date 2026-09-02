@@ -28,7 +28,6 @@ import reducer, {
   selectIsSaving,
   selectSaveSuccess,
   selectError,
-  selectIsLoading,
   selectActiveSectionsWithData,
 } from "../ReduxStore/features/clinicalReportTemplateSlice";
 
@@ -210,7 +209,6 @@ describe("template selectors", () => {
     expect(selectIsSaving(empty)).toBe(false);
     expect(selectSaveSuccess(empty)).toBe(false);
     expect(selectError(empty)).toBeNull();
-    expect(selectIsLoading(empty)).toBe(false);
     expect(selectActiveSectionsWithData(empty)).toEqual([]);
   });
 

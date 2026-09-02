@@ -727,81 +727,6 @@ RadioInput.propTypes = {
   error: PropTypes.string,
 };
 
-// A stable module-level default. Inlining the literal in the destructure gave
-// `value` a fresh identity on every render, so the `[value]` effect below fired
-// forever whenever TimeInput was used without a `value` prop. React 19 ignores
-// `TimeInput.defaultProps`, which used to hide this.
-const ZERO_TIME = Object.freeze({ hours: 0, minutes: 0, seconds: 0 });
-
-const TimeInput = ({ value = ZERO_TIME, onChange, disabled = false }) => {
-  const [time, setTime] = useState(value);
-
-  useEffect(() => {
-    setTime(value);
-  }, [value]);
-
-  const handleChange = (field, val) => {
-    const newValue = Math.max(
-      0,
-      Math.min(parseInt(val) || 0, field === "hours" ? 23 : 59)
-    );
-    const newTime = { ...time, [field]: newValue };
-    setTime(newTime);
-    onChange(newTime);
-  };
-
-  const formatTime = () => {
-    return `${time.hours.toString().padStart(2, "0")}:${time.minutes
-      .toString()
-      .padStart(2, "0")}:${time.seconds.toString().padStart(2, "0")}`;
-  };
-
-  return (
-    <div className="flex items-center space-x-2">
-      <input
-        type="text"
-        value={time.hours}
-        onChange={(e) => handleChange("hours", e.target.value)}
-        min="0"
-        max="23"
-        disabled={disabled}
-        className="w-50 p-4 border rounded-md text-center"
-      />
-      <span>:</span>
-      <input
-        type="text"
-        value={time.minutes}
-        onChange={(e) => handleChange("minutes", e.target.value)}
-        min="0"
-        max="59"
-        disabled={disabled}
-        className="w-50 p-4 border rounded-md text-center"
-      />
-      <span>:</span>
-      <input
-        type="text"
-        value={time.seconds}
-        onChange={(e) => handleChange("seconds", e.target.value)}
-        min="0"
-        max="59"
-        disabled={disabled}
-        className="w-50 p-4 border rounded-md text-center"
-      />
-      <span className="ml-2 text-sm text-gray-600">{formatTime()}</span>
-    </div>
-  );
-};
-
-TimeInput.propTypes = {
-  value: PropTypes.shape({
-    hours: PropTypes.number,
-    minutes: PropTypes.number,
-    seconds: PropTypes.number,
-  }),
-  onChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool,
-};
-
 const CustomDatePickerInput = ({
   value,
   onClick,
@@ -862,6 +787,5 @@ export {
   TextareaInput,
   SearchInput,
   RadioInput,
-  TimeInput,
   CustomDatePickerInput,
 };

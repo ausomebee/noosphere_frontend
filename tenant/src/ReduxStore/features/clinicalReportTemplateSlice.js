@@ -504,11 +504,6 @@ export const selectError = createSelector(
   (slice) => slice?.error || null,
 );
 
-export const selectIsLoading = createSelector(
-  (state) => state.clinicalReportTemplate,
-  (slice) => slice?.isLoading || false,
-);
-
 export const selectActiveSectionsWithData = createSelector(
   [
     selectActiveSections,

@@ -11,7 +11,6 @@ import {
   TextareaInput,
   SearchInput,
   RadioInput,
-  TimeInput,
   CustomDatePickerInput,
   SPECIAL_CHAR_REGEX,
   PASSWORD_RULES,
@@ -406,52 +405,6 @@ describe("TextareaInput, SearchInput and RadioInput", () => {
     expect(screen.getByText("Alpha")).toBeInTheDocument();
     rerender(<RadioInput name="n" value="a" onChange={noop} />);
     expect(container.querySelector('input[type="radio"]')).toBeInTheDocument();
-  });
-});
-
-describe("TimeInput clamping", () => {
-  const fields = (container) => container.querySelectorAll("input");
-
-  it("starts from the supplied value", () => {
-    const { container } = render(
-      <TimeInput value={{ hours: 2, minutes: 30, seconds: 15 }} onChange={noop} />
-    );
-    expect(fields(container).length).toBeGreaterThanOrEqual(2);
-  });
-
-  it("defaults to zeroes when no value is given", () => {
-    expect(() => render(<TimeInput onChange={noop} />)).not.toThrow();
-  });
-
-  it("clamps hours to 23 and minutes to 59", () => {
-    const onChange = vi.fn();
-    const { container } = render(
-      <TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={onChange} />
-    );
-    const inputs = fields(container);
-    fireEvent.change(inputs[0], { target: { value: "99" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 23 }));
-    fireEvent.change(inputs[1], { target: { value: "99" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ minutes: 59 }));
-  });
-
-  it("floors a negative or unparseable entry at zero", () => {
-    const onChange = vi.fn();
-    const { container } = render(
-      <TimeInput value={{ hours: 5, minutes: 5, seconds: 0 }} onChange={onChange} />
-    );
-    const inputs = fields(container);
-    fireEvent.change(inputs[0], { target: { value: "-4" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 0 }));
-    fireEvent.change(inputs[0], { target: { value: "abc" } });
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ hours: 0 }));
-  });
-
-  it("renders disabled when asked", () => {
-    const { container } = render(
-      <TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={noop} disabled />
-    );
-    expect(fields(container)[0]).toBeDisabled();
   });
 });
 

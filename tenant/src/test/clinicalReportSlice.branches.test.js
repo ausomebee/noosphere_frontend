@@ -22,7 +22,6 @@ import reducer, {
   selectExpandedSections,
   selectSectionData,
   selectExistingSectionIds,
-  selectMode,
   selectReportId,
   selectActionMenuOpen,
   selectActiveDragId,
@@ -321,7 +320,6 @@ describe("selectors", () => {
     expect(selectExpandedSections(empty)).toEqual([]);
     expect(selectSectionData(empty)).toBeDefined();
     expect(selectExistingSectionIds(empty)).toEqual({});
-    expect(selectMode(empty)).toBe("new");
     expect(selectReportId(empty)).toBeUndefined();
     expect(selectActionMenuOpen(empty)).toBeUndefined();
     expect(selectActiveDragId(empty)).toBeUndefined();
@@ -331,7 +329,6 @@ describe("selectors", () => {
   it("read through to a populated slice", () => {
     const s = { clinicalReport: { ...initial(), reportId: "r1", mode: "edit", isSaving: true } };
     expect(selectReportId(s)).toBe("r1");
-    expect(selectMode(s)).toBe("edit");
     expect(selectIsSaving(s)).toBe(true);
   });
 });

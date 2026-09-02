@@ -57,4 +57,3 @@ export const normalizeState = (value, country) => {
 };
 
 /** Display name for a stored country value (accepts legacy codes/abbrevs). */
-export const getCountryLabel = normalizeCountry;

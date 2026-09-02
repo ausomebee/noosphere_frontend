@@ -163,29 +163,8 @@ export const {
   resetFormResponse,
 } = formResponseSlice.actions;
 
-export const selectFormResponse = (state) => state.formResponse;
-export const selectResponses = (state) => state.formResponse.responses;
-export const selectFiles = (state) => state.formResponse.files;
-export const selectSignatures = (state) => state.formResponse.signatures;
-export const selectCurrentPage = (state) => state.formResponse.currentPage;
-export const selectIsSubmitted = (state) => state.formResponse.submitted;
-export const selectSubmissionId = (state) => state.formResponse.submissionId;
 export const selectIsLoading = (state) => state.formResponse.isLoading;
 export const selectError = (state) => state.formResponse.error;
-
-export const selectFileCount = (state, fieldId) => {
-  const files = state.formResponse.files[fieldId];
-  return files ? files.length : 0;
-};
-
-export const selectHasResponse = (state, fieldId) => {
-  const { responses, files, signatures } = state.formResponse;
-  return !!(
-    responses[fieldId] ||
-    files[fieldId]?.length > 0 ||
-    signatures[fieldId]
-  );
-};
 
 const formResponsePersistConfig = {
   key: "formResponse",

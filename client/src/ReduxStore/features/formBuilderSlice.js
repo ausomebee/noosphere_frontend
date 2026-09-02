@@ -347,14 +347,7 @@ export const {
 } = formBuilderSlice.actions;
 
 // Selectors
-export const selectFormName = (state) => state.formBuilder.formName;
-export const selectElements = (state) => state.formBuilder.elements;
-export const selectFormId = (state) => state.formBuilder.formId;
-export const selectTenantId = (state) => state.formBuilder.tenantId;
-export const selectFormStatus = (state) => state.formBuilder.status;
 export const selectIsLoading = (state) => state.formBuilder.isLoading;
 export const selectError = (state) => state.formBuilder.error;
-export const selectIsPublished = (state) => state.formBuilder.isPublished;
-export const selectIsTemplate = (state) => state.formBuilder.isTemplate;
 
 export default formBuilderSlice.reducer;

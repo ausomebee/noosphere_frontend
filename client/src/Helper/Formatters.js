@@ -38,26 +38,6 @@ export const formatDateShort = (dateStr) => {
 };
 
 /**
- * Format a date string as "Mon dd, yyyy, hh:mm AM/PM".
- */
-export const formatDateTime = (dateStr) => {
-  if (!dateStr) return "N/A";
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return "Invalid date";
-    return d.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "Invalid date";
-  }
-};
-
-/**
  * Format a time-only string as "Mon dd, yyyy hh:mm AM/PM".
  * Used when only the time portion of a Date is needed.
  */

@@ -9,13 +9,6 @@ const LoadingSpinner = React.memo(() => (
   </div>
 ));
 
-export const SectionSpinner = () => (
-  <div className="section-spinner-container" role="status" aria-live="polite">
-    <FaSpinner className="loading-spinner" aria-hidden="true" />
-    <span className="sr-only">Loading...</span>
-  </div>
-);
-
 /** Inline shimmer placeholder for individual values */
 export const Skeleton = ({ width = "80px", height = "16px", borderRadius = "4px", style }) => (
   <span
@@ -41,18 +34,6 @@ export const SkeletonText = ({ lines = 1, width = "100%" }) => (
       />
     ))}
   </div>
-);
-
-/** Card-shaped skeleton for stats/overview cards */
-export const SkeletonCard = ({ width = "100%", height = "80px" }) => (
-  <div
-    className="skeleton-shimmer"
-    style={{
-      width,
-      height,
-      borderRadius: "8px",
-    }}
-  />
 );
 
 /** Table skeleton rows */

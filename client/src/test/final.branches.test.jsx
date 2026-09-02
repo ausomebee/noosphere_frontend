@@ -1,26 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-import reducer, {
-  loadSavedResponse,
-  selectFormResponse,
-  selectResponses,
-  selectFiles,
-  selectSignatures,
-  selectCurrentPage,
-  selectIsSubmitted,
-  selectSubmissionId,
-  selectIsLoading,
-  selectError,
-  selectFileCount,
-  selectHasResponse,
-} from "../ReduxStore/features/formResponseSlice";
+import reducer, { loadSavedResponse } from "../ReduxStore/features/formResponseSlice";
 import { SelectInput } from "../Components/Input/Inputs";
 import ReusableTable from "../Components/Table/ReuseableTable";
 
 /**
- * The last client branches: the persisted-file rehydration, the slice's
- * selectors, and the select's react-select wiring.
+ * The last client branches: the persisted-file rehydration and the select's
+ * react-select wiring.
  */
 
 const noop = () => {};
@@ -64,49 +51,6 @@ describe("rehydrating persisted files", () => {
   it("handles a saved field whose file list is missing entirely", () => {
     const s = reducer(initial(), loadSavedResponse({ files: { q1: null } }));
     expect(s.files.q1).toEqual([]);
-  });
-});
-
-describe("form response selectors", () => {
-  const state = {
-    formResponse: {
-      formId: "f1",
-      responses: { q1: "yes" },
-      files: { q2: [{ filename: "a" }], q3: [] },
-      signatures: { q4: "data:image/png;base64,AAA" },
-      signatureMode: {},
-      currentPage: 2,
-      submitted: true,
-      submissionId: "sub1",
-      isLoading: false,
-      error: "boom",
-    },
-  };
-
-  it("exposes each slice of state", () => {
-    expect(selectFormResponse(state)).toBe(state.formResponse);
-    expect(selectResponses(state)).toEqual({ q1: "yes" });
-    expect(selectFiles(state).q2).toHaveLength(1);
-    expect(selectSignatures(state).q4).toBeTruthy();
-    expect(selectCurrentPage(state)).toBe(2);
-    expect(selectIsSubmitted(state)).toBe(true);
-    expect(selectSubmissionId(state)).toBe("sub1");
-    expect(selectIsLoading(state)).toBe(false);
-    expect(selectError(state)).toBe("boom");
-  });
-
-  it("counts a field's files, reporting zero for an unknown field", () => {
-    expect(selectFileCount(state, "q2")).toBe(1);
-    expect(selectFileCount(state, "q3")).toBe(0);
-    expect(selectFileCount(state, "nope")).toBe(0);
-  });
-
-  it("reports whether a field has any answer, file or signature", () => {
-    expect(selectHasResponse(state, "q1")).toBe(true); // a text answer
-    expect(selectHasResponse(state, "q2")).toBe(true); // a file
-    expect(selectHasResponse(state, "q4")).toBe(true); // a signature
-    expect(selectHasResponse(state, "q3")).toBe(false); // an empty file list
-    expect(selectHasResponse(state, "nope")).toBe(false); // nothing at all
   });
 });
 

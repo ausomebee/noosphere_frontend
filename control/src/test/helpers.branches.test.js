@@ -17,7 +17,6 @@ import {
   SPECIAL_CHAR_REGEX,
   DEFAULT_PASSWORD_MIN_LENGTH,
   buildPasswordRules,
-  PASSWORD_RULES,
 } from '../Helper/passwordPolicy';
 import {
   passwordSchema,
@@ -42,11 +41,6 @@ describe('passwordPolicy: buildPasswordRules', () => {
     expect(rules[0].label).toBe('At least 12 characters');
     expect(rules[0].test('Abcdefg1!aa')).toBe(false); // 11 chars
     expect(rules[0].test('Abcdefg1!aaa')).toBe(true); // 12 chars
-  });
-
-  it('exports the default rules ready-made', () => {
-    expect(PASSWORD_RULES).toHaveLength(5);
-    expect(PASSWORD_RULES[0].label).toBe('At least 8 characters');
   });
 
   it('treats a missing value as empty rather than throwing', () => {

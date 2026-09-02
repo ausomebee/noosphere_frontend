@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { TextInput, PasswordInput, CheckboxInput, SwitchInput, TextareaInput, SearchInput, RadioInput, TimeInput, CustomDatePickerInput, SelectInput, SearchableSelectInput } from '../Components/Input/Inputs';
+import { TextInput, PasswordInput, CheckboxInput, SwitchInput, TextareaInput, SearchInput, RadioInput, CustomDatePickerInput, SelectInput, SearchableSelectInput } from '../Components/Input/Inputs';
 
 describe('TextInput', () => {
   it('renders with label', () => {
@@ -188,41 +188,6 @@ describe('RadioInput', () => {
   it('renders without label', () => {
     const { container } = render(<RadioInput name="c" value="a" checked={false} onChange={vi.fn()} />);
     expect(container.querySelector('.input-radio-label')).not.toBeInTheDocument();
-  });
-});
-
-describe('TimeInput', () => {
-  it('renders three inputs', () => {
-    const { container } = render(<TimeInput onChange={vi.fn()} />);
-    expect(container.querySelectorAll('input')).toHaveLength(3);
-  });
-  it('displays formatted time', () => {
-    render(<TimeInput value={{ hours: 9, minutes: 5, seconds: 30 }} onChange={vi.fn()} />);
-    expect(screen.getByText('09:05:30')).toBeInTheDocument();
-  });
-  it('calls onChange when hours change', () => {
-    const fn = vi.fn();
-    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
-    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: '14' } });
-    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 14 }));
-  });
-  it('clamps hours to 23', () => {
-    const fn = vi.fn();
-    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
-    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: '99' } });
-    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 23 }));
-  });
-  it('clamps minutes to 59', () => {
-    const fn = vi.fn();
-    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
-    fireEvent.change(container.querySelectorAll('input')[1], { target: { value: '99' } });
-    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ minutes: 59 }));
-  });
-  it('handles NaN as 0', () => {
-    const fn = vi.fn();
-    const { container } = render(<TimeInput value={{ hours: 0, minutes: 0, seconds: 0 }} onChange={fn} />);
-    fireEvent.change(container.querySelectorAll('input')[0], { target: { value: 'abc' } });
-    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ hours: 0 }));
   });
 });
 
