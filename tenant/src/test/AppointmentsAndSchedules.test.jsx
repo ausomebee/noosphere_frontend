@@ -792,6 +792,9 @@ describe("search and filters", () => {
   // table's data too -- so type into it there and read the result back in the
   // table view.
   const searchFrom = async (term) => {
+    // The target only exists once the data behind it has rendered, so it has
+    // to be waited for rather than assumed present.
+    await waitFor(() => expect(screen.getByText("Calendar View")).toBeInTheDocument());
     fireEvent.click(screen.getByText("Calendar View"));
     fireEvent.change(screen.getByPlaceholderText("Search appointments..."), {
       target: { value: term },

@@ -133,6 +133,9 @@ const rows = () => screen.queryAllByTestId("row");
 const cell = (row, key) => row.querySelector(`[data-cell="${key}"]`);
 
 const openSubmitModal = async () => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole("button", { name: /Submit a new request/i })).toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name: /Submit a new request/i }));
   await screen.findByRole("dialog");
 };

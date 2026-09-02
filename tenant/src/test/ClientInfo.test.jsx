@@ -196,6 +196,9 @@ const dataRows = () =>
   );
 
 const openTab = async (name) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole("button", { name })).toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name }));
   await waitFor(() => expect(screen.getByRole("button", { name })).toHaveClass("doc-tab-active"));
 };

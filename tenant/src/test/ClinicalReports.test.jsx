@@ -122,6 +122,9 @@ const renderTab = ({ permissions, data = clientData } = {}) => {
 };
 
 const openTab = async (name) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole("tab", { name })).toBeInTheDocument());
   fireEvent.click(screen.getByRole("tab", { name }));
   await waitFor(() =>
     expect(screen.getByRole("tab", { name })).toHaveAttribute("aria-selected", "true")

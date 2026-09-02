@@ -174,6 +174,9 @@ const loadWith = async ({ name = "Intake Form", fields = [], answers = [] } = {}
 const pdfText = () => pdf.doc.calls.text.map((args) => args[0]).flat();
 
 const download = async () => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByText("Download PDF")).toBeInTheDocument());
   fireEvent.click(screen.getByText("Download PDF"));
   await waitFor(() => expect(pdf.doc).not.toBeNull());
   await waitFor(() => expect(pdf.doc.calls.save.length).toBeGreaterThan(0));

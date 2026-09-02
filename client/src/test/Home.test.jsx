@@ -170,6 +170,9 @@ const goToPage = async (n) => {
 // active one and for its rows to finish loading, otherwise assertions race the
 // fetch and fail only under CPU contention.
 const openTab = async (label) => {
+  // The tab strip itself only renders once the page has data, so the label has
+  // to be waited for before it can be clicked.
+  await waitFor(() => expect(screen.getByText(label)).toBeInTheDocument());
   fireEvent.click(screen.getByText(label));
   await waitFor(() => {
     expect(document.querySelector(".table-tab.active")).toHaveTextContent(label);

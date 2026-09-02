@@ -208,6 +208,9 @@ const renderIssue = async ({ permissions = allPerms, ...props } = {}) => {
 };
 
 const openAction = async (label) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument());
   fireEvent.click(screen.getByText('Actions'));
   await act(async () => {
     fireEvent.click(screen.getByRole('menuitem', { name: label }));
@@ -700,6 +703,9 @@ describe('issue mutations', () => {
 
 describe('sending a mutation with no file attached', () => {
   const runBare = async (action, testid) => {
+    // The target only exists once the data behind it has rendered, so it has
+    // to be waited for rather than assumed present.
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument());
     fireEvent.click(screen.getByText('Actions'));
     await act(async () => {
       fireEvent.click(screen.getByRole('menuitem', { name: action }));

@@ -56,6 +56,9 @@ import BillingReports from '../Pages/BillingsAndPayment/BillingReports';
 const rows = () => JSON.parse(screen.getByTestId('table-dump').textContent);
 
 const openReport = async (title) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole('button', { name: new RegExp(title) })).toBeInTheDocument());
   fireEvent.click(screen.getByRole('button', { name: new RegExp(title) }));
   await waitFor(() => expect(screen.getByTestId('table-loading').textContent).toBe('false'));
 };

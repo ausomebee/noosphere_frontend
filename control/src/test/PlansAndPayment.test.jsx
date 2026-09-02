@@ -315,6 +315,9 @@ const renderPage = async () => {
 // Tab clicks are ignored while a fetch is in flight, so every switch has to
 // wait for the refetch it triggers before the next interaction.
 const switchTab = async (label) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByText(label)).toBeInTheDocument());
   fireEvent.click(screen.getByText(label));
   await waitFor(() =>
     expect(document.body.querySelector('.section-loader')).toBeInTheDocument()

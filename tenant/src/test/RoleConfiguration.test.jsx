@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../ReduxStore/features/authentication";
@@ -79,6 +79,9 @@ const moduleBox = (label) =>
   within(screen.getByText(label).closest("label")).getByRole("checkbox");
 
 const pickAccessLevel = async (label) => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole("combobox")).toBeInTheDocument());
   fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
   fireEvent.click(await screen.findByText(label));
 };

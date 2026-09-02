@@ -120,6 +120,9 @@ const openRowMenu = () =>
   fireEvent.click(document.body.querySelector(".action-cell .action-button"));
 
 const goToTeams = async () => {
+  // The target only exists once the data behind it has rendered, so it has
+  // to be waited for rather than assumed present.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Teams" })).toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name: "Teams" }));
   await waitFor(() => expect(apiMock.GetAllTeamsByTenantId).toHaveBeenCalled());
 };
