@@ -356,23 +356,26 @@ Each module's `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']`, s
 
 Branch coverage against the whole codebase:
 
-| Module | Branches | Tests |
-| --- | --- | --- |
-| control | 9.80% (750/7,649) | 588 |
-| tenant | 10.63% (1,686/15,859) | 1,083 |
-| client | 28.39% (894/3,148) | 816 |
+| Module | Branches | Statements | Functions | Tests | Test files |
+| --- | --- | --- | --- | --- | --- |
+| client | 97.81% (3,079/3,148) | 96.55% | 93.20% | 1,859 | 72 |
+| control | 97.74% (7,476/7,649) | 97.24% | 94.47% | 4,720 | 167 |
+| tenant | 95.95% (15,240/15,883) | 97.17% | 95.72% | 8,417 | 273 |
 
-The coverage is not spread evenly, and the shape is more informative than the total — the tested layers are genuinely well covered, the screens are not tested at all:
+Coverage is now even across the layers rather than concentrated in the ones that are easy to reach:
 
 | Layer | control | tenant | client |
 | --- | --- | --- | --- |
-| Redux slices | 2% | 97% | 9% |
-| API wrappers | 28% | 9% | 95% |
-| Helpers | 57% | 78% | 78% |
-| Shared components | 19% | 13% | 34% |
-| Pages / screens | 0% | 1% | 0% |
+| Redux slices | 100% | 97% | 100% |
+| API wrappers | 100% | 97% | 99% |
+| Hooks | 98% | 97% | 100% |
+| Helpers | 99% | 96% | 99% |
+| Shared components | 97% | 95% | 97% |
+| Pages / screens | 97% | 96% | 98% |
 
-Raising the total means testing pages, which is where the bulk of the branches live: `PlansAndPayment.jsx` (370 branches), `SingleTimeSheet.jsx` (497), `FormRenderer.jsx` (340), and others like them are all at zero.
+**The remaining few percent is mostly not reachable from tests.** Every uncovered branch has been resolved to its source line, and the large majority is defensive code that cannot execute: guards behind a `disabled` button, `value || fallback` where a normaliser already guaranteed a truthy value, and `if (ref.current)` where the ref is always attached by the time the callback runs. Closing the gap further means deleting dead code or fixing the defects that stranded it — not writing more tests. Two whole features are currently unreachable in tenant: `SupportRequests`' Progress Track modal has no code path that opens it, and `UploadTenantStaffDocumentModal` discards a rejected file before its Retry button can render.
+
+Treat a sudden drop in these numbers as a regression in the tests, not in the metric. If you add a source file, it counts against the total immediately, whether or not anything imports it.
 
 ### Manual QA
 

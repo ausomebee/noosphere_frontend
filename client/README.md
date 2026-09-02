@@ -276,7 +276,9 @@ The dev server port is not pinned; Vite starts at 5173 and takes the next free p
 
 Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npx vitest run --coverage` for a coverage report.
 
-Branch coverage sits at **28.39%** across 816 tests, measured against every source file — `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']` so the denominator does not move when someone adds an import. What is covered is the API wrappers (95%), helpers and the shared component kit; the pages are largely untested, and that is where most of the branches are.
+Branch coverage sits at **97.81%** (3,079/3,148) across 1,859 tests in 72 files, measured against every source file — `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']` so the denominator does not move when someone adds an import. Every layer is covered: redux slices and hooks at 100%, API wrappers 99%, helpers 99%, shared components 97%, pages 98%.
+
+All 69 remaining branches have been resolved to their source line and every one is unreachable: guards duplicating a `primaryButtonDisabled` condition, `name || "Untitled"` fallbacks after the row transform already substituted, and click handlers on controls React renders `disabled`. Two of them are outright dead code — `ForgotPassword`'s `errorMessage` paragraph (the setter is only ever called with `""`) and `MessageModal`'s duplicated `mountedRef` guard.
 
 Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 

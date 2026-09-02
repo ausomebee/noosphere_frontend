@@ -298,7 +298,9 @@ The dev server port is not pinned; Vite starts at 5173 and takes the next free p
 
 Unit and component tests use Vitest with React Testing Library and live in `src/test/`. Run `npm run test:coverage` for a coverage report.
 
-Branch coverage sits at **10.63%** across 1,083 tests, measured against every source file — `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']` so the denominator does not move when someone adds an import. What is covered is the redux slices (97%), helpers and the shared component kit; the pages are largely untested, and that is where most of the branches are.
+Branch coverage sits at **95.95%** (15,240/15,883) across 8,417 tests in 273 files, measured against every source file — `vite.config.js` sets `coverage.include: ['src/**/*.{js,jsx}']` so the denominator does not move when someone adds an import. Every layer is covered: redux slices 97%, API wrappers 97%, hooks 97%, helpers 96%, shared components 95%, pages 96%.
+
+This is the largest of the three modules and the one with the most unreachable code left. Two features cannot currently be exercised at all: `SupportRequests`' Progress Track modal has no code path that opens it (its state has no setter in scope), and `UploadTenantStaffDocumentModal` discards a rejected file before its Retry button can render. Those two account for a large share of what is left, and no test can reach them until the source is fixed.
 
 Manual QA cases live in [`QA_TEST_PLAN.md`](./QA_TEST_PLAN.md), whose Appendix A maps every source file in this module to the cases that cover it.
 
