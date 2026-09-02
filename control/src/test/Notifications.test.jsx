@@ -192,17 +192,22 @@ describe('the type icon', () => {
     cards()[index].querySelector('.ctrl-notification-icon').className;
 
   it('picks an icon per notification domain', async () => {
+    // The page sorts by createdAt descending, and `notif` stamps each fixture
+    // with its own `Date.now()`. Ten of those only land in the same millisecond
+    // on a fast machine; one explicit timestamp is what actually makes the sort
+    // stable, so the order below is the fixture order everywhere.
+    const at = minutesAgo(1);
     await renderPage([
-      notif({ id: 'a', type: 'PAYMENT_RECEIVED' }),
-      notif({ id: 'b', type: 'PRODUCT_ACCESS_GRANTED' }),
-      notif({ id: 'c', type: 'TENANT_CREATED' }),
-      notif({ id: 'd', type: 'PLAN_UPDATED' }),
-      notif({ id: 'e', type: 'SUBSCRIPTION_EXPIRING' }),
-      notif({ id: 'f', type: 'ISSUE_RESOLVED' }),
-      notif({ id: 'g', type: 'SUBSCRIPTION_AUTO_RENEWED' }),
-      notif({ id: 'h', type: 'ISSUE_RAISED' }),
-      notif({ id: 'i', type: 'ANYTHING_ELSE' }),
-      notif({ id: 'j', type: undefined }),
+      notif({ id: 'a', type: 'PAYMENT_RECEIVED', createdAt: at }),
+      notif({ id: 'b', type: 'PRODUCT_ACCESS_GRANTED', createdAt: at }),
+      notif({ id: 'c', type: 'TENANT_CREATED', createdAt: at }),
+      notif({ id: 'd', type: 'PLAN_UPDATED', createdAt: at }),
+      notif({ id: 'e', type: 'SUBSCRIPTION_EXPIRING', createdAt: at }),
+      notif({ id: 'f', type: 'ISSUE_RESOLVED', createdAt: at }),
+      notif({ id: 'g', type: 'SUBSCRIPTION_AUTO_RENEWED', createdAt: at }),
+      notif({ id: 'h', type: 'ISSUE_RAISED', createdAt: at }),
+      notif({ id: 'i', type: 'ANYTHING_ELSE', createdAt: at }),
+      notif({ id: 'j', type: undefined, createdAt: at }),
     ]);
     const keys = cards().map(
       (c) =>
@@ -210,7 +215,6 @@ describe('the type icon', () => {
           .querySelector('.ctrl-notification-icon')
           .className.match(/ctrl-notification-icon-(\w+)/)[1]
     );
-    // Order matches the fixture order because every item shares a timestamp.
     expect(keys).toEqual([
       'payment',
       'payment',
