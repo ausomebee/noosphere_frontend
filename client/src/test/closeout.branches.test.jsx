@@ -312,7 +312,7 @@ describe("useDocumentViewer download filename", () => {
   };
 
   it("uses the supplied file name", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     renderHarness("report.pdf");
     fireEvent.click(screen.getByText("go"));
@@ -321,7 +321,7 @@ describe("useDocumentViewer download filename", () => {
   });
 
   it("falls back to a generic name when none is given", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     renderHarness(undefined);
     fireEvent.click(screen.getByText("go"));

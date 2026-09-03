@@ -12,8 +12,14 @@ import DocumentViewer from '../Components/ReusableModal/DocumentViewer';
  * (including a Word file, which no browser will inline) gets a download prompt.
  *
  * Downloading fetches the file and clicks a synthetic link so the browser saves
- * it under the name the caller supplied; if that fetch fails it falls back to
- * opening the url in a new tab, which is the only route a cross-origin file has.
+ * it under the name the caller supplied. A blocked fetch still falls back to a
+ * new tab, which is the one route left when only CORS is in the way, but a
+ * refused *response* does not: a 403 or 404 is reported instead, rather than
+ * saving S3's error body as though it were the document.
+ *
+ * An unsigned bucket link is refused before any of that, since there is no
+ * credential the browser could add, and the overlay says so in place of a
+ * preview that would sit blank.
  */
 
 const onClose = vi.fn();
@@ -118,7 +124,7 @@ describe('downloading', () => {
     vi.spyOn(document, 'createElement').mockImplementation((tag) =>
       tag === 'a' ? created : Object.getPrototypeOf(document).createElement.call(document, tag)
     );
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
 
     renderViewer();
     await act(async () => {
@@ -137,7 +143,7 @@ describe('downloading', () => {
     vi.spyOn(document, 'createElement').mockImplementation((tag) =>
       tag === 'a' ? created : Object.getPrototypeOf(document).createElement.call(document, tag)
     );
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
 
     renderViewer({ fileName: undefined });
     await act(async () => {
@@ -154,7 +160,7 @@ describe('downloading', () => {
     await act(async () => {
       fireEvent.click(screen.getByLabelText('Download file'));
     });
-    expect(open).toHaveBeenCalledWith('https://cdn.example.com/report.pdf', '_blank');
+    expect(open).toHaveBeenCalledWith('https://cdn.example.com/report.pdf', '_blank', 'noopener');
   });
 
   it('downloads from the fallback prompt too', async () => {
@@ -166,6 +172,53 @@ describe('downloading', () => {
       fireEvent.click(screen.getByText('Download File'));
     });
     expect(open).toHaveBeenCalled();
+  });
+});
+
+describe('a link that cannot work', () => {
+  const UNSIGNED = 'https://s3.us-west-1.amazonaws.com/ausomebee-objects-storage/x.pdf';
+
+  it('explains itself instead of framing a pdf it cannot read', () => {
+    renderViewer({ fileUrl: UNSIGNED, fileName: 'x.pdf' });
+
+    expect(document.body.querySelector('.doc-viewer-fallback')).not.toBeNull();
+    expect(document.body.querySelector('iframe')).toBeNull();
+    expect(screen.getByText(/secure link is missing or has expired/i)).toBeInTheDocument();
+  });
+
+  // Offering a download beside "this can't be opened" would contradict itself.
+  it('withholds the download prompt', () => {
+    renderViewer({ fileUrl: UNSIGNED, fileName: 'x.pdf' });
+    expect(screen.queryByText('Download File')).toBeNull();
+  });
+
+  // Nothing is loading, so a spinner would never stop.
+  it('shows no spinner', () => {
+    renderViewer({ fileUrl: UNSIGNED, fileName: 'x.pdf' });
+    expect(body().getAttribute('aria-busy')).toBe('false');
+    expect(document.body.querySelector('.doc-viewer-spinner')).toBeNull();
+  });
+
+  it('still frames a signed link to the same object', () => {
+    renderViewer({ fileUrl: `${UNSIGNED}?X-Amz-Signature=abc`, fileName: 'x.pdf' });
+    expect(document.body.querySelector('iframe')).not.toBeNull();
+  });
+
+  it('reports a refused response rather than saving it', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      blob: async () => new Blob(['<Error>AccessDenied</Error>']),
+    });
+    const open = vi.spyOn(window, 'open').mockImplementation(() => {});
+
+    renderViewer();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Download file'));
+    });
+
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
   });
 });
 

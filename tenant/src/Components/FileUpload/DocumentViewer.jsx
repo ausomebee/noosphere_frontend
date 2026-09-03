@@ -2,6 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { LuDownload, LuX } from "react-icons/lu";
 import "./DocumentViewer.css";
+import {
+  downloadDocumentFile,
+  isUnsignedStorageUrl,
+  DOCUMENT_UNAVAILABLE,
+} from "../../Helper/documentAccess";
+import { showToast } from "../../Helper/ShowToast";
 
 const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,25 +16,23 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   const getFileExtension = (url) =>
     url?.split("?")[0]?.split(".").pop()?.toLowerCase() || "";
 
+  // An unsigned storage link can be neither framed nor fetched, so it is routed
+  // to the explanatory panel below rather than to a preview that would sit
+  // blank while the browser was quietly refused.
+  const isUnavailable = isUnsignedStorageUrl(fileUrl);
   const fileExtension = getFileExtension(fileUrl);
-  const isPdf = fileExtension === "pdf";
-  const isDoc = fileExtension === "doc" || fileExtension === "docx";
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
+  const isPdf = !isUnavailable && fileExtension === "pdf";
+  const isDoc =
+    !isUnavailable && (fileExtension === "doc" || fileExtension === "docx");
+  const isImage =
+    !isUnavailable &&
+    ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
 
   const handleDownload = useCallback(async () => {
     try {
-      const res = await fetch(fileUrl);
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = fileName || "document";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(fileUrl, "_blank");
+      await downloadDocumentFile(fileUrl, fileName);
+    } catch (err) {
+      showToast(err.message, "error");
     }
   }, [fileUrl, fileName]);
 
@@ -120,14 +124,18 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
           <polyline points="14 2 14 8 20 8" />
         </svg>
         <p>
-          {isDoc
-            ? "Word documents can't be previewed in the browser."
-            : "This file type cannot be previewed."}
+          {isUnavailable
+            ? DOCUMENT_UNAVAILABLE
+            : isDoc
+              ? "Word documents can't be previewed in the browser."
+              : "This file type cannot be previewed."}
         </p>
-        <button className="doc-viewer-btn" onClick={handleDownload} aria-label="Download file">
-          <LuDownload size={16} aria-hidden="true" />
-          <span>Download File</span>
-        </button>
+        {!isUnavailable && (
+          <button className="doc-viewer-btn" onClick={handleDownload} aria-label="Download file">
+            <LuDownload size={16} aria-hidden="true" />
+            <span>Download File</span>
+          </button>
+        )}
       </div>
     );
   };
@@ -150,14 +158,14 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
           </div>
         </div>
 
-        <div className="doc-viewer-body" aria-busy={isLoading}>
-          {isLoading && (
+        <div className="doc-viewer-body" aria-busy={isLoading && !isUnavailable}>
+          {isLoading && !isUnavailable && (
             <div className="doc-viewer-loading" role="status" aria-live="polite">
               <div className="doc-viewer-spinner" />
               <span className="doc-viewer-sr-only">Loading document...</span>
             </div>
           )}
-          <div className={`doc-viewer-content ${isImage ? "doc-viewer-content-image" : ""} ${isLoading ? "doc-viewer-content-hidden" : ""}`}>
+          <div className={`doc-viewer-content ${isImage ? "doc-viewer-content-image" : ""} ${isLoading && !isUnavailable ? "doc-viewer-content-hidden" : ""}`}>
             {renderContent()}
           </div>
         </div>

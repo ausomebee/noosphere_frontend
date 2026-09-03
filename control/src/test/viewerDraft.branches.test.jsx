@@ -86,7 +86,7 @@ describe('DocumentViewer download', () => {
   };
 
   it('downloads through a blob when the fetch succeeds', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
     const spy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     render(<DocumentViewer isOpen onClose={vi.fn()} fileUrl="https://x/a.pdf" fileName="a.pdf" />);
     if (clickDownload(document.body)) {
@@ -100,7 +100,7 @@ describe('DocumentViewer download', () => {
     const open = openSpy();
     render(<DocumentViewer isOpen onClose={vi.fn()} fileUrl="https://x/a.pdf" fileName="a.pdf" />);
     if (clickDownload(document.body)) {
-      await waitFor(() => expect(open).toHaveBeenCalledWith('https://x/a.pdf', '_blank'));
+      await waitFor(() => expect(open).toHaveBeenCalledWith('https://x/a.pdf', '_blank', 'noopener'));
     }
   });
 });
@@ -121,7 +121,7 @@ describe('useDocumentViewer download', () => {
     );
 
   it('names the download from the supplied file name', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
     const anchors = [];
     const orig = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation((tag) => {
@@ -139,7 +139,7 @@ describe('useDocumentViewer download', () => {
   });
 
   it('falls back to a generic name when none is given', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
     const anchors = [];
     const orig = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation((tag) => {
@@ -161,7 +161,7 @@ describe('useDocumentViewer download', () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => {});
     renderHarness('report.pdf');
     fireEvent.click(screen.getByText('go'));
-    await waitFor(() => expect(open).toHaveBeenCalledWith('https://x/a.pdf', '_blank'));
+    await waitFor(() => expect(open).toHaveBeenCalledWith('https://x/a.pdf', '_blank', 'noopener'));
   });
 });
 

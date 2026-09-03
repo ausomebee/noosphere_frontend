@@ -74,7 +74,7 @@ describe("DocumentViewer fallbacks", () => {
   });
 
   it("names the download from the file name, and 'document' without one", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = [];
     const orig = document.createElement.bind(document);
     vi.spyOn(document, "createElement").mockImplementation((tag) => {
@@ -119,7 +119,7 @@ describe("DocumentViewer fallbacks", () => {
     );
     if (btn) {
       fireEvent.click(btn);
-      await waitFor(() => expect(open).toHaveBeenCalledWith("https://x/a.pdf", "_blank"));
+      await waitFor(() => expect(open).toHaveBeenCalledWith("https://x/a.pdf", "_blank", "noopener"));
     }
   });
 });

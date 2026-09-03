@@ -75,7 +75,7 @@ describe('ReusableModal busy short-circuit', () => {
 
 describe('DocumentViewer download filename fallback', () => {
   it('names the file "document" when none is supplied', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(['x']) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['x']) });
     const anchors = [];
     const orig = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation((tag) => {

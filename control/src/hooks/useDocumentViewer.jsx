@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import DocumentViewer from "../Components/ReusableModal/DocumentViewer";
 
+import { downloadDocumentFile } from "../Helper/documentAccess";
+import { showToast } from "../Helper/ShowToast";
+
 const DocumentViewerContext = createContext(null);
 
 export const DocumentViewerProvider = ({ children }) => {
@@ -20,18 +23,11 @@ export const DocumentViewerProvider = ({ children }) => {
 
   const downloadDocument = useCallback(async (fileUrl, fileName) => {
     try {
-      const res = await fetch(fileUrl);
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = fileName || "document";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(fileUrl, "_blank");
+      await downloadDocumentFile(fileUrl, fileName);
+    } catch (err) {
+      // The helper's messages are written for the person on the screen, so the
+      // failure is reported rather than swallowed the way it used to be.
+      showToast(err.message, "error");
     }
   }, []);
 

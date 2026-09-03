@@ -79,7 +79,7 @@ describe("useDocumentViewer", () => {
 
   it("downloadDocument fetches and triggers download", async () => {
     const mockBlob = new Blob(["test"], { type: "application/pdf" });
-    global.fetch = vi.fn().mockResolvedValue({ blob: () => Promise.resolve(mockBlob) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: () => Promise.resolve(mockBlob) });
     global.URL.createObjectURL = vi.fn().mockReturnValue("blob:url");
     global.URL.revokeObjectURL = vi.fn();
 
@@ -108,7 +108,7 @@ describe("useDocumentViewer", () => {
     fireEvent.click(getByText("Download"));
 
     await vi.waitFor(() => {
-      expect(mockOpen).toHaveBeenCalledWith("http://example.com/file.pdf", "_blank");
+      expect(mockOpen).toHaveBeenCalledWith("http://example.com/file.pdf", "_blank", "noopener");
     });
   });
 });

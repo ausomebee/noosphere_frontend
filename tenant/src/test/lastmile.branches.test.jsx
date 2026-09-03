@@ -173,7 +173,7 @@ describe("useDocumentViewer download", () => {
   });
 
   it("uses the supplied file name", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     renderHarness("report.pdf");
     fireEvent.click(screen.getByText("go"));
@@ -182,7 +182,7 @@ describe("useDocumentViewer download", () => {
   });
 
   it("falls back to a generic name when none is given", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     renderHarness(undefined);
     fireEvent.click(screen.getByText("go"));
@@ -196,7 +196,7 @@ describe("useDocumentViewer download", () => {
     renderHarness("report.pdf");
     fireEvent.click(screen.getByText("go"));
     await waitFor(() =>
-      expect(open).toHaveBeenCalledWith("https://x/a.pdf", "_blank")
+      expect(open).toHaveBeenCalledWith("https://x/a.pdf", "_blank", "noopener")
     );
   });
 });
@@ -208,16 +208,16 @@ describe("getSubdomain host shapes", () => {
   };
 
   it("extracts a real tenant subdomain and stores it", () => {
-    setHost("mypractice.nooshere.org");
+    setHost("mypractice.noospherehub.com");
     expect(getSubdomain()).toBe("mypractice");
     expect(localStorage.getItem("subDomain")).toBe("mypractice");
   });
 
   it("treats the www host and the bare root as no tenant", () => {
     localStorage.setItem("subDomain", "stale");
-    setHost("www.nooshere.org");
+    setHost("www.noospherehub.com");
     expect(getSubdomain()).toBeNull();
-    setHost("nooshere.org");
+    setHost("noospherehub.com");
     expect(getSubdomain()).toBeNull();
   });
 

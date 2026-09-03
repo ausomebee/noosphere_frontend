@@ -64,3 +64,60 @@ describe("DocumentViewer Component", () => {
     expect(spinner).toBeInTheDocument();
   });
 });
+
+describe("a link that cannot work", () => {
+  const UNSIGNED =
+    "https://s3.us-west-1.amazonaws.com/ausomebee-objects-storage/x.pdf";
+  const renderUnsigned = (url = UNSIGNED) =>
+    render(<DocumentViewer fileUrl={url} fileName="x.pdf" onClose={vi.fn()} />);
+
+  // A bucket link with no signature reaches S3 anonymous and is denied, so
+  // framing it would only show an empty panel.
+  it("explains itself instead of framing a pdf it cannot read", () => {
+    renderUnsigned();
+    expect(document.querySelector("iframe")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/secure link is missing or has expired/i)
+    ).toBeInTheDocument();
+  });
+
+  it("withholds the download prompt", () => {
+    renderUnsigned();
+    expect(screen.queryByText("Download File")).not.toBeInTheDocument();
+  });
+
+  // This overlay gates its loader on isLoading alone, so without the extra
+  // guard the explanation would sit hidden behind a spinner with nothing left
+  // to wait for.
+  it("shows no spinner, and does not hide the explanation", () => {
+    renderUnsigned();
+    expect(document.querySelector(".doc-viewer-spinner")).not.toBeInTheDocument();
+    expect(document.querySelector(".doc-viewer-content-hidden")).not.toBeInTheDocument();
+  });
+
+  it("still frames a signed link to the same object", () => {
+    renderUnsigned(`${UNSIGNED}?X-Amz-Signature=abc`);
+    expect(document.querySelector("iframe")).toBeInTheDocument();
+  });
+
+  it("reports a refused response rather than saving it", async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: false, status: 403, blob: async () => new Blob(["x"]) });
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    const openTab = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    render(
+      <DocumentViewer fileUrl="https://cdn.example.com/a.pdf" fileName="a.pdf" onClose={vi.fn()} />
+    );
+    fireEvent.click(screen.getByLabelText("Download file"));
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    // The old code saved S3's error body as though it were the document.
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(openTab).not.toHaveBeenCalled();
+
+    openTab.mockRestore();
+    delete global.fetch;
+  });
+});

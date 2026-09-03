@@ -8,8 +8,9 @@ import DocumentViewer from "../Components/FileUpload/DocumentViewer";
  *
  * It portals into document.body, so queries go through `document.body` rather
  * than the render container. The arms driven here are the file-type routing
- * (PDF frame, image, Word/other fallback), the download-then-open-in-a-tab
- * path, and the same scroll-lock / inert-root bookkeeping the modal does.
+ * (PDF frame, image, Word/other fallback), the download path and its
+ * open-in-a-tab fallback, the refusal of a link that carries no signature, and
+ * the same scroll-lock / inert-root bookkeeping the modal does.
  */
 
 const noop = () => {};
@@ -122,7 +123,7 @@ describe("download", () => {
   };
 
   it("saves the blob under the file's own name", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     open({ fileName: "report.pdf" });
     fireEvent.click(screen.getByLabelText("Download file"));
@@ -131,7 +132,7 @@ describe("download", () => {
   });
 
   it("falls back to a generic name when the file has none", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     open({ fileName: undefined });
     fireEvent.click(screen.getByLabelText("Download file"));
@@ -145,16 +146,61 @@ describe("download", () => {
     open({ fileUrl: "https://x/a.pdf" });
     fireEvent.click(screen.getByLabelText("Download file"));
     await waitFor(() =>
-      expect(openTab).toHaveBeenCalledWith("https://x/a.pdf", "_blank")
+      expect(openTab).toHaveBeenCalledWith("https://x/a.pdf", "_blank", "noopener")
     );
   });
 
   it("offers the same download from the unpreviewable fallback", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ blob: async () => new Blob(["x"]) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(["x"]) });
     const anchors = captureAnchors();
     open({ fileUrl: "https://x/a.docx", fileName: "a.docx" });
     fireEvent.click(screen.getByText("Download File"));
     await waitFor(() => expect(anchors.length).toBe(1));
+  });
+});
+
+describe("a link that cannot work", () => {
+  const UNSIGNED = "https://s3.us-west-1.amazonaws.com/ausomebee-objects-storage/x.pdf";
+
+  it("explains itself instead of framing a pdf it cannot read", () => {
+    open({ fileUrl: UNSIGNED, fileName: "x.pdf" });
+    expect(body().querySelector(".doc-viewer-fallback")).not.toBeNull();
+    expect(body().querySelector("iframe")).toBeNull();
+    expect(screen.getByText(/secure link is missing or has expired/i)).toBeInTheDocument();
+  });
+
+  it("withholds the download prompt", () => {
+    open({ fileUrl: UNSIGNED, fileName: "x.pdf" });
+    expect(screen.queryByText("Download File")).toBeNull();
+  });
+
+  // This overlay gates its loader on isLoading alone, so without the extra
+  // guard the explanation above would stay hidden behind a spinner that has
+  // nothing left to wait for.
+  it("shows no spinner, and does not hide the explanation", () => {
+    open({ fileUrl: UNSIGNED, fileName: "x.pdf" });
+    expect(body().querySelector(".doc-viewer-spinner")).toBeNull();
+    expect(body().querySelector(".doc-viewer-body").getAttribute("aria-busy")).toBe("false");
+    expect(body().querySelector(".doc-viewer-content-hidden")).toBeNull();
+  });
+
+  it("still frames a signed link to the same object", () => {
+    open({ fileUrl: `${UNSIGNED}?X-Amz-Signature=abc`, fileName: "x.pdf" });
+    expect(body().querySelector("iframe")).not.toBeNull();
+  });
+
+  it("reports a refused response rather than saving it", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      blob: async () => new Blob(["<Error>AccessDenied</Error>"]),
+    });
+    const openTab = vi.spyOn(window, "open").mockImplementation(() => {});
+    open({ fileUrl: "https://x/a.pdf", fileName: "a.pdf" });
+    fireEvent.click(screen.getByLabelText("Download file"));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    expect(openTab).not.toHaveBeenCalled();
   });
 });
 
