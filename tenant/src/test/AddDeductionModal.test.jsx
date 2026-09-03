@@ -132,7 +132,7 @@ describe("the modal shell", () => {
 
   it("closes and clears from Cancel", async () => {
     const { onClose, onSave } = renderModal();
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     choose("Health insurance ($500)");
     fireEvent.click(secondary());
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -179,7 +179,7 @@ describe("loading the deductions", () => {
   it("reads a response that is a bare list", async () => {
     payroll.getDeductions.mockResolvedValue([percentItem]);
     renderModal();
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     openMenu();
     await waitFor(() => expect(menuLabels()).toEqual(["Tax withholding (12%)"]));
   });
@@ -187,7 +187,7 @@ describe("loading the deductions", () => {
   it("treats a response that is neither a list nor a wrapper as empty", async () => {
     payroll.getDeductions.mockResolvedValue({ items: [flatItem] });
     renderModal();
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     openMenu();
     expect(menuLabels()[0]).toContain("No deductions found");
   });
@@ -195,7 +195,7 @@ describe("loading the deductions", () => {
   it("treats an empty response as no items at all", async () => {
     payroll.getDeductions.mockResolvedValue(null);
     renderModal();
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     openMenu();
     expect(menuLabels()[0]).toContain("No deductions found");
   });
@@ -225,7 +225,7 @@ describe("loading the deductions", () => {
   it("fetches anyway when the prefetched list is empty", async () => {
     const NONE_PREFETCHED = [];
     renderModal({ prefetchedItems: NONE_PREFETCHED });
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     openMenu();
     await waitFor(() => expect(menuLabels()).toEqual(["Health insurance ($500)"]));
   });
@@ -298,7 +298,7 @@ describe("choosing a deduction", () => {
 
   it("hands the whole deduction back and closes", async () => {
     const { onSave, onClose } = renderModal();
-    await waitFor(() => expect(payroll.getDeductions).toHaveBeenCalled());
+    await waitFor(() => expect(picker()).not.toBeNull());
     choose("Health insurance ($500)");
     expect(chosen()).toBe("Health insurance ($500)");
     await submit();
