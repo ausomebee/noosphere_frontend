@@ -38,22 +38,22 @@ describe('getSubdomain', () => {
   });
 
   it('returns null for root production domain', () => {
-    setHostname('nooshere.org');
+    setHostname('noospherehub.com');
     expect(getSubdomain()).toBeNull();
   });
 
-  it('returns null for www.nooshere.org', () => {
-    setHostname('www.nooshere.org');
+  it('returns null for www.noospherehub.com', () => {
+    setHostname('www.noospherehub.com');
     expect(getSubdomain()).toBeNull();
   });
 
-  it('extracts subdomain from tenant.nooshere.org', () => {
-    setHostname('clinic1.nooshere.org');
+  it('extracts subdomain from tenant.noospherehub.com', () => {
+    setHostname('clinic1.noospherehub.com');
     expect(getSubdomain()).toBe('clinic1');
   });
 
   it('ignores www subdomain in production', () => {
-    setHostname('www.something.nooshere.org');
+    setHostname('www.something.noospherehub.com');
     expect(getSubdomain()).toBeNull();
   });
 

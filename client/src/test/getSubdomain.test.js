@@ -18,19 +18,19 @@ describe("getSubdomain", () => {
     expect(localStorage.getItem("subDomain")).toBe("acme");
   });
   it("returns null for root domain", () => {
-    setHostname("nooshere.org");
+    setHostname("noospherehub.com");
     expect(getSubdomain()).toBeNull();
   });
   it("returns null for www root domain", () => {
-    setHostname("www.nooshere.org");
+    setHostname("www.noospherehub.com");
     expect(getSubdomain()).toBeNull();
   });
   it("detects subdomain on production", () => {
-    setHostname("acme.nooshere.org");
+    setHostname("acme.noospherehub.com");
     expect(getSubdomain()).toBe("acme");
   });
   it("ignores www as subdomain", () => {
-    setHostname("www.nooshere.org");
+    setHostname("www.noospherehub.com");
     expect(getSubdomain()).toBeNull();
     expect(localStorage.getItem("subDomain")).toBeNull();
   });

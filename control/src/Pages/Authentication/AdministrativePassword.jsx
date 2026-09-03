@@ -108,8 +108,8 @@ const AdministrativePassword = () => {
               </p>
               <p className="support-note">
                 Didn't get the passcode?{" "}
-                <a href="mailto:support@noosphere.com">
-                  Contact support@noosphere.com
+                <a href="mailto:support@noospherehub.com">
+                  Contact support@noospherehub.com
                 </a>
               </p>
             </div>

@@ -8,6 +8,17 @@ import api2 from "../../../api/clientPanelApis";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { useSelector } from "react-redux";
 
+// Every apex we own, production first. The head of the list is the fallback for
+// hosts that carry no usable apex of their own (localhost, raw EC2 hostnames,
+// bare IPs), and matching against the list — rather than blindly taking the
+// last two labels — keeps a deeper host such as admin.eu.noospherehub.com
+// resolving to the apex we actually registered.
+const KNOWN_APEXES = [
+  "noospherehub.com",
+  "noospherehub.net",
+  "noospherehub.org",
+];
+
 const ClientPortalSettingsModal = ({
   isOpen,
   onClose,
@@ -47,9 +58,11 @@ const ClientPortalSettingsModal = ({
       host.endsWith(".localhost") ||
       host.endsWith(".amazonaws.com") ||
       /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-    if (isLocalOrRaw) return "nooshere.org";
+    if (isLocalOrRaw) return KNOWN_APEXES[0];
+    const known = KNOWN_APEXES.find((d) => host === d || host.endsWith(`.${d}`));
+    if (known) return known;
+    // Unrecognised host: fall back to the last two labels.
     const parts = host.split(".");
-    // apex = last two labels, e.g. acme.nooshere.org -> nooshere.org
     return parts.length >= 2 ? parts.slice(-2).join(".") : host;
   };
   const portalUrl = subdomain

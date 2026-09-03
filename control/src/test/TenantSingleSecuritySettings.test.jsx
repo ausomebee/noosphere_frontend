@@ -205,25 +205,25 @@ describe('the portal url', () => {
 
   it('falls back to the production apex on localhost', async () => {
     await renderSettings();
-    expect(portalUrlText()).toBe('https://acme.nooshere.org/tenant/');
+    expect(portalUrlText()).toBe('https://acme.noospherehub.com/tenant/');
   });
 
   it('falls back to the production apex on a localhost subdomain', async () => {
     setHostname('control.localhost');
     await renderSettings();
-    expect(portalUrlText()).toBe('https://acme.nooshere.org/tenant/');
+    expect(portalUrlText()).toBe('https://acme.noospherehub.com/tenant/');
   });
 
   it('falls back to the production apex on an amazonaws host', async () => {
     setHostname('ec2-1-2-3-4.compute.amazonaws.com');
     await renderSettings();
-    expect(portalUrlText()).toBe('https://acme.nooshere.org/tenant/');
+    expect(portalUrlText()).toBe('https://acme.noospherehub.com/tenant/');
   });
 
   it('falls back to the production apex on a raw ip address', async () => {
     setHostname('10.0.11.254');
     await renderSettings();
-    expect(portalUrlText()).toBe('https://acme.nooshere.org/tenant/');
+    expect(portalUrlText()).toBe('https://acme.noospherehub.com/tenant/');
   });
 
   it('takes the apex from a real host', async () => {
@@ -246,7 +246,7 @@ describe('copying the portal url', () => {
     await renderSettings();
     fireEvent.click(copyButton());
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'https://acme.nooshere.org/tenant/'
+      'https://acme.noospherehub.com/tenant/'
     );
     expect(mocks.showToast).toHaveBeenCalledWith('URL copied to clipboard', 'success');
   });

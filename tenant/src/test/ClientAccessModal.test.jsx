@@ -89,7 +89,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.mockResolvedValue({ data: { success: true } });
   originalLocation = window.location;
-  setHost("app.nooshere.org");
+  setHost("app.noospherehub.com");
   Object.defineProperty(navigator, "clipboard", {
     value: { writeText },
     writable: true,
@@ -172,33 +172,33 @@ describe("the portal address", () => {
   };
 
   it("puts the tenant's subdomain in front of the apex of the current host", () => {
-    setHost("admin.nooshere.org");
+    setHost("admin.noospherehub.com");
     openEnabled();
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
   });
 
   it("uses the production apex when the admin is on localhost", () => {
     setHost("localhost");
     openEnabled();
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
   });
 
   it("uses the production apex on a subdomain of localhost", () => {
     setHost("acme.localhost");
     openEnabled();
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
   });
 
   it("uses the production apex on a raw AWS host", () => {
     setHost("ec2-1-2-3-4.compute.amazonaws.com");
     openEnabled();
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
   });
 
   it("uses the production apex on a bare IP address", () => {
     setHost("192.168.0.14");
     openEnabled();
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
   });
 
   // A single-label host has no apex to trim down to, so it is used whole.
@@ -215,16 +215,16 @@ describe("the portal address", () => {
   });
 
   it("falls back to the current origin when the tenant has no subdomain", () => {
-    setHost("app.nooshere.org", "https://app.nooshere.org");
+    setHost("app.noospherehub.com", "https://app.noospherehub.com");
     const ENABLED = Object.freeze({ clientPortalAccess: true });
     renderModal({ store: makeStore({ subdomain: null }), initialData: ENABLED });
-    expect(portalUrl()).toBe("https://app.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://app.noospherehub.com/client/");
   });
 
   it("copies the address to the clipboard", () => {
     openEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Copy portal link" }));
-    expect(writeText).toHaveBeenCalledWith("https://acme.nooshere.org/client/");
+    expect(writeText).toHaveBeenCalledWith("https://acme.noospherehub.com/client/");
     expect(toast.showToast).toHaveBeenCalledWith("Link copied to clipboard!", "success");
   });
 });
@@ -234,7 +234,7 @@ describe("the switches", () => {
     renderModal();
     fireEvent.click(portalSwitch());
     expect(switches()).toHaveLength(3);
-    expect(portalUrl()).toBe("https://acme.nooshere.org/client/");
+    expect(portalUrl()).toBe("https://acme.noospherehub.com/client/");
     expect(
       screen.queryByText("Enable the client portal to configure access and permissions")
     ).toBeNull();

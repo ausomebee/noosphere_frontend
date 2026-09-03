@@ -27,10 +27,16 @@ const getSubdomain = () => {
     return null;
   }
 
-  // === PRODUCTION: nooshere.org ===
+  // === OUR REGISTERED APEXES ===
+  // All three domains we own, plus their www forms. Hitting any of these means
+  // "no tenant selected", so it must not be parsed for a subdomain.
   const rootDomains = [
-    "nooshere.org",
-    "www.nooshere.org",
+    "noospherehub.com",
+    "www.noospherehub.com",
+    "noospherehub.net",
+    "www.noospherehub.net",
+    "noospherehub.org",
+    "www.noospherehub.org",
   ];
 
   if (rootDomains.includes(hostname)) {
@@ -38,7 +44,7 @@ const getSubdomain = () => {
     return null;
   }
 
-  // Extract subdomain from real domains: tenant.nooshere.org
+  // Extract subdomain from real domains: tenant.noospherehub.com
   const parts = hostname.split(".");
   if (parts.length >= 3) {
     const potentialSubdomain = parts[0];

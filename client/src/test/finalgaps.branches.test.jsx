@@ -38,20 +38,20 @@ describe("getSubdomain on real hosts", () => {
 
   it("treats a www-prefixed host as no tenant", () => {
     localStorage.setItem("subDomain", "stale");
-    setHost("www.nooshere.org");
+    setHost("www.noospherehub.com");
     expect(getSubdomain()).toBeNull();
     expect(localStorage.getItem("subDomain")).toBeNull();
   });
 
   it("treats the bare root domain as no tenant", () => {
     localStorage.setItem("subDomain", "stale");
-    setHost("nooshere.org");
+    setHost("noospherehub.com");
     expect(getSubdomain()).toBeNull();
     expect(localStorage.getItem("subDomain")).toBeNull();
   });
 
   it("extracts a real tenant subdomain and stores it", () => {
-    setHost("mypractice.nooshere.org");
+    setHost("mypractice.noospherehub.com");
     expect(getSubdomain()).toBe("mypractice");
     expect(localStorage.getItem("subDomain")).toBe("mypractice");
   });

@@ -30,10 +30,20 @@ const deactivationReasons = [
   { value: "Repeated Policy Violations Despite Warnings", label: "Repeated Policy Violations Despite Warnings" },
 ];
 
+// Every apex we own, production first. Matching a host against this list —
+// rather than blindly taking its last two labels — keeps a deeper host such as
+// admin.eu.noospherehub.com resolving to the apex we actually registered, and
+// the head of the list is the fallback for hosts that carry no usable apex at
+// all (localhost, raw EC2 hostnames, bare IPs).
+const KNOWN_APEXES = [
+  "noospherehub.com",
+  "noospherehub.net",
+  "noospherehub.org",
+];
+
 // Base domain for tenant portal URLs, derived from the host the control app is
-// actually running on so the URL always matches the current environment
-// (prod/staging). Falls back to the production root on localhost, raw IPs and
-// EC2 hosts where there is no real apex to read.
+// actually running on, so a generated URL always matches the current
+// environment rather than being hardcoded to one of them.
 const getTenantBaseDomain = () => {
   const host = (window.location.hostname || "").toLowerCase();
   const isLocalOrRaw =
@@ -41,9 +51,11 @@ const getTenantBaseDomain = () => {
     host.endsWith(".localhost") ||
     host.endsWith(".amazonaws.com") ||
     /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-  if (isLocalOrRaw) return "nooshere.org";
+  if (isLocalOrRaw) return KNOWN_APEXES[0];
+  const known = KNOWN_APEXES.find((d) => host === d || host.endsWith(`.${d}`));
+  if (known) return known;
+  // Unrecognised host: fall back to the last two labels.
   const parts = host.split(".");
-  // apex = last two labels, e.g. admin.nooshere.org -> nooshere.org
   return parts.length >= 2 ? parts.slice(-2).join(".") : host;
 };
 
