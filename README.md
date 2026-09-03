@@ -34,11 +34,11 @@ Each application is a fully standalone Vite + React 19 project with its own `pac
 
 The applications are deployed to separate subpaths:
 
-- `/tenant/` — Tenant Portal (accessed by clinic staff via `{subdomain}.nooshere.org/tenant/`)
-- `/control/` — Control Panel (accessed by platform super admins via `nooshere.org/control/`)
-- `/client/` — Client Portal (accessed by patients/caregivers via `{subdomain}.nooshere.org/client/`)
+- `/tenant/` — Tenant Portal (accessed by clinic staff via `{subdomain}.noospherehub.com/tenant/`)
+- `/control/` — Control Panel (accessed by platform super admins via `noospherehub.com/control/`)
+- `/client/` — Client Portal (accessed by patients/caregivers via `{subdomain}.noospherehub.com/client/`)
 
-The root domain is `nooshere.org`; it is hard-coded in `Helper/getSubdomain.jsx` in the tenant and client modules, which treat `nooshere.org` and `www.nooshere.org` as "no tenant".
+The production root domain is `noospherehub.com`. We also own `noospherehub.net` and `noospherehub.org`, which carry the non-production environments; all three (and their `www.` forms) are listed in `Helper/getSubdomain.jsx` in the tenant and client modules, which treat them as "no tenant".
 
 ## Module Descriptions
 
@@ -250,9 +250,15 @@ nginx serves each module from its matching subpath and falls back to that module
 
 Noosphere uses **subdomain-based tenant isolation**:
 
-- `acme.nooshere.org/tenant/` — ACME Corp's tenant portal
-- `acme.nooshere.org/client/` — ACME Corp's client portal
-- `nooshere.org/control/` — Super admin control panel (no subdomain; the control module has no `getSubdomain` at all)
+- `acme.noospherehub.com/tenant/` — ACME Corp's tenant portal
+- `acme.noospherehub.com/client/` — ACME Corp's client portal
+- `noospherehub.com/control/` — Super admin control panel (no subdomain; the control module has no `getSubdomain` at all)
+
+The same shape applies on `noospherehub.net` and `noospherehub.org`, which host
+the non-production environments. Tenant-portal URLs that the apps generate are
+derived from the host actually being served (see `KNOWN_APEXES` in
+`ClientAccessModal.jsx` and `TenantSingleSecuritySettings.jsx`), so a link built
+on one environment never points at another.
 
 ### How It Works
 
@@ -289,9 +295,36 @@ Although the three modules are independent applications, they follow identical a
 ### Authentication
 
 - JWT-based authentication with access and refresh tokens
-- Tokens stored in Redux memory (NOT localStorage) to prevent XSS token theft
 - Automatic token refresh with request queuing for concurrent API calls
 - `persistor.purge()` called on logout to clear all persisted state
+
+#### Token storage — known exposure
+
+Access and refresh tokens are persisted to `localStorage` (through
+`redux-persist/lib/storage`), not held in memory only, so a session survives a
+page reload. Any script running on the origin can read them, which makes an XSS
+bug a token-theft bug. What each module persists:
+
+| Module | Persisted slices | Holds tokens |
+| --- | --- | --- |
+| `control` | whole root — `authentication`, `pipeline`, `featureManagement`, `formDrafts` | yes |
+| `tenant` | whole root — `authentication`, `pipeline`, `addTargetDraft`, `staffFormDraft`, `formBuilder`, `addClient`, `subDomain` | yes |
+| `client` | `auth`, `formBuilder`, `formResponse` (explicit `whitelist`) | yes |
+
+`control` and `tenant` persist every slice because their `persistConfig` sets
+neither `whitelist` nor `blacklist` — that includes the draft slices holding
+client-entered data.
+
+Compensating controls: DOMPurify on all `dangerouslySetInnerHTML` (see [Input
+Sanitization](#input-sanitization)), Yup validation on form input, a 30-minute
+idle timeout, `persistor.purge()` on logout, and short-lived access tokens.
+
+The real fix is to move the refresh token into an `httpOnly` `Secure`
+`SameSite` cookie issued by the API and keep only the access token in memory.
+That needs a coordinated backend change and is tracked as a follow-up.
+Blacklisting the auth slice on its own would log every user out on each reload
+without closing the XSS path, since injected script can read the in-memory
+store just as readily.
 
 ### Session Management
 
@@ -315,7 +348,8 @@ Although the three modules are independent applications, they follow identical a
 ### Production Hardening
 
 - All `console.log`/`console.warn`/`console.info` statements guarded with `import.meta.env.DEV`
-- Client module strips all console output via Terser in production builds
+- All three modules strip `console` and `debugger` from production bundles:
+  `client` via Terser (`drop_console`), `tenant` and `control` via esbuild `drop`
 - No hardcoded API keys or secrets in source code
 - Payment keys loaded from environment variables with graceful fallback
 
