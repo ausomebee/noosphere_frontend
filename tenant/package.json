@@ -24,6 +24,7 @@
     "axios": "^1.8.4",
     "country-region-data": "^4.1.0",
     "date-fns": "^4.1.0",
+    "docx-preview": "^0.4.0",
     "dompurify": "^3.3.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

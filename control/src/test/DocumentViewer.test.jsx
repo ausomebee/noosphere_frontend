@@ -3,6 +3,18 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 import DocumentViewer from '../Components/ReusableModal/DocumentViewer';
 
+// These cover the overlay's routing, not the Word renderer's internals, which
+// have their own suite. Standing it in keeps a network fetch and a megabyte of
+// zip library out of every case here.
+vi.mock("../Components/ReusableModal/DocxPreview", () => ({
+  default: ({ fileUrl, onDownload }) => (
+    <div data-testid="docx-preview" data-url={fileUrl}>
+      <button onClick={onDownload}>Save a copy</button>
+    </div>
+  ),
+}));
+
+
 /**
  * The document preview overlay.
  *
@@ -92,10 +104,13 @@ describe('choosing how to show the file', () => {
     await waitFor(() => expect(body()).toHaveAttribute('aria-busy', 'false'));
   });
 
-  it.each(['doc', 'docx'])('offers a %s as a download instead', (ext) => {
-    renderViewer({ fileUrl: `https://cdn.example.com/notes.${ext}` });
-    expect(document.body.querySelector('.doc-viewer-fallback')).toBeInTheDocument();
-    expect(screen.getByText('Download File')).toBeInTheDocument();
+  it.each(['doc', 'docx'])('renders a %s in the browser', (ext) => {
+    const url = `https://cdn.example.com/notes.${ext}`;
+    renderViewer({ fileUrl: url });
+    expect(screen.getByTestId('docx-preview')).toHaveAttribute('data-url', url);
+    // Not the download prompt any more, and never a third-party frame.
+    expect(document.body.querySelector('.doc-viewer-fallback')).toBeNull();
+    expect(document.body.querySelector('iframe')).toBeNull();
   });
 
   it('offers anything else as a download too', () => {
@@ -167,7 +182,8 @@ describe('downloading', () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('cross-origin'));
     const open = vi.spyOn(window, 'open').mockImplementation(() => {});
 
-    renderViewer({ fileUrl: 'https://cdn.example.com/notes.docx' });
+    // A type with no preview of its own: Word now renders instead.
+    renderViewer({ fileUrl: 'https://cdn.example.com/archive.zip' });
     await act(async () => {
       fireEvent.click(screen.getByText('Download File'));
     });
@@ -226,14 +242,15 @@ describe("a file the browser cannot preview", () => {
   // Only a pdf iframe or an image ever reports that it loaded. A Word file
   // reports nothing, so holding the loader for it left the spinner turning
   // forever with the download prompt hidden behind it.
-  it("shows a Word file's download prompt instead of a spinner", () => {
+  it("hands a Word file straight to the renderer, with no loader of its own", () => {
     renderViewer({ fileUrl: "https://cdn.example.com/notes.docx", fileName: "notes.docx" });
 
+    // The renderer runs its own loader while it fetches and lays the document
+    // out; the overlay waiting on it too left a spinner that never stopped.
     expect(document.body.querySelector(".doc-viewer-spinner")).toBeNull();
     expect(document.body.querySelector(".doc-viewer-content-hidden")).toBeNull();
     expect(body().getAttribute("aria-busy")).toBe("false");
-    expect(screen.getByText(/Word documents can't be previewed/i)).toBeInTheDocument();
-    expect(screen.getByText("Download File")).toBeInTheDocument();
+    expect(screen.getByTestId("docx-preview")).toBeInTheDocument();
   });
 
   it("does the same for a type it does not recognise", () => {

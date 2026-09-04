@@ -8,6 +8,13 @@ import useDocumentViewer, { DocumentViewerProvider } from '../hooks/useDocumentV
 import useReduxFormDraft from '../hooks/useReduxFormDraft';
 import draftReducer from '../ReduxStore/features/formDraftsSlice';
 
+// Renders Word files for real otherwise, which would put a live fetch in a
+// unit test. Its own behaviour is covered in DocxPreview.test.jsx.
+vi.mock("../Components/ReusableModal/DocxPreview", () => ({
+  default: ({ fileUrl }) => <div data-testid="docx-preview" data-url={fileUrl} />,
+}));
+
+
 // The provider now reads the caller's tokens and exchanges a stored key for a
 // signed link. Neither belongs in a test of the viewer's own state machine, and
 // the urls used here are not bucket urls, so the exchange never fires.
@@ -57,9 +64,10 @@ describe('DocumentViewer file types', () => {
     expect(document.body.querySelector('img')).toHaveAttribute('alt', 'Document preview');
   });
 
-  it('handles a Word document rather than treating it as an image', () => {
+  it('renders a Word document rather than treating it as an image', () => {
     render(<DocumentViewer {...base} fileUrl="https://x/notes.docx" fileName="notes.docx" />);
     expect(document.body.querySelector('img')).toBeNull();
+    expect(screen.getByTestId('docx-preview')).toBeInTheDocument();
   });
 
   it('reads the extension past a query string', () => {

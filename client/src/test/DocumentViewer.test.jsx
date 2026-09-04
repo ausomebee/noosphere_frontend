@@ -2,6 +2,18 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
+// These cover the overlay's routing, not the Word renderer's internals, which
+// have their own suite. Standing it in keeps a network fetch and a megabyte of
+// zip library out of every case here.
+vi.mock("../Components/FileUpload/DocxPreview", () => ({
+  default: ({ fileUrl, onDownload }) => (
+    <div data-testid="docx-preview" data-url={fileUrl}>
+      <button onClick={onDownload}>Save a copy</button>
+    </div>
+  ),
+}));
+
+
 describe("DocumentViewer Component", () => {
   it("renders with file name", () => {
     render(<DocumentViewer fileUrl="test.pdf" fileName="My Document" onClose={vi.fn()} />);
@@ -34,10 +46,15 @@ describe("DocumentViewer Component", () => {
 
   // A third-party viewer fetches the file from its own servers, so the request
   // never carries our origin and the referer-locked bucket denies it.
-  it("never hands a DOC file to a third-party viewer", () => {
+  it("renders a DOC file locally, never through a third-party viewer", () => {
     render(<DocumentViewer fileUrl="https://example.com/doc.docx" fileName="Word Doc" onClose={vi.fn()} />);
+    // A third-party viewer would fetch the file to its own servers, which for
+    // a clinical record means handing it to someone else.
     expect(document.querySelector("iframe")).not.toBeInTheDocument();
-    expect(screen.getByText("Download File")).toBeInTheDocument();
+    expect(screen.getByTestId("docx-preview")).toHaveAttribute(
+      "data-url",
+      "https://example.com/doc.docx"
+    );
   });
 
   it("shows download button for unsupported file types", () => {
@@ -129,13 +146,14 @@ describe("a file the browser cannot preview", () => {
   // Only a pdf iframe or an image ever reports that it loaded. A Word file
   // reports nothing, so holding the loader for it left the spinner turning
   // forever with the download prompt hidden behind it.
-  it("shows a Word file's download prompt instead of a spinner", () => {
+  it("hands a Word file straight to the renderer, with no loader of its own", () => {
     show("https://cdn.example.com/notes.docx", "notes.docx");
 
+    // The renderer runs its own loader while it fetches and lays the document
+    // out; the overlay waiting on it too left a spinner that never stopped.
     expect(document.querySelector(".doc-viewer-spinner")).not.toBeInTheDocument();
     expect(document.querySelector(".doc-viewer-content-hidden")).not.toBeInTheDocument();
-    expect(screen.getByText(/Word documents can't be previewed/i)).toBeInTheDocument();
-    expect(screen.getByText("Download File")).toBeInTheDocument();
+    expect(screen.getByTestId("docx-preview")).toBeInTheDocument();
   });
 
   it("does the same for a type it does not recognise", () => {

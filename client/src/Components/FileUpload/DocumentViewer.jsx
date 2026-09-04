@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LuDownload, LuX } from "react-icons/lu";
 import "./DocumentViewer.css";
+import DocxPreview from "./DocxPreview";
 import {
   downloadDocumentFile,
   isUnsignedStorageUrl,
@@ -31,10 +32,10 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
     !resolving &&
     !isUnavailable &&
     ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
-  // Only a framed pdf or an image ever reports back that it has loaded, so only
-  // those two may hold the loader up. Anything else -- a Word file, an unknown
-  // type -- renders a panel straight away; waiting on it left the spinner
-  // turning forever with the download prompt hidden behind it.
+  // Only a framed pdf or an image reports back to *this* component that it has
+  // loaded, so only those two may hold its loader up. A Word file renders
+  // through DocxPreview, which runs its own loader while it fetches and lays
+  // the document out; anything else renders a panel straight away.
   const busy = resolving || (isLoading && (isPdf || isImage));
 
   const handleDownload = async () => {
@@ -71,11 +72,11 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
       );
     }
 
-    // Word files used to render through docs.google.com/gview, which makes
-    // Google's servers fetch the file. That request does not come from our
-    // domain, so the referer-locked bucket answers it with Access Denied and
-    // the frame stays blank. Downloading keeps the request in the browser,
-    // where it carries our origin.
+    if (isDoc) {
+      return <DocxPreview fileUrl={fileUrl} onDownload={handleDownload} />;
+    }
+
+    // Everything else: no preview, only the file itself.
     return (
       <div className="doc-viewer-fallback">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -83,11 +84,7 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
           <polyline points="14 2 14 8 20 8" />
         </svg>
         <p>
-          {isUnavailable
-            ? DOCUMENT_UNAVAILABLE
-            : isDoc
-              ? "Word documents can't be previewed in the browser."
-              : "This file type cannot be previewed."}
+          {isUnavailable ? DOCUMENT_UNAVAILABLE : "This file type cannot be previewed."}
         </p>
         {!isUnavailable && (
           <button className="doc-viewer-btn" onClick={handleDownload} aria-label="Download file">
