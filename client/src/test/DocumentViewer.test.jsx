@@ -2,12 +2,12 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
-// These cover the overlay's routing, not the Word renderer's internals, which
-// have their own suite. Standing it in keeps a network fetch and a megabyte of
+// These cover the overlay's routing, not how a Word file is then shown, which
+// has its own suite. Standing it in keeps a network fetch and a megabyte of
 // zip library out of every case here.
-vi.mock("../Components/FileUpload/DocxPreview", () => ({
+vi.mock("../Components/FileUpload/WordDocument", () => ({
   default: ({ fileUrl, onDownload }) => (
-    <div data-testid="docx-preview" data-url={fileUrl}>
+    <div data-testid="word-document" data-url={fileUrl}>
       <button onClick={onDownload}>Save a copy</button>
     </div>
   ),
@@ -51,7 +51,7 @@ describe("DocumentViewer Component", () => {
     // A third-party viewer would fetch the file to its own servers, which for
     // a clinical record means handing it to someone else.
     expect(document.querySelector("iframe")).not.toBeInTheDocument();
-    expect(screen.getByTestId("docx-preview")).toHaveAttribute(
+    expect(screen.getByTestId("word-document")).toHaveAttribute(
       "data-url",
       "https://example.com/doc.docx"
     );
@@ -153,7 +153,7 @@ describe("a file the browser cannot preview", () => {
     // out; the overlay waiting on it too left a spinner that never stopped.
     expect(document.querySelector(".doc-viewer-spinner")).not.toBeInTheDocument();
     expect(document.querySelector(".doc-viewer-content-hidden")).not.toBeInTheDocument();
-    expect(screen.getByTestId("docx-preview")).toBeInTheDocument();
+    expect(screen.getByTestId("word-document")).toBeInTheDocument();
   });
 
   it("does the same for a type it does not recognise", () => {

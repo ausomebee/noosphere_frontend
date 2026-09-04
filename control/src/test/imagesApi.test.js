@@ -100,3 +100,38 @@ describe("GetPresignedUrl", () => {
     expect(authFetch.get.mock.calls[0][1].params.expiresIn).toBe(expected);
   });
 });
+
+describe("GetPdfPreviewUrl", () => {
+  const PDF_PATH = `${import.meta.env.VITE_API_URL}/images/admin/pdf-preview`;
+
+  const askPdf = () =>
+    imagesApi.GetPdfPreviewUrl({
+      key: "1699999999-notes.docx",
+      accessToken: "access-1",
+      refreshToken: "refresh-1",
+    });
+
+  it("asks this portal's own conversion route with the key", async () => {
+    authFetch.get.mockResolvedValue({ data: { data: { url: "https://signed/a.pdf" } } });
+    await askPdf();
+    expect(authFetch.get).toHaveBeenCalledWith(PDF_PATH, {
+      params: { key: "1699999999-notes.docx" },
+    });
+  });
+
+  it("returns the converted PDF's url", async () => {
+    authFetch.get.mockResolvedValue({ data: { data: { url: "https://signed/a.pdf" } } });
+    await expect(askPdf()).resolves.toBe("https://signed/a.pdf");
+  });
+
+  // Nothing converted yet: the caller falls back to rendering in the browser.
+  it("resolves null when the body carries no url", async () => {
+    authFetch.get.mockResolvedValue({ data: { success: true, data: {} } });
+    await expect(askPdf()).resolves.toBeNull();
+  });
+
+  it("rejects when the route is absent, which the caller treats as no preview", async () => {
+    authFetch.get.mockRejectedValue(new Error("404"));
+    await expect(askPdf()).rejects.toThrow("404");
+  });
+});

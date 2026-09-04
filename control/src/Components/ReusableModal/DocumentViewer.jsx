@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactDOM from "react-dom";
 import "./DocumentViewer.css";
-import DocxPreview from "./DocxPreview";
+import WordDocument from "./WordDocument";
 import {
   downloadDocumentFile,
   isUnsignedStorageUrl,
@@ -116,7 +116,13 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, resolving = false, onClose 
     }
 
     if (isDoc) {
-      return <DocxPreview fileUrl={fileUrl} onDownload={handleDownload} />;
+      return (
+        <WordDocument
+          fileUrl={fileUrl}
+          fileName={fileName}
+          onDownload={handleDownload}
+        />
+      );
     }
 
     // Everything else: no preview, only the file itself.

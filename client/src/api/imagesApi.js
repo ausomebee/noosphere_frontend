@@ -44,4 +44,23 @@ const GetPresignedUrl = async ({
   return readUrl(res?.data);
 };
 
-export default { GetPresignedUrl };
+// Word documents converted to PDF server-side, so they can be framed rather
+// than fetched. An iframe is a navigation, not a script read, so it is not
+// subject to CORS -- which is the whole reason this route exists while the
+// bucket carries no CORS rule of its own.
+//
+// PROPOSED CONTRACT, mirroring the presign route above:
+//   GET /images/client/pdf-preview?key=<object key>
+//   200 { success, data: { key, url, expiresIn } }   url = the converted PDF
+//   404, or a body with no url                       nothing to show yet
+// Anything other than a url makes the caller fall back to rendering the .docx
+// in the browser, so this ships safely before the route exists.
+const PDF_PREVIEW_PATH = `${PLAIN_API_URL}/images/client/pdf-preview`;
+
+const GetPdfPreviewUrl = async ({ key, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  const res = await authFetch.get(PDF_PREVIEW_PATH, { params: { key } });
+  return readUrl(res?.data);
+};
+
+export default { GetPresignedUrl, GetPdfPreviewUrl };

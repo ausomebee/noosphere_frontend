@@ -3,12 +3,12 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 import DocumentViewer from '../Components/ReusableModal/DocumentViewer';
 
-// These cover the overlay's routing, not the Word renderer's internals, which
-// have their own suite. Standing it in keeps a network fetch and a megabyte of
+// These cover the overlay's routing, not how a Word file is then shown, which
+// has its own suite. Standing it in keeps a network fetch and a megabyte of
 // zip library out of every case here.
-vi.mock("../Components/ReusableModal/DocxPreview", () => ({
+vi.mock("../Components/ReusableModal/WordDocument", () => ({
   default: ({ fileUrl, onDownload }) => (
-    <div data-testid="docx-preview" data-url={fileUrl}>
+    <div data-testid="word-document" data-url={fileUrl}>
       <button onClick={onDownload}>Save a copy</button>
     </div>
   ),
@@ -107,7 +107,7 @@ describe('choosing how to show the file', () => {
   it.each(['doc', 'docx'])('renders a %s in the browser', (ext) => {
     const url = `https://cdn.example.com/notes.${ext}`;
     renderViewer({ fileUrl: url });
-    expect(screen.getByTestId('docx-preview')).toHaveAttribute('data-url', url);
+    expect(screen.getByTestId('word-document')).toHaveAttribute('data-url', url);
     // Not the download prompt any more, and never a third-party frame.
     expect(document.body.querySelector('.doc-viewer-fallback')).toBeNull();
     expect(document.body.querySelector('iframe')).toBeNull();
@@ -250,7 +250,7 @@ describe("a file the browser cannot preview", () => {
     expect(document.body.querySelector(".doc-viewer-spinner")).toBeNull();
     expect(document.body.querySelector(".doc-viewer-content-hidden")).toBeNull();
     expect(body().getAttribute("aria-busy")).toBe("false");
-    expect(screen.getByTestId("docx-preview")).toBeInTheDocument();
+    expect(screen.getByTestId("word-document")).toBeInTheDocument();
   });
 
   it("does the same for a type it does not recognise", () => {

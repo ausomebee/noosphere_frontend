@@ -3,12 +3,12 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
-// These cover the overlay's routing, not the Word renderer's internals, which
-// have their own suite. Standing it in keeps a network fetch and a megabyte of
+// These cover the overlay's routing, not how a Word file is then shown, which
+// has its own suite. Standing it in keeps a network fetch and a megabyte of
 // zip library out of every case here.
-vi.mock("../Components/FileUpload/DocxPreview", () => ({
+vi.mock("../Components/FileUpload/WordDocument", () => ({
   default: ({ fileUrl, onDownload }) => (
-    <div data-testid="docx-preview" data-url={fileUrl}>
+    <div data-testid="word-document" data-url={fileUrl}>
       <button onClick={onDownload}>Save a copy</button>
     </div>
   ),
@@ -106,7 +106,7 @@ describe("file type routing", () => {
   it.each(["doc", "docx"])("renders a .%s in the browser", (ext) => {
     const url = `https://x/a.${ext}`;
     open({ fileUrl: url, fileName: `a.${ext}` });
-    expect(screen.getByTestId("docx-preview")).toHaveAttribute("data-url", url);
+    expect(screen.getByTestId("word-document")).toHaveAttribute("data-url", url);
     expect(body().querySelector(".doc-viewer-fallback")).toBeNull();
   });
 
@@ -231,7 +231,7 @@ describe("a file the browser cannot preview", () => {
     expect(body().querySelector(".doc-viewer-spinner")).toBeNull();
     expect(body().querySelector(".doc-viewer-content-hidden")).toBeNull();
     expect(body().querySelector(".doc-viewer-body").getAttribute("aria-busy")).toBe("false");
-    expect(screen.getByTestId("docx-preview")).toBeInTheDocument();
+    expect(screen.getByTestId("word-document")).toBeInTheDocument();
   });
 
   it("does the same for a type it does not recognise", () => {
