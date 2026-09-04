@@ -92,6 +92,12 @@ export const storageKeyFromUrl = (url) => {
 export const DOCUMENT_UNAVAILABLE =
   "This file can't be opened. Its secure link is missing or has expired — reload the page and try again.";
 export const DOCUMENT_GONE = "This file is no longer available.";
+// Distinct from UNAVAILABLE on purpose. A link can be perfectly good and still
+// be unreadable by the page: the browser discards a storage response that
+// carries no CORS header, and reports it identically to being offline. Saying
+// "expired" there sends whoever is debugging it at the wrong thing entirely.
+export const DOCUMENT_NOT_VIEWABLE =
+  "This file couldn't be shown here. You can still download it.";
 export const DOCUMENT_FAILED = "This file couldn't be downloaded. Please try again.";
 
 const saveBlob = (blob, fileName) => {

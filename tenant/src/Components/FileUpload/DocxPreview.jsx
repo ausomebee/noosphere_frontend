@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { DOCUMENT_UNAVAILABLE } from "../../Helper/documentAccess";
+import {
+  DOCUMENT_UNAVAILABLE,
+  DOCUMENT_GONE,
+  DOCUMENT_NOT_VIEWABLE,
+} from "../../Helper/documentAccess";
 
 /**
  * Renders a Word document in the browser.
@@ -20,9 +24,11 @@ import { DOCUMENT_UNAVAILABLE } from "../../Helper/documentAccess";
 const DocxPreview = ({ fileUrl, onDownload }) => {
   const containerRef = useRef(null);
   const [status, setStatus] = useState("loading");
+  const [reason, setReason] = useState(DOCUMENT_NOT_VIEWABLE);
 
   useEffect(() => {
     if (!fileUrl) {
+      setReason(DOCUMENT_UNAVAILABLE);
       setStatus("failed");
       return undefined;
     }
@@ -33,10 +39,33 @@ const DocxPreview = ({ fileUrl, onDownload }) => {
     let cancelled = false;
     setStatus("loading");
 
+    const fail = (message) => {
+      if (cancelled) return;
+      setReason(message);
+      setStatus("failed");
+    };
+
     (async () => {
+      let res;
       try {
-        const res = await fetch(fileUrl);
-        if (!res.ok) throw new Error(String(res.status));
+        res = await fetch(fileUrl);
+      } catch {
+        // fetch rejects identically whether the network is down or the browser
+        // threw the response away for carrying no CORS header -- and a storage
+        // bucket with no CORS rule answers 200 and is discarded anyway. So this
+        // is never "expired": the link may be perfectly good and simply not
+        // readable by script. Downloading still works, because a plain
+        // navigation is not subject to CORS at all.
+        return fail(DOCUMENT_NOT_VIEWABLE);
+      }
+
+      if (!res.ok) {
+        if (res.status === 403) return fail(DOCUMENT_UNAVAILABLE);
+        if (res.status === 404) return fail(DOCUMENT_GONE);
+        return fail(DOCUMENT_NOT_VIEWABLE);
+      }
+
+      try {
         const blob = await res.blob();
 
         const { renderAsync } = await import("docx-preview");
@@ -55,10 +84,9 @@ const DocxPreview = ({ fileUrl, onDownload }) => {
 
         if (!cancelled) setStatus("ready");
       } catch {
-        // Offline, refused by CORS, expired link, or a file this cannot parse.
-        // They are not worth telling apart here: none of them can be previewed,
-        // and the prompt below offers the one thing that still works.
-        if (!cancelled) setStatus("failed");
+        // The bytes arrived but could not be laid out: a corrupt or unsupported
+        // file. Still worth offering the download.
+        fail(DOCUMENT_NOT_VIEWABLE);
       }
     })();
 
@@ -78,7 +106,7 @@ const DocxPreview = ({ fileUrl, onDownload }) => {
 
       {status === "failed" && (
         <div className="doc-viewer-fallback">
-          <p>{DOCUMENT_UNAVAILABLE}</p>
+          <p>{reason}</p>
           {onDownload && (
             <button className="doc-viewer-btn" onClick={onDownload}>
               <span>Download File</span>

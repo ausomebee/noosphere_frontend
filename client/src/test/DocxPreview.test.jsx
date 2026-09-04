@@ -68,40 +68,62 @@ describe("rendering the document", () => {
 });
 
 describe("when it cannot be rendered", () => {
-  const expectFallback = async () => {
-    await waitFor(() =>
-      expect(screen.getByText(/secure link is missing or has expired/i)).toBeInTheDocument()
-    );
+  const expectMessage = async (pattern) => {
+    await waitFor(() => expect(screen.getByText(pattern)).toBeInTheDocument());
     expect(spinner()).toBeNull();
   };
 
-  // Reading the bytes needs CORS on the bucket, which framing a PDF does not.
-  it("falls back when the fetch is refused outright", async () => {
+  const NOT_VIEWABLE = /couldn't be shown here/i;
+  const EXPIRED = /secure link is missing or has expired/i;
+
+  // A bucket with no CORS rule answers 200 and the browser throws the response
+  // away, which reaches script as the same rejection as being offline. Calling
+  // that "expired" points whoever is debugging it at a link that is fine.
+  it("reports a blocked fetch as not viewable, not as expired", async () => {
     global.fetch.mockRejectedValue(new TypeError("Failed to fetch"));
     render(<DocxPreview fileUrl={URL_A} />);
-    await expectFallback();
+    await expectMessage(NOT_VIEWABLE);
+    expect(screen.queryByText(EXPIRED)).toBeNull();
     expect(docx.renderAsync).not.toHaveBeenCalled();
   });
 
-  it.each([[403], [404], [500]])("falls back on a %i", async (status) => {
-    global.fetch.mockResolvedValue({ ok: false, status, blob: async () => new Blob([""]) });
+  // A refusal really is about the link, so it keeps the stronger wording.
+  it("reports a 403 as an expired or missing link", async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 403, blob: async () => new Blob([""]) });
     render(<DocxPreview fileUrl={URL_A} />);
-    await expectFallback();
+    await expectMessage(EXPIRED);
     expect(docx.renderAsync).not.toHaveBeenCalled();
   });
 
-  it("falls back when the file itself cannot be parsed", async () => {
+  it("reports a 404 as gone", async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 404, blob: async () => new Blob([""]) });
+    render(<DocxPreview fileUrl={URL_A} />);
+    await expectMessage(/no longer available/i);
+    expect(docx.renderAsync).not.toHaveBeenCalled();
+  });
+
+  it("reports any other status as not viewable", async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 500, blob: async () => new Blob([""]) });
+    render(<DocxPreview fileUrl={URL_A} />);
+    await expectMessage(NOT_VIEWABLE);
+    expect(docx.renderAsync).not.toHaveBeenCalled();
+  });
+
+  // The bytes arrived; it is the file that is the problem, not the link.
+  it("reports an unparseable file as not viewable", async () => {
     docx.renderAsync.mockRejectedValue(new Error("corrupt"));
     render(<DocxPreview fileUrl={URL_A} />);
-    await expectFallback();
+    await expectMessage(NOT_VIEWABLE);
   });
 
-  it("falls back when there is no url at all, without fetching", async () => {
+  it("reports a missing url as an expired link, without fetching", async () => {
     render(<DocxPreview fileUrl="" />);
-    await expectFallback();
+    await expectMessage(EXPIRED);
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  // Downloading still works when rendering does not: a plain navigation is not
+  // subject to CORS, so the tab fallback reaches the file the fetch could not.
   it("offers the download prompt, and only when there is a handler", async () => {
     const onDownload = vi.fn();
     global.fetch.mockRejectedValue(new TypeError("Failed to fetch"));
@@ -113,9 +135,7 @@ describe("when it cannot be rendered", () => {
     unmount();
 
     render(<DocxPreview fileUrl={URL_A} />);
-    await waitFor(() =>
-      expect(screen.getByText(/secure link is missing or has expired/i)).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText(/couldn't be shown here/i)).toBeInTheDocument());
     expect(screen.queryByText("Download File")).toBeNull();
   });
 });
