@@ -50,17 +50,32 @@ describe("GetPresignedUrl", () => {
     await expect(call()).resolves.toBe("https://signed/x?X-Amz-Signature=a");
   });
 
-  // The envelope is not pinned down, so every shape the rest of this API uses
-  // is accepted rather than breaking on an unexpected wrapper.
+  // The documented envelope, verbatim from the API.
+  it("reads the url out of { success, data: { key, url, expiresIn } }", async () => {
+    authFetch.get.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          key: "1784261531993-pmf-go-live-checklist-v2.docx",
+          url: "https://signed/bare",
+          expiresIn: 1800,
+        },
+      },
+    });
+    await expect(call()).resolves.toBe("https://signed/bare");
+  });
+
+  it("also accepts a bare { url }, so an envelope change is survivable", async () => {
+    authFetch.get.mockResolvedValue({ data: { url: "https://signed/bare" } });
+    await expect(call()).resolves.toBe("https://signed/bare");
+  });
+
   it.each([
     ["a bare string", "https://signed/bare"],
-    ["{ url }", { url: "https://signed/bare" }],
-    ["{ data: url }", { data: "https://signed/bare" }],
-    ["{ data: { url } }", { data: { url: "https://signed/bare" } }],
     ["{ presignedUrl }", { presignedUrl: "https://signed/bare" }],
-  ])("reads the url out of %s", async (_label, body) => {
+  ])("resolves null for %s, which the API does not send", async (_label, body) => {
     authFetch.get.mockResolvedValue({ data: body });
-    await expect(call()).resolves.toBe("https://signed/bare");
+    await expect(call()).resolves.toBeNull();
   });
 
   it("resolves null when the body carries no url at all", async () => {

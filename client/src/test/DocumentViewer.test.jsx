@@ -121,3 +121,31 @@ describe("a link that cannot work", () => {
     delete global.fetch;
   });
 });
+
+describe("a file the browser cannot preview", () => {
+  const show = (url, name) =>
+    render(<DocumentViewer fileUrl={url} fileName={name} onClose={vi.fn()} />);
+
+  // Only a pdf iframe or an image ever reports that it loaded. A Word file
+  // reports nothing, so holding the loader for it left the spinner turning
+  // forever with the download prompt hidden behind it.
+  it("shows a Word file's download prompt instead of a spinner", () => {
+    show("https://cdn.example.com/notes.docx", "notes.docx");
+
+    expect(document.querySelector(".doc-viewer-spinner")).not.toBeInTheDocument();
+    expect(document.querySelector(".doc-viewer-content-hidden")).not.toBeInTheDocument();
+    expect(screen.getByText(/Word documents can't be previewed/i)).toBeInTheDocument();
+    expect(screen.getByText("Download File")).toBeInTheDocument();
+  });
+
+  it("does the same for a type it does not recognise", () => {
+    show("https://cdn.example.com/archive.zip", "archive.zip");
+    expect(document.querySelector(".doc-viewer-spinner")).not.toBeInTheDocument();
+    expect(screen.getByText("Download File")).toBeInTheDocument();
+  });
+
+  it("still holds the loader for a pdf until it loads", () => {
+    show("https://cdn.example.com/a.pdf", "a.pdf");
+    expect(document.querySelector(".doc-viewer-spinner")).toBeInTheDocument();
+  });
+});

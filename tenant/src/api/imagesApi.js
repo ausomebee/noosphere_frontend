@@ -20,14 +20,11 @@ const clampExpiry = (seconds) => {
   return Math.min(Math.floor(n), MAX_EXPIRES_IN);
 };
 
-// The response envelope is not pinned down, so accept the shapes the rest of
-// this API uses -- a bare url, { url }, { data: url } or { data: { url } } --
-// rather than breaking on a wrapper we did not expect.
-const readUrl = (body) => {
-  if (typeof body === "string") return body;
-  if (typeof body?.data === "string") return body.data;
-  return body?.data?.url ?? body?.url ?? body?.data?.presignedUrl ?? body?.presignedUrl ?? null;
-};
+// The documented envelope is { success, data: { key, url, expiresIn } }. A bare
+// { url } is still accepted because it costs nothing and an envelope change
+// would otherwise take every attachment down at once; anything else yields
+// null, which the caller reports rather than passing an undefined url on.
+const readUrl = (body) => body?.data?.url ?? body?.url ?? null;
 
 /**
  * Exchanges a stored object key for a short-lived signed link. Resolves to the

@@ -222,6 +222,33 @@ describe('a link that cannot work', () => {
   });
 });
 
+describe("a file the browser cannot preview", () => {
+  // Only a pdf iframe or an image ever reports that it loaded. A Word file
+  // reports nothing, so holding the loader for it left the spinner turning
+  // forever with the download prompt hidden behind it.
+  it("shows a Word file's download prompt instead of a spinner", () => {
+    renderViewer({ fileUrl: "https://cdn.example.com/notes.docx", fileName: "notes.docx" });
+
+    expect(document.body.querySelector(".doc-viewer-spinner")).toBeNull();
+    expect(document.body.querySelector(".doc-viewer-content-hidden")).toBeNull();
+    expect(body().getAttribute("aria-busy")).toBe("false");
+    expect(screen.getByText(/Word documents can't be previewed/i)).toBeInTheDocument();
+    expect(screen.getByText("Download File")).toBeInTheDocument();
+  });
+
+  it("does the same for a type it does not recognise", () => {
+    renderViewer({ fileUrl: "https://cdn.example.com/archive.zip", fileName: "archive.zip" });
+    expect(document.body.querySelector(".doc-viewer-spinner")).toBeNull();
+    expect(screen.getByText("Download File")).toBeInTheDocument();
+  });
+
+  // The pdf and image paths must still wait for their load event.
+  it("still holds the loader for a pdf until it loads", () => {
+    renderViewer({ fileUrl: "https://cdn.example.com/a.pdf", fileName: "a.pdf" });
+    expect(document.body.querySelector(".doc-viewer-spinner")).not.toBeNull();
+  });
+});
+
 describe('closing', () => {
   it('closes from its own button', () => {
     renderViewer();

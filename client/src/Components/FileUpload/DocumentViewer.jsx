@@ -31,7 +31,11 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
     !resolving &&
     !isUnavailable &&
     ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
-  const busy = resolving || (isLoading && !isUnavailable);
+  // Only a framed pdf or an image ever reports back that it has loaded, so only
+  // those two may hold the loader up. Anything else -- a Word file, an unknown
+  // type -- renders a panel straight away; waiting on it left the spinner
+  // turning forever with the download prompt hidden behind it.
+  const busy = resolving || (isLoading && (isPdf || isImage));
 
   const handleDownload = async () => {
     try {
