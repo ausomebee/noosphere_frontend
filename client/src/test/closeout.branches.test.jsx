@@ -9,6 +9,17 @@ import AuthorizationCard from "../Components/Cards/Dashboard/Authorization/Autho
 import { SelectInput, SearchableSelectInput } from "../Components/Input/Inputs";
 import useDocumentViewer, { DocumentViewerProvider } from "../hooks/useDocumentViewer";
 
+// The provider now reads the caller's tokens and exchanges a stored key for a
+// signed link. Neither belongs in a test of the viewer's own state machine, and
+// the urls used here are not bucket urls, so the exchange never fires.
+vi.mock("../hooks/useAuth", () => ({
+  default: () => ({ accessToken: "access-1", refreshToken: "refresh-1" }),
+}));
+vi.mock("../api/imagesApi", () => ({
+  default: { GetPresignedUrl: vi.fn(async () => null) },
+}));
+
+
 /**
  * Closing out the client's reachable branches: the selects' change handlers
  * and disabled state, the button's icon placement, and the viewer's download

@@ -13,6 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import {
   isUnsignedStorageUrl,
+  storageKeyFromUrl,
   downloadDocumentFile,
   DOCUMENT_UNAVAILABLE,
   DOCUMENT_GONE,
@@ -79,6 +80,54 @@ describe("isUnsignedStorageUrl", () => {
     ["unparseable text", "not a url at all ::::"],
   ])("returns false for %s", (_label, value) => {
     expect(isUnsignedStorageUrl(value)).toBe(false);
+  });
+});
+
+describe("storageKeyFromUrl", () => {
+  it("takes the key out of a path-style url, dropping the bucket", () => {
+    expect(storageKeyFromUrl(UNSIGNED)).toBe("1764605574756-grok_report.pdf");
+  });
+
+  // Here the bucket is in the hostname, so the whole path is the key.
+  it("takes the whole path from a virtual-hosted url", () => {
+    expect(
+      storageKeyFromUrl(
+        "https://ausomebee-objects-storage.s3.us-west-1.amazonaws.com/1699999999-photo.png"
+      )
+    ).toBe("1699999999-photo.png");
+  });
+
+  it("keeps a key that contains slashes", () => {
+    expect(
+      storageKeyFromUrl(`${BUCKET}/tenant-1/reports/2026/q1.pdf`)
+    ).toBe("tenant-1/reports/2026/q1.pdf");
+  });
+
+  // The API wants the key itself; the request layer encodes it again.
+  it("decodes a percent-encoded key", () => {
+    expect(storageKeyFromUrl(`${BUCKET}/1699999999-my%20photo%20%281%29.png`)).toBe(
+      "1699999999-my photo (1).png"
+    );
+  });
+
+  it("ignores a query string, so an already-signed url still yields its key", () => {
+    expect(storageKeyFromUrl(SIGNED)).toBe("1764605574756-grok_report.pdf");
+  });
+
+  it("handles the older dash-style regional endpoint", () => {
+    expect(
+      storageKeyFromUrl("https://s3-us-west-1.amazonaws.com/bucket/a/b.pdf")
+    ).toBe("a/b.pdf");
+  });
+
+  it.each([
+    ["our own API", "https://api.noospherehub.com/api/v1/issue/attachment/7"],
+    ["a bucket url with no key", "https://s3.us-west-1.amazonaws.com/bucket-only"],
+    ["an empty string", ""],
+    ["null", null],
+    ["unparseable text", "not a url ::::"],
+  ])("returns null for %s", (_label, value) => {
+    expect(storageKeyFromUrl(value)).toBeNull();
   });
 });
 

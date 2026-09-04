@@ -9,7 +9,7 @@ import {
 } from "../../Helper/documentAccess";
 import { showToast } from "../../Helper/ShowToast";
 
-const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
+const DocumentViewer = ({ isOpen, fileUrl, fileName, resolving = false, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const scrollPositionRef = useRef(0);
 
@@ -19,14 +19,21 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   // An unsigned storage link can be neither framed nor fetched, so it is routed
   // to the explanatory panel below rather than to a preview that would sit
   // blank while the browser was quietly refused.
-  const isUnavailable = isUnsignedStorageUrl(fileUrl);
+  // While the signed link is still being fetched nothing is known about the
+  // file yet, so every branch below waits rather than deciding on a url that is
+  // about to be replaced.
+  const isUnavailable = !resolving && isUnsignedStorageUrl(fileUrl);
   const fileExtension = getFileExtension(fileUrl);
-  const isPdf = !isUnavailable && fileExtension === "pdf";
+  const isPdf = !resolving && !isUnavailable && fileExtension === "pdf";
   const isDoc =
-    !isUnavailable && (fileExtension === "doc" || fileExtension === "docx");
+    !resolving &&
+    !isUnavailable &&
+    (fileExtension === "doc" || fileExtension === "docx");
   const isImage =
+    !resolving &&
     !isUnavailable &&
     ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
+  const busy = resolving || (isLoading && !isUnavailable);
 
   const handleDownload = useCallback(async () => {
     try {
@@ -89,6 +96,8 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
   };
 
   const renderContent = () => {
+    if (resolving) return null;
+
     if (isPdf) {
       return (
         <iframe
@@ -158,14 +167,14 @@ const DocumentViewer = ({ isOpen, fileUrl, fileName, onClose }) => {
           </div>
         </div>
 
-        <div className="doc-viewer-body" aria-busy={isLoading && !isUnavailable}>
-          {isLoading && !isUnavailable && (
+        <div className="doc-viewer-body" aria-busy={busy}>
+          {busy && (
             <div className="doc-viewer-loading" role="status" aria-live="polite">
               <div className="doc-viewer-spinner" />
               <span className="doc-viewer-sr-only">Loading document...</span>
             </div>
           )}
-          <div className={`doc-viewer-content ${isImage ? "doc-viewer-content-image" : ""} ${isLoading && !isUnavailable ? "doc-viewer-content-hidden" : ""}`}>
+          <div className={`doc-viewer-content ${isImage ? "doc-viewer-content-image" : ""} ${busy ? "doc-viewer-content-hidden" : ""}`}>
             {renderContent()}
           </div>
         </div>

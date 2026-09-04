@@ -8,6 +8,17 @@ import useDocumentViewer, { DocumentViewerProvider } from '../hooks/useDocumentV
 import useReduxFormDraft from '../hooks/useReduxFormDraft';
 import draftReducer from '../ReduxStore/features/formDraftsSlice';
 
+// The provider now reads the caller's tokens and exchanges a stored key for a
+// signed link. Neither belongs in a test of the viewer's own state machine, and
+// the urls used here are not bucket urls, so the exchange never fires.
+vi.mock("../hooks/useAuth", () => ({
+  default: () => ({ accessToken: "access-1", refreshToken: "refresh-1" }),
+}));
+vi.mock("../api/imagesApi", () => ({
+  default: { GetPresignedUrl: vi.fn(async () => null) },
+}));
+
+
 /**
  * The document viewer's download fallback and file-type routing, and the form
  * draft hook's hydrate/expire branches.

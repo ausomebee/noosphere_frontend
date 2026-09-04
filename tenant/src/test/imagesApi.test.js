@@ -1,0 +1,87 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+/**
+ * Exchanging a stored object key for a signed link.
+ *
+ * Each portal reads through the route for its own role -- the bucket is
+ * private and the API decides whether this caller may see this object -- so
+ * the path is asserted here rather than taken on trust.
+ */
+
+const authFetch = vi.hoisted(() => ({ get: vi.fn() }));
+vi.mock("../Helper/AxiosInterceptor", () => ({
+  default: vi.fn(() => authFetch),
+}));
+
+import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import imagesApi from "../api/imagesApi";
+
+const PATH = `${import.meta.env.VITE_API_URL}/images/presigned-url`;
+
+const call = (over = {}) =>
+  imagesApi.GetPresignedUrl({
+    key: "1699999999-photo.png",
+    accessToken: "access-1",
+    refreshToken: "refresh-1",
+    ...over,
+  });
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  authFetch.get.mockResolvedValue({
+    data: { url: "https://signed/x?X-Amz-Signature=a" },
+  });
+});
+
+describe("GetPresignedUrl", () => {
+  it("asks this portal's own route, with the key and an expiry", async () => {
+    await call();
+    expect(authFetch.get).toHaveBeenCalledWith(PATH, {
+      params: { key: "1699999999-photo.png", expiresIn: 1800 },
+    });
+  });
+
+  it("signs the request with the caller's tokens", async () => {
+    await call();
+    expect(AxiosInterceptor).toHaveBeenCalledWith("access-1", "refresh-1");
+  });
+
+  it("returns the signed url", async () => {
+    await expect(call()).resolves.toBe("https://signed/x?X-Amz-Signature=a");
+  });
+
+  // The envelope is not pinned down, so every shape the rest of this API uses
+  // is accepted rather than breaking on an unexpected wrapper.
+  it.each([
+    ["a bare string", "https://signed/bare"],
+    ["{ url }", { url: "https://signed/bare" }],
+    ["{ data: url }", { data: "https://signed/bare" }],
+    ["{ data: { url } }", { data: { url: "https://signed/bare" } }],
+    ["{ presignedUrl }", { presignedUrl: "https://signed/bare" }],
+  ])("reads the url out of %s", async (_label, body) => {
+    authFetch.get.mockResolvedValue({ data: body });
+    await expect(call()).resolves.toBe("https://signed/bare");
+  });
+
+  it("resolves null when the body carries no url at all", async () => {
+    authFetch.get.mockResolvedValue({ data: { ok: true } });
+    await expect(call()).resolves.toBeNull();
+  });
+
+  // A refusal has to surface: the caller tells "denied" from "no url" by it.
+  it("rejects when the request fails", async () => {
+    authFetch.get.mockRejectedValue(new Error("403"));
+    await expect(call()).rejects.toThrow("403");
+  });
+
+  it.each([
+    ["a caller's own value", 60, 60],
+    ["past the one-week ceiling", 999999999, 604800],
+    ["zero", 0, 1800],
+    ["a negative", -5, 1800],
+    ["nonsense", "soon", 1800],
+  ])("clamps %s", async (_label, given, expected) => {
+    await call({ expiresIn: given });
+    expect(authFetch.get.mock.calls[0][1].params.expiresIn).toBe(expected);
+  });
+});

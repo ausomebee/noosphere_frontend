@@ -49,6 +49,46 @@ export const isUnsignedStorageUrl = (url) => {
   return !SIGNATURE_PARAMS.some((param) => parsed.searchParams.has(param));
 };
 
+/**
+ * The object key the API needs in order to sign a link, read back out of a
+ * stored URL.
+ *
+ * Path-style URLs carry the bucket in the first path segment
+ * (s3.us-west-1.amazonaws.com/<bucket>/<key>); virtual-hosted URLs carry it in
+ * the hostname, so the whole path is the key. Returns null for anything that
+ * is not object storage, and for a storage url with no key at all.
+ */
+export const storageKeyFromUrl = (url) => {
+  if (typeof url !== "string" || url.trim() === "") return null;
+
+  let parsed;
+  try {
+    parsed = new URL(url, window.location.origin);
+  } catch {
+    return null;
+  }
+
+  if (!isObjectStorageHost(parsed.hostname)) return null;
+
+  const firstLabel = parsed.hostname.split(".")[0];
+  const isPathStyle = firstLabel === "s3" || firstLabel.startsWith("s3-");
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  const keySegments = isPathStyle ? segments.slice(1) : segments;
+  if (keySegments.length === 0) return null;
+
+  // A url path is percent-encoded and the API wants the key itself; the request
+  // layer encodes it again on the way out. A malformed escape is left as-is
+  // rather than throwing, so a bad key fails at the API with a clear status
+  // instead of taking the click down here.
+  const joined = keySegments.join("/");
+  try {
+    return decodeURIComponent(joined);
+  } catch {
+    return joined;
+  }
+};
+
 export const DOCUMENT_UNAVAILABLE =
   "This file can't be opened. Its secure link is missing or has expired — reload the page and try again.";
 export const DOCUMENT_GONE = "This file is no longer available.";
