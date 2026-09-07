@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuDownload, LuX } from "react-icons/lu";
 import "./DocumentViewer.css";
-import WordDocument from "./WordDocument";
+import DocxPreview from "./DocxPreview";
 import {
   downloadDocumentFile,
   isUnsignedStorageUrl,
@@ -73,13 +73,7 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
     }
 
     if (isDoc) {
-      return (
-        <WordDocument
-          fileUrl={fileUrl}
-          fileName={fileName}
-          onDownload={handleDownload}
-        />
-      );
+      return <DocxPreview fileUrl={fileUrl} onDownload={handleDownload} />;
     }
 
     // Everything else: no preview, only the file itself.
