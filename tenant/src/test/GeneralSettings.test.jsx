@@ -518,18 +518,16 @@ describe("the authentication methods", () => {
     expect(modal()).toHaveTextContent("Authenticator App");
     fireEvent.click(within(modal()).getByRole("checkbox"));
     save();
-    await waitFor(() =>
-      expect(api.Set2FASetDefault).toHaveBeenCalledWith({
-        tenantId: "tenant-1",
-        Authenticator2FA: true,
-        securityQuestion: false,
-        setForAll: true,
-        accessToken: "at",
-        refreshToken: "rt",
-      })
-    );
+    await waitFor(() => expect(badgedMethod()).toBe("Authenticator App"));
+    expect(api.Set2FASetDefault).toHaveBeenCalledWith({
+      tenantId: "tenant-1",
+      Authenticator2FA: true,
+      securityQuestion: false,
+      setForAll: true,
+      accessToken: "at",
+      refreshToken: "rt",
+    });
     expect(toast.showToast).toHaveBeenCalledWith("Authenticator settings saved", "success");
-    expect(badgedMethod()).toBe("Authenticator App");
   });
 
   it("leaves the badge where it was when the change is not for everyone", async () => {
@@ -537,10 +535,14 @@ describe("the authentication methods", () => {
     await ready();
     fireEvent.click(gear("Authenticator App"));
     save();
+    // Nothing on screen moves here, so the toast is the only signal the save
+    // finished. Asserting the badge before it would pass whether the component
+    // left it alone or had simply not got there yet.
     await waitFor(() =>
-      expect(api.Set2FASetDefault).toHaveBeenCalledWith(
-        expect.objectContaining({ setForAll: false })
-      )
+      expect(toast.showToast).toHaveBeenCalledWith("Authenticator settings saved", "success")
+    );
+    expect(api.Set2FASetDefault).toHaveBeenCalledWith(
+      expect.objectContaining({ setForAll: false })
     );
     expect(badgedMethod()).toBe("Security Question");
   });
@@ -569,16 +571,14 @@ describe("the authentication methods", () => {
     expect(within(modal()).getByRole("checkbox")).not.toBeChecked();
     fireEvent.click(within(modal()).getByRole("checkbox"));
     save();
-    await waitFor(() =>
-      expect(api.Set2FASetDefault).toHaveBeenCalledWith(
-        expect.objectContaining({ securityQuestion: true, Authenticator2FA: false, setForAll: true })
-      )
+    await waitFor(() => expect(badgedMethod()).toBe("Security Question"));
+    expect(api.Set2FASetDefault).toHaveBeenCalledWith(
+      expect.objectContaining({ securityQuestion: true, Authenticator2FA: false, setForAll: true })
     );
     expect(toast.showToast).toHaveBeenCalledWith(
       "Security question settings saved",
       "success"
     );
-    expect(badgedMethod()).toBe("Security Question");
   });
 
   it("leaves the badge alone when the security question change is not for everyone", async () => {
@@ -586,10 +586,12 @@ describe("the authentication methods", () => {
     await ready();
     fireEvent.click(gear("Security Question"));
     save();
+    // As above: with nothing moving, the toast is what says the save landed.
     await waitFor(() =>
-      expect(api.Set2FASetDefault).toHaveBeenCalledWith(
-        expect.objectContaining({ setForAll: false })
-      )
+      expect(toast.showToast).toHaveBeenCalledWith("Security question settings saved", "success")
+    );
+    expect(api.Set2FASetDefault).toHaveBeenCalledWith(
+      expect.objectContaining({ setForAll: false })
     );
     expect(badgedMethod()).toBe("Authenticator App");
   });
