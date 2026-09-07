@@ -44,4 +44,25 @@ const GetPresignedUrl = async ({
   return readUrl(res?.data);
 };
 
-export default { GetPresignedUrl };
+// The same object, streamed through our own API rather than read straight from
+// the bucket. It exists because a bucket response carries no CORS header, so
+// the browser discards it before script can touch it; this route inherits the
+// API's CORS config and also corrects the Office MIME types that S3 returns as
+// application/zip.
+//
+// Only for reads that go through script -- rendering a Word file, saving a
+// blob. A frame or an <img> cannot send an Authorization header, so those keep
+// using the presigned URL, which they are allowed to fetch precisely because a
+// navigation is not subject to CORS.
+const FILE_PATH = `${PLAIN_API_URL}/images/file`;
+
+const GetFileBlob = async ({ key, accessToken, refreshToken }) => {
+  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  const res = await authFetch.get(FILE_PATH, {
+    params: { key },
+    responseType: "blob",
+  });
+  return res?.data ?? null;
+};
+
+export default { GetPresignedUrl, GetFileBlob };

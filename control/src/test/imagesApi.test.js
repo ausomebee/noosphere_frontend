@@ -100,3 +100,47 @@ describe("GetPresignedUrl", () => {
     expect(authFetch.get.mock.calls[0][1].params.expiresIn).toBe(expected);
   });
 });
+
+describe("GetFileBlob", () => {
+  const FILE_PATH = `${import.meta.env.VITE_API_URL}/images/admin/file`;
+
+  const askFile = () =>
+    imagesApi.GetFileBlob({
+      key: "1699999999-notes.docx",
+      accessToken: "access-1",
+      refreshToken: "refresh-1",
+    });
+
+  it("streams from this portal's own route, asking for a blob", async () => {
+    authFetch.get.mockResolvedValue({ data: new Blob(["bytes"]) });
+    await askFile();
+    // responseType matters: without it axios would hand back parsed text.
+    expect(authFetch.get).toHaveBeenCalledWith(FILE_PATH, {
+      params: { key: "1699999999-notes.docx" },
+      responseType: "blob",
+    });
+  });
+
+  it("signs the request with the caller's tokens", async () => {
+    authFetch.get.mockResolvedValue({ data: new Blob(["bytes"]) });
+    await askFile();
+    expect(AxiosInterceptor).toHaveBeenCalledWith("access-1", "refresh-1");
+  });
+
+  it("returns the blob", async () => {
+    const blob = new Blob(["bytes"]);
+    authFetch.get.mockResolvedValue({ data: blob });
+    await expect(askFile()).resolves.toBe(blob);
+  });
+
+  it("returns null when the response carries no body", async () => {
+    authFetch.get.mockResolvedValue({});
+    await expect(askFile()).resolves.toBeNull();
+  });
+
+  it("rejects on a refusal, so the caller can report which one", async () => {
+    const err = Object.assign(new Error("403"), { response: { status: 403 } });
+    authFetch.get.mockRejectedValue(err);
+    await expect(askFile()).rejects.toThrow("403");
+  });
+});

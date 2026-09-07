@@ -3,6 +3,17 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
+// Downloading now reads a stored object through our own API, which means auth.
+// The urls in this file are not bucket urls, so the direct path still runs --
+// these only keep redux and the axios chain out of a component test.
+vi.mock("../hooks/useAuth", () => ({
+  default: () => ({ accessToken: "access-1", refreshToken: "refresh-1" }),
+}));
+vi.mock("../api/imagesApi", () => ({
+  default: { GetPresignedUrl: vi.fn(async () => null), GetFileBlob: vi.fn(async () => null) },
+}));
+
+
 // These cover the overlay's routing, not the Word renderer's internals, which
 // have their own suite. Standing it in keeps a network fetch and a megabyte of
 // zip library out of every case here.

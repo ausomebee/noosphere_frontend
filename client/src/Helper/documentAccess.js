@@ -100,7 +100,7 @@ export const DOCUMENT_NOT_VIEWABLE =
   "This file couldn't be shown here. You can still download it.";
 export const DOCUMENT_FAILED = "This file couldn't be downloaded. Please try again.";
 
-const saveBlob = (blob, fileName) => {
+export const saveBlob = (blob, fileName) => {
   const blobUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = blobUrl;

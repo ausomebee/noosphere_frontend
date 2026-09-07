@@ -3,11 +3,10 @@ import { LuDownload, LuX } from "react-icons/lu";
 import "./DocumentViewer.css";
 import DocxPreview from "./DocxPreview";
 import {
-  downloadDocumentFile,
   isUnsignedStorageUrl,
   DOCUMENT_UNAVAILABLE,
 } from "../../Helper/documentAccess";
-import { showToast } from "../../Helper/ShowToast";
+import useDocumentDownload from "../../hooks/useDocumentDownload";
 
 const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,13 +37,9 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
   // the document out; anything else renders a panel straight away.
   const busy = resolving || (isLoading && (isPdf || isImage));
 
-  const handleDownload = async () => {
-    try {
-      await downloadDocumentFile(fileUrl, fileName);
-    } catch (err) {
-      showToast(err.message, "error");
-    }
-  };
+  // Stored objects are read through our own API by key; the hook decides.
+  const downloadDocument = useDocumentDownload();
+  const handleDownload = () => downloadDocument(fileUrl, fileName);
 
   const renderContent = () => {
     if (resolving) return null;

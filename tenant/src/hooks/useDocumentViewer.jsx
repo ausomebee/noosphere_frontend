@@ -2,13 +2,12 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
 import {
-  downloadDocumentFile,
   isUnsignedStorageUrl,
   storageKeyFromUrl,
 } from "../Helper/documentAccess";
-import { showToast } from "../Helper/ShowToast";
 import imagesApi from "../api/imagesApi";
 import useAuth from "./useAuth";
+import useDocumentDownload from "./useDocumentDownload";
 
 const DocumentViewerContext = createContext(null);
 
@@ -65,25 +64,10 @@ export const DocumentViewerProvider = ({ children }) => {
     setViewerState({ isOpen: false, fileUrl: "", fileName: "", resolving: false });
   }, []);
 
-  const downloadDocument = useCallback(
-    async (fileUrl, fileName) => {
-      let resolved = fileUrl;
-      try {
-        resolved = await resolveUrl(fileUrl);
-      } catch {
-        // Fall through with the unsigned url: the helper refuses it with the
-        // message written for this exact case, rather than an axios one.
-      }
-      try {
-        await downloadDocumentFile(resolved, fileName);
-      } catch (err) {
-        // The helper's messages are written for the person on the screen, so
-        // the failure is reported rather than swallowed the way it used to be.
-        showToast(err.message, "error");
-      }
-    },
-    [resolveUrl]
-  );
+  // Downloading needs no signed link at all now: a stored object is read
+  // through our own API by key, so resolving one first would be a wasted round
+  // trip. Non-stored urls still go the direct route inside the hook.
+  const downloadDocument = useDocumentDownload();
 
   return (
     <DocumentViewerContext.Provider

@@ -17,6 +17,18 @@ vi.mock("docx-preview", () => ({ renderAsync: docx.renderAsync }));
 
 import DocxPreview from "../Components/FileUpload/DocxPreview";
 
+// Downloading now reads a stored object through our own API, which means auth.
+// The urls in this file are not bucket urls, so the direct path still runs --
+// these only keep redux and the axios chain out of a component test.
+vi.mock("../hooks/useAuth", () => ({
+  default: () => ({ accessToken: "access-1", refreshToken: "refresh-1" }),
+}));
+const images = vi.hoisted(() => ({ getFileBlob: vi.fn(async () => null) }));
+vi.mock("../api/imagesApi", () => ({
+  default: { GetPresignedUrl: vi.fn(async () => null), GetFileBlob: images.getFileBlob },
+}));
+
+
 const URL_A = "https://signed/a.docx?X-Amz-Signature=abc";
 
 const okResponse = (body = "docx bytes") => ({
@@ -167,6 +179,51 @@ describe("when the file changes mid-render", () => {
     release(okResponse());
 
     await new Promise((r) => setTimeout(r, 0));
+    expect(docx.renderAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe("a stored object", () => {
+  const STORED =
+    "https://s3.us-west-1.amazonaws.com/ausomebee-objects-storage/1784261531993-notes.docx?X-Amz-Signature=abc";
+
+  // Reading the bucket directly is not possible: its responses carry no CORS
+  // header and the browser discards them however good the signed link is.
+  it("streams the bytes through the API instead of fetching the bucket", async () => {
+    images.getFileBlob.mockResolvedValue(new Blob(["docx bytes"]));
+
+    render(<DocxPreview fileUrl={STORED} />);
+
+    await waitFor(() => expect(docx.renderAsync).toHaveBeenCalled());
+    expect(images.getFileBlob).toHaveBeenCalledWith({
+      key: "1784261531993-notes.docx",
+      accessToken: "access-1",
+      refreshToken: "refresh-1",
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [403, /secure link is missing or has expired/i],
+    [404, /no longer available/i],
+    [500, /couldn't be shown here/i],
+  ])("reports a %i from the stream route", async (status, pattern) => {
+    images.getFileBlob.mockRejectedValue(
+      Object.assign(new Error(String(status)), { response: { status } })
+    );
+
+    render(<DocxPreview fileUrl={STORED} />);
+
+    await waitFor(() => expect(screen.getByText(pattern)).toBeInTheDocument());
+    expect(docx.renderAsync).not.toHaveBeenCalled();
+  });
+
+  it("reports an empty body rather than rendering nothing", async () => {
+    images.getFileBlob.mockResolvedValue(null);
+    render(<DocxPreview fileUrl={STORED} />);
+    await waitFor(() =>
+      expect(screen.getByText(/couldn't be shown here/i)).toBeInTheDocument()
+    );
     expect(docx.renderAsync).not.toHaveBeenCalled();
   });
 });

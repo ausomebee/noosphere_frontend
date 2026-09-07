@@ -22,6 +22,17 @@ import { ClientLogin } from "../ReduxStore/features/authentication";
 import getSubdomain from "../Helper/getSubdomain";
 import { getFingerprint } from "../Helper/fingerprint";
 
+// The overlay reads auth now, since downloading a stored object goes through
+// our own API. The urls here are not bucket urls, so the direct path still
+// runs -- this only keeps redux out of a component test.
+vi.mock("../hooks/useAuth", () => ({
+  default: () => ({ accessToken: "access-1", refreshToken: "refresh-1" }),
+}));
+vi.mock("../api/imagesApi", () => ({
+  default: { GetPresignedUrl: vi.fn(async () => null), GetFileBlob: vi.fn(async () => null) },
+}));
+
+
 /**
  * Last-mile client branches: the document viewer's filename and type
  * fallbacks, the form payload builder's file and signature arms, and the login

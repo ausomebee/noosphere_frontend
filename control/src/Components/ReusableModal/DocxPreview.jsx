@@ -3,7 +3,10 @@ import {
   DOCUMENT_UNAVAILABLE,
   DOCUMENT_GONE,
   DOCUMENT_NOT_VIEWABLE,
+  storageKeyFromUrl,
 } from "../../Helper/documentAccess";
+import imagesApi from "../../api/imagesApi";
+import useAuth from "../../hooks/useAuth";
 
 /**
  * Renders a Word document in the browser.
@@ -22,6 +25,7 @@ import {
  * therefore falls back to the download prompt rather than an empty page.
  */
 const DocxPreview = ({ fileUrl, onDownload }) => {
+  const { accessToken, refreshToken } = useAuth();
   const containerRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [reason, setReason] = useState(DOCUMENT_NOT_VIEWABLE);
@@ -46,28 +50,39 @@ const DocxPreview = ({ fileUrl, onDownload }) => {
     };
 
     (async () => {
-      let res;
-      try {
-        res = await fetch(fileUrl);
-      } catch {
-        // fetch rejects identically whether the network is down or the browser
-        // threw the response away for carrying no CORS header -- and a storage
-        // bucket with no CORS rule answers 200 and is discarded anyway. So this
-        // is never "expired": the link may be perfectly good and simply not
-        // readable by script. Downloading still works, because a plain
-        // navigation is not subject to CORS at all.
-        return fail(DOCUMENT_NOT_VIEWABLE);
+      let blob;
+      const key = storageKeyFromUrl(fileUrl);
+
+      if (key) {
+        // Streamed through our own API. Reading the bucket directly is not an
+        // option: its responses carry no CORS header, so the browser discards
+        // them however good the signed link is.
+        try {
+          blob = await imagesApi.GetFileBlob({ key, accessToken, refreshToken });
+        } catch (err) {
+          const status = err?.response?.status;
+          if (status === 403) return fail(DOCUMENT_UNAVAILABLE);
+          if (status === 404) return fail(DOCUMENT_GONE);
+          return fail(DOCUMENT_NOT_VIEWABLE);
+        }
+        if (!blob) return fail(DOCUMENT_NOT_VIEWABLE);
+      } else {
+        // Not a stored object -- an external or same-origin url, read directly.
+        let res;
+        try {
+          res = await fetch(fileUrl);
+        } catch {
+          return fail(DOCUMENT_NOT_VIEWABLE);
+        }
+        if (!res.ok) {
+          if (res.status === 403) return fail(DOCUMENT_UNAVAILABLE);
+          if (res.status === 404) return fail(DOCUMENT_GONE);
+          return fail(DOCUMENT_NOT_VIEWABLE);
+        }
+        blob = await res.blob();
       }
 
-      if (!res.ok) {
-        if (res.status === 403) return fail(DOCUMENT_UNAVAILABLE);
-        if (res.status === 404) return fail(DOCUMENT_GONE);
-        return fail(DOCUMENT_NOT_VIEWABLE);
-      }
-
       try {
-        const blob = await res.blob();
-
         const { renderAsync } = await import("docx-preview");
         const container = containerRef.current;
         if (cancelled || !container) return;
@@ -93,7 +108,7 @@ const DocxPreview = ({ fileUrl, onDownload }) => {
     return () => {
       cancelled = true;
     };
-  }, [fileUrl]);
+  }, [fileUrl, accessToken, refreshToken]);
 
   return (
     <div className="docx-preview">
