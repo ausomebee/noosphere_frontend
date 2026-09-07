@@ -79,6 +79,9 @@ export const DocumentViewerProvider = ({ children }) => {
         fileUrl={viewerState.fileUrl}
         fileName={viewerState.fileName}
         resolving={viewerState.resolving}
+        onDownload={() =>
+          downloadDocument(viewerState.fileUrl, viewerState.fileName)
+        }
         onClose={closeDocument}
       />
     </DocumentViewerContext.Provider>

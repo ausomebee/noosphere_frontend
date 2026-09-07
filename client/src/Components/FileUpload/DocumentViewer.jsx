@@ -3,12 +3,19 @@ import { LuDownload, LuX } from "react-icons/lu";
 import "./DocumentViewer.css";
 import DocxPreview from "./DocxPreview";
 import {
+  downloadDocumentFile,
   isUnsignedStorageUrl,
   DOCUMENT_UNAVAILABLE,
 } from "../../Helper/documentAccess";
-import useDocumentDownload from "../../hooks/useDocumentDownload";
+import { showToast } from "../../Helper/ShowToast";
 
-const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
+const DocumentViewer = ({
+  fileUrl,
+  fileName,
+  resolving = false,
+  onDownload,
+  onClose,
+}) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const getFileExtension = (url) =>
@@ -37,9 +44,19 @@ const DocumentViewer = ({ fileUrl, fileName, resolving = false, onClose }) => {
   // the document out; anything else renders a panel straight away.
   const busy = resolving || (isLoading && (isPdf || isImage));
 
-  // Stored objects are read through our own API by key; the hook decides.
-  const downloadDocument = useDocumentDownload();
-  const handleDownload = () => downloadDocument(fileUrl, fileName);
+  // The provider supplies onDownload, which streams a stored object through our
+  // own API and so needs the caller's tokens. Keeping that out of here leaves
+  // this component presentational: it renders wherever it is put, with no store
+  // behind it. Without one, read the url directly -- all a non-stored url ever
+  // needed anyway.
+  const handleDownload = async () => {
+    if (onDownload) return onDownload();
+    try {
+      await downloadDocumentFile(fileUrl, fileName);
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
 
   const renderContent = () => {
     if (resolving) return null;
