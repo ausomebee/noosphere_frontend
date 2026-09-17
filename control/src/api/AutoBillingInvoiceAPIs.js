@@ -27,7 +27,7 @@ const UpdatePlanPurchaseToggle = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/invoice/invoice/management/on-plan-purchase`,
+      `${PLAIN_API_URL}/invoice/invoice/management/on-plan-purchase/admin`,
       {
         id,
         onPlanPurchase,
@@ -99,7 +99,7 @@ const UpdateOnDueDateToggle = async ({
   const authFetch = AxiosInterceptor(accessToken, refreshToken);
   try {
     const response = await authFetch.patch(
-      `${PLAIN_API_URL}/invoice/invoice/management/on-due-date`,
+      `${PLAIN_API_URL}/invoice/invoice/management/on-due-date/admin`,
       {
         id,
         onDueDate,
