@@ -1,11 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import process from 'node:process'
+
+// Identifies this build. The bundle is stamped with it, and the same value is
+// written to dist/version.json, which a running tab polls to learn that a
+// newer deploy has landed (see src/hooks/useVersionCheck.js). CI builds use
+// the commit; local builds fall back to a timestamp.
+const buildVersion =
+  (process.env.GITHUB_SHA || '').slice(0, 7) || `local-${Date.now()}`
+
+const versionFile = () => ({
+  name: 'version-file',
+  apply: 'build',
+  generateBundle() {
+    this.emitFile({
+      type: 'asset',
+      fileName: 'version.json',
+      source: JSON.stringify({ version: buildVersion }),
+    })
+  },
+})
 
 // `command` is 'build' for `vite build` and 'serve' for the dev server, so
 // console/debugger are stripped from production bundles only — dev and the
 // vitest run (which loads config in serve mode) keep their logging.
 export default defineConfig(({ command }) => ({
-  plugins: [react()],
+  plugins: [react(), versionFile()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(buildVersion),
+  },
   base: '/tenant/',
   esbuild: {
     drop: command === 'build' ? ['console', 'debugger'] : [],

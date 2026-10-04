@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSubdomain } from "./ReduxStore/features/tenantSlice";
 import ErrorBoundary from "./Helper/ErrorBoundary";
 import FullPageLoader from "./Components/FullPageLoader";
+import UpdateNotice from "./Components/UpdateNotice/UpdateNotice";
 import { DocumentViewerProvider } from "./hooks/useDocumentViewer";
 import getSubdomain from "./Helper/getSubdomain";
 
@@ -35,6 +36,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AppContent />
+      <UpdateNotice />
     </ErrorBoundary>
   );
 }
