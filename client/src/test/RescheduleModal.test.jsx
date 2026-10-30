@@ -285,6 +285,10 @@ describe("closing", () => {
     renderModal({ appointment: { id: "a1" } });
     submit();
     await waitFor(() => expect(screen.getByText("Date is required")).toBeInTheDocument());
+    // The modal locks Cancel while a submit is in flight and releases it a
+    // tick after the failed validation settles. The error can render first on
+    // a slow runner, so wait for the release rather than clicking a dead button.
+    await waitFor(() => expect(screen.getByText("Cancel")).toBeEnabled());
     fireEvent.click(screen.getByText("Cancel"));
     expect(onClose).toHaveBeenCalled();
   });
