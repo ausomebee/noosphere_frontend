@@ -1,0 +1,240 @@
+
+name: Deploy Noosphere Frontend Production
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: noosphere-frontend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to production frontend EC2 instances
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    env:
+      AWS_REGION: ${{ vars.PROD_AWS_REGION }}
+      INSTANCE_1A: ${{ vars.PROD_FRONTEND_INSTANCE_1A }}
+      INSTANCE_1C: ${{ vars.PROD_FRONTEND_INSTANCE_1C }}
+      VITE_API_URL: ${{ secrets.PROD_VITE_API_URL }}
+      VITE_STRIPE_PK: ${{ secrets.PROD_VITE_STRIPE_PK }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PROD_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.PROD_AWS_REGION }}
+
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$AWS_REGION"
+          test -n "$INSTANCE_1A"
+          test -n "$INSTANCE_1C"
+          test -n "$VITE_API_URL"
+          test -n "$VITE_STRIPE_PK"
+          test "$INSTANCE_1A" != "$INSTANCE_1C"
+
+          echo "Production configuration validated."
+
+      - name: Deploy frontend through AWS SSM
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_B64=$(printf '%s' "$VITE_API_URL" | base64 -w 0)
+          STRIPE_B64=$(printf '%s' "$VITE_STRIPE_PK" | base64 -w 0)
+
+          export API_B64 STRIPE_B64
+
+          cat > /tmp/deploy-frontend.sh <<'REMOTE'
+          #!/bin/bash
+          set -euo pipefail
+
+          export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
+          REPO="git@github.com:ausomebee/noosphere_frontend.git"
+          BASE="/opt/noosphere/frontend/releases"
+          RELEASE="$BASE/$DEPLOY_SHA"
+
+          export GITHUB_SHA="$DEPLOY_SHA"
+          export VITE_API_URL="$(printf '%s' "$API_B64" | base64 -d)"
+          export VITE_STRIPE_PK="$(printf '%s' "$STRIPE_B64" | base64 -d)"
+
+          mkdir -p "$BASE"
+
+          # Clone automatically when the release does not exist.
+          if [ ! -d "$RELEASE/.git" ]; then
+            git clone "$REPO" "$RELEASE"
+          fi
+
+          cd "$RELEASE"
+
+          # Deploy the exact commit that triggered GitHub Actions.
+          git fetch origin "$DEPLOY_SHA"
+          git checkout --detach "$DEPLOY_SHA"
+          git reset --hard "$DEPLOY_SHA"
+
+          echo "Deploying commit: $DEPLOY_SHA"
+
+          # Build all three applications before publishing.
+          for app in control tenant client; do
+            echo "Building $app..."
+
+            (
+              cd "$RELEASE/$app"
+
+              npm ci
+              npm run build
+
+              test -f dist/index.html
+            )
+
+            echo "$app build completed."
+          done
+
+          # Stage all three builds before replacing live content.
+          for app in control tenant client; do
+            STAGE="/var/www/.${app}-${DEPLOY_SHA}"
+
+            rm -rf "$STAGE"
+            mkdir -p "$STAGE"
+
+            cp -a "$RELEASE/$app/dist/." "$STAGE/"
+            chmod -R a+rX "$STAGE"
+
+            if command -v restorecon >/dev/null 2>&1; then
+              restorecon -RF "$STAGE"
+            fi
+          done
+
+          # Publish completed builds.
+          for app in control tenant client; do
+            LIVE="/var/www/$app"
+            STAGE="/var/www/.${app}-${DEPLOY_SHA}"
+            BACKUP="/var/www/.${app}-previous"
+
+            rm -rf "$BACKUP"
+
+            if [ -d "$LIVE" ]; then
+              mv "$LIVE" "$BACKUP"
+            fi
+
+            mv "$STAGE" "$LIVE"
+          done
+
+          nginx -t
+          systemctl reload nginx
+
+          echo "Frontend deployment completed: $DEPLOY_SHA"
+          REMOTE
+
+          # Prepare JSON-encoded SSM parameters.
+          python3 - <<'PY'
+          import json
+          import os
+
+          with open("/tmp/deploy-frontend.sh") as f:
+              script = f.read()
+
+          variables = {
+              "DEPLOY_SHA": os.environ["GITHUB_SHA"],
+              "API_B64": os.environ["API_B64"],
+              "STRIPE_B64": os.environ["STRIPE_B64"],
+          }
+
+          exports = "\n".join(
+              f"export {key}={json.dumps(value)}"
+              for key, value in variables.items()
+          )
+
+          command = exports + "\n" + script
+
+          with open("/tmp/ssm-parameters.json", "w") as f:
+              json.dump({
+                  "commands": [command],
+                  "executionTimeout": ["3600"]
+              }, f)
+          PY
+
+          # Start deployment on both frontend instances.
+          COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_1A" "$INSTANCE_1C" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Noosphere frontend production deployment" \
+            --timeout-seconds 3600 \
+            --parameters file:///tmp/ssm-parameters.json \
+            --query 'Command.CommandId' \
+            --output text)
+
+          echo "SSM command ID: $COMMAND_ID"
+
+          # Monitor both instances.
+          FAILED=0
+
+          for INSTANCE in "$INSTANCE_1A" "$INSTANCE_1C"; do
+            echo "Monitoring deployment on $INSTANCE..."
+
+            STATUS="Pending"
+
+            for ATTEMPT in $(seq 1 240); do
+              STATUS=$(aws ssm get-command-invocation \
+                --region "$AWS_REGION" \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE" \
+                --query 'Status' \
+                --output text 2>/dev/null) || STATUS="Pending"
+
+              case "$STATUS" in
+                Success)
+                  echo "Deployment succeeded on $INSTANCE"
+                  break
+                  ;;
+
+                Failed|Cancelled|TimedOut|Cancelling)
+                  echo "Deployment failed on $INSTANCE: $STATUS"
+                  FAILED=1
+                  break
+                  ;;
+
+                *)
+                  sleep 15
+                  ;;
+              esac
+            done
+
+            if [ "$STATUS" != "Success" ]; then
+              echo "Deployment did not complete successfully on $INSTANCE"
+              FAILED=1
+            fi
+
+            aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE" \
+              --query '{Status:Status,Details:StatusDetails,Output:StandardOutputContent,Errors:StandardErrorContent}' \
+              --output json || true
+          done
+
+          exit "$FAILED"
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "Production frontend deployment completed."
+          echo "Commit: $GITHUB_SHA"
+          echo "Applications: Control, Tenant, Client"
+          echo "Targets: Both frontend EC2 instances"
