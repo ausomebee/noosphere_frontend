@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - pre-prod
-      - master
 
 jobs:
   deploy:
