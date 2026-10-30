@@ -1,0 +1,91 @@
+/* Floats above the page without blocking it: the user can finish what they
+   are doing before refreshing. Colours come from the app's own tokens, so
+   the card and its buttons match the rest of the app. */
+.update-notice {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 10000;
+  display: flex;
+  gap: var(--space-3);
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-4);
+  border: 1px solid var(--color-gray-200);
+  border-left: 4px solid var(--button-primary-color);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-primary);
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.14);
+  animation: update-notice-in 0.2s ease-out;
+}
+
+.update-notice-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--button-primary-color) 10%, transparent);
+  color: var(--button-primary-color);
+}
+
+.update-notice-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.update-notice-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.update-notice-text {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-sec);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.update-notice-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* The shared button carries page-sized padding; this card needs compact ones. */
+.update-notice-actions .custom-button {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 480px) {
+  .update-notice {
+    right: var(--space-4);
+    bottom: var(--space-4);
+    left: var(--space-4);
+    width: auto;
+  }
+}
+
+@keyframes update-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-notice {
+    animation: none;
+  }
+}

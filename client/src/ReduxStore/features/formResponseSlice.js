@@ -1,0 +1,195 @@
+// ReduxStore/features/formResponseSlice.js
+import { createSlice } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+
+const initialState = {
+  formId: null,
+  tenantId: null,
+  submittedBy: null,
+  responses: {},
+  files: {}, // fieldId → [{ file, filename, progress, url?, error?, errorMessage?, previewUrl? }]
+  signatures: {},
+  signatureMode: {},
+  currentPage: 0,
+  isLoading: false,
+  error: null,
+  submitted: false,
+  submissionId: null,
+  submittedAt: null,
+  version: 1,
+};
+
+// Helper: Deserialize → safe, no File restoration
+const deserializeFileInfo = (fileInfo) => {
+  if (!fileInfo) return [];
+  return fileInfo.map((info) => ({
+    ...info,
+    file: null, // Cannot restore File object
+    previewUrl: info.previewUrl || null,
+  }));
+};
+
+const formResponseSlice = createSlice({
+  name: "formResponse",
+  initialState,
+  reducers: {
+    initializeResponse: (state, action) => {
+      const { formId, tenantId, submittedBy } = action.payload;
+      state.formId = formId;
+      state.tenantId = tenantId;
+      state.submittedBy = submittedBy;
+      state.submitted = false;
+      state.submissionId = null;
+      state.submittedAt = null;
+    },
+
+    setResponse: (state, action) => {
+      const { fieldId, value } = action.payload;
+      state.responses[fieldId] = value;
+    },
+
+    addFilesToField: (state, action) => {
+      const { fieldId, fileItems } = action.payload;
+      // Create preview URLs for images when adding
+      const enhancedItems = fileItems.map((item) => {
+        if (item.file?.type?.includes("image")) {
+          return {
+            ...item,
+            previewUrl: URL.createObjectURL(item.file),
+          };
+        }
+        return item;
+      });
+      state.files[fieldId] = [...(state.files[fieldId] || []), ...enhancedItems];
+    },
+
+    setFilesForField: (state, action) => {
+      const { fieldId, fileItems } = action.payload;
+      state.files[fieldId] = Array.isArray(fileItems) ? [...fileItems] : [];
+    },
+
+    setFileUploadStatus: (state, action) => {
+      const { fieldId, fileIndex, updates } = action.payload;
+      if (!state.files[fieldId]?.[fileIndex]) return;
+      state.files[fieldId][fileIndex] = {
+        ...state.files[fieldId][fileIndex],
+        ...updates,
+      };
+    },
+
+    setSignature: (state, action) => {
+      const { fieldId, signature } = action.payload;
+      state.signatures[fieldId] = signature;
+    },
+
+    setSignatureMode: (state, action) => {
+      const { fieldId, mode } = action.payload;
+      state.signatureMode[fieldId] = mode;
+    },
+
+    setCurrentPage: (state, action) => {
+      state.currentPage = action.payload;
+    },
+
+    clearResponseField: (state, action) => {
+      const { fieldId } = action.payload;
+      delete state.responses[fieldId];
+      delete state.files[fieldId];
+      delete state.signatures[fieldId];
+      delete state.signatureMode[fieldId];
+    },
+
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+
+    clearAllResponses: (state) => {
+      state.responses = {};
+      state.files = {};
+      state.signatures = {};
+      state.signatureMode = {};
+      state.currentPage = 0;
+      state.error = null;
+    },
+
+    markAsSubmitted: (state, action) => {
+      const { submissionId } = action.payload || {};
+      state.submitted = true;
+      state.submissionId = submissionId;
+      state.submittedAt = new Date().toISOString();
+      state.responses = {};
+      state.files = {};
+      state.signatures = {};
+      state.signatureMode = {};
+      state.currentPage = 0;
+    },
+
+    loadSavedResponse: (state, action) => {
+      const savedState = action.payload;
+      if (savedState.files) {
+        Object.keys(savedState.files).forEach((fieldId) => {
+          savedState.files[fieldId] = deserializeFileInfo(
+            savedState.files[fieldId],
+          );
+        });
+      }
+      return { ...initialState, ...savedState };
+    },
+
+    resetFormResponse: () => initialState,
+  },
+});
+
+export const {
+  initializeResponse,
+  setResponse,
+  addFilesToField,
+  setFilesForField,
+  setFileUploadStatus,
+  setSignature,
+  setSignatureMode,
+  setCurrentPage,
+  clearResponseField,
+  setLoading,
+  setError,
+  clearAllResponses,
+  markAsSubmitted,
+  loadSavedResponse,
+  resetFormResponse,
+} = formResponseSlice.actions;
+
+export const selectIsLoading = (state) => state.formResponse.isLoading;
+export const selectError = (state) => state.formResponse.error;
+
+const formResponsePersistConfig = {
+  key: "formResponse",
+  storage,
+  whitelist: [
+    "formId",
+    "tenantId",
+    "submittedBy",
+    "responses",
+    "signatures",
+    "signatureMode",
+    "currentPage",
+    "submitted",
+    "submissionId",
+    "submittedAt",
+    // Files are deliberately NOT persisted: a File object cannot be
+    // serialized, so it would not survive a reload anyway. Saved file
+    // metadata is rehydrated by deserializeFileInfo in loadSavedResponse,
+    // which returns each entry with `file: null`.
+  ],
+};
+
+export const persistedFormResponseReducer = persistReducer(
+  formResponsePersistConfig,
+  formResponseSlice.reducer
+);
+
+export default formResponseSlice.reducer;

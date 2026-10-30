@@ -1,0 +1,118 @@
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { PasswordInput } from "../../Components/Input/Inputs";
+import Button from "../../Components/Button/Button";
+import Logo from "../../assets/NoosphereLogo-white.png";
+import { useNavigate } from "react-router-dom";
+import "./SuperAdmin.css";
+import api from "../../api/authApis";
+import useAuth from "../../hooks/useAuth";
+import { showToast } from "../../Helper/ShowToast";
+import { showValidationErrors } from "../../Helper/formErrors";
+import {
+  passwordSchema,
+  confirmPasswordSchema,
+} from "../../Helper/passwordValidation";
+
+// Validation schema. Confirm is held to the same strength rules as the new password.
+const schema = yup.object().shape({
+  newPassword: passwordSchema("New password"),
+  confirmPassword: confirmPasswordSchema("newPassword"),
+});
+
+const SuperAdminChangePassword = () => {
+  const { userId } = useAuth();
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
+    resolver: yupResolver(schema),
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const response = await api.AdminSetPassword({
+        id: userId,
+        password: data.newPassword,
+      });
+
+      const successMessage = response?.data?.message || "Password updated successfully!";
+      showToast(successMessage, "success");
+      // Onboarding chain: set the administrative password before choosing 2FA.
+      navigate("/SA/administrative-password");
+    } catch (error) {
+      const message =
+        error?.response?.data?.message || "Failed to update password.";
+      showToast(message, "error");
+      if (import.meta.env.DEV) console.error("Could not set password:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-background">
+      <img src={Logo} alt="Noosphere Logo" className="Auth-logo" />
+      <div className="auth-form-container">
+        <h2>Change your password</h2>
+        <p className="subtitle">
+          Before proceeding you need to set a new password
+        </p>
+        <form onSubmit={handleSubmit(onSubmit, showValidationErrors)}>
+          <div className="form-group">
+            <PasswordInput
+              required
+              label="Password"
+              id="newPassword"
+              placeholder="Enter new password"
+              autoComplete="new-password"
+              showStrength
+              {...register("newPassword")}
+              className={errors.newPassword ? "input-error" : ""}
+            />
+            {errors.newPassword && (
+              <p className="error-message">{errors.newPassword.message}</p>
+            )}
+          </div>
+
+          <div className="form-group">
+            <PasswordInput
+              required
+              label="Confirm password"
+              id="confirmPassword"
+              placeholder="Confirm new password"
+              autoComplete="new-password"
+              {...register("confirmPassword")}
+              matchValue={watch("newPassword") || ""}
+              className={errors.confirmPassword ? "input-error" : ""}
+            />
+            {errors.confirmPassword && (
+              <p className="error-message">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            label="Continue"
+            variant="primary"
+            className="auth-button"
+            loading={loading}
+          />
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SuperAdminChangePassword;

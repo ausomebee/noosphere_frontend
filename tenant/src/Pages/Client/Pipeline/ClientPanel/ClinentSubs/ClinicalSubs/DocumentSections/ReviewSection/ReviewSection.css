@@ -1,0 +1,155 @@
+/* ReviewSection.css */
+.crb-section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Service Recommendations Section */
+.service-recommendations-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.section-title {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Service Recommendation Card Styles */
+.service-recommendation-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.service-recommendation-card:last-child {
+  margin-bottom: 0;
+}
+
+.service-recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.service-recommendation-header h6 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.service-recommendation-delete-btn {
+background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.service-recommendation-delete-btn:hover {
+  background: #fee2e2;
+}
+
+.service-recommendation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Select with Other Container */
+.select-with-other-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.other-input-wrapper {
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error Styles */
+.report-builder-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* Buttons Wrapper */
+.service-recommendation-add-wrapper{
+        width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  padding: 16px 0;
+  border-top: 1px dashed #cbd5e0;
+}
+
+
+.service-recommendation-add-wrapper {
+  margin-top: 16px;
+}
+
+/* Spacing between fields */
+.crb-section-fields > *:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .crb-section-fields {
+    gap: 16px;
+  }
+  
+  .service-recommendation-card {
+    padding: 16px;
+  }
+  
+  .service-recommendation-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .service-recommendation-delete-btn {
+    align-self: flex-start;
+  }
+  
+  .service-recommendation-content {
+    gap: 12px;
+  }
+}
+
+/* Card spacing */
+.service-recommendations-section + .section-remove-btn-wrapper {
+  margin-top: 16px;
+}

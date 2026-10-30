@@ -1,0 +1,9 @@
+# Claude Code
+.claude/
+node_modules/
+package-lock.json
+coverage/
+.gstack/
+
+# graphify knowledge graph output
+graphify-out/

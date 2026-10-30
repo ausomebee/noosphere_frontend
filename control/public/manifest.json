@@ -1,0 +1,12 @@
+{
+  "name": "Noosphere Control Panel",
+  "short_name": "Noosphere Admin",
+  "description": "Admin control panel for Noosphere platform",
+  "start_url": "/control/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    { "src": "/control/logosvg.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,283 @@
+.security-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.security-settings-container .settings-header {
+  margin-bottom: 0;
+}
+
+/* Section */
+.security-settings-container .settings-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.security-settings-container .settings-section-header {
+  margin-bottom: 20px;
+}
+
+.security-settings-container .settings-section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px;
+}
+
+.security-settings-container .settings-section-header p {
+  font-size: 13px;
+  color: #667085;
+  margin: 0;
+}
+
+/* Rows */
+.security-settings-container .settings-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.security-settings-container .settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.security-settings-container .settings-row:last-child {
+  border-bottom: none;
+}
+
+.security-settings-container .settings-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.security-settings-container .settings-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.security-settings-container .settings-row-value {
+  font-size: 13px;
+  color: #667085;
+}
+
+.security-settings-container .settings-row-description {
+  font-size: 12px;
+  color: #98a2b3;
+  max-width: 400px;
+}
+
+.security-settings-container .settings-change-link.btn {
+  color: #004aba !important;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 4px 8px;
+  min-width: unset;
+}
+
+.security-settings-container .settings-change-link.btn:hover {
+  text-decoration: underline;
+  background: transparent !important;
+}
+
+/* 2FA Methods */
+.security-settings-container .settings-2fa-methods {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.security-settings-container .settings-2fa-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 12px;
+}
+
+.security-settings-container .settings-2fa-method-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.security-settings-container .settings-2fa-method-row:last-child {
+  border-bottom: none;
+}
+
+.security-settings-container .settings-2fa-method-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.security-settings-container .settings-2fa-method-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+}
+
+.security-settings-container .settings-2fa-default-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  background: #004ABA;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 16px;
+}
+
+.security-settings-container .settings-2fa-gear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #004ABA;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.security-settings-container .settings-2fa-gear-btn:hover {
+  color: #333;
+}
+
+/* Modal content */
+.settings-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Security Questions Section inside modal */
+.sq-section {
+  margin-top: 8px;
+}
+
+.sq-section-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667085;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sq-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sq-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sq-item:last-child {
+  border-bottom: none;
+}
+
+.sq-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.sq-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sq-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.sq-action-btn.edit {
+  color: #667085;
+}
+
+.sq-action-btn.edit:hover {
+  color: #004aba;
+  background: #eff8ff;
+}
+
+.sq-action-btn.delete {
+  color: #667085;
+}
+
+.sq-action-btn.delete:hover {
+  color: #d92d20;
+  background: #fef3f2;
+}
+
+.sq-add-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sq-add-btn:hover {
+  background: #f9fafb;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .security-settings-container .settings-section {
+    padding: 16px;
+  }
+
+  .security-settings-container .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .security-settings-container .settings-row-description {
+    max-width: 100%;
+  }
+
+  .security-settings-container .settings-2fa-method-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Responsive: Tablet */
+@media (min-width: 641px) and (max-width: 992px) {
+  .security-settings-container .settings-section {
+    padding: 20px;
+  }
+
+  .security-settings-container .settings-row-description {
+    max-width: 300px;
+  }
+}

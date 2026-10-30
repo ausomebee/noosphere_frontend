@@ -1,0 +1,321 @@
+import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
+import { RxCross2 } from "react-icons/rx";
+import "./ReusableModal.css";
+import { modalRegistry } from "../../hooks/modalRegistry";
+
+const ReusableModal = ({
+  isOpen,
+  onClose,
+  title,
+  subTitle,
+  primaryButtonText,
+  secondaryButtonText,
+  tabs,
+  onPrimaryButtonClick,
+  onSecondaryButtonClick,
+  children,
+  size = "md",
+  titleIcon,
+  primaryButtonColor,
+  secondaryButtonColor,
+  primaryButtonLoading = false,
+  activeTab,
+  onTabChange,
+  showClose = false,
+  closeOnOverlayClick = false,
+  className = "",
+  footerContent,
+}) => {
+  const scrollPositionRef = useRef(0);
+  const modalRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  /* ---------- Register open modal (so the board goes inert) ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    modalRegistry.open();
+    return () => modalRegistry.close();
+  }, [isOpen]);
+
+  /* ---------- Focus trap + Escape ---------- */
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") { onCloseRef.current(); return; }
+      if (e.key === "Tab") {
+        const focusable = modalRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable?.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+        else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    const timer = setTimeout(() => { modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus(); }, 50);
+    return () => { document.removeEventListener("keydown", handleKeyDown); clearTimeout(timer); };
+  }, [isOpen]);
+
+  /* ---------- Disable interactions on content behind modal ---------- */
+  useEffect(() => {
+    if (isOpen) {
+      const appRoot = document.getElementById('root');
+      if (appRoot) {
+        appRoot.setAttribute('inert', '');
+      }
+    }
+
+    return () => {
+      if (isOpen) {
+        const appRoot = document.getElementById('root');
+        if (appRoot) {
+          appRoot.removeAttribute('inert');
+        }
+      }
+    };
+  }, [isOpen]);
+
+  /* ---------- Body Scroll Lock ---------- */
+  useEffect(() => {
+    if (isOpen) {
+      scrollPositionRef.current = window.scrollY;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.width = "100%";
+    }
+
+    return () => {
+      if (isOpen) {
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        window.scrollTo(0, scrollPositionRef.current);
+      }
+    };
+  }, [isOpen]);
+
+  // Auto-disable the primary button while an async submit is in flight, so it
+  // can't be double-clicked into a duplicate request.
+  const [submitting, setSubmitting] = useState(false);
+  const primaryBusy = primaryButtonLoading || submitting;
+
+  // Held briefly for handlers that return nothing to await, so a rapid second
+  // click can't slip through before the request lands.
+  const submitGuardRef = useRef(null);
+  useEffect(() => () => clearTimeout(submitGuardRef.current), []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (primaryBusy) return;
+
+    // Lock on every submit. Previously only a promise-returning handler locked
+    // the buttons, so a handler that fired a request without returning it left
+    // the primary button live and a second click sent a duplicate.
+    setSubmitting(true);
+
+    let result;
+    try {
+      result = onPrimaryButtonClick?.(e);
+    } catch (err) {
+      setSubmitting(false);
+      throw err;
+    }
+
+    if (result && typeof result.then === "function") {
+      Promise.resolve(result)
+        .catch(() => {
+          // Already surfaced by the handler; swallowed so a
+          // deliberate re-throw isn't logged as unhandled.
+        })
+        .finally(() => setSubmitting(false));
+      return;
+    }
+
+    clearTimeout(submitGuardRef.current);
+    submitGuardRef.current = setTimeout(() => setSubmitting(false), 600);
+  };
+
+  const blockDrag = (e) => {
+    e.stopPropagation();
+  };
+
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div
+      className="modal-overlay"
+      // Shield the board's dnd-kit from Space/arrows typed in the modal, but let
+      // Escape/Tab bubble to the document handler (close + focus trap).
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" && e.key !== "Tab") e.stopPropagation();
+      }}
+      // Opt-in: clicking the backdrop (not the modal content) closes it.
+      onClick={
+        closeOnOverlayClick
+          ? (e) => {
+              if (e.target === e.currentTarget) onClose();
+            }
+          : undefined
+      }
+      onDragStart={blockDrag}
+      onDrag={blockDrag}
+      onDragEnd={blockDrag}
+      onDragOver={blockDrag}
+      onDragEnter={blockDrag}
+      onDragLeave={blockDrag}
+      onDrop={blockDrag}
+    >
+      <form
+        id="modal-form"
+        className={`modal-content modal-${size} ${className}`}
+        ref={modalRef}
+        role="dialog"
+        aria-labelledby="modal-title"
+        onSubmit={handleSubmit}
+      >
+        <div className="re-modal-header">
+          <h1 id="modal-title" className="modal-title">
+            {titleIcon && <span className="modal-title-icon">{titleIcon}</span>}
+            <span className="modal-title-text">{title}</span>
+          </h1>
+          {subTitle && <p className="modal-subtitle">{subTitle}</p>}
+
+          {((tabs && tabs.length > 0) || showClose) && (
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={onClose}
+              aria-label="Close modal"
+            >
+              <RxCross2 size={24} />
+            </button>
+          )}
+        </div>
+
+        {tabs && tabs.length > 0 && (
+          <div className="modal-tabs" role="tablist">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                type="button"
+                className={`modal-tab-btn ${activeTab === tab.name ? "active" : ""}`}
+                onClick={() => onTabChange?.(tab.name)}
+                role="tab"
+                aria-selected={activeTab === tab.name}
+              >
+                {tab.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="ReuseableModal-body">
+          {tabs && tabs.length > 0
+            ? tabs.map((tab) => (
+                <div
+                  key={tab.name}
+                  style={{ display: activeTab === tab.name ? "block" : "none" }}
+                >
+                  {tab.content}
+                </div>
+              ))
+            : children}
+        </div>
+
+        {footerContent ? (
+          <div className="modal-btns">{footerContent}</div>
+        ) : (
+          (tabs?.length || primaryButtonText || secondaryButtonText) && (
+          <div className="modal-btns">
+            {secondaryButtonText && (
+              <button
+                type="button"
+                onClick={onSecondaryButtonClick || onClose}
+                className="modal-btn modal-btn-secondary"
+                style={{
+                  backgroundColor: secondaryButtonColor || "#ffffff",
+                  color: "#333333",
+                }}
+              >
+                {secondaryButtonText}
+              </button>
+            )}
+
+            {primaryButtonText && (
+              <button
+                type="submit"
+                className="modal-btn"
+                style={{
+                  backgroundColor: primaryButtonColor || "#004aba",
+                  color: "#ffffff",
+                }}
+                disabled={primaryBusy}
+              >
+                {primaryBusy ? (
+                  <span className="modal-btn-spinner">
+                    <svg
+                      className="modal-spinner animate-spin"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                ) : (
+                  primaryButtonText
+                )}
+              </button>
+            )}
+          </div>
+          )
+        )}
+      </form>
+    </div>
+  );
+
+  // Render modal outside the app root using Portal
+  return ReactDOM.createPortal(modalContent, document.body);
+};
+
+ReusableModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  primaryButtonText: PropTypes.string,
+  secondaryButtonText: PropTypes.string,
+  tabs: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      content: PropTypes.node.isRequired,
+    })
+  ),
+  onPrimaryButtonClick: PropTypes.func,
+  onSecondaryButtonClick: PropTypes.func,
+  children: PropTypes.node,
+  size: PropTypes.oneOf(["sm", "md", "lg", "xl", "2xl"]),
+  titleIcon: PropTypes.node,
+  primaryButtonColor: PropTypes.string,
+  secondaryButtonColor: PropTypes.string,
+  primaryButtonLoading: PropTypes.bool,
+  activeTab: PropTypes.string,
+  onTabChange: PropTypes.func,
+  showClose: PropTypes.bool,
+  closeOnOverlayClick: PropTypes.bool,
+  className: PropTypes.string,
+  footerContent: PropTypes.node,
+};
+
+export default ReusableModal;

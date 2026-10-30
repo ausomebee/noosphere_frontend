@@ -1,0 +1,14 @@
+#!/bin/sh
+# Lint staged files in each app using their own eslint
+
+for app in client tenant control; do
+  staged=$(git diff --cached --name-only --diff-filter=ACM -- "$app/src/**/*.{js,jsx}" 2>/dev/null)
+  if [ -n "$staged" ]; then
+    echo "Linting $app..."
+    cd "$app" && npx eslint --no-error-on-unmatched-pattern $staged; result=$?; cd ..
+    if [ $result -ne 0 ]; then
+      echo "Lint failed in $app. Fix errors before committing."
+      exit 1
+    fi
+  fi
+done

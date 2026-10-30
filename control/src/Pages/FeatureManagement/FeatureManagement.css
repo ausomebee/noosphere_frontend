@@ -1,0 +1,214 @@
+/* Header Section */
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .board-title h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .board-title p {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  /* Feature Group */
+  .feature-group {
+    margin-bottom: 40px;
+  }
+  
+  .feature-group-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  
+  /* Feature Table Wrapper */
+  .feature-table-wrapper {
+    position: relative;
+    overflow: visible;
+  }
+  
+  /* Feature Table */
+  .feature-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .feature-table th,
+  .feature-table td {
+    padding: 12px;
+    text-align: left;
+  }
+  
+  .feature-table th {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    text-transform: uppercase;
+    background-color: #F7F7F7;
+  }
+  
+  .feature-table td {
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  /* Apply border-radius to top-left of the first column in the header */
+  .feature-table thead tr:first-child th:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  
+  /* Apply border-radius to top-right of the last column in the header */
+  .feature-table thead tr:first-child th:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  
+  /* Action Cell */
+  .action-cell {
+    position: relative;
+  }
+  
+  /* Active Cell */
+  .active-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .active-status {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  /* Plan Tags */
+  .plan-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .plan-tag {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+  
+  /* Different colors for each plan */
+  .plan-tag-basic-plan {
+    background-color: #e0f2fe;
+    color: #0284c7;
+  }
+  
+  .plan-tag-standard-plan {
+    background-color: #fef3c7;
+    color: #d97706;
+  }
+  
+  .plan-tag-pro-plan {
+    background-color: #fce7f3;
+    color: #db2777;
+  }
+  
+  .plan-tag-enterprise-plan {
+    background-color: #e6f4ea;
+    color: #16a34a;
+  }
+  .plan-tag-unassigned {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    
+  }
+  
+  /* Feature Row */
+  .feature-row:hover {
+    background-color: #f9f9f9;
+  }
+  
+  /* Action Icon for Dropdown */
+  .feature-action-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .feature-action-icon svg {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .feature-action-icon:hover svg {
+    color: #007bff;
+  }
+  
+  .blurred {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 992px) {
+    .feature-table th,
+    .feature-table td {
+      padding: 8px;
+      font-size: 12px;
+    }
+
+    .board-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .plan-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
+
+    .dropdown-menu {
+      width: 180px;
+    }
+  }
+
+  /* Mobile (640px and below) */
+  @media (max-width: 640px) {
+    .board-title h1 {
+      font-size: 20px;
+    }
+
+    .board-title p {
+      font-size: 12px;
+    }
+
+    .feature-group-title {
+      font-size: 14px;
+    }
+
+    .feature-table th,
+    .feature-table td {
+      padding: 6px;
+      font-size: 11px;
+    }
+
+    .plan-tag {
+      font-size: 9px;
+      padding: 1px 5px;
+    }
+  }

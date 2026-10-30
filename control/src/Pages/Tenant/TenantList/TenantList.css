@@ -1,0 +1,347 @@
+.tenant-page-container {
+    padding: 1rem 0;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .tenant-page-header{
+    align-items: center;
+    border-bottom: 3px solid #eee;
+
+  }
+  .tenant-page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #111827;
+  }
+
+  .tenant-page-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+  }
+
+  .tenant-section-label {
+    margin-top: 1rem;
+    font-size: 16px;
+    font-weight: 600;
+    color: #a1a8b3;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .overview-card-wrapper {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    border-bottom: 3px solid #eee;
+    padding-bottom: 2rem;
+  }
+
+  .overview-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background-color: #fff;
+  }
+
+  .overview-card label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .overview-card p {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  /* Deactivation modal steps */
+  .deactivate-confirmation {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .deactivate-confirmation p {
+    font-size: 0.95rem;
+    color: #374151;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+  }
+
+  .deactivate-warning {
+    color: #dc2626 !important;
+    font-weight: 600;
+  }
+
+  .deactivate-password-prompt {
+    font-size: 0.9rem;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 992px) {
+    .overview-card-wrapper {
+      flex-direction: column;
+    }
+  }
+
+  /* src/styles/TenantListViewPayment.css */
+
+.tenant-payment-page {
+  padding: 24px;
+  font-family: 'Inter', sans-serif;
+  background-color: #fff;
+  min-height: 100vh;
+  position: relative;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #888;
+}
+
+.breadcrumb-active {
+  color: #000;
+  font-weight: bold;
+}
+.breadcrumb span {
+  color: #000;
+  font-weight: 600;
+}
+
+.payment-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-row:last-child {
+  border-bottom: none;
+}
+
+.card-icon {
+  width: 24px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.invoice-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invoice-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Usage Statistics Cards */
+.usage-statistics-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.usage-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  flex: 1;
+  position: relative;
+}
+
+.usage-card h3 {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.usage-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.view-graph-button {
+  background: none;
+  border: none;
+  color: #242528;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+.view-graph-button:hover {
+  text-decoration: none;
+}
+
+/* Graph Section */
+.usage-graph-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.graph-title-headers{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.graph-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 0.5rem;
+
+}
+
+.graph-filter {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background: #fff;
+}
+
+.view-data-button {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: #3b82f6;
+  cursor: pointer;
+}
+
+.view-data-button:hover {
+  background: #f3f4f6;
+}
+
+.sessions-over-time {
+  position: relative;
+}
+
+.sessions-change {
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.875rem;
+  color: #1f2937;
+  margin-bottom: 20px;
+
+}
+
+.change-value {
+  font-weight: 600;
+}
+
+.change-percentage {
+  color: #ef4444;
+  margin-left: 10px;
+}
+
+/* Graph Container */
+.graph-container {
+  margin-top: 1rem;
+}
+
+/* Graph data table (toggled below chart) */
+.graph-data-table {
+  margin-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Base tenant page styles */
+.tli-tenant-issue-page,
+.tli-tenant-payment-page {
+  padding: 20px;
+
+}
+
+/* Section containers */
+.issue-information {
+  margin-bottom: 30px;
+}
+
+/* Comments meta (unique to TenantList) */
+.issues-comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+/* Mobile (640px and below) */
+@media (max-width: 640px) {
+  .tenant-page-container {
+    padding: 0.5rem 0;
+  }
+
+  .tenant-page-title {
+    font-size: 20px;
+  }
+
+  .overview-card {
+    min-width: 100%;
+  }
+
+  .usage-statistics-cards {
+    flex-direction: column;
+  }
+
+  .graph-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

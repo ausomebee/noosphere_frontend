@@ -1,0 +1,334 @@
+import React, { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import ReusableModal from "./ReusableModal";
+import { TextInput, SelectInput } from "../Input/Inputs";
+import { useDispatch } from "react-redux";
+import useAuth from "../../hooks/useAuth";
+import { updateCandidate } from "../../ReduxStore/features/PipelineSlice";
+import { showToast } from "../../Helper/ShowToast";
+import { orgTypeOptions as organizationTypeOptions, companySizeOptions } from "../../Data/selectOptions";
+import {
+  countryOptions,
+  getStateOptions,
+  normalizeCountry,
+  normalizeState,
+  withCustomOption,
+} from "../../Helper/geoOptions";
+import useReduxFormDraft from "../../hooks/useReduxFormDraft";
+import "./ReusableModal.css";
+
+import { showValidationErrors } from "../../Helper/formErrors";
+const validationSchema = yup.object().shape({
+  company: yup.string().required("Company name is required"),
+  contactPerson: yup.string().required("Contact person is required"),
+  email: yup
+    .string()
+    .email("Invalid email address")
+    .required("Email is required"),
+  phone: yup
+    .string()
+    .required("Phone number is required")
+    .matches(/^[0-9+()\-\s]{7,}$/, {
+      message: "Enter a valid phone number (digits only)",
+      excludeEmptyString: true,
+    }),
+  companySize: yup.string().nullable(),
+  organizationType: yup.string().nullable(),
+  location: yup.string().required("Address is required"),
+  city: yup.string().nullable(),
+  state: yup.string().nullable(),
+  zipCode: yup
+    .string()
+    .nullable()
+    .matches(/^[0-9]{3,10}$/, {
+      message: "Zip code must be digits only",
+      excludeEmptyString: true,
+    }),
+  country: yup.string().nullable(),
+  leadSource: yup.string().nullable(),
+  subdomain: yup
+    .string()
+    .nullable()
+    .matches(/^[a-z]+(?:-[a-z]+)*$/, {
+      message:
+        "Subdomain may only contain lowercase letters and hyphens (no numbers or spaces)",
+      excludeEmptyString: true,
+    }),
+  assignToStaff: yup.string().nullable(),
+  onboardStage: yup.string().nullable(),
+});
+
+// Keep only lowercase letters and hyphens as the user types — strips ".,<>",
+// digits, spaces, etc. before the value reaches the form state.
+const sanitizeSubdomain = (value) =>
+  (value || "").toLowerCase().replace(/[^a-z-]/g, "");
+
+const EditProspectModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  formData: initialFormData,
+  staffList = [],
+  stages = [],
+}) => {
+  const dispatch = useDispatch();
+  const { accessToken, refreshToken, userId: adminId } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onBlur",
+    defaultValues: initialFormData,
+    resolver: yupResolver(validationSchema),
+  });
+
+  // Edit-only modal: the prospect record is the source of truth, so never
+  // hydrate a stale persisted draft (it would clobber the record and poison
+  // the isDirty baseline). Disable draft persistence here.
+  const clearDraft = useReduxFormDraft("edit-prospect", { watch, reset, isOpen: false, exclude: [] });
+
+  const country = watch("country");
+  const state = watch("state");
+  // Both fields were free text before, so a saved prospect may hold "USA" or
+  // "Lagos State"; keep whatever is stored selectable.
+  const countryChoices = useMemo(
+    () => withCustomOption(countryOptions, country),
+    [country],
+  );
+  const stateChoices = useMemo(
+    () => withCustomOption(getStateOptions(country), state),
+    [country, state],
+  );
+
+  const countryField = register("country");
+
+  const staffOptions = [
+    { value: "", label: staffList.length ? "Select" : "No staff available" },
+    ...staffList
+      .filter((staff) => staff.active !== false)
+      .map((staff) => ({ value: staff.staffId, label: staff.name })),
+  ];
+
+  const stageOptions = [
+    { value: "", label: stages.length ? "Select" : "No stages available" },
+    ...stages.map((stage) => ({ value: stage.stageId, label: stage.name })),
+  ];
+
+
+  useEffect(() => {
+    if (isOpen) {
+      const resolvedCountry =
+        normalizeCountry(initialFormData?.country) || initialFormData?.country || "";
+      reset({
+        ...initialFormData,
+        country: resolvedCountry,
+        state:
+          normalizeState(initialFormData?.state, resolvedCountry) ||
+          initialFormData?.state ||
+          "",
+      });
+    }
+  }, [isOpen, initialFormData, reset]);
+
+  const onSubmit = async (data) => {
+    try {
+      const updatedData = {
+        companyName: data.company,
+        fullName: data.contactPerson,
+        contactPerson: data.contactPerson,
+        email: data.email,
+        phoneNumber: data.phone,
+        companySize: data.companySize,
+        organizationType: data.organizationType,
+        location: {
+          address: data.location,
+          city: data.city,
+          stateProvince: data.state,
+          zip: data.zipCode,
+          country: data.country,
+        },
+        leadSource: data.leadSource,
+        subdomain: data.subdomain,
+        assignToAdmin: data.assignToStaff,
+        pipelineStageId: data.onboardStage,
+        createdBy: adminId,
+        stage: "DEFAULT",
+      };
+
+      const response = await dispatch(
+        updateCandidate({
+          id: initialFormData.id,
+          ...updatedData,
+          accessToken,
+          refreshToken,
+        })
+      ).unwrap();
+
+      if (response.status === "ok") {
+        showToast("Candidate updated successfully!", "success");
+
+        clearDraft();
+        // onSave updates the prospect panel in place — no full reload needed.
+        onSave(updatedData);
+        onClose();
+      } else {
+        throw new Error("Failed to update candidate.");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) console.error("Failed to update candidate:", error);
+      showToast(
+        error?.response?.data?.message || "Failed to update candidate.",
+        "error"
+      );
+    }
+  };
+
+  return (
+    <ReusableModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit information"
+      primaryButtonText="Save candidate"
+      secondaryButtonText="Cancel"
+      primaryButtonColor="#000000"
+      secondaryButtonColor="#ffffff"
+      onPrimaryButtonClick={handleSubmit(onSubmit, showValidationErrors)}
+      onSecondaryButtonClick={onClose}
+      primaryButtonLoading={isSubmitting}
+    >
+      <form className="no-scrollbar::-webkit-scrollbar no-scrollbar">
+        <TextInput
+          required
+          label="Company Name"
+          {...register("company")}
+          error={errors.company?.message}
+          placeholder="Type something"
+        />
+        <TextInput
+          required
+          label="Contact person"
+          {...register("contactPerson")}
+          error={errors.contactPerson?.message}
+          placeholder="Type something"
+        />
+        <TextInput
+          required
+          label="Email"
+          type="email"
+          {...register("email")}
+          error={errors.email?.message}
+          placeholder="Type something"
+        />
+        <TextInput
+          required
+          label="Phone"
+          {...register("phone")}
+          error={errors.phone?.message}
+          placeholder="Type something"
+        />
+        <SelectInput
+          label="Company Size"
+          {...register("companySize")}
+          options={companySizeOptions}
+          error={errors.companySize?.message}
+        />
+        <SelectInput
+          label="Organization Type"
+          {...register("organizationType")}
+          options={organizationTypeOptions}
+          error={errors.organizationType?.message}
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextInput
+            required
+            label="Address"
+            {...register("location")}
+            error={errors.location?.message}
+            placeholder="Street address"
+          />
+          <TextInput
+            label="City"
+            {...register("city")}
+            error={errors.city?.message}
+            placeholder="City"
+          />
+          <SelectInput
+            label="Country"
+            options={countryChoices}
+            {...countryField}
+            onChange={(e) => {
+              countryField.onChange(e);
+              // The old state belongs to the old country.
+              setValue("state", "");
+            }}
+            error={errors.country?.message}
+          />
+          <SelectInput
+            label="State / Province"
+            options={stateChoices}
+            {...register("state")}
+            disabled={!country}
+            emptyHint={
+              country
+                ? "This country has no states/provinces."
+                : "Select a country first."
+            }
+            error={errors.state?.message}
+          />
+          <TextInput
+            label="ZIP / Postal Code"
+            {...register("zipCode")}
+            error={errors.zipCode?.message}
+            placeholder="ZIP or Postal Code"
+          />
+        </div>
+
+        <TextInput
+          label="Lead Source"
+          {...register("leadSource")}
+          error={errors.leadSource?.message}
+          placeholder="Type something"
+        />
+        <TextInput
+          label="Subdomain"
+          {...register("subdomain")}
+          onChange={(e) =>
+            setValue("subdomain", sanitizeSubdomain(e.target.value), {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
+          error={errors.subdomain?.message}
+          placeholder="e.g. mycompany"
+        />
+        <SelectInput
+          label="Assign to Staff"
+          {...register("assignToStaff")}
+          options={staffOptions}
+          error={errors.assignToStaff?.message}
+          disabled={staffList.length === 0}
+          emptyHint="No staff found. Create one in Settings → Staff."
+        />
+        <SelectInput
+          label="Select Onboarding Stage"
+          {...register("onboardStage")}
+          options={stageOptions}
+          error={errors.onboardStage?.message}
+          disabled={stages.length === 0}
+          emptyHint="No onboarding stages found. Create one in Settings → Pipeline Stages."
+        />
+      </form>
+    </ReusableModal>
+  );
+};
+
+export default EditProspectModal;

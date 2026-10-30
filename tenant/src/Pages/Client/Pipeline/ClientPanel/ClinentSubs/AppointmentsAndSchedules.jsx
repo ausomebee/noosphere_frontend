@@ -1,0 +1,891 @@
+// src/pages/Client/ClientSubs/AppointmentsAndSchedules/AppointmentsScheduleTab.jsx
+import { useState, memo, useCallback, useEffect, useMemo } from "react";
+import useAuth from "../../../../../hooks/useAuth";
+import usePermissions from "../../../../../hooks/usePermissions";
+import { format, addDays, subDays } from "date-fns";
+import Button from "../../../../../Components/Button/Button";
+import { FaPlus } from "react-icons/fa";
+import { FiEdit, FiRefreshCw } from "react-icons/fi";
+import { RxCross2 } from "react-icons/rx";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
+import { showToast, showApiError } from "../../../../../Helper/ShowToast";
+import AppointmentModal from "../../../../../Components/ReusableModal/SchedulerModal/AppointmentModal";
+import RescheduleModal from "../../../../../Components/ReusableModal/SchedulerModal/RescheduleModal";
+import CancelModal from "../../../../../Components/ReusableModal/SchedulerModal/CancelModal";
+import api from "../../../../../api/AppointmentApi";
+import api2 from "../../../../../api/clientPanelApis";
+import api3 from "../../../../../api/billingAndPaymentsApi"; // For real service codes
+import CustomTable from "../../../../../Components/Table/CustomTable";
+import MonthView from "../../../../../Components/CalendarScheduler/MonthView";
+import RescheduleRequests from "../../../../Scheduler/SchdedulerSubs/AppointmentSubs/RescheduleRequests";
+import { SearchInput } from "../../../../../Components/Input/Inputs";
+import { useParams, useNavigate } from "react-router-dom";
+
+import expand from "../../../../../utils/expand";
+import expandForAppointments from "../../../../../utils/expandForAppointments";
+
+const MemoAppointmentModal = memo(AppointmentModal);
+
+const AppointmentsScheduleTab = ({ fullName }) => {
+  const { tenantId, accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  const [activeTab, setActiveTab] = useState("upcomingAppointments");
+  const [viewMode, setViewMode] = useState("table");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Date pre-filled into the New Appointment modal when a calendar day is
+  // clicked (time left blank), mirroring the scheduler calendar.
+  const [presetDate, setPresetDate] = useState(null);
+  // Targets for the Reschedule / Cancel action modals (ported from the
+  // scheduler so the client panel has the same actions as the main table).
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  // The cancelled appointment whose "Cancellation details" modal is open.
+  const [cancelDetails, setCancelDetails] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const { clientId } = useParams();
+  const navigate = useNavigate();
+
+  const [clients, setClients] = useState([]);
+  const [sessionTypes, setSessionTypes] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Real service code map: serviceCodeId → code (e.g., "97158")
+  const [serviceCodeMap, setServiceCodeMap] = useState({});
+  // Full list of service codes to pass to modal
+  const [serviceCodes, setServiceCodes] = useState([]);
+
+  // Fetch real service codes
+  const fetchServiceCodes = useCallback(async () => {
+    if (!tenantId || !accessToken) return;
+
+    try {
+      const response = await api3.GetTenantServiceCodeByTenantId({
+        tenantId,
+        accessToken,
+        refreshToken,
+      });
+      const data = response?.data || [];
+
+      const map = {};
+      const fullList = data.filter((item) => !item.isDeleted && item.isActive);
+
+      fullList.forEach((item) => {
+        map[item.id] = item.code;
+      });
+
+      setServiceCodeMap(map);
+      setServiceCodes(fullList); // Pass full objects to modal
+    } catch (error) {
+      console.error("Failed to load service codes:", error);
+    }
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchServiceCodes();
+  }, [fetchServiceCodes]);
+
+  // Prepare data for modal — consistent with CalendarScheduler
+  const prepareModalData = (appt) => {
+    if (!appt) return null;
+
+    const clinicianIds = appt.clinicians?.map((c) => c.id.toString()) || [];
+
+    const service = (appt.appointmentServices || []).map((as) => ({
+      serviceCodeId: as.serviceCodeId,
+      modifier: as.modifiers?.modifier || "", // "HP"
+    }));
+
+    return {
+      ...appt,
+      sessionType: appt.session?.id || "",
+      clinicians: clinicianIds,
+      service:
+        service.length > 0 ? service : [{ serviceCodeId: "", modifier: "" }],
+      colorCode: appt.colourCode || "#3B82F6",
+    };
+  };
+
+  // Transform for table — prefer the code the appointment already carries and
+  // only fall back to the fetched map (which may not have loaded yet).
+  const toTableRow = (apiAppt) => {
+    const service = (apiAppt.appointmentServices || []).map((as) => {
+      const code =
+        as.serviceCode?.code || serviceCodeMap[as.serviceCodeId] || "N/A";
+      const modifier = as.modifiers?.modifier
+        ? ` (${as.modifiers.modifier})`
+        : "";
+
+      return {
+        serviceType: `${code}${modifier}`,
+      };
+    });
+
+    return {
+      ...apiAppt,
+      service: service.length > 0 ? service : [{ serviceType: "N/A" }],
+      client: apiAppt.client || { fullName: "Unknown Client" },
+      clinicians: apiAppt.clinicians || [],
+      session: apiAppt.session || { name: "Unknown Session" },
+      colourCode: apiAppt.colourCode || "#3B82F6",
+    };
+  };
+
+  const currentClient = useMemo(() => {
+    if (!clientId) return null;
+
+    if (clients.length > 0) {
+      const client = clients.find(
+        (c) => c.id === clientId || c.clientId === clientId
+      );
+      if (client) {
+        return {
+          clientId: client.id || client.clientId,
+          client: {
+            firstName:
+              client.firstName || client.fullName?.split(" ")[0] || "Client",
+            lastName:
+              client.lastName ||
+              client.fullName?.split(" ").slice(1).join(" ") ||
+              "",
+          },
+          ...client,
+        };
+      }
+    }
+
+    const nameParts = (fullName || "Current Client").split(" ");
+    return {
+      clientId,
+      client: {
+        firstName: nameParts[0] || "Client",
+        lastName: nameParts.slice(1).join(" ") || "",
+      },
+      firstName: nameParts[0] || "Client",
+      lastName: nameParts.slice(1).join(" ") || "",
+      fullName: fullName || "Current Client",
+    };
+  }, [clients, clientId, fullName]);
+
+  const fetchSupportingData = useCallback(async () => {
+    try {
+      const [sess, stf] = await Promise.all([
+        api
+          .GetSessionTypeActiveByTenantId({
+            tenantId,
+            accessToken,
+            refreshToken,
+          })
+          .then((r) => r.data?.data || []),
+        api
+          .GetTenantStaffByTenantId({ tenantId, accessToken, refreshToken })
+          .then((r) => r.data?.data || []),
+      ]);
+      setSessionTypes(sess);
+      setStaff(stf);
+
+      if (clientId) {
+        try {
+          const res = await api2.GetSingleClientByClientId({
+            id: clientId,
+            accessToken,
+            refreshToken,
+          });
+          if (res?.data?.data) {
+            const data = res.data.data;
+            setClients([
+              {
+                clientId: data.id || data.clientId,
+                client: {
+                  firstName:
+                    data.firstName || data.fullName?.split(" ")[0] || "Client",
+                  lastName:
+                    data.lastName ||
+                    data.fullName?.split(" ").slice(1).join(" ") ||
+                    "",
+                },
+                ...data,
+              },
+            ]);
+          }
+        } catch (err) {
+          console.error("Failed to fetch client:", err);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load support data:", err);
+    }
+  }, [tenantId, accessToken, refreshToken, clientId]);
+
+  const fetchAppointments = useCallback(async () => {
+    // The Reschedule Requests tab renders the self-contained RescheduleRequests
+    // component, which fetches its own data — skip the parent appointment fetch.
+    if (activeTab === "rescheduleRequests") return;
+    if (!clientId) return showToast("Client ID not found", "error");
+
+    setLoading(true);
+    try {
+      let response;
+      switch (activeTab) {
+        case "upcomingAppointments":
+          response = await api2.GetClientUpcomingAppointments({
+            id: clientId,
+            accessToken,
+            refreshToken,
+          });
+          break;
+        case "pastAppointments":
+          response = await api2.GetClientPastAppointments({
+            id: clientId,
+            accessToken,
+            refreshToken,
+          });
+          break;
+        case "cancelledAppointments":
+          response = await api2.GetClientCancelAppointments({
+            id: clientId,
+            accessToken,
+            refreshToken,
+          });
+          break;
+        default:
+          response = { data: { data: [] } };
+      }
+
+      const raw = response?.data?.data || response?.data || [];
+      const transformed = raw.map(toTableRow);
+      setAppointments(transformed);
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, clientId, accessToken, refreshToken, serviceCodeMap]);
+
+  useEffect(() => {
+    fetchSupportingData();
+  }, [fetchSupportingData]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // TABLE VIEW
+  const formattedAppointments = useMemo(() => {
+    if (!appointments.length) return [];
+
+    if (activeTab === "cancelledAppointments") {
+      return appointments.map((appt) => {
+        const cancelTime = appt.cancelTime ? new Date(appt.cancelTime) : null;
+        const validCancelTime = cancelTime && !isNaN(cancelTime.getTime());
+        return {
+          id: appt.id,
+          clientName: currentClient?.fullName || "Current Client",
+          therapistName:
+            appt.clinicians?.map((c) => c.fullName).join(", ") || "Unassigned",
+          serviceType:
+            appt.service?.map((s) => s.serviceType).join(", ") || "N/A",
+          sessionType: appt.session?.name || "N/A",
+          date: appt.date || "Unknown Date",
+          time:
+            appt.startTime && appt.endTime
+              ? `${appt.startTime} - ${appt.endTime}`
+              : "No Time",
+          dateTime: appt.date
+            ? `${format(new Date(appt.date), "MMM dd, yyyy")} • ${
+                appt.startTime || ""
+              }`
+            : "Unknown Date",
+          colorCode: appt.colourCode || "#3B82F6",
+          cancellation: {
+            cancelledBy: appt.canceledBy || "N/A",
+            dateOfCancellation: validCancelTime
+              ? format(cancelTime, "MMM dd, yyyy")
+              : "N/A",
+            timeOfCancellation: validCancelTime
+              ? format(cancelTime, "hh:mm a")
+              : "N/A",
+            reason: appt.reasonForCancel || "No reason provided",
+          },
+          hasActions: true,
+          rawData: appt,
+        };
+      });
+    }
+
+    const direction = activeTab === "pastAppointments" ? "past" : "future";
+
+    return appointments.flatMap((master) => {
+      const expanded = expandForAppointments(master, direction);
+
+      return expanded.map((instance) => ({
+        id: instance.id,
+        clientName: currentClient?.fullName || "Current Client",
+        therapistName:
+          (instance.clinicians || master.clinicians)
+            ?.map((c) => c.fullName)
+            .join(", ") || "Unassigned",
+        serviceType:
+          master.service?.map((s) => s.serviceType).join(", ") || "N/A",
+        sessionType: (instance.session || master.session)?.name || "N/A",
+        date: instance.date,
+        time: `${instance.startTime} - ${instance.endTime}`,
+        dateTime: `${format(new Date(instance.date), "MMM dd, yyyy")} • ${
+          instance.startTime
+        }`,
+        colorCode: instance.colourCode || master.colourCode || "#3B82F6",
+        hasActions: true,
+        rawData: { ...master, ...instance },
+      }));
+    });
+  }, [appointments, activeTab, currentClient]);
+
+  // CALENDAR VIEW
+  const calendarAppointments = useMemo(() => {
+    if (!appointments.length) return [];
+
+    if (activeTab === "cancelledAppointments") {
+      return appointments
+        .filter((a) => a.date)
+        .map((appt) => ({
+          id: appt.id,
+          clientId,
+          clientName:
+            appt.client?.fullName ||
+            currentClient?.fullName ||
+            "Current Client",
+          clinicianIds: appt.clinicians?.map((c) => c.id.toString()) || [],
+          service: appt.service || [],
+          sessionId: appt.session?.id || "",
+          date: appt.date,
+          startTime: appt.startTime,
+          endTime: appt.endTime,
+          colourCode: appt.colourCode || "#3B82F6",
+          title:
+            appt.service?.map((s) => s.serviceType).join(", ") || "Appointment",
+        }));
+    }
+
+    const viewWindow = {
+      start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      end: new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59
+      ),
+    };
+
+    return appointments.flatMap((master) => {
+      const expanded = expand(master, viewWindow);
+      return expanded.map((instance) => ({
+        id: instance.id,
+        clientId,
+        clientName:
+          instance.client?.fullName ||
+          currentClient?.fullName ||
+          "Current Client",
+        clinicianIds: instance.clinicians?.map((c) => c.id.toString()) || [],
+        service: master.service || [],
+        sessionId: master.session?.id || "",
+        date: instance.date,
+        startTime: instance.startTime,
+        endTime: instance.endTime,
+        colourCode: instance.colourCode || "#3B82F6",
+        title:
+          master.service?.map((s) => s.serviceType).join(", ") || "Appointment",
+      }));
+    });
+  }, [appointments, activeTab, currentDate, clientId, currentClient]);
+
+  const filteredAppointments = useMemo(() => {
+    if (!searchTerm) return formattedAppointments;
+    const term = searchTerm.toLowerCase();
+    return formattedAppointments.filter(
+      (appt) =>
+        appt.therapistName?.toLowerCase().includes(term) ||
+        appt.serviceType?.toLowerCase().includes(term) ||
+        appt.sessionType?.toLowerCase().includes(term) ||
+        appt.date?.toLowerCase().includes(term) ||
+        appt.time?.toLowerCase().includes(term)
+    );
+  }, [formattedAppointments, searchTerm]);
+
+  const filters = useMemo(() => {
+    const clinicians = [
+      ...new Set(formattedAppointments.map((a) => a.therapistName)),
+    ]
+      .filter(Boolean)
+      .map((n) => ({ value: n, label: n }));
+    const services = [
+      ...new Set(formattedAppointments.map((a) => a.serviceType)),
+    ]
+      .filter(Boolean)
+      .map((s) => ({ value: s, label: s }));
+    const sessions = [
+      ...new Set(formattedAppointments.map((a) => a.sessionType)),
+    ]
+      .filter(Boolean)
+      .map((s) => ({ value: s, label: s }));
+
+    return [
+      {
+        value: "therapistName",
+        label: "Clinician",
+        filterValues: clinicians,
+        filterFunction: (row, val) => !val || row.therapistName.includes(val),
+      },
+      {
+        value: "serviceType",
+        label: "Service Type",
+        filterValues: services,
+        filterFunction: (row, val) => !val || row.serviceType.includes(val),
+      },
+      {
+        value: "sessionType",
+        label: "Session Type",
+        filterValues: sessions,
+        filterFunction: (row, val) => !val || row.sessionType === val,
+      },
+    ];
+  }, [formattedAppointments]);
+
+  const columns = [
+    { header: "Clinician(s)", key: "therapistName", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Service Type(s)", key: "serviceType", type: "text", width: "clamp(150px, 16vw, 260px)" },
+    { header: "Session Type", key: "sessionType", type: "text", width: "clamp(130px, 13vw, 220px)" },
+    { header: "Date", key: "date", type: "dateTime" },
+    { header: "Time", key: "time", type: "text" },
+  ];
+
+  const actions = [
+    {
+      type: "dropdown",
+      label: "Actions",
+      items: [
+        hasPermission("edit_appointments") && {
+          label: "Edit Appointment",
+          icon: <FiEdit />,
+          onClick: (row) => openModal(row),
+        },
+        hasPermission("reschedule_appointments") && {
+          label: "Reschedule",
+          icon: <FiRefreshCw />,
+          onClick: (row) => handleReschedule(row),
+        },
+        hasPermission("cancel_appointments") && {
+          label: "Cancel",
+          icon: <RxCross2 />,
+          onClick: (row) => handleCancel(row),
+        },
+        hasPermission("start_appointments") && {
+          label: "Start Appointment",
+          icon: <IoCheckmarkCircleOutline />,
+          onClick: (row) => handleStartAppointment(row),
+          className: "text-primary font-bold bg-brand-50",
+        },
+      ].filter(Boolean),
+    },
+  ].filter((a) => a.items.length > 0);
+
+  const handleAppointmentClick = (appointment) => {
+    const full = appointments.find(
+      (a) => a.id === appointment.id.split("_")[0]
+    );
+    if (full) openModal(full);
+  };
+
+  // Clicking an empty day in the calendar opens the New Appointment modal
+  // pre-filled with that date. The client stays locked to this panel's client.
+  const handleSlotClick = useCallback(
+    (day) => {
+      if (!hasPermission("create_a_new_appointment")) return;
+      const d = day instanceof Date ? day : new Date(day);
+      if (isNaN(d.getTime())) return;
+      setPresetDate(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+          d.getDate()
+        ).padStart(2, "0")}`
+      );
+      setSelectedAppointment(null);
+      setIsModalOpen(true);
+    },
+    [hasPermission]
+  );
+
+  const openModal = (appointment = null) => {
+    if (!appointment) {
+      setPresetDate(null);
+      setSelectedAppointment(null);
+      setIsModalOpen(true);
+      return;
+    }
+
+    const fullAppt = appointment.rawData || appointment;
+    const preparedData = prepareModalData(fullAppt);
+
+    if (!preparedData) {
+      showToast("Failed to prepare appointment data", "error");
+      return;
+    }
+
+    // Ensure at least one service entry
+    if (!preparedData.service || preparedData.service.length === 0) {
+      preparedData.service = [{ serviceCodeId: "", modifier: "" }];
+    }
+
+    setSelectedAppointment(preparedData);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedAppointment(null);
+    setPresetDate(null);
+  };
+
+  const handleSaveAppointment = async (data) => {
+    try {
+      // Shape the payload exactly as the Scheduler does: the modal returns a
+      // raw form (clinician ids, `billable`, flat recurrence fields) that the
+      // API does not accept -- map them instead of spreading `...data`.
+      const payload = {
+        tenantId,
+        clientId: data.client || clientId,
+        sessionId: data.sessionType,
+        clinicians: (data.clinicians || []).map((id) => ({ id })),
+        service: data.service,
+        date: data.date,
+        isRecurring: data.isRecurring,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        recurrence: data.recurrence || {},
+        isBillable: data.billable,
+        serviceLocation: data.serviceLocation,
+        requiresTravel: data.requiresTravel,
+        colourCode: data.colorCode,
+        accessToken,
+        refreshToken,
+      };
+
+      if (selectedAppointment?.id) {
+        const id =
+          selectedAppointment.id.split("_")[0] || selectedAppointment.id;
+        await api.UpdateAppointments({
+          ...payload,
+          id,
+          forAll: data.scope === "all",
+        });
+        showToast("Appointment updated!", "success");
+      } else {
+        await api.CreateAppointments(payload);
+        showToast("Appointment created!", "success");
+      }
+
+      closeModal();
+      fetchAppointments();
+    } catch (err) {
+      showApiError(err, "SAVE_APPOINTMENT");
+      // Re-throw so the AppointmentModal stays open on a failed save.
+      throw err;
+    }
+  };
+
+  // ---- Reschedule ----
+  const handleReschedule = (row) => setRescheduleTarget(row.rawData || row);
+
+  const handleSaveReschedule = async (data) => {
+    try {
+      await api.RescheduleAppointments({
+        tenantId,
+        id: rescheduleTarget?.id,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        forAll: data.scope === "all",
+        accessToken,
+        refreshToken,
+      });
+      showToast("Rescheduled!", "success");
+      setRescheduleTarget(null);
+      fetchAppointments();
+    } catch (err) {
+      showApiError(err, "RESCHEDULE_APPOINTMENT");
+    }
+  };
+
+  // ---- Cancel ----
+  const handleCancel = (row) => setCancelTarget(row.rawData || row);
+
+  const handleSaveCancel = async (data) => {
+    try {
+      await api.CancelAppointments({
+        tenantId,
+        id: cancelTarget?.id,
+        reason: data.reason,
+        forAll: true,
+        accessToken,
+        refreshToken,
+      });
+      showToast("Cancelled!", "success");
+      setCancelTarget(null);
+      fetchAppointments();
+    } catch (err) {
+      showApiError(err, "CANCEL_APPOINTMENT");
+    }
+  };
+
+  // ---- Start appointment ----
+  const handleStartAppointment = (row) => {
+    const raw = row.rawData || row;
+    const appointmentId = (row.id || raw.id || "").split("_")[0] || raw.id;
+    const cid = raw.client?.id || raw.clientId || clientId;
+    if (!appointmentId || !cid) {
+      showToast("Cannot start: missing appointment or client ID", "error");
+      return;
+    }
+    navigate(`/appointments/start/${appointmentId}/${cid}`);
+  };
+
+  const handlePrevMonth = () => setCurrentDate(subDays(currentDate, 30));
+  const handleNextMonth = () => setCurrentDate(addDays(currentDate, 30));
+  const handleToday = () => setCurrentDate(new Date());
+
+  return (
+    <div className="appt-sched-wrapper">
+      <div className="documents-tabs w-full">
+        {[
+          "upcomingAppointments",
+          "pastAppointments",
+          "cancelledAppointments",
+          "rescheduleRequests",
+        ].map((tab) => (
+          <button
+            key={tab}
+            className={`doc-tab flex-1 ${
+              activeTab === tab ? "doc-tab-active" : ""
+            }`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab === "upcomingAppointments" && "Upcoming Appointments"}
+            {tab === "pastAppointments" && "Past Appointments"}
+            {tab === "cancelledAppointments" && "Cancelled Appointments"}
+            {tab === "rescheduleRequests" && "Reschedule Requests"}
+          </button>
+        ))}
+      </div>
+
+      <div className="appt-controls-row">
+        <div className="flex items-center gap-4">
+          {activeTab !== "rescheduleRequests" && (
+          <div className="cal-sched-filter-controls">
+            <div className="cal-sched-tab-container">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`cal-sched-tab-button flex items-center gap-2 ${
+                  viewMode === "table" ? "active" : ""
+                }`}
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M6.66667 5H17.5M6.66667 10H17.5M6.66667 15H17.5M2.5 5H2.50833M2.5 10H2.50833M2.5 15H2.50833"
+                    stroke="currentColor"
+                    strokeWidth="1.67"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Table View
+              </button>
+              <div className="cal-sched-tab-divider" />
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`cal-sched-tab-button flex items-center gap-2 ${
+                  viewMode === "calendar" ? "active" : ""
+                }`}
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M13.3333 1.66699V5.00033M6.66667 1.66699V5.00033M2.5 8.33366H17.5M4.16667 3.33366H15.8333C16.7538 3.33366 17.5 4.07985 17.5 5.00033V16.667C17.5 17.5875 16.7538 18.3337 15.8333 18.3337H4.16667C3.24619 18.3337 2.5 17.5875 2.5 16.667V5.00033C2.5 4.07985 3.24619 3.33366 4.16667 3.33366Z"
+                    stroke="currentColor"
+                    strokeWidth="1.67"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Calendar View
+              </button>
+            </div>
+          </div>
+          )}
+        </div>
+        {hasPermission("create_a_new_appointment") && (
+          <Button
+            label="New Appointment"
+            variant="primary"
+            icon={<FaPlus />}
+            onClick={() => openModal()}
+          />
+        )}
+      </div>
+
+      {viewMode === "calendar" && activeTab !== "rescheduleRequests" && (
+        <div className="appt-calendar-nav">
+          <div className="appt-calendar-nav-controls">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevMonth}
+                className="p-2 text-3xl hover:bg-gray-200 rounded"
+              >
+                &lt;
+              </button>
+              <button onClick={handleToday} className="px-3 py-1">
+                Today
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 text-3xl hover:bg-gray-200 rounded"
+              >
+                &gt;
+              </button>
+              <span className="ml-4 font-semibold">
+                {format(currentDate, "MMMM yyyy")}
+              </span>
+            </div>
+          </div>
+          <div style={{ marginBottom: "-10px" }}>
+            <SearchInput
+              placeholder="Search appointments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="full"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4">
+        {activeTab === "rescheduleRequests" ? (
+          // Self-contained: renders its own table + Approve/Reject/Modify
+          // modals and fetches client-scoped reschedule requests itself.
+          // Table-only — the calendar view does not apply here.
+          <RescheduleRequests clientId={clientId} />
+        ) : viewMode === "table" ? (
+          <CustomTable
+            data={filteredAppointments}
+            columns={columns}
+            {...(activeTab === "pastAppointments"
+              ? {
+                  // Past appointments can't be edited — a simple link to the
+                  // timesheets instead of the Edit action.
+                  actionText: "Go to Timesheets",
+                  onActionClick: () => navigate("/billing/timesheets"),
+                }
+              : activeTab === "cancelledAppointments"
+              ? {
+                  // Cancelled appointments reveal their cancellation details.
+                  actionText: "See more",
+                  onActionClick: (row) => setCancelDetails(row),
+                }
+              : { actions })}
+            filters={filters}
+            tableName={activeTab
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (str) => str.toUpperCase())}
+            itemsPerPage={10}
+            loading={loading}
+            showCheckbox={false}
+            showActions={true}
+          />
+        ) : (
+          <div className="appt-calendar-container">
+            <MonthView
+              date={currentDate}
+              appointments={calendarAppointments}
+              clients={[currentClient].filter(Boolean)}
+              onAppointmentClick={handleAppointmentClick}
+              onSlotClick={handleSlotClick}
+            />
+          </div>
+        )}
+      </div>
+
+      <MemoAppointmentModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        initialData={selectedAppointment || null}
+        isEditMode={!!selectedAppointment}
+        presetSlot={presetDate ? { date: presetDate } : null}
+        onSave={handleSaveAppointment}
+        clients={currentClient ? [currentClient] : []}
+        sessionTypes={sessionTypes}
+        staff={staff}
+        serviceCodes={serviceCodes}
+        accessToken={accessToken}
+        refreshToken={refreshToken}
+        tenantId={tenantId}
+        initialClientId={clientId}
+      />
+
+      <RescheduleModal
+        isOpen={!!rescheduleTarget}
+        onClose={() => setRescheduleTarget(null)}
+        appointment={rescheduleTarget}
+        onSave={handleSaveReschedule}
+      />
+
+      <CancelModal
+        isOpen={!!cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onSave={handleSaveCancel}
+        appointments={cancelTarget ? [cancelTarget] : []}
+      />
+
+      {cancelDetails && (
+        <div className="modal-overlay">
+          <div className="cancel-modal-content">
+            <div className="cancel-modal-header">
+              <h2>Cancellation details</h2>
+              <button
+                className="cancel-close-button"
+                onClick={() => setCancelDetails(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="cancel-modal-body">
+              <div className="grid grid-cols-3 mb-6">
+                <div>
+                  <h3>Cancelled by</h3>
+                  <p>{cancelDetails.cancellation?.cancelledBy || "N/A"}</p>
+                </div>
+                <div>
+                  <h3>Date of Cancellation</h3>
+                  <p>{cancelDetails.cancellation?.dateOfCancellation || "N/A"}</p>
+                </div>
+                <div>
+                  <h3>Time of Cancellation</h3>
+                  <p>{cancelDetails.cancellation?.timeOfCancellation || "N/A"}</p>
+                </div>
+              </div>
+              <div>
+                <h3>Reason for Cancellation</h3>
+                <p>
+                  {cancelDetails.cancellation?.reason || "No reason provided"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AppointmentsScheduleTab;

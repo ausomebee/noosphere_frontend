@@ -1,0 +1,111 @@
+.audit-trails-container {
+  padding: 20px;
+  margin: 0 auto;
+}
+
+.manage-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.manage-column-header h1 {
+  font-size: 20px;
+  color: #9ca3af;
+  font-weight: 400;
+  margin: 0;
+}
+
+.manage-back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.manage-back-button:hover {
+  background-color: #f3f4f6;
+}
+
+.audit-trail-content {
+  background: white;
+  border-radius: 8px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Audit entries -------------------------------------------------------
+   Plain sentences rather than cards — the same treatment as the timesheet
+   history: each entry reads as a line of prose, with the names, dates and
+   title picked out, and the verb carrying the status colour. */
+.approval-line {
+  padding: 10px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.approval-line + .approval-line {
+  border-top: 1px solid #f7f7f7;
+}
+
+.approval-entry {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.approval-subject {
+  color: #004aba;
+  font-weight: 600;
+}
+
+.approval-action {
+  font-weight: 600;
+}
+
+.approval-action.is-approved {
+  color: #027a48;
+}
+
+.approval-action.is-rejected {
+  color: #d92d20;
+}
+
+.audit-trail-empty {
+  padding: 24px 0;
+  text-align: center;
+}
+
+.audit-trail-empty p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .audit-trails-container {
+    padding: 15px;
+  }
+
+  .audit-trail-content {
+    padding: 20px 16px;
+  }
+
+  .manage-column-header h1 {
+    font-size: 18px;
+  }
+
+  .approval-entry {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}

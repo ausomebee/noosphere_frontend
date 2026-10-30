@@ -1,0 +1,12 @@
+{
+  "name": "Noosphere Client Portal",
+  "short_name": "Noosphere",
+  "description": "Client portal for Noosphere platform",
+  "start_url": "/client/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    { "src": "/client/logosvg.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

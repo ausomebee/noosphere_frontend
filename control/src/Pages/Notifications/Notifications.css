@@ -1,0 +1,250 @@
+/* ===== Control Notifications Page ===== */
+
+.ctrl-notifications-page {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+/* Header */
+.ctrl-notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.ctrl-notifications-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ctrl-notifications-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.ctrl-notifications-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: #004aba;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ctrl-notifications-mark-all {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #004aba;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.ctrl-notifications-mark-all:hover {
+  color: #003a92;
+}
+
+/* Body */
+.ctrl-notifications-body {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Type group */
+.ctrl-notifications-group-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+}
+
+.ctrl-notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card */
+.ctrl-notification-card {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.ctrl-notification-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ctrl-notification-card-unread {
+  border-left: 3px solid #004aba;
+  background: #f7faff;
+}
+
+/* Icon */
+.ctrl-notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ctrl-notification-icon-payment {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.ctrl-notification-icon-tenant {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.ctrl-notification-icon-plan {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.ctrl-notification-icon-subscription {
+  background: #cffafe;
+  color: #0e7490;
+}
+
+.ctrl-notification-icon-issue {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ctrl-notification-icon-success {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.ctrl-notification-icon-system {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Content */
+.ctrl-notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ctrl-notification-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.ctrl-notification-card-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  line-height: 1.45;
+}
+
+/* Footer */
+.ctrl-notification-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ctrl-notification-card-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.ctrl-notification-card-link {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #004aba;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ctrl-notification-card-link:hover {
+  color: #003a92;
+  text-decoration: underline;
+}
+
+/* Empty state */
+.ctrl-notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  gap: 12px;
+}
+
+.ctrl-notifications-empty p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ===== RESPONSIVE: MOBILE ===== */
+@media (max-width: 640px) {
+  .ctrl-notifications-header {
+    margin-bottom: 20px;
+  }
+
+  .ctrl-notifications-title {
+    font-size: 18px;
+  }
+
+  .ctrl-notification-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .ctrl-notification-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ctrl-notification-card-title {
+    font-size: 14px;
+  }
+
+  .ctrl-notification-card-desc {
+    font-size: 13px;
+  }
+
+  .ctrl-notification-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* ===== RESPONSIVE: TABLET ===== */
+@media (min-width: 641px) and (max-width: 992px) {
+  .ctrl-notifications-page {
+    max-width: 700px;
+  }
+}
