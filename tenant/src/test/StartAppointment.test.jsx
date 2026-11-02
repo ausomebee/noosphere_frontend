@@ -239,7 +239,10 @@ const makeStore = (user) =>
 // elapsed-time loop only advances when a test says so.
 const frames = [];
 
-const tick = () => {
+// The page starts its clock in an effect that can land just after the loading
+// state clears, so wait for its first frame before running one.
+const tick = async () => {
+  await waitFor(() => expect(frames.length).toBeGreaterThan(0));
   const cb = frames[frames.length - 1];
   act(() => cb(performance.now()));
 };
@@ -876,7 +879,7 @@ describe("the elapsed clock", () => {
 
     const started = Number(sessionStorage.getItem("sessionStartTime_appt-1"));
     vi.spyOn(Date, "now").mockReturnValue(started + 65_000);
-    tick();
+    await tick();
     expect(screen.getByText("1m 5s")).toBeInTheDocument();
   });
 
@@ -884,7 +887,7 @@ describe("the elapsed clock", () => {
     await renderPage();
     const started = Number(sessionStorage.getItem("sessionStartTime_appt-1"));
     vi.spyOn(Date, "now").mockReturnValue(started + 3_661_000);
-    tick();
+    await tick();
     expect(screen.getByText("1hrs 1m 1s")).toBeInTheDocument();
   });
 
