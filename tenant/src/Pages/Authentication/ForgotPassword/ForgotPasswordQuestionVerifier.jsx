@@ -8,12 +8,14 @@ import TenantLogo from "../../../assets/Logo.svg";
 import { TextInput } from "../../../Components/Input/Inputs";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 import SectionLoader from "../../../Components/SectionLoader";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 const answerSchema = yup.object().shape({
   answer: yup
     .string()
@@ -61,10 +63,7 @@ const ForgotPasswordQuestionVerifier = () => {
       }
     } catch (error) {
       console.error("2FA verification failed:", error);
-      showToast(
-        error?.response?.data?.message || "Verification failed.",
-        "error"
-      );
+      showToast(authErrorMessage(error, "Verification failed."), "error");
       setIsVerified(false);
     } finally {
       setLoading(false);
@@ -125,6 +124,7 @@ const ForgotPasswordQuestionVerifier = () => {
                       loading={loading}
                     />
                   </form>
+                  <BackToLogin />
                 </>
               )}
               {step === 2 && (

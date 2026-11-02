@@ -8,6 +8,7 @@ import { SwitchInput, RadioInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 import "../../Auth.css";
 import api from "../../../../api/authApis";
+import { authErrorMessage } from "../../../../Helper/authErrors";
 import { showToast } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
 import { showValidationErrors } from "../../../../Helper/formErrors";
@@ -35,7 +36,7 @@ const SuperAdmin2FAChoice = () => {
       default2FAMethod: "qrCode",
     },
   });
-  const { tenantId: userId } = useAuth();
+  const { tenantId: userId, accessToken, refreshToken } = useAuth();
 
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +51,9 @@ const SuperAdmin2FAChoice = () => {
         Authenticator2FA,
         securityQuestion,
         setForAll,
-        tenantId: userId
+        tenantId: userId,
+        accessToken,
+        refreshToken,
       });
 
       const successMessage =
@@ -68,8 +71,7 @@ const SuperAdmin2FAChoice = () => {
           console.error("Invalid 2FA method selected");
       }
     } catch (error) {
-      const message =
-        error?.response?.data?.message || "Failed to update 2FA settings.";
+      const message = authErrorMessage(error, "Failed to update 2FA settings.");
       showToast(message, "error");
       console.error("2FA settings error:", error);
     } finally {

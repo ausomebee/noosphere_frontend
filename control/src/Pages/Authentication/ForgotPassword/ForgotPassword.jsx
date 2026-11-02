@@ -8,9 +8,11 @@ import Logo from "../../../assets/NoosphereLogo-white.png";
 import { TextInput } from "../../../Components/Input/Inputs";
 import "../SuperAdmin.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 // Yup validation schema for forgot password
 const forgotPasswordSchema = yup.object().shape({
   email: yup
@@ -54,7 +56,7 @@ const ForgetPassword = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Password reset failed:", error);
-      const message = error?.response?.data?.message || "Failed to send password reset email.";
+      const message = authErrorMessage(error, "Failed to send password reset email.");
       setErrorMessage(message);
       showToast(message, "error");
     } finally {
@@ -94,6 +96,7 @@ const ForgetPassword = () => {
             loading={loading}
           />
         </form>
+        <BackToLogin />
       </div>
     </div>
   );

@@ -414,8 +414,13 @@ const expand = (master, viewWindow) => {
       let monthOffset = 0;
       const occurrences = Number(r.occurrences) || 0;
       while (count < occurrences) {
+        const monthBase = addMonths(seedDate, monthOffset * interval);
+        // count only grows inside the window, so without this stop a series
+        // whose remaining occurrences fall past the window looped forever and
+        // froze the tab.
+        if (isAfter(startOfMonth(monthBase), viewWindow.end)) break;
         for (const day of r.day) {
-          const inst = addMonths(seedDate, monthOffset * interval);
+          const inst = new Date(monthBase);
           inst.setDate(day);
           if (!isValid(inst)) continue;
           inst.setHours(h, m, 0, 0);

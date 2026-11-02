@@ -6,14 +6,24 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
   : null;
 
 let socket = null;
+// Who the current socket was opened for. The server binds a socket to the user
+// in its handshake, so a socket is never handed to anyone else.
+let socketUserId = null;
+
+// Called after the socket comes back from a drop. While it was down — and it
+// may come back on the other backend server — anything the server pushed was
+// missed, so listeners refetch rather than trust what they hold.
+const reconnectListeners = new Set();
 
 // Preserve socket reference across Vite HMR reloads (development only)
 if (import.meta.hot) {
   if (import.meta.hot.data?.socket) {
     socket = import.meta.hot.data.socket;
+    socketUserId = import.meta.hot.data.socketUserId ?? null;
   }
   import.meta.hot.dispose((data) => {
     data.socket = socket;
+    data.socketUserId = socketUserId;
   });
 }
 
@@ -23,10 +33,23 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     return null;
   }
 
-  if (socket?.connected) {
+  // A socket left over from a different user (logout without a reload, or a
+  // session that expired) must not carry this user's traffic.
+  if (socket && socketUserId !== userId) {
+    disconnectSocket();
+  }
+
+  // Same user: reuse the socket even while it is still connecting or waiting
+  // out a reconnect backoff — opening a second one leaked the first and doubled
+  // every notification. A refreshed token goes on the existing socket's next
+  // handshake rather than forcing a disconnect.
+  if (socket) {
+    socket.auth = { token: accessToken };
+    if (!socket.connected && !socket.active) socket.connect();
     return socket;
   }
 
+  socketUserId = userId;
   socket = io(SOCKET_URL, {
     auth: { token: accessToken },
     query: { userId, tenantId },
@@ -40,6 +63,12 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     reconnectionDelay: 2000,
     reconnectionDelayMax: 10000,
     randomizationFactor: 0.5,
+  });
+
+  let connectedBefore = false;
+  socket.on("connect", () => {
+    if (connectedBefore) reconnectListeners.forEach((listener) => listener());
+    connectedBefore = true;
   });
 
   return socket;
@@ -69,11 +98,26 @@ export const disconnectSocket = () => {
     socket.disconnect();
     socket = null;
   }
+  socketUserId = null;
 };
 
 export const getSocket = () => socket;
 
+/**
+ * Listen for the socket reconnecting after a drop (not its first connect).
+ * Doesn't need a socket yet, so a page can subscribe before login connects one.
+ * Returns an unsubscribe function.
+ */
+export const onReconnect = (callback) => {
+  reconnectListeners.add(callback);
+  return () => reconnectListeners.delete(callback);
+};
+
 // ─── Chat Events ───
+
+// How long to wait for the server to acknowledge a chat message before the
+// sender is told it didn't go through.
+export const CHAT_ACK_TIMEOUT_MS = 10000;
 
 export const sendChatMessage = (
   { senderId, senderType = "CLIENT", receiverId, receiverType = "TENANT_STAFF", content },
@@ -83,17 +127,24 @@ export const sendChatMessage = (
     callback?.({ success: false, error: "Not connected" });
     return;
   }
-  socket.emit(
+  // Without a timeout a message emitted into a half-dead connection waits for
+  // an ack forever and sits "sending" with no way to retry.
+  socket.timeout(CHAT_ACK_TIMEOUT_MS).emit(
     "chatMessage",
     { senderId, senderType, receiverId, receiverType, content, isRead: false },
-    callback
+    (err, ack) => {
+      callback?.(err ? { success: false, error: "Timed out" } : ack);
+    }
   );
 };
 
+// Each unsubscribe holds the socket it subscribed on: by cleanup time the
+// module-level socket may already be gone (logout) or replaced (user switch).
 export const onChatMessage = (callback) => {
   if (!socket) return () => {};
-  socket.on("chatMessage", callback);
-  return () => socket.off("chatMessage", callback);
+  const current = socket;
+  current.on("chatMessage", callback);
+  return () => current.off("chatMessage", callback);
 };
 
 export const emitTyping = ({ userId, isTyping }) => {
@@ -103,16 +154,18 @@ export const emitTyping = ({ userId, isTyping }) => {
 
 export const onTyping = (callback) => {
   if (!socket) return () => {};
-  socket.on("typing", callback);
-  return () => socket.off("typing", callback);
+  const current = socket;
+  current.on("typing", callback);
+  return () => current.off("typing", callback);
 };
 
 // ─── Notification Events ───
 
 export const onNotification = (callback) => {
   if (!socket) return () => {};
-  socket.on("newNotification", callback);
-  return () => socket.off("newNotification", callback);
+  const current = socket;
+  current.on("newNotification", callback);
+  return () => current.off("newNotification", callback);
 };
 
 export const emitNotificationRead = (notificationId) => {
@@ -129,28 +182,32 @@ export const emitMessagesRead = ({ readerId, partnerId }) => {
 
 export const onMessagesRead = (callback) => {
   if (!socket) return () => {};
-  socket.on("messagesRead", callback);
-  return () => socket.off("messagesRead", callback);
+  const current = socket;
+  current.on("messagesRead", callback);
+  return () => current.off("messagesRead", callback);
 };
 
 // ─── Online / Presence ───
 
 export const onUserOnline = (callback) => {
   if (!socket) return () => {};
-  socket.on("userOnline", callback);
-  return () => socket.off("userOnline", callback);
+  const current = socket;
+  current.on("userOnline", callback);
+  return () => current.off("userOnline", callback);
 };
 
 export const onUserOffline = (callback) => {
   if (!socket) return () => {};
-  socket.on("userOffline", callback);
-  return () => socket.off("userOffline", callback);
+  const current = socket;
+  current.on("userOffline", callback);
+  return () => current.off("userOffline", callback);
 };
 
 export default {
   connectSocket,
   disconnectSocket,
   getSocket,
+  onReconnect,
   sendChatMessage,
   onChatMessage,
   emitTyping,

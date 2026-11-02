@@ -189,6 +189,28 @@ describe('token validation', () => {
     expect(screen.getByText('This payment link has expired')).toBeInTheDocument();
   });
 
+  it('offers a retry instead of the expiry page when the server could not be reached', async () => {
+    const unreachable = new Error("We couldn't check this payment link right now.");
+    unreachable.isNetworkError = true;
+    await renderPage(unreachable);
+    expect(
+      screen.getByText("We couldn't check this payment link right now.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText('This payment link has expired')).not.toBeInTheDocument();
+
+    // A retry that gets through shows the checkout.
+    mocks.api.ValidatePaymentToken.mockResolvedValue({ data: fullInvoice() });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Try again'));
+    });
+    expect(mocks.api.ValidatePaymentToken).toHaveBeenCalledTimes(2);
+    expect(
+      screen.queryByText("We couldn't check this payment link right now.")
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('This payment link has expired')).not.toBeInTheDocument();
+    expect(screen.getByText('Credit / Debit Card')).toBeInTheDocument();
+  });
+
   it('shows the expiry page when validation rejects', async () => {
     await renderPage(new Error('Token already used'));
     expect(screen.getByText('This payment link has expired')).toBeInTheDocument();

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";           // ← add this
 import AuthLayout from "../AuthLayout";
 import { showToast } from "../../../Helper/ShowToast";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 import api from "../../../api/authApis";                 // ← import api
 
 const EmailSentIllustration = () => (
@@ -85,6 +86,7 @@ const CheckEmail = () => {
       console.error("Resend failed:", error);
       const msg =
         error?.response?.data?.message ||
+        (error?.isNetworkError && error.message) ||
         "Failed to resend email. Please try again later.";
       showToast(msg, "error");
     } finally {
@@ -143,6 +145,8 @@ const CheckEmail = () => {
         <p className="text-gray-500 text-sm mt-8">
           Check your spam/junk folder if it doesn't arrive soon.
         </p>
+
+        <BackToLogin />
       </div>
     </AuthLayout>
   );

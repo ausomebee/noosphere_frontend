@@ -1,0 +1,15 @@
+.back-to-login {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.back-to-login a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-to-login a:hover {
+  text-decoration: underline;
+}

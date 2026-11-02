@@ -487,6 +487,9 @@ describe('the security question method', () => {
       Authenticator2FA: false,
       securityQuestion: true,
       setForAll: true,
+      // Sent through the auth interceptor, which needs the session tokens.
+      accessToken: 'at',
+      refreshToken: 'rt',
     });
     expect(showToast).toHaveBeenCalledWith('Security question settings saved', 'success');
     await waitFor(() =>
@@ -573,6 +576,9 @@ describe('the authenticator method', () => {
       Authenticator2FA: true,
       securityQuestion: false,
       setForAll: true,
+      // Sent through the auth interceptor, which needs the session tokens.
+      accessToken: 'at',
+      refreshToken: 'rt',
     });
     expect(showToast).toHaveBeenCalledWith('Authenticator settings saved', 'success');
     const app = screen.getByText('Authenticator App').closest('.settings-2fa-method-row');

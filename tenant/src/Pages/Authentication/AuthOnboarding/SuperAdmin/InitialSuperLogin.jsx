@@ -6,7 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
-import { AdminLogin } from "../../../../ReduxStore/features/authentication";
+import {
+  AdminLogin,
+  setPending2FARoute,
+} from "../../../../ReduxStore/features/authentication";
 import "../../Auth.css";
 import TenantLogo from "../../../../assets/Logo.svg";
 import { PasswordInput, TextInput } from "../../../../Components/Input/Inputs";
@@ -44,13 +47,19 @@ const InitialSuperLogin = () => {
         const user = resultAction.payload.data;
         showToast("Login successful", "success");
 
+        // Every branch ends on a 2FA page; remember it for the route guards.
+        const go2FA = (path) => {
+          dispatch(setPending2FARoute(path));
+          navigate(path);
+        };
+
         if (!user.auth2FADone) {
-          navigate("/auth/change-password");
+          go2FA("/auth/change-password");
         } else {
           if (user.authType === "AUTHENTICATOR") {
-            navigate("/auth/2fa/login-authenticator");
+            go2FA("/auth/2fa/login-authenticator");
           } else if (user.authType === "SECRETMESSAGE") {
-            navigate("/auth/2fa/login-question");
+            go2FA("/auth/2fa/login-question");
           } else {
             console.error("Unknown authType:", user.authType);
             showToast("Unknown authentication type", "error");

@@ -294,18 +294,25 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
           : [rescheduleData];
 
         // The modal returns the new date/time but not the appointment id, so
-        // pull it from the selected appointment(s) — the endpoint requires it.
+        // pull it from the selected appointment at the same position. Each slot
+        // must have its own id: falling back to another selected request's id
+        // rescheduled that one twice and left this one untouched.
         const selected = Array.isArray(selectedAppointment)
           ? selectedAppointment
           : selectedAppointment
             ? [selectedAppointment]
             : [];
 
-        await Promise.all(
-          items.map((item, i) =>
-            api.RescheduleAppointments({
+        // One failure must not hide which of the others went through.
+        const results = await Promise.allSettled(
+          items.map((item, i) => {
+            const id = item.id ?? selected[i]?.id;
+            if (!id) {
+              return Promise.reject(new Error("Missing appointment id"));
+            }
+            return api.RescheduleAppointments({
               tenantId,
-              id: item.id ?? selected[i]?.id ?? selected[0]?.id,
+              id,
               date: item.date,
               startTime: item.startTime,
               endTime: item.endTime,
@@ -313,16 +320,49 @@ const RescheduleRequests = ({ setCounts = () => {}, clientId }) => {
               rescheduled: true,
               accessToken,
               refreshToken,
-            }),
-          ),
+            });
+          }),
         );
+
+        const describe = (item, i) =>
+          selected[i]?.clientName || item.date || `#${i + 1}`;
+        const failed = results
+          .map((result, i) => ({ result, item: items[i], i }))
+          .filter(({ result }) => result.status === "rejected");
+
+        if (failed.length === results.length) {
+          // Nothing went through: report it as before, keeping the form open.
+          if (results.length === 1) throw failed[0].result.reason || {};
+          const reasons = failed
+            .map(({ result, item, i }) =>
+              `${describe(item, i)}${result.reason?.message ? ` (${result.reason.message})` : ""}`,
+            )
+            .join(", ");
+          throw new Error(`Failed to reschedule: ${reasons}`);
+        }
 
         fetchRescheduleRequests(); // Refresh list
         setIsRescheduleModalOpen(false);
         setSelectedAppointment(null);
         setSelectedItems([]);
         clearSelection();
-        showToast("Appointment rescheduled", "success");
+        if (failed.length === 0) {
+          showToast("Appointment rescheduled", "success");
+        } else {
+          const succeeded = results
+            .map((result, i) => ({ result, item: items[i], i }))
+            .filter(({ result }) => result.status === "fulfilled")
+            .map(({ item, i }) => describe(item, i));
+          const reasons = failed
+            .map(({ result, item, i }) =>
+              `${describe(item, i)}${result.reason?.message ? ` (${result.reason.message})` : ""}`,
+            )
+            .join(", ");
+          showToast(
+            `Rescheduled ${succeeded.length} of ${results.length}: ${succeeded.join(", ")}. Failed: ${reasons}`,
+            "warning",
+          );
+        }
       } catch (err) {
         setError(err.message || "Failed to modify reschedule");
         showToast(err.message || "Failed to reschedule appointment", "error");

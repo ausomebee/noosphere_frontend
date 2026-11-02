@@ -8,7 +8,10 @@ import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
+import { useDispatch } from "react-redux";
+import { complete2FA } from "../../../ReduxStore/features/authentication";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { SERVER_UNREACHABLE_MESSAGE } from "../../../Helper/authErrors";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
 // Yup validation schema for OTP
@@ -22,6 +25,7 @@ const otpSchema = yup.object().shape({
 const SuperAdmin2FAAuthenticatorLogin = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
@@ -89,13 +93,16 @@ const SuperAdmin2FAAuthenticatorLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("OTP verification successful!", "success");
+        // 2FA verified: unlock the app (ProtectedRoute) before entering it.
+        dispatch(complete2FA());
         navigate("/tenants/pipeline"); // Adjust to dashboard or next step
       } else {
         throw new Error("Verification failed.");
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("2FA verification failed:", error);
-      showApiError(error, "VERIFY_2FA");
+      if (error?.isNetworkError) showToast(SERVER_UNREACHABLE_MESSAGE, "error");
+      else showApiError(error, "VERIFY_2FA");
     } finally {
       setLoading(false);
     }

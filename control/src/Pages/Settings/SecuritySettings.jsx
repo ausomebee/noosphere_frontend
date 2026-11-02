@@ -183,6 +183,8 @@ const SecuritySettings = () => {
         Authenticator2FA: false,
         securityQuestion: true,
         setForAll: sqEnableAll,
+        accessToken,
+        refreshToken,
       });
       if (sqDefault) {
         setAuthMethods((prev) =>
@@ -211,6 +213,8 @@ const SecuritySettings = () => {
         Authenticator2FA: true,
         securityQuestion: false,
         setForAll: authenticatorEnableAll,
+        accessToken,
+        refreshToken,
       });
       if (authenticatorDefault) {
         setAuthMethods((prev) =>

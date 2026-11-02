@@ -37,6 +37,9 @@ const h = vi.hoisted(() => ({
   unsub: vi.fn(),
 }));
 
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock("react-router-dom", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => h.navigate,
@@ -55,6 +58,10 @@ vi.mock("../api/notificationApi", () => ({
 }));
 
 vi.mock("../api/socketService", () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   emitNotificationRead: (...a) => h.emitNotificationRead(...a),
   onNotification: (fn) => {
     h.onNotificationCb = fn;
@@ -223,11 +230,26 @@ describe("loading the list", () => {
     expect(screen.getByText("No notifications")).toBeInTheDocument();
   });
 
-  it("shows the empty state when the fetch rejects", async () => {
+  // A failed load used to fall through to "No notifications", hiding it.
+  it("shows an error with a retry when the fetch rejects", async () => {
     h.getNotifications.mockRejectedValue(new Error("down"));
     renderPage();
     await settled();
+    expect(screen.getByText("Oops!")).toBeInTheDocument();
+    expect(screen.queryByText("No notifications")).toBeNull();
+
+    withList([notif({ title: "Back again" })]);
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(await screen.findByText("Back again")).toBeInTheDocument();
+    expect(screen.queryByText("Oops!")).toBeNull();
+  });
+
+  it("treats a 404 as no notifications rather than an error", async () => {
+    h.getNotifications.mockRejectedValue(Object.assign(new Error("none"), { status: 404 }));
+    renderPage();
+    await settled();
     expect(screen.getByText("No notifications")).toBeInTheDocument();
+    expect(screen.queryByText("Oops!")).toBeNull();
   });
 });
 
@@ -1021,5 +1043,40 @@ describe("a reschedule request whose proposal is only half filled in", () => {
     });
     expect(row.newDateTime.date).toBe("N/A");
     expect(row.newDateTime.time).not.toBe("N/A");
+  });
+});
+
+describe("catching up after the socket reconnects", () => {
+  it("reloads the list in place, picking up what was pushed while it was down", async () => {
+    reconnectListeners.length = 0;
+    withList([notif({ id: "n1", title: "Seen before" })]);
+    renderPage();
+    await settled();
+
+    let deliver;
+    h.getNotifications.mockReturnValue(new Promise((r) => { deliver = r; }));
+    act(() => reconnectListeners.forEach((fn) => fn()));
+    // Quiet: the list stays on screen rather than flipping to the loader.
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("Seen before")).toBeInTheDocument();
+
+    await act(async () =>
+      deliver({ data: { data: [notif({ id: "n2", title: "Missed while away" }), notif({ id: "n1", title: "Seen before" })] } })
+    );
+    expect(screen.getByText("Missed while away")).toBeInTheDocument();
+  });
+});
+
+describe("a quiet reconnect reload that fails", () => {
+  it("keeps the list on screen instead of flashing an error", async () => {
+    reconnectListeners.length = 0;
+    withList([notif({ id: "n1", title: "Seen before" })]);
+    renderPage();
+    await settled();
+
+    h.getNotifications.mockRejectedValue(new Error("blip"));
+    await act(async () => reconnectListeners.forEach((fn) => fn()));
+    expect(screen.getByText("Seen before")).toBeInTheDocument();
+    expect(screen.queryByText("Oops!")).toBeNull();
   });
 });

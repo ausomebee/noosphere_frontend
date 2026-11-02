@@ -141,3 +141,15 @@ describe('how a card is styled', () => {
     expect(card().className).not.toContain('dragging');
   });
 });
+
+describe('Task drag permission', () => {
+  it('can be picked up by default', () => {
+    renderTask();
+    expect(card()).toHaveAttribute('aria-disabled', 'false');
+  });
+
+  it('cannot be picked up when dragging is disabled', () => {
+    renderTask({ dragDisabled: true });
+    expect(card()).toHaveAttribute('aria-disabled', 'true');
+  });
+});

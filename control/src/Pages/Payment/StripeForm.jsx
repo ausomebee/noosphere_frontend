@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import invoiceApi from "../../api/InvoiceApi";
 
@@ -19,12 +19,22 @@ const CARD_ELEMENT_OPTIONS = {
   },
 };
 
+// Stripe says this PaymentIntent can't take another attempt (e.g. it was
+// cancelled), so the next submit must ask the server for a fresh one.
+const isIntentUnusable = (err) =>
+  err?.code === "payment_intent_unexpected_state" ||
+  err?.payment_intent?.status === "canceled";
+
 const StripeForm = ({ token, amount, currency, tenantId, email, onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [cardError, setCardError] = useState(null);
+  // The PaymentIntent from the first submit. A declined card leaves it ready
+  // for another attempt, so retries reuse it instead of piling up a new
+  // PaymentIntent per click. Keyed by token so a different link never reuses it.
+  const intentRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +55,12 @@ const StripeForm = ({ token, amount, currency, tenantId, email, onSuccess, onErr
       //    invoice behind the token, so nothing here can change what is
       //    charged. Done before touching the card so a dead or already-paid
       //    link fails without an authorisation attempt.
-      const intent = await invoiceApi.CreateStripePaymentIntent({ token });
+      //    Reused across retries on this page (see intentRef).
+      if (intentRef.current?.token !== token) {
+        const intent = await invoiceApi.CreateStripePaymentIntent({ token });
+        intentRef.current = { token, clientSecret: intent.clientSecret };
+      }
+      const { clientSecret } = intentRef.current;
 
       // 2. Tokenise. This is only for the receipt: confirmCardPayment's
       //    client-side response doesn't expand the charge, so the brand and
@@ -60,13 +75,17 @@ const StripeForm = ({ token, amount, currency, tenantId, email, onSuccess, onErr
       // 3. The actual charge. Handles the 3-D Secure challenge itself when the
       //    intent comes back as requires_action.
       const { error: confirmError, paymentIntent } =
-        await stripe.confirmCardPayment(intent.clientSecret, {
+        await stripe.confirmCardPayment(clientSecret, {
           payment_method: paymentMethod.id,
         });
-      if (confirmError) throw confirmError;
+      if (confirmError) {
+        if (isIntentUnusable(confirmError)) intentRef.current = null;
+        throw confirmError;
+      }
 
       // Anything other than succeeded is not a payment — never report it as one.
       if (paymentIntent?.status !== "succeeded") {
+        if (paymentIntent?.status === "canceled") intentRef.current = null;
         throw new Error(
           `Payment was not completed (status: ${paymentIntent?.status || "unknown"}). You have not been charged.`
         );

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 /**
  * The subscriptions board: a status tab bar over one list request and one count
@@ -409,6 +409,58 @@ describe('the subscription list', () => {
     mocks.subApi.GetSubscriptionByStatus.mockRejectedValue(new Error('down'));
     await renderPage();
     expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('says so when the list cannot be loaded', async () => {
+    mocks.subApi.GetSubscriptionByStatus.mockRejectedValue(new Error('down'));
+    await renderPage();
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA');
+  });
+
+  it('keeps the rows and counts it already had when a refetch fails', async () => {
+    // Used to blank the table and zero every count on any failure.
+    await renderPage();
+    expect(screen.getByTestId('table-rows').textContent).toBe('4');
+    mocks.subApi.GetSubscriptionByStatus.mockRejectedValue(new Error('down'));
+    mocks.subApi.GetCountForSubscription.mockRejectedValue(new Error('down'));
+    await switchTab('Active');
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA');
+    expect(screen.getByTestId('table-dump').textContent).toBe('Acme Health:active:Pro:4500');
+    expect(screen.getByRole('button', { name: /^All/ }).textContent).toContain('4');
+    expect(screen.getByRole('button', { name: /^Canceled/ }).textContent).toContain('1');
+  });
+
+  it('still takes the half that did load', async () => {
+    await renderPage();
+    mocks.subApi.GetCountForSubscription.mockRejectedValue(new Error('down'));
+    await switchTab('Canceled');
+    expect(screen.getByTestId('table-rows').textContent).toBe('1');
+    expect(screen.getByRole('button', { name: /^All/ }).textContent).toContain('4');
+  });
+
+  it('ignores a slow answer for a tab the user has already left', async () => {
+    await renderPage();
+    let releaseActive;
+    mocks.subApi.GetSubscriptionByStatus.mockImplementation((params) =>
+      params.status === 'ACTIVE'
+        ? new Promise((resolve) => { releaseActive = resolve; })
+        : Promise.resolve(subscriptions)
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Active/ }));
+    await waitFor(() =>
+      expect(mocks.subApi.GetSubscriptionByStatus).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'ACTIVE' })
+      )
+    );
+    await switchTab('Canceled');
+    const canceledView = screen.getByTestId('table-dump').textContent;
+
+    // The Active answer lands last, carrying rows that would replace the list.
+    await act(async () => {
+      releaseActive({ data: [{ id: 'late', tenant: { companyName: 'Late Co' }, status: 'CANCELLED' }] });
+    });
+    expect(screen.getByTestId('table-dump').textContent).toBe(canceledView);
+    expect(screen.getByTestId('table-dump').textContent).not.toContain('Late Co');
   });
 
   it('returns to the All tab when the table reports a filter change', async () => {

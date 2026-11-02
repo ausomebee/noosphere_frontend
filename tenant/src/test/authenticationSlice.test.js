@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import reducer, { logout, updateAccessToken } from '../ReduxStore/features/authentication';
+import reducer, {
+  logout,
+  updateAccessToken,
+  setPending2FARoute,
+  clearPending2FA,
+} from '../ReduxStore/features/authentication';
 
 const initialState = {
   isAuthenticated: false,
@@ -8,6 +13,8 @@ const initialState = {
   refreshToken: null,
   loading: false,
   error: null,
+  pending2FA: false,
+  pending2FARoute: null,
 };
 
 describe('authenticationSlice', () => {
@@ -97,5 +104,57 @@ describe('authenticationSlice', () => {
       payload: 'Onboarding failed',
     });
     expect(state.error).toBe('Onboarding failed');
+  });
+
+  // Login hands back real tokens before the second factor, so the session is
+  // "pending" until the app lets the user in.
+  describe('pending 2FA', () => {
+    const login = () =>
+      reducer(initialState, {
+        type: 'auth/AdminLogin/fulfilled',
+        payload: { data: { id: '1', accessToken: 'jwt' } },
+      });
+
+    it('marks a fresh login as pending, with no 2FA page chosen yet', () => {
+      const state = login();
+      expect(state.pending2FA).toBe(true);
+      expect(state.pending2FARoute).toBeNull();
+    });
+
+    it('marks an onboarding login as pending too', () => {
+      const state = reducer(initialState, {
+        type: 'auth/OnboardAdmin/fulfilled',
+        payload: { data: { id: '2', token: 'jwt2' } },
+      });
+      expect(state.pending2FA).toBe(true);
+    });
+
+    it('records the 2FA page the user has to finish', () => {
+      const state = reducer(login(), setPending2FARoute('/auth/2fa/login-question'));
+      expect(state.pending2FARoute).toBe('/auth/2fa/login-question');
+      expect(state.pending2FA).toBe(true);
+    });
+
+    it('clears once the user is let in', () => {
+      const state = reducer(
+        reducer(login(), setPending2FARoute('/auth/2fa/login-question')),
+        clearPending2FA()
+      );
+      expect(state.pending2FA).toBe(false);
+      expect(state.pending2FARoute).toBeNull();
+      expect(state.isAuthenticated).toBe(true);
+    });
+
+    it('clears on logout', () => {
+      const state = reducer(login(), logout());
+      expect(state.pending2FA).toBe(false);
+      expect(state.pending2FARoute).toBeNull();
+    });
+
+    it('leaves a session persisted before the flag existed alone', () => {
+      const legacy = { isAuthenticated: true, user: { id: '1' }, token: 't', loading: false, error: null };
+      const state = reducer(legacy, updateAccessToken('t2'));
+      expect(state.pending2FA).toBeUndefined();
+    });
   });
 });

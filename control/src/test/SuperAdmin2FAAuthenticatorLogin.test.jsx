@@ -22,8 +22,9 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
 const state = {
   authentication: { accessToken: 'at', refreshToken: 'rt', user: { id: 'admin-1' } },
 };
+const dispatch = vi.hoisted(() => vi.fn());
 vi.mock('react-redux', () => ({
-  useDispatch: () => vi.fn(),
+  useDispatch: () => dispatch,
   useSelector: (fn) => fn(state),
 }));
 
@@ -228,6 +229,29 @@ describe('verifying the code', () => {
     await verify();
     expect(showToast).toHaveBeenCalledWith('OTP verification successful!', 'success');
     expect(navigate).toHaveBeenCalledWith('/tenants/pipeline');
+    // Unlocks the app so ProtectedRoute lets the admin in.
+    expect(dispatch).toHaveBeenCalledWith({ type: 'authentication/complete2FA' });
+  });
+
+  it('keeps the app locked when the code is refused', async () => {
+    api.Admin2FAVerify.mockResolvedValue({ data: { status: 'denied' } });
+    await verify();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('says the server could not be reached when the call never got an answer', async () => {
+    const unreachable = new Error('unreachable');
+    unreachable.isNetworkError = true;
+    api.Admin2FAVerify.mockRejectedValue(unreachable);
+    await verify();
+    expect(showToast).toHaveBeenCalledWith(
+      "Can't reach the server. Check your connection and try again.",
+      'error'
+    );
+    expect(showApiError).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(document.querySelector('.custom-button')).not.toBeDisabled()
+    );
   });
 
   it('treats a non-ok status as a failure', async () => {

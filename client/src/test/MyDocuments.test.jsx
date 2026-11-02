@@ -158,17 +158,29 @@ describe("loading the three sections", () => {
     await waitFor(() => expect(screen.getByText("No folders yet")).toBeInTheDocument());
   });
 
+  // These used to expect the section's empty state on a failed fetch — the
+  // bug: a failure read as "you have no files". It now shows an error instead.
   it.each([
-    ["GetAllFolders", "No folders yet"],
-    ["GetRecentFiles", "No recent files"],
-    ["GetAllFiles", "No files uploaded yet"],
-  ])("keeps the other sections when %s fails", async (failing, emptyMessage) => {
+    ["GetAllFolders", "No folders yet", "We couldn't load your folders. Please try again."],
+    ["GetRecentFiles", "No recent files", "We couldn't load your recent files. Please try again."],
+    ["GetAllFiles", "No files uploaded yet", "We couldn't load your files. Please try again."],
+  ])("keeps the other sections when %s fails", async (failing, emptyMessage, errorMessage) => {
     apiMock[failing].mockRejectedValue(new Error("offline"));
     await renderPage();
-    await waitFor(() => expect(screen.getByText(emptyMessage)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(errorMessage)).toBeInTheDocument());
+    expect(screen.queryByText(emptyMessage)).toBeNull();
     // The other two still have their data.
-    const empties = document.body.querySelectorAll(".empty-state");
-    expect(empties).toHaveLength(1);
+    expect(document.body.querySelectorAll(".empty-state")).toHaveLength(0);
+  });
+
+  it("retries a failed section", async () => {
+    apiMock.GetAllFiles.mockRejectedValueOnce(new Error("offline"));
+    await renderPage();
+    fireEvent.click(await screen.findByText("Try Again"));
+    await waitFor(() =>
+      expect(screen.queryByText("We couldn't load your files. Please try again.")).toBeNull()
+    );
+    expect(apiMock.GetAllFiles).toHaveBeenCalledTimes(2);
   });
 
   it("labels a file with no recorded size or uploader", async () => {
@@ -405,6 +417,25 @@ describe("uploading files", () => {
     await waitFor(() =>
       expect(apiMock.GetAllFiles.mock.calls.length).toBeGreaterThan(before)
     );
+  });
+
+  it("keeps the visible list when the refresh after an upload fails", async () => {
+    await openFileModal();
+    await waitFor(() => expect(document.body.querySelectorAll(".empty-state")).toHaveLength(0));
+    const before = apiMock.GetAllFiles.mock.calls.length;
+    apiMock.GetAllFiles.mockRejectedValue(new Error("offline"));
+    await act(async () => {
+      await modalProps.file.onCreate([{ name: "a.pdf", url: "https://cdn/a.pdf" }]);
+    });
+    await waitFor(() => expect(apiMock.GetAllFiles.mock.calls.length).toBeGreaterThan(before));
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        "Couldn't refresh your documents. Showing what was loaded before.",
+        "error"
+      )
+    );
+    expect(screen.queryByText("We couldn't load your files. Please try again.")).toBeNull();
+    expect(screen.queryByText("No files uploaded yet")).toBeNull();
   });
 
   it("reports a failed upload", async () => {

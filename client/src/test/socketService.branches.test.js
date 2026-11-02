@@ -114,3 +114,23 @@ describe("connect and disconnect lifecycle", () => {
     expect(() => svc.disconnectSocket()).not.toThrow();
   });
 });
+
+describe("catching up after a reconnect", () => {
+  it("tells listeners when the socket comes back, but not on its first connect", async () => {
+    const svc = await import("../api/socketService");
+    svc.connectSocket({ accessToken: "at", userId: "u1", tenantId: "t1" });
+    const connect = mockSocket.on.mock.calls.filter(([e]) => e === "connect").at(-1)[1];
+    const listener = vi.fn();
+    const unsubscribe = svc.onReconnect(listener);
+
+    connect(); // first connect
+    expect(listener).not.toHaveBeenCalled();
+    connect(); // back after a drop
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    connect();
+    expect(listener).toHaveBeenCalledTimes(1);
+    svc.disconnectSocket();
+  });
+});

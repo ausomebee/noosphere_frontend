@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import DocumentViewer from "../Components/FileUpload/DocumentViewer";
 
 import {
@@ -19,6 +19,10 @@ export const DocumentViewerProvider = ({ children }) => {
     fileName: "",
     resolving: false,
   });
+  // Bumped on every open and close. A presign that comes back after the viewer
+  // was closed, or after another document was opened, is stale and ignored —
+  // otherwise it reopened the viewer or swapped in the wrong file.
+  const requestIdRef = useRef(0);
 
   // Stored urls point at a private bucket and carry no signature of their own,
   // so they are exchanged for a short-lived signed one at the moment they are
@@ -42,6 +46,7 @@ export const DocumentViewerProvider = ({ children }) => {
 
   const openDocument = useCallback(
     async (fileUrl, fileName) => {
+      const requestId = ++requestIdRef.current;
       setViewerState({ isOpen: true, fileUrl: "", fileName, resolving: true });
       let resolved = fileUrl;
       try {
@@ -50,6 +55,7 @@ export const DocumentViewerProvider = ({ children }) => {
         // Keep the original url. The viewer recognises an unsigned link and
         // explains itself, which reads better than a blank frame.
       }
+      if (requestId !== requestIdRef.current) return;
       setViewerState({
         isOpen: true,
         fileUrl: resolved,
@@ -61,6 +67,7 @@ export const DocumentViewerProvider = ({ children }) => {
   );
 
   const closeDocument = useCallback(() => {
+    requestIdRef.current += 1;
     setViewerState({ isOpen: false, fileUrl: "", fileName: "", resolving: false });
   }, []);
 

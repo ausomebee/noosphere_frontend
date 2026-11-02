@@ -346,3 +346,59 @@ describe('a payment that fails', () => {
     expect(onSuccess).toHaveBeenCalled();
   });
 });
+
+describe('retrying on the same page', () => {
+  it('reuses the first PaymentIntent after a decline instead of creating another', async () => {
+    stripe.confirmCardPayment.mockResolvedValueOnce({
+      error: { code: 'card_declined', message: 'Your card was declined.' },
+    });
+    renderForm();
+    await pay();
+    expect(error()).toHaveTextContent('Your card was declined.');
+
+    await pay();
+    expect(api.CreateStripePaymentIntent).toHaveBeenCalledTimes(1);
+    expect(stripe.confirmCardPayment).toHaveBeenCalledTimes(2);
+    expect(stripe.confirmCardPayment.mock.calls[1][0]).toBe('cs_1');
+    expect(onSuccess).toHaveBeenCalled();
+  });
+
+  it('asks for a new PaymentIntent once Stripe says the old one cannot be used', async () => {
+    api.CreateStripePaymentIntent
+      .mockResolvedValueOnce({ clientSecret: 'cs_1' })
+      .mockResolvedValueOnce({ clientSecret: 'cs_2' });
+    stripe.confirmCardPayment.mockResolvedValueOnce({
+      error: {
+        code: 'payment_intent_unexpected_state',
+        message: 'This PaymentIntent was canceled.',
+        payment_intent: { status: 'canceled' },
+      },
+    });
+    renderForm();
+    await pay();
+    await pay();
+    expect(api.CreateStripePaymentIntent).toHaveBeenCalledTimes(2);
+    expect(stripe.confirmCardPayment.mock.calls[1][0]).toBe('cs_2');
+  });
+
+  it('asks for a new PaymentIntent when the confirmed one came back cancelled', async () => {
+    api.CreateStripePaymentIntent
+      .mockResolvedValueOnce({ clientSecret: 'cs_1' })
+      .mockResolvedValueOnce({ clientSecret: 'cs_2' });
+    stripe.confirmCardPayment.mockResolvedValueOnce({
+      paymentIntent: { id: 'pi_1', status: 'canceled' },
+    });
+    renderForm();
+    await pay();
+    await pay();
+    expect(api.CreateStripePaymentIntent).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries the server call when the first attempt to create one failed', async () => {
+    api.CreateStripePaymentIntent.mockRejectedValueOnce(new Error('boom'));
+    renderForm();
+    await pay();
+    await pay();
+    expect(api.CreateStripePaymentIntent).toHaveBeenCalledTimes(2);
+  });
+});

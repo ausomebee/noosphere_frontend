@@ -8,6 +8,7 @@ import TenantLogo from "../../../assets/Logo.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 import { showValidationErrors } from "../../../Helper/formErrors";
 import {
@@ -87,8 +88,7 @@ const ForgotPasswordResetPassword = () => {
       }
     } catch (error) {
       console.error("Password update error:", error);
-      const message =
-        error?.response?.data?.message || "Failed to update password.";
+      const message = authErrorMessage(error, "Failed to update password.");
       showToast(message, "error");
     } finally {
       setSubmitting(false);

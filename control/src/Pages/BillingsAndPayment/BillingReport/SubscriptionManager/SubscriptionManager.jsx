@@ -404,7 +404,13 @@ const SubscriptionManager = () => {
     }
   }, [activeActions, pausedActions, canceledActions, defaultActions]);
 
+  // Only the newest fetch may write to the page: a slow answer for a tab or
+  // filter the user has already left is dropped (same idea as BillingManager).
+  const fetchSeq = useRef(0);
+
   const fetchData = useCallback(async () => {
+    const seq = ++fetchSeq.current;
+    const isStale = () => seq !== fetchSeq.current;
     setLoading(true);
     try {
       const params =
@@ -434,39 +440,50 @@ const SubscriptionManager = () => {
             },
           })),
       ]);
+      if (isStale()) return;
 
-      const subscriptions = (subscriptionsResponse.data || []).map((sub) => ({
-        id: sub.id,
-        tenantId: sub.tenantId,
-        companyName: sub.tenant?.companyName || "N/A",
-        plan: sub.plan?.name || "N/A",
-        status: sub.status.toLowerCase().replace("CANCELED", "CANCELLED"),
-        nextBillingDate: formatDate(sub.endDate),
-        billingCycle: sub.billingCycle || "N/A",
-        amount: sub.payment?.amount || 0,
-        lastPaymentStatus: sub.payment?.status || "N/A",
-        paymentId: sub.payment?.id,
-        invoiceId: sub.payment?.invoiceId,
-        hasCheckbox: true,
-        hasActions: true,
-      }));
+      // A failed request keeps what is already on screen rather than
+      // replacing it with an empty list or zero counts. The table only shows
+      // rows matching the current tab, so kept rows never appear under the
+      // wrong heading.
+      if (!subscriptionsResponse.error) {
+        const subscriptions = (subscriptionsResponse.data || []).map((sub) => ({
+          id: sub.id,
+          tenantId: sub.tenantId,
+          companyName: sub.tenant?.companyName || "N/A",
+          plan: sub.plan?.name || "N/A",
+          status: sub.status.toLowerCase().replace("CANCELED", "CANCELLED"),
+          nextBillingDate: formatDate(sub.endDate),
+          billingCycle: sub.billingCycle || "N/A",
+          amount: sub.payment?.amount || 0,
+          lastPaymentStatus: sub.payment?.status || "N/A",
+          paymentId: sub.payment?.id,
+          invoiceId: sub.payment?.invoiceId,
+          hasCheckbox: true,
+          hasActions: true,
+        }));
 
-      setSubscriptionData(subscriptions);
-      setSubscriptionCounts({
-        All: countsResponse.data?.All?._count?._all ?? 0,
-        ACTIVE: countsResponse.data?.ACTIVE?._count?._all ?? 0,
-        PAUSED: countsResponse.data?.PAUSED?._count?._all ?? 0,
-        PENDING: countsResponse.data?.PENDING?._count?._all ?? 0,
-        CANCELLED: countsResponse.data?.CANCELLED?._count?._all ?? 0,
-      });
+        setSubscriptionData(subscriptions);
+      }
+      if (!countsResponse.error) {
+        setSubscriptionCounts({
+          All: countsResponse.data?.All?._count?._all ?? 0,
+          ACTIVE: countsResponse.data?.ACTIVE?._count?._all ?? 0,
+          PAUSED: countsResponse.data?.PAUSED?._count?._all ?? 0,
+          PENDING: countsResponse.data?.PENDING?._count?._all ?? 0,
+          CANCELLED: countsResponse.data?.CANCELLED?._count?._all ?? 0,
+        });
+      }
 
       if (subscriptionsResponse.error || countsResponse.error) {
         throw new Error("Failed to fetch some data.");
       }
     } catch (err) {
+      if (isStale()) return;
       if (import.meta.env.DEV) console.error("Error fetching subscriptions:", err);
+      showApiError(err, "LOAD_BILLING_DATA");
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   }, [activeTab, formatDate]); // eslint-disable-line react-hooks/exhaustive-deps
 

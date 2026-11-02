@@ -254,6 +254,23 @@ describe("verifying the code", () => {
     );
   });
 
+  it("says the server can't be reached when the request never got an answer", async () => {
+    api.Admin2FAVerify.mockRejectedValue(Object.assign(
+      new Error("Can't reach the server. Check your connection and try again."),
+      { isNetworkError: true }
+    ));
+    renderPage();
+    await verifyWith();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Can't reach the server. Check your connection and try again.",
+        "error"
+      )
+    );
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it("leaves the boxes usable for another attempt", async () => {
     api.Admin2FAVerify.mockRejectedValue(new Error("nope"));
     renderPage();

@@ -632,7 +632,26 @@ describe("countering with a different slot", () => {
     expect(screen.queryByTestId("reschedule-modal")).not.toBeInTheDocument();
   });
 
-  it("sends one call per slot when the modal returns several", async () => {
+  it("sends one call per slot, each for its own request", async () => {
+    await renderTab();
+    act(() => rowAction("Modify").onClick(rows()[0]));
+    await act(async () => {
+      await probes.reschedule.onSave([
+        { id: "req-1", date: "2030-04-09", startTime: "15:00", endTime: "16:00" },
+        { id: "req-2", date: "2030-04-10", startTime: "15:00", endTime: "16:00" },
+      ]);
+    });
+
+    expect(api.RescheduleAppointments).toHaveBeenCalledTimes(2);
+    expect(api.RescheduleAppointments.mock.calls[0][0].id).toBe("req-1");
+    expect(api.RescheduleAppointments.mock.calls[1][0].id).toBe("req-2");
+    expect(api.RescheduleAppointments.mock.calls[0][0].forAll).toBe(false);
+    expect(toast.showToast).toHaveBeenCalledWith("Appointment rescheduled", "success");
+  });
+
+  // A slot with no id of its own used to borrow the first selected request's,
+  // rescheduling that one twice. Now it fails on its own and is reported.
+  it("never reschedules a slot under another request's id", async () => {
     await renderTab();
     act(() => rowAction("Modify").onClick(rows()[0]));
     await act(async () => {
@@ -642,13 +661,55 @@ describe("countering with a different slot", () => {
       ]);
     });
 
-    expect(api.RescheduleAppointments).toHaveBeenCalledTimes(2);
-    // Neither slot carried an id of its own: the first lines up with the
-    // selected request by position, and the second, having no counterpart,
-    // falls back to that same request.
+    // Only the first slot lines up with a selected request by position.
+    expect(api.RescheduleAppointments).toHaveBeenCalledTimes(1);
     expect(api.RescheduleAppointments.mock.calls[0][0].id).toBe("req-1");
-    expect(api.RescheduleAppointments.mock.calls[1][0].id).toBe("req-1");
-    expect(api.RescheduleAppointments.mock.calls[0][0].forAll).toBe(false);
+    expect(toast.showToast).toHaveBeenCalledWith(
+      expect.stringMatching(/^Rescheduled 1 of 2: .*Failed: 2030-04-10 \(Missing appointment id\)$/),
+      "warning"
+    );
+  });
+
+  it("reports which slots went through and which failed, and refreshes", async () => {
+    api.RescheduleAppointments
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce(new Error("slot taken"));
+    await renderTab();
+    const fetches = api.GetRescheduleAppointmentReqByTenantId.mock.calls.length;
+    act(() => rowAction("Modify").onClick(rows()[0]));
+    await act(async () => {
+      await probes.reschedule.onSave([
+        { id: "req-1", date: "2030-04-09", startTime: "15:00", endTime: "16:00" },
+        { id: "req-2", date: "2030-04-10", startTime: "15:00", endTime: "16:00" },
+      ]);
+    });
+
+    // Both were attempted: one failure doesn't stop the other.
+    expect(api.RescheduleAppointments).toHaveBeenCalledTimes(2);
+    expect(toast.showToast).toHaveBeenCalledWith(
+      expect.stringMatching(/^Rescheduled 1 of 2: .*Failed: 2030-04-10 \(slot taken\)$/),
+      "warning"
+    );
+    expect(api.GetRescheduleAppointmentReqByTenantId.mock.calls.length).toBeGreaterThan(fetches);
+    expect(screen.queryByTestId("reschedule-modal")).not.toBeInTheDocument();
+  });
+
+  it("names every slot when all of several fail, keeping the form open", async () => {
+    api.RescheduleAppointments.mockRejectedValue(new Error("slot taken"));
+    await renderTab();
+    act(() => rowAction("Modify").onClick(rows()[0]));
+    await act(async () => {
+      await probes.reschedule.onSave([
+        { id: "req-1", date: "2030-04-09" },
+        { id: "req-2", date: "2030-04-10" },
+      ]);
+    });
+
+    expect(toast.showToast).toHaveBeenCalledWith(
+      expect.stringMatching(/^Failed to reschedule: .*\(slot taken\), 2030-04-10 \(slot taken\)$/),
+      "error"
+    );
+    expect(screen.getByTestId("reschedule-modal")).toBeInTheDocument();
   });
 
   it("reports a failed counter-proposal", async () => {

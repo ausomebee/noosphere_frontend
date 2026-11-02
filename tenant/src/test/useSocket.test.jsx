@@ -159,6 +159,52 @@ describe("waking a backgrounded tab", () => {
   });
 });
 
+describe("a token refresh", () => {
+  // The hook used to run once behind a ref guard: the refresh re-ran the effect,
+  // its cleanup stripped the listeners, and the guard stopped them coming back,
+  // so chat and notification badges went quiet until a page reload.
+  it("re-attaches the chat and notification listeners", () => {
+    const onMessage = vi.fn();
+    const onNotification = vi.fn();
+    const { rerender } = renderHook(() => useSocket({ onMessage, onNotification }));
+
+    chatHandler = null;
+    notifHandler = null;
+    auth.accessToken = "at-2";
+    rerender();
+
+    expect(unsubChat).toHaveBeenCalled();
+    expect(chatHandler).toEqual(expect.any(Function));
+    expect(notifHandler).toEqual(expect.any(Function));
+    act(() => chatHandler({ id: "m2" }));
+    act(() => notifHandler({ id: "n2" }));
+    expect(onMessage).toHaveBeenCalledWith({ id: "m2" });
+    expect(onNotification).toHaveBeenCalledWith({ id: "n2" });
+  });
+
+  it("hands the new token to the same socket without disconnecting", () => {
+    const { rerender } = renderHook(() => useSocket());
+    auth.accessToken = "at-2";
+    rerender();
+    expect(connectSocket).toHaveBeenLastCalledWith({ accessToken: "at-2", userId: "u1", tenantId: "t1" });
+    expect(disconnectSocket).not.toHaveBeenCalled();
+  });
+
+  it("keeps tracking connect/disconnect after the refresh", () => {
+    const { result, rerender } = renderHook(() => useSocket());
+    auth.accessToken = "at-2";
+    rerender();
+    const connects = socket.on.mock.calls.filter(([name]) => name === "connect");
+    act(() => connects[connects.length - 1][1]());
+    expect(result.current.isConnected).toBe(true);
+  });
+
+  it("does nothing when no socket could be created", () => {
+    connectSocket.mockReturnValueOnce(null);
+    expect(() => renderHook(() => useSocket())).not.toThrow();
+  });
+});
+
 describe("teardown", () => {
   it("removes every listener it added", () => {
     const { unmount } = renderHook(() => useSocket());

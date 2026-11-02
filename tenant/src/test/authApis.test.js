@@ -12,6 +12,10 @@ vi.mock('axios', () => ({
 // Mock env
 vi.stubEnv('VITE_API_URL', 'https://api.test.com');
 
+// Every pre-session call carries a 20s timeout so a dead connection can't
+// leave the login button spinning forever.
+const WITH_TIMEOUT = expect.objectContaining({ timeout: 20000 });
+
 describe('authApis', () => {
   let api;
 
@@ -28,7 +32,8 @@ describe('authApis', () => {
       const result = await api.AdminLogin({ email: 'a@b.com', password: '123' });
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining('/tenant/signin'),
-        { email: 'a@b.com', password: '123' }
+        { email: 'a@b.com', password: '123' },
+        WITH_TIMEOUT
       );
       expect(result.data.status).toBe('ok');
     });
@@ -53,7 +58,8 @@ describe('authApis', () => {
       axios.get.mockResolvedValueOnce({ data: { status: 'ok' } });
       await api.AdminForgetPassword({ email: 'a@b.com' });
       expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/tenant/forgotpassword/a@b.com')
+        expect.stringContaining('/tenant/forgotpassword/a@b.com'),
+        WITH_TIMEOUT
       );
     });
 
@@ -72,7 +78,8 @@ describe('authApis', () => {
       await api.AdminSetPassword({ id: '1', password: 'newPass' });
       expect(axios.patch).toHaveBeenCalledWith(
         expect.stringContaining('/tenant/setpassword'),
-        { id: '1', password: 'newPass' }
+        { id: '1', password: 'newPass' },
+        WITH_TIMEOUT
       );
     });
   });
@@ -83,7 +90,8 @@ describe('authApis', () => {
       await api.Admin2FAVerify({ userId: 'u1', token: '123456' });
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining('/auth/tenant/verify'),
-        { userId: 'u1', token: '123456' }
+        { userId: 'u1', token: '123456' },
+        WITH_TIMEOUT
       );
     });
   });
@@ -104,7 +112,8 @@ describe('authApis', () => {
           secret: 'myAnswer',
           authQuestion: 'What is your pet?',
           module: 'TENANT',
-        }
+        },
+        WITH_TIMEOUT
       );
     });
   });
@@ -125,7 +134,8 @@ describe('authApis', () => {
           securityQuestion: false,
           setForAll: true,
           tenantId: 't1',
-        }
+        },
+        WITH_TIMEOUT
       );
     });
   });
@@ -134,7 +144,7 @@ describe('authApis', () => {
     it('sends POST with userId and token', async () => {
       axios.post.mockResolvedValueOnce({ data: { valid: true } });
       await api.AdminVerifyToken({ userId: 'u1', token: 'tok123' });
-      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verify'), { userId: 'u1', token: 'tok123' });
+      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verify'), { userId: 'u1', token: 'tok123' }, WITH_TIMEOUT);
     });
     it('throws on failure', async () => {
       axios.post.mockRejectedValueOnce({ response: { data: { message: 'Invalid' } } });
@@ -146,7 +156,7 @@ describe('authApis', () => {
     it('sends PATCH with id and password', async () => {
       axios.patch.mockResolvedValueOnce({ data: { status: 'ok' } });
       await api.AdminOnboarding({ id: 'u1', password: 'newPass' });
-      expect(axios.patch).toHaveBeenCalledWith(expect.stringContaining('/tenant/setpassword'), { id: 'u1', password: 'newPass' });
+      expect(axios.patch).toHaveBeenCalledWith(expect.stringContaining('/tenant/setpassword'), { id: 'u1', password: 'newPass' }, WITH_TIMEOUT);
     });
     it('throws on failure', async () => {
       axios.patch.mockRejectedValueOnce({ response: { data: { message: 'Onboarding failed' } } });
@@ -158,7 +168,7 @@ describe('authApis', () => {
     it('sends GET with id and moduleType', async () => {
       axios.get.mockResolvedValueOnce({ data: { link: 'otpauth://...' } });
       await api.Admin2FALink({ id: 'u1', moduleType: 'TENANT' });
-      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/u1/TENANT'));
+      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/u1/TENANT'), WITH_TIMEOUT);
     });
     it('throws on failure', async () => {
       axios.get.mockRejectedValueOnce({ response: { data: { message: '2FA fail' } } });
@@ -185,7 +195,7 @@ describe('authApis', () => {
     it('sends POST with secret answer', async () => {
       axios.post.mockResolvedValueOnce({ data: { verified: true } });
       await api.Admin2FAVerifySecretMessage({ userId: 'u1', secret: 'answer', authQuestion: 'What?' });
-      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verifysecretmessage'), { userId: 'u1', secret: 'answer', authQuestion: 'What?' });
+      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/tenant/verifysecretmessage'), { userId: 'u1', secret: 'answer', authQuestion: 'What?' }, WITH_TIMEOUT);
     });
     it('throws on failure', async () => {
       axios.post.mockRejectedValueOnce({ response: { data: { message: 'Wrong answer' } } });
@@ -252,6 +262,53 @@ describe('authApis', () => {
       axios.post.mockRejectedValueOnce(boom);
 
       await expect(refreshAccessToken('good-refresh', vi.fn())).rejects.toEqual(boom);
+    });
+  });
+
+  // A request that never got an answer (timeout, dropped connection) must say
+  // so, instead of the endpoint's generic "X failed" copy.
+  describe('when the server cannot be reached', () => {
+    const NETWORK = "Can't reach the server. Check your connection and try again.";
+    const timedOut = () =>
+      Object.assign(new Error('timeout of 20000ms exceeded'), {
+        code: 'ECONNABORTED',
+        request: {},
+      });
+
+    it('reports a timed-out login as unreachable, flagged as a network error', async () => {
+      axios.post.mockRejectedValueOnce(timedOut());
+      const err = await api.AdminLogin({ email: 'a@b.com', password: '123' }).catch((e) => e);
+      expect(err.message).toBe(NETWORK);
+      expect(err.isNetworkError).toBe(true);
+    });
+
+    it.each([
+      ['AdminForgetPassword', 'get', () => api.AdminForgetPassword({ email: 'a@b.com' })],
+      ['Admin2FAVerify', 'post', () => api.Admin2FAVerify({ userId: 'u1', token: '1' })],
+      ['Admin2FAVerifySecretMessage', 'post', () => api.Admin2FAVerifySecretMessage({ userId: 'u1', secret: 's' })],
+      ['AdminSetPassword', 'patch', () => api.AdminSetPassword({ id: '1', password: 'x' })],
+    ])('%s reports a dropped connection as unreachable', async (_name, method, call) => {
+      axios[method].mockRejectedValueOnce(
+        Object.assign(new Error('Network Error'), { code: 'ERR_NETWORK', request: {} })
+      );
+      await expect(call()).rejects.toThrow(NETWORK);
+    });
+
+    it('still prefers what the server said when it did answer', async () => {
+      axios.post.mockRejectedValueOnce({ request: {}, response: { data: { message: 'Bad credentials' } } });
+      await expect(api.AdminLogin({ email: 'a@b.com', password: 'x' })).rejects.toThrow('Bad credentials');
+    });
+
+    it('lets refreshAccessToken re-throw the raw error so the interceptor keeps the session', async () => {
+      const { refreshAccessToken } = await import('../api/authApis');
+      const raw = timedOut();
+      axios.post.mockRejectedValueOnce(raw);
+      await expect(refreshAccessToken('good-refresh', vi.fn())).rejects.toBe(raw);
+      expect(axios.post).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/refresh-token'),
+        { refreshToken: 'good-refresh' },
+        WITH_TIMEOUT
+      );
     });
   });
 });

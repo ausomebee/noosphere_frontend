@@ -19,7 +19,9 @@ import {
 const useSocket = ({ onNotification: onNotif } = {}) => {
   const { accessToken, userId } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
-  const initialized = useRef(false);
+  // The socket + user last registered, so a token refresh re-running the
+  // effect doesn't register the same user on the same socket again.
+  const registered = useRef(null);
   // Keep callbacks in a ref so the effect doesn't re-run on every render.
   const cbRef = useRef({ onNotif });
   useEffect(() => {
@@ -30,22 +32,24 @@ const useSocket = ({ onNotification: onNotif } = {}) => {
     // Logged out — disconnect and reset so we can reconnect on next login.
     if (!accessToken || !userId) {
       disconnectSocket();
-      initialized.current = false;
+      registered.current = null;
       return;
     }
 
-    if (initialized.current) return;
-    initialized.current = true;
-
+    // Runs again on every token refresh. The cleanup below removed the
+    // listeners, so they are attached again here; connectSocket hands back the
+    // same socket for the same user and updates its auth token.
     const socket = connectSocket({ accessToken, userId });
-    if (!socket) {
-      initialized.current = false;
-      return;
-    }
+    if (!socket) return;
+
+    const register = () => {
+      registerUser({ userId, userType: "ADMIN" });
+      registered.current = { socket, userId };
+    };
 
     const handleConnect = () => {
       setIsConnected(true);
-      registerUser({ userId, userType: "ADMIN" });
+      register();
     };
     // No toast on either edge. Backgrounding a tab throttles the heartbeat and
     // drops the socket routinely, so toasting made normal behaviour look like a
@@ -65,10 +69,12 @@ const useSocket = ({ onNotification: onNotif } = {}) => {
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Already connected (e.g. hot-reload).
+    // Already connected (e.g. hot-reload, or the effect re-ran on a token
+    // refresh). Register only if this socket hasn't been told who we are.
     if (socket.connected) {
       setIsConnected(true);
-      registerUser({ userId, userType: "ADMIN" });
+      const last = registered.current;
+      if (last?.socket !== socket || last?.userId !== userId) register();
     }
 
     const unsubNotif = onNotification((notif) => cbRef.current.onNotif?.(notif));

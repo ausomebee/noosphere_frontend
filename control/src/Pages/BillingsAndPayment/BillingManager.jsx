@@ -16,11 +16,11 @@ import {
   SiAmericanexpress,
   SiPaypal,
 } from "react-icons/si";
-import { formatDate } from "../../Helper/Formatters";
+import { formatDate, formatMoney } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 import "./BillingAndPayments.css";
 
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, showApiError } from "../../Helper/ShowToast";
 const statusMap = {
   // Payment statuses
   successful: "Successful",
@@ -85,29 +85,33 @@ const BillingManager = () => {
     Failed: 0,
   });
 
-  const buildInvoiceItems = (items, billingFrequency) => {
+  // Line items are money rows: full currency format, not the KPI "k" style.
+  const buildInvoiceItems = (items, billingFrequency, currency) => {
     const rows = [];
     let rowNum = 1;
     (items || []).forEach((item) => {
       rows.push({
         id: `${rowNum++}`,
         description: item.description,
-        rate: formatNumber(item.rate?.price || 0, true),
+        rate: formatMoney(item.rate?.price || 0, item.rate?.currency || currency),
         quantity: item.quantity,
-        price: formatNumber(item.price || 0, true),
+        price: formatMoney(item.price || 0, item.rate?.currency || currency),
       });
       (item.extraFeaturesWithPrice || []).forEach((feature) => {
         const isYearly = billingFrequency?.toLowerCase() === "yearly";
         const featurePrice = isYearly
           ? feature.pricePerYear?.price || 0
           : feature.pricePerMonth?.price || 0;
+        const featureCurrency =
+          (isYearly ? feature.pricePerYear?.currency : feature.pricePerMonth?.currency) ||
+          currency;
         const qty = item.quantity || 1;
         rows.push({
           id: `${rowNum++}`,
           description: "Add-on Feature",
-          rate: formatNumber(featurePrice, true),
+          rate: formatMoney(featurePrice, featureCurrency),
           quantity: qty,
-          price: formatNumber(featurePrice * qty, true),
+          price: formatMoney(featurePrice * qty, featureCurrency),
         });
       });
     });
@@ -142,6 +146,8 @@ const BillingManager = () => {
     });
   };
 
+  // Abbreviated ("$1.5k") — only for the KPI summary tiles. Table rows and
+  // invoice lines use formatMoney.
   const formatNumber = (value, isCurrency = false) => {
     if (value === null || value === undefined) return isCurrency ? "$0" : "0";
     const absValue = Math.abs(value);
@@ -180,6 +186,8 @@ const BillingManager = () => {
   };
 
   useEffect(() => {
+    // Ignore a response that lands after the page has unmounted.
+    let stale = false;
     const fetchMetrics = async () => {
       try {
         setLoading(true);
@@ -201,77 +209,56 @@ const BillingManager = () => {
             fetchBillingTotal.catch((err) => ({ error: err })),
             fetchBillingDue.catch((err) => ({ error: err })),
           ]);
+        if (stale) return;
 
-        const tenantCount = tenantResponse.error ? 0 : tenantResponse.data || 0;
-
-        const totalBilled = {
-          all_time: formatNumber(
-            billingTotalResponse.error
-              ? 0
-              : billingTotalResponse.data?.allTime?._sum?.total ?? 0,
-            true
-          ),
-          this_week: formatNumber(
-            billingTotalResponse.error
-              ? 0
-              : billingTotalResponse.data?.thisWeek?._sum?.total ?? 0,
-            true
-          ),
-          this_month: formatNumber(
-            billingTotalResponse.error
-              ? 0
-              : billingTotalResponse.data?.thisMonth?._sum?.total ?? 0,
-            true
-          ),
-          this_year: formatNumber(
-            billingTotalResponse.error
-              ? 0
-              : billingTotalResponse.data?.thisYear?._sum?.total ?? 0,
-            true
-          ),
-          custom: "$0",
-        };
-
-        const invoicesDue = {
-          all_time: formatNumber(
-            billingDueResponse.error
-              ? 0
-              : billingDueResponse.data?.allTime?._sum?.total ?? 0
-          ),
-          this_week: formatNumber(
-            billingDueResponse.error
-              ? 0
-              : billingDueResponse.data?.thisWeek?._sum?.total ?? 0
-          ),
-          this_month: formatNumber(
-            billingDueResponse.error
-              ? 0
-              : billingDueResponse.data?.thisMonth?._sum?.total ?? 0
-          ),
-          this_year: formatNumber(
-            billingDueResponse.error
-              ? 0
-              : billingDueResponse.data?.thisYear?._sum?.total ?? 0
-          ),
-          custom: "0",
-        };
-
-        setOverviewData({
-          totalTenants: formatNumber(tenantCount),
-          totalBilled,
-          invoicesDue,
+        // A failed metric keeps the figure already shown instead of turning
+        // into "$0", and the failure is reported below.
+        setOverviewData((prev) => {
+          const next = { ...prev };
+          if (!tenantResponse.error) {
+            next.totalTenants = formatNumber(tenantResponse.data || 0);
+          }
+          if (!billingTotalResponse.error) {
+            next.totalBilled = {
+              ...prev.totalBilled,
+              all_time: formatNumber(billingTotalResponse.data?.allTime?._sum?.total ?? 0, true),
+              this_week: formatNumber(billingTotalResponse.data?.thisWeek?._sum?.total ?? 0, true),
+              this_month: formatNumber(billingTotalResponse.data?.thisMonth?._sum?.total ?? 0, true),
+              this_year: formatNumber(billingTotalResponse.data?.thisYear?._sum?.total ?? 0, true),
+            };
+          }
+          if (!billingDueResponse.error) {
+            next.invoicesDue = {
+              ...prev.invoicesDue,
+              all_time: formatNumber(billingDueResponse.data?.allTime?._sum?.total ?? 0),
+              this_week: formatNumber(billingDueResponse.data?.thisWeek?._sum?.total ?? 0),
+              this_month: formatNumber(billingDueResponse.data?.thisMonth?._sum?.total ?? 0),
+              this_year: formatNumber(billingDueResponse.data?.thisYear?._sum?.total ?? 0),
+            };
+          }
+          return next;
         });
+
+        const failed =
+          tenantResponse.error || billingTotalResponse.error || billingDueResponse.error;
+        if (failed) showApiError(failed, "LOAD_BILLING_DATA");
       } catch (err) {
         if (import.meta.env.DEV) console.error("Error fetching metrics:", err);
       } finally {
-        setLoading(false);
+        if (!stale) setLoading(false);
       }
     };
 
     fetchMetrics();
+    return () => {
+      stale = true;
+    };
   }, []);
 
   useEffect(() => {
+    // The tab (or sub-tab) can change before this request answers. Its
+    // response then belongs to a tab the user has left: drop it.
+    let stale = false;
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -312,28 +299,13 @@ const BillingManager = () => {
                 data: [],
               }))
             : Promise.resolve({ data: [] }),
-          fetchInvoiceCounts.catch((err) => ({
-            error: err,
-            data: {
-              All: { _count: { _all: 0 } },
-              Paid: { _count: { _all: 0 } },
-              Upcoming: { _count: { _all: 0 } },
-              Due: { _count: { _all: 0 } },
-              Overdue: { _count: { _all: 0 } },
-            },
-          })),
-          fetchPaymentCounts.catch((err) => ({
-            error: err,
-            data: {
-              All: { _count: { _all: 0 } },
-              Successful: { _count: { _all: 0 } },
-              InProgress: { _count: { _all: 0 } },
-              Failed: { _count: { _all: 0 } },
-            },
-          })),
+          fetchInvoiceCounts.catch((err) => ({ error: err })),
+          fetchPaymentCounts.catch((err) => ({ error: err })),
         ]);
+        if (stale) return;
 
-        if (activeTab === "invoices") {
+        // Anything that failed keeps what is already on screen.
+        if (activeTab === "invoices" && !invoicesResponse.error) {
           const invoices = (invoicesResponse.data || []).map((inv) => ({
             invoice_id: inv.invoiceId,
             tenant: inv.tenant,
@@ -345,53 +317,66 @@ const BillingManager = () => {
           setInvoiceData(invoices);
         }
 
-        if (activeTab === "payments") {
+        if (activeTab === "payments" && !paymentsResponse.error) {
           const payments = (paymentsResponse.data || []).map((pay) => ({
             payment_id: formatPaymentId(pay.id),
             invoice_id: formatInvoiceId(pay.invoiceId),
             tenant: pay.tenant?.companyName,
             date_paid: formatDate(pay.createdAt),
-            amount: formatNumber(pay.amount, true),
+            amount: formatMoney(pay.amount, pay.currency),
             status: pay.status,
             hasActions: true,
           }));
           setPaymentData(payments);
         }
 
-        setInvoiceCounts({
-          All: invoiceCountsResponse.data?.All?._count?._all ?? 0,
-          Paid: invoiceCountsResponse.data?.Paid?._count?._all ?? 0,
-          Upcoming: invoiceCountsResponse.data?.Upcoming?._count?._all ?? 0,
-          Due: invoiceCountsResponse.data?.Due?._count?._all ?? 0,
-          Overdue: invoiceCountsResponse.data?.Overdue?._count?._all ?? 0,
-        });
+        if (!invoiceCountsResponse.error) {
+          setInvoiceCounts({
+            All: invoiceCountsResponse.data?.All?._count?._all ?? 0,
+            Paid: invoiceCountsResponse.data?.Paid?._count?._all ?? 0,
+            Upcoming: invoiceCountsResponse.data?.Upcoming?._count?._all ?? 0,
+            Due: invoiceCountsResponse.data?.Due?._count?._all ?? 0,
+            Overdue: invoiceCountsResponse.data?.Overdue?._count?._all ?? 0,
+          });
+        }
 
-        setPaymentCounts({
-          All: paymentCountsResponse.data?.All?._count?._all ?? 0,
-          Successful: paymentCountsResponse.data?.Successful?._count?._all ?? 0,
-          InProgress: paymentCountsResponse.data?.InProgress?._count?._all ?? 0,
-          Failed: paymentCountsResponse.data?.Failed?._count?._all ?? 0,
-        });
+        if (!paymentCountsResponse.error) {
+          setPaymentCounts({
+            All: paymentCountsResponse.data?.All?._count?._all ?? 0,
+            Successful: paymentCountsResponse.data?.Successful?._count?._all ?? 0,
+            InProgress: paymentCountsResponse.data?.InProgress?._count?._all ?? 0,
+            Failed: paymentCountsResponse.data?.Failed?._count?._all ?? 0,
+          });
+        }
 
-        if (
+        const failed =
           invoicesResponse.error ||
           paymentsResponse.error ||
           invoiceCountsResponse.error ||
-          paymentCountsResponse.error
-        ) {
+          paymentCountsResponse.error;
+        if (failed) {
+          showApiError(
+            failed,
+            activeTab === "payments" ? "LOAD_PAYMENTS" : "LOAD_INVOICES"
+          );
           throw new Error("Failed to fetch some data.");
         }
       } catch (err) {
         if (import.meta.env.DEV) console.error(`Error fetching ${activeTab}:`, err);
       } finally {
-        setLoading(false);
+        if (!stale) setLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      stale = true;
+    };
   }, [activeTab, activeSubTab]);
 
   useEffect(() => {
+    // A newer date range (or unmount) supersedes this request.
+    let stale = false;
     const fetchCustomMetrics = async () => {
       if (
         (filterValues.totalBilled === "custom" &&
@@ -432,36 +417,44 @@ const BillingManager = () => {
             totalBilledPromise.catch((err) => ({ error: err })),
             invoicesDuePromise.catch((err) => ({ error: err })),
           ]);
+          if (stale) return;
 
-          const updatedOverviewData = { ...overviewData };
+          // Functional update: the overviewData this effect closed over may be
+          // older than what is on screen, and must not be mutated.
+          const billedCustom =
+            filterValues.totalBilled === "custom" && !totalBilledResponse.error
+              ? formatNumber(totalBilledResponse.data?._sum?.total ?? 0, true)
+              : null;
+          const dueCustom =
+            filterValues.invoicesDue === "custom" && !invoicesDueResponse.error
+              ? formatNumber(invoicesDueResponse.data?._sum?.total ?? 0)
+              : null;
+          setOverviewData((prev) => ({
+            ...prev,
+            totalBilled:
+              billedCustom === null
+                ? prev.totalBilled
+                : { ...prev.totalBilled, custom: billedCustom },
+            invoicesDue:
+              dueCustom === null
+                ? prev.invoicesDue
+                : { ...prev.invoicesDue, custom: dueCustom },
+          }));
 
-          if (filterValues.totalBilled === "custom") {
-            updatedOverviewData.totalBilled.custom = formatNumber(
-              totalBilledResponse.error
-                ? 0
-                : totalBilledResponse.data?._sum?.total ?? 0,
-              true
-            );
-          }
-
-          if (filterValues.invoicesDue === "custom") {
-            updatedOverviewData.invoicesDue.custom = formatNumber(
-              invoicesDueResponse.error
-                ? 0
-                : invoicesDueResponse.data?._sum?.total ?? 0
-            );
-          }
-
-          setOverviewData(updatedOverviewData);
+          const failed = totalBilledResponse.error || invoicesDueResponse.error;
+          if (failed) showApiError(failed, "LOAD_BILLING_DATA");
         } catch (err) {
           if (import.meta.env.DEV) console.error("Error fetching custom metrics:", err);
         } finally {
-          setLoading(false);
+          if (!stale) setLoading(false);
         }
       }
     };
 
     fetchCustomMetrics();
+    return () => {
+      stale = true;
+    };
   }, [customDates, filterValues]);
 
   const closeInvoiceModal = () => {
@@ -486,8 +479,12 @@ const BillingManager = () => {
         dueDate: formatDate(invoiceData.dueDate),
         billingFrequency: invoiceData.billingFrequency,
         customerInfo: invoiceData.customerInfo,
-        items: buildInvoiceItems(invoiceData.items, invoiceData.billingFrequency),
-        total: formatNumber(invoiceData.total || 0, true),
+        items: buildInvoiceItems(
+          invoiceData.items,
+          invoiceData.billingFrequency,
+          invoiceData.currency
+        ),
+        total: formatMoney(invoiceData.total || 0, invoiceData.currency),
       };
       setSelectedInvoice(invoice);
       setShowInvoiceModal(true);
@@ -515,7 +512,7 @@ const BillingManager = () => {
         "Payment ID": formatPaymentId(paymentId),
         "Payment Date": formatDate(paymentData.paymentDate),
         "Time of Payment": formatDate(paymentData.paymentTime),
-        "Payment Amount": formatNumber(paymentData.amount, true),
+        "Payment Amount": formatMoney(paymentData.amount, paymentData.currency),
         "Payment Method": {
           icon: getPaymentIcon(paymentData.paymentMethod?.name),
           number: paymentData.paymentMethod?.code || "N/A",
@@ -550,8 +547,12 @@ const BillingManager = () => {
         dueDate: formatDate(invoiceData.dueDate),
         billingFrequency: invoiceData.billingFrequency,
         customerInfo: invoiceData.customerInfo,
-        items: buildInvoiceItems(invoiceData.items, invoiceData.billingFrequency),
-        total: formatNumber(invoiceData.total || 0, true),
+        items: buildInvoiceItems(
+          invoiceData.items,
+          invoiceData.billingFrequency,
+          invoiceData.currency
+        ),
+        total: formatMoney(invoiceData.total || 0, invoiceData.currency),
       };
 
       const tempContainer = document.createElement("div");

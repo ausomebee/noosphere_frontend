@@ -4,6 +4,20 @@ import { showToast } from "./ShowToast";
 import { getFingerprint } from "./fingerprint";
 import { getStore, getPersistor } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
+import { disconnectSocket } from "../api/socketService";
+import {
+  prepareRequest,
+  shouldRetry,
+  retryRequest,
+  explainGatewayError,
+} from "./requestResilience";
+import {
+  withRefreshLock,
+  rotationFrom,
+  recordRotation,
+  clearRotation,
+  syncRotations,
+} from "./tokenRotation";
 
 let isRefreshing = false; // Tracks if a token refresh is in progress
 let refreshSubscribers = []; // Queue to store pending requests while token is refreshing
@@ -28,14 +42,48 @@ function onRefreshFailed(refreshError) {
 
 // Ends the session for real. Purging matters as much as the logout: form
 // drafts carry client data, and on a shared workstation they must not outlive
-// the session just because the user never clicked "Log out".
+// the session just because the user never clicked "Log out". The socket goes
+// too, so the next person to sign in on this tab never inherits it.
 function endSession() {
+  clearRotation();
+  disconnectSocket();
   getStore()?.dispatch(logout());
   getPersistor()?.purge();
   showToast("Session expired. Please log in again.", "error");
 }
 
+// Picks up token refreshes made in other tabs. Waits for the store, which is
+// injected at boot before any request is made.
+function syncTokensAcrossTabs() {
+  const store = getStore();
+  if (!store) return;
+  syncRotations({
+    getRefreshToken: () => store.getState().auth?.refreshToken,
+    applyTokens: (tokens) => store.dispatch(setTokens(tokens)),
+    subscribe: store.subscribe,
+  });
+}
+
+// A refresh is one at a time across tabs. A tab that waited its turn may find
+// another tab already swapped the token it holds — the server has retired that
+// token, so take the new pair rather than sending it.
+function refreshTokens(currentRefreshToken) {
+  return withRefreshLock(async () => {
+    const rotated = rotationFrom(currentRefreshToken);
+    if (rotated) {
+      getStore()?.dispatch(setTokens(rotated));
+      return rotated.accessToken;
+    }
+    return api.refreshAccessToken(currentRefreshToken, (tokens) => {
+      getStore()?.dispatch(setTokens(tokens));
+      recordRotation(currentRefreshToken, tokens);
+    });
+  });
+}
+
 const AxiosInterceptor = (accessToken, refreshToken) => {
+  syncTokensAcrossTabs();
+
   const authFetch = axios.create({
     withCredentials: true,
     timeout: 30000,
@@ -48,7 +96,7 @@ const AxiosInterceptor = (accessToken, refreshToken) => {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
       }
       config.headers["x-fingerprint"] = getFingerprint();
-      return config;
+      return prepareRequest(config);
     },
     (error) => Promise.reject(error)
   );
@@ -78,10 +126,7 @@ const AxiosInterceptor = (accessToken, refreshToken) => {
             const currentRefreshToken =
               getStore()?.getState().auth?.refreshToken ?? refreshToken;
 
-            const newAccessToken = await api.refreshAccessToken(
-              currentRefreshToken,
-              (tokens) => getStore()?.dispatch(setTokens(tokens))
-            );
+            const newAccessToken = await refreshTokens(currentRefreshToken);
 
             if (newAccessToken) {
               isRefreshing = false;
@@ -136,6 +181,11 @@ const AxiosInterceptor = (accessToken, refreshToken) => {
         });
       }
 
+      // The server it reached failed or the reply was lost: send it again,
+      // which the load balancer may route to the other server.
+      if (shouldRetry(error)) return retryRequest(authFetch, error);
+
+      explainGatewayError(error);
       return Promise.reject(error);
     }
   );

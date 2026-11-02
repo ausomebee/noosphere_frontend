@@ -13,6 +13,7 @@ import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 import SectionLoader from "../../../Components/SectionLoader";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 const otpSchema = yup.object().shape({
   code: yup
     .string()
@@ -160,6 +161,7 @@ const ForgotPasswordAuthenticatorVerifier = () => {
                       loading={loading}
                     />
                   </form>
+                  <BackToLogin />
                 </>
               )}
               {step === 2 && (

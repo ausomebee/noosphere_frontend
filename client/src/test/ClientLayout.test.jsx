@@ -8,7 +8,7 @@ const messageApiMock = vi.hoisted(() => ({ GetNotifications: vi.fn() }));
 vi.mock("../api/messageApi", () => ({ default: messageApiMock }));
 
 const disconnectSocket = vi.hoisted(() => vi.fn());
-vi.mock("../api/socketService", () => ({ disconnectSocket }));
+vi.mock("../api/socketService", () => ({ disconnectSocket, onReconnect: () => () => {} }));
 
 // The layout reaches for the real persistor at import time; stubbing the whole
 // module keeps redux-persist (and its storage writes) out of this suite while

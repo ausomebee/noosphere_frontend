@@ -169,15 +169,43 @@ describe("teardown", () => {
 });
 
 describe("a tenant switch under the same session", () => {
-  it("does not dial a second socket when only the tenant changes", () => {
+  // Used to assert connectSocket was called only once, guarded by an
+  // `initialized` ref. That guard is gone (it broke token refresh, below);
+  // connectSocket itself now hands back the same socket for the same user.
+  it("keeps using the same socket when only the tenant changes", () => {
     const { rerender } = renderHook(() => useSocket());
-    expect(connectSocket).toHaveBeenCalledTimes(1);
-
-    // `tenantId` is in the effect's dependency list, so this re-runs the whole
-    // effect body -- the `initialized` ref is the only thing stopping it from
-    // opening a second connection.
     auth.tenantId = "t2";
     rerender();
-    expect(connectSocket).toHaveBeenCalledTimes(1);
+    expect(connectSocket.mock.results.every((r) => r.value === socket)).toBe(true);
+    expect(disconnectSocket).not.toHaveBeenCalled();
+  });
+});
+
+describe("a token refresh", () => {
+  it("re-attaches every listener after the refresh re-runs the effect", () => {
+    const onNotification = vi.fn();
+    const { rerender } = renderHook(() => useSocket({ onNotification }));
+
+    auth.accessToken = "at-2";
+    rerender();
+
+    // The refresh hands the new token to the (idempotent) connect...
+    expect(connectSocket).toHaveBeenLastCalledWith({ accessToken: "at-2", userId: "u1", tenantId: "t1" });
+    // ...and the first run's cleanup removed its listeners, so this run must
+    // have added them back — otherwise live badges stop after a refresh.
+    expect(unsubNotif).toHaveBeenCalledTimes(1);
+    expect(socket.on.mock.calls.filter(([e]) => e === "connect")).toHaveLength(2);
+    act(() => notifHandler({ id: "n1" }));
+    expect(onNotification).toHaveBeenCalledWith({ id: "n1" });
+    expect(disconnectSocket).not.toHaveBeenCalled();
+  });
+
+  it("still reports connect/disconnect after a refresh", () => {
+    const { result, rerender } = renderHook(() => useSocket());
+    auth.accessToken = "at-2";
+    rerender();
+    const handlers = socket.on.mock.calls.filter(([e]) => e === "connect").map(([, fn]) => fn);
+    act(() => handlers.at(-1)());
+    expect(result.current.isConnected).toBe(true);
   });
 });

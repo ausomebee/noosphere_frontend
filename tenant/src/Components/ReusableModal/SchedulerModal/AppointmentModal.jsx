@@ -23,20 +23,18 @@ import ColorPicker from "../../ColorPicker";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import DatePicker from "react-multi-date-picker";
-import { format } from "date-fns";
 import api2 from "../../../api/billingAndPaymentsApi";
 import appointmentApi from "../../../api/AppointmentApi";
 import useAuth from "../../../hooks/useAuth";
 import { locationOptions, modifierOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
+import { toDateKey, todayDateKey } from "../../../Helper/dates";
 
 // Date object or parseable string → "yyyy-MM-dd" ("" when unusable), the shape
-// the availability endpoint expects.
-const toIsoDate = (value) => {
-  if (!value) return "";
-  const parsed = value instanceof Date ? value : new Date(value);
-  return isNaN(parsed.getTime()) ? "" : format(parsed, "yyyy-MM-dd");
-};
+// the availability endpoint expects. A date-only / midnight-UTC value is kept
+// on its calendar day — `new Date()` moved it to the day before west of UTC,
+// so editing an appointment pre-filled the wrong date.
+const toIsoDate = (value) => toDateKey(value);
 
 // "14:30:00" / "9:5" → "14:30" / "09:05". Shared by the edit-mode reset and the
 // availability lookup so both compare times in the same shape.
@@ -355,7 +353,7 @@ const AppointmentModal = ({
     reValidateMode: "onBlur",
     resolver: yupResolver(validationSchema),
     defaultValues: {
-      date: new Date().toISOString().split("T")[0],
+      date: todayDateKey(),
       startTime: "",
       endTime: "",
       client: "",
@@ -622,7 +620,7 @@ const AppointmentModal = ({
 
     const formattedData = {
       date:
-        toIsoDate(initialData.date) || new Date().toISOString().split("T")[0],
+        toIsoDate(initialData.date) || todayDateKey(),
       startTime: normalizeTime(initialData.startTime),
       endTime: normalizeTime(initialData.endTime),
       client: initialData.clientId || "",
@@ -753,7 +751,7 @@ const AppointmentModal = ({
         await onSave(appointmentData);
         clearDraft();
         reset({
-          date: new Date().toISOString().split("T")[0],
+          date: todayDateKey(),
           startTime: "",
           endTime: "",
           client: "",
@@ -852,7 +850,7 @@ const AppointmentModal = ({
       await onSave(appointmentData);
       clearDraft();
       reset({
-        date: new Date().toISOString().split("T")[0],
+        date: todayDateKey(),
         startTime: "",
         endTime: "",
         client: "",

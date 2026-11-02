@@ -6,7 +6,7 @@ vi.mock("../Helper/fingerprint", () => ({
   getFingerprint: () => "test-fingerprint-123",
 }));
 
-import api, { refreshAccessToken } from "../api/authApis";
+import api, { refreshAccessToken, NETWORK_ERROR_MESSAGE } from "../api/authApis";
 
 describe("authApis", () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe("authApis", () => {
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining("/client/login"),
         { email: "user@test.com", password: "pass123" },
-        { headers: { "x-fingerprint": "test-fingerprint-123" } },
+        { headers: { "x-fingerprint": "test-fingerprint-123" }, timeout: 20000 },
       );
       expect(result).toEqual(mockResponse);
     });
@@ -31,9 +31,16 @@ describe("authApis", () => {
       await expect(api.ClientLogin({ email: "bad@test.com", password: "wrong" })).rejects.toThrow("Invalid credentials");
     });
 
-    it("throws default error when no message", async () => {
-      axios.post.mockRejectedValue({});
+    it("throws default error when the server answers without a message", async () => {
+      axios.post.mockRejectedValue({ response: { status: 500, data: {} } });
       await expect(api.ClientLogin({ email: "a", password: "b" })).rejects.toThrow("Login failed");
+    });
+
+    it("throws the can't-reach-server message on a timeout / network drop", async () => {
+      axios.post.mockRejectedValue(Object.assign(new Error("timeout of 20000ms exceeded"), { code: "ECONNABORTED" }));
+      const err = await api.ClientLogin({ email: "a", password: "b" }).catch((e) => e);
+      expect(err.message).toBe(NETWORK_ERROR_MESSAGE);
+      expect(err.isNetworkError).toBe(true);
     });
   });
 
@@ -51,6 +58,12 @@ describe("authApis", () => {
     it("throws on failure", async () => {
       axios.patch.mockRejectedValue({ response: { data: { message: "User not found" } } });
       await expect(api.ClientForgetPassword({ email: "x@x.com" })).rejects.toThrow("User not found");
+    });
+
+    it("sends a 20s timeout and maps a network drop to the can't-reach-server message", async () => {
+      axios.patch.mockRejectedValue(new Error("Network Error"));
+      await expect(api.ClientForgetPassword({ email: "x@x.com" })).rejects.toThrow(NETWORK_ERROR_MESSAGE);
+      expect(axios.patch.mock.calls[0][2]).toMatchObject({ timeout: 20000 });
     });
   });
 
@@ -72,8 +85,12 @@ describe("authApis", () => {
       await expect(api.ClientSetPassword({ clientTenantId: "ct1", password: "x" })).rejects.toThrow("Bad password");
     });
     it("throws default message", async () => {
-      axios.patch.mockRejectedValue(new Error("Network"));
+      axios.patch.mockRejectedValue({ response: { status: 500, data: {} } });
       await expect(api.ClientSetPassword({ clientTenantId: "ct1", password: "x" })).rejects.toThrow("Password setting failed");
+    });
+    it("throws the can't-reach-server message when there is no response", async () => {
+      axios.patch.mockRejectedValue(new Error("Network Error"));
+      await expect(api.ClientSetPassword({ clientTenantId: "ct1", password: "x" })).rejects.toThrow(NETWORK_ERROR_MESSAGE);
     });
   });
 
@@ -85,7 +102,7 @@ describe("authApis", () => {
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining("/auth/refresh-token"),
         { refreshToken: "old-refresh" },
-        { headers: { "x-fingerprint": "test-fingerprint-123" } },
+        { headers: { "x-fingerprint": "test-fingerprint-123" }, timeout: 20000 },
       );
       expect(onSuccess).toHaveBeenCalledWith({ accessToken: "new-access-tok", refreshToken: "new-refresh-tok" });
       expect(result).toBe("new-access-tok");

@@ -358,24 +358,67 @@ describe('changing the admin phone', () => {
 });
 
 describe('admin security actions', () => {
-  it('resets the admin password', async () => {
+  // Reset Password used to fire on a single click. It now confirms first and
+  // asks for the administrator's own password (a UI confirmation for now).
+  const RESET_TITLE = "Are you sure you want to reset this tenant's admin password?";
+
+  it('does not reset the password on the first click', async () => {
     await renderSettings();
-    await act(async () => {
-      fireEvent.click(screen.getByText('Reset Password'));
-    });
-    expect(mocks.tenantApi.ChangeAdminPassword).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: 'tenant-1' })
-    );
-    expect(mocks.showToast).toHaveBeenCalledWith('Password reset successfully', 'success');
+    fireEvent.click(screen.getByText('Reset Password'));
+    expect(modalTitle()).toBe(RESET_TITLE);
+    expect(mocks.tenantApi.ChangeAdminPassword).not.toHaveBeenCalled();
   });
 
-  it('surfaces a failed password reset', async () => {
+  it('refuses to reset without the administrator password', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('Reset Password'));
+    await act(async () => {
+      fireEvent.click(primaryButton());
+    });
+    expect(mocks.showToast).toHaveBeenCalledWith('Please enter your password', 'error');
+    expect(mocks.tenantApi.ChangeAdminPassword).not.toHaveBeenCalled();
+    expect(modalTitle()).toBe(RESET_TITLE);
+  });
+
+  it('resets the admin password once confirmed with the administrator password', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('Reset Password'));
+    fireEvent.change(screen.getByPlaceholderText('Enter password'), { target: { value: 'hunter2' } });
+    await act(async () => {
+      fireEvent.click(primaryButton());
+    });
+    // The password gates the confirm step; the API call itself carries only
+    // the tenant and the session tokens.
+    expect(mocks.tenantApi.ChangeAdminPassword).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      accessToken: 'token',
+      refreshToken: 'refresh',
+    });
+    expect(mocks.showToast).toHaveBeenCalledWith('Password reset successfully', 'success');
+    expect(modalTitle()).toBeUndefined();
+  });
+
+  it('surfaces a failed password reset and keeps the confirmation open', async () => {
     mocks.tenantApi.ChangeAdminPassword.mockRejectedValue(new Error('x'));
     await renderSettings();
+    fireEvent.click(screen.getByText('Reset Password'));
+    fireEvent.change(screen.getByPlaceholderText('Enter password'), { target: { value: 'wrong' } });
     await act(async () => {
-      fireEvent.click(screen.getByText('Reset Password'));
+      fireEvent.click(primaryButton());
     });
     expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'RESET_TENANT_PASSWORD');
+    expect(modalTitle()).toBe(RESET_TITLE);
+  });
+
+  it('cancels the password reset without calling the server and forgets the password', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('Reset Password'));
+    fireEvent.change(screen.getByPlaceholderText('Enter password'), { target: { value: 'hunter2' } });
+    fireEvent.click(secondaryButton());
+    expect(modalTitle()).toBeUndefined();
+    expect(mocks.tenantApi.ChangeAdminPassword).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('Reset Password'));
+    expect(screen.getByPlaceholderText('Enter password')).toHaveValue('');
   });
 
   it('confirms before resetting two-factor authentication', async () => {

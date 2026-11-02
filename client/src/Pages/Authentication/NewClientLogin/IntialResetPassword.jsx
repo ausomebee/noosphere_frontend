@@ -54,7 +54,10 @@ const InitialResetPassword = () => {
       navigate("/intialResetSuccessful");
     } catch (error) {
       console.error("Reset password error:", error);
-      showToast("Password reset failed. Please try again.", "error");
+      showToast(
+        error?.isNetworkError ? error.message : "Password reset failed. Please try again.",
+        "error",
+      );
     } finally {
       setLoading(false);
     }

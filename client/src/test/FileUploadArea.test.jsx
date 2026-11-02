@@ -21,15 +21,20 @@ import authReducer from "../ReduxStore/features/authentication";
  * hold even when a drag delivers several, and the per-file retry and remove.
  */
 
+// The slice is `auth` with top-level tokens. This used to seed a non-existent
+// `authentication` slice, matching the bug where the component read from it
+// and so always uploaded with no token.
 const makeStore = () =>
   configureStore({
-    reducer: { authentication: authReducer },
+    reducer: { auth: authReducer },
     preloadedState: {
-      authentication: {
+      auth: {
         isAuthenticated: true,
         loading: false,
         error: null,
-        user: { token: "at", refreshToken: "rt" },
+        user: { id: "u1" },
+        accessToken: "at",
+        refreshToken: "rt",
       },
     },
   });
@@ -100,6 +105,13 @@ describe("rendering", () => {
 });
 
 describe("accepting files", () => {
+  it("uploads with the signed-in user's tokens from the auth slice", async () => {
+    renderArea();
+    fireEvent.change(input(), { target: { files: [file()] } });
+    await waitFor(() => expect(uploadImage).toHaveBeenCalled());
+    expect(uploadImage.mock.calls[0][0]).toMatchObject({ accessToken: "at", refreshToken: "rt" });
+  });
+
   it("uploads a file and reports it back", async () => {
     const onUploadStart = vi.fn();
     const onUploadComplete = vi.fn();
@@ -234,8 +246,8 @@ describe("the edges of the upload area", () => {
 
   it("uploads with no signed-in user at all", async () => {
     const store = configureStore({
-      reducer: { authentication: authReducer },
-      preloadedState: { authentication: { isAuthenticated: false, user: null } },
+      reducer: { auth: authReducer },
+      preloadedState: { auth: { isAuthenticated: false, user: null } },
     });
     render(
       <Provider store={store}>

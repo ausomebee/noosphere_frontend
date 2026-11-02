@@ -20,7 +20,11 @@ const { AdminLogin } = vi.hoisted(() => {
   AdminLogin.fulfilled = { match: (action) => action?.type === 'adminLogin/fulfilled' };
   return { AdminLogin };
 });
-vi.mock('../ReduxStore/features/authentication', () => ({ AdminLogin }));
+vi.mock('../ReduxStore/features/authentication', () => ({
+  AdminLogin,
+  setPending2FARoute: (route) => ({ type: 'setPending2FARoute', payload: route }),
+  complete2FA: () => ({ type: 'complete2FA' }),
+}));
 
 const { navigate, dispatch, result } = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -245,6 +249,44 @@ describe('an admin who has already set up 2FA', () => {
     result.current = fulfilledWith({ auth2FADone: true, authType: null });
     await login();
     expect(navigate).toHaveBeenCalledWith('/tenants/pipeline');
+  });
+});
+
+describe('the pending-2FA lock', () => {
+  // The login response already carries full tokens, so the page records
+  // whether the admin still owes a 2FA step; ProtectedRoute enforces it.
+  it('unlocks the app when 2FA is switched off', async () => {
+    api.GetSuperAdminChoices.mockResolvedValue(choices({ isEnabled: false }));
+    await login();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'complete2FA' });
+    expect(dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'setPending2FARoute' })
+    );
+  });
+
+  it('records the verify page as the one to finish', async () => {
+    result.current = fulfilledWith({ auth2FADone: true, authType: 'AUTHENTICATOR' });
+    await login();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'setPending2FARoute',
+      payload: '/SA/2fa-authentication/login',
+    });
+    expect(dispatch).not.toHaveBeenCalledWith({ type: 'complete2FA' });
+  });
+
+  it('keeps a setup flow pending', async () => {
+    await login();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'setPending2FARoute',
+      payload: '/2fa/choice',
+    });
+    expect(dispatch).not.toHaveBeenCalledWith({ type: 'complete2FA' });
+  });
+
+  it('unlocks the app when no method can be worked out', async () => {
+    result.current = fulfilledWith({ auth2FADone: true, authType: null });
+    await login();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'complete2FA' });
   });
 });
 

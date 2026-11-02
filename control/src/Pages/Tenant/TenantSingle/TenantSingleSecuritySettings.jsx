@@ -79,6 +79,12 @@ const TenantSingleSecuritySettings = () => {
   const [savingPhone, setSavingPhone] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Reset Password confirmation modal state — asks for the administrator's own
+  // password before resetting (UI confirmation only until the backend verifies
+  // it; see BACKEND_REQUIREMENTS.md §8).
+  const [resetPasswordModal, setResetPasswordModal] = useState(false);
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
+
   // Reset Tenant 2FA login modal state
   const [reset2FAModal, setReset2FAModal] = useState(false);
   const [isResetting2FA, setIsResetting2FA] = useState(false);
@@ -162,11 +168,24 @@ const TenantSingleSecuritySettings = () => {
   };
 
   // --- Reset Password ---
+  const handleCloseResetPassword = () => {
+    setResetPasswordModal(false);
+    setResetPasswordConfirm("");
+  };
+
   const handleResetPassword = async () => {
+    if (!resetPasswordConfirm) {
+      showToast("Please enter your password", "error");
+      return;
+    }
     try {
       setSavingPassword(true);
+      // The password is only collected for this confirmation step; it is not
+      // sent yet. It will be verified once the backend supports it (see
+      // BACKEND_REQUIREMENTS.md §8).
       await tenantApi.ChangeAdminPassword({ tenantId, accessToken, refreshToken });
       showToast("Password reset successfully", "success");
+      handleCloseResetPassword();
     } catch (err) {
       showApiError(err, "RESET_TENANT_PASSWORD");
     } finally {
@@ -424,7 +443,10 @@ const TenantSingleSecuritySettings = () => {
             <div className="tenant-settings-row">
               <div className="tenant-settings-action-group">
                 <Button
-                  onClick={handleResetPassword}
+                  onClick={() => {
+                    setResetPasswordConfirm("");
+                    setResetPasswordModal(true);
+                  }}
                   label="Reset Password"
                   variant="important"
                   className="important-red"
@@ -478,6 +500,31 @@ const TenantSingleSecuritySettings = () => {
         primaryButtonLoading={isDeactivating}
       >
         {renderDeactivateBody()}
+      </ReusableModal>
+
+      {/* Reset Password — confirmation with the administrator's password */}
+      <ReusableModal
+        isOpen={resetPasswordModal}
+        onClose={handleCloseResetPassword}
+        title="Are you sure you want to reset this tenant's admin password?"
+        primaryButtonText="Reset password"
+        secondaryButtonText="Cancel"
+        primaryButtonColor="#dc2626"
+        onPrimaryButtonClick={handleResetPassword}
+        onSecondaryButtonClick={handleCloseResetPassword}
+        primaryButtonLoading={savingPassword}
+      >
+        <div>
+          <p className="deactivate-password-prompt">
+            Please provide your account password to continue
+          </p>
+          <PasswordInput
+            label=""
+            placeholder="Enter password"
+            value={resetPasswordConfirm}
+            onChange={(e) => setResetPasswordConfirm(e.target.value)}
+          />
+        </div>
       </ReusableModal>
 
       {/* Reset Tenant 2FA login — confirmation */}

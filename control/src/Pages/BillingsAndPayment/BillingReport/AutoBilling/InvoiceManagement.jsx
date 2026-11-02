@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import debounce from "lodash/debounce";
 import {
   SwitchInput,
@@ -104,98 +104,125 @@ const InvoiceManagement = () => {
     fetchInvoiceSettings();
   }, [fetchInvoiceSettings]);
 
-  const debouncedSave = useCallback(
-    debounce(async (settings, reminders, section) => {
-      setIsLoading(true);
-      try {
-        const { id } = settings;
-        if (section === "autoGenerateInvoice") {
-          await api.UpdatePlanPurchaseToggle({
-            accessToken,
-            refreshToken,
-            id,
-            onPlanPurchase: settings.autoGenerateInvoice,
-          });
-        } else if (section === "upcomingDaysBefore") {
-          await api.UpdateDayBeforeDueNumber({
-            accessToken,
-            refreshToken,
-            id,
-            daysBeforeDueDate: parseInt(settings.upcomingDaysBefore, 10),
-            isDaysBeforeDueDate: settings.sendUpcomingInvoices,
-          });
-        } else if (section === "upcomingInvoices") {
-          await api.UpcomingInvoiceEmail({
-            accessToken,
-            refreshToken,
-            id,
-            upcomingInvoiceHeader: settings.upcomingEmailHeader,
-            upcomingInvoiceBody: settings.upcomingEmailBody,
-          });
-        } else if (section === "sendDueInvoices") {
-          await api.UpdateOnDueDateToggle({
-            accessToken,
-            refreshToken,
-            id,
-            onDueDate: settings.sendDueInvoices,
-          });
-        } else if (section === "dueInvoices") {
-          await api.DueInvoiceEmail({
-            accessToken,
-            refreshToken,
-            id,
-            dueInvoiceHeader: settings.dueEmailHeader,
-            dueInvoiceBody: settings.dueEmailBody,
-          });
-        } else if (section === "overdueDaysPast") {
-          await api.MarkOverDueCount({
-            accessToken,
-            refreshToken,
-            id,
-            markOverDue: parseInt(settings.overdueDaysPast, 10),
-          });
-        } else if (section === "overdueReminderTimes") {
-          await api.ReminderTimesBefore({
-            accessToken,
-            refreshToken,
-            id,
-            unpaidReminderTimesBefore: parseInt(
-              settings.overdueReminderTimes,
-              10
-            ),
-          });
-        } else if (section === "attachInvoiceToReminder") {
-          await api.UpdateAttachToReminderToggle({
-            accessToken,
-            refreshToken,
-            id,
-            attachInvoiceToReminder: settings.attachInvoiceToReminder,
-          });
-        } else if (section === "reminder") {
-          await api.ReminderEmail({
-            accessToken,
-            refreshToken,
-            id,
-            reminderEmail: reminders.map((r) => ({
-              header: r.emailHeader,
-              body: r.emailBody,
-              sendOn: parseInt(r.sendOn, 10),
-            })),
-          });
-          setReminders((prev) =>
-            prev.map((r) => ({ ...r, saved: false }))
-          );
-        }
-        showToast(`${section} settings updated successfully`, "success");
-        await fetchInvoiceSettings();
-      } catch (error) {
-        showApiError(error, "UPDATE_INVOICE");
-      } finally {
-        setIsLoading(false);
+  // Persists one section. Toggles call it straight away (saveNow); typed fields
+  // and Save buttons go through debouncedSave, which keeps one debounce per
+  // section — a single shared debounce dropped all but the last of two
+  // sections changed within 500 ms.
+  const saveSection = async (settings, reminders, section) => {
+    setIsLoading(true);
+    try {
+      const { id } = settings;
+      if (section === "autoGenerateInvoice") {
+        await api.UpdatePlanPurchaseToggle({
+          accessToken,
+          refreshToken,
+          id,
+          onPlanPurchase: settings.autoGenerateInvoice,
+        });
+      } else if (section === "upcomingDaysBefore") {
+        await api.UpdateDayBeforeDueNumber({
+          accessToken,
+          refreshToken,
+          id,
+          daysBeforeDueDate: parseInt(settings.upcomingDaysBefore, 10),
+          isDaysBeforeDueDate: settings.sendUpcomingInvoices,
+        });
+      } else if (section === "upcomingInvoices") {
+        await api.UpcomingInvoiceEmail({
+          accessToken,
+          refreshToken,
+          id,
+          upcomingInvoiceHeader: settings.upcomingEmailHeader,
+          upcomingInvoiceBody: settings.upcomingEmailBody,
+        });
+      } else if (section === "sendDueInvoices") {
+        await api.UpdateOnDueDateToggle({
+          accessToken,
+          refreshToken,
+          id,
+          onDueDate: settings.sendDueInvoices,
+        });
+      } else if (section === "dueInvoices") {
+        await api.DueInvoiceEmail({
+          accessToken,
+          refreshToken,
+          id,
+          dueInvoiceHeader: settings.dueEmailHeader,
+          dueInvoiceBody: settings.dueEmailBody,
+        });
+      } else if (section === "overdueDaysPast") {
+        await api.MarkOverDueCount({
+          accessToken,
+          refreshToken,
+          id,
+          markOverDue: parseInt(settings.overdueDaysPast, 10),
+        });
+      } else if (section === "overdueReminderTimes") {
+        await api.ReminderTimesBefore({
+          accessToken,
+          refreshToken,
+          id,
+          unpaidReminderTimesBefore: parseInt(
+            settings.overdueReminderTimes,
+            10
+          ),
+        });
+      } else if (section === "attachInvoiceToReminder") {
+        await api.UpdateAttachToReminderToggle({
+          accessToken,
+          refreshToken,
+          id,
+          attachInvoiceToReminder: settings.attachInvoiceToReminder,
+        });
+      } else if (section === "reminder") {
+        await api.ReminderEmail({
+          accessToken,
+          refreshToken,
+          id,
+          reminderEmail: reminders.map((r) => ({
+            header: r.emailHeader,
+            body: r.emailBody,
+            sendOn: parseInt(r.sendOn, 10),
+          })),
+        });
+        setReminders((prev) =>
+          prev.map((r) => ({ ...r, saved: false }))
+        );
       }
-    }, 500),
-    [fetchInvoiceSettings]
-  );
+      showToast(`${section} settings updated successfully`, "success");
+      await fetchInvoiceSettings();
+    } catch (error) {
+      showApiError(error, "UPDATE_INVOICE");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Debounced calls run the latest saveSection, not the one from the render
+  // that scheduled them.
+  const saveSectionRef = useRef(saveSection);
+  useEffect(() => {
+    saveSectionRef.current = saveSection;
+  });
+  const debouncers = useRef({});
+
+  const debouncedSave = useCallback((settings, reminders, section) => {
+    if (!debouncers.current[section]) {
+      debouncers.current[section] = debounce(
+        (...args) => saveSectionRef.current(...args),
+        500
+      );
+    }
+    debouncers.current[section](settings, reminders, section);
+  }, []);
+
+  // A toggle saves at once. Any typed change still waiting for the same
+  // section is dropped: this save already carries it (it is in state), and
+  // letting it fire later would put the toggle back.
+  const saveNow = (settings, reminders, section) => {
+    debouncers.current[section]?.cancel?.();
+    saveSectionRef.current(settings, reminders, section);
+  };
 
   const toggleEditMode = (section) => {
     setEditMode((prev) => ({
@@ -262,21 +289,21 @@ const InvoiceManagement = () => {
           "overdueReminderTimes"
         );
       } else if (key === "autoGenerateInvoice") {
-        debouncedSave(
+        saveNow(
           { ...invoiceSettings, [key]: value },
           reminders,
           "autoGenerateInvoice"
         );
       } else if (key === "upcomingDaysBefore" || key === "sendUpcomingInvoices") {
         // Both the day count and the on/off toggle persist via the same
-        // days-before-due-date endpoint.
-        debouncedSave(
+        // days-before-due-date endpoint; only the typed count is debounced.
+        (key === "sendUpcomingInvoices" ? saveNow : debouncedSave)(
           { ...invoiceSettings, [key]: value },
           reminders,
           "upcomingDaysBefore"
         );
       } else if (key === "sendDueInvoices") {
-        debouncedSave(
+        saveNow(
           { ...invoiceSettings, [key]: value },
           reminders,
           "sendDueInvoices"
@@ -288,7 +315,7 @@ const InvoiceManagement = () => {
           "overdueDaysPast"
         );
       } else if (key === "attachInvoiceToReminder") {
-        debouncedSave(
+        saveNow(
           { ...invoiceSettings, [key]: value },
           reminders,
           "attachInvoiceToReminder"

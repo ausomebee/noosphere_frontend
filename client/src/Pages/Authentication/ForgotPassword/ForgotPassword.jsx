@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthLayout from "../AuthLayout";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 import { TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
@@ -94,14 +95,7 @@ const ForgotPassword = () => {
           loading={loading}
         />
 
-        <div className="text-center mt-6">
-          <Link
-            to="/"
-            className="text-blue-600 text-sm font-semibold hover:underline inline-flex items-center gap-2"
-          >
-            ← Back to Login
-          </Link>
-        </div>
+        <BackToLogin />
       </form>
     </AuthLayout>
   );

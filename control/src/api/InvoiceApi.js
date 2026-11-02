@@ -1,4 +1,5 @@
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import { requestIdHeader } from "../Helper/requestResilience";
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
@@ -152,7 +153,7 @@ const CreateStripePaymentIntent = async ({ token }) => {
   try {
     const response = await fetch(`${PLAIN_API_URL}/billing/stripe/create-payment-intent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...requestIdHeader() },
       body: JSON.stringify({ token }),
     });
     const data = await readJson(response);
@@ -175,7 +176,7 @@ const ConfirmPayment = async ({ token, paymentIntentId }) => {
   try {
     const response = await fetch(`${PLAIN_API_URL}/billing/stripe/confirm-payment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...requestIdHeader() },
       body: JSON.stringify({ token, paymentIntentId }),
     });
     const data = await readJson(response);
@@ -190,7 +191,7 @@ const RecordPayment = async ({ tenantId, invoiceId, planId, billingCycle, endDat
   try {
     const response = await fetch(`${PLAIN_API_URL}/billing/pay-payment-link`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...requestIdHeader() },
       body: JSON.stringify({ tenantId, invoiceId, planId, billingCycle, endDate, transactionId, transactionRef, amount, cardType, lastFourDigits, gatewayToken, holderName, paymentStatus, gateway }),
     });
     const data = await response.json();
@@ -201,14 +202,59 @@ const RecordPayment = async ({ tenantId, invoiceId, planId, billingCycle, endDat
   }
 };
 
+// fetch has no timeout of its own: a hung server left the payer on the
+// "Validating payment link…" spinner forever.
+const PAYMENT_TOKEN_TIMEOUT_MS = 20000;
+const GATEWAY_STATUSES = new Set([502, 503, 504]);
+const PAYMENT_LINK_UNCHECKED_MESSAGE =
+  "We couldn't check this payment link right now.";
+
+// The server never answered (timeout or dropped connection). Flagged so the
+// page doesn't tell a payer that a good link is invalid.
+const paymentLinkUnchecked = () => {
+  const error = new Error(PAYMENT_LINK_UNCHECKED_MESSAGE);
+  error.isNetworkError = true;
+  return error;
+};
+
 const ValidatePaymentToken = async ({ token }) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PAYMENT_TOKEN_TIMEOUT_MS);
+  let response;
   try {
-    const response = await fetch(`${PLAIN_API_URL}/invoice/validate-payment-token/${token}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data?.message || "Invalid or expired payment token");
+    // fetch only rejects when no response came back at all.
+    response = await fetch(`${PLAIN_API_URL}/invoice/validate-payment-token/${token}`, {
+      headers: requestIdHeader(),
+      signal: controller.signal,
+    });
+  } catch {
+    clearTimeout(timer);
+    throw paymentLinkUnchecked();
+  }
+  try {
+    // A gateway error (load balancer / nginx) says nothing about the link.
+    if (GATEWAY_STATUSES.has(response.status)) throw paymentLinkUnchecked();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // A failed request whose body isn't our JSON error (e.g. an nginx HTML
+      // page) is an outage, not an invalid link.
+      if (!response.ok && parseError?.name !== "AbortError") throw paymentLinkUnchecked();
+      throw parseError;
+    }
+    if (!response.ok) {
+      if (!data || typeof data !== "object") throw paymentLinkUnchecked();
+      throw new Error(data.message || "Invalid or expired payment token");
+    }
     return data;
   } catch (error) {
+    if (error?.isNetworkError) throw error;
+    // The timeout can also fire while the body is still arriving.
+    if (error?.name === "AbortError") throw paymentLinkUnchecked();
     throw new Error(error.message || "Failed to validate payment token");
+  } finally {
+    clearTimeout(timer);
   }
 };
 

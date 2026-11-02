@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => ({
   },
   tenantApi: { GetTenantCount: vi.fn() },
   showToast: vi.fn(),
+  showApiError: vi.fn(),
   addImage: vi.fn(),
   save: vi.fn(),
 }));
@@ -48,7 +49,7 @@ vi.mock('../api/InvoiceApi', () => ({ default: mocks.invoiceApi }));
 vi.mock('../api/TenantApis', () => ({ default: mocks.tenantApi }));
 vi.mock('../Helper/ShowToast', () => ({
   showToast: (...a) => mocks.showToast(...a),
-  showApiError: vi.fn(),
+  showApiError: (...a) => mocks.showApiError(...a),
 }));
 
 vi.mock('html2canvas', () => ({
@@ -555,7 +556,8 @@ describe('the payment tab', () => {
   it('leaves the tenant cell empty when the company name is missing', async () => {
     await openPayments();
     const [, second] = screen.getByTestId('table-dump').textContent.split('#');
-    expect(second).toBe('PAY0043|invoice_78||1/3/2024|$250|Failed|true');
+    // Row amounts are full currency now (#43), not the KPI "k" style.
+    expect(second).toBe('PAY0043|invoice_78||1/3/2024|$250.00|Failed|true');
   });
 
   it('filters the rows client-side on a status sub-tab', async () => {
@@ -658,10 +660,10 @@ describe('viewing an invoice', () => {
     expect(mocks.invoiceApi.GetInvoiceById).toHaveBeenCalledWith(
       expect.objectContaining({ id: '77' })
     );
-    expect(screen.getByTestId('invoice-total').textContent).toBe('$1.20k');
+    expect(screen.getByTestId('invoice-total').textContent).toBe('$1,200.00');
     // Row two is the add-on, priced monthly at the item's quantity.
     expect(screen.getByTestId('invoice-items').textContent).toBe(
-      '1:Plan:$100:2:$200|2:Add-on Feature:$50:2:$100'
+      '1:Plan:$100.00:2:$200.00|2:Add-on Feature:$50.00:2:$100.00'
     );
   });
 
@@ -684,7 +686,7 @@ describe('viewing an invoice', () => {
     );
     // No quantity on the item, so the add-on falls back to one.
     expect(screen.getByTestId('invoice-items').textContent).toContain(
-      '2:Add-on Feature:$500:1:$500'
+      '2:Add-on Feature:$500.00:1:$500.00'
     );
   });
 
@@ -697,7 +699,7 @@ describe('viewing an invoice', () => {
     );
     // With no invoiceId in the response the extracted row id stands in.
     expect(screen.getByTestId('invoice-id').textContent).toBe('77');
-    expect(screen.getByTestId('invoice-total').textContent).toBe('$0');
+    expect(screen.getByTestId('invoice-total').textContent).toBe('$0.00');
     expect(screen.getByTestId('invoice-items').textContent).toBe('');
     expect(screen.getByTestId('invoice-due').textContent).toBe('N/A');
   });
@@ -719,7 +721,7 @@ describe('viewing an invoice', () => {
     );
     // Row one has no add-ons; row three is an add-on with no monthly price.
     expect(screen.getByTestId('invoice-items').textContent).toBe(
-      '1:Plan:$0:undefined:$0|2:Add-on parent:$0:undefined:$0|3:Add-on Feature:$0:1:$0'
+      '1:Plan:$0.00:undefined:$0.00|2:Add-on parent:$0.00:undefined:$0.00|3:Add-on Feature:$0.00:1:$0.00'
     );
   });
 
@@ -736,7 +738,7 @@ describe('viewing an invoice', () => {
       expect(screen.getByTestId('subscription-invoice')).toBeInTheDocument()
     );
     expect(screen.getByTestId('invoice-items').textContent).toContain(
-      '2:Add-on Feature:$0:1:$0'
+      '2:Add-on Feature:$0.00:1:$0.00'
     );
   });
 
@@ -829,7 +831,7 @@ describe('viewing a payment', () => {
     expect(screen.getByTestId('payment-plan').textContent).toBe('Pro');
     expect(screen.getByTestId('payment-period').textContent).toBe('1/1/2024 - 1/31/2024');
     expect(screen.getByTestId('payment-id').textContent).toBe('PAY0042');
-    expect(screen.getByTestId('payment-amount').textContent).toBe('$4.50k');
+    expect(screen.getByTestId('payment-amount').textContent).toBe('$4,500.00');
     expect(screen.getByTestId('payment-card').textContent).toBe('4242');
     expect(screen.getByTestId('payment-invoice-id').textContent).toBe('77');
   });
@@ -998,5 +1000,110 @@ describe('the custom-range failure outside development', () => {
     fireEvent.change(inputs[1], { target: { value: '2024-01-31' } });
     await waitFor(() => expect(screen.getByText('$0')).toBeInTheDocument());
     expect(console.error).not.toHaveBeenCalled();
+  });
+});
+
+describe('failures and late answers', () => {
+  it('reports metrics that could not be loaded', async () => {
+    mocks.invoiceApi.GetBillingTotalMetric.mockRejectedValue(new Error('down'));
+    await renderPage();
+    await waitFor(() =>
+      expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA')
+    );
+  });
+
+  it('keeps the last good custom total when a later range fails', async () => {
+    // Used to overwrite it with $0.
+    await renderPage();
+    const [totalSelect] = overviewSelects();
+    fireEvent.change(totalSelect, { target: { value: 'custom' } });
+    const inputs = document.body.querySelectorAll('.date-filter-input-small');
+    mocks.invoiceApi.GetBillingTotalMetric.mockResolvedValue({ data: { _sum: { total: 4200 } } });
+    fireEvent.change(inputs[0], { target: { value: '2024-01-01' } });
+    fireEvent.change(inputs[1], { target: { value: '2024-01-31' } });
+    expect(await screen.findByText('$4.20k')).toBeInTheDocument();
+
+    mocks.invoiceApi.GetBillingTotalMetric.mockRejectedValue(new Error('down'));
+    fireEvent.change(inputs[1], { target: { value: '2024-02-28' } });
+    await waitFor(() =>
+      expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA')
+    );
+    expect(screen.getByText('$4.20k')).toBeInTheDocument();
+  });
+
+  it('keeps the rows and counts it had when a refetch fails', async () => {
+    await renderPage();
+    expect(screen.getByTestId('table-first-row').textContent).toContain('INV77');
+    mocks.invoiceApi.GetInvoiceByAllAndStatus.mockRejectedValue(new Error('down'));
+    mocks.invoiceApi.GetCountForInvoice.mockRejectedValue(new Error('down'));
+    fireEvent.click(screen.getByRole('button', { name: /^Paid/ }));
+    await waitFor(() =>
+      expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_INVOICES')
+    );
+    expect(screen.getByTestId('table-first-row').textContent).toContain('INV77');
+    expect(screen.getByRole('button', { name: /^All/ }).textContent).toContain('9');
+  });
+
+  it('ignores invoice rows that arrive after the user moved to payments', async () => {
+    let release;
+    await renderPage();
+    mocks.invoiceApi.GetInvoiceByAllAndStatus.mockReturnValueOnce(
+      new Promise((resolve) => {
+        release = resolve;
+      })
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Paid/ }));
+    await waitFor(() =>
+      expect(mocks.invoiceApi.GetInvoiceByAllAndStatus).toHaveBeenCalledTimes(2)
+    );
+    fireEvent.click(tabButton('Payments'));
+    await waitFor(() =>
+      expect(screen.getByTestId('table-first-row').textContent).toContain('PAY00')
+    );
+    const paymentsView = screen.getByTestId('table-dump').textContent;
+
+    // The stale invoice answer lands last; it must not touch the screen.
+    release({ data: [{ invoiceId: 'INV-LATE', tenant: 'Late', status: 'Paid' }] });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(paymentsView).not.toContain('INV-LATE');
+
+    // Back on invoices, with that tab's own refetch still in flight, the table
+    // shows the rows it had -- not the late answer for the abandoned sub-tab.
+    mocks.invoiceApi.GetInvoiceByAllAndStatus.mockReturnValueOnce(new Promise(() => {}));
+    fireEvent.click(tabButton('Invoices'));
+    await waitFor(() =>
+      expect(mocks.invoiceApi.GetInvoiceByAllAndStatus).toHaveBeenCalledTimes(3)
+    );
+    expect(screen.getByTestId('table-first-row').textContent).toContain('INV77');
+    expect(screen.getByTestId('table-dump').textContent).not.toContain('INV-LATE');
+  });
+});
+
+describe('money in rows', () => {
+  it('keeps a refund negative, with two decimals', async () => {
+    mocks.invoiceApi.GetPaymentByAllAndStatus.mockResolvedValue({
+      data: [{ id: '50', invoiceId: '9', tenant: { companyName: 'Acme' }, amount: -20, status: 'Refunded' }],
+    });
+    await renderPage();
+    fireEvent.click(tabButton('Payments'));
+    await waitFor(() =>
+      expect(screen.getByTestId('table-first-row').textContent).toContain('-$20.00')
+    );
+  });
+
+  it("uses the record's own currency when it has one", async () => {
+    mocks.invoiceApi.GetPaymentByAllAndStatus.mockResolvedValue({
+      data: [{ id: '51', invoiceId: '9', tenant: {}, amount: 1234.5, currency: 'EUR', status: 'Successful' }],
+    });
+    await renderPage();
+    fireEvent.click(tabButton('Payments'));
+    await waitFor(() =>
+      expect(screen.getByTestId('table-first-row').textContent).toContain('€1,234.50')
+    );
+  });
+
+  it('keeps the abbreviated style for the summary tiles only', async () => {
+    await renderPage();
+    expect(screen.getByText('$1.50b')).toBeInTheDocument();
   });
 });

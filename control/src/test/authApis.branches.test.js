@@ -179,3 +179,62 @@ describe('refreshAccessToken', () => {
     await expect(refreshAccessToken('rt')).rejects.toBe(boom);
   });
 });
+
+describe('authApis timeouts and unreachable servers', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const lastConfig = (mock) => mock.mock.calls.at(-1).at(-1);
+
+  it('gives every call a 20 second timeout', async () => {
+    resolveAll({ data: { data: {} } });
+    for (const [, call] of calls) await call();
+    await refreshAccessToken('rt');
+    const used = allVerbs.filter((m) => m.mock.calls.length);
+    expect(used.length).toBeGreaterThan(0);
+    for (const mock of used) {
+      for (const args of mock.mock.calls) {
+        expect(args.at(-1)).toEqual(expect.objectContaining({ timeout: 20000 }));
+      }
+    }
+  });
+
+  it.each([
+    ['a timeout', { code: 'ECONNABORTED', message: 'timeout of 20000ms exceeded' }],
+    ['a dropped connection', { code: 'ERR_NETWORK', request: {}, message: 'Network Error' }],
+  ])('turns %s into the unreachable-server message', async (_label, failure) => {
+    for (const [, call] of calls) {
+      rejectAll(failure);
+      const err = await call().catch((e) => e);
+      expect(err.message).toBe(
+        "Can't reach the server. Check your connection and try again."
+      );
+      expect(err.isNetworkError).toBe(true);
+    }
+  });
+
+  it('still lets a token refresh network error through for the interceptor', async () => {
+    const drop = { code: 'ERR_NETWORK', request: {}, message: 'Network Error' };
+    axiosPost.mockRejectedValue(drop);
+    await expect(refreshAccessToken('rt')).rejects.toBe(drop);
+  });
+
+  it('saves the 2FA choices through the authenticated interceptor', async () => {
+    fetchPost.mockResolvedValue({ data: {} });
+    await api.SuperAdminChoices({
+      Authenticator2FA: true,
+      securityQuestion: false,
+      setForAll: true,
+      accessToken: 'at',
+      refreshToken: 'rt',
+    });
+    expect(axiosPost).not.toHaveBeenCalled();
+    expect(fetchPost).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/superadminchoices'),
+      { Authenticator2FA: true, securityQuestion: false, setForAll: true },
+      expect.objectContaining({ timeout: 20000 })
+    );
+    expect(lastConfig(fetchPost)).toEqual({ timeout: 20000 });
+  });
+});

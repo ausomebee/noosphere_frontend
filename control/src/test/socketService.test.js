@@ -83,10 +83,54 @@ describe('connecting', () => {
     expect(io).toHaveBeenCalledTimes(1);
   });
 
-  it('opens a fresh socket when the previous one has dropped', async () => {
+  it('restarts the same socket when it has fully stopped, rather than opening another', async () => {
+    // Used to open a second socket here, which doubled every notification.
     const { connectSocket } = await load();
-    connectSocket({ accessToken: 'at' });
-    connectSocket({ accessToken: 'at' });
+    const first = connectSocket({ accessToken: 'at', userId: 'u1' });
+    first.active = false;
+
+    expect(connectSocket({ accessToken: 'at', userId: 'u1' })).toBe(first);
+    expect(io).toHaveBeenCalledTimes(1);
+    expect(first.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('reuses a socket that is still connecting or reconnecting, without forcing it', async () => {
+    const { connectSocket } = await load();
+    const first = connectSocket({ accessToken: 'at', userId: 'u1' });
+    first.active = true; // socket.io is mid-(re)connect
+
+    expect(connectSocket({ accessToken: 'at', userId: 'u1' })).toBe(first);
+    expect(io).toHaveBeenCalledTimes(1);
+    expect(first.connect).not.toHaveBeenCalled();
+  });
+
+  it('hands the reused socket the refreshed token for its next handshake', async () => {
+    const { connectSocket } = await load();
+    const first = connectSocket({ accessToken: 'old', userId: 'u1' });
+    first.connected = true;
+
+    connectSocket({ accessToken: 'new', userId: 'u1' });
+    expect(first.auth).toEqual({ token: 'new' });
+  });
+
+  it('never hands one user the socket made for another', async () => {
+    const { connectSocket, getSocket } = await load();
+    const first = connectSocket({ accessToken: 'at1', userId: 'u1' });
+    first.connected = true;
+
+    const second = connectSocket({ accessToken: 'at2', userId: 'u2' });
+    expect(second).not.toBe(first);
+    expect(first.disconnect).toHaveBeenCalled();
+    expect(io).toHaveBeenCalledTimes(2);
+    expect(io.mock.calls[1][1].query).toEqual({ userId: 'u2', tenantId: undefined });
+    expect(getSocket()).toBe(second);
+  });
+
+  it('starts a new socket for the same user after a logout', async () => {
+    const { connectSocket, disconnectSocket } = await load();
+    const first = connectSocket({ accessToken: 'at', userId: 'u1' });
+    disconnectSocket();
+    expect(connectSocket({ accessToken: 'at', userId: 'u1' })).not.toBe(first);
     expect(io).toHaveBeenCalledTimes(2);
   });
 
@@ -224,7 +268,39 @@ describe('the default export', () => {
       'emitNotificationRead',
       'getSocket',
       'onNotification',
+      'onReconnect',
       'registerUser',
     ]);
+  });
+});
+
+describe('catching up after a reconnect', () => {
+  it('tells listeners when the socket comes back, but not on its first connect', async () => {
+    const { connectSocket, onReconnect } = await load();
+    const socket = connectSocket({ accessToken: 'at' });
+    const listener = vi.fn();
+    const unsubscribe = onReconnect(listener);
+
+    socket.handlers.connect(); // first connect
+    expect(listener).not.toHaveBeenCalled();
+    socket.handlers.connect(); // back after a drop
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    socket.handlers.connect();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('still catches up after the same socket is reused on a token refresh', async () => {
+    const { connectSocket, onReconnect } = await load();
+    const socket = connectSocket({ accessToken: 'at', userId: 'u1' });
+    const listener = vi.fn();
+    onReconnect(listener);
+
+    socket.handlers.connect();
+    socket.connected = true;
+    connectSocket({ accessToken: 'refreshed', userId: 'u1' });
+    socket.handlers.connect(); // back after a drop
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

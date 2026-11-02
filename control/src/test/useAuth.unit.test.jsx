@@ -120,4 +120,19 @@ describe('useAuth hook', () => {
 
     expect(result.current.error).toBe('Something went wrong');
   });
+
+  it('treats a session persisted before the 2FA lock existed as unlocked', () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper({
+        isAuthenticated: true,
+        user: { id: 'u1' },
+        accessToken: 'at',
+        refreshToken: 'rt',
+        loading: false,
+        error: null,
+      }),
+    });
+    expect(result.current.pending2FA).toBe(false);
+    expect(result.current.pending2FARoute).toBeNull();
+  });
 });

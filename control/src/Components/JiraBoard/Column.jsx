@@ -49,6 +49,8 @@ const Column = React.memo(({
   const { attributes, listeners, setNodeRef: sortableRef, transform, transition, isDragging } = useSortable({
     id: columnId,
     data: { type: 'Column' },
+    // Only stage editors may reorder columns; cards can still be dropped here.
+    disabled: { draggable: !hasPermission('edit_pipeline_stage'), droppable: false },
   });
 
   const style = useMemo(
@@ -123,6 +125,7 @@ const Column = React.memo(({
             onEditCandidate={onEditCandidate}
             columnId={columnId}
             columns={columns}
+            dragDisabled={!hasPermission('move_prospect')}
           />
         );
       }),

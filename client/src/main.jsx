@@ -8,6 +8,8 @@ import { store, persistor } from "../src/ReduxStore/store.js";
 import { injectStore, injectPersistor } from "./Helper/storeRef";
 injectStore(store);
 injectPersistor(persistor);
+import { installRequestIds } from "./Helper/requestResilience";
+installRequestIds();
 import { ToastContainer } from "react-toastify";
 import { Provider } from "react-redux";
 

@@ -85,21 +85,20 @@ describe('pending and rejected handling', () => {
     expect(state.error).toBeNull();
   });
 
+  // Reducers no longer toast: the old object-shaped showToast call was dropped
+  // and its toast.dismiss() wiped the component's own toast. The components
+  // report results themselves.
   it.each(thunks)('%s records the rejection message it was given', (_name, thunk) => {
     const state = reducer({ ...initial(), loading: true }, rejectedWith(thunk, 'server said no'));
     expect(state.loading).toBe(false);
     expect(state.error).toBe('server said no');
-    expect(showToast).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('server said no') })
-    );
+    expect(showToast).not.toHaveBeenCalled();
   });
 
-  it.each(thunks)('%s falls back to "Unknown error" with no message', (_name, thunk) => {
+  it.each(thunks)('%s records a rejection with no message, without a toast', (_name, thunk) => {
     const state = reducer(initial(), rejectedWith(thunk, undefined));
     expect(state.error).toBeUndefined();
-    expect(showToast).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('Unknown error') })
-    );
+    expect(showToast).not.toHaveBeenCalled();
   });
 });
 
@@ -129,14 +128,14 @@ describe('updating a group', () => {
     expect(groupById(state, 'g1').title).toBe('Billing & Tax');
   });
 
-  it('still reports success when the id matches nothing in state', () => {
+  it('leaves state alone, without a toast, when the id matches nothing', () => {
     const before = withGroups();
     const state = reducer(
       before,
       asyncUpdateFeatureGroup.fulfilled({ id: 'nope', name: 'Ghost' }, 'req', {})
     );
     expect(state.featureGroups.map((g) => g.title)).toEqual(['Billing', 'Extra Features']);
-    expect(showToast).toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
   });
 });
 
@@ -265,7 +264,7 @@ describe('updating a feature', () => {
   it('touches nothing when no group holds that feature', () => {
     const state = reducer(withGroups(), updated());
     expect(groupById(state, 'g1').features).toEqual([]);
-    expect(showToast).toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
   });
 });
 
@@ -325,26 +324,22 @@ describe('enabling and disabling a feature', () => {
       )
     );
 
-  it('turns a feature off and says so', () => {
+  it('turns a feature off (the component, not the reducer, says so)', () => {
     const state = reducer(
       withOne(),
       asyncEnableOrDisableFeature.fulfilled({ id: 'f1', active: false }, 'req', {})
     );
     expect(groupById(state, 'g1').features[0].active).toBe(false);
-    expect(showToast).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Feature disabled successfully' })
-    );
+    expect(showToast).not.toHaveBeenCalled();
   });
 
-  it('turns a feature back on and says so', () => {
+  it('turns a feature back on', () => {
     const state = reducer(
       withOne(),
       asyncEnableOrDisableFeature.fulfilled({ id: 'f1', active: true }, 'req', {})
     );
     expect(groupById(state, 'g1').features[0].active).toBe(true);
-    expect(showToast).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Feature enabled successfully' })
-    );
+    expect(showToast).not.toHaveBeenCalled();
   });
 
   it('leaves state alone for a feature it cannot find', () => {
@@ -534,14 +529,12 @@ describe('what a failing request reports', () => {
     expect(action.payload).toBe('Feature group retrieval failed');
   });
 
-  it('loses the API layer\'s message when fetching features', async () => {
-    // KNOWN DEFECT: this thunk alone reads error.response.data.message, but the
-    // API layer rethrows a plain Error with no `response`, so the read throws a
-    // TypeError inside the catch and rejectWithValue is never reached. The user
-    // is told "Unknown error" whatever the backend actually said.
+  it('keeps the API layer\'s message when fetching features', async () => {
+    // Was a known defect: the thunk read error.response.data.message from the
+    // plain Error the API layer throws, so the read itself threw a TypeError
+    // and the backend's reason was lost. It now reads error.message.
     featureApi.GetAllFeatures.mockRejectedValue(new Error('Feature retrieval failed'));
     const action = await dispatchThunk(asyncFetchAllFeatures);
-    expect(action.payload).toBeUndefined();
-    expect(action.error.message).toMatch(/Cannot read properties of undefined/);
+    expect(action.payload).toBe('Feature retrieval failed');
   });
 });

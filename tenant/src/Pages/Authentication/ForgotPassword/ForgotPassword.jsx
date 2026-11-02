@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,9 +7,11 @@ import TenantLogo from "../../../assets/Logo.svg";
 import { TextInput } from "../../../Components/Input/Inputs";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 // Yup validation schema for forgot password
 const forgotPasswordSchema = yup.object().shape({
   email: yup
@@ -20,7 +21,6 @@ const forgotPasswordSchema = yup.object().shape({
 });
 
 const ForgetPassword = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -53,18 +53,15 @@ const ForgetPassword = () => {
       }
     } catch (error) {
       console.error("Password reset failed:", error);
-      const message =
-        error?.response?.data?.message ||
-        "Failed to send password reset email.";
+      const message = authErrorMessage(
+        error,
+        "Failed to send password reset email."
+      );
       setErrorMessage(message);
       showToast(message, "error");
     } finally {
       setLoading(false);
     }
-  };
-
-  const rememberPassword = () => {
-    navigate("/");
   };
 
   return (
@@ -111,11 +108,7 @@ const ForgetPassword = () => {
                   loading={loading}
                 />
               </form>
-              <p className="cant-access ">
-                <a href="#" onClick={rememberPassword}>
-                  Remember Password?
-                </a>
-              </p>
+              <BackToLogin />
             </div>
           </div>
         </div>

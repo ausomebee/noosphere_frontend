@@ -62,9 +62,9 @@ describe("the screen", () => {
     expect(errorTexts()).toEqual([]);
   });
 
-  it("sends the user back to the login page from the remember link", () => {
+  it("sends the user back to the login page from the Back to Login link", () => {
     render(<ForgetPassword />);
-    fireEvent.click(screen.getByText("Remember Password?"));
+    fireEvent.click(screen.getByText("← Back to Login"));
     expect(navigate).toHaveBeenCalledWith("/");
   });
 });
@@ -168,6 +168,25 @@ describe("requesting the reset", () => {
 
   // The request error is cleared at the start of the next attempt, so a retry
   // that works does not leave the old message under the field.
+  it("says the server can't be reached when the request never got an answer", async () => {
+    api.AdminForgetPassword.mockRejectedValue(Object.assign(
+      new Error("Can't reach the server. Check your connection and try again."),
+      { isNetworkError: true }
+    ));
+    render(<ForgetPassword />);
+    typeEmail("olivia@therapyco.com");
+    submit();
+    await waitFor(() =>
+      expect(errorTexts()).toContain(
+        "Can't reach the server. Check your connection and try again."
+      )
+    );
+    expect(toast).toHaveBeenCalledWith(
+      "Can't reach the server. Check your connection and try again.",
+      "error"
+    );
+  });
+
   it("clears the previous failure when the request is retried", async () => {
     api.AdminForgetPassword.mockRejectedValueOnce(new Error("network down"));
     render(<ForgetPassword />);

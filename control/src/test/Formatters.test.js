@@ -118,3 +118,30 @@ describe('formatTime', () => {
     expect(formatTime('nonsense')).toBe('Invalid time');
   });
 });
+
+describe('formatMoney', () => {
+  it('always shows two decimals with grouping', async () => {
+    const { formatMoney } = await import('../Helper/Formatters');
+    expect(formatMoney(4500)).toBe('$4,500.00');
+    expect(formatMoney(0.5)).toBe('$0.50');
+  });
+
+  it('keeps a negative amount negative', async () => {
+    const { formatMoney } = await import('../Helper/Formatters');
+    expect(formatMoney(-20)).toBe('-$20.00');
+  });
+
+  it("uses the record's currency, falling back to USD", async () => {
+    const { formatMoney } = await import('../Helper/Formatters');
+    expect(formatMoney(10, 'EUR')).toBe('€10.00');
+    expect(formatMoney(10, 'not-a-code')).toBe('$10.00');
+    expect(formatMoney(10, null)).toBe('$10.00');
+  });
+
+  it('treats a missing or non-numeric amount as zero', async () => {
+    const { formatMoney } = await import('../Helper/Formatters');
+    expect(formatMoney(null)).toBe('$0.00');
+    expect(formatMoney('abc')).toBe('$0.00');
+    expect(formatMoney('12.3')).toBe('$12.30');
+  });
+});
