@@ -184,13 +184,11 @@ describe("initial load", () => {
     expect(scheduler.props.clients).toEqual([]);
   });
 
-  it("publishes a debug snapshot on the window", async () => {
+  // The old debug snapshot exposed staff, client and appointment counts on
+  // window for anyone with devtools; nothing read it.
+  it("publishes nothing on the window", async () => {
     await renderCalendar();
-    expect(window.CALENDAR_DEBUG).toEqual({
-      staffWithCounts: [],
-      clientsWithCounts: [],
-      filteredAppointments: 0,
-    });
+    expect(window.CALENDAR_DEBUG).toBeUndefined();
   });
 });
 

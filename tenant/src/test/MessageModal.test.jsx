@@ -39,6 +39,9 @@ const h = vi.hoisted(() => ({
   },
 }));
 
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock("../hooks/useAuth", () => ({ default: () => h.auth }));
 vi.mock("../hooks/useFormatSettings", () => ({
   default: () => ({ timeFormat: "12-hour", dateFormat: "MM/DD/YYYY", currency: "USD" }),
@@ -56,6 +59,10 @@ vi.mock("../api/chatApi", () => ({
 }));
 
 vi.mock("../api/socketService", () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   getSocket: (...a) => h.getSocket(...a),
   sendChatMessage: (...a) => h.sendChatMessage(...a),
   emitTyping: (...a) => h.emitTyping(...a),
@@ -592,23 +599,85 @@ describe("sending", () => {
     expect(bubbles()).toEqual(["still mine"]);
   });
 
-  it("rolls the message back and warns when the send fails", async () => {
+  // A failed send used to vanish along with what was typed. Now it stays in
+  // the thread, marked, with a retry — and the text comes back to the box.
+  it("marks a failed send Not sent and puts the text back", async () => {
     await openThread();
     fireEvent.change(messageBox(), { target: { value: "doomed" } });
     fireEvent.click(screen.getByLabelText("Send message"));
 
     act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
     expect(h.showToast).toHaveBeenCalledWith("Failed to send message", "error");
-    expect(bubbles()).toEqual([]);
+    expect(bubbles()).toEqual(["doomed"]);
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+    expect(document.body.querySelector(".msg-receipt-pending")).toBeNull();
+    expect(messageBox()).toHaveValue("doomed");
   });
 
-  it("rolls back on an acknowledgement that is missing entirely", async () => {
+  it("treats an acknowledgement that is missing entirely (a timeout) as a failure", async () => {
     await openThread();
     fireEvent.change(messageBox(), { target: { value: "silence" } });
     fireEvent.click(screen.getByLabelText("Send message"));
 
     act(() => h.sendChatMessage.mock.calls[0][1](undefined));
     expect(h.showToast).toHaveBeenCalledWith("Failed to send message", "error");
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+  });
+
+  it("does not overwrite a new message the user started typing", async () => {
+    await openThread();
+    fireEvent.change(messageBox(), { target: { value: "first" } });
+    fireEvent.click(screen.getByLabelText("Send message"));
+    fireEvent.change(messageBox(), { target: { value: "second draft" } });
+
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+    expect(messageBox()).toHaveValue("second draft");
+  });
+
+  it("resends a failed message from its Retry link", async () => {
+    await openThread();
+    fireEvent.change(messageBox(), { target: { value: "try again" } });
+    fireEvent.click(screen.getByLabelText("Send message"));
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+
+    fireEvent.click(screen.getByText("Not sent – Retry"));
+    expect(h.sendChatMessage).toHaveBeenCalledTimes(2);
+    expect(h.sendChatMessage.mock.calls[1][0]).toMatchObject({
+      receiverId: "c1",
+      content: "try again",
+    });
+    // Back to pending while the retry is in flight; still one row, not two.
+    expect(screen.queryByText("Not sent – Retry")).toBeNull();
+    expect(bubbles()).toEqual(["try again"]);
+
+    act(() =>
+      h.sendChatMessage.mock.calls[1][1]({
+        success: true,
+        message: {
+          id: "server-9",
+          senderId: USER_ID,
+          receiverId: "c1",
+          content: "try again",
+          createdAt: "2026-01-05T11:00:00.000Z",
+          isRead: false,
+        },
+      })
+    );
+    expect(bubbles()).toEqual(["try again"]);
+    expect(screen.queryByText("Not sent – Retry")).toBeNull();
+  });
+
+  it("marks a retry that fails again without touching the input", async () => {
+    await openThread();
+    fireEvent.change(messageBox(), { target: { value: "stubborn" } });
+    fireEvent.click(screen.getByLabelText("Send message"));
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+    fireEvent.change(messageBox(), { target: { value: "" } });
+
+    fireEvent.click(screen.getByText("Not sent – Retry"));
+    act(() => h.sendChatMessage.mock.calls[1][1]({ success: false }));
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+    expect(messageBox()).toHaveValue("");
   });
 });
 
@@ -900,3 +969,160 @@ describe("ordering the conversation list", () => {
     expect(convNames()).toEqual(["Ada Lovelace", "Bob Stone"]);
   });
 });
+
+describe("catching up after the socket reconnects", () => {
+  it("reloads the history while open, without the loading state", async () => {
+    reconnectListeners.length = 0;
+    renderModal();
+    await settled();
+    expect(h.getUserMessages).toHaveBeenCalledTimes(1);
+
+    h.getUserMessages.mockReturnValue(new Promise(() => {}));
+    act(() => reconnectListeners.forEach((fn) => fn()));
+    expect(h.getUserMessages).toHaveBeenCalledTimes(2);
+    expect(screen.queryByLabelText("Loading…")).toBeNull();
+  });
+
+  it("stops listening once closed", async () => {
+    reconnectListeners.length = 0;
+    render(<MessageModal isOpen={false} onClose={vi.fn()} />);
+    expect(reconnectListeners).toHaveLength(0);
+  });
+});
+
+// A quiet reload (after a reconnect) used to replace the whole message map
+// with the server's copy, dropping rows only this tab knew about.
+describe("local rows across a reload", () => {
+  const openThreadHere = async () => {
+    reconnectListeners.length = 0;
+    renderModal();
+    await settled();
+    fireEvent.change(picker(), { target: { value: "c1" } });
+  };
+  const box = () => screen.getByPlaceholderText("Message");
+  const sendText = (text) => {
+    fireEvent.change(box(), { target: { value: text } });
+    fireEvent.click(screen.getByLabelText("Send message"));
+  };
+  const reconnect = async (serverList = []) => {
+    h.getUserMessages.mockResolvedValue({ data: { data: serverList } });
+    await act(async () => reconnectListeners.forEach((fn) => fn()));
+  };
+
+  it("keeps a Not sent message after a reconnect reload", async () => {
+    await openThreadHere();
+    sendText("lost in transit");
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+
+    await reconnect();
+    expect(bubbles()).toEqual(["lost in transit"]);
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+  });
+
+  it("keeps a message that is still sending, and doesn't double it once the server has it", async () => {
+    await openThreadHere();
+    sendText("in flight");
+    await reconnect();
+    expect(bubbles()).toEqual(["in flight"]);
+
+    const server = {
+      id: "server-1",
+      senderId: USER_ID,
+      receiverId: "c1",
+      content: "in flight",
+      // The server's copy of a message just sent carries a time of about now.
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    await reconnect([server]);
+    expect(bubbles()).toEqual(["in flight"]);
+
+    // The late ack for a message the reload already brought in leaves one row.
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: true, message: server }));
+    expect(bubbles()).toEqual(["in flight"]);
+  });
+
+  it("doesn't mistake an old message with the same text for the one still sending", async () => {
+    await openThreadHere();
+    sendText("ok");
+    await reconnect([
+      {
+        id: "last-week",
+        senderId: USER_ID,
+        receiverId: "c1",
+        content: "ok",
+        createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
+        isRead: true,
+      },
+    ]);
+    // Last week's "ok" plus the one still sending.
+    expect(bubbles()).toEqual(["ok", "ok"]);
+  });
+
+  it("drops a Not sent row once the server shows it was saved after all", async () => {
+    await openThreadHere();
+    sendText("actually delivered");
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+
+    await reconnect([
+      {
+        id: "server-2",
+        senderId: USER_ID,
+        receiverId: "c1",
+        content: "actually delivered",
+        createdAt: new Date().toISOString(),
+        isRead: false,
+      },
+    ]);
+    expect(bubbles()).toEqual(["actually delivered"]);
+    expect(screen.queryByText("Not sent – Retry")).toBeNull();
+  });
+
+  it("keeps the text of a retry that fails again across a reload", async () => {
+    await openThreadHere();
+    sendText("second chance");
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+    fireEvent.click(screen.getByText("Not sent – Retry"));
+    act(() => h.sendChatMessage.mock.calls[1][1]({ success: false }));
+
+    await reconnect();
+    expect(bubbles()).toEqual(["second chance"]);
+    expect(screen.getByText("Not sent – Retry")).toBeInTheDocument();
+  });
+});
+
+// Both the Retry link and the restored input text offer the same message.
+describe("not sending a failed message twice", () => {
+  const box = () => screen.getByPlaceholderText("Message");
+  const openAndFail = async (text) => {
+    renderModal();
+    await settled();
+    fireEvent.change(picker(), { target: { value: "c1" } });
+    fireEvent.change(box(), { target: { value: text } });
+    fireEvent.click(screen.getByLabelText("Send message"));
+    act(() => h.sendChatMessage.mock.calls[0][1]({ success: false }));
+    expect(box()).toHaveValue(text);
+  };
+
+  it("clears the restored text when Retry is pressed", async () => {
+    await openAndFail("hello again");
+    fireEvent.click(screen.getByText("Not sent – Retry"));
+    expect(box()).toHaveValue("");
+  });
+
+  it("leaves other text in the box alone when Retry is pressed", async () => {
+    await openAndFail("hello again");
+    fireEvent.change(box(), { target: { value: "something new" } });
+    fireEvent.click(screen.getByText("Not sent – Retry"));
+    expect(box()).toHaveValue("something new");
+  });
+
+  it("replaces the Not sent bubble when the restored text is sent again", async () => {
+    await openAndFail("hello again");
+    fireEvent.click(screen.getByLabelText("Send message"));
+    expect(bubbles()).toEqual(["hello again"]);
+    expect(screen.queryByText("Not sent – Retry")).toBeNull();
+  });
+});
+

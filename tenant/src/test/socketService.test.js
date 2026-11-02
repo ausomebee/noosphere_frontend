@@ -16,14 +16,19 @@ vi.mock("socket.io-client", () => ({ io: (...args) => io(...args) }));
  * module has since reconnected to a new one.
  */
 
-const makeSocket = () => ({
-  connected: false,
-  on: vi.fn(),
-  off: vi.fn(),
-  emit: vi.fn(),
-  connect: vi.fn(),
-  disconnect: vi.fn(),
-});
+const makeSocket = () => {
+  const sock = {
+    connected: false,
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+  };
+  // socket.io's per-emit ack timeout: `socket.timeout(ms).emit(...)`.
+  sock.timeout = vi.fn(() => sock);
+  return sock;
+};
 
 // A fresh module copy, so the module-level socket starts out null again.
 const load = async () => {
@@ -79,18 +84,55 @@ describe("connecting", () => {
     expect(io.mock.calls[0][1].reconnection).toBe(true);
   });
 
-  it("reuses a socket that is already connected", async () => {
+  it("reuses a socket that is already connected, carrying a refreshed token", async () => {
     const { mod, sock } = await connected();
-    expect(mod.connectSocket({ accessToken: "at2" })).toBe(sock);
+    expect(mod.connectSocket({ accessToken: "at2", userId: "u1", tenantId: "t1" })).toBe(sock);
     expect(io).toHaveBeenCalledTimes(1);
+    // The new token rides on `auth` for the next handshake; no forced drop.
+    expect(sock.auth).toEqual({ token: "at2" });
+    expect(sock.disconnect).not.toHaveBeenCalled();
+    expect(sock.connect).not.toHaveBeenCalled();
   });
 
-  it("dials again when the previous socket has dropped", async () => {
+  // Used to open a second socket whenever the first wasn't connected yet,
+  // leaving the first reconnecting in the background (double events).
+  it("reuses the same user's socket while it is still reconnecting", async () => {
+    const sock = makeSocket();
+    sock.active = true; // socket.io is retrying on its own
+    io.mockReturnValue(sock);
+    const { connectSocket } = await load();
+    connectSocket({ accessToken: "at", userId: "u1" });
+    expect(connectSocket({ accessToken: "at", userId: "u1" })).toBe(sock);
+    expect(io).toHaveBeenCalledTimes(1);
+    expect(sock.connect).not.toHaveBeenCalled();
+  });
+
+  it("restarts the same user's socket when it has fully stopped, without dialling a new one", async () => {
     const sock = makeSocket();
     io.mockReturnValue(sock);
     const { connectSocket } = await load();
-    connectSocket({ accessToken: "at" });
-    connectSocket({ accessToken: "at" }); // still connected: false
+    connectSocket({ accessToken: "at", userId: "u1" });
+    connectSocket({ accessToken: "at", userId: "u1" }); // connected: false, not active
+    expect(io).toHaveBeenCalledTimes(1);
+    expect(sock.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it("never hands one user's socket to another user", async () => {
+    const { mod, sock } = await connected();
+    const next = makeSocket();
+    io.mockReturnValue(next);
+    expect(mod.connectSocket({ accessToken: "other", userId: "u2", tenantId: "t1" })).toBe(next);
+    expect(sock.disconnect).toHaveBeenCalled();
+    expect(io).toHaveBeenCalledTimes(2);
+    expect(io.mock.calls[1][1].auth).toEqual({ token: "other" });
+  });
+
+  it("dials a fresh socket after logout, even for the same user", async () => {
+    const { mod } = await connected();
+    mod.disconnectSocket();
+    const next = makeSocket();
+    io.mockReturnValue(next);
+    expect(mod.connectSocket({ accessToken: "at", userId: "u1" })).toBe(next);
     expect(io).toHaveBeenCalledTimes(2);
   });
 
@@ -242,8 +284,41 @@ describe("chat", () => {
         content: "hello",
         isRead: false,
       },
-      undefined,
+      expect.any(Function),
     );
+  });
+
+  it("waits at most ten seconds for the server's ack", async () => {
+    const { mod, sock } = await connected();
+    mod.sendChatMessage({ senderId: "u1", receiverId: "c1", content: "hello" });
+    expect(sock.timeout).toHaveBeenCalledWith(10000);
+  });
+
+  it("passes the server's ack through to the caller", async () => {
+    const { mod, sock } = await connected();
+    const cb = vi.fn();
+    mod.sendChatMessage({ senderId: "u1", receiverId: "c1", content: "hello" }, cb);
+    const ack = sock.emit.mock.calls[0][2];
+    ack(null, { success: true, message: { id: "m1" } });
+    expect(cb).toHaveBeenCalledWith({ success: true, message: { id: "m1" } });
+  });
+
+  it("reports a send the server never acknowledged as failed", async () => {
+    const { mod, sock } = await connected();
+    const cb = vi.fn();
+    mod.sendChatMessage({ senderId: "u1", receiverId: "c1", content: "hello" }, cb);
+    sock.emit.mock.calls[0][2](new Error("operation has timed out"));
+    expect(cb).toHaveBeenCalledWith({ success: false, error: "Timed out" });
+  });
+
+  it("survives an ack or a timeout with no callback to answer", async () => {
+    const { mod, sock } = await connected();
+    mod.sendChatMessage({ senderId: "u1", receiverId: "c1", content: "hello" });
+    const ack = sock.emit.mock.calls[0][2];
+    expect(() => {
+      ack(null, { success: true });
+      ack(new Error("timeout"));
+    }).not.toThrow();
   });
 
   it("honours explicit participant types", async () => {
@@ -316,14 +391,15 @@ describe("subscriptions", () => {
     const first = makeSocket();
     io.mockReturnValue(first);
     const mod = await load();
-    mod.connectSocket({ accessToken: "at" });
+    mod.connectSocket({ accessToken: "at", userId: "u1" });
     const cb = vi.fn();
     const unsub = mod[name](cb);
 
-    // The app reconnects underneath a listener the component still holds.
+    // A new socket replaces the one a component still holds a listener on
+    // (another user signing in on this tab).
     const second = makeSocket();
     io.mockReturnValue(second);
-    mod.connectSocket({ accessToken: "at" });
+    mod.connectSocket({ accessToken: "at", userId: "u2" });
 
     unsub();
     expect(first.off).toHaveBeenCalledWith(event, cb);
@@ -371,5 +447,28 @@ describe("the default export", () => {
     expect(mod.default.connectSocket).toBe(mod.connectSocket);
     expect(mod.default.onNotification).toBe(mod.onNotification);
     expect(mod.default.disconnectSocket).toBe(mod.disconnectSocket);
+  });
+});
+
+describe("catching up after a reconnect", () => {
+  it("tells listeners when the socket comes back, but not on its first connect", async () => {
+    const { mod, sock } = await connected();
+    const listener = vi.fn();
+    const unsubscribe = mod.onReconnect(listener);
+
+    handlerFor(sock, "connect")(); // first connect
+    expect(listener).not.toHaveBeenCalled();
+
+    handlerFor(sock, "connect")(); // back after a drop
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    handlerFor(sock, "connect")();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets a page subscribe before any socket exists", async () => {
+    const mod = await load();
+    expect(() => mod.onReconnect(() => {})()).not.toThrow();
   });
 });

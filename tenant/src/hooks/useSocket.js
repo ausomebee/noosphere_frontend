@@ -22,16 +22,20 @@ import {
 const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
   const { accessToken, userId, tenantId } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
-  const initialized = useRef(false);
   // Keep callbacks in a ref so the effect doesn't re-run on every render
   const cbRef = useRef({ onMessage, onNotif });
   useEffect(() => { cbRef.current = { onMessage, onNotif }; }, [onMessage, onNotif]);
 
+  // Runs again whenever the token refreshes. connectSocket is idempotent for
+  // the same user — it hands back the existing socket with the new token on
+  // its `auth` for the next reconnect — so this only re-attaches listeners.
+  // (A run-once guard here used to let the cleanup strip the listeners on the
+  // first refresh and never put them back, so live badges silently stopped.)
   useEffect(() => {
-    if (!accessToken || !userId || initialized.current) return;
+    if (!accessToken || !userId) return;
 
     const socket = connectSocket({ accessToken, userId, tenantId });
-    initialized.current = true;
+    if (!socket) return;
 
     const handleConnect = () => {
       setIsConnected(true);

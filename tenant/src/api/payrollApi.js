@@ -411,7 +411,11 @@ const GetPayrollCycleStaffs = async ({
     );
     return response.data;
   } catch (error) {
-    throw new Error(error.message || "Get payroll cycle staffs failed");
+    const wrapped = new Error(error.message || "Get payroll cycle staffs failed");
+    // Kept so the page can tell "this cycle has no staff" from a real failure.
+    wrapped.status = error.response?.status;
+    wrapped.serverMessage = error.response?.data?.message;
+    throw wrapped;
   }
 };
 

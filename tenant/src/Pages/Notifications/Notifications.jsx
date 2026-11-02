@@ -5,7 +5,7 @@ const ITEMS_PER_PAGE = 10;
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import notificationApi from "../../api/notificationApi";
-import { emitNotificationRead, onNotification } from "../../api/socketService";
+import { emitNotificationRead, onNotification, onReconnect } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
 import {
   IoClose,
@@ -21,6 +21,7 @@ import useFormatSettings from "../../hooks/useFormatSettings";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
 import SectionLoader from "../../Components/SectionLoader";
+import ErrorFallback from "../../Components/ErrorFallback";
 import appointmentApi from "../../api/AppointmentApi";
 import AppointmentViewModal from "../../Components/ReusableModal/SchedulerModal/AppointmentViewModal";
 import RescheduleRequestActionModal from "../../Components/ReusableModal/SchedulerModal/RescheduleRequestActionModal";
@@ -76,6 +77,9 @@ const Notifications = () => {
   usePageTitle("Notifications");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  // The list failed to load — shown as an error with a retry, not as "No
+  // notifications", which hid the failure.
+  const [loadError, setLoadError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Modals opened straight from a notification, without leaving this page.
   const [viewAppt, setViewAppt] = useState(null);
@@ -85,9 +89,9 @@ const Notifications = () => {
   const [opening, setOpening] = useState(false);
   const role = authRole?.name ?? "Client";
 
-  const loadNotifications = useCallback(() => {
+  const loadNotifications = useCallback(({ quiet = false } = {}) => {
     if (!userId || !accessToken) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     notificationApi
       .getNotifications({ userId, userType: "TENANT_STAFF", accessToken, refreshToken })
       .then((res) => {
@@ -95,14 +99,32 @@ const Notifications = () => {
         // Each item may arrive flat or wrapped as { notification: {...} }.
         const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
         setNotifications(list);
+        setLoadError(false);
       })
-      .catch(() => {})
+      .catch((err) => {
+        // 404 is how the API says "nothing yet" — an empty list, not a failure.
+        if (err?.status === 404) {
+          setNotifications([]);
+          setLoadError(false);
+          return;
+        }
+        // A quiet reconnect reload that fails keeps what's on screen; the
+        // socket is flapping, and flashing an error over a good list helps no one.
+        if (!quiet) setLoadError(true);
+      })
       .finally(() => setLoading(false));
   }, [userId, accessToken, refreshToken]);
 
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // After the socket drops and comes back, anything pushed in between was
+  // missed. Reload in place — no spinner — so the list just catches up.
+  useEffect(
+    () => onReconnect(() => loadNotifications({ quiet: true })),
+    [loadNotifications]
+  );
 
   // Live updates: the socket pushes a "newNotification" whose payload uses the
   // same keys as the fetched list, so prepend it directly — no refresh needed.
@@ -389,6 +411,11 @@ const Notifications = () => {
       <div className="notifications-body">
         {loading ? (
           <SectionLoader />
+        ) : loadError ? (
+          <ErrorFallback
+            message="We couldn't load your notifications. Please try again."
+            onRetry={() => loadNotifications()}
+          />
         ) : notifications.length === 0 ? (
           <div className="notifications-empty">
             <IoNotificationsOutline size={48} />
@@ -438,7 +465,7 @@ const Notifications = () => {
         )}
       </div>
 
-      {!loading && totalPages > 1 && (
+      {!loading && !loadError && totalPages > 1 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}

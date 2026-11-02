@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../ReduxStore/features/authentication";
 import { persistor } from "../ReduxStore/store";
 import { disconnectSocket } from "../api/socketService";
+import { isIdleLogoutPaused } from "../Helper/liveSessionGuard";
 
 const useIdleTimeout = (timeoutMs = 30 * 60 * 1000) => {
   const dispatch = useDispatch();
@@ -20,7 +21,15 @@ const useIdleTimeout = (timeoutMs = 30 * 60 * 1000) => {
   useEffect(() => {
     const resetTimer = () => {
       clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(handleLogout, timeoutMs);
+      timerRef.current = setTimeout(() => {
+        // A live appointment session can run for a long time with nobody
+        // touching the screen; logging out then would lose it. Wait again.
+        if (isIdleLogoutPaused()) {
+          resetTimer();
+          return;
+        }
+        handleLogout();
+      }, timeoutMs);
     };
 
     const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];

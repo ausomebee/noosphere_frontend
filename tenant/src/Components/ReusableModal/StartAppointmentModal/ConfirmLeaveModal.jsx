@@ -1,11 +1,21 @@
 import React from "react";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 
-const ConfirmLeaveModal = ({ isOpen, onClose, onConfirm, loading = false }) => (
+// title / message / confirmText let the live session reuse this for its
+// two-step leave confirmation; the defaults are the original copy.
+const ConfirmLeaveModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading = false,
+  title = "Are you sure you want to go back?",
+  message = "Review your data carefully before leaving. Once you exit, this appointment will be automatically marked as completed.",
+  confirmText = "Leave anyway",
+}) => (
   <ReusableModal
     isOpen={isOpen}
     onClose={onClose}
-    primaryButtonText="Leave anyway"
+    primaryButtonText={confirmText}
     secondaryButtonText="cancel"
     onPrimaryButtonClick={onConfirm}
     onSecondaryButtonClick={onClose}
@@ -41,11 +51,8 @@ const ConfirmLeaveModal = ({ isOpen, onClose, onConfirm, loading = false }) => (
           />
         </svg>
       </div>
-      <h2 className="text-xl mb-4">Are you sure you want to go back?</h2>
-      <p className="text-gray-600 mb-16">
-        Review your data carefully before leaving. Once you exit, this
-        appointment will be automatically marked as completed.
-      </p>
+      <h2 className="text-xl mb-4">{title}</h2>
+      <p className="text-gray-600 mb-16">{message}</p>
     </div>
   </ReusableModal>
 );

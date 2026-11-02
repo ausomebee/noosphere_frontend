@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,9 +9,11 @@ import { TextInput } from "../../../Components/Input/Inputs";
 import TenantLogo from "../../../assets/Logo.svg";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
+import { clearPending2FA } from "../../../ReduxStore/features/authentication";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
@@ -25,6 +28,7 @@ const answerSchema = yup.object().shape({
 const Admin2FAQuestionLogin = () => {
   const { userId, accessToken, tenantId, authQuestion, role } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [showCantAccess, setShowCantAccess] = useState(false);
 
@@ -50,6 +54,8 @@ const Admin2FAQuestionLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("Security question verified successfully!", "success");
+        // Second factor passed: the session may now enter the app.
+        dispatch(clearPending2FA());
         connectSocket({ accessToken, userId, tenantId });
         navigate("/dashboard");
       } else {
@@ -57,7 +63,7 @@ const Admin2FAQuestionLogin = () => {
       }
     } catch (error) {
       console.error("2FA verification failed:", error);
-      const message = error?.response?.data?.message || "Verification failed.";
+      const message = authErrorMessage(error, "Verification failed.");
       showToast(message, "error");
     } finally {
       setLoading(false);

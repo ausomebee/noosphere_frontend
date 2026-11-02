@@ -256,6 +256,64 @@ describe("monthly recurrence by day of month", () => {
     );
     expect(dates(out)).toEqual(["2026-01-05", "2026-04-05", "2026-07-05", "2026-10-05"]);
   });
+
+  // Only occurrences inside the window count, so a series that outlives the
+  // window never reached its count and the loop spun forever (a frozen tab).
+  describe("ending after a count that outlives the window", () => {
+    it("stops at the window end instead of looping forever", () => {
+      const out = expand(
+        master({ isRecurring: true, recurrence: { type: "month", day: [5], endType: "after", occurrences: 50 } }),
+        shortWindow
+      );
+      expect(dates(out)).toEqual(["2026-01-05"]);
+    });
+
+    it("stops for a custom month interval too", () => {
+      const out = expand(
+        master({
+          isRecurring: true,
+          recurrence: { type: "custom", unit: "month", day: [5], interval: 2, endType: "after", occurrences: 100 },
+        }),
+        window2026
+      );
+      expect(dates(out)).toEqual([
+        "2026-01-05",
+        "2026-03-05",
+        "2026-05-05",
+        "2026-07-05",
+        "2026-09-05",
+        "2026-11-05",
+      ]);
+    });
+
+    it("keeps every in-window occurrence it produced before", () => {
+      const out = monthly({ day: [5, 20], endType: "after", occurrences: 5 });
+      expect(dates(out)).toEqual([
+        "2026-01-05",
+        "2026-01-20",
+        "2026-02-05",
+        "2026-02-20",
+        "2026-03-05",
+        // The count is checked per month, so the month that reaches it is
+        // finished — unchanged from before.
+        "2026-03-20",
+      ]);
+    });
+  });
+
+  it("produces exactly what it did before for a day some months lack", () => {
+    const out = expand(
+      master({
+        date: "2026-01-31T00:00:00Z",
+        isRecurring: true,
+        recurrence: { type: "month", day: [31], endType: "after", occurrences: 4 },
+      }),
+      window2026
+    );
+    // Unchanged behaviour (shared with the "on"/"never" branches): a month
+    // without the 31st rolls over into the next one.
+    expect(dates(out)).toEqual(["2026-01-31", "2026-03-03", "2026-03-31", "2026-05-01"]);
+  });
 });
 
 describe("monthly recurrence by weekday position", () => {

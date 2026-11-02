@@ -7,7 +7,11 @@ import { useDispatch } from "react-redux";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
-import { AdminLogin } from "../../../ReduxStore/features/authentication";
+import {
+  AdminLogin,
+  clearPending2FA,
+  setPending2FARoute,
+} from "../../../ReduxStore/features/authentication";
 import { connectSocket } from "../../../api/socketService";
 import "../Auth.css";
 import TenantLogo from "../../../assets/Logo.svg";
@@ -79,12 +83,21 @@ const AdminCLogin = () => {
         const effectiveType = setForAll ? choiceType : user.authType || null;
 
         const goDashboard = () => {
+          // The only exits from login into the app: 2FA is off or has no type.
+          dispatch(clearPending2FA());
           connectSocket({
             accessToken: user.accessToken,
             userId: user.id,
             tenantId: user.tenantId,
           });
           navigate("/dashboard");
+        };
+
+        // Every other branch ends on a 2FA page. Remember which one, so the
+        // route guards can send the user back there until they finish it.
+        const go2FA = (path) => {
+          dispatch(setPending2FARoute(path));
+          navigate(path);
         };
 
         // Master switch: when 2FA is disabled, skip it and go to the dashboard.
@@ -97,23 +110,23 @@ const AdminCLogin = () => {
           // Forced (re)setup: a type is set but 2FA isn't complete (first time,
           // or the admin just changed the type for all).
           if (effectiveType === "AUTHENTICATOR") {
-            navigate("/auth/2fa/authenticator");
+            go2FA("/auth/2fa/authenticator");
           } else if (effectiveType === "SECRETMESSAGE") {
-            navigate("/auth/2fa/security-question");
+            go2FA("/auth/2fa/security-question");
           } else if (isPrivileged) {
             // Brand-new admin, no type chosen yet → password onboarding.
-            navigate("/auth/change-password");
+            go2FA("/auth/change-password");
           } else {
             // setForAll is off and this user has no type yet → let them pick
             // their own 2FA method.
-            navigate("/auth/2fa/choice");
+            go2FA("/auth/2fa/choice");
           }
         } else {
           // Already set up → verify with the chosen method.
           if (effectiveType === "AUTHENTICATOR") {
-            navigate("/auth/2fa/login-authenticator");
+            go2FA("/auth/2fa/login-authenticator");
           } else if (effectiveType === "SECRETMESSAGE") {
-            navigate("/auth/2fa/login-question");
+            go2FA("/auth/2fa/login-question");
           } else {
             goDashboard();
           }

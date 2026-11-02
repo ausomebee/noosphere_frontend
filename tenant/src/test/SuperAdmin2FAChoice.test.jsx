@@ -110,11 +110,14 @@ describe("saving the choice", () => {
     renderPage();
     submit();
     await waitFor(() => expect(api.SuperAdminChoices).toHaveBeenCalled());
+    // The session's tokens go along, so the policy write is authenticated.
     expect(payload()).toEqual({
       Authenticator2FA: true,
       securityQuestion: false,
       setForAll: true,
       tenantId: "t-1",
+      accessToken: "at",
+      refreshToken: "rt",
     });
   });
 
@@ -213,6 +216,23 @@ describe("a save that fails", () => {
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith("Failed to update 2FA settings.", "error")
     );
+  });
+
+  it("says the server can't be reached when the request never got an answer", async () => {
+    api.SuperAdminChoices.mockRejectedValue(
+      Object.assign(new Error("Can't reach the server. Check your connection and try again."), {
+        isNetworkError: true,
+      })
+    );
+    renderPage();
+    submit();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Can't reach the server. Check your connection and try again.",
+        "error"
+      )
+    );
+    expect(continueButton()).toBeEnabled();
   });
 
   it("locks the button while the save is in flight and releases it after", async () => {

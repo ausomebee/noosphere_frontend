@@ -25,7 +25,7 @@ import { useDispatch } from "react-redux";
 import useAuth from "../hooks/useAuth";
 import usePermissions from "../hooks/usePermissions";
 import { logout } from "../ReduxStore/features/authentication";
-import { disconnectSocket } from "../api/socketService";
+import { disconnectSocket, onReconnect } from "../api/socketService";
 import { persistor } from "../ReduxStore/store";
 import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/MessageModal/MessageModal";
@@ -33,8 +33,10 @@ import useSocket from "../hooks/useSocket";
 import notificationApi from "../api/notificationApi";
 
 import ConnectionStatus from "../Components/ConnectionStatus/ConnectionStatus";
+import { hasNavigationGuard, requestNavigation } from "../Helper/liveSessionGuard";
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { hasModule, hasPermission } = usePermissions();
   const [expandedItems, setExpandedItems] = useState({});
 
@@ -141,6 +143,16 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
     })
     .filter(Boolean);
 
+  // A page with a session in progress (see liveSessionGuard) gets to confirm
+  // before a sidebar link takes the user away; otherwise the Link navigates.
+  const handleNavClick = (e, path) => {
+    if (hasNavigationGuard()) {
+      e.preventDefault();
+      requestNavigation(() => navigate(path));
+    }
+    if (isMobile) toggleSidebar();
+  };
+
   const toggleExpand = (name) => {
     setExpandedItems((prev) => ({
       ...prev,
@@ -205,7 +217,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                                     ? "active"
                                     : ""
                                 }`}
-                                onClick={() => isMobile && toggleSidebar()}
+                                onClick={(e) => handleNavClick(e, child.path)}
                               >
                                 {child.name}
                               </Link>
@@ -220,7 +232,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                       className={`nav-link ${
                         location.pathname === item.path ? "active" : ""
                       }`}
-                      onClick={() => isMobile && toggleSidebar()}
+                      onClick={(e) => handleNavClick(e, item.path)}
                     >
                       <item.icon className="nav-icon" />
                       {isOpen && item.name}
@@ -251,6 +263,8 @@ const DashboardLayout = ({ children }) => {
   // Unread notification count shown on the bell — driven by the socket, so no
   // banner is needed.
   const [notifCount, setNotifCount] = useState(0);
+  // The unread count couldn't be loaded, so the bell can't be trusted to say 0.
+  const [notifCountError, setNotifCountError] = useState(false);
   const profileDropdownRef = useRef(null);
 
   useIdleTimeout();
@@ -259,14 +273,30 @@ const DashboardLayout = ({ children }) => {
   // refreshes/logins (not just sockets fired during this session).
   useEffect(() => {
     if (!userId || !accessToken) return;
-    notificationApi
-      .getNotifications({ userId, userType: "TENANT_STAFF", accessToken, refreshToken })
-      .then((res) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
-        setNotifCount(list.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
+    const loadUnreadCount = ({ quiet = false } = {}) =>
+      notificationApi
+        .getNotifications({ userId, userType: "TENANT_STAFF", accessToken, refreshToken })
+        .then((res) => {
+          const raw = res?.data?.data ?? res?.data ?? res ?? [];
+          const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+          setNotifCount(list.filter((n) => !n.isRead).length);
+          setNotifCountError(false);
+        })
+        .catch((err) => {
+          // 404 means no notifications yet: a real zero.
+          if (err?.status === 404) {
+            setNotifCount(0);
+            setNotifCountError(false);
+            return;
+          }
+          // A failed reconnect recount keeps the last count rather than
+          // flagging a blip.
+          if (!quiet) setNotifCountError(true);
+        });
+    loadUnreadCount();
+    // A reconnect means pushes may have been missed while the socket was
+    // down, so recount from the server.
+    return onReconnect(() => loadUnreadCount({ quiet: true }));
   }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wire socket: register + listen for notifications and new messages
@@ -368,14 +398,27 @@ const DashboardLayout = ({ children }) => {
               <div className="header-left">
                 <button
                   className="message-icon"
-                  onClick={() => {
-                    setNotifCount(0);
-                    navigate("/notifications");
-                  }}
+                  onClick={() =>
+                    requestNavigation(() => {
+                      setNotifCount(0);
+                      // The page itself loads (and retries) the list from here on.
+                      setNotifCountError(false);
+                      navigate("/notifications");
+                    })
+                  }
                   aria-label="Notifications"
                 >
                   <IoNotifications size={26} color="#fff" />
-                  {notifCount > 0 && (
+                  {notifCountError ? (
+                    // The Notifications page shows the full error with a retry.
+                    <span
+                      className="notification-badge"
+                      title="Couldn't load notifications"
+                      aria-label="Couldn't load notifications"
+                    >
+                      !
+                    </span>
+                  ) : notifCount > 0 && (
                     <span className="notification-badge">
                       {notifCount > 99 ? "99+" : notifCount}
                     </span>
@@ -428,7 +471,7 @@ const DashboardLayout = ({ children }) => {
                       className="profile-dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
-                        navigate("/notifications");
+                        requestNavigation(() => navigate("/notifications"));
                       }}
                     >
                       <IoNotificationsOutline size={18} />
@@ -438,7 +481,7 @@ const DashboardLayout = ({ children }) => {
                       className="profile-dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
-                        navigate("/settings");
+                        requestNavigation(() => navigate("/settings"));
                       }}
                     >
                       <FaCog size={16} />
@@ -448,10 +491,12 @@ const DashboardLayout = ({ children }) => {
                       className="profile-dropdown-item profile-dropdown-danger"
                       onClick={() => {
                         setShowProfileDropdown(false);
-                        disconnectSocket();
-                        dispatch(logout());
-                        persistor.purge();
-                        navigate("/");
+                        requestNavigation(() => {
+                          disconnectSocket();
+                          dispatch(logout());
+                          persistor.purge();
+                          navigate("/");
+                        });
                       }}
                     >
                       <IoLogOutOutline size={18} />

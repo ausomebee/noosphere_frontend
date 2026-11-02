@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReusableModal from "../ReusableModal";
 import Button from "../../Button/Button";
 import { FaPlus } from "react-icons/fa";
@@ -37,9 +37,15 @@ const PreviewPayrollModal = ({
   const [deductionItems, setDeductionItems] = useState([]);
   const itemsPerPage = 8;
 
+  // Tokens are read at call time, not as effect dependencies: a background
+  // token refresh used to re-run the fetch and wipe the admin's unsaved edits.
+  const tokensRef = useRef({ accessToken, refreshToken });
+  tokensRef.current = { accessToken, refreshToken };
+
   // Fetch staff and prefetch income/deduction items when modal opens
   const fetchData = useCallback(async () => {
     if (!isOpen || !payrollData || !tenantId) return;
+    const { accessToken, refreshToken } = tokensRef.current;
     setLoading(true);
     try {
       const [staffRes, incomeRes, deductionRes] = await Promise.all([
@@ -88,7 +94,7 @@ const PreviewPayrollModal = ({
     } finally {
       setLoading(false);
     }
-  }, [isOpen, payrollData, tenantId, accessToken, refreshToken]);
+  }, [isOpen, payrollData, tenantId]);
 
   useEffect(() => {
     if (isOpen) {

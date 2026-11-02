@@ -8,6 +8,7 @@ import { SelectInput, TextInput } from "../../../../../Components/Input/Inputs";
 import "../../../Auth.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../api/authApis";
+import { authErrorMessage, isNetworkFailure, NETWORK_ERROR_MESSAGE } from "../../../../../Helper/authErrors";
 import useAuth from "../../../../../hooks/useAuth";
 import { showToast } from "../../../../../Helper/ShowToast";
 
@@ -172,7 +173,9 @@ const QuestionAndAnswer2FA = () => {
       }
     } catch (error) {
       console.error("Error:", error);
-      setErrorMessage("An error occurred. Please try again.");
+      setErrorMessage(
+        isNetworkFailure(error) ? NETWORK_ERROR_MESSAGE : "An error occurred. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -197,8 +200,7 @@ const QuestionAndAnswer2FA = () => {
       }
     } catch (error) {
       console.error("2FA verification failed:", error);
-      const message =
-        error?.response?.data?.message || "Failed to set security question.";
+      const message = authErrorMessage(error, "Failed to set security question.");
       setErrorMessage(message);
       showToast(message, "error");
     } finally {

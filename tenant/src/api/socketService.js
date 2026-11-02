@@ -6,14 +6,24 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
   : null;
 
 let socket = null;
+// Whose socket this is. A socket authenticates once, at its handshake, so one
+// opened for another user must never be handed back.
+let socketUserId = null;
+
+// Called after the socket comes back from a drop. While it was down — and it
+// may come back on the other backend server — anything the server pushed was
+// missed, so listeners refetch rather than trust what they hold.
+const reconnectListeners = new Set();
 
 // Preserve socket reference across Vite HMR reloads (development only)
 if (import.meta.hot) {
   if (import.meta.hot.data?.socket) {
     socket = import.meta.hot.data.socket;
+    socketUserId = import.meta.hot.data.socketUserId ?? null;
   }
   import.meta.hot.dispose((data) => {
     data.socket = socket;
+    data.socketUserId = socketUserId;
   });
 }
 
@@ -27,10 +37,25 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     return null;
   }
 
-  if (socket?.connected) {
-    return socket;
+  if (socket) {
+    if (socketUserId === userId) {
+      // Same user: keep the one socket even while it is still connecting or
+      // retrying — opening a second left the first reconnecting in the
+      // background, so every event arrived twice. A refreshed token goes on
+      // `auth`, which socket.io reads at the next (re)connect; no disconnect.
+      if (accessToken && socket.auth?.token !== accessToken) {
+        socket.auth = { ...socket.auth, token: accessToken };
+      }
+      // Only a socket that has given up (or was disconnected by hand) needs a
+      // push; one that is mid-retry reconnects by itself.
+      if (!socket.connected && !socket.active) socket.connect();
+      return socket;
+    }
+    // A different user signed in on this tab: drop the old user's socket.
+    disconnectSocket();
   }
 
+  socketUserId = userId;
   socket = io(SOCKET_URL, {
     auth: { token: accessToken },
     query: { userId, tenantId },
@@ -46,7 +71,10 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     randomizationFactor: 0.5,
   });
 
+  let connectedBefore = false;
   socket.on("connect", () => {
+    if (connectedBefore) reconnectListeners.forEach((listener) => listener());
+    connectedBefore = true;
   });
 
   socket.on("disconnect", (reason) => {
@@ -89,6 +117,7 @@ export const disconnectSocket = () => {
     socket.disconnect();
     socket = null;
   }
+  socketUserId = null;
 };
 /**
  * Nudges a dropped socket to reconnect immediately.
@@ -109,7 +138,19 @@ export const ensureConnected = () => {
  */
 export const getSocket = () => socket;
 
+/**
+ * Listen for the socket reconnecting after a drop (not its first connect).
+ * Doesn't need a socket yet, so a page can subscribe before login connects one.
+ * Returns an unsubscribe function.
+ */
+export const onReconnect = (callback) => {
+  reconnectListeners.add(callback);
+  return () => reconnectListeners.delete(callback);
+};
+
 // ─── Chat Events ───
+
+const CHAT_ACK_TIMEOUT_MS = 10000;
 
 /**
  * Create or retrieve an existing conversation between two participants.
@@ -139,10 +180,19 @@ export const sendChatMessage = (
     return;
   }
   // Backend schema: senderId, senderType, receiverId, receiverType, content, isRead
-  socket.emit(
+  // Wait at most 10s for the server's ack. Without a timeout a message sent
+  // into a half-dead connection sat as "sending" forever; now the caller hears
+  // { success: false } and can offer a retry.
+  socket.timeout(CHAT_ACK_TIMEOUT_MS).emit(
     "chatMessage",
     { senderId, senderType, receiverId, receiverType, content, isRead: false },
-    callback
+    (err, ack) => {
+      if (err) {
+        callback?.({ success: false, error: "Timed out" });
+        return;
+      }
+      callback?.(ack);
+    }
   );
 };
 
@@ -238,6 +288,7 @@ export default {
   connectSocket,
   disconnectSocket,
   getSocket,
+  onReconnect,
   sendChatMessage,
   onChatMessage,
   emitTyping,
