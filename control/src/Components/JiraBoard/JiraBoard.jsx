@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import usePermission from "../../hooks/usePermission";
 import { useAnyModalOpen } from "../../hooks/modalRegistry";
 import {
   DndContext,
@@ -69,6 +70,10 @@ const JiraBoard = () => {
     (state) => state.pipeline
   );
   const { accessToken, refreshToken } = useAuth();
+  const { hasPermission } = usePermission();
+  // Dragging a card moves a prospect; dragging a column reorders the stages.
+  const canMoveProspect = hasPermission("move_prospect");
+  const canEditStage = hasPermission("edit_pipeline_stage");
   const [loadingCount, setLoadingCount] = useState(0);
   const isLoading = loadingCount > 0;
   const [localTasks, setLocalTasks] = useState({});
@@ -349,9 +354,11 @@ const JiraBoard = () => {
   const handleDragStart = (event) => {
     const { active } = event;
     if (active.data.current?.type === "Column") {
+      if (!canEditStage) return;
       setDraggedColumn(columns[active.id]);
       return;
     }
+    if (!canMoveProspect) return;
     const taskId = active.id;
     const task = localTasks[taskId];
     setDraggedTask(task);
@@ -367,7 +374,15 @@ const JiraBoard = () => {
     const activeId = active.id;
     const overId = over.id;
 
+    // The optimistic update below changes the board before the server answers;
+    // keep what it looked like so a failed save can put it back. Only the
+    // columns this drag touches are restored, so a failure here can't undo a
+    // different drag that succeeded in the meantime.
+    const previousColumnOrder = columnOrder;
+    const previousTask = localTasks[activeId];
+
     if (active.data.current?.type === "Column") {
+      if (!canEditStage) return;
       const activeColumnIndex = columnOrder.indexOf(activeId);
       const overColumnIndex = columnOrder.indexOf(overId);
 
@@ -388,11 +403,14 @@ const JiraBoard = () => {
           });
         } catch (err) {
           if (import.meta.env.DEV) console.error("Failed to reorder column:", err);
+          dispatch(updateColumnOrder(previousColumnOrder));
           showToast("Failed to update column order.", "error");
         }
       }
       return;
     }
+
+    if (!canMoveProspect) return;
 
     const activeColumnId = Object.keys(columns).find((columnId) =>
       columns[columnId].taskIds.includes(activeId)
@@ -431,6 +449,9 @@ const JiraBoard = () => {
         });
       } catch (err) {
         if (import.meta.env.DEV) console.error("Failed to update task order:", err);
+        dispatch(
+          updateColumnTaskIds({ columnId: activeColumnId, taskIds: activeColumn.taskIds })
+        );
         showToast("Failed to update task order.", "error");
       }
     } else {
@@ -483,6 +504,13 @@ const JiraBoard = () => {
         });
       } catch (err) {
         if (import.meta.env.DEV) console.error("Failed to move task:", err);
+        dispatch(
+          updateColumnTaskIds({ columnId: activeColumnId, taskIds: activeColumn.taskIds })
+        );
+        dispatch(
+          updateColumnTaskIds({ columnId: targetColumnId, taskIds: targetColumn.taskIds })
+        );
+        setLocalTasks((prev) => ({ ...prev, [activeId]: previousTask }));
         showToast("Failed to move task.", "error");
       }
     }
@@ -928,7 +956,9 @@ const JiraBoard = () => {
           // Do not remount on modal open: that would reset column-local state
           // (e.g. a column's Add-candidate modal flag) and instantly close it.
           // Disabled sensors + inert board already block dragging while open.
-          sensors={anyModalOpen ? [] : sensors}
+          // No drag at all for an admin who may neither move prospects nor
+          // reorder stages; Column/Task disable the one they lack.
+          sensors={anyModalOpen || (!canMoveProspect && !canEditStage) ? [] : sensors}
           collisionDetection={rectIntersection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}

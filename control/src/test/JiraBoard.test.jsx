@@ -278,7 +278,7 @@ const buildState = (over = {}) => ({
     error: null,
     accessToken: over.accessToken === undefined ? 'token' : over.accessToken,
     refreshToken: over.refreshToken === undefined ? 'refresh' : over.refreshToken,
-    user: { id: 'u1', role: null },
+    user: over.user ?? { id: 'u1', role: null },
   },
   pipeline: {
     pipeline: 'pipeline' in over ? over.pipeline : { id: 'p1', name: 'Onboarding', description: 'Intake' },
@@ -1428,6 +1428,154 @@ describe('a pipeline item that lands in Redux with its own progress', () => {
   it('ignores an item that has no id', async () => {
     await withLateItem({ pipelineStageId: 's1', doneTasks: { a: true } });
     expect(Object.keys(mocks.board.data.tasks)).toEqual([]);
+  });
+});
+
+describe('a failed drag save', () => {
+  // The board moves first and saves second; a refused save must put it back.
+  const withCards = async () => {
+    mocks.responses.fetchPipelineItems = (action) =>
+      Promise.resolve({
+        items:
+          action.payload.stageId === 's1'
+            ? [{ id: 't1', companyName: 'Acme' }, { id: 't2', companyName: 'Beta' }]
+            : [{ id: 't3', companyName: 'Gamma' }],
+      });
+    return renderBoard();
+  };
+
+  it('restores the column order', async () => {
+    mocks.api.ReorderPipelineStage.mockRejectedValue(new Error('x'));
+    await renderBoard();
+    await dragEnd('s1', 's2', 'Column');
+    const orders = dispatched('updateColumnOrder').map((a) => a.payload);
+    expect(orders.at(-2)).toEqual(['s2', 's1']);
+    expect(orders.at(-1)).toEqual(['s1', 's2']);
+  });
+
+  it('restores the column it reordered after a failed card reorder', async () => {
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    await withCards();
+    const loads = dispatched('setColumns').length;
+    await dragEnd('t1', 't2');
+    expect(dispatched('updateColumnTaskIds').at(-1).payload).toEqual({
+      columnId: 's1',
+      taskIds: ['t1', 't2'],
+    });
+    expect(dispatched('setColumns')).toHaveLength(loads);
+  });
+
+  it('restores both columns and the card after a failed move to another column', async () => {
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    await withCards();
+    const progressBefore = screen.getByTestId('board-tasks').textContent;
+    const loads = dispatched('setColumns').length;
+    await dragEnd('t1', 's2');
+    expect(dispatched('updateColumnTaskIds').slice(-2).map((a) => a.payload)).toEqual([
+      { columnId: 's1', taskIds: ['t1', 't2'] },
+      { columnId: 's2', taskIds: ['t3'] },
+    ]);
+    expect(dispatched('setColumns')).toHaveLength(loads);
+    expect(screen.getByTestId('board-tasks').textContent).toBe(progressBefore);
+  });
+
+  it('rolls back only the failed drag when two drags overlap', async () => {
+    // Drag A reorders s1 and fails late; drag B moves t3 from s2 to s3 and
+    // succeeds meanwhile. The rollback must not touch s2 or s3.
+    let failA;
+    mocks.api.UpdatePipelineItemActivity.mockImplementation(({ ids }) =>
+      ids[0] === 't1'
+        ? new Promise((_, reject) => { failA = () => reject(new Error('x')); })
+        : Promise.resolve({})
+    );
+    mocks.responses.fetchPipelineItems = (action) =>
+      Promise.resolve({
+        items:
+          action.payload.stageId === 's1'
+            ? [{ id: 't1', companyName: 'Acme' }, { id: 't2', companyName: 'Beta' }]
+            : action.payload.stageId === 's2'
+            ? [{ id: 't3', companyName: 'Gamma' }]
+            : [],
+      });
+    await renderBoard({ columnOrder: ['s1', 's2', 's3'] });
+
+    const drag = (activeId, overId) =>
+      mocks.dnd.onDragEnd({ active: { id: activeId, data: { current: {} } }, over: { id: overId } });
+    let pendingA;
+    await act(async () => {
+      pendingA = drag('t1', 't2');
+      await drag('t3', 's3');
+    });
+    // Drag B really went through.
+    expect(mocks.api.UpdatePipelineItemActivity).toHaveBeenCalledWith(
+      expect.objectContaining({ ids: ['t3'], pipelineStageId: 's3' })
+    );
+    const beforeRollback = dispatched('updateColumnTaskIds').length;
+    const loads = dispatched('setColumns').length;
+    await act(async () => {
+      failA();
+      await pendingA;
+    });
+
+    const rollback = dispatched('updateColumnTaskIds').slice(beforeRollback).map((a) => a.payload);
+    expect(rollback).toEqual([{ columnId: 's1', taskIds: ['t1', 't2'] }]);
+    expect(dispatched('setColumns')).toHaveLength(loads);
+  });
+
+  it('leaves a successful move alone', async () => {
+    await withCards();
+    const restoresBefore = dispatched('setColumns').length;
+    await dragEnd('t1', 's2');
+    expect(dispatched('setColumns')).toHaveLength(restoresBefore);
+  });
+});
+
+describe('dragging without permission', () => {
+  const restricted = (permissions) => ({
+    id: 'u2',
+    role: { roleModuleAccesses: [{ module: 'TENANT', permissions }] },
+  });
+  const withCards = async (user) => {
+    mocks.responses.fetchPipelineItems = (action) =>
+      Promise.resolve({
+        items:
+          action.payload.stageId === 's1'
+            ? [{ id: 't1', companyName: 'Acme' }, { id: 't2', companyName: 'Beta' }]
+            : [{ id: 't3', companyName: 'Gamma' }],
+      });
+    return renderBoard({ user });
+  };
+
+  it('switches dragging off entirely for an admin with neither permission', async () => {
+    await withCards(restricted(['view_pipeline']));
+    expect(mocks.dnd.sensors).toEqual([]);
+  });
+
+  it('keeps dragging on for an admin who holds either permission', async () => {
+    await withCards(restricted(['move_prospect']));
+    expect(mocks.dnd.sensors).not.toEqual([]);
+  });
+
+  it('will not move a card without move_prospect', async () => {
+    await withCards(restricted(['edit_pipeline_stage']));
+    const before = dispatched('updateColumnTaskIds').length;
+    await dragEnd('t1', 's2');
+    expect(dispatched('updateColumnTaskIds')).toHaveLength(before);
+    expect(mocks.api.UpdatePipelineItemActivity).not.toHaveBeenCalled();
+  });
+
+  it('will not reorder columns without edit_pipeline_stage', async () => {
+    await withCards(restricted(['move_prospect']));
+    const before = dispatched('updateColumnOrder').length;
+    await dragEnd('s1', 's2', 'Column');
+    expect(dispatched('updateColumnOrder')).toHaveLength(before);
+    expect(mocks.api.ReorderPipelineStage).not.toHaveBeenCalled();
+  });
+
+  it('still lets an admin with move_prospect move a card', async () => {
+    await withCards(restricted(['move_prospect']));
+    await dragEnd('t1', 's2');
+    expect(mocks.api.UpdatePipelineItemActivity).toHaveBeenCalled();
   });
 });
 

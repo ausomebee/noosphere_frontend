@@ -11,10 +11,13 @@ const Task = React.memo(({
   columnId,
   selected,
   toggleSelection,
+  dragDisabled = false,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
     data: { type: 'Task' },
+    // Without move_prospect the card can't be picked up, but stays a drop target.
+    disabled: { draggable: dragDisabled, droppable: false },
   });
 
   // Every hook above this line. Nothing calls a hook before it today, so an

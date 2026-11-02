@@ -19,6 +19,12 @@ vi.mock('../api/authApis', () => ({ default: authApi }));
 const navigate = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
 
+const state = { authentication: { accessToken: 'at', refreshToken: 'rt', user: { id: 'u1' } } };
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+  useSelector: (fn) => fn(state),
+}));
+
 import SuperAdmin2FASettings from '../Pages/Authentication/SuperAdmin2FASettings';
 
 /**
@@ -84,6 +90,9 @@ describe('submitting', () => {
       Authenticator2FA: true,
       securityQuestion: false,
       setForAll: true,
+      // The save is a protected call, so it carries the session tokens.
+      accessToken: 'at',
+      refreshToken: 'rt',
     });
     expect(navigate).toHaveBeenCalledWith('/2fa/authenticator');
   });
@@ -96,6 +105,9 @@ describe('submitting', () => {
       Authenticator2FA: false,
       securityQuestion: true,
       setForAll: true,
+      // The save is a protected call, so it carries the session tokens.
+      accessToken: 'at',
+      refreshToken: 'rt',
     });
     expect(navigate).toHaveBeenCalledWith('/2fa/security-question');
   });

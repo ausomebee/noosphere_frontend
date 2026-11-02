@@ -106,8 +106,18 @@ describe('InvoiceApi Stripe calls', () => {
     );
   });
 
-  it('reports a transport failure rather than an empty message', async () => {
+  it('reports a transport failure as an unchecked link, not an invalid one', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error(''));
+    await expect(InvoiceApi.ValidatePaymentToken({ token: 't' })).rejects.toThrow(
+      "We couldn't check this payment link right now."
+    );
+  });
+
+  it('reports an unreadable body rather than an empty message', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(new Error('')),
+    });
     await expect(InvoiceApi.ValidatePaymentToken({ token: 't' })).rejects.toThrow(
       'Failed to validate payment token'
     );

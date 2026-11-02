@@ -8,6 +8,7 @@ import Logo from "../../../assets/NoosphereLogo-white.png";
 import { useNavigate, useParams } from "react-router-dom";
 import "./../SuperAdmin.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 import { showValidationErrors } from "../../../Helper/formErrors";
 import {
@@ -81,11 +82,16 @@ const ForgotPasswordResetPassword = () => {
           if (import.meta.env.DEV) console.error("Unknown authType:", authType);
           showToast("Unknown authentication type", "error");
         }
+      } else {
+        // !setForAll && auth2FADone: no branch above matched and the user was
+        // left on this page after the success toast. Send them to sign in.
+        navigate("/");
       }
 
     } catch (error) {
       if (import.meta.env.DEV) console.error("Password update error:", error);
-      const message = error?.response?.data?.message || "Failed to update password.";
+      // Unreachable server gets its own message; otherwise the page's wording.
+      const message = authErrorMessage(error, "Failed to update password.");
       showToast(message, "error");
     } finally {
       setSubmitting(false);

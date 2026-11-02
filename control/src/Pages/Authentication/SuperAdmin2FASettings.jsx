@@ -8,6 +8,7 @@ import Button from "../../Components/Button/Button";
 import Logo from "../../assets/NoosphereLogo-white.png";
 import "./SuperAdmin.css";
 import api from "../../api/authApis";
+import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../Helper/formErrors";
@@ -22,6 +23,7 @@ const schema = yup.object().shape({
 
 const SuperAdmin2FASettings = () => {
   const navigate = useNavigate();
+  const { accessToken, refreshToken } = useAuth();
   const {
     register,
     handleSubmit,
@@ -49,6 +51,8 @@ const SuperAdmin2FASettings = () => {
         Authenticator2FA,
         securityQuestion,
         setForAll,
+        accessToken,
+        refreshToken,
       });
 
       const successMessage =

@@ -2,6 +2,7 @@ import React from "react";
 import Button from "../../../Components/Button/Button";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css"
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 
 const PasswordResetConfirmation = () => {
   // Handle "Go to email" button click
@@ -23,6 +24,7 @@ const PasswordResetConfirmation = () => {
           className="auth-button"
           onClick={handleGoToEmail}
         />
+        <BackToLogin />
       </div>
     </div>
   );

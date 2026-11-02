@@ -144,6 +144,19 @@ describe('requesting the link', () => {
     );
   });
 
+  it('says the server could not be reached when the call never got an answer', async () => {
+    const unreachable = new Error('unreachable');
+    unreachable.isNetworkError = true;
+    authApi.AdminForgetPassword.mockRejectedValue(unreachable);
+    render(<ForgotPassword />);
+    fill();
+    await submit();
+    const message = "Can't reach the server. Check your connection and try again.";
+    await waitFor(() => expect(screen.getByText(message)).toBeInTheDocument());
+    expect(showToast).toHaveBeenCalledWith(message, 'error');
+    expect(document.querySelector('.custom-button')).not.toBeDisabled();
+  });
+
   it('clears the previous error before trying again', async () => {
     authApi.AdminForgetPassword.mockRejectedValueOnce(new Error('offline'));
     render(<ForgotPassword />);

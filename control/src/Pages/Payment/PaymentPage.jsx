@@ -152,6 +152,10 @@ const PaymentPage = () => {
   const [invoice, setInvoice] = useState(null);
   const [validating, setValidating] = useState(true);
   const [tokenError, setTokenError] = useState(null);
+  // Validation never got an answer (timeout / network): not the same as an
+  // invalid link, so the payer is offered a retry instead of "expired".
+  const [tokenUnchecked, setTokenUnchecked] = useState(false);
+  const [validationAttempt, setValidationAttempt] = useState(0);
   const [recording, setRecording] = useState(false);
 
   const [selectedMethod, setSelectedMethod] = useState(null);
@@ -166,9 +170,19 @@ const PaymentPage = () => {
     }
     invoiceApi.ValidatePaymentToken({ token })
       .then((res) => setInvoice(res.data))
-      .catch((err) => setTokenError(err.message || "This payment link is invalid or has expired."))
+      .catch((err) => {
+        if (err?.isNetworkError) setTokenUnchecked(true);
+        else setTokenError(err.message || "This payment link is invalid or has expired.");
+      })
       .finally(() => setValidating(false));
-  }, [token]);
+  }, [token, validationAttempt]);
+
+  const retryValidation = () => {
+    setTokenUnchecked(false);
+    setTokenError(null);
+    setValidating(true);
+    setValidationAttempt((n) => n + 1);
+  };
 
   const handleSuccess = async (result) => {
     setRecording(true);
@@ -254,6 +268,25 @@ const PaymentPage = () => {
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.6)" }}>
             {recording ? "Recording payment…" : "Validating payment link…"}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Token Unchecked (server unreachable) ─────────────────────────── */
+  if (tokenUnchecked) {
+    return (
+      <div className="pp-page" style={{ alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", maxWidth: 440, padding: "0 24px" }}>
+          <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 12px" }}>
+            We couldn&apos;t check this payment link right now.
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, lineHeight: 1.8, margin: "0 0 20px" }}>
+            Your link may still be valid. Check your connection and try again.
+          </p>
+          <button type="button" className="pp-download-btn" onClick={retryValidation}>
+            Try again
+          </button>
         </div>
       </div>
     );

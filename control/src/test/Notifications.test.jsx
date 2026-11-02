@@ -25,6 +25,9 @@ const mocks = vi.hoisted(() => ({
   action: vi.fn(),
 }));
 
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mocks.navigate };
@@ -33,6 +36,10 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../hooks/useAuth', () => ({ default: () => mocks.auth }));
 vi.mock('../api/notificationApi', () => ({ default: mocks.api }));
 vi.mock('../api/socketService', () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   onNotification: (cb) => {
     mocks.push = cb;
     return mocks.unsub;
@@ -510,5 +517,24 @@ describe('list updates that leave their neighbours alone', () => {
     expect(mocks.api.markNotificationRead).toHaveBeenCalledTimes(1);
     expect(cards()[0].className).not.toContain('unread');
     expect(cards()[1].className).toContain('unread');
+  });
+});
+
+describe('catching up after the socket reconnects', () => {
+  it('reloads the feed in place, picking up what was pushed while it was down', async () => {
+    reconnectListeners.length = 0;
+    await renderPage([notif({ id: 'n1', title: 'Seen before' })]);
+
+    let deliver;
+    mocks.api.getNotifications.mockReturnValue(new Promise((r) => { deliver = r; }));
+    act(() => reconnectListeners.forEach((fn) => fn()));
+    // Quiet: the feed stays on screen rather than flipping to the loader.
+    expect(document.body.querySelector('.section-loader')).toBeNull();
+    expect(screen.getByText('Seen before')).toBeInTheDocument();
+
+    await act(async () =>
+      deliver({ data: { data: [notif({ id: 'n2', title: 'Missed while away' }), notif({ id: 'n1', title: 'Seen before' })] } })
+    );
+    expect(screen.getByText('Missed while away')).toBeInTheDocument();
   });
 });

@@ -7,7 +7,11 @@ import Button from "../../Components/Button/Button";
 import Logo from "../../assets/NoosphereLogo-white.png";
 import { useNavigate } from "react-router-dom";
 import "./SuperAdmin.css";
-import { AdminLogin } from "../../ReduxStore/features/authentication";
+import {
+  AdminLogin,
+  setPending2FARoute,
+  complete2FA,
+} from "../../ReduxStore/features/authentication";
 import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
@@ -50,6 +54,18 @@ const AdminsLogin = () => {
     }
   };
 
+  // The login response already holds full tokens, so the app stays locked
+  // (pending2FA) until 2FA is done. Record which 2FA page to return to, or
+  // unlock it when this login goes straight into the app.
+  const goTo2FA = (route) => {
+    dispatch(setPending2FARoute(route));
+    navigate(route);
+  };
+  const enterApp = () => {
+    dispatch(complete2FA());
+    navigate("/tenants/pipeline");
+  };
+
   const onSubmit = async (data) => {
     try {
       const resultAction = await dispatch(AdminLogin(data));
@@ -65,7 +81,7 @@ const AdminsLogin = () => {
 
         // Master switch: when 2FA is disabled, skip it and go to the dashboard.
         if (isEnabled === false) {
-          navigate("/tenants/pipeline");
+          enterApp();
           return;
         }
 
@@ -83,24 +99,24 @@ const AdminsLogin = () => {
           // Forced (re)setup: a type is set but the user hasn't completed 2FA
           // (first time, or the super admin just changed the type for all).
           if (effectiveType === "AUTHENTICATOR") {
-            navigate("/2fa/authenticator");
+            goTo2FA("/2fa/authenticator");
           } else if (effectiveType === "SECRETMESSAGE") {
-            navigate("/2fa/security-question");
+            goTo2FA("/2fa/security-question");
           } else if (isPrivileged) {
             // Brand-new super admin, no type chosen yet → password onboarding.
-            navigate("/SA/change-password");
+            goTo2FA("/SA/change-password");
           } else {
             // setForAll is off and this admin has no type yet → let them pick.
-            navigate("/2fa/choice");
+            goTo2FA("/2fa/choice");
           }
         } else {
           // Already set up → verify with the chosen method.
           if (effectiveType === "AUTHENTICATOR") {
-            navigate("/SA/2fa-authentication/login");
+            goTo2FA("/SA/2fa-authentication/login");
           } else if (effectiveType === "SECRETMESSAGE") {
-            navigate("/SA/2fa-question/login");
+            goTo2FA("/SA/2fa-question/login");
           } else {
-            navigate("/tenants/pipeline");
+            enterApp();
           }
         }
       } else {

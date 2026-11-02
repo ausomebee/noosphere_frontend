@@ -113,6 +113,30 @@ describe('the protected route', () => {
     expect(screen.getByText('Sign in')).toBeInTheDocument();
     state.authentication.isAuthenticated = true;
   });
+
+  it('sends an admin who still owes 2FA back to their 2FA page', () => {
+    state.authentication.pending2FA = true;
+    state.authentication.pending2FARoute = '/2fa-verify';
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/2fa-verify" element={<div>Enter your code</div>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div>Dashboard</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Enter your code')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+    delete state.authentication.pending2FA;
+    delete state.authentication.pending2FARoute;
+  });
 });
 
 describe('the section loader', () => {

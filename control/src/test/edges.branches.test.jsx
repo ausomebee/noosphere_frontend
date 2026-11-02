@@ -97,7 +97,8 @@ describe('TableUtils blank-cell handling', () => {
     printTableData({ meta: { a: 1 }, plain: 'x' }, [], 'Details');
 
     const html = doc.write.mock.calls.map((c) => c[0]).join('');
-    expect(html).toContain('{"a":1}');
+    // Escaped for the print document (#10); the browser still shows {"a":1}.
+    expect(html).toContain('{&quot;a&quot;:1}');
     expect(html).toContain('plain');
   });
 });

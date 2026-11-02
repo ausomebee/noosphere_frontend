@@ -26,8 +26,9 @@ const state = {
     user: { id: 'u1', authQuestion: 'What was your first pet called?' },
   },
 };
+const dispatch = vi.hoisted(() => vi.fn());
 vi.mock('react-redux', () => ({
-  useDispatch: () => vi.fn(),
+  useDispatch: () => dispatch,
   useSelector: (fn) => fn(state),
 }));
 
@@ -131,6 +132,22 @@ describe('verifying', () => {
       'success'
     );
     expect(navigate).toHaveBeenCalledWith('/tenants/pipeline');
+    // Unlocks the app so ProtectedRoute lets the admin in.
+    expect(dispatch).toHaveBeenCalledWith({ type: 'authentication/complete2FA' });
+  });
+
+  it('says the server could not be reached when the call never got an answer', async () => {
+    const unreachable = new Error('unreachable');
+    unreachable.isNetworkError = true;
+    authApi.Admin2FAVerifySecretMessage.mockRejectedValue(unreachable);
+    render(<SuperAdmin2FAQuestionLogin />);
+    fill();
+    await submit();
+    expect(showToast).toHaveBeenCalledWith(
+      "Can't reach the server. Check your connection and try again.",
+      'error'
+    );
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it('sends an undefined question when the session has none', async () => {

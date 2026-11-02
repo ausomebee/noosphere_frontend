@@ -13,7 +13,7 @@ import Pagination from "../../Components/Table/Pagination";
 import usePageTitle from "../../hooks/usePageTitle";
 import useAuth from "../../hooks/useAuth";
 import notificationApi from "../../api/notificationApi";
-import { onNotification } from "../../api/socketService";
+import { onNotification, onReconnect } from "../../api/socketService";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import "./Notifications.css";
 import SectionLoader from "../../Components/SectionLoader";
@@ -82,9 +82,9 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadNotifications = useCallback(() => {
+  const loadNotifications = useCallback(({ quiet = false } = {}) => {
     if (!userId || !accessToken) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     notificationApi
       .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
       .then((res) => {
@@ -100,6 +100,13 @@ const Notifications = () => {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // After the socket drops and comes back, anything pushed in between was
+  // missed. Reload in place — no spinner — so the list just catches up.
+  useEffect(
+    () => onReconnect(() => loadNotifications({ quiet: true })),
+    [loadNotifications]
+  );
 
   // Live updates: the socket pushes a "newNotification" whose payload uses the
   // same keys as the fetched list, so prepend it directly — no refresh needed.

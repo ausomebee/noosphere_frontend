@@ -86,6 +86,43 @@ describe("connecting", () => {
   });
 });
 
+describe("a token refresh", () => {
+  // The effect depends on accessToken, so a refresh re-runs it. It used to
+  // remove the listeners in cleanup and then bail out on an `initialized` ref,
+  // leaving the socket with no connect/disconnect/notification listeners.
+  it("re-attaches every listener after the effect re-runs", () => {
+    const onNotification = vi.fn();
+    const { rerender, result } = renderHook(() => useSocket({ onNotification }));
+    expect(socket.on).toHaveBeenCalledWith("connect", expect.any(Function));
+
+    auth.accessToken = "refreshed";
+    rerender();
+
+    expect(connectSocket).toHaveBeenLastCalledWith(
+      expect.objectContaining({ accessToken: "refreshed", userId: "u1" })
+    );
+    // Removed once by the cleanup, added again by the new run.
+    expect(socket.off).toHaveBeenCalledWith("connect", expect.any(Function));
+    expect(socket.on.mock.calls.filter(([e]) => e === "connect")).toHaveLength(2);
+    expect(socket.on.mock.calls.filter(([e]) => e === "disconnect")).toHaveLength(2);
+
+    // The live listeners still work.
+    act(() => socket.on.mock.calls.filter(([e]) => e === "connect").at(-1)[1]());
+    expect(result.current.isConnected).toBe(true);
+    act(() => notifHandler({ id: "n2" }));
+    expect(onNotification).toHaveBeenCalledWith({ id: "n2" });
+  });
+
+  it("does not register the same user on the same socket twice", () => {
+    socket.connected = true;
+    const { rerender } = renderHook(() => useSocket());
+    expect(registerUser).toHaveBeenCalledTimes(1);
+    auth.accessToken = "refreshed";
+    rerender();
+    expect(registerUser).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("signed out", () => {
   it("does not connect without a user id", () => {
     auth.userId = null;

@@ -9,7 +9,10 @@ import Logo from "../../assets/NoosphereLogo-white.png";
 import "./SuperAdmin.css";
 import api from "../../api/authApis";
 import useAuth from "../../hooks/useAuth";
+import { useDispatch } from "react-redux";
+import { complete2FA } from "../../ReduxStore/features/authentication";
 import { showToast } from "../../Helper/ShowToast";
+import { authErrorMessage } from "../../Helper/authErrors";
 
 import { showValidationErrors } from "../../Helper/formErrors";
 // Yup validation schema for security answer
@@ -24,6 +27,7 @@ const SuperAdmin2FAQuestionLogin = () => {
   const { userId, user } = useAuth();
   const authQuestion = user?.authQuestion;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   // Form setup with react-hook-form and yup
@@ -48,13 +52,15 @@ const SuperAdmin2FAQuestionLogin = () => {
       });
       if (response.data.status ==="ok") {
         showToast("Security question verified successfully!", "success");
+        // 2FA verified: unlock the app (ProtectedRoute) before entering it.
+        dispatch(complete2FA());
         navigate("/tenants/pipeline");
       } else {
         throw new Error("Verification failed.");
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("2FA verification failed:", error);
-      const message = error?.response?.data?.message || "Verification failed.";
+      const message = authErrorMessage(error, "Verification failed.");
       showToast(message, "error");
     } finally {
       setLoading(false);

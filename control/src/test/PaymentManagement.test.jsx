@@ -224,23 +224,49 @@ describe('the self-saving switches', () => {
     expect(showToast).toHaveBeenCalledWith(`${field} updated successfully`, 'success');
   });
 
-  it('sends nothing until the debounce elapses', async () => {
+  // Switches used to share one 500ms debounce with every other setting, so
+  // flipping two inside the window saved only the second. They now save at once.
+  it('saves a switch straight away, without waiting for a debounce', async () => {
     await renderPage();
     fireEvent.click(switchFor('Notify tenant of every charge attempt'));
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
-    });
-    expect(api.UpdateNotifyTenantToggle).not.toHaveBeenCalled();
+    await act(async () => {});
+    expect(api.UpdateNotifyTenantToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('collapses two changes made inside the debounce window into the later one', async () => {
+  it('saves both of two switches flipped inside the old debounce window', async () => {
     await renderPage();
     fireEvent.click(switchFor('Notify tenant of every charge attempt'));
     fireEvent.click(switchFor('Allow admin to manually cancel subscriptions'));
     await flushSave();
 
-    expect(api.UpdateNotifyTenantToggle).not.toHaveBeenCalled();
+    expect(api.UpdateNotifyTenantToggle).toHaveBeenCalledTimes(1);
     expect(api.UpdateManualCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('still waits out the debounce for a typed count', async () => {
+    await renderPage();
+    fireEvent.change(counterFor('times before invoice becomes overdue'), {
+      target: { value: '3' },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(api.UpdateRetryBeforeCount).not.toHaveBeenCalled();
+    await flushSave();
+    expect(api.UpdateRetryBeforeCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('debounces each typed count on its own, so two different counts both save', async () => {
+    await renderPage();
+    fireEvent.change(counterFor('times before invoice becomes overdue'), {
+      target: { value: '3' },
+    });
+    fireEvent.change(counterFor('times after invoice becomes overdue'), {
+      target: { value: '4' },
+    });
+    await flushSave();
+    expect(api.UpdateRetryBeforeCount).toHaveBeenCalledTimes(1);
+    expect(api.UpdateRetryAfterCount).toHaveBeenCalledTimes(1);
   });
 
   it('reloads the settings after a save lands', async () => {

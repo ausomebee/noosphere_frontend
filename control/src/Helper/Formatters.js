@@ -140,3 +140,27 @@ export const formatTime = (dateStr) => {
     return "Invalid time";
   }
 };
+
+/**
+ * Format a money amount for a table row or invoice line, e.g. "$1,234.50" or
+ * "-$20.00". Always two decimals and keeps the sign. Uses the record's own
+ * currency code when it has one, else USD. (The abbreviated "$1.2k" style is
+ * only for the KPI summary tiles.)
+ */
+export const formatMoney = (value, currency) => {
+  const amount = Number(value);
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const format = (code) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safe);
+  try {
+    return format(currency || "USD");
+  } catch {
+    // An unrecognised currency code makes Intl throw; fall back to USD.
+    return format("USD");
+  }
+};

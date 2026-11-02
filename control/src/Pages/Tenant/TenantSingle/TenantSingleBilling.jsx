@@ -13,7 +13,7 @@ import invoiceApi from "../../../api/InvoiceApi";
 import useAuth from "../../../hooks/useAuth";
 import usePermission from "../../../hooks/usePermission";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
-import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear } from "../../../Helper/Formatters";
+import { formatDateShortMonth as formatDateDisplay, formatDateMonthYear, formatMoney } from "../../../Helper/Formatters";
 import SubscriptionInvoice from "../../../Components/Invoice/SubscriptionInvoice";
 import TenantListViewPayment from "../../../Pages/Tenant/TenantList/TenantListViewPayment";
 import GeneratePaymentLinkModal from "../../../Components/ReusableModal/GeneratePaymentLinkModal";
@@ -30,10 +30,9 @@ const toFilterDate = (dateStr) => {
   return `${m}/${day}/${d.getFullYear()}`;
 };
 
-const formatCurrency = (value) => {
-  if (value == null) return "$0";
-  return `$${Number(value).toLocaleString()}`;
-};
+// Invoice lines and totals: full currency format with two decimals and the
+// sign kept (formatMoney), in the record's currency when it has one.
+const formatCurrency = (value, currency) => formatMoney(value ?? 0, currency);
 
 const CardBrandIcon = ({ brand }) => {
   const size = 36;
@@ -136,6 +135,12 @@ const TenantSingleBilling = () => {
         const d = tenantRes.value?.data || tenantRes.value;
         setTenant(d || null);
       }
+      // allSettled never throws, so a failed request used to vanish and its
+      // section just looked empty. Say which part could not be loaded.
+      const failed = [tenantRes, invoicesRes, paymentsRes, paymentMethodsRes].find(
+        (r) => r.status === "rejected"
+      );
+      if (failed) showApiError(failed.reason, "LOAD_BILLING_DATA");
       if (invoicesRes.status === "fulfilled") {
         const list = extractList(invoicesRes.value);
         setAllInvoices(list);
@@ -159,33 +164,46 @@ const TenantSingleBilling = () => {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // The sub-tab each list is on right now. A status request that answers after
+  // the user has clicked another tab is dropped instead of overwriting it.
+  const currentInvoiceTab = useRef("All");
+  const currentPaymentTab = useRef("All");
+
   const handleInvoiceTabChange = useCallback(async (tab) => {
+    currentInvoiceTab.current = tab;
     setActiveInvoiceTab(tab);
-    if (tab === "All") { setDisplayInvoices(allInvoices); return; }
+    if (tab === "All") { setDisplayInvoices(allInvoices); setTabLoading(false); return; }
     setDisplayInvoices([]);
     try {
       setTabLoading(true);
       const res = await tenantApi.GetTenantInvoicesByStatus({ accessToken, refreshToken, tenantId, status: tab });
+      if (currentInvoiceTab.current !== tab) return;
       setDisplayInvoices(extractList(res));
-    } catch {
+    } catch (err) {
+      if (currentInvoiceTab.current !== tab) return;
       setDisplayInvoices([]);
+      showApiError(err, "LOAD_INVOICES");
     } finally {
-      setTabLoading(false);
+      if (currentInvoiceTab.current === tab) setTabLoading(false);
     }
   }, [tenantId, allInvoices]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePaymentTabChange = useCallback(async (tab) => {
+    currentPaymentTab.current = tab;
     setActivePaymentTab(tab);
-    if (tab === "All") { setDisplayPayments(allPayments); return; }
+    if (tab === "All") { setDisplayPayments(allPayments); setTabLoading(false); return; }
     setDisplayPayments([]);
     try {
       setTabLoading(true);
       const res = await tenantApi.GetTenantPaymentsByStatus({ accessToken, refreshToken, tenantId, status: tab });
+      if (currentPaymentTab.current !== tab) return;
       setDisplayPayments(extractList(res));
-    } catch {
+    } catch (err) {
+      if (currentPaymentTab.current !== tab) return;
       setDisplayPayments([]);
+      showApiError(err, "LOAD_PAYMENTS");
     } finally {
-      setTabLoading(false);
+      if (currentPaymentTab.current === tab) setTabLoading(false);
     }
   }, [tenantId, allPayments]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,7 +222,7 @@ const TenantSingleBilling = () => {
     document:     inv.invoiceNumber || inv.invoiceId || inv.id || "—",
     date_created: toFilterDate(inv.createdAt || inv.dateCreated || inv.issueDate),
     due_date:     toFilterDate(inv.dueDate || inv.due_date),
-    amount:       (inv.total ?? inv.amount) != null ? `$${Number(inv.total ?? inv.amount).toFixed(2)}` : "—",
+    amount:       (inv.total ?? inv.amount) != null ? formatMoney(inv.total ?? inv.amount, inv.currency) : "—",
     status:       inv.status || "—",
     hasCheckbox:  true,
     hasActions:   true,
@@ -214,7 +232,7 @@ const TenantSingleBilling = () => {
     id:        pay.id || pay.paymentId,
     invoiceId: pay.invoice?.id || pay.invoiceId || null,
     reference: pay.transactionRef || pay.transactionId || pay.reference || pay.id || "—",
-    amount:    pay.amount != null ? `$${Number(pay.amount).toFixed(2)}` : "—",
+    amount:    pay.amount != null ? formatMoney(pay.amount, pay.currency) : "—",
     method:    pay.gateway || pay.method || pay.paymentMethod || "—",
     date:      toFilterDate(pay.paymentDate || pay.createdAt || pay.paidAt),
     status:    pay.status || "—",
@@ -291,15 +309,16 @@ const TenantSingleBilling = () => {
     return true;
   }), [paymentData, paymentFilters]);
 
-  const buildInvoiceItems = (items, billingFrequency) => {
+  const buildInvoiceItems = (items, billingFrequency, currency) => {
     const rows = [];
     let n = 1;
     (items || []).forEach((item) => {
-      rows.push({ id: `${n++}`, description: item.description, rate: formatCurrency(item.rate?.price || 0), quantity: item.quantity, price: formatCurrency(item.price || 0) });
+      rows.push({ id: `${n++}`, description: item.description, rate: formatCurrency(item.rate?.price || 0, item.rate?.currency || currency), quantity: item.quantity, price: formatCurrency(item.price || 0, item.rate?.currency || currency) });
       (item.extraFeaturesWithPrice || []).forEach((feature) => {
         const isYearly = billingFrequency?.toLowerCase() === "yearly";
         const fp = isYearly ? feature.pricePerYear?.price || 0 : feature.pricePerMonth?.price || 0;
-        rows.push({ id: `${n++}`, description: "Add-on Feature", rate: formatCurrency(fp), quantity: item.quantity || 1, price: formatCurrency(fp * (item.quantity || 1)) });
+        const fc = (isYearly ? feature.pricePerYear?.currency : feature.pricePerMonth?.currency) || currency;
+        rows.push({ id: `${n++}`, description: "Add-on Feature", rate: formatCurrency(fp, fc), quantity: item.quantity || 1, price: formatCurrency(fp * (item.quantity || 1), fc) });
       });
     });
     return rows;
@@ -319,8 +338,8 @@ const TenantSingleBilling = () => {
         dueDate:          formatDateDisplay(data.dueDate),
         billingFrequency: data.billingFrequency,
         customerInfo:     data.customerInfo,
-        items:            buildInvoiceItems(data.items, data.billingFrequency),
-        total:            formatCurrency(data.total || 0),
+        items:            buildInvoiceItems(data.items, data.billingFrequency, data.currency),
+        total:            formatCurrency(data.total || 0, data.currency),
       });
       setShowInvoiceModal(true);
     } catch (err) {
@@ -353,7 +372,7 @@ const TenantSingleBilling = () => {
         "Payment ID": `PAY00${paymentId}`,
         "Payment Date": formatDateDisplay(paymentData.paymentDate),
         "Time of Payment": formatDateDisplay(paymentData.paymentTime),
-        "Payment Amount": paymentData.amount != null ? `$${Number(paymentData.amount).toLocaleString()}` : "N/A",
+        "Payment Amount": paymentData.amount != null ? formatMoney(paymentData.amount, paymentData.currency) : "N/A",
         "Payment Method": {
           icon: getPaymentIcon(paymentData.paymentMethod?.name),
           number: paymentData.paymentMethod?.code || "N/A",
@@ -384,8 +403,8 @@ const TenantSingleBilling = () => {
         dueDate: formatDateDisplay(data.dueDate),
         billingFrequency: data.billingFrequency,
         customerInfo: data.customerInfo,
-        items: buildInvoiceItems(data.items, data.billingFrequency),
-        total: formatCurrency(data.total || 0),
+        items: buildInvoiceItems(data.items, data.billingFrequency, data.currency),
+        total: formatCurrency(data.total || 0, data.currency),
       };
 
       const tempContainer = document.createElement("div");
