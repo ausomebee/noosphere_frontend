@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./Notifications.css";
 import DashboardLayout from "../../layouts/ClientLayout";
 import messageApi from "../../api/messageApi";
-import { emitNotificationRead, onNotification } from "../../api/socketService";
+import { emitNotificationRead, onNotification, onReconnect } from "../../api/socketService";
 import useAuth from "../../hooks/useAuth";
 import { getNotificationAction } from "../../Data/notificationConfig";
 import { formatDateHeader } from "../../Helper/Formatters";
@@ -46,9 +46,9 @@ const Notifications = () => {
   const [viewAppt, setViewAppt] = useState(null);
   const [opening, setOpening] = useState(false);
 
-  const loadNotifications = useCallback(() => {
+  const loadNotifications = useCallback(({ quiet = false } = {}) => {
     if (!userId || !accessToken) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     messageApi
       .GetNotifications({ userId, userType: "CLIENT", accessToken, refreshToken })
       .then((res) => {
@@ -64,6 +64,13 @@ const Notifications = () => {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // After the socket drops and comes back, anything pushed in between was
+  // missed. Reload in place — no spinner — so the list just catches up.
+  useEffect(
+    () => onReconnect(() => loadNotifications({ quiet: true })),
+    [loadNotifications]
+  );
 
   // Live updates: the socket pushes a "newNotification" whose payload uses the
   // same keys as the fetched list, so prepend it directly — no refresh needed.

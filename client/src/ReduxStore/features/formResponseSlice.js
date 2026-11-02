@@ -1,5 +1,6 @@
 // ReduxStore/features/formResponseSlice.js
 import { createSlice } from "@reduxjs/toolkit";
+import { logout } from "./authentication";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
@@ -142,6 +143,12 @@ const formResponseSlice = createSlice({
     },
 
     resetFormResponse: () => initialState,
+  },
+  // Drafts can hold client data. Clear them on logout: purging storage alone
+  // isn't enough, because redux-persist writes the in-memory slice straight
+  // back after the purge.
+  extraReducers: (builder) => {
+    builder.addCase(logout, () => initialState);
   },
 });
 

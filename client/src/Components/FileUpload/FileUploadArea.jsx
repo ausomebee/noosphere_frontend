@@ -10,7 +10,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoMdRefresh } from "react-icons/io";
 import uploadApi from "../../api/ImageUpload";
 import { showToast } from "../../Helper/ShowToast";
-import { useSelector } from "react-redux";
+import useAuth from "../../hooks/useAuth";
 
 const FileUploadArea = memo(
   ({
@@ -28,9 +28,7 @@ const FileUploadArea = memo(
     const [files, setFiles] = useState([]);
     const fileInputRef = useRef(null);
 
-    const { token: accessToken, refreshToken } = useSelector(
-      (s) => s.authentication?.user || {}
-    );
+    const { accessToken, refreshToken } = useAuth();
 
     /* ---------------- Load existing files ---------------- */
     useEffect(() => {

@@ -206,18 +206,38 @@ describe("loading both sections", () => {
     await waitFor(() => expect(screen.getByText("No document requests")).toBeInTheDocument());
   });
 
-  it("still loads the forms when the documents fetch fails", async () => {
+  // These used to assert the empty state ("No document requests" / "No form
+  // requests") on a failed fetch — the bug: a failure looked like nothing to do.
+  it("still loads the forms when the documents fetch fails, and shows the error", async () => {
     apiMock.GetAllRequestDocuments.mockRejectedValue(new Error("offline"));
     await renderPage();
     await waitFor(() => expect(screen.getByText("Intake questionnaire")).toBeInTheDocument());
-    expect(screen.getByText("No document requests")).toBeInTheDocument();
+    expect(screen.getByText("We couldn't load your document requests. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByText("No document requests")).toBeNull();
   });
 
-  it("still shows the documents when the forms fetch fails", async () => {
+  it("still shows the documents when the forms fetch fails, and shows the error", async () => {
     apiMock.GetAllClientForms.mockRejectedValue(new Error("offline"));
     await renderPage();
     await waitFor(() => expect(screen.getByText("Proof of address")).toBeInTheDocument());
-    expect(screen.getByText("No form requests")).toBeInTheDocument();
+    expect(screen.getByText("We couldn't load your forms. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByText("No form requests")).toBeNull();
+  });
+
+  it("retries the documents from the error", async () => {
+    apiMock.GetAllRequestDocuments.mockRejectedValueOnce(new Error("offline"));
+    await renderPage();
+    fireEvent.click(await screen.findByText("Try Again"));
+    await waitFor(() => expect(screen.getByText("Proof of address")).toBeInTheDocument());
+    expect(apiMock.GetAllRequestDocuments).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries the forms from the error", async () => {
+    apiMock.GetAllClientForms.mockRejectedValueOnce(new Error("offline"));
+    await renderPage();
+    fireEvent.click(await screen.findByText("Try Again"));
+    await waitFor(() => expect(screen.getByText("Intake questionnaire")).toBeInTheDocument());
+    expect(apiMock.GetAllClientForms).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -341,6 +361,16 @@ describe("attaching documents", () => {
       await modalProps.upload.onFilesReady(["https://x/a.pdf", "https://x/b.pdf"]);
     });
     expect(showToast).toHaveBeenCalledWith("2 documents attached successfully", "success");
+  });
+
+  it("refetches the badge counts once the attachment lands", async () => {
+    await openUpload();
+    await waitFor(() => expect(screen.getByText("2 new")).toBeInTheDocument());
+    const before = apiMock.GetCountsForDocumentRequests.mock.calls.length;
+    apiMock.GetCountsForDocumentRequests.mockResolvedValue(ok({ request: { PENDING: 5 }, overdue: 0 }));
+    await act(async () => { await modalProps.upload.onFilesReady(["https://x/a.pdf"]); });
+    expect(apiMock.GetCountsForDocumentRequests.mock.calls.length).toBe(before + 1);
+    await waitFor(() => expect(screen.getByText("5 new")).toBeInTheDocument());
   });
 
   it("reloads the request list once the attachment lands", async () => {

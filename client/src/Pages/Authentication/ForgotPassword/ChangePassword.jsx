@@ -55,7 +55,10 @@ const ChangePassword = () => {
       navigate("/");
     } catch (error) {
       console.error("Change password error:", error);
-      showToast("Failed to reset password. Please try again.", "error");
+      showToast(
+        error?.isNetworkError ? error.message : "Failed to reset password. Please try again.",
+        "error",
+      );
     } finally {
       setLoading(false);
     }

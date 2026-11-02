@@ -20,23 +20,22 @@ import useAuth from "./useAuth";
 const useSocket = ({ onMessage, onNotification: onNotif } = {}) => {
   const { userId, accessToken, tenantId } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
-  const initialized = useRef(false);
   // Keep callbacks in a ref so the effect doesn't re-run on every render
   const cbRef = useRef({ onMessage, onNotif });
   useEffect(() => { cbRef.current = { onMessage, onNotif }; }, [onMessage, onNotif]);
 
   useEffect(() => {
-    // Logged out — disconnect and reset so we can reconnect on next login
+    // Logged out — disconnect so the next login starts a fresh socket
     if (!userId || !accessToken) {
       disconnectSocket();
-      initialized.current = false;
       return;
     }
 
-    if (initialized.current) return;
-    initialized.current = true;
-
+    // Runs again on every token refresh. The cleanup below removed this run's
+    // listeners, so they must be re-attached each time — connectSocket hands
+    // back the same socket for the same user and just updates its token.
     const socket = connectSocket({ accessToken, userId, tenantId });
+    if (!socket) return;
 
     const handleConnect = () => {
       setIsConnected(true);

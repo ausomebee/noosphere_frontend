@@ -20,6 +20,7 @@ import api from "../../../api/documentsAndFormsApis";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 import SectionLoader from "../../../Components/SectionLoader";
+import ErrorFallback from "../../../Components/ErrorFallback";
 
 // Statuses arrive uppercase (PENDING / OVERDUE / UPLOADED). Matched exactly so
 // the "Pending upload" wording isn't mistaken for an upload, and uploaded
@@ -43,6 +44,8 @@ const DocumentRequests = () => {
 
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [loadingForms, setLoadingForms] = useState(true);
+  const [docsError, setDocsError] = useState(false);
+  const [formsError, setFormsError] = useState(false);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSelectModal, setShowSelectModal] = useState(false);
@@ -64,74 +67,101 @@ const DocumentRequests = () => {
     totalPages: Math.ceil(formsData.length / itemsPerPage) || 1,
   };
 
+  const formatDocs = (items) =>
+    (items || []).map((item) => ({
+      id: item.id,
+      name: item.name || "Unnamed Request",
+      description: item.description || "—",
+      allowMultiple: item.allowMultiple || false,
+      status: item.status || "PENDING",
+      statusColor: statusColorFor(item.status),
+      dueDate: item.dueDate,
+      createdAt: item.createdAt,
+      clientDocuments: item.clientDocuments || [],
+    }));
+
+  // The badge counts are secondary: if only they fail, the list still shows.
+  const loadDocumentCounts = async () => {
+    try {
+      const countsRes = await api.GetCountsForDocumentRequests({
+        clientTenantId,
+        accessToken,
+        refreshToken,
+      });
+      setCounts(countsRes.data?.data || { request: {}, overdue: 0 });
+    } catch (err) {
+      console.error("Document counts fetch error:", err);
+    }
+  };
+
+  // A failed load shows an error with a retry. It used to fall through to the
+  // empty state, telling the client they had nothing to do when we simply
+  // couldn't reach the server.
+  const loadDocuments = async () => {
+    setLoadingDocs(true);
+    setDocsError(false);
+    try {
+      const docsRes = await api.GetAllRequestDocuments({
+        clientTenantId,
+        accessToken,
+        refreshToken,
+      });
+      setDocumentRequests(formatDocs(docsRes.data?.data));
+    } catch (err) {
+      console.error("Documents fetch error:", err);
+      setDocsError(true);
+      setLoadingDocs(false);
+      return;
+    }
+    await loadDocumentCounts();
+    setLoadingDocs(false);
+  };
+
+  const loadForms = async () => {
+    setLoadingForms(true);
+    setFormsError(false);
+    try {
+      const formsRes = await api.GetAllClientForms({
+        clientTenantId,
+        accessToken,
+        refreshToken,
+      });
+
+      const formattedForms = (formsRes.data?.data || []).map((item) => ({
+        id: item.id,
+        formId: item.formId,
+        name: item.form?.name || "Unnamed Form",
+        dateReceived: item.createdAt ? formatDate(item.createdAt) : "—",
+        status: item.status || "PENDING",
+        statusColor: statusColorFor(item.status),
+      }));
+
+      setFormsData(formattedForms);
+    } catch (err) {
+      console.error("Forms fetch error:", err);
+      setFormsError(true);
+      setLoadingForms(false);
+      return;
+    }
+    try {
+      const formsCountsRes = await api.GetFormsCounts({
+        clientTenantId,
+        accessToken,
+        refreshToken,
+      });
+      setFormsCounts(formsCountsRes.data?.data || { forms: {}, overdue: 0 });
+    } catch (err) {
+      console.error("Forms counts fetch error:", err);
+    }
+    setLoadingForms(false);
+  };
+
   useEffect(() => {
     if (!clientTenantId || !accessToken || !refreshToken) return;
 
     const loadAllData = async () => {
-      setLoadingDocs(true);
-      try {
-        const docsRes = await api.GetAllRequestDocuments({
-          clientTenantId,
-          accessToken,
-          refreshToken,
-        });
-
-        const formattedDocs = (docsRes.data?.data || []).map((item) => ({
-          id: item.id,
-          name: item.name || "Unnamed Request",
-          description: item.description || "—",
-          allowMultiple: item.allowMultiple || false,
-          status: item.status || "PENDING",
-          statusColor: statusColorFor(item.status),
-          dueDate: item.dueDate,
-          createdAt: item.createdAt,
-          clientDocuments: item.clientDocuments || [],
-        }));
-
-        setDocumentRequests(formattedDocs);
-
-        const countsRes = await api.GetCountsForDocumentRequests({
-          clientTenantId,
-          accessToken,
-          refreshToken,
-        });
-        setCounts(countsRes.data?.data || { request: {}, overdue: 0 });
-      } catch (err) {
-        console.error("Documents fetch error:", err);
-      } finally {
-        setLoadingDocs(false);
-      }
-
-      setLoadingForms(true);
-      try {
-        const formsRes = await api.GetAllClientForms({
-          clientTenantId,
-          accessToken,
-          refreshToken,
-        });
-
-        const formattedForms = (formsRes.data?.data || []).map((item) => ({
-          id: item.id,
-          formId: item.formId,
-          name: item.form?.name || "Unnamed Form",
-          dateReceived: item.createdAt ? formatDate(item.createdAt) : "—",
-          status: item.status || "PENDING",
-          statusColor: statusColorFor(item.status),
-        }));
-
-        setFormsData(formattedForms);
-
-        const formsCountsRes = await api.GetFormsCounts({
-          clientTenantId,
-          accessToken,
-          refreshToken,
-        });
-        setFormsCounts(formsCountsRes.data?.data || { forms: {}, overdue: 0 });
-      } catch (err) {
-        console.error("Forms fetch error:", err);
-      } finally {
-        setLoadingForms(false);
-      }
+      await loadDocuments();
+      await loadForms();
     };
 
     loadAllData();
@@ -145,19 +175,7 @@ const DocumentRequests = () => {
         refreshToken,
       });
 
-      const formattedDocs = (res.data?.data || []).map((item) => ({
-        id: item.id,
-        name: item.name || "Unnamed Request",
-        description: item.description || "—",
-        allowMultiple: item.allowMultiple || false,
-        status: item.status || "PENDING",
-        statusColor: statusColorFor(item.status),
-        dueDate: item.dueDate,
-        createdAt: item.createdAt,
-        clientDocuments: item.clientDocuments || [],
-      }));
-
-      setDocumentRequests(formattedDocs);
+      setDocumentRequests(formatDocs(res.data?.data));
     } catch (err) {
       console.error("Refresh failed", err);
     }
@@ -210,7 +228,8 @@ const DocumentRequests = () => {
       setShowSelectModal(false);
       setActiveRequest(null);
 
-      await refreshDocuments();
+      // The "new" / overdue badges change with the attachment too
+      await Promise.all([refreshDocuments(), loadDocumentCounts()]);
     } catch (err) {
       console.error(err);
       showToast("Failed to attach documents", "error");
@@ -546,6 +565,11 @@ const DocumentRequests = () => {
 
         {loadingDocs ? (
           <SectionLoader />
+        ) : docsError ? (
+          <ErrorFallback
+            message="We couldn't load your document requests. Please try again."
+            onRetry={loadDocuments}
+          />
         ) : documentRequests.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />
@@ -589,6 +613,11 @@ const DocumentRequests = () => {
 
         {loadingForms ? (
           <SectionLoader />
+        ) : formsError ? (
+          <ErrorFallback
+            message="We couldn't load your forms. Please try again."
+            onRetry={loadForms}
+          />
         ) : formsData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentText size={48} className="empty-icon" />

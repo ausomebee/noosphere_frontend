@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { logout } from "../ReduxStore/features/authentication";
 import useAuth from "../hooks/useAuth";
 import useSocket from "../hooks/useSocket";
-import { disconnectSocket } from "../api/socketService";
+import { disconnectSocket, onReconnect } from "../api/socketService";
 import messageApi from "../api/messageApi";
 import { persistor } from "../ReduxStore/store";
 import useIdleTimeout from "../hooks/useIdleTimeout";
@@ -66,14 +66,19 @@ const DashboardLayout = ({ children }) => {
   // refreshes/logins (not just sockets fired during this session).
   useEffect(() => {
     if (!userId || !accessToken) return;
-    messageApi
-      .GetNotifications({ userId, userType: "CLIENT", accessToken, refreshToken })
-      .then((res) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
-        setNotifCount(list.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
+    const loadUnreadCount = () =>
+      messageApi
+        .GetNotifications({ userId, userType: "CLIENT", accessToken, refreshToken })
+        .then((res) => {
+          const raw = res?.data?.data ?? res?.data ?? res ?? [];
+          const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+          setNotifCount(list.filter((n) => !n.isRead).length);
+        })
+        .catch(() => {});
+    loadUnreadCount();
+    // A reconnect means pushes may have been missed while the socket was
+    // down, so recount from the server.
+    return onReconnect(loadUnreadCount);
   }, [userId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useIdleTimeout();

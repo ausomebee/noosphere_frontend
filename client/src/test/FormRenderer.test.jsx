@@ -700,9 +700,10 @@ describe("signatures", () => {
     ]);
   });
 
-  it("records an uploaded signature image", async () => {
-    const objectUrl = "blob:signature";
-    vi.spyOn(URL, "createObjectURL").mockReturnValue(objectUrl);
+  // Used to submit a `blob:` object URL, which means nothing off this tab; the
+  // image is now read into a data URL and that is what gets sent.
+  it("records an uploaded signature image as a data URL", async () => {
+    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:signature");
     await sigForm();
     await waitFor(() => expect(screen.getByText("Image")).toBeInTheDocument());
     fireEvent.click(screen.getByText("Image"));
@@ -719,10 +720,15 @@ describe("signatures", () => {
       expect(document.body.querySelector(".signature-preview")).toBeInTheDocument()
     );
 
+    expect(document.body.querySelector(".signature-preview").getAttribute("src")).toBe(
+      "data:image/png;base64,eA=="
+    );
+
     await act(async () => { submit(); });
     expect(createResponse.mock.calls[0][0].responseFields).toEqual([
-      { formFieldId: "f1", value: objectUrl },
+      { formFieldId: "f1", value: "data:image/png;base64,eA==" },
     ]);
+    expect(createObjectURL).not.toHaveBeenCalled();
   });
 
   it("ignores an image chooser dismissed without a file", async () => {
@@ -1156,6 +1162,11 @@ describe("odds and ends of the loader", () => {
 
   it("returns to the page the responder had reached", async () => {
     const store = makeStore();
+    // The saved page only counts for a draft of this same form and user.
+    store.dispatch({
+      type: "formResponse/initializeResponse",
+      payload: { formId: "form-1", tenantId: "t1", submittedBy: "tc1" },
+    });
     store.dispatch({ type: "formResponse/setCurrentPage", payload: 1 });
     getForm.mockResolvedValue({
       status: "ok",
@@ -1469,5 +1480,304 @@ describe("a second upload batch that fails as well", () => {
     });
     await waitFor(() => expect(screen.getAllByText("network down")).toHaveLength(2));
     expect(screen.getByText("a.pdf")).toBeInTheDocument();
+  });
+});
+
+// ─── Drafts that belong to a different form or user (#23 #47) ───────────────
+
+describe("a saved draft from somewhere else", () => {
+  const renderWithStore = (store, fields = [field()]) => {
+    getForm.mockResolvedValue(formResponse(fields));
+    return render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <FormRenderer />
+        </MemoryRouter>
+      </Provider>
+    );
+  };
+
+  const seed = (store, { formId, submittedBy = "tc1" }) =>
+    store.dispatch({
+      type: "formResponse/initializeResponse",
+      payload: { formId, tenantId: "t1", submittedBy },
+    });
+
+  it("starts fresh when the draft was for another form", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-0" });
+    store.dispatch({ type: "formResponse/setResponse", payload: { fieldId: "f1", value: "stale" } });
+    store.dispatch({ type: "formResponse/setSignature", payload: { fieldId: "sigX", signature: "Old Sig" } });
+    store.dispatch({ type: "formResponse/setCurrentPage", payload: 3 });
+
+    renderWithStore(store);
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
+    expect(input).toHaveValue("");
+    const draft = store.getState().formResponse;
+    expect(draft).toMatchObject({ formId: "form-1", responses: {}, signatures: {}, currentPage: 0 });
+  });
+
+  it("starts fresh when the draft belongs to another user", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-1", submittedBy: "someone-else" });
+    store.dispatch({ type: "formResponse/setResponse", payload: { fieldId: "f1", value: "theirs" } });
+
+    renderWithStore(store);
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
+    expect(input).toHaveValue("");
+    expect(store.getState().formResponse.submittedBy).toBe("tc1");
+  });
+
+  it("keeps the responder's own draft of this form", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-1" });
+    store.dispatch({ type: "formResponse/setResponse", payload: { fieldId: "f1", value: "mine" } });
+
+    renderWithStore(store);
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
+    expect(input).toHaveValue("mine");
+  });
+
+  it("never flashes another form's success screen while loading", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-0" });
+    store.dispatch({ type: "formResponse/markAsSubmitted", payload: { submissionId: "s0" } });
+    getForm.mockReturnValue(new Promise(() => {}));
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <FormRenderer />
+        </MemoryRouter>
+      </Provider>
+    );
+    await waitFor(() => expect(getForm).toHaveBeenCalled());
+    expect(screen.queryByText(/Form Submitted Successfully/)).toBeNull();
+    expect(store.getState().formResponse.submitted).toBe(false);
+  });
+
+  it("does not flash its own earlier success screen either", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-1" });
+    store.dispatch({ type: "formResponse/markAsSubmitted", payload: { submissionId: "s1" } });
+    getForm.mockReturnValue(new Promise(() => {}));
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <FormRenderer />
+        </MemoryRouter>
+      </Provider>
+    );
+    await waitFor(() => expect(getForm).toHaveBeenCalled());
+    expect(screen.queryByText(/Form Submitted Successfully/)).toBeNull();
+  });
+
+  it("only submits answers to this form's own fields", async () => {
+    const store = makeStore();
+    seed(store, { formId: "form-1" });
+    store.dispatch({ type: "formResponse/setResponse", payload: { fieldId: "f1", value: "Ada" } });
+    store.dispatch({ type: "formResponse/setResponse", payload: { fieldId: "ghost", value: "leftover" } });
+    store.dispatch({ type: "formResponse/setSignature", payload: { fieldId: "ghostSig", signature: "x" } });
+    store.dispatch({
+      type: "formResponse/setFilesForField",
+      payload: { fieldId: "ghostFile", fileItems: [{ url: "https://x/old.pdf" }] },
+    });
+
+    renderWithStore(store);
+    await waitForValue(() => document.body.querySelector('input[type="text"]'));
+    await act(async () => { submit(); });
+    expect(createResponse.mock.calls[0][0].responseFields).toEqual([
+      { formFieldId: "f1", value: "Ada" },
+    ]);
+  });
+});
+
+describe("the way back after submitting (#47)", () => {
+  it("goes to the documents page, a real route", async () => {
+    await renderForm();
+    const input = await waitForValue(() => document.body.querySelector('input[type="text"]'));
+    fireEvent.change(input, { target: { value: "Ada" } });
+    await act(async () => { submit(); });
+    fireEvent.click(await screen.findByText("Back to Forms"));
+    expect(navigate).toHaveBeenCalledWith("/documents");
+    expect(navigate).not.toHaveBeenCalledWith("/forms");
+  });
+});
+
+describe("a form that fails to load (#41)", () => {
+  it("shows an error with a retry instead of spinning forever", async () => {
+    getForm.mockRejectedValueOnce(new Error("offline"));
+    render(
+      <Provider store={makeStore()}>
+        <MemoryRouter>
+          <FormRenderer />
+        </MemoryRouter>
+      </Provider>
+    );
+    expect(await screen.findByText("We couldn't load this form. Please try again.")).toBeInTheDocument();
+
+    getForm.mockResolvedValue(formResponse([field()]));
+    fireEvent.click(screen.getByText("Try Again"));
+    await waitFor(() => expect(screen.getByText(/Full name/)).toBeInTheDocument());
+    expect(getForm).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("uploads matched by id, not position (#25)", () => {
+  const pdf = (name) => new File(["x"], name, { type: "application/pdf" });
+
+  it("lands each result on its own file when batches finish out of order", async () => {
+    const settles = [];
+    uploadImage.mockImplementation(() => new Promise((r) => settles.push(r)));
+    await renderForm([
+      field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "3" }] }),
+    ]);
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
+
+    await act(async () => { fireEvent.change(input, { target: { files: [pdf("a.pdf")] } }); });
+    await act(async () => { fireEvent.change(input, { target: { files: [pdf("b.pdf")] } }); });
+
+    // The second batch finishes first.
+    await act(async () => {
+      settles[1]({ success: true, data: [{ url: "https://x/b.pdf", filename: "b.pdf" }] });
+    });
+    await act(async () => {
+      settles[0]({ success: true, data: [{ url: "https://x/a.pdf", filename: "a.pdf" }] });
+    });
+
+    await waitFor(() => expect(screen.getAllByText("Uploaded successfully")).toHaveLength(2));
+    await act(async () => { submit(); });
+    expect(createResponse.mock.calls[0][0].responseFields).toEqual(
+      expect.arrayContaining([
+        { formFieldId: "f1", value: "https://x/a.pdf" },
+        { formFieldId: "f1", value: "https://x/b.pdf" },
+      ])
+    );
+  });
+
+  it("won't remove a file while it is still uploading", async () => {
+    let settle;
+    uploadImage.mockReturnValue(new Promise((r) => { settle = r; }));
+    await renderForm([
+      field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "3" }] }),
+    ]);
+    const input = await waitForValue(() => document.body.querySelector('input[type="file"]'));
+    await act(async () => { fireEvent.change(input, { target: { files: [pdf("a.pdf")] } }); });
+
+    expect(screen.getByLabelText("Remove file")).toBeDisabled();
+    await act(async () => {
+      settle({ success: true, data: [{ url: "https://x/a.pdf", filename: "a.pdf" }] });
+    });
+    await waitFor(() => expect(screen.getByLabelText("Remove file")).not.toBeDisabled());
+  });
+});
+
+describe("an upload cut off by a reload (#25 follow-up)", () => {
+  it("marks a restored row with no url and no error as interrupted, and lets it be removed", async () => {
+    const store = makeStore();
+    store.dispatch({
+      type: "formResponse/initializeResponse",
+      payload: { formId: "form-1", tenantId: "t1", submittedBy: "tc1" },
+    });
+    // What the persisted draft holds after the tab closed mid-upload.
+    store.dispatch({
+      type: "formResponse/setFilesForField",
+      payload: {
+        fieldId: "f1",
+        fileItems: [{ id: "old-1", filename: "a.pdf", progress: 0, url: null, error: false }],
+      },
+    });
+    getForm.mockResolvedValue(
+      formResponse([field({ fieldType: "fileUpload", label: "Attach", fileUpload: [{ maxFiles: "1" }] })])
+    );
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <FormRenderer />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    expect(await screen.findByText("Upload interrupted")).toBeInTheDocument();
+    const remove = screen.getByLabelText("Remove file");
+    expect(remove).not.toBeDisabled();
+    fireEvent.click(remove);
+    await waitFor(() => expect(screen.queryByText("a.pdf")).toBeNull());
+    expect(store.getState().formResponse.files.f1).toEqual([]);
+  });
+});
+
+describe("signature images are downscaled before storing (#24 follow-up)", () => {
+  const sigFormWithUpload = async () => {
+    await renderForm([field({ fieldType: "signature", label: "Sign", signature: [{ allowUpload: true }] })]);
+    fireEvent.click(await screen.findByText("Image"));
+    return waitForValue(() => document.body.querySelector(".signature-image-upload input"));
+  };
+
+  const bigImage = (bytes) => {
+    const f = new File(["x"], "photo.png", { type: "image/png" });
+    Object.defineProperty(f, "size", { value: bytes });
+    return f;
+  };
+
+  it("draws the image at most 600px wide, keeping its shape, and stores the PNG", async () => {
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage });
+    const toDataURL = vi
+      .spyOn(HTMLCanvasElement.prototype, "toDataURL")
+      .mockReturnValue("data:image/png;base64,small");
+    const sizes = [];
+    toDataURL.mockImplementation(function () {
+      sizes.push([this.width, this.height]);
+      return "data:image/png;base64,small";
+    });
+    class FakeImage {
+      width = 2400;
+      height = 1200;
+      set src(v) { this._src = v; setTimeout(() => this.onload?.(), 0); }
+      get src() { return this._src; }
+    }
+    vi.stubGlobal("Image", FakeImage);
+
+    const input = await sigFormWithUpload();
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [bigImage(4 * 1024 * 1024)] } });
+    });
+    await waitFor(() =>
+      expect(document.body.querySelector(".signature-preview")?.getAttribute("src")).toBe(
+        "data:image/png;base64,small"
+      )
+    );
+    expect(sizes).toEqual([[600, 300]]);
+    expect(toDataURL).toHaveBeenCalledWith("image/png");
+    expect(drawImage).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("refuses a large image when it can't be drawn, and says why", async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const input = await sigFormWithUpload();
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [bigImage(600 * 1024)] } });
+    });
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        "That image is too large. Please use one under 500 KB.",
+        "error"
+      )
+    );
+    expect(document.body.querySelector(".signature-preview")).toBeNull();
+  });
+
+  it("keeps a small image as-is when it can't be drawn", async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const input = await sigFormWithUpload();
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [bigImage(100 * 1024)] } });
+    });
+    await waitFor(() =>
+      expect(document.body.querySelector(".signature-preview")?.getAttribute("src")).toBe(
+        "data:image/png;base64,eA=="
+      )
+    );
   });
 });

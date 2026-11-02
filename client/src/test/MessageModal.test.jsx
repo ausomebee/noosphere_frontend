@@ -6,6 +6,9 @@ import { configureStore } from "@reduxjs/toolkit";
 const getClinicians = vi.fn();
 const getMessages = vi.fn();
 const markRead = vi.fn();
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock("../api/messageApi", () => ({
   default: {
     GetAssignedClinicians: (...a) => getClinicians(...a),
@@ -35,6 +38,10 @@ const register = (name) => (cb) => {
   return () => { delete listeners[name]; };
 };
 vi.mock("../api/socketService", () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   getSocket: () => (socketIsUp ? fakeSocket : null),
   sendChatMessage: (...a) => sendChatMessage(...a),
   emitTyping: (...a) => emitTyping(...a),
@@ -399,16 +406,52 @@ describe("sending", () => {
     await waitFor(() => expect(hasBubble("Hi doctor")).toBe(true));
   });
 
-  it("removes the bubble and complains when the send is refused", async () => {
+  // Previously the bubble was removed on failure, losing what the client typed.
+  it("keeps a refused message marked 'Not sent' and restores the typed text", async () => {
+    await renderModal();
+    await openConversation();
+    type("Hi doctor");
+    fireEvent.click(sendButton());
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false, error: "Timed out" }));
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith("Failed to send message", "error")
+    );
+    expect(hasBubble("Hi doctor")).toBe(true);
+    expect(screen.getByRole("button", { name: "Not sent – Retry" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Type a message")).toHaveValue("Hi doctor");
+  });
+
+  it("does not overwrite new typing when restoring a failed message", async () => {
+    await renderModal();
+    await openConversation();
+    type("Hi doctor");
+    fireEvent.click(sendButton());
+    type("Something else");
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    await waitFor(() => expect(showToast).toHaveBeenCalled());
+    expect(screen.getByLabelText("Type a message")).toHaveValue("Something else");
+  });
+
+  it("resends a failed message from its Retry button", async () => {
     await renderModal();
     await openConversation();
     type("Hi doctor");
     fireEvent.click(sendButton());
     act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
-    await waitFor(() =>
-      expect(showToast).toHaveBeenCalledWith("Failed to send message", "error")
+    fireEvent.click(await screen.findByRole("button", { name: "Not sent – Retry" }));
+
+    expect(sendChatMessage).toHaveBeenCalledTimes(2);
+    expect(sendChatMessage.mock.calls[1][0]).toMatchObject({ receiverId: DOC, content: "Hi doctor" });
+    expect(screen.queryByRole("button", { name: "Not sent – Retry" })).toBeNull();
+
+    act(() =>
+      sendChatMessage.mock.calls[1][1]({
+        success: true,
+        message: msg({ id: "real", senderId: ME, receiverId: DOC, content: "Hi doctor" }),
+      })
     );
-    expect(hasBubble("Hi doctor")).toBe(false);
+    await waitFor(() => expect(bubbles().filter((b) => b.includes("Hi doctor"))).toHaveLength(1));
+    expect(screen.queryByRole("button", { name: "Not sent – Retry" })).toBeNull();
   });
 
   it("treats a missing ack as a failure", async () => {
@@ -650,14 +693,16 @@ describe("shapes the API and the socket can also deliver", () => {
     expect(hasBubble("Hello for the first time")).toBe(true);
   });
 
-  it("removes a failed first message, leaving the conversation empty", async () => {
+  // Used to remove the bubble; a failed send now stays, offering a retry.
+  it("keeps a failed first message in the conversation with a retry", async () => {
     getMessages.mockResolvedValue({ data: { data: [] } });
     await renderModal();
     await pickFromDropdown();
     fireEvent.change(screen.getByLabelText("Type a message"), { target: { value: "Hi" } });
     fireEvent.click(document.body.querySelector(".msg-send-button"));
     act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
-    await waitFor(() => expect(hasBubble("Hi")).toBe(false));
+    await screen.findByRole("button", { name: "Not sent – Retry" });
+    expect(hasBubble("Hi")).toBe(true);
   });
 
   it("stops listening once the modal closes", async () => {
@@ -827,5 +872,117 @@ describe("a clinician the directory sent without an id", () => {
 
     expect(screen.getByText("Select a clinician to start messaging")).toBeInTheDocument();
     expect(emitMessagesRead).not.toHaveBeenCalled();
+  });
+});
+
+describe("catching up after the socket reconnects", () => {
+  it("reloads the history while open", async () => {
+    reconnectListeners.length = 0;
+    await renderModal();
+    await waitFor(() => expect(getMessages).toHaveBeenCalledTimes(1));
+
+    await act(async () => reconnectListeners.forEach((fn) => fn()));
+    await waitFor(() => expect(getMessages).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("unsent messages survive a reconnect reload", () => {
+  const type = (text) =>
+    fireEvent.change(screen.getByLabelText("Type a message"), { target: { value: text } });
+  const sendButton = () => document.body.querySelector(".msg-send-button");
+  const reconnect = () => act(async () => reconnectListeners.forEach((fn) => fn()));
+
+  beforeEach(() => {
+    reconnectListeners.length = 0;
+  });
+
+  it("keeps a 'Not sent' bubble when the history reloads", async () => {
+    await renderModal();
+    await openConversation();
+    type("Lost in transit");
+    fireEvent.click(sendButton());
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    await screen.findByRole("button", { name: "Not sent – Retry" });
+
+    await reconnect();
+    await waitFor(() => expect(getMessages).toHaveBeenCalledTimes(2));
+    expect(hasBubble("Lost in transit")).toBe(true);
+    expect(screen.getByRole("button", { name: "Not sent – Retry" })).toBeInTheDocument();
+    expect(hasBubble("Hello there")).toBe(true);
+  });
+
+  it("keeps a still-sending bubble when the history reloads", async () => {
+    await renderModal();
+    await openConversation();
+    type("Still going");
+    fireEvent.click(sendButton());
+
+    await reconnect();
+    await waitFor(() => expect(getMessages).toHaveBeenCalledTimes(2));
+    expect(hasBubble("Still going")).toBe(true);
+  });
+
+  it("drops the local copy once the reloaded history already has it", async () => {
+    await renderModal();
+    await openConversation();
+    type("Made it after all");
+    fireEvent.click(sendButton());
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    await screen.findByRole("button", { name: "Not sent – Retry" });
+
+    getMessages.mockResolvedValue({
+      data: {
+        data: [
+          msg(),
+          msg({ id: "srv", senderId: ME, receiverId: DOC, content: "Made it after all", createdAt: new Date().toISOString() }),
+        ],
+      },
+    });
+    await reconnect();
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Not sent – Retry" })).toBeNull());
+    expect(bubbles().filter((b) => b.includes("Made it after all"))).toHaveLength(1);
+  });
+});
+
+describe("avoiding a double send", () => {
+  const type = (text) =>
+    fireEvent.change(screen.getByLabelText("Type a message"), { target: { value: text } });
+  const sendButton = () => document.body.querySelector(".msg-send-button");
+
+  it("clears the restored text when Retry is pressed", async () => {
+    await renderModal();
+    await openConversation();
+    type("Hi doctor");
+    fireEvent.click(sendButton());
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    await waitFor(() => expect(screen.getByLabelText("Type a message")).toHaveValue("Hi doctor"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Not sent – Retry" }));
+    expect(screen.getByLabelText("Type a message")).toHaveValue("");
+  });
+
+  it("leaves other text in the input when Retry is pressed", async () => {
+    await renderModal();
+    await openConversation();
+    type("Hi doctor");
+    fireEvent.click(sendButton());
+    type("Something new");
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    fireEvent.click(await screen.findByRole("button", { name: "Not sent – Retry" }));
+    expect(screen.getByLabelText("Type a message")).toHaveValue("Something new");
+  });
+
+  it("replaces the failed bubble when the restored text is sent again", async () => {
+    await renderModal();
+    await openConversation();
+    type("Hi doctor");
+    fireEvent.click(sendButton());
+    act(() => sendChatMessage.mock.calls[0][1]({ success: false }));
+    await waitFor(() => expect(screen.getByLabelText("Type a message")).toHaveValue("Hi doctor"));
+
+    fireEvent.click(sendButton());
+    expect(sendChatMessage).toHaveBeenCalledTimes(2);
+    expect(bubbles().filter((b) => b.includes("Hi doctor"))).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Not sent – Retry" })).toBeNull();
   });
 });

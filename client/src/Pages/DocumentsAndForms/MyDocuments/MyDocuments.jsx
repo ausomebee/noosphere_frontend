@@ -24,6 +24,7 @@ import useAuth from "../../../hooks/useAuth";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { formatDate, formatDateShort } from "../../../Helper/Formatters";
 import SectionLoader from "../../../Components/SectionLoader";
+import ErrorFallback from "../../../Components/ErrorFallback";
 
 const MyDocuments = () => {
   const { tenantClientId: clientTenantId, accessToken, refreshToken } = useAuth();
@@ -49,6 +50,26 @@ const MyDocuments = () => {
   const [foldersLoading, setFoldersLoading] = useState(true);
   const [recentLoading, setRecentLoading] = useState(true);
   const [allFilesLoading, setAllFilesLoading] = useState(true);
+  // Which sections failed to load. A failure used to fall through to the
+  // empty state ("No files uploaded yet"), which reads as data loss.
+  const [loadErrors, setLoadErrors] = useState({});
+  const setLoadError = (key, failed) =>
+    setLoadErrors((prev) => ({ ...prev, [key]: failed }));
+  // A background refresh (after an upload) that fails keeps what is already
+  // on screen; the error card is only for a section with nothing to show.
+  const handleLoadFailure = (key, hasData) => {
+    if (hasData) {
+      showToast("Couldn't refresh your documents. Showing what was loaded before.", "error");
+      return;
+    }
+    setLoadError(key, true);
+  };
+  const retryLoad = () => {
+    setFoldersLoading(true);
+    setRecentLoading(true);
+    setAllFilesLoading(true);
+    refreshFiles();
+  };
 
   const [selectedFolder, setSelectedFolder] = useState(null);
 
@@ -82,9 +103,11 @@ const MyDocuments = () => {
           .GetAllFolders({ clientTenantId, accessToken, refreshToken })
           .then((res) => {
             setFoldersData(res?.data?.data || []);
+            setLoadError("folders", false);
           })
           .catch((err) => {
             console.error("Folders fetch failed:", err);
+            handleLoadFailure("folders", foldersData.length > 0);
           })
           .finally(() => setFoldersLoading(false)),
 
@@ -102,9 +125,11 @@ const MyDocuments = () => {
                 url: f.url || f.fileUrl || f.downloadUrl || f.previewUrl || "",
               })),
             );
+            setLoadError("recent", false);
           })
           .catch((err) => {
             console.error("Recent files fetch failed:", err);
+            handleLoadFailure("recent", recentFiles.length > 0);
           })
           .finally(() => setRecentLoading(false)),
 
@@ -121,9 +146,11 @@ const MyDocuments = () => {
                 url: f.url || f.fileUrl || f.downloadUrl || f.previewUrl || "",
               })),
             );
+            setLoadError("all", false);
           })
           .catch((err) => {
             console.error("All files fetch failed:", err);
+            handleLoadFailure("all", allFilesData.length > 0);
           })
           .finally(() => setAllFilesLoading(false)),
       ];
@@ -338,6 +365,11 @@ const MyDocuments = () => {
 
         {foldersLoading ? (
           <SectionLoader />
+        ) : loadErrors.folders ? (
+          <ErrorFallback
+            message="We couldn't load your folders. Please try again."
+            onRetry={retryLoad}
+          />
         ) : foldersData.length === 0 ? (
           <div className="empty-state">
             <IoFolderOpenOutline size={48} className="empty-icon" />
@@ -406,6 +438,11 @@ const MyDocuments = () => {
 
         {recentLoading ? (
           <SectionLoader />
+        ) : loadErrors.recent ? (
+          <ErrorFallback
+            message="We couldn't load your recent files. Please try again."
+            onRetry={retryLoad}
+          />
         ) : recentFiles.length === 0 ? (
           <div className="empty-state">
             <IoDocumentTextOutline size={48} className="empty-icon" />
@@ -450,6 +487,11 @@ const MyDocuments = () => {
 
         {allFilesLoading ? (
           <SectionLoader />
+        ) : loadErrors.all ? (
+          <ErrorFallback
+            message="We couldn't load your files. Please try again."
+            onRetry={retryLoad}
+          />
         ) : allFilesData.length === 0 ? (
           <div className="empty-state">
             <IoDocumentOutline size={48} className="empty-icon" />

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, waitFor, screen, fireEvent } from "@testing-library/react";
+import { render, waitFor, screen, fireEvent, act } from "@testing-library/react";
 import { DocumentViewerProvider } from "../hooks/useDocumentViewer";
 import useDocumentViewer from "../hooks/useDocumentViewer";
 
@@ -162,5 +162,67 @@ describe("resolving a stored link", () => {
       expect(screen.getByTestId("viewer-url").textContent).not.toBe("")
     );
     expect(images.getPresignedUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe("a presign that comes back late (#46)", () => {
+  const BUCKET_A = "https://s3.amazonaws.com/bucket/1699999999-a.png";
+  const BUCKET_B = "https://s3.amazonaws.com/bucket/1699999999-b.png";
+
+  const Consumer = () => {
+    const { openDocument, closeDocument } = useDocumentViewer();
+    return (
+      <div>
+        <button onClick={() => openDocument(BUCKET_A, "A")}>Open A</button>
+        <button onClick={() => openDocument(BUCKET_B, "B")}>Open B</button>
+        <button onClick={() => closeDocument()}>Close it</button>
+      </div>
+    );
+  };
+
+  const deferred = () => {
+    let resolve;
+    const promise = new Promise((r) => { resolve = r; });
+    return { promise, resolve };
+  };
+
+  it("does not reopen the viewer after it was closed", async () => {
+    const pending = deferred();
+    images.getPresignedUrl.mockReset();
+    images.getPresignedUrl.mockReturnValueOnce(pending.promise);
+    render(
+      <DocumentViewerProvider>
+        <Consumer />
+      </DocumentViewerProvider>
+    );
+    fireEvent.click(screen.getByText("Open A"));
+    expect(screen.getByTestId("document-viewer")).toBeInTheDocument();
+    expect(images.getPresignedUrl).toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Close it"));
+
+    await act(async () => { pending.resolve("https://signed/a"); await pending.promise; });
+    expect(screen.queryByTestId("document-viewer")).toBeNull();
+  });
+
+  it("does not swap in the first document after a second was opened", async () => {
+    const first = deferred();
+    images.getPresignedUrl.mockReset();
+    images.getPresignedUrl
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValueOnce("https://signed/b");
+    render(
+      <DocumentViewerProvider>
+        <Consumer />
+      </DocumentViewerProvider>
+    );
+    fireEvent.click(screen.getByText("Open A"));
+    fireEvent.click(screen.getByText("Open B"));
+    await waitFor(() =>
+      expect(screen.getByTestId("viewer-url").textContent).toBe("https://signed/b")
+    );
+
+    await act(async () => { first.resolve("https://signed/a"); await first.promise; });
+    expect(screen.getByTestId("viewer-url").textContent).toBe("https://signed/b");
+    expect(screen.getByTestId("viewer-name").textContent).toBe("B");
   });
 });

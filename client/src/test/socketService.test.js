@@ -6,7 +6,10 @@ const mockSocket = {
   on: vi.fn(),
   off: vi.fn(),
   emit: vi.fn(),
+  connect: vi.fn(),
   disconnect: vi.fn(),
+  // Chat sends go through socket.timeout(ms).emit(...)
+  timeout: vi.fn(() => mockSocket),
 };
 
 vi.mock("socket.io-client", () => ({
@@ -76,7 +79,10 @@ describe("socketService", () => {
       sendChatMessage({ senderId: "u1", receiverId: "u2", content: "hello" }, callback);
       expect(mockSocket.emit).toHaveBeenCalledWith("chatMessage", expect.objectContaining({
         senderId: "u1", receiverId: "u2", content: "hello",
-      }), callback);
+      }), expect.any(Function));
+      // The ack wrapper hands the server's reply through unchanged.
+      mockSocket.emit.mock.calls.at(-1)[2](null, { success: true });
+      expect(callback).toHaveBeenCalledWith({ success: true });
     });
   });
 

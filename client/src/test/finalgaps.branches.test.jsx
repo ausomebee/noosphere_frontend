@@ -79,9 +79,18 @@ describe("ClientForgetPassword messaging", () => {
   });
 
   it("falls back to its own wording when the backend sends none", async () => {
-    axiosPatch.mockRejectedValue(new Error("network down"));
+    axiosPatch.mockRejectedValue({ response: { status: 500, data: {} } });
     await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).rejects.toThrow(
       "Forget Password Email failed"
+    );
+  });
+
+  // A rejection with no response used to fall into the case above; it now says
+  // the server couldn't be reached.
+  it("says the server couldn't be reached when nothing came back", async () => {
+    axiosPatch.mockRejectedValue(new Error("network down"));
+    await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).rejects.toThrow(
+      "Can't reach the server. Check your connection and try again."
     );
   });
 
