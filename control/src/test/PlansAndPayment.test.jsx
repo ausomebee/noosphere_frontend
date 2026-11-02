@@ -800,8 +800,10 @@ describe('creating a plan', () => {
       pricePerMonth: { price: 2, currency: 'GBP' },
       pricePerYear: { price: 20, currency: 'USD' },
     });
+    // The dialog closes and the list refetches only after the create request
+    // settles, which can land a tick after the call itself on a slow runner.
+    await waitFor(() => expect(screen.queryByTestId('create-modal')).not.toBeInTheDocument());
     expect(mocks.showToast).toHaveBeenCalledWith('Plan created successfully', 'success');
-    expect(screen.queryByTestId('create-modal')).not.toBeInTheDocument();
     expect(mocks.billing.GetPlanByPlanType).toHaveBeenCalledTimes(2);
   });
 
@@ -967,8 +969,9 @@ describe('editing a plan', () => {
       price: 0,
       currency: 'USD',
     });
+    // Closes only after the update request settles.
+    await waitFor(() => expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument());
     expect(mocks.showToast).toHaveBeenCalledWith('Plan updated successfully', 'success');
-    expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument();
   });
 
   it('rejects an update with no pricing', async () => {
@@ -1148,8 +1151,9 @@ describe('activating and deactivating', () => {
         expect.objectContaining({ id: 'p1', active: true, administratorPassword: 'hunter2' })
       )
     );
+    // Closes only after the status request settles.
+    await waitFor(() => expect(screen.queryByTestId('status-modal')).not.toBeInTheDocument());
     expect(mocks.showToast).toHaveBeenCalledWith('Plan activated successfully', 'success');
-    expect(screen.queryByTestId('status-modal')).not.toBeInTheDocument();
   });
 
   it('deactivates an enterprise plan', async () => {
