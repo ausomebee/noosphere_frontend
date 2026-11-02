@@ -96,6 +96,60 @@ describe('printTableData', () => {
   });
 });
 
+describe('printTableData escaping', () => {
+  const capture = () => {
+    const writeMock = vi.fn();
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: { write: writeMock, close: vi.fn() },
+      print: vi.fn(),
+    });
+    return () => writeMock.mock.calls[0][0];
+  };
+
+  it('writes markup in cells, headers and the title as text, not HTML', () => {
+    const html = capture();
+    printTableData(
+      [{ name: '<img src=x onerror="alert(1)">' }],
+      [{ key: 'name', header: '<b>Name</b>' }],
+      "</title><script>alert('t')</script>"
+    );
+    const out = html();
+    expect(out).not.toContain('<img');
+    expect(out).not.toContain('<script>');
+    expect(out).not.toContain('<b>');
+    expect(out).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
+    expect(out).toContain('&lt;b&gt;Name&lt;/b&gt;');
+    expect(out).toContain('&lt;/title&gt;&lt;script&gt;alert(&#39;t&#39;)&lt;/script&gt;');
+  });
+
+  it('escapes key/value rows too', () => {
+    const html = capture();
+    printTableData({ '<k>': '<v>', nested: { a: '<x>' } }, [], 'KV');
+    const out = html();
+    expect(out).toContain('<td>&lt;k&gt;</td><td>&lt;v&gt;</td>');
+    expect(out).toContain('{&quot;a&quot;:&quot;&lt;x&gt;&quot;}');
+  });
+
+  it('leaves ordinary text exactly as before', () => {
+    const html = capture();
+    printTableData(
+      [{ name: 'John', count: 0, missing: null }],
+      [
+        { key: 'name', header: 'Name' },
+        { key: 'count', header: 'Count' },
+        { key: 'missing', header: 'Missing' },
+      ],
+      'Tenants'
+    );
+    const out = html();
+    expect(out).toContain('<title>Tenants</title>');
+    expect(out).toContain('<h1>Tenants</h1>');
+    expect(out).toContain('<th>S/N</th><th>Name</th><th>Count</th><th>Missing</th>');
+    // Falsy values still print as empty cells, as they always have.
+    expect(out).toContain('<tr><td>1</td><td>John</td><td></td><td></td></tr>');
+  });
+});
+
 describe('exportTableToPDF', () => {
   it('generates PDF with columns', async () => {
     const saveMock = vi.fn();

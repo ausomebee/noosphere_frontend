@@ -1,5 +1,6 @@
 // ReduxStore/features/formBuilderSlice.js
 import { createSlice } from "@reduxjs/toolkit";
+import { logout } from "./authentication";
 
 const initialState = {
   formName: "Untitled Form",
@@ -319,6 +320,12 @@ const formBuilderSlice = createSlice({
 
     // Clear form state
     resetForm: () => initialState,
+  },
+  // Drafts can hold client data. Clear them on logout: purging storage alone
+  // isn't enough, because redux-persist writes the in-memory slice straight
+  // back after the purge.
+  extraReducers: (builder) => {
+    builder.addCase(logout, () => initialState);
   },
 });
 

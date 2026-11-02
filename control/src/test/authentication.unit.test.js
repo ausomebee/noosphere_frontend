@@ -5,6 +5,8 @@ import authReducer, {
   updateAccessToken,
   AdminLogin,
   OnboardAdmin,
+  setPending2FARoute,
+  complete2FA,
 } from '../ReduxStore/features/authentication';
 
 vi.mock('../api/authApis', () => ({
@@ -168,6 +170,67 @@ describe('authentication slice', () => {
         payload: 'Onboarding failed',
       });
       expect(store.getState().authentication.error).toBe('Onboarding failed');
+    });
+  });
+
+  describe('pending 2FA', () => {
+    // The login response already carries full tokens; pending2FA keeps the
+    // app locked until the 2FA step is done.
+    const tokens = { id: 'u1', accessToken: 'at', refreshToken: 'rt' };
+
+    it('starts unlocked', () => {
+      const state = createStore().getState().authentication;
+      expect(state.pending2FA).toBe(false);
+      expect(state.pending2FARoute).toBeNull();
+    });
+
+    it('locks the app when the password step succeeds', () => {
+      for (const thunk of [AdminLogin, OnboardAdmin]) {
+        const store = createStore();
+        store.dispatch({ type: thunk.fulfilled.type, payload: { data: tokens } });
+        const state = store.getState().authentication;
+        expect(state.isAuthenticated).toBe(true);
+        expect(state.pending2FA).toBe(true);
+        expect(state.pending2FARoute).toBeNull();
+      }
+    });
+
+    it('records the 2FA page to finish, and unlocks once it is done', () => {
+      const store = createStore();
+      store.dispatch({ type: AdminLogin.fulfilled.type, payload: { data: tokens } });
+      store.dispatch(setPending2FARoute('/SA/2fa-question/login'));
+      expect(store.getState().authentication.pending2FARoute).toBe('/SA/2fa-question/login');
+
+      store.dispatch(complete2FA());
+      const state = store.getState().authentication;
+      expect(state.pending2FA).toBe(false);
+      expect(state.pending2FARoute).toBeNull();
+      expect(state.isAuthenticated).toBe(true);
+    });
+
+    it('is cleared by logout', () => {
+      const store = createStore();
+      store.dispatch({ type: AdminLogin.fulfilled.type, payload: { data: tokens } });
+      store.dispatch(setPending2FARoute('/2fa/choice'));
+      store.dispatch(logout());
+      const state = store.getState().authentication;
+      expect(state.pending2FA).toBe(false);
+      expect(state.pending2FARoute).toBeNull();
+    });
+
+    it('rejects a login that never reached the server with the network message', async () => {
+      const unreachable = new Error(
+        "Can't reach the server. Check your connection and try again."
+      );
+      unreachable.isNetworkError = true;
+      api.AdminLogin.mockRejectedValueOnce(unreachable);
+      const store = createStore();
+      const result = await store.dispatch(AdminLogin({ email: 'a@b.co', password: 'pw' }));
+      expect(result.payload).toBe(
+        "Can't reach the server. Check your connection and try again."
+      );
+      // The thunk settled, so the submit button is usable again.
+      expect(store.getState().authentication.loading).toBe(false);
     });
   });
 });

@@ -340,6 +340,20 @@ describe('loading and initial fetch', () => {
     expect(screen.getByText('No payment methods on file.')).toBeInTheDocument();
     expect(screen.getByTestId('table-rows')).toHaveTextContent('0');
     expect(screen.getByText('0 out of 0 used')).toBeInTheDocument();
+    // allSettled swallowed these; the page now says the data didn't load.
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA');
+  });
+
+  it('reports one failed request even when the others load', async () => {
+    mocks.tenantApi.GetTenantPayments.mockRejectedValue(new Error('c'));
+    await renderBilling();
+    expect(mocks.showApiError).toHaveBeenCalledTimes(1);
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_BILLING_DATA');
+  });
+
+  it('stays quiet when everything loads', async () => {
+    await renderBilling();
+    expect(mocks.showApiError).not.toHaveBeenCalled();
   });
 
   it('treats a response with neither data nor an array as an empty list', async () => {
@@ -589,13 +603,50 @@ describe('sub tabs', () => {
     expect(screen.getByTestId('table-rows')).toHaveTextContent('1');
   });
 
-  it('empties the invoice table when the status request fails', async () => {
+  it('empties the invoice table and says why when the status request fails', async () => {
     mocks.tenantApi.GetTenantInvoicesByStatus.mockRejectedValue(new Error('x'));
     await renderBilling();
     await act(async () => {
       fireEvent.click(subTab('Overdue'));
     });
     expect(screen.getByTestId('table-rows')).toHaveTextContent('0');
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_INVOICES');
+  });
+
+  it('drops a status answer for a tab the user already left', async () => {
+    let releasePaid;
+    mocks.tenantApi.GetTenantInvoicesByStatus.mockImplementation(({ status }) =>
+      status === 'Paid'
+        ? new Promise((resolve) => { releasePaid = resolve; })
+        : Promise.resolve({ data: { data: [] } })
+    );
+    await renderBilling();
+    fireEvent.click(subTab('Paid'));
+    await act(async () => {
+      fireEvent.click(subTab('Overdue'));
+    });
+    expect(screen.getByTestId('table-rows')).toHaveTextContent('0');
+    // The Paid answer lands last; it must not replace the Overdue list.
+    await act(async () => {
+      releasePaid({ data: { data: [INVOICES[0]] } });
+    });
+    expect(screen.getByTestId('table-rows')).toHaveTextContent('0');
+  });
+
+  it('drops a late status answer once the user is back on All', async () => {
+    let releasePaid;
+    mocks.tenantApi.GetTenantInvoicesByStatus.mockImplementation(
+      () => new Promise((resolve) => { releasePaid = resolve; })
+    );
+    await renderBilling();
+    fireEvent.click(subTab('Paid'));
+    fireEvent.click(subTab('All'));
+    expect(screen.getByTestId('table-rows')).toHaveTextContent('2');
+    await act(async () => {
+      releasePaid({ data: { data: [] } });
+    });
+    expect(screen.getByTestId('table-rows')).toHaveTextContent('2');
+    expect(screen.queryByTestId('table-loading')).toBeNull();
   });
 
   it('restores the full invoice list on the All tab without refetching', async () => {
@@ -622,7 +673,7 @@ describe('sub tabs', () => {
     expect(screen.getByTestId('table-rows')).toHaveTextContent('1');
   });
 
-  it('empties the payment table when the status request fails', async () => {
+  it('empties the payment table and says why when the status request fails', async () => {
     mocks.tenantApi.GetTenantPaymentsByStatus.mockRejectedValue(new Error('x'));
     await renderBilling();
     fireEvent.click(screen.getByText('Payments'));
@@ -630,6 +681,7 @@ describe('sub tabs', () => {
       fireEvent.click(subTab('In Progress'));
     });
     expect(screen.getByTestId('table-rows')).toHaveTextContent('0');
+    expect(mocks.showApiError).toHaveBeenCalledWith(expect.any(Error), 'LOAD_PAYMENTS');
   });
 
   it('restores the full payment list on the All tab', async () => {
@@ -844,7 +896,7 @@ describe('viewing an invoice', () => {
       expect.objectContaining({ id: 'inv-fallback' })
     );
     expect(screen.getByTestId('invoice-id')).toHaveTextContent('INV-77');
-    expect(screen.getByTestId('invoice-total')).toHaveTextContent('$1,500');
+    expect(screen.getByTestId('invoice-total')).toHaveTextContent('$1,500.00');
   });
 
   it('prices an add-on per month for a monthly invoice', async () => {
@@ -853,8 +905,8 @@ describe('viewing an invoice', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('act-0-View Invoice'));
     });
-    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Seats|$100|2|$200');
-    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$25|2|$50');
+    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Seats|$100.00|2|$200.00');
+    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$25.00|2|$50.00');
   });
 
   it('prices an add-on per year for a yearly invoice', async () => {
@@ -865,7 +917,7 @@ describe('viewing an invoice', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('act-0-View Invoice'));
     });
-    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$250|2|$500');
+    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$250.00|2|$500.00');
   });
 
   it('zeroes an add-on with no price and defaults the quantity to one', async () => {
@@ -879,8 +931,8 @@ describe('viewing an invoice', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('act-0-View Invoice'));
     });
-    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Base|$0||$0');
-    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$0|1|$0');
+    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Base|$0.00||$0.00');
+    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$0.00|1|$0.00');
   });
 
   it('renders no line items when the invoice carries none', async () => {
@@ -971,7 +1023,7 @@ describe('viewing a payment', () => {
     });
     expect(screen.getByTestId('payment-period')).toHaveTextContent('Jan 1, 2026 - Feb 1, 2026');
     expect(screen.getByTestId('payment-ref')).toHaveTextContent('PAY00pay-1');
-    expect(screen.getByTestId('payment-amount')).toHaveTextContent('$120');
+    expect(screen.getByTestId('payment-amount')).toHaveTextContent('$120.00');
     expect(screen.getByTestId('payment-card')).toHaveTextContent('**** 1111');
     expect(screen.getByTestId('payment-invoice')).toHaveTextContent('0042');
   });
@@ -1167,7 +1219,7 @@ describe('fallbacks the happy path never reaches', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('act-0-View Invoice'));
     });
-    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Seats|$0|1|$10');
+    expect(screen.getByTestId('invoice-item-1')).toHaveTextContent('Seats|$0.00|1|$10.00');
     expect(screen.queryByTestId('invoice-item-2')).toBeNull();
   });
 
@@ -1183,7 +1235,7 @@ describe('fallbacks the happy path never reaches', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('act-0-View Invoice'));
     });
-    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$0|2|$0');
+    expect(screen.getByTestId('invoice-item-2')).toHaveTextContent('Add-on Feature|$0.00|2|$0.00');
   });
 
   it('downloads an invoice whose response has no body', async () => {
@@ -1193,5 +1245,16 @@ describe('fallbacks the happy path never reaches', () => {
       fireEvent.click(screen.getByTestId('act-0-Download Invoice'));
     });
     await waitFor(() => expect(mocks.pdfSave).toHaveBeenCalledWith('invoice_inv-1.pdf'));
+  });
+});
+
+describe('money in rows', () => {
+  it('keeps a negative amount negative and in the record currency', async () => {
+    mocks.tenantApi.GetTenantPayments.mockImplementation(() =>
+      settle({ data: [{ ...PAYMENTS[0], amount: -45.5, currency: 'GBP' }] })
+    );
+    await renderBilling();
+    fireEvent.click(screen.getByText('Payments'));
+    expect(cell(0, 'amount')).toBe('-£45.50');
   });
 });

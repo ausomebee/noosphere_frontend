@@ -209,16 +209,16 @@ describe('where the admin lands', () => {
     expect(navigate).toHaveBeenCalledWith('/');
   });
 
-  it('leaves an already-enrolled admin where they are when 2FA is optional', async () => {
+  it('sends an already-enrolled admin to sign in when 2FA is optional', async () => {
     api.AdminSetPassword.mockResolvedValue(
       setPasswordResponse({ auth2FADone: true })
     );
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    // None of the three arms match this combination, so the password is saved
-    // and the screen simply stays put.
+    // None of the three named arms match this combination; it used to leave
+    // the admin stuck here after the toast, so it now falls back to sign-in.
     expect(showToast).toHaveBeenCalledWith('Password updated successfully!', 'success');
-    expect(navigate).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 });
 
@@ -281,6 +281,29 @@ describe('a refused update', () => {
     await submitValid();
     expect(spy).not.toHaveBeenCalled();
     expect(showToast).toHaveBeenCalledWith('Failed to update password.', 'error');
+  });
+
+  it('keeps its own wording for what the API helper really throws on a refusal', async () => {
+    // AdminSetPassword re-throws a plain Error carrying its own fallback text;
+    // the page shows its usual wording, not "Password setting failed".
+    api.AdminSetPassword.mockRejectedValue(new Error('Password setting failed'));
+    render(<ForgotPasswordResetPassword />);
+    await submitValid();
+    expect(showToast).toHaveBeenCalledWith('Failed to update password.', 'error');
+  });
+
+  it('says the server could not be reached when the call never got an answer', async () => {
+    const unreachable = new Error(
+      "Can't reach the server. Check your connection and try again."
+    );
+    unreachable.isNetworkError = true;
+    api.AdminSetPassword.mockRejectedValue(unreachable);
+    render(<ForgotPasswordResetPassword />);
+    await submitValid();
+    expect(showToast).toHaveBeenCalledWith(
+      "Can't reach the server. Check your connection and try again.",
+      'error'
+    );
   });
 
   it('frees the button again once the failure is reported', async () => {

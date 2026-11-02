@@ -5,6 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 
 const state = vi.hoisted(() => ({
   authenticated: true,
+  pending2FA: false,
+  pending2FARoute: null,
   moduleAccess: true,
   showToast: vi.fn(),
   hasModuleAccess: vi.fn(),
@@ -17,7 +19,11 @@ const stub = vi.hoisted(() => (testId) => ({
 }));
 
 vi.mock('../hooks/useAuth', () => ({
-  default: () => ({ isAuthenticated: state.authenticated }),
+  default: () => ({
+    isAuthenticated: state.authenticated,
+    pending2FA: state.pending2FA,
+    pending2FARoute: state.pending2FARoute,
+  }),
 }));
 vi.mock('../hooks/usePermission', () => ({
   default: () => ({ hasModuleAccess: (key) => state.hasModuleAccess(key) }),
@@ -136,6 +142,8 @@ const reload = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   state.authenticated = true;
+  state.pending2FA = false;
+  state.pending2FARoute = null;
   state.moduleAccess = true;
   state.hasModuleAccess.mockImplementation(() => state.moduleAccess);
   sessionStorage.clear();
@@ -171,6 +179,39 @@ describe('the public routes', () => {
   it('falls through to the not-found page for an unknown path', async () => {
     await renderAt('/nowhere-at-all');
     expect(await screen.findByText('Page not found')).toBeInTheDocument();
+  });
+});
+
+describe('an admin who still owes a 2FA step', () => {
+  // Signed in with full tokens, but the password step alone is not enough.
+  beforeEach(() => {
+    state.pending2FA = true;
+    state.pending2FARoute = '/SA/2fa-authentication/login';
+  });
+
+  it('is sent back to their 2FA page from an inside URL', async () => {
+    await renderAt('/issues');
+    expect(await screen.findByTestId('2fa-authenticator-login')).toBeInTheDocument();
+    expect(screen.queryByTestId('issues')).not.toBeInTheDocument();
+  });
+
+  it('is sent to sign in when no 2FA page was recorded', async () => {
+    state.pending2FARoute = null;
+    await renderAt('/tenants/pipeline');
+    expect(await screen.findByTestId('login')).toBeInTheDocument();
+    expect(screen.queryByTestId('tenant-pipeline')).not.toBeInTheDocument();
+  });
+
+  it('gets in once 2FA is finished', async () => {
+    state.pending2FA = false;
+    state.pending2FARoute = null;
+    await renderAt('/issues');
+    expect(await screen.findByTestId('issues')).toBeInTheDocument();
+  });
+
+  it('can still open a public payment link', async () => {
+    await renderAt('/payment/pay-token-9', { payment: () => stub('payment') });
+    expect(await screen.findByTestId('payment')).toBeInTheDocument();
   });
 });
 

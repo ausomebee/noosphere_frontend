@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer, { AdminLogin } from "../ReduxStore/features/authentication";
+import authReducer, {
+  AdminLogin,
+  clearPending2FA,
+  setPending2FARoute,
+} from "../ReduxStore/features/authentication";
 
 /**
  * The tenant admin login screen. Signing in is two lines of it; the rest is a
@@ -167,6 +171,18 @@ describe("when the tenant has 2FA switched off entirely", () => {
     });
   });
 
+  it("lets the session into the app — 2FA is not left pending", async () => {
+    await loginUnder({
+      choices: { ...POLICY_OFF, isEnabled: false },
+      user: { auth2FADone: true, authType: "AUTHENTICATOR" },
+    });
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/dashboard"));
+    expect(dispatch).toHaveBeenCalledWith(clearPending2FA());
+    expect(dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: setPending2FARoute.type })
+    );
+  });
+
   it("still enforces 2FA when the master switch is merely absent", async () => {
     // Only an explicit `false` skips 2FA; `undefined` must not.
     await loginUnder({
@@ -266,6 +282,11 @@ describe("routing a user who is already enrolled", () => {
     await waitFor(() =>
       expect(navigate).toHaveBeenCalledWith("/auth/2fa/login-authenticator")
     );
+    // The guards keep the session on this page until the challenge passes.
+    expect(dispatch).toHaveBeenCalledWith(
+      setPending2FARoute("/auth/2fa/login-authenticator")
+    );
+    expect(dispatch).not.toHaveBeenCalledWith(clearPending2FA());
   });
 
   it("sends them to the security-question challenge", async () => {

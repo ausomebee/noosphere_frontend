@@ -10,7 +10,10 @@ const getNotifications = async ({ userId, userType = "TENANT_STAFF", accessToken
     );
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Failed to load notifications");
+    const wrapped = new Error(error.response?.data?.message || "Failed to load notifications");
+    // Kept so callers can treat "no notifications" (404) as an empty list.
+    wrapped.status = error.response?.status;
+    throw wrapped;
   }
 };
 

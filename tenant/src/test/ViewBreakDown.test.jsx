@@ -404,13 +404,57 @@ describe("mapping a staff record onto a row", () => {
     );
   });
 
-  it("shows the empty state rather than an error when the roster endpoint rejects", async () => {
-    apiMock.GetPayrollCycleStaffs.mockRejectedValue(new Error("down"));
+  it("shows the empty state rather than an error when the cycle has no staff (404)", async () => {
+    apiMock.GetPayrollCycleStaffs.mockRejectedValue(
+      Object.assign(new Error("Request failed with status code 404"), { status: 404 })
+    );
     renderPage();
     await waitFor(() =>
       expect(screen.getByText(/No staff in this payroll yet/)).toBeInTheDocument()
     );
+    expect(screen.queryByText("Oops!")).not.toBeInTheDocument();
     expect(toastMock.showApiError).not.toHaveBeenCalled();
+  });
+
+  // The empty-cycle reply was never pinned down, so anything that looks like
+  // "nobody here yet" still reads as an empty cycle, as it always did.
+  it.each([
+    ["a 400", { status: 400 }],
+    ["a 422", { status: 422 }],
+    ["a 5xx that says there is no staff", { status: 500, serverMessage: "No staff found for this payroll cycle" }],
+    ["a 5xx that says not found", { status: 500, serverMessage: "Payroll cycle staff not found" }],
+  ])("treats %s as an empty cycle", async (_label, extra) => {
+    apiMock.GetPayrollCycleStaffs.mockRejectedValue(Object.assign(new Error("x"), extra));
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByText(/No staff in this payroll yet/)).toBeInTheDocument()
+    );
+    expect(screen.queryByText("Oops!")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a server error", { status: 500, serverMessage: "Internal server error" }],
+    ["a 503", { status: 503 }],
+    ["an expired session", { status: 401 }],
+    ["a forbidden reply", { status: 403 }],
+  ])("shows an error for %s", async (_label, extra) => {
+    apiMock.GetPayrollCycleStaffs.mockRejectedValue(Object.assign(new Error("x"), extra));
+    renderPage();
+    expect(await screen.findByText("Oops!")).toBeInTheDocument();
+  });
+
+  // Any other failure used to show the same empty cycle, which an admin could
+  // mistake for a cycle with nobody on it.
+  it("shows an error with a retry when the roster fails to load", async () => {
+    apiMock.GetPayrollCycleStaffs.mockRejectedValue(new Error("down"));
+    renderPage();
+    expect(await screen.findByText("Oops!")).toBeInTheDocument();
+    expect(screen.queryByText(/No staff in this payroll yet/)).not.toBeInTheDocument();
+
+    apiMock.GetPayrollCycleStaffs.mockResolvedValue({ data: [cycleStaff()] });
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(await screen.findByText("Grace Hopper")).toBeInTheDocument();
+    expect(screen.queryByText("Oops!")).not.toBeInTheDocument();
   });
 
   it("leaves the cycle metadata alone when the first staff record has no cycle", async () => {
@@ -918,5 +962,83 @@ describe("exporting a cycle that never named a date", () => {
 
     fireEvent.mouseDown(document.body.querySelector(".action-menu .action-button"));
     expect(screen.getByText("Export as CSV")).toBeInTheDocument();
+  });
+});
+
+// Adding or removing staff reloads the roster, which used to silently throw
+// away income/deduction edits that hadn't been submitted yet.
+describe("adding or removing staff with unsaved edits", () => {
+  const editThen = async () => {
+    renderPage();
+    await rosterLoaded();
+    fireEvent.click(screen.getByText("income pcs-1"));
+    fireEvent.click(screen.getByText("save-income"));
+    expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
+  };
+  const prompt = () => screen.queryByText("You have unsaved changes");
+
+  it("asks first instead of opening the add-staff picker", async () => {
+    await editThen();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    expect(prompt()).toBeInTheDocument();
+    expect(screen.queryByTestId("staff-modal")).not.toBeInTheDocument();
+  });
+
+  it("keeps the edits and stays put on Cancel", async () => {
+    await editThen();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(prompt()).not.toBeInTheDocument();
+    expect(screen.queryByTestId("staff-modal")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
+    expect(rows.byId["pcs-1"].additionalIncomes).toEqual([{ id: "inc-1" }, { id: "inc-new" }]);
+  });
+
+  it("drops the edits and carries on with Discard", async () => {
+    await editThen();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    expect(screen.getByTestId("staff-modal")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit" })).not.toBeInTheDocument();
+    expect(rows.byId["pcs-1"].additionalIncomes).toEqual([{ id: "inc-1" }]);
+    expect(apiMock.EditPayrollBreakdown).not.toHaveBeenCalled();
+  });
+
+  it("saves the edits, then carries on, with Save", async () => {
+    await editThen();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(apiMock.EditPayrollBreakdown).toHaveBeenCalledTimes(1));
+    expect(await screen.findByTestId("staff-modal")).toBeInTheDocument();
+    expect(prompt()).not.toBeInTheDocument();
+  });
+
+  it("keeps the prompt open when the save fails", async () => {
+    apiMock.EditPayrollBreakdown.mockRejectedValue(new Error("nope"));
+    await editThen();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(toastMock.showApiError).toHaveBeenCalled());
+    expect(prompt()).toBeInTheDocument();
+    expect(screen.queryByTestId("staff-modal")).not.toBeInTheDocument();
+  });
+
+  it("asks before removing staff too", async () => {
+    await editThen();
+    fireEvent.click(screen.getByLabelText("select pcs-1"));
+    fireEvent.click(screen.getByRole("button", { name: "Remove selected employees" }));
+    expect(prompt()).toBeInTheDocument();
+    expect(apiMock.RemoveStaffFromPayrollCycle).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    await waitFor(() => expect(apiMock.RemoveStaffFromPayrollCycle).toHaveBeenCalled());
+  });
+
+  it("does not ask when nothing is unsaved", async () => {
+    renderPage();
+    await rosterLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Add staff to payroll" }));
+    expect(prompt()).not.toBeInTheDocument();
+    expect(screen.getByTestId("staff-modal")).toBeInTheDocument();
   });
 });

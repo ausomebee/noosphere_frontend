@@ -1,6 +1,7 @@
 import React from "react";
 import Logo from "../../../assets/NoosphereLogo-white.png";
 import "../SuperAdmin.css";
+import BackToLogin from "../../../Components/BackToLogin/BackToLogin";
 
 const PasswordResetFailure = () => {
   return (
@@ -12,6 +13,7 @@ const PasswordResetFailure = () => {
         <p className="confirmation-message">
         Unfortunately we cannot verify your identity. Please contact the technical team for further assistance
         </p>
+        <BackToLogin />
       </div>
     </div>
   );

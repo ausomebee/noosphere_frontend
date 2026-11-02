@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
@@ -24,6 +24,25 @@ import { showToast } from "../../../Helper/ShowToast";
 import { formatDate, formatTime, formatDuration } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
 import SectionLoader from "../../../Components/SectionLoader";
+import { localDateTimeToIso } from "../../../Helper/dates";
+import {
+  registerNavigationGuard,
+  pauseIdleLogout,
+} from "../../../Helper/liveSessionGuard";
+
+// Everything this page keeps in sessionStorage for one appointment's session.
+const sessionKeys = (appointmentId) => ({
+  startTime: `sessionStartTime_${appointmentId}`,
+  // Present only while a session is running. Finding it on load means the page
+  // was reloaded (through the browser's "Leave site?" box) mid-session.
+  live: `liveSession_${appointmentId}`,
+});
+
+const clearSessionStorage = (appointmentId) => {
+  const keys = sessionKeys(appointmentId);
+  sessionStorage.removeItem(keys.startTime);
+  sessionStorage.removeItem(keys.live);
+};
 
 const StartAppointment = () => {
   const { clientId, appointmentId } = useParams();
@@ -55,7 +74,21 @@ const StartAppointment = () => {
 
   const [travelModalOpen, setTravelModalOpen] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
-  const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
+  // Two-step leave confirmation: 0 = closed, 1 = "Leave this session?",
+  // 2 = "this ends the session and loses the data". Only both confirms leave.
+  const [leaveStep, setLeaveStep] = useState(0);
+  // Where to go once both steps are confirmed (Back, a sidebar link, …).
+  const pendingLeaveRef = useRef(null);
+  // Set while deliberately leaving, so our own navigation isn't intercepted.
+  const leavingRef = useRef(false);
+  // The session was finished or left; the guards come down.
+  const [sessionEnded, setSessionEnded] = useState(false);
+  // Read once, before this mount marks the session live: a marker already
+  // there means the page was reloaded mid-session.
+  const [reloadedMidSession] = useState(
+    () => sessionStorage.getItem(sessionKeys(appointmentId).live) === "1"
+  );
+  const reloadHandledRef = useRef(false);
 
   // Target whose recorded data is being cleared. Holds the targetId while the
   // "Clear data" confirmation modal is open.
@@ -68,12 +101,26 @@ const StartAppointment = () => {
   const sessionStartTimestampRef = useRef(null);
   const animationFrameRef = useRef(null);
 
+  // Reloaded mid-session: the work in memory is gone, so end the session
+  // cleanly rather than silently starting a new one.
+  useEffect(() => {
+    if (!reloadedMidSession || reloadHandledRef.current) return;
+    reloadHandledRef.current = true;
+    clearSessionStorage(appointmentId);
+    showToast(
+      "The session was ended because the page was reloaded.",
+      "warning"
+    );
+    navigate("/scheduler/appointments", { replace: true });
+  }, [reloadedMidSession, appointmentId, navigate]);
+
   // Session start time
   useEffect(() => {
+    if (reloadedMidSession) return;
     const now = Date.now();
     sessionStartTimestampRef.current = now;
     sessionStorage.setItem(`sessionStartTime_${appointmentId}`, now.toString());
-  }, [appointmentId]);
+  }, [appointmentId, reloadedMidSession]);
 
   // Accurate timer
   useEffect(() => {
@@ -105,17 +152,119 @@ const StartAppointment = () => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    // Restoring a minimised window doesn't always fire visibilitychange, so
+    // re-derive the clock on focus too. It is always now − start, never a
+    // count of ticks, so time spent in the background is never lost.
+    const handleFocus = () => {
+      if (sessionStartTimestampRef.current !== null) {
+        setSeconds(
+          Math.floor((Date.now() - sessionStartTimestampRef.current) / 1000)
+        );
+      }
+    };
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [appointment]);
+
+  const sessionLive = !!appointment && !sessionEnded && !reloadedMidSession;
+
+  // Go back to where the user came from. From the guard's duplicate entry that
+  // is two entries back — but a session opened in a new tab or from a pasted
+  // link has nothing in-app behind it (React Router numbers its entries in
+  // history.state.idx, starting at 0), so go to the appointments list instead
+  // of leaving the user on a dead page.
+  const goBackFromSession = useCallback(() => {
+    const idx = window.history.state?.idx;
+    if (typeof idx === "number" && idx > 0) {
+      navigate(-2);
+    } else {
+      navigate("/scheduler/appointments", { replace: true });
+    }
+  }, [navigate]);
+
+  const openLeaveFlow = useCallback((proceed) => {
+    pendingLeaveRef.current = proceed;
+    setLeaveStep(1);
+  }, []);
+
+  // While the session runs: mark it live, make reload/close show the browser's
+  // own "Leave site?" box, hand the layout a guard for its links, and keep the
+  // idle logout from ending it.
+  useEffect(() => {
+    if (!sessionLive) return;
+    const { live } = sessionKeys(appointmentId);
+    sessionStorage.setItem(live, "1");
+
+    const handleBeforeUnload = (e) => {
+      if (leavingRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    const unregisterGuard = registerNavigationGuard(openLeaveFlow);
+    const resumeIdleLogout = pauseIdleLogout();
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      unregisterGuard();
+      resumeIdleLogout();
+      // Unmounting in-app (never a reload, which skips cleanup) means the
+      // session is over, so it must not later read as "reloaded".
+      sessionStorage.removeItem(live);
+    };
+  }, [sessionLive, appointmentId, openLeaveFlow]);
+
+  // The browser Back button: keep a duplicate history entry on top, so Back
+  // lands on this same page and we can ask first. Confirming goes back past
+  // both entries.
+  useEffect(() => {
+    if (!sessionLive) return;
+    const marker = { liveSessionTrap: appointmentId };
+    const trapState = { ...(window.history.state || {}), ...marker };
+    if (window.history.state?.liveSessionTrap !== appointmentId) {
+      window.history.pushState(trapState, "", window.location.href);
+    }
+    const handlePopState = () => {
+      if (leavingRef.current) return;
+      window.history.pushState(trapState, "", window.location.href);
+      openLeaveFlow(goBackFromSession);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [sessionLive, appointmentId, openLeaveFlow, goBackFromSession]);
+
+  const cancelLeave = () => {
+    pendingLeaveRef.current = null;
+    setLeaveStep(0);
+  };
+
+  const confirmLeave = () => {
+    if (leaveStep === 1) {
+      setLeaveStep(2);
+      return;
+    }
+    // Second confirmation: end the session, drop its data, then go.
+    const proceed = pendingLeaveRef.current;
+    pendingLeaveRef.current = null;
+    leavingRef.current = true;
+    cancelAnimationFrame(animationFrameRef.current);
+    clearSessionStorage(appointmentId);
+    setCollectedData({});
+    setSessionEnded(true);
+    setLeaveStep(0);
+    proceed?.();
+  };
 
   // Fetch appointment and programs
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (reloadedMidSession) return;
         if (!accessToken) throw new Error("No access token found");
 
         const [appointmentRes, programsRes] = await Promise.all([
@@ -229,7 +378,7 @@ const StartAppointment = () => {
     };
 
     fetchData();
-  }, [clientId, appointmentId, accessToken, refreshToken]);
+  }, [clientId, appointmentId, accessToken, refreshToken, reloadedMidSession]);
   // Format helpers
   const formatTotalTime = (totalSeconds) => {
     const h = Math.floor(totalSeconds / 3600);
@@ -238,11 +387,11 @@ const StartAppointment = () => {
     return `${h > 0 ? h + "hrs " : ""}${m}m ${s}s`;
   };
 
-  const timeStringToIso = (timeStr) => {
-    if (!timeStr) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    return `${today}T${timeStr}:00.000Z`;
-  };
+  // Travel times are wall-clock times on the appointment's day. They used to
+  // be stamped as UTC on today's UTC date, so 08:00 travel in New York was
+  // saved as 03:00 local — and on the wrong day late in the evening.
+  const timeStringToIso = (timeStr) =>
+    localDateTimeToIso(appointment?.date, timeStr);
 
   // Current selections
   const currentProgram = programs.find((p) => p.id === selectedProgramId);
@@ -343,7 +492,7 @@ const StartAppointment = () => {
     setClearTargetInfo(null);
   };
 
-  const handleBackClick = () => setConfirmLeaveOpen(true);
+  const handleBackClick = () => openLeaveFlow(goBackFromSession);
 
   const finishAppointment = async () => {
     if (submitting) return;
@@ -386,7 +535,9 @@ const StartAppointment = () => {
         "Appointment finished and session saved successfully!",
         "success",
       );
-      sessionStorage.removeItem(`sessionStartTime_${appointmentId}`);
+      leavingRef.current = true;
+      clearSessionStorage(appointmentId);
+      setSessionEnded(true);
       navigate("/billing/timesheets");
     } catch (err) {
       console.error("Failed to submit session:", err);
@@ -575,6 +726,7 @@ const StartAppointment = () => {
     );
   };
 
+  if (reloadedMidSession) return null;
   if (loading)
     return (
       <SectionLoader />
@@ -991,9 +1143,20 @@ const StartAppointment = () => {
       />
 
       <ConfirmLeaveModal
-        isOpen={confirmLeaveOpen}
-        onClose={() => setConfirmLeaveOpen(false)}
-        onConfirm={() => navigate(-1)}
+        isOpen={leaveStep > 0}
+        onClose={cancelLeave}
+        onConfirm={confirmLeave}
+        title={
+          leaveStep === 2
+            ? "This will end the session"
+            : "Leave this session?"
+        }
+        message={
+          leaveStep === 2
+            ? "Leaving ends this session and all data collected will be lost. This can't be undone."
+            : "Your session is still running. Are you sure you want to leave?"
+        }
+        confirmText={leaveStep === 2 ? "End session and leave" : "Leave"}
       />
 
       <ReusableModal

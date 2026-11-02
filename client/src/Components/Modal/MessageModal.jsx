@@ -13,11 +13,37 @@ import {
   onUserOffline,
   emitMessagesRead,
   onMessagesRead,
+  onReconnect,
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
 import { formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
 import SectionLoader from "../SectionLoader";
 const getClinicianName = (c) => c?.fullName?.trim() || "Unknown";
+
+const isLocalOnly = (m) => String(m.id).startsWith("tmp_");
+
+// Puts this tab's unsent bubbles back into freshly fetched history. One the
+// server already has (same sender and text, created no earlier) is dropped,
+// so a send whose ack was lost doesn't show twice.
+const keepLocalMessages = (fetched, current) => {
+  const merged = { ...fetched };
+  Object.entries(current).forEach(([partnerId, msgs]) => {
+    const local = (msgs || []).filter(isLocalOnly);
+    if (local.length === 0) return;
+    const history = merged[partnerId] || [];
+    const unsent = local.filter(
+      (m) =>
+        !history.some(
+          (h) =>
+            h.senderId === m.senderId &&
+            h.content === m.content &&
+            new Date(h.createdAt) >= new Date(m.createdAt) - 60000
+        )
+    );
+    if (unsent.length) merged[partnerId] = [...history, ...unsent];
+  });
+  return merged;
+};
 
 const getInitials = (name) =>
   (name || "?")
@@ -42,9 +68,9 @@ const MessageModal = ({ isOpen, onClose }) => {
   const mountedRef = useRef(true);
 
   // ─── On open: load clinicians + message history ───────────────────
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async ({ quiet = false } = {}) => {
     if (!userId || !clientId || !tenantId) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     try {
       const [clinicianRes, msgRes] = await Promise.allSettled([
         messageApi.GetAssignedClinicians({ clientId, tenantId, accessToken, refreshToken }),
@@ -71,7 +97,9 @@ const MessageModal = ({ isOpen, onClose }) => {
           (acc[partnerId] = acc[partnerId] || []).push(msg);
           return acc;
         }, {});
-        setMessages(grouped);
+        // A quiet reload (after a reconnect) must not drop bubbles that only
+        // exist here: still sending, or "Not sent" awaiting a retry.
+        setMessages((prev) => (quiet ? keepLocalMessages(grouped, prev) : grouped));
       } else {
         console.error("[MessageModal] Failed to load messages:", msgRes.reason);
       }
@@ -84,6 +112,13 @@ const MessageModal = ({ isOpen, onClose }) => {
     mountedRef.current = true;
     if (isOpen) fetchData();
     return () => { mountedRef.current = false; };
+  }, [isOpen, fetchData]);
+
+  // Messages sent while the socket was down never arrived here. Reload the
+  // history when it comes back, without the loading state.
+  useEffect(() => {
+    if (!isOpen) return;
+    return onReconnect(() => fetchData({ quiet: true }));
   }, [isOpen, fetchData]);
 
   // ─── Scroll to bottom on new messages ────────────────────────────
@@ -198,6 +233,41 @@ const MessageModal = ({ isOpen, onClose }) => {
   };
 
   // ─── Send message ─────────────────────────────────────────────────
+  // Sends one optimistic bubble and settles it on the server's ack. A refused
+  // or timed-out send stays on screen marked "Not sent" so it can be retried,
+  // rather than vanishing along with what the client typed.
+  const deliver = (tmpId, receiverId, content, { restoreText = false } = {}) => {
+    sendChatMessage(
+      {
+        senderId: userId,
+        senderType: "CLIENT",
+        receiverId,
+        receiverType: "TENANT_STAFF",
+        content,
+      },
+      (ack) => {
+        if (!ack?.success) {
+          showToast("Failed to send message", "error");
+          setMessages((prev) => ({
+            ...prev,
+            [receiverId]: (prev[receiverId] || []).map((m) =>
+              m.id === tmpId ? { ...m, failed: true } : m
+            ),
+          }));
+          // Put the text back unless the client has started typing again.
+          if (restoreText) setMessageText((current) => current || content);
+        } else if (ack.message) {
+          setMessages((prev) => ({
+            ...prev,
+            [receiverId]: (prev[receiverId] || []).map((m) =>
+              m.id === tmpId ? ack.message : m
+            ),
+          }));
+        }
+      }
+    );
+  };
+
   const handleSend = () => {
     const content = messageText.trim();
     if (!content || !selectedClinicianId) return;
@@ -216,38 +286,33 @@ const MessageModal = ({ isOpen, onClose }) => {
       isRead: false,
     };
 
+    // Sending the same text as a "Not sent" bubble replaces it, rather than
+    // leaving a retry button that would send it a second time.
     setMessages((prev) => ({
       ...prev,
-      [selectedClinicianId]: [...(prev[selectedClinicianId] || []), optimistic],
+      [selectedClinicianId]: [
+        ...(prev[selectedClinicianId] || []).filter(
+          (m) => !(m.failed && m.content === content)
+        ),
+        optimistic,
+      ],
     }));
 
-    sendChatMessage(
-      {
-        senderId: userId,
-        senderType: "CLIENT",
-        receiverId: selectedClinicianId,
-        receiverType: "TENANT_STAFF",
-        content,
-      },
-      (ack) => {
-        if (!ack?.success) {
-          showToast("Failed to send message", "error");
-          setMessages((prev) => ({
-            ...prev,
-            [selectedClinicianId]: (prev[selectedClinicianId] || []).filter(
-              (m) => m.id !== tmpId
-            ),
-          }));
-        } else if (ack.message) {
-          setMessages((prev) => ({
-            ...prev,
-            [selectedClinicianId]: (prev[selectedClinicianId] || []).map((m) =>
-              m.id === tmpId ? ack.message : m
-            ),
-          }));
-        }
-      }
-    );
+    deliver(tmpId, selectedClinicianId, content, { restoreText: true });
+  };
+
+  const handleRetry = (failedMsg) => {
+    const receiverId = failedMsg.receiverId;
+    // The text was restored to the input when the send failed; leaving it
+    // there invites sending it a second time.
+    setMessageText((current) => (current.trim() === failedMsg.content ? "" : current));
+    setMessages((prev) => ({
+      ...prev,
+      [receiverId]: (prev[receiverId] || []).map((m) =>
+        m.id === failedMsg.id ? { ...m, failed: false } : m
+      ),
+    }));
+    deliver(failedMsg.id, receiverId, failedMsg.content);
   };
 
   // ─── Derived ──────────────────────────────────────────────────────
@@ -374,7 +439,8 @@ const MessageModal = ({ isOpen, onClose }) => {
                     </div>
                     {msgs.map((msg) => {
                       const isMe = msg.senderId === userId;
-                      const isPending = String(msg.id).startsWith("tmp_");
+                      const isFailed = Boolean(msg.failed);
+                      const isPending = String(msg.id).startsWith("tmp_") && !isFailed;
                       return (
                         <div
                           key={msg.id}
@@ -403,7 +469,7 @@ const MessageModal = ({ isOpen, onClose }) => {
                               }`}
                             >
                               {msg.content}
-                              {isMe && (
+                              {isMe && !isFailed && (
                                 <span
                                   className={`msg-receipt ${
                                     msg.isRead
@@ -423,6 +489,15 @@ const MessageModal = ({ isOpen, onClose }) => {
                                 </span>
                               )}
                             </div>
+                            {isFailed && (
+                              <button
+                                type="button"
+                                className="text-xs text-red-600 font-semibold hover:underline mt-1 self-end"
+                                onClick={() => handleRetry(msg)}
+                              >
+                                Not sent – Retry
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

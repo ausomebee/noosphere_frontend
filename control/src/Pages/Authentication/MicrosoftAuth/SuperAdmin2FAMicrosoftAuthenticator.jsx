@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { authErrorMessage } from "../../../Helper/authErrors";
 
 const TOTP_PERIOD_MS = 30_000;
 
@@ -84,7 +85,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
     } catch (error) {
       if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       showToast(
-        error?.response?.data?.message || "Verification failed.",
+        authErrorMessage(error, "Verification failed."),
         "error"
       );
       return false;

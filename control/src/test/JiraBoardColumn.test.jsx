@@ -253,3 +253,29 @@ describe('a column full of candidates', () => {
     );
   });
 });
+
+describe('Column drag permissions', () => {
+  it('lets only a stage editor pick the column up', () => {
+    renderColumn({ permissions: ['edit_pipeline_stage'] });
+    expect(col()).toHaveAttribute('aria-disabled', 'false');
+  });
+
+  it('pins the column for an admin without edit_pipeline_stage', () => {
+    renderColumn({ permissions: ['move_prospect'] });
+    expect(col()).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('pins its cards for an admin without move_prospect', () => {
+    renderColumn({ permissions: ['edit_pipeline_stage'] });
+    const cards = [...document.body.querySelectorAll('.task')];
+    expect(cards.length).toBeGreaterThan(0);
+    cards.forEach((card) => expect(card).toHaveAttribute('aria-disabled', 'true'));
+  });
+
+  it('lets an admin with move_prospect pick its cards up', () => {
+    renderColumn({ permissions: ['move_prospect'] });
+    const cards = [...document.body.querySelectorAll('.task')];
+    expect(cards.length).toBeGreaterThan(0);
+    cards.forEach((card) => expect(card).toHaveAttribute('aria-disabled', 'false'));
+  });
+});

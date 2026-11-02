@@ -15,6 +15,20 @@ import payrollApi from "../../../api/payrollApi";
 import { showToast, showApiError } from "../../../Helper/ShowToast";
 import { formatDate } from "../../../Helper/Formatters";
 import useFormatSettings from "../../../hooks/useFormatSettings";
+import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
+import ErrorFallback from "../../../Components/ErrorFallback";
+
+// The staff endpoint has no settled way of saying "this cycle has nobody on it
+// yet" — the page has always treated any failure as that. Keep doing so for
+// anything the server answered with a "not found"/"no staff" style reply or a
+// client-side status, and only report a real failure: no answer at all, a 5xx,
+// or a session problem (401/403).
+const EMPTY_CYCLE_MESSAGE = /not found|no staff|no record|does not exist|no payroll/i;
+const isRealLoadFailure = (error) => {
+  if (EMPTY_CYCLE_MESSAGE.test(error?.serverMessage || "")) return false;
+  const status = error?.status;
+  return !status || status >= 500 || status === 401 || status === 403;
+};
 
 const ViewBreakDown = () => {
   const { id } = useParams();
@@ -43,6 +57,12 @@ const ViewBreakDown = () => {
   const [deductionItems, setDeductionItems] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const originalEmployeesRef = useRef(null);
+  // The staff list failed to load (anything but "no staff yet").
+  const [loadError, setLoadError] = useState(false);
+  // An add/remove waiting on the "unsaved changes" prompt: adding or removing
+  // staff refetches the breakdown, which would throw away unsaved edits.
+  const [pendingStaffAction, setPendingStaffAction] = useState(null);
+  const [savingBeforeAction, setSavingBeforeAction] = useState(false);
 
   // Fetch income items and deductions on mount
   useEffect(() => {
@@ -149,14 +169,17 @@ const ViewBreakDown = () => {
       setEmployees(mapped);
       originalEmployeesRef.current = mapped;
       setHasChanges(false);
+      setLoadError(false);
     } catch (error) {
       // A cycle with no staff yet (common right after an automatic cycle runs)
       // shouldn't read as a failure — fall back to the empty state so the user
-      // can still add staff and build the breakdown.
+      // can still add staff and build the breakdown. A genuine failure (see
+      // isRealLoadFailure) shows an error instead: an empty cycle hid it.
       console.error("Failed to load payroll cycle staff:", error);
       setEmployees([]);
       originalEmployeesRef.current = [];
       setHasChanges(false);
+      setLoadError(isRealLoadFailure(error));
     } finally {
       setLoading(false);
     }
@@ -353,11 +376,41 @@ const ViewBreakDown = () => {
       showToast("Payroll breakdown updated", "success");
       setHasChanges(false);
       fetchCycleStaffs();
+      return true;
     } catch (error) {
       showApiError(error, "UPDATE_PAYROLL");
+      return false;
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Run an add/remove now, or first ask what to do with unsaved edits.
+  const guardUnsavedChanges = (action) => {
+    if (hasChanges) {
+      setPendingStaffAction(() => action);
+    } else {
+      action();
+    }
+  };
+
+  const handleSaveThenContinue = async () => {
+    const action = pendingStaffAction;
+    setSavingBeforeAction(true);
+    const saved = await handleSubmitChanges();
+    setSavingBeforeAction(false);
+    // A failed save keeps the prompt open so nothing is lost.
+    if (!saved) return;
+    setPendingStaffAction(null);
+    action?.();
+  };
+
+  const handleDiscardThenContinue = () => {
+    const action = pendingStaffAction;
+    setEmployees(originalEmployeesRef.current || []);
+    setHasChanges(false);
+    setPendingStaffAction(null);
+    action?.();
   };
 
   return (
@@ -423,7 +476,7 @@ const ViewBreakDown = () => {
             variant="secondary"
             label="Add Staff to Payroll"
             icon={<FaPlus />}
-            onClick={() => setIsStaffModalOpen(true)}
+            onClick={() => guardUnsavedChanges(() => setIsStaffModalOpen(true))}
             aria-label="Add staff to payroll"
           />
         )}
@@ -431,7 +484,11 @@ const ViewBreakDown = () => {
           <Button
             variant="secondary-danger"
             label="Remove from Payroll"
-            onClick={handleRemoveSelected}
+            onClick={() => {
+              // Nothing to remove: don't raise the save/discard prompt for it.
+              if (selectedEmployees.length === 0) return;
+              guardUnsavedChanges(handleRemoveSelected);
+            }}
             loading={removingStaff}
             aria-label="Remove selected employees"
           />
@@ -442,6 +499,11 @@ const ViewBreakDown = () => {
         <div className="loading-spinner">
           <div className="spinner"></div>
         </div>
+      ) : loadError ? (
+        <ErrorFallback
+          message="We couldn't load this payroll breakdown. Please try again."
+          onRetry={fetchCycleStaffs}
+        />
       ) : (
         <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="custom-table w-full" style={{ minWidth: "600px" }}>
@@ -497,13 +559,56 @@ const ViewBreakDown = () => {
         </div>
       )}
 
-      {totalPages > 1 && (
+      {!loadError && totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
       )}
+
+      <ReusableModal
+        isOpen={!!pendingStaffAction}
+        onClose={() => setPendingStaffAction(null)}
+        title="You have unsaved changes"
+        size="md"
+        footerContent={
+          <>
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
+              style={{ backgroundColor: "#ffffff", color: "#333333" }}
+              onClick={() => setPendingStaffAction(null)}
+              disabled={savingBeforeAction}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
+              style={{ backgroundColor: "#ffffff", color: "#D92D20" }}
+              onClick={handleDiscardThenContinue}
+              disabled={savingBeforeAction}
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              className="modal-btn"
+              style={{ backgroundColor: "#004aba", color: "#ffffff" }}
+              onClick={handleSaveThenContinue}
+              disabled={savingBeforeAction}
+            >
+              {savingBeforeAction ? "Saving…" : "Save"}
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-600">
+          Adding or removing staff reloads this breakdown. Save your income and
+          deduction changes first, or discard them.
+        </p>
+      </ReusableModal>
 
       <AddIncomeItemModal
         isOpen={isIncomeModalOpen}

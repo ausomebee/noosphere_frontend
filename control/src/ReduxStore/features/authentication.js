@@ -8,6 +8,11 @@ const initialState = {
   refreshToken: null,
   loading: false,
   error: null,
+  // Set when the password step succeeds but 2FA has not been finished yet.
+  // The login response already carries full tokens, so ProtectedRoute uses
+  // this to keep the admin out of the app until the 2FA step is done.
+  pending2FA: false,
+  pending2FARoute: null,
 };
 
 export const AdminLogin = createAsyncThunk(
@@ -44,6 +49,17 @@ const authenticationSlice = createSlice({
       state.accessToken = null;
       state.refreshToken = null;
       state.error = null;
+      state.pending2FA = false;
+      state.pending2FARoute = null;
+    },
+    // The 2FA page the admin has to finish before entering the app.
+    setPending2FARoute(state, action) {
+      state.pending2FARoute = action.payload;
+    },
+    // 2FA verified (or not required) — the admin may enter the app.
+    complete2FA(state) {
+      state.pending2FA = false;
+      state.pending2FARoute = null;
     },
     updateAccessToken(state, action) {
       state.accessToken = action.payload;
@@ -68,6 +84,8 @@ const authenticationSlice = createSlice({
         state.user = userData;
         state.accessToken = userData.accessToken;
         state.refreshToken = userData.refreshToken;
+        state.pending2FA = true;
+        state.pending2FARoute = null;
       })
       .addCase(AdminLogin.rejected, (state, action) => {
         state.loading = false;
@@ -85,6 +103,8 @@ const authenticationSlice = createSlice({
         state.user = userData;
         state.accessToken = userData.accessToken;
         state.refreshToken = userData.refreshToken;
+        state.pending2FA = true;
+        state.pending2FARoute = null;
       })
       .addCase(OnboardAdmin.rejected, (state, action) => {
         state.loading = false;
@@ -93,5 +113,5 @@ const authenticationSlice = createSlice({
   },
 });
 
-export const { logout, updateAccessToken, setTokens } = authenticationSlice.actions;
+export const { logout, updateAccessToken, setTokens, setPending2FARoute, complete2FA } = authenticationSlice.actions;
 export default authenticationSlice.reducer;

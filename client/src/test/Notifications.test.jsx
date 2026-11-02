@@ -8,6 +8,9 @@ const messageApiMock = vi.hoisted(() => ({
   GetNotifications: vi.fn(),
   MarkNotificationRead: vi.fn(),
 }));
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock("../api/messageApi", () => ({ default: messageApiMock }));
 
 const homeApiMock = vi.hoisted(() => ({ GetAppointmentById: vi.fn() }));
@@ -17,6 +20,10 @@ vi.mock("../api/homeApis", () => ({ default: homeApiMock }));
 // notification into the page.
 const { socket } = vi.hoisted(() => ({ socket: { push: null, reads: [] } }));
 vi.mock("../api/socketService", () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   onNotification: (cb) => {
     socket.push = cb;
     return () => { socket.push = null; };
@@ -634,5 +641,21 @@ describe("sorting when nothing carries a date", () => {
       (n) => n.textContent
     );
     expect(titles).toEqual(["First", "Second"]);
+  });
+});
+
+describe("catching up after the socket reconnects", () => {
+  it("reloads the feed, picking up what was pushed while it was down", async () => {
+    reconnectListeners.length = 0;
+    messageApiMock.GetNotifications.mockResolvedValue({ data: { data: [notification({ id: "n1", title: "Seen before" })] } });
+    await renderPage();
+    await waitFor(() => expect(screen.getByText("Seen before")).toBeInTheDocument());
+
+    messageApiMock.GetNotifications.mockResolvedValue({
+      data: { data: [notification({ id: "n2", title: "Missed while away" }), notification({ id: "n1", title: "Seen before" })] },
+    });
+    await act(async () => reconnectListeners.forEach((fn) => fn()));
+    await waitFor(() => expect(screen.getByText("Missed while away")).toBeInTheDocument());
+    expect(messageApiMock.GetNotifications).toHaveBeenCalledTimes(2);
   });
 });

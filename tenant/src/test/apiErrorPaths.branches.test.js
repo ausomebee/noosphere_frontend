@@ -30,6 +30,7 @@ vi.mock("../Helper/AxiosInterceptor", () => ({
 
 import authApi, { refreshAccessToken } from "../api/authApis";
 import tenantApi from "../api/TenantApis";
+import payrollApi from "../api/payrollApi";
 
 /**
  * Every API wrapper rethrows as `new Error(body.message || <its own copy>)`.
@@ -59,8 +60,17 @@ describe("authApis fallback messages", () => {
   ];
 
   it.each(cases)("%s falls back to its own copy", async (_name, mock, call, expected) => {
-    mock.mockRejectedValue(bare());
+    mock.mockRejectedValue(new Error("boom"));
     await expect(call()).rejects.toThrow(expected);
+  });
+
+  // A bare axios "Network Error" means the server never answered: say that,
+  // rather than the endpoint's generic copy.
+  it.each(cases)("%s reports a network failure as an unreachable server", async (_name, mock, call) => {
+    mock.mockRejectedValue(bare());
+    await expect(call()).rejects.toThrow(
+      "Can't reach the server. Check your connection and try again."
+    );
   });
 
   it.each(cases)("%s prefers the backend's message", async (_name, mock, call) => {
@@ -71,6 +81,49 @@ describe("authApis fallback messages", () => {
   it.each(cases)("%s resolves on success", async (_name, mock, call) => {
     mock.mockResolvedValue({ data: { ok: true } });
     await expect(call()).resolves.toBeDefined();
+  });
+});
+
+describe("payroll cycle staff failures", () => {
+  // The breakdown page reads these to tell an empty cycle from a real failure.
+  it("carries the status and the server's message on the thrown error", async () => {
+    fetchGet.mockRejectedValue({
+      message: "Request failed with status code 404",
+      response: { status: 404, data: { message: "No staff found" } },
+    });
+    const err = await payrollApi.GetPayrollCycleStaffs({ payrollCycleId: "c", ...tokens }).catch((e) => e);
+    expect(err.status).toBe(404);
+    expect(err.serverMessage).toBe("No staff found");
+  });
+});
+
+describe("saving the 2FA policy", () => {
+  const choices = { Authenticator2FA: true, securityQuestion: false, setForAll: true, tenantId: "t1" };
+
+  it("goes through the authenticated client when the caller has a session", async () => {
+    fetchPatch.mockResolvedValue({ data: { ok: true } });
+    await authApi.SuperAdminChoices({ ...choices, ...tokens });
+    expect(fetchPatch).toHaveBeenCalledWith(
+      expect.stringContaining("/tenant/tenantadminchoices"),
+      choices
+    );
+    expect(axiosPatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps the plain request for a caller with no token", async () => {
+    axiosPatch.mockResolvedValue({ data: { ok: true } });
+    await authApi.SuperAdminChoices(choices);
+    expect(axiosPatch).toHaveBeenCalledWith(
+      expect.stringContaining("/tenant/tenantadminchoices"),
+      choices,
+      expect.objectContaining({ timeout: 20000 })
+    );
+    expect(fetchPatch).not.toHaveBeenCalled();
+  });
+
+  it("reports a backend rejection from the authenticated client", async () => {
+    fetchPatch.mockRejectedValue(withBody("not allowed"));
+    await expect(authApi.SuperAdminChoices({ ...choices, ...tokens })).rejects.toThrow("not allowed");
   });
 });
 

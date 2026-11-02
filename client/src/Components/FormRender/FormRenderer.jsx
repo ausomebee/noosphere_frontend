@@ -18,12 +18,69 @@ import {
   setCurrentPage,
   clearAllResponses,
   markAsSubmitted,
+  resetFormResponse,
 } from "../../ReduxStore/features/formResponseSlice";
 import { loadForm } from "../../ReduxStore/features/formBuilderSlice";
 import { mimeMap } from "../../Data/selectOptions";
 import SectionLoader from "../SectionLoader";
+import ErrorFallback from "../ErrorFallback";
 
 import ConfirmModal from "../Modal/ConfirmModal";
+
+// Signature images are kept as data URLs in the persisted draft, which shares
+// one localStorage entry with the session tokens. A full-size phone photo is
+// several MB of base64 and can blow the storage quota, so it is scaled down
+// first. Only when the browser can't draw it is the size capped instead.
+const SIGNATURE_MAX_WIDTH = 600;
+const SIGNATURE_FALLBACK_MAX_BYTES = 500 * 1024;
+
+const readAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const downscaleImage = (dataUrl) =>
+  new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    let ctx = null;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch {
+      ctx = null;
+    }
+    if (!ctx) {
+      reject(new Error("Canvas unavailable"));
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, SIGNATURE_MAX_WIDTH / (img.width || 1));
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error("Image could not be decoded"));
+    img.src = dataUrl;
+  });
+
+const prepareSignatureImage = async (file) => {
+  const dataUrl = await readAsDataUrl(file);
+  try {
+    return await downscaleImage(dataUrl);
+  } catch {
+    if (file.size > SIGNATURE_FALLBACK_MAX_BYTES) return null;
+    return dataUrl;
+  }
+};
+
 const FormRenderer = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -41,9 +98,16 @@ const FormRenderer = () => {
   } = useSelector((s) => s.formResponse);
   const [isLoading, setIsLoading] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [dragOver, setDragOver] = useState({});
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const sigRefs = useRef({});
+  // The form a load was started for; a slower load for a form we've since
+  // navigated away from must not overwrite the current one.
+  const loadingFormIdRef = useRef(null);
+  // Upload items with a request in flight in this tab. Only these can't be
+  // removed; anything else without a url or error was cut off by a reload.
+  const uploadingIdsRef = useRef(new Set());
 
   const parseFileSize = (sizeString) => {
     if (!sizeString && sizeString !== 0) return 10;
@@ -72,11 +136,47 @@ const FormRenderer = () => {
     return [...new Set(acceptParts)].join(",");
   };
 
+  // The draft is persisted, so it can belong to another form or another
+  // user. Start fresh in that case — otherwise answers, signatures, the page
+  // and the "submitted" flag leak from one form into the next.
   useEffect(() => {
-    if (formId && tenantId && accessToken && !formLoaded) {
+    if (!formId) return;
+    const draft = dispatch((d, getState) => getState().formResponse);
+    const otherForm = String(draft?.formId ?? "") !== String(formId);
+    const otherUser =
+      !!draft?.submittedBy && !!tenantClientId && draft.submittedBy !== tenantClientId;
+    if (otherForm || otherUser) {
+      dispatch(resetFormResponse());
+    } else {
+      // Files are persisted with the draft. A row saved mid-upload (tab
+      // closed or reloaded) will never get its result — mark it failed so it
+      // can be removed rather than blocking the field for good.
+      Object.entries(draft?.files || {}).forEach(([fid, items]) => {
+        if (!Array.isArray(items)) return;
+        const stuck = (item) =>
+          !item.url && !item.error && !uploadingIdsRef.current.has(item.id);
+        if (!items.some(stuck)) return;
+        dispatch(
+          setFilesForField({
+            fieldId: fid,
+            fileItems: items.map((item) =>
+              stuck(item)
+                ? { ...item, progress: 0, error: true, errorMessage: "Upload interrupted" }
+                : item,
+            ),
+          }),
+        );
+      });
+    }
+    setFormLoaded(false);
+    setLoadError(false);
+  }, [formId, tenantClientId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (formId && tenantId && accessToken && !formLoaded && !loadError) {
       loadFormData();
     }
-  }, [formId, tenantId, accessToken, formLoaded]);
+  }, [formId, tenantId, accessToken, formLoaded, loadError]);
 
   useEffect(() => {
     if (formLoaded) {
@@ -89,7 +189,9 @@ const FormRenderer = () => {
   }, [formLoaded, signatures]);
 
   const loadFormData = async () => {
+    loadingFormIdRef.current = formId;
     setIsLoading(true);
+    setLoadError(false);
     try {
       const res = await api.GetFormWithItsFields({
         formId,
@@ -109,6 +211,7 @@ const FormRenderer = () => {
         throw new Error("Missing 'data' object in successful response");
       }
       const formData = responseBody.data;
+      if (loadingFormIdRef.current !== formId) return;
       if (!Array.isArray(formData.fields)) {
         if (import.meta.env.DEV) console.warn("Form has no fields or fields is not array", formData);
       }
@@ -168,12 +271,14 @@ const FormRenderer = () => {
           submittedBy: tenantClientId,
         }),
       );
-      if (savedCurrentPage > 0) {
-        dispatch(setCurrentPage(savedCurrentPage));
-      }
+      // The saved page is kept by initializeResponse; re-dispatching it here
+      // from this render's snapshot would restore a page from a draft that
+      // was just discarded.
       setFormLoaded(true);
     } catch (err) {
+      if (loadingFormIdRef.current !== formId) return;
       console.error("Form loading failed:", err);
+      setLoadError(true);
       showToast(
         err.message ||
           "Failed to load form. Please check the link or try again.",
@@ -215,8 +320,11 @@ const FormRenderer = () => {
       return;
     }
 
-    // No preview — just basic file tracking
+    // No preview — just basic file tracking. Each item gets an id so the
+    // upload result is patched onto the right row even if the list changed
+    // while the request was in flight.
     const newFileItems = selectedFiles.map((file) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       file,
       filename: file.name,
       size: file.size,
@@ -226,6 +334,9 @@ const FormRenderer = () => {
       errorMessage: null,
     }));
 
+    newFileItems.forEach((item) => uploadingIdsRef.current.add(item.id));
+    const finishUploading = () =>
+      newFileItems.forEach((item) => uploadingIdsRef.current.delete(item.id));
     dispatch(addFilesToField({ fieldId, fileItems: newFileItems }));
 
     try {
@@ -251,14 +362,18 @@ const FormRenderer = () => {
 
       const uploadedFiles = uploadResult.data;
 
+      // The server answers in the order the batch was sent
+      const uploadedById = new Map(
+        newFileItems.map((item, i) => [item.id, uploadedFiles[i]]),
+      );
+
       // Get latest state after upload completes
       const latestState = getLatestState();
       const currentAfterAdd = latestState.files[fieldId] || [];
-      const startIndex = currentAfterAdd.length - newFileItems.length;
 
-      const updatedFiles = currentAfterAdd.map((item, idx) => {
-        if (idx < startIndex) return item;
-        const uploaded = uploadedFiles[idx - startIndex];
+      const updatedFiles = currentAfterAdd.map((item) => {
+        if (!uploadedById.has(item.id)) return item;
+        const uploaded = uploadedById.get(item.id);
         if (uploaded?.url) {
           return {
             ...item,
@@ -278,6 +393,7 @@ const FormRenderer = () => {
         };
       });
 
+      finishUploading();
       dispatch(setFilesForField({ fieldId, fileItems: updatedFiles }));
 
       const successCount = uploadedFiles.filter((f) => f?.url).length;
@@ -288,12 +404,12 @@ const FormRenderer = () => {
     } catch (err) {
       console.error("Batch upload error:", err);
 
+      const batchIds = new Set(newFileItems.map((item) => item.id));
       const latestState = getLatestState();
       const currentAfterAdd = latestState.files[fieldId] || [];
-      const startIndex = currentAfterAdd.length - newFileItems.length;
 
-      const failedFiles = currentAfterAdd.map((item, idx) => {
-        if (idx >= startIndex) {
+      const failedFiles = currentAfterAdd.map((item) => {
+        if (batchIds.has(item.id)) {
           return {
             ...item,
             progress: 0,
@@ -304,6 +420,7 @@ const FormRenderer = () => {
         return item;
       });
 
+      finishUploading();
       dispatch(setFilesForField({ fieldId, fileItems: failedFiles }));
       showToast(
         `Failed to upload files: ${err.message || "Unknown error"}`,
@@ -351,9 +468,13 @@ const FormRenderer = () => {
       return;
     }
     setIsLoading(true);
+    // Only send answers to this form's own fields — anything else in the
+    // draft is left over and the server would reject or misfile it.
+    const formFieldIds = new Set(elements.map((el) => String(el.id)));
+    const belongsToForm = (fid) => formFieldIds.has(String(fid));
     const responseFields = [];
     Object.entries(responses).forEach(([fid, value]) => {
-      if (!value) return;
+      if (!value || !belongsToForm(fid)) return;
       const finalValue = Array.isArray(value)
         ? value.join(", ")
         : String(value).trim();
@@ -362,7 +483,7 @@ const FormRenderer = () => {
       }
     });
     Object.entries(files || {}).forEach(([fid, fileItems]) => {
-      if (!Array.isArray(fileItems)) return;
+      if (!Array.isArray(fileItems) || !belongsToForm(fid)) return;
       fileItems.forEach((item) => {
         if (item.url) {
           responseFields.push({ formFieldId: fid, value: item.url });
@@ -370,7 +491,7 @@ const FormRenderer = () => {
       });
     });
     Object.entries(signatures).forEach(([fid, sig]) => {
-      if (sig) {
+      if (sig && belongsToForm(fid)) {
         responseFields.push({ formFieldId: fid, value: sig });
       }
     });
@@ -471,18 +592,33 @@ const FormRenderer = () => {
     showToast("All responses cleared", "info");
   };
 
-  if (submitted) {
+  // `submitted` is persisted, so only trust it once this form has loaded
+  // (loading resets it) — otherwise another form's success screen flashes.
+  if (submitted && formLoaded) {
     return (
       <div className="form-renderer">
         <div className="form-container">
           <h2>Form Submitted Successfully! ✅</h2>
           <p>Thank you for your submission.</p>
           <button
-            onClick={() => (window.location.href = "/forms")}
+            onClick={() => navigate("/documents")}
             className="submit-btn"
           >
             Back to Forms
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError && !formLoaded) {
+    return (
+      <div className="form-renderer">
+        <div className="form-container">
+          <ErrorFallback
+            message="We couldn't load this form. Please try again."
+            onRetry={() => setLoadError(false)}
+          />
         </div>
       </div>
     );
@@ -748,7 +884,7 @@ const FormRenderer = () => {
                     </label>
 
                     {(files[el.id] || []).map((item, index) => (
-                      <div key={index} className="uploaded-file-card">
+                      <div key={item.id ?? index} className="uploaded-file-card">
                         <div className="file-preview">
                           <FiFile size={32} />
                         </div>
@@ -785,7 +921,9 @@ const FormRenderer = () => {
                         <button
                           onClick={() => handleFileRemove(el.id, index)}
                           className="remove-btn"
-                          disabled={item.progress > 0 && item.progress < 100}
+                          // Still uploading: removing it now would leave the
+                          // in-flight result with nowhere to land.
+                          disabled={uploadingIdsRef.current.has(item.id)}
                           aria-label="Remove file"
                         >
                           <FiTrash2 />
@@ -898,13 +1036,28 @@ const FormRenderer = () => {
                             onChange={(e) => {
                               const file = e.target.files[0];
                               if (file) {
-                                const url = URL.createObjectURL(file);
-                                dispatch(
-                                  setSignature({
-                                    fieldId: el.id,
-                                    signature: url,
-                                  }),
-                                );
+                                // A data URL, not an object URL: a `blob:`
+                                // link only exists in this tab, so submitting
+                                // one sent the server nothing it could open.
+                                prepareSignatureImage(file)
+                                  .then((signature) => {
+                                    if (!signature) {
+                                      showToast(
+                                        "That image is too large. Please use one under 500 KB.",
+                                        "error",
+                                      );
+                                      return;
+                                    }
+                                    dispatch(
+                                      setSignature({
+                                        fieldId: el.id,
+                                        signature,
+                                      }),
+                                    );
+                                  })
+                                  .catch(() =>
+                                    showToast("Couldn't read that image. Please try another.", "error"),
+                                  );
                               }
                             }}
                           />

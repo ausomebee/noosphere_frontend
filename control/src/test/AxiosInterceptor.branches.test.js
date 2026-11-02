@@ -45,6 +45,11 @@ vi.mock('../ReduxStore/features/authentication', () => ({
 const showToast = vi.fn();
 vi.mock('../Helper/ShowToast', () => ({ showToast: (...a) => showToast(...a) }));
 
+const disconnectSocket = vi.fn();
+vi.mock('../api/socketService', () => ({
+  disconnectSocket: (...a) => disconnectSocket(...a),
+}));
+
 import AxiosInterceptor from '../Helper/AxiosInterceptor';
 
 /**
@@ -64,6 +69,9 @@ const authError = (message = 'Not authorized') => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // A refresh records the token it replaced; don't let one test's record
+  // decide whether the next one refreshes.
+  localStorage.clear();
   storeValue = {
     getState: vi.fn(() => ({ authentication: { refreshToken: 'stored-refresh' } })),
     dispatch,
@@ -135,6 +143,8 @@ describe('refresh rejected by the server', () => {
     await expect(responseErrFn(err)).rejects.toBe(err);
     expect(purge).toHaveBeenCalled();
     expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'auth/logout' }));
+    // The socket goes with the session, so it stops receiving this user's events.
+    expect(disconnectSocket).toHaveBeenCalledTimes(1);
   });
 
   it('ends the session when the refresh call itself returns 401', async () => {
@@ -161,6 +171,7 @@ describe('refresh that never reached the server', () => {
     await expect(responseErrFn(err)).rejects.toBe(err);
     // The refresh token is probably still good, so the session must survive.
     expect(purge).not.toHaveBeenCalled();
+    expect(disconnectSocket).not.toHaveBeenCalled();
   });
 
   it('keeps the user signed in when the refresh fails with no response at all', async () => {
@@ -294,5 +305,30 @@ describe('a refresh that fails without an error object', () => {
     fail();
     await expect(first).rejects.toBe(firstError);
     await expect(second).rejects.toBe(secondError);
+  });
+});
+
+describe('a request that failed in transit', () => {
+  const gatewayError = (method) => ({
+    config: { method, url: '/x', headers: {} },
+    response: { status: 502, data: '<html>502 Bad Gateway</html>' },
+  });
+
+  it('resends a read, which the load balancer can route to the other server', async () => {
+    vi.useFakeTimers();
+    AxiosInterceptor('at', 'rt');
+    const pending = responseErrFn(gatewayError('get'));
+    await vi.runAllTimersAsync();
+    expect(await pending).toEqual({ data: 'retried' });
+    expect(instanceMock).toHaveBeenCalledWith(expect.objectContaining({ _retryCount: 1 }));
+    vi.useRealTimers();
+  });
+
+  it('does not resend a write the backend cannot recognise, and explains the failure', async () => {
+    AxiosInterceptor('at', 'rt');
+    const err = gatewayError('post');
+    await expect(responseErrFn(err)).rejects.toBe(err);
+    expect(instanceMock).not.toHaveBeenCalled();
+    expect(err.response.data.message).toMatch(/temporarily unavailable/);
   });
 });

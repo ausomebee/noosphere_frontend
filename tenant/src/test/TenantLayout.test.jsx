@@ -32,6 +32,9 @@ const h = vi.hoisted(() => ({
   isConnected: true,
 }));
 
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock("react-router-dom", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => h.navigate,
@@ -67,6 +70,10 @@ vi.mock("../api/notificationApi", () => ({
 }));
 
 vi.mock("../api/socketService", () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   disconnectSocket: (...a) => h.disconnectSocket(...a),
 }));
 
@@ -95,6 +102,7 @@ vi.mock("../Components/ConnectionStatus/ConnectionStatus", () => ({
 }));
 
 import DashboardLayout, { LayoutRoute } from "../Layout/TenantLayout";
+import { registerNavigationGuard } from "../Helper/liveSessionGuard";
 
 const setViewport = (width) => {
   window.innerWidth = width;
@@ -388,11 +396,40 @@ describe("the notification bell", () => {
     expect(document.body.querySelector(".notification-badge")).toBeNull();
   });
 
-  it("shows no badge when the fetch fails", async () => {
+  // A failed load used to read as "no notifications" — a silent zero.
+  it("flags the bell when the unread count could not be loaded", async () => {
     h.getNotifications.mockRejectedValue(new Error("down"));
+    renderLayout();
+    expect(await screen.findByLabelText("Couldn't load notifications")).toBeInTheDocument();
+  });
+
+  it("shows no badge when the server says there are no notifications (404)", async () => {
+    h.getNotifications.mockRejectedValue(Object.assign(new Error("none"), { status: 404 }));
     renderLayout();
     await waitFor(() => expect(h.getNotifications).toHaveBeenCalled());
     expect(document.body.querySelector(".notification-badge")).toBeNull();
+  });
+
+  it("keeps the last count when a reconnect recount fails", async () => {
+    h.getNotifications.mockResolvedValueOnce({ data: { data: [{ id: "a" }] } });
+    renderLayout();
+    expect(await screen.findByText("1")).toBeInTheDocument();
+
+    h.getNotifications.mockRejectedValueOnce(new Error("blip"));
+    await act(async () => {
+      reconnectListeners.at(-1)();
+    });
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Couldn't load notifications")).toBeNull();
+  });
+
+  it("clears the flag when the bell is opened", async () => {
+    h.getNotifications.mockRejectedValue(new Error("down"));
+    renderLayout();
+    await screen.findByLabelText("Couldn't load notifications");
+    fireEvent.click(screen.getByLabelText("Notifications"));
+    expect(screen.queryByLabelText("Couldn't load notifications")).toBeNull();
+    expect(h.navigate).toHaveBeenCalledWith("/notifications");
   });
 
   it("asks for nothing when nobody is signed in", () => {
@@ -531,6 +568,54 @@ describe("the profile area", () => {
     expect(h.purge).toHaveBeenCalled();
     expect(h.navigate).toHaveBeenCalledWith("/");
     expect(document.body.querySelector(".profile-dropdown")).toBeNull();
+  });
+});
+
+// A live appointment session registers a guard; every way out of the page
+// through the layout must ask it first.
+describe("navigation while a page holds the user back", () => {
+  let unregister;
+  const guard = vi.fn();
+  beforeEach(() => {
+    guard.mockReset();
+    unregister = registerNavigationGuard(guard);
+  });
+  afterEach(() => unregister());
+
+  it("hands a sidebar link to the guard instead of following it", () => {
+    renderLayout();
+    fireEvent.click(screen.getByText("Dashboard"));
+    expect(guard).toHaveBeenCalledTimes(1);
+    expect(h.navigate).not.toHaveBeenCalled();
+
+    // Confirming goes where the link pointed.
+    act(() => guard.mock.calls[0][0]());
+    expect(h.navigate).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("guards the notification bell, the menu items and log out", () => {
+    renderLayout();
+    fireEvent.click(screen.getByLabelText("Notifications"));
+    openProfile();
+    fireEvent.click(screen.getByText("Notifications"));
+    openProfile();
+    fireEvent.click(screen.getAllByText("Settings").at(-1));
+    openProfile();
+    fireEvent.click(screen.getByText("Log out"));
+
+    expect(guard).toHaveBeenCalledTimes(4);
+    expect(h.navigate).not.toHaveBeenCalled();
+    expect(h.disconnectSocket).not.toHaveBeenCalled();
+    expect(h.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("navigates as normal once the guard is gone", () => {
+    unregister();
+    renderLayout();
+    openProfile();
+    fireEvent.click(screen.getAllByText("Settings").at(-1));
+    expect(h.navigate).toHaveBeenCalledWith("/settings");
+    expect(guard).not.toHaveBeenCalled();
   });
 });
 

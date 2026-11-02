@@ -412,11 +412,15 @@ describe("supporting data", () => {
     );
     renderTab();
 
-    await waitFor(() => expect(apptModal.props.clients).toHaveLength(1));
-    expect(apptModal.props.clients[0].client).toEqual({
-      firstName: "Client",
-      lastName: "",
-    });
+    // The route's own client ("Ada") fills the list first, so wait for the
+    // fetched record rather than just a list of one.
+    await waitFor(() =>
+      expect(apptModal.props.clients[0]?.client).toEqual({
+        firstName: "Client",
+        lastName: "",
+      })
+    );
+    expect(apptModal.props.clients).toHaveLength(1);
   });
 
   it("ignores a fetched client whose id is not the one on the route", async () => {

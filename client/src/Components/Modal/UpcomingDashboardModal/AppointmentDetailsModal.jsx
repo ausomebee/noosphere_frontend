@@ -4,6 +4,7 @@ import { FiRefreshCw } from "react-icons/fi";
 import { format, parse, isValid } from "date-fns";
 import { RxCross2 } from "react-icons/rx";
 import Button from "../../Button/Button";
+import { parseDate, toDateKey } from "../../../Helper/dates";
 
 const AppointmentDetailsModal = ({
   isOpen,
@@ -34,8 +35,12 @@ const AppointmentDetailsModal = ({
       const parts = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
       if (!parts) return defaultDate;
       const normalizedTime = `${parts[1].padStart(2, "0")}:${parts[2]}`;
+      // The date may arrive as a full ISO string; parse against its calendar
+      // day, or "yyyy-MM-dd HH:mm" never matches and the time fell back to now.
+      const dayKey = toDateKey(dateStr);
+      if (!dayKey) return defaultDate;
       const parsedDate = parse(
-        `${dateStr} ${normalizedTime}`,
+        `${dayKey} ${normalizedTime}`,
         "yyyy-MM-dd HH:mm",
         new Date()
       );
@@ -45,7 +50,7 @@ const AppointmentDetailsModal = ({
       return parsedDate;
     } catch {
       const [h, m] = timeStr.split(":");
-      const d = new Date(dateStr);
+      const d = parseDate(dateStr);
       if (!isValid(d)) {
         return defaultDate;
       }
@@ -55,7 +60,8 @@ const AppointmentDetailsModal = ({
   };
 
   // Parse date and time from API response
-  const appointmentDate = appointmentData.date || new Date().toISOString().split('T')[0];
+  // Today in the user's timezone — the UTC date is already tomorrow on a US evening
+  const appointmentDate = appointmentData.date || toDateKey(new Date());
   const startTimeStr = appointmentData.startTime || "00:00";
   const endTimeStr = appointmentData.endTime || "00:00";
 
@@ -64,8 +70,8 @@ const AppointmentDetailsModal = ({
   const startTime = isValid(start) ? format(start, "h:mm a") : "Invalid Time";
   const endTime = isValid(end) ? format(end, "h:mm a") : "Invalid Time";
   const timeRange = `${startTime} - ${endTime}`;
-  const dateDisplay = appointmentDate && isValid(new Date(appointmentDate))
-    ? format(new Date(appointmentDate), "MM/dd/yyyy")
+  const dateDisplay = appointmentDate && isValid(parseDate(appointmentDate))
+    ? format(parseDate(appointmentDate), "MM/dd/yyyy")
     : "Invalid Date";
 
   // Extract client information
@@ -109,15 +115,15 @@ const AppointmentDetailsModal = ({
         : `Daily${
             r.endType === "after"
               ? ` for ${r.occurrences} occurrences`
-              : r.endOn && isValid(new Date(r.endOn))
-              ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
+              : r.endOn && isValid(parseDate(r.endOn))
+              ? ` until ${format(parseDate(r.endOn), "MM/dd/yyyy")}`
               : ""
           }`;
     
     if (r.type === "week")
       return `Weekly on ${(r.days || []).join(", ")}${
-        r.endType === "on" && r.endOn && isValid(new Date(r.endOn))
-          ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
+        r.endType === "on" && r.endOn && isValid(parseDate(r.endOn))
+          ? ` until ${format(parseDate(r.endOn), "MM/dd/yyyy")}`
           : ""
       }`;
     
@@ -125,8 +131,8 @@ const AppointmentDetailsModal = ({
       return `Monthly on day ${r.day || 1}${
         r.endType === "after"
           ? ` for ${r.occurrences} occurrences`
-          : r.endOn && isValid(new Date(r.endOn))
-          ? ` until ${format(new Date(r.endOn), "MM/dd/yyyy")}`
+          : r.endOn && isValid(parseDate(r.endOn))
+          ? ` until ${format(parseDate(r.endOn), "MM/dd/yyyy")}`
           : ""
       }`;
     

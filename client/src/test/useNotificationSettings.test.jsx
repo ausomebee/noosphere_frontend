@@ -195,3 +195,67 @@ describe("a record saved with a preference switched off", () => {
     );
   });
 });
+
+describe("quick successive toggles (#45)", () => {
+  it("saves one at a time, each with the latest values", async () => {
+    let releaseFirst;
+    updateSettings
+      .mockImplementationOnce(() => new Promise((r) => { releaseFirst = r; }))
+      .mockResolvedValue({});
+    const { result } = setup();
+    await waitFor(() => expect(result.current.notifications.appointmentScheduled).toBe(true));
+
+    let first;
+    let second;
+    act(() => {
+      first = result.current.toggleNotification("formShared");
+      second = result.current.toggleNotification("documentRequested");
+    });
+    // The second save waits for the first instead of racing it.
+    await waitFor(() => expect(updateSettings).toHaveBeenCalledTimes(1));
+    expect(updateSettings.mock.calls[0][0]).toMatchObject({ formShared: true });
+
+    await act(async () => { releaseFirst({}); await first; await second; });
+    expect(updateSettings).toHaveBeenCalledTimes(2);
+    // ...and carries both changes, not a snapshot missing the first.
+    expect(updateSettings.mock.calls[1][0]).toMatchObject({ formShared: true, documentRequested: true });
+  });
+
+  it("reverts only the toggle whose save failed", async () => {
+    updateSettings
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce(new Error("server said no"));
+    const { result } = setup();
+    await waitFor(() => expect(result.current.notifications.appointmentScheduled).toBe(true));
+
+    await act(async () => {
+      const a = result.current.toggleNotification("formShared");
+      const b = result.current.toggleNotification("documentRequested");
+      await a;
+      await b;
+    });
+    expect(result.current.notifications.formShared).toBe(true);
+    expect(result.current.notifications.documentRequested).toBe(false);
+    expect(result.current.notifications.appointmentScheduled).toBe(true);
+  });
+
+  it("creates the record only once when there is no id yet", async () => {
+    getSettings.mockResolvedValue({ data: {} });
+    const { result } = setup();
+    await waitFor(() => expect(getSettings).toHaveBeenCalled());
+
+    await act(async () => {
+      const a = result.current.toggleNotification("formShared");
+      const b = result.current.toggleNotification("documentRequested");
+      await a;
+      await b;
+    });
+    expect(createSettings).toHaveBeenCalledTimes(1);
+    expect(updateSettings).toHaveBeenCalledTimes(1);
+    expect(updateSettings.mock.calls[0][0]).toMatchObject({
+      id: "new-1",
+      formShared: true,
+      documentRequested: true,
+    });
+  });
+});

@@ -252,9 +252,72 @@ describe('InvoiceApi', () => {
       global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Expired' }) });
       await expect(InvoiceApi.ValidatePaymentToken({ token: 'bad' })).rejects.toThrow('Expired');
     });
-    it('throws on fetch error', async () => {
-      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network'));
-      await expect(InvoiceApi.ValidatePaymentToken({ token: 'x' })).rejects.toThrow('Network');
+    it('flags a fetch that never got an answer as unchecked, not invalid', async () => {
+      // fetch only rejects when nothing came back (dropped connection, abort).
+      global.fetch = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+      expect(err.isNetworkError).toBe(true);
+      expect(err.message).toBe("We couldn't check this payment link right now.");
+    });
+    it('gives up after 20 seconds without an answer', async () => {
+      vi.useFakeTimers();
+      try {
+        global.fetch = vi.fn((url, { signal }) =>
+          new Promise((resolve, reject) => {
+            signal.addEventListener('abort', () =>
+              reject(new DOMException('aborted', 'AbortError'))
+            );
+          })
+        );
+        const pending = InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+        await vi.advanceTimersByTimeAsync(19999);
+        expect(global.fetch.mock.calls[0][1].signal.aborted).toBe(false);
+        await vi.advanceTimersByTimeAsync(1);
+        const err = await pending;
+        expect(err.isNetworkError).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+    it.each([502, 503, 504])('treats a %i gateway error as unchecked, not invalid', async (status) => {
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status,
+        json: () => Promise.reject(new SyntaxError('Unexpected token <')),
+      });
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+      expect(err.isNetworkError).toBe(true);
+      expect(err.message).toBe("We couldn't check this payment link right now.");
+    });
+    it('treats a failed response with a non-JSON body as unchecked', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.reject(new SyntaxError('Unexpected token <')),
+      });
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+      expect(err.isNetworkError).toBe(true);
+    });
+    it('treats a failed response whose JSON is not an error object as unchecked', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve(null) });
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+      expect(err.isNetworkError).toBe(true);
+    });
+    it('still reports a 404/410 JSON refusal as invalid', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 410,
+        json: () => Promise.resolve({ message: 'Payment link expired' }),
+      });
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'x' }).catch((e) => e);
+      expect(err.message).toBe('Payment link expired');
+      expect(err.isNetworkError).toBeUndefined();
+    });
+    it('still reports a refused token as invalid', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Expired' }) });
+      const err = await InvoiceApi.ValidatePaymentToken({ token: 'bad' }).catch((e) => e);
+      expect(err.message).toBe('Expired');
+      expect(err.isNetworkError).toBeUndefined();
     });
   });
 

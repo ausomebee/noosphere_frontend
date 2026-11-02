@@ -2,13 +2,16 @@
  * Centralized formatting utilities for the client module.
  */
 
+import { parseDate } from "./dates";
+
 /**
  * Format a date string as "Mon dd, yyyy" (e.g., "Jan 5, 2025").
  */
 export const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
   try {
-    const d = new Date(dateStr);
+    // parseDate keeps a date-only value on its own day in every timezone
+    const d = parseDate(dateStr);
     if (isNaN(d)) return "Invalid date";
     return d.toLocaleDateString("en-US", {
       year: "numeric",
@@ -26,7 +29,8 @@ export const formatDate = (dateStr) => {
 export const formatDateShort = (dateStr) => {
   if (!dateStr) return "N/A";
   try {
-    const d = new Date(dateStr);
+    // parseDate keeps a date-only value on its own day in every timezone
+    const d = parseDate(dateStr);
     if (isNaN(d)) return "Invalid date";
     return d.toLocaleDateString("en-US", {
       month: "short",

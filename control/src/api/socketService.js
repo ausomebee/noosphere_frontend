@@ -6,20 +6,30 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
   : null;
 
 let socket = null;
+// Whose socket it is: one user's socket must never be handed to another
+// (e.g. a different admin signing in on the same tab).
+let socketUserId = null;
+
+// Called after the socket comes back from a drop. While it was down — and it
+// may come back on the other backend server — anything the server pushed was
+// missed, so listeners refetch rather than trust what they hold.
+const reconnectListeners = new Set();
 
 // Preserve socket reference across Vite HMR reloads (development only).
 if (import.meta.hot) {
   if (import.meta.hot.data?.socket) {
     socket = import.meta.hot.data.socket;
+    socketUserId = import.meta.hot.data.socketUserId ?? null;
   }
   import.meta.hot.dispose((data) => {
     data.socket = socket;
+    data.socketUserId = socketUserId;
   });
 }
 
 /**
- * Connect to the WebSocket server. Call once after login (e.g. in the layout).
- * Same configuration as the tenant/client apps — only the registered userType
+ * Connect to the WebSocket server. Call after login (e.g. in the layout). Safe
+ * to call again: the same user gets the same socket back. Same configuration as the tenant/client apps — only the registered userType
  * differs (see registerUser).
  */
 export const connectSocket = ({ accessToken, userId, tenantId }) => {
@@ -28,10 +38,21 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     return null;
   }
 
-  if (socket?.connected) {
-    return socket;
+  if (socket) {
+    if (socketUserId === userId) {
+      // Same user: reuse it even while it is still connecting or reconnecting —
+      // a second socket would double every notification. Keep its token current
+      // so its next (re)connect handshake uses the refreshed one.
+      socket.auth = { token: accessToken };
+      // Fully stopped (not connected and not trying to): start it again.
+      if (!socket.connected && !socket.active) socket.connect();
+      return socket;
+    }
+    // A different user: never hand them the previous user's socket.
+    disconnectSocket();
   }
 
+  socketUserId = userId;
   socket = io(SOCKET_URL, {
     auth: { token: accessToken },
     query: { userId, tenantId },
@@ -45,6 +66,12 @@ export const connectSocket = ({ accessToken, userId, tenantId }) => {
     reconnectionDelay: 2000,
     reconnectionDelayMax: 10000,
     randomizationFactor: 0.5,
+  });
+
+  let connectedBefore = false;
+  socket.on("connect", () => {
+    if (connectedBefore) reconnectListeners.forEach((listener) => listener());
+    connectedBefore = true;
   });
 
   socket.on("connect_error", (err) => {
@@ -75,6 +102,7 @@ export const disconnectSocket = () => {
     socket.disconnect();
     socket = null;
   }
+  socketUserId = null;
 };
 /**
  * Nudges a dropped socket to reconnect immediately.
@@ -94,6 +122,16 @@ export const ensureConnected = () => {
  * Get the current socket instance.
  */
 export const getSocket = () => socket;
+
+/**
+ * Listen for the socket reconnecting after a drop (not its first connect).
+ * Doesn't need a socket yet, so a page can subscribe before login connects one.
+ * Returns an unsubscribe function.
+ */
+export const onReconnect = (callback) => {
+  reconnectListeners.add(callback);
+  return () => reconnectListeners.delete(callback);
+};
 
 /**
  * Listen for real-time notifications. Backend emits "newNotification".
@@ -118,6 +156,7 @@ export default {
   connectSocket,
   disconnectSocket,
   getSocket,
+  onReconnect,
   registerUser,
   onNotification,
   emitNotificationRead,

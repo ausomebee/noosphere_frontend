@@ -31,6 +31,9 @@ const mocks = vi.hoisted(() => ({
   tenantApi: { GetSingleTenant: vi.fn() },
 }));
 
+// Reconnect listeners the component registered, so a test can fire one.
+const reconnectListeners = vi.hoisted(() => []);
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mocks.navigate };
@@ -41,6 +44,10 @@ vi.mock('../ReduxStore/features/authentication', () => ({
   logout: () => ({ type: 'auth/logout' }),
 }));
 vi.mock('../api/socketService', () => ({
+  onReconnect: (fn) => {
+    reconnectListeners.push(fn);
+    return () => {};
+  },
   disconnectSocket: (...a) => mocks.disconnectSocket(...a),
 }));
 vi.mock('../hooks/useIdleTimeout', () => ({ default: () => {} }));

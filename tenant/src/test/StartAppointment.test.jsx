@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "../ReduxStore/features/authentication";
+import {
+  requestNavigation,
+  isIdleLogoutPaused,
+} from "../Helper/liveSessionGuard";
 
 /**
  * The live session screen a clinician runs an appointment from. It loads the
@@ -235,7 +239,10 @@ const makeStore = (user) =>
 // elapsed-time loop only advances when a test says so.
 const frames = [];
 
-const tick = () => {
+// The page starts its clock in an effect that can land just after the loading
+// state clears, so wait for its first frame before running one.
+const tick = async () => {
+  await waitFor(() => expect(frames.length).toBeGreaterThan(0));
   const cb = frames[frames.length - 1];
   act(() => cb(performance.now()));
 };
@@ -872,7 +879,7 @@ describe("the elapsed clock", () => {
 
     const started = Number(sessionStorage.getItem("sessionStartTime_appt-1"));
     vi.spyOn(Date, "now").mockReturnValue(started + 65_000);
-    tick();
+    await tick();
     expect(screen.getByText("1m 5s")).toBeInTheDocument();
   });
 
@@ -880,7 +887,7 @@ describe("the elapsed clock", () => {
     await renderPage();
     const started = Number(sessionStorage.getItem("sessionStartTime_appt-1"));
     vi.spyOn(Date, "now").mockReturnValue(started + 3_661_000);
-    tick();
+    await tick();
     expect(screen.getByText("1hrs 1m 1s")).toBeInTheDocument();
   });
 
@@ -893,6 +900,17 @@ describe("the elapsed clock", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     expect(screen.getByText("0m 12s")).toBeInTheDocument();
+  });
+
+  it("re-syncs the clock when a minimised window regains focus", async () => {
+    await renderPage();
+    const started = Number(sessionStorage.getItem("sessionStartTime_appt-1"));
+    // Ten minutes in the background with no animation frames at all.
+    vi.spyOn(Date, "now").mockReturnValue(started + 600_000);
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    expect(screen.getByText("10m 0s")).toBeInTheDocument();
   });
 
   it("stops counting while the tab is hidden", async () => {
@@ -953,15 +971,49 @@ describe("finishing the session", () => {
     );
   });
 
-  it("attaches the travel window when the appointment required travel", async () => {
-    await renderPage({ appt: { ...appointment, requiresTravel: true } });
+  // Travel times are local wall-clock times on the appointment's own day; they
+  // used to be stamped "…T08:00:00.000Z" on today's UTC date.
+  it("attaches the travel window as local times on the appointment's day", async () => {
+    await renderPage({
+      appt: { ...appointment, requiresTravel: true, date: "2026-03-10T00:00:00.000Z" },
+    });
     fireEvent.click(screen.getByText("+ Log travel time"));
     act(() => probes.travel.onSave({ start: "08:00", end: "08:30" }));
     await finish();
 
     const payload = api.SubmitStartAppointment.mock.calls[0][0];
-    expect(payload.travelStartTime).toMatch(/T08:00:00\.000Z$/);
-    expect(payload.travelEndTime).toMatch(/T08:30:00\.000Z$/);
+    expect(payload.travelStartTime).toBe(new Date(2026, 2, 10, 8, 0).toISOString());
+    expect(payload.travelEndTime).toBe(new Date(2026, 2, 10, 8, 30).toISOString());
+  });
+
+  describe("for a clinician in New York", () => {
+    let originalTZ;
+    beforeAll(() => {
+      originalTZ = process.env.TZ;
+      process.env.TZ = "America/New_York";
+    });
+    afterAll(() => {
+      process.env.TZ = originalTZ;
+      if (originalTZ === undefined) delete process.env.TZ;
+    });
+
+    it("sends 08:00 travel as 08:00 New York time, not 08:00 UTC", async () => {
+      await renderPage({
+        appt: { ...appointment, requiresTravel: true, date: "2026-03-10T00:00:00.000Z" },
+      });
+      fireEvent.click(screen.getByText("+ Log travel time"));
+      act(() => probes.travel.onSave({ start: "08:00", end: "08:30" }));
+      await finish();
+
+      const payload = api.SubmitStartAppointment.mock.calls[0][0];
+      expect(payload.travelStartTime).toBe("2026-03-10T12:00:00.000Z");
+      expect(payload.travelEndTime).toBe("2026-03-10T12:30:00.000Z");
+    });
+
+    it("shows the client's date of birth on the day it is", async () => {
+      await renderPage();
+      expect(screen.getByText("04/01/2015")).toBeInTheDocument();
+    });
   });
 
   it("leaves the travel window off when no travel was logged", async () => {
@@ -1016,13 +1068,48 @@ describe("finishing the session", () => {
 });
 
 describe("leaving the session", () => {
-  it("asks before going back and then navigates away", async () => {
+  // Leaving loses everything collected, so it takes two confirmations.
+  it("asks twice before going back, then ends the session and navigates away", async () => {
+    // Opened from another page in the app (React Router's history index > 0).
+    window.history.replaceState({ idx: 3 }, "");
     await renderPage();
     fireEvent.click(screen.getByText("Back"));
 
     expect(screen.getByTestId("confirm-leave-modal")).toBeInTheDocument();
+    expect(probes.confirmLeave.title).toBe("Leave this session?");
     act(() => probes.confirmLeave.onConfirm());
-    expect(router.navigate).toHaveBeenCalledWith(-1);
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    expect(screen.getByTestId("confirm-leave-modal")).toBeInTheDocument();
+    expect(probes.confirmLeave.message).toMatch(/ends this session and all data collected will be lost/);
+    act(() => probes.confirmLeave.onConfirm());
+    // Back past this page and the guard's duplicate history entry.
+    expect(router.navigate).toHaveBeenCalledWith(-2);
+    expect(sessionStorage.getItem("sessionStartTime_appt-1")).toBeNull();
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBeNull();
+  });
+
+  // Opened in a new tab or from a pasted link there is nothing in-app behind
+  // the page; going back two entries did nothing and left a dead page.
+  it("goes to the appointments list when there is nothing in-app to go back to", async () => {
+    window.history.replaceState({ idx: 0 }, "");
+    await renderPage();
+    fireEvent.click(screen.getByText("Back"));
+    act(() => probes.confirmLeave.onConfirm());
+    act(() => probes.confirmLeave.onConfirm());
+    expect(router.navigate).toHaveBeenCalledWith("/scheduler/appointments", { replace: true });
+    expect(router.navigate).not.toHaveBeenCalledWith(-2);
+  });
+
+  it("does the same for the browser Back button on a fresh tab", async () => {
+    window.history.replaceState(null, "");
+    await renderPage();
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    act(() => probes.confirmLeave.onConfirm());
+    act(() => probes.confirmLeave.onConfirm());
+    expect(router.navigate).toHaveBeenCalledWith("/scheduler/appointments", { replace: true });
   });
 
   it("stays put when the leave prompt is dismissed", async () => {
@@ -1032,6 +1119,137 @@ describe("leaving the session", () => {
 
     expect(screen.queryByTestId("confirm-leave-modal")).not.toBeInTheDocument();
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it("stays put when the second, final prompt is dismissed", async () => {
+    await renderPage();
+    fireEvent.click(screen.getByText("Back"));
+    act(() => probes.confirmLeave.onConfirm());
+    act(() => probes.confirmLeave.onClose());
+
+    expect(screen.queryByTestId("confirm-leave-modal")).not.toBeInTheDocument();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBe("1");
+
+    // And the next attempt starts again from the first question.
+    fireEvent.click(screen.getByText("Back"));
+    expect(probes.confirmLeave.title).toBe("Leave this session?");
+  });
+
+  it("holds sidebar and header navigation behind the same double confirmation", async () => {
+    await renderPage();
+    const proceed = vi.fn();
+    act(() => requestNavigation(proceed));
+    expect(screen.getByTestId("confirm-leave-modal")).toBeInTheDocument();
+    act(() => probes.confirmLeave.onConfirm());
+    expect(proceed).not.toHaveBeenCalled();
+    act(() => probes.confirmLeave.onConfirm());
+    expect(proceed).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops the navigation hold once the page is gone", async () => {
+    const view = await renderPage();
+    view.unmount();
+    const proceed = vi.fn();
+    requestNavigation(proceed);
+    expect(proceed).toHaveBeenCalledTimes(1);
+  });
+
+  it("catches the browser Back button and asks first", async () => {
+    window.history.replaceState({ idx: 3 }, "");
+    await renderPage();
+    const depth = window.history.length;
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(screen.getByTestId("confirm-leave-modal")).toBeInTheDocument();
+    // The guard entry is put back, so a second Back is caught too.
+    expect(window.history.length).toBe(depth + 1);
+    act(() => probes.confirmLeave.onConfirm());
+    act(() => probes.confirmLeave.onConfirm());
+    expect(router.navigate).toHaveBeenCalledWith(-2);
+  });
+});
+
+describe("while the session runs", () => {
+  const beforeUnload = () => {
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+    return event;
+  };
+
+  it("makes a reload or close ask the browser's own question", async () => {
+    await renderPage();
+    expect(beforeUnload().defaultPrevented).toBe(true);
+  });
+
+  it("lets the page unload freely once the session is finished", async () => {
+    await renderPage();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText("Finish Appointment"));
+    });
+    expect(beforeUnload().defaultPrevented).toBe(false);
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBeNull();
+  });
+
+  it("does not hold the page before the appointment has loaded", async () => {
+    api.GetAppointmentById.mockReturnValue(new Promise(() => {}));
+    api.GetClientProgramAndTargetsDetails.mockReturnValue(new Promise(() => {}));
+    render(
+      <Provider store={makeStore()}>
+        <StartAppointment />
+      </Provider>
+    );
+    expect(beforeUnload().defaultPrevented).toBe(false);
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBeNull();
+  });
+
+  it("marks the session live, and clears the mark when the page is left in-app", async () => {
+    const view = await renderPage();
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBe("1");
+    view.unmount();
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBeNull();
+  });
+
+  it("pauses the idle logout until the session is over", async () => {
+    const view = await renderPage();
+    expect(isIdleLogoutPaused()).toBe(true);
+    view.unmount();
+    expect(isIdleLogoutPaused()).toBe(false);
+  });
+});
+
+describe("loading a page that was reloaded mid-session", () => {
+  beforeEach(() => {
+    sessionStorage.setItem("liveSession_appt-1", "1");
+    sessionStorage.setItem("sessionStartTime_appt-1", "123");
+  });
+
+  it("ends the session, clears its data and returns to the appointments", async () => {
+    render(
+      <Provider store={makeStore()}>
+        <StartAppointment />
+      </Provider>
+    );
+    await waitFor(() =>
+      expect(router.navigate).toHaveBeenCalledWith("/scheduler/appointments", {
+        replace: true,
+      })
+    );
+    expect(toast.showToast).toHaveBeenCalledWith(
+      "The session was ended because the page was reloaded.",
+      "warning"
+    );
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBeNull();
+    expect(sessionStorage.getItem("sessionStartTime_appt-1")).toBeNull();
+    expect(api.GetAppointmentById).not.toHaveBeenCalled();
+  });
+
+  it("leaves another appointment's session alone", async () => {
+    router.params = { clientId: "client-1", appointmentId: "appt-2" };
+    await renderPage();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("liveSession_appt-1")).toBe("1");
   });
 });
 

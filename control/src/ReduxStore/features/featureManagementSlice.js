@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/FeatureApis";
-import { showToast } from "../../Helper/ShowToast";
 import { formatDatePadded } from "../../Helper/Formatters";
 
 const initialState = {
@@ -228,7 +227,8 @@ export const asyncFetchAllFeatures = createAsyncThunk(
       const response = await api.GetAllFeatures({ accessToken, refreshToken });
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      // The API helper re-throws a plain Error, so the reason is on `message`.
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -385,21 +385,11 @@ const featureManagementSlice = createSlice({
             title: action.payload.name,
             features: [], // Initialize with empty features, to be populated by asyncFetchAllFeatures
           });
-          showToast({
-            message: `Feature group "${action.payload.name}" created successfully`,
-            type: "success",
-          });
         }
       })
       .addCase(asyncCreateFeatureGroup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to create feature group: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Update Feature Group
       .addCase(asyncUpdateFeatureGroup.pending, (state) => {
@@ -414,20 +404,10 @@ const featureManagementSlice = createSlice({
         if (group) {
           group.title = action.payload.name;
         }
-        showToast({
-          message: `Feature group "${action.payload.name}" updated successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncUpdateFeatureGroup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to update feature group: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Delete Feature Group
       .addCase(asyncDeleteFeatureGroup.pending, (state) => {
@@ -456,20 +436,10 @@ const featureManagementSlice = createSlice({
             (g) => g.id !== action.payload.id
           );
         }
-        showToast({
-          message: `Feature group deleted successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncDeleteFeatureGroup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to delete feature group: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Create Feature
       .addCase(asyncCreateFeature.pending, (state) => {
@@ -492,20 +462,10 @@ const featureManagementSlice = createSlice({
             selected: false,
           });
         }
-        showToast({
-          message: `Feature "${action.payload.name}" created successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncCreateFeature.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to create feature: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Update Feature
       .addCase(asyncUpdateFeature.pending, (state) => {
@@ -534,20 +494,10 @@ const featureManagementSlice = createSlice({
             };
           }
         });
-        showToast({
-          message: `Feature "${action.payload.name}" updated successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncUpdateFeature.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to update feature: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Delete Feature
       .addCase(asyncDeleteFeature.pending, (state) => {
@@ -561,20 +511,10 @@ const featureManagementSlice = createSlice({
             (f) => f.id !== action.payload.id
           );
         });
-        showToast({
-          message: `Feature deleted successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncDeleteFeature.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to delete feature: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Move Feature
       .addCase(asyncMoveFeatureToAnotherGroup.pending, (state) => {
@@ -598,20 +538,10 @@ const featureManagementSlice = createSlice({
             toGroup.features.push(featureToMove);
           }
         }
-        showToast({
-          message: `Feature moved to group successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncMoveFeatureToAnotherGroup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to move feature: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Enable or Disable Feature
       .addCase(asyncEnableOrDisableFeature.pending, (state) => {
@@ -628,22 +558,10 @@ const featureManagementSlice = createSlice({
             feature.active = action.payload.active;
           }
         });
-        showToast({
-          message: `Feature ${
-            action.payload.active ? "enabled" : "disabled"
-          } successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncEnableOrDisableFeature.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to toggle feature: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Assign Feature to Plan
       .addCase(asyncAssignFeatureToPlan.pending, (state) => {
@@ -660,20 +578,10 @@ const featureManagementSlice = createSlice({
             feature.plan = action.payload.applicablePlans;
           }
         });
-        showToast({
-          message: `Feature assigned to plan(s) successfully`,
-          type: "success",
-        });
       })
       .addCase(asyncAssignFeatureToPlan.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to assign feature to plan: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
       // Fetch All Feature Groups
       .addCase(asyncFetchAllFeatureGroups.pending, (state) => {
@@ -720,22 +628,11 @@ const featureManagementSlice = createSlice({
       }
     }
   });
-
-  showToast({
-    message: "Feature groups fetched successfully",
-    type: "success",
-  });
 })
 
       .addCase(asyncFetchAllFeatureGroups.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to fetch feature groups: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       })
 
       // Fetch All Features
@@ -779,22 +676,11 @@ const featureManagementSlice = createSlice({
             group.features.push(mappedFeature);
           }
         });
-
-        showToast({
-          message: "Features fetched successfully",
-          type: "success",
-        });
       })
 
       .addCase(asyncFetchAllFeatures.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        showToast({
-          message: `Failed to fetch features: ${
-            action.payload || "Unknown error"
-          }`,
-          type: "error",
-        });
       });
   },
 });

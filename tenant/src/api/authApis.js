@@ -1,66 +1,91 @@
 import axios from "axios";
+import AxiosInterceptor from "../Helper/AxiosInterceptor";
+import { NETWORK_ERROR_MESSAGE, isNetworkFailure } from "../Helper/authErrors";
 // Define your API endpoints
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 
+// These calls run before there is a session, so they go out on plain axios,
+// which has no timeout of its own: a dead connection left the login button
+// spinning forever. 20s is long enough for a slow mobile network.
+const AUTH_TIMEOUT_MS = 20000;
+const withTimeout = { timeout: AUTH_TIMEOUT_MS };
+
+// Builds the Error these functions throw. A network failure carries the
+// "can't reach the server" text (and a flag) instead of the generic fallback,
+// so the pages can tell the user what actually went wrong.
+const toAuthError = (error, fallback, serverMessage = error?.response?.data?.message) => {
+  if (isNetworkFailure(error)) {
+    const networkError = new Error(NETWORK_ERROR_MESSAGE);
+    networkError.isNetworkError = true;
+    return networkError;
+  }
+  return new Error(serverMessage || fallback);
+};
+
 const AdminVerifyToken = async ({ userId, token }) => {
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/auth/tenant/verify`, {
-      userId,
-      token,
-    });
+    const response = await axios.post(
+      `${PLAIN_API_URL}/auth/tenant/verify`,
+      { userId, token },
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Verification failed");
+    throw toAuthError(error, "Verification failed");
   }
 };
 
 const AdminLogin = async ({ email, password }) => {
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/tenant/signin`, {
-      email,
-      password,
-    });
+    const response = await axios.post(
+      `${PLAIN_API_URL}/tenant/signin`,
+      { email, password },
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Login failed");
+    throw toAuthError(error, "Login failed");
   }
 };
 const AdminOnboarding = async ({ id, password }) => {
   try {
-    const response = await axios.patch(`${PLAIN_API_URL}/tenant/setpassword`, {
-      id,
-      password,
-    });
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/tenant/setpassword`,
+      { id, password },
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Admin Onboarding failed");
+    throw toAuthError(error, "Admin Onboarding failed");
   }
 };
 
 const AdminForgetPassword = async ({ email }) => {
   try {
     const response = await axios.get(
-      `${PLAIN_API_URL}/tenant/forgotpassword/${email}`
+      `${PLAIN_API_URL}/tenant/forgotpassword/${email}`,
+      withTimeout
     );
     return response;
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Forget Password Email failed"
-    );
+    throw toAuthError(error, "Forget Password Email failed");
   }
 };
 
 const AdminSetPassword = async ({ id, password }) => {
   try {
-    const response = await axios.patch(`${PLAIN_API_URL}/tenant/setpassword`, {
-      id,
-      password,
-    });
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/tenant/setpassword`,
+      { id, password },
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(
-      error.response?.data?.data?.message || "Password setting failed"
+    throw toAuthError(
+      error,
+      "Password setting failed",
+      error.response?.data?.data?.message
     );
   }
 };
@@ -68,31 +93,46 @@ const AdminSetPassword = async ({ id, password }) => {
 
 const Admin2FALink = async ({ id, moduleType }) => {
   try {
-    const response = await axios.get(`${PLAIN_API_URL}/auth/tenant/${id}/${moduleType}`, );
+    const response = await axios.get(
+      `${PLAIN_API_URL}/auth/tenant/${id}/${moduleType}`,
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error in 2FA link");
+    throw toAuthError(error, "error in 2FA link");
   }
 };
+// Saving the 2FA policy is an admin action, so it carries the session's token
+// through the interceptor (which also refreshes it). A caller with no session
+// yet keeps the old unauthenticated request.
 const SuperAdminChoices = async ({
   Authenticator2FA,
   securityQuestion,
   setForAll,
-  tenantId
+  tenantId,
+  accessToken,
+  refreshToken,
 }) => {
+  const body = {
+    Authenticator2FA,
+    securityQuestion,
+    setForAll,
+    tenantId
+  };
   try {
-    const response = await axios.patch(
-      `${PLAIN_API_URL}/tenant/tenantadminchoices`,
-      {
-        Authenticator2FA,
-        securityQuestion,
-        setForAll,
-        tenantId
-      }
-    );
+    const response = accessToken
+      ? await AxiosInterceptor(accessToken, refreshToken).patch(
+          `${PLAIN_API_URL}/tenant/tenantadminchoices`,
+          body
+        )
+      : await axios.patch(
+          `${PLAIN_API_URL}/tenant/tenantadminchoices`,
+          body,
+          withTimeout
+        );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error in super admin choices");
+    throw toAuthError(error, "error in super admin choices");
   }
 };
 const GetSuperAdminChoices = async ({id}) => {
@@ -103,11 +143,12 @@ const GetSuperAdminChoices = async ({id}) => {
         headers: {
           "Content-Type": "application/json",
         },
+        ...withTimeout,
       }
     );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error in getting super admin choices");
+    throw toAuthError(error, "error in getting super admin choices");
   }
 };
 
@@ -121,11 +162,12 @@ const Admin2FACreateSecretMessage = async ({ userId, secret, authQuestion, modul
         secret,
         authQuestion,
         module
-      }
+      },
+      withTimeout
     );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error in creating secret message");
+    throw toAuthError(error, "error in creating secret message");
   }
 };
 const Admin2FAVerifySecretMessage = async ({ userId, secret, authQuestion }) => {
@@ -136,30 +178,34 @@ const Admin2FAVerifySecretMessage = async ({ userId, secret, authQuestion }) => 
         userId,
         secret,
        authQuestion 
-      }
+      },
+      withTimeout
     );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error verifying secret message");
+    throw toAuthError(error, "error verifying secret message");
   }
 };
 const Admin2FAVerify = async ({ userId, token }) => {
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/auth/tenant/verify`, {
-      userId,
-      token,
-    });
+    const response = await axios.post(
+      `${PLAIN_API_URL}/auth/tenant/verify`,
+      { userId, token },
+      withTimeout
+    );
     return response;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "error in 2FA verify");
+    throw toAuthError(error, "error in 2FA verify");
   }
 };
 
 export const refreshAccessToken = async (refreshToken, onSuccess) => {
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/auth/refresh-token`, {
-      refreshToken,
-    });
+    const response = await axios.post(
+      `${PLAIN_API_URL}/auth/refresh-token`,
+      { refreshToken },
+      withTimeout
+    );
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     if (accessToken) {
       onSuccess?.({ accessToken, refreshToken: newRefreshToken });

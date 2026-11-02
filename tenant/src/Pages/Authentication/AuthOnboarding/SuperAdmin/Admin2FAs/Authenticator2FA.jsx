@@ -5,6 +5,7 @@ import TenantLogo from "../../../../../assets/Logo.svg";
 import "../../../Auth.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../api/authApis";
+import { authErrorMessage, isNetworkFailure, NETWORK_ERROR_MESSAGE } from "../../../../../Helper/authErrors";
 import useAuth from "../../../../../hooks/useAuth";
 import { showToast } from "../../../../../Helper/ShowToast";
 
@@ -82,10 +83,7 @@ const Authenticator2FA = () => {
       return false;
     } catch (error) {
       console.error("2FA verification failed:", error);
-      showToast(
-        error?.response?.data?.message || "Verification failed.",
-        "error"
-      );
+      showToast(authErrorMessage(error, "Verification failed."), "error");
       return false;
     } finally {
       setLoading(false);
@@ -175,7 +173,10 @@ const Authenticator2FA = () => {
       }
     } catch (error) {
       console.error("Error during OTP submission:", error);
-      showToast("An error occurred. Please try again.", "error");
+      showToast(
+        isNetworkFailure(error) ? NETWORK_ERROR_MESSAGE : "An error occurred. Please try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -191,7 +192,10 @@ const Authenticator2FA = () => {
       }
     } catch (error) {
       console.error("Error:", error);
-      showToast("An error occurred. Please try again.", "error");
+      showToast(
+        isNetworkFailure(error) ? NETWORK_ERROR_MESSAGE : "An error occurred. Please try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }

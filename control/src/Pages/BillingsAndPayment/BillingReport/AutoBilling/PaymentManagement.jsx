@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import debounce from "lodash/debounce";
 import {
   SwitchInput,
@@ -11,6 +11,17 @@ import api from "../../../../api/AutoBillingPandAApis";
 import { showToast, showApiError } from "../../../../Helper/ShowToast";
 import useAuth from "../../../../hooks/useAuth";
 import usePermission from "../../../../hooks/usePermission";
+
+// On/off switches: saved the moment they change, never debounced.
+const TOGGLE_FIELDS = new Set([
+  "chargeOnDueDate",
+  "chargeLastUsedFirst",
+  "chargeAlternative",
+  "notifyTenant",
+  "manualCancel",
+  "sendWarningEmail",
+  "sendOnSubscriptionCancel",
+]);
 
 const PaymentManagement = () => {
   const [, setIsLoading] = useState(false);
@@ -101,144 +112,181 @@ const PaymentManagement = () => {
     }
   };
 
-  const debouncedSave = useCallback(
-    debounce(async (settings, fieldOrForm, isForm = false) => {
-      setIsLoading(true);
-      try {
-        const { id } = settings;
-        if (!isForm) {
-          // Auto-save for non-form fields
-          if (fieldOrForm === "chargeOnDueDate") {
-            await api.UpdateChargeOnDueDateToggle({
-              accessToken,
-              refreshToken,
-              id,
-              chargeOnDueDate: settings.chargeOnDueDate,
-            });
-          } else if (fieldOrForm === "chargeLastUsedFirst") {
-            await api.UpdateChargeLastUsedFirstToggle({
-              accessToken,
-              refreshToken,
-              id,
-              chargeLastUsedFirst: settings.chargeLastUsedFirst,
-            });
-          } else if (fieldOrForm === "chargeAlternative") {
-            await api.UpdateChargeAlternativeToggle({
-              accessToken,
-              refreshToken,
-              id,
-              chargeAlternative: settings.chargeAlternative,
-            });
-          } else if (fieldOrForm === "retryBefore") {
-            await api.UpdateRetryBeforeCount({
-              accessToken,
-              refreshToken,
-              id,
-              retryBefore: parseInt(settings.retryBefore, 10),
-            });
-          } else if (fieldOrForm === "retryAfter") {
-            await api.UpdateRetryAfterCount({
-              accessToken,
-              refreshToken,
-              id,
-              retryAfter: parseInt(settings.retryAfter, 10),
-            });
-          } else if (fieldOrForm === "notifyTenant") {
-            await api.UpdateNotifyTenantToggle({
-              accessToken,
-              refreshToken,
-              id,
-              notifyTenant: settings.notifyTenant,
-            });
-          } else if (fieldOrForm === "cancelAfter") {
-            await api.UpdateCancelAfter({
-              accessToken,
-              refreshToken,
-              id,
-              cancelAfter: parseInt(settings.cancelAfter, 10),
-            });
-          } else if (fieldOrForm === "manualCancel") {
-            await api.UpdateManualCancel({
-              accessToken,
-              refreshToken,
-              id,
-              manualCancel: settings.manualCancel,
-            });
-          } else if (fieldOrForm === "emailAfterAttempts") {
-            await api.UpdateEmailAfterAttempts({
-              accessToken,
-              refreshToken,
-              id,
-              emailAfterAttempts: parseInt(settings.emailAfterAttempts, 10),
-            });
-            setPaymentSettings((prev) => ({
-              ...prev,
-              sendWarningEmail: parseInt(settings.emailAfterAttempts, 10) > 0,
-            }));
-          } else if (fieldOrForm === "sendWarningEmail") {
-            await api.UpdateEmailAfterAttempts({
-              accessToken,
-              refreshToken,
-              id,
-              emailAfterAttempts: settings.sendWarningEmail
-                ? parseInt(settings.emailAfterAttempts, 10)
-                : 0,
-            });
-          } else if (fieldOrForm === "sendOnSubscriptionCancel") {
-            await api.SendOnSubCancel({
-              accessToken,
-              refreshToken,
-              id,
-              sendOnSubscriptionCancel: settings.sendOnSubscriptionCancel,
-            });
-          }
-          showToast(`${fieldOrForm} updated successfully`, "success");
-        } else {
-          // Save for form fields
-          if (fieldOrForm === "notificationEmail") {
-            await api.NotificationEmail({
-              accessToken,
-              refreshToken,
-              id,
-              notificationEmailHeader: settings.notificationEmailHeader,
-              notificationEmailBody: settings.notificationEmailBody,
-            });
-          } else if (fieldOrForm === "suspensionAction") {
-            await api.UpdateSuspensionAction({
-              accessToken,
-              refreshToken,
-              id,
-              suspensionAction: settings.suspensionAction,
-              errorMessage: settings.errorMessage,
-            });
-          } else if (fieldOrForm === "warningEmail") {
-            await api.WarningEmail({
-              accessToken,
-              refreshToken,
-              id,
-              warningMailHeader: settings.warningMailHeader,
-              warningMailBody: settings.warningMailBody,
-            });
-          } else if (fieldOrForm === "cancelEmail") {
-            await api.CancelEmail({
-              accessToken,
-              refreshToken,
-              id,
-              cancelMailHeader: settings.cancelMailHeader,
-              cancelMailBody: settings.cancelMailBody,
-            });
-          }
-          showToast(`${fieldOrForm} form updated successfully`, "success");
+  // Persists one field or form. Toggles call it straight away (saveNow); typed
+  // fields and Save buttons go through debouncedSave, which keeps one debounce
+  // per field/form — a single shared debounce dropped all but the last of two
+  // settings changed within 500 ms.
+  const saveSettings = async (settings, fieldOrForm, isForm = false) => {
+    setIsLoading(true);
+    try {
+      const { id } = settings;
+      if (!isForm) {
+        // Auto-save for non-form fields
+        if (fieldOrForm === "chargeOnDueDate") {
+          await api.UpdateChargeOnDueDateToggle({
+            accessToken,
+            refreshToken,
+            id,
+            chargeOnDueDate: settings.chargeOnDueDate,
+          });
+        } else if (fieldOrForm === "chargeLastUsedFirst") {
+          await api.UpdateChargeLastUsedFirstToggle({
+            accessToken,
+            refreshToken,
+            id,
+            chargeLastUsedFirst: settings.chargeLastUsedFirst,
+          });
+        } else if (fieldOrForm === "chargeAlternative") {
+          await api.UpdateChargeAlternativeToggle({
+            accessToken,
+            refreshToken,
+            id,
+            chargeAlternative: settings.chargeAlternative,
+          });
+        } else if (fieldOrForm === "retryBefore") {
+          await api.UpdateRetryBeforeCount({
+            accessToken,
+            refreshToken,
+            id,
+            retryBefore: parseInt(settings.retryBefore, 10),
+          });
+        } else if (fieldOrForm === "retryAfter") {
+          await api.UpdateRetryAfterCount({
+            accessToken,
+            refreshToken,
+            id,
+            retryAfter: parseInt(settings.retryAfter, 10),
+          });
+        } else if (fieldOrForm === "notifyTenant") {
+          await api.UpdateNotifyTenantToggle({
+            accessToken,
+            refreshToken,
+            id,
+            notifyTenant: settings.notifyTenant,
+          });
+        } else if (fieldOrForm === "cancelAfter") {
+          await api.UpdateCancelAfter({
+            accessToken,
+            refreshToken,
+            id,
+            cancelAfter: parseInt(settings.cancelAfter, 10),
+          });
+        } else if (fieldOrForm === "manualCancel") {
+          await api.UpdateManualCancel({
+            accessToken,
+            refreshToken,
+            id,
+            manualCancel: settings.manualCancel,
+          });
+        } else if (fieldOrForm === "emailAfterAttempts") {
+          await api.UpdateEmailAfterAttempts({
+            accessToken,
+            refreshToken,
+            id,
+            emailAfterAttempts: parseInt(settings.emailAfterAttempts, 10),
+          });
+          setPaymentSettings((prev) => ({
+            ...prev,
+            sendWarningEmail: parseInt(settings.emailAfterAttempts, 10) > 0,
+          }));
+        } else if (fieldOrForm === "sendWarningEmail") {
+          await api.UpdateEmailAfterAttempts({
+            accessToken,
+            refreshToken,
+            id,
+            emailAfterAttempts: settings.sendWarningEmail
+              ? parseInt(settings.emailAfterAttempts, 10)
+              : 0,
+          });
+        } else if (fieldOrForm === "sendOnSubscriptionCancel") {
+          await api.SendOnSubCancel({
+            accessToken,
+            refreshToken,
+            id,
+            sendOnSubscriptionCancel: settings.sendOnSubscriptionCancel,
+          });
         }
-        await fetchPaymentSettings();
-      } catch (error) {
-        showApiError(error, "UPDATE_PAYMENT");
-      } finally {
-        setIsLoading(false);
+        showToast(`${fieldOrForm} updated successfully`, "success");
+      } else {
+        // Save for form fields
+        if (fieldOrForm === "notificationEmail") {
+          await api.NotificationEmail({
+            accessToken,
+            refreshToken,
+            id,
+            notificationEmailHeader: settings.notificationEmailHeader,
+            notificationEmailBody: settings.notificationEmailBody,
+          });
+        } else if (fieldOrForm === "suspensionAction") {
+          await api.UpdateSuspensionAction({
+            accessToken,
+            refreshToken,
+            id,
+            suspensionAction: settings.suspensionAction,
+            errorMessage: settings.errorMessage,
+          });
+        } else if (fieldOrForm === "warningEmail") {
+          await api.WarningEmail({
+            accessToken,
+            refreshToken,
+            id,
+            warningMailHeader: settings.warningMailHeader,
+            warningMailBody: settings.warningMailBody,
+          });
+        } else if (fieldOrForm === "cancelEmail") {
+          await api.CancelEmail({
+            accessToken,
+            refreshToken,
+            id,
+            cancelMailHeader: settings.cancelMailHeader,
+            cancelMailBody: settings.cancelMailBody,
+          });
+        }
+        showToast(`${fieldOrForm} form updated successfully`, "success");
       }
-    }, 500),
-    [fetchPaymentSettings]
-  );
+      await fetchPaymentSettings();
+    } catch (error) {
+      showApiError(error, "UPDATE_PAYMENT");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Debounced calls run the latest saveSettings, not the one from the render
+  // that scheduled them.
+  const saveSettingsRef = useRef(saveSettings);
+  useEffect(() => {
+    saveSettingsRef.current = saveSettings;
+  });
+  const debouncers = useRef({});
+
+  // The warning-email toggle and its attempt count share one endpoint, so they
+  // share a debounce key too (see saveNow).
+  const debounceKey = (fieldOrForm, isForm) =>
+    isForm
+      ? `form:${fieldOrForm}`
+      : fieldOrForm === "sendWarningEmail"
+      ? "emailAfterAttempts"
+      : fieldOrForm;
+
+  const debouncedSave = useCallback((settings, fieldOrForm, isForm = false) => {
+    const key = debounceKey(fieldOrForm, isForm);
+    if (!debouncers.current[key]) {
+      debouncers.current[key] = debounce(
+        (...args) => saveSettingsRef.current(...args),
+        500
+      );
+    }
+    debouncers.current[key](settings, fieldOrForm, isForm);
+  }, []);
+
+  // A toggle saves at once. Any typed change still waiting on the same
+  // endpoint is dropped: this save already carries it (it is in state), and
+  // letting it fire later would put the toggle back.
+  const saveNow = (settings, field) => {
+    debouncers.current[debounceKey(field, false)]?.cancel?.();
+    saveSettingsRef.current(settings, field);
+  };
 
   const handleInputChange = (key, value, isFormField = false) => {
     // Inline fields auto-persist via debouncedSave, so gate the whole path —
@@ -249,7 +297,8 @@ const PaymentManagement = () => {
       [key]: value,
     }));
     if (!isFormField) {
-      debouncedSave({ ...paymentSettings, [key]: value }, key);
+      if (TOGGLE_FIELDS.has(key)) saveNow({ ...paymentSettings, [key]: value }, key);
+      else debouncedSave({ ...paymentSettings, [key]: value }, key);
     }
   };
 

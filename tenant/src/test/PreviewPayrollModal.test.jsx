@@ -524,3 +524,53 @@ describe("saving the preview as a cycle", () => {
     expect(apiMock.CreateManualPayrollCycle).not.toHaveBeenCalled();
   });
 });
+
+// A background token refresh hands the modal new token props. That used to
+// re-run the fetch and wipe whatever the admin had added to the preview.
+describe("a token refresh while the preview is open", () => {
+  const rerenderWith = (rerender, props) =>
+    rerender(
+      <Provider store={makeStore()}>
+        <PreviewPayrollModal
+          isOpen
+          onClose={onClose}
+          onSave={onSave}
+          payrollData={PAYROLL_WINDOW}
+          tenantId="tenant-1"
+          accessToken="at"
+          refreshToken="rt"
+          {...props}
+        />
+      </Provider>
+    );
+
+  it("keeps the admin's edits and does not refetch", async () => {
+    const { rerender } = renderModal();
+    await rosterLoaded();
+    fireEvent.click(screen.getByText("income staff-1"));
+    fireEvent.click(screen.getByText("save-income"));
+
+    rerenderWith(rerender, { accessToken: "at-2", refreshToken: "rt-2" });
+
+    expect(apiMock.GetStaffWithPayrollByDate).toHaveBeenCalledTimes(1);
+    expect(rows.byId["staff-1"].additionalIncomes).toEqual([{ id: "inc-1" }, { id: "inc-new" }]);
+  });
+
+  it("still refetches for a new payroll window, with the latest token", async () => {
+    const { rerender } = renderModal();
+    await rosterLoaded();
+    rerenderWith(rerender, { accessToken: "at-2", refreshToken: "rt-2" });
+    rerenderWith(rerender, {
+      accessToken: "at-2",
+      refreshToken: "rt-2",
+      payrollData: { ...PAYROLL_WINDOW, from: "2026-06-01", to: "2026-06-30" },
+    });
+
+    await waitFor(() => expect(apiMock.GetStaffWithPayrollByDate).toHaveBeenCalledTimes(2));
+    expect(apiMock.GetStaffWithPayrollByDate.mock.calls[1][0]).toMatchObject({
+      startDate: "2026-06-01",
+      accessToken: "at-2",
+      refreshToken: "rt-2",
+    });
+  });
+});

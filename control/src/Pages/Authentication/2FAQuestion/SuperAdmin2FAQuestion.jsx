@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
+import { authErrorMessage } from "../../../Helper/authErrors";
 
 // Yup validation schema for security question
 const securityQuestionSchema = yup.object().shape({
@@ -187,7 +188,7 @@ const SuperAdmin2FAQuestion = () => {
     } catch (error) {
       if (import.meta.env.DEV) console.error("2FA verification failed:", error);
       const message =
-        error?.response?.data?.message || "Failed to set security question.";
+        authErrorMessage(error, "Failed to set security question.");
       setErrorMessage(message);
       showToast(message, "error");
     } finally {

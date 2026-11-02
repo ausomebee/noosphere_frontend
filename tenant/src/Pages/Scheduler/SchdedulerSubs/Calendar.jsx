@@ -141,14 +141,6 @@ const Calendar = () => {
   const [staffWithCounts, setStaffWithCounts] = useState([]);
   const [clientsWithCounts, setClientsWithCounts] = useState([]);
 
-  useEffect(() => {
-    window.CALENDAR_DEBUG = {
-      staffWithCounts,
-      clientsWithCounts,
-      filteredAppointments: filteredAppointments.length,
-    };
-  }, [staffWithCounts, clientsWithCounts, filteredAppointments]);
-
   const fetchInitialData = useCallback(async () => {
     if (!tenantId || !accessToken) {
       setLoading(false);

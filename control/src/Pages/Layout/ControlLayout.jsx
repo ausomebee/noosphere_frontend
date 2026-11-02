@@ -20,7 +20,7 @@ import { PiUserList } from "react-icons/pi";
 import { IoNotifications } from "react-icons/io5";
 import notificationApi from "../../api/notificationApi";
 import useSocket from "../../hooks/useSocket";
-import { disconnectSocket } from "../../api/socketService";
+import { disconnectSocket, onReconnect } from "../../api/socketService";
 import "./ControlLayout.css";
 import NoosphereLogo from "../../assets/NoosphereLogo.png";
 import useIdleTimeout from "../../hooks/useIdleTimeout";
@@ -90,18 +90,23 @@ const Layout = ({ children }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch the unread notification count once on mount for the header badge.
+  // Fetch the unread notification count on mount for the header badge.
   useEffect(() => {
     const userId = user?.id;
     if (!userId || !accessToken) return;
-    notificationApi
-      .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
-      .then((res) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
-        setUnreadNotifications(list.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
+    const loadUnreadCount = () =>
+      notificationApi
+        .getNotifications({ userId, userType: "ADMIN", accessToken, refreshToken })
+        .then((res) => {
+          const raw = res?.data?.data ?? res?.data ?? res ?? [];
+          const list = (Array.isArray(raw) ? raw : []).map((n) => n?.notification ?? n);
+          setUnreadNotifications(list.filter((n) => !n.isRead).length);
+        })
+        .catch(() => {});
+    loadUnreadCount();
+    // A reconnect means pushes may have been missed while the socket was
+    // down, so recount from the server.
+    return onReconnect(loadUnreadCount);
   }, [user?.id, accessToken]);
 
   const toggleSidebar = () => {

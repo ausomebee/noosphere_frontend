@@ -14,6 +14,7 @@ import {
   onUserOffline,
   emitMessagesRead,
   onMessagesRead,
+  onReconnect,
 } from "../../api/socketService";
 import { showToast } from "../../Helper/ShowToast";
 import { getInitials, formatMsgTime, formatDateHeader } from "../../Helper/Formatters";
@@ -24,6 +25,32 @@ const getClientName = (client) =>
   client?.fullName ||
   `${client?.firstName || ""} ${client?.lastName || ""}`.trim() ||
   "Unknown";
+
+const isLocalRow = (m) => String(m?.id).startsWith("tmp_");
+
+// `fresh` (from the server) plus each conversation's local-only rows from
+// `prev`. A local row — pending or marked "Not sent" — whose text the server
+// lists from us at around the same time was delivered after all, so it is not
+// carried over twice. Only a server copy from no earlier than a minute before
+// counts: the same short reply sent last week is not this message.
+const mergeLocalRows = (fresh, prev) => {
+  const merged = { ...fresh };
+  Object.entries(prev || {}).forEach(([partnerId, msgs]) => {
+    const serverRows = merged[partnerId] || [];
+    const local = (msgs || []).filter(
+      (m) =>
+        isLocalRow(m) &&
+        !serverRows.some(
+          (s) =>
+            s.senderId === m.senderId &&
+            s.content === m.content &&
+            new Date(s.createdAt) >= new Date(m.createdAt) - 60000
+        )
+    );
+    if (local.length) merged[partnerId] = [...serverRows, ...local];
+  });
+  return merged;
+};
 
 const MessageModal = ({ isOpen, onClose }) => {
   const { userId, tenantId, accessToken, refreshToken } = useAuth();
@@ -41,9 +68,9 @@ const MessageModal = ({ isOpen, onClose }) => {
   const mountedRef = useRef(true);
 
   // ─── On open: load clients + message history ─────────────────────
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async ({ quiet = false } = {}) => {
     if (!userId || !tenantId) return;
-    setLoadingClients(true);
+    if (!quiet) setLoadingClients(true);
     try {
       const [clientRes, msgRes] = await Promise.allSettled([
         orgApi.GetStaffClients({ staffId: userId, tenantId, accessToken, refreshToken }),
@@ -68,7 +95,10 @@ const MessageModal = ({ isOpen, onClose }) => {
           (acc[partnerId] = acc[partnerId] || []).push(msg);
           return acc;
         }, {});
-        setMessages(grouped);
+        // Keep our own rows the server doesn't have yet — messages still
+        // sending and ones marked "Not sent" — or a reload (e.g. after a
+        // reconnect) would silently drop them, and their text with them.
+        setMessages((prev) => mergeLocalRows(grouped, prev));
       } else {
         console.error("[MessageModal] Failed to load messages:", msgRes.reason);
       }
@@ -83,6 +113,13 @@ const MessageModal = ({ isOpen, onClose }) => {
     mountedRef.current = true;
     if (isOpen) fetchData();
     return () => { mountedRef.current = false; };
+  }, [isOpen, fetchData]);
+
+  // Messages sent while the socket was down never arrived here. Reload the
+  // history when it comes back, without the loading state.
+  useEffect(() => {
+    if (!isOpen) return;
+    return onReconnect(() => fetchData({ quiet: true }));
   }, [isOpen, fetchData]);
 
   // ─── Scroll to bottom on new messages ───────────────────────────
@@ -172,7 +209,7 @@ const MessageModal = ({ isOpen, onClose }) => {
 
     // Collect unread received messages before updating state
     const unread = (messages[clientId] || []).filter(
-      (m) => m.senderId !== userId && !m.isRead && !String(m.id).startsWith("tmp_")
+      (m) => m.senderId !== userId && !m.isRead && !isLocalRow(m)
     );
 
     // Mark local state as read immediately
@@ -197,34 +234,15 @@ const MessageModal = ({ isOpen, onClose }) => {
   };
 
   // ─── Send message ────────────────────────────────────────────────
-  const handleSend = () => {
-    const content = messageText.trim();
-    if (!content || !selectedClientId) return;
-    setMessageText("");
-    clearTimeout(typingTimeoutRef.current);
-    emitTyping({ userId, isTyping: false });
-
-    const tmpId = `tmp_${Date.now()}`;
-    const optimistic = {
-      id: tmpId,
-      senderId: userId,
-      senderType: "TENANT_STAFF",
-      receiverId: selectedClientId,
-      content,
-      createdAt: new Date().toISOString(),
-      isRead: false,
-    };
-
-    setMessages((prev) => ({
-      ...prev,
-      [selectedClientId]: [...(prev[selectedClientId] || []), optimistic],
-    }));
-
+  // Emits one message and settles its optimistic row from the server's ack
+  // (which the socket layer times out after 10s). A failed send stays in the
+  // thread marked "Not sent" with a retry, instead of vanishing.
+  const deliver = ({ tmpId, partnerId, content, onFail }) => {
     sendChatMessage(
       {
         senderId: userId,
         senderType: "TENANT_STAFF",
-        receiverId: selectedClientId,
+        receiverId: partnerId,
         receiverType: "CLIENT",
         content,
       },
@@ -233,18 +251,90 @@ const MessageModal = ({ isOpen, onClose }) => {
           showToast("Failed to send message", "error");
           setMessages((prev) => ({
             ...prev,
-            [selectedClientId]: (prev[selectedClientId] || []).filter((m) => m.id !== tmpId),
+            [partnerId]: (prev[partnerId] || []).map((m) =>
+              m.id === tmpId ? { ...m, failed: true } : m
+            ),
           }));
+          onFail?.();
         } else if (ack.message) {
+          setMessages((prev) => {
+            const conv = prev[partnerId] || [];
+            // A reload may already have brought the server's copy in.
+            const alreadyThere = conv.some((m) => m.id === ack.message.id);
+            return {
+              ...prev,
+              [partnerId]: alreadyThere
+                ? conv.filter((m) => m.id !== tmpId)
+                : conv.map((m) => (m.id === tmpId ? ack.message : m)),
+            };
+          });
+        } else {
+          // Accepted without a server copy: keep the row, just not "failed".
           setMessages((prev) => ({
             ...prev,
-            [selectedClientId]: (prev[selectedClientId] || []).map((m) =>
-              m.id === tmpId ? ack.message : m
+            [partnerId]: (prev[partnerId] || []).map((m) =>
+              m.id === tmpId && m.failed ? { ...m, failed: false } : m
             ),
           }));
         }
       }
     );
+  };
+
+  const handleSend = () => {
+    const content = messageText.trim();
+    if (!content || !selectedClientId) return;
+    const partnerId = selectedClientId;
+    setMessageText("");
+    // Sending the restored text again replaces its "Not sent" bubble rather
+    // than leaving a second copy to be retried.
+    const failedCopy = (messages[partnerId] || []).find(
+      (m) => m.failed && m.senderId === userId && m.content === content
+    );
+    clearTimeout(typingTimeoutRef.current);
+    emitTyping({ userId, isTyping: false });
+
+    const tmpId = `tmp_${Date.now()}`;
+    const optimistic = {
+      id: tmpId,
+      senderId: userId,
+      senderType: "TENANT_STAFF",
+      receiverId: partnerId,
+      content,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [partnerId]: [
+        ...(prev[partnerId] || []).filter((m) => m.id !== failedCopy?.id),
+        optimistic,
+      ],
+    }));
+
+    deliver({
+      tmpId,
+      partnerId,
+      content,
+      // Put the typed text back unless the user has started a new message.
+      onFail: () => setMessageText((current) => current || content),
+    });
+  };
+
+  const handleRetry = (msg) => {
+    const partnerId = msg.receiverId;
+    if (!partnerId) return;
+    // The failed text was also put back in the box; retrying from the bubble
+    // must not leave it there to be sent a second time.
+    setMessageText((current) => (current.trim() === msg.content ? "" : current));
+    setMessages((prev) => ({
+      ...prev,
+      [partnerId]: (prev[partnerId] || []).map((m) =>
+        m.id === msg.id ? { ...m, failed: false } : m
+      ),
+    }));
+    deliver({ tmpId: msg.id, partnerId, content: msg.content });
   };
 
   // ─── Derived ─────────────────────────────────────────────────────
@@ -370,7 +460,8 @@ const MessageModal = ({ isOpen, onClose }) => {
                     </div>
                     {msgs.map((msg) => {
                       const isMe = msg.senderId === userId;
-                      const isPending = String(msg.id).startsWith("tmp_");
+                      const isPending =
+                        String(msg.id).startsWith("tmp_") && !msg.failed;
                       return (
                         <div
                           key={msg.id}
@@ -419,6 +510,25 @@ const MessageModal = ({ isOpen, onClose }) => {
                                 </span>
                               )}
                             </div>
+                            {isMe && msg.failed && (
+                              <button
+                                type="button"
+                                className="msg-bubble-failed"
+                                onClick={() => handleRetry(msg)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  padding: 0,
+                                  marginTop: 4,
+                                  color: "#D92D20",
+                                  fontSize: 12,
+                                  cursor: "pointer",
+                                  alignSelf: "flex-end",
+                                }}
+                              >
+                                Not sent – Retry
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

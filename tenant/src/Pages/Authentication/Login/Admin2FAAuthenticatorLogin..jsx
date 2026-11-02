@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -7,9 +8,11 @@ import Button from "../../../Components/Button/Button";
 import TenantLogo from "../../../assets/Logo.svg";
 import "../../Authentication/Auth.css";
 import api from "../../../api/authApis";
+import { authErrorMessage } from "../../../Helper/authErrors";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
+import { clearPending2FA } from "../../../ReduxStore/features/authentication";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
@@ -24,6 +27,7 @@ const otpSchema = yup.object().shape({
 const Admin2FAAuthenticatorLogin = () => {
   const { userId, accessToken, tenantId, role } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [showCantAccess, setShowCantAccess] = useState(false);
@@ -95,6 +99,8 @@ const Admin2FAAuthenticatorLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("OTP verification successful!", "success");
+        // Second factor passed: the session may now enter the app.
+        dispatch(clearPending2FA());
         connectSocket({ accessToken, userId, tenantId });
         navigate("/dashboard");
       } else {
@@ -102,10 +108,7 @@ const Admin2FAAuthenticatorLogin = () => {
       }
     } catch (error) {
       console.error("2FA verification failed:", error);
-      showToast(
-        error?.response?.data?.message || "Verification failed.",
-        "error"
-      );
+      showToast(authErrorMessage(error, "Verification failed."), "error");
     } finally {
       setLoading(false);
     }

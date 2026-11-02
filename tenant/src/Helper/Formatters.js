@@ -5,6 +5,8 @@
  * Use the useFormatSettings() hook to get { dateFormat, timeFormat, currency }.
  */
 
+import { parseCalendarDate } from "./dates";
+
 // ─── Currency symbols ──────────────────────────────────────────────
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -27,8 +29,10 @@ const CURRENCY_SYMBOLS = {
 export const formatDate = (dateStr, dateFormat = "MM/DD/YYYY") => {
   if (!dateStr) return "N/A";
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return "Invalid date";
+    // Date-only and midnight-UTC values (a DOB, an appointment day) are read as
+    // that calendar day — `new Date()` put them a day early west of UTC.
+    const d = parseCalendarDate(dateStr);
+    if (!d) return "Invalid date";
 
     const year = d.getFullYear();
     const month = d.getMonth(); // 0-based
@@ -66,7 +70,8 @@ export const formatDateTime = (dateStr, dateFormat = "MM/DD/YYYY", timeFormat = 
   try {
     const d = new Date(dateStr);
     if (isNaN(d)) return "Invalid date";
-    const datePart = formatDate(dateStr, dateFormat);
+    // A timestamp: date and time both come from the same local instant.
+    const datePart = formatDate(d, dateFormat);
     const timePart = formatTimeFromDate(d, timeFormat);
     return `${datePart} ${timePart}`;
   } catch {

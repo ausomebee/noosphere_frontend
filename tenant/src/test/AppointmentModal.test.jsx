@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -245,6 +245,41 @@ describe("appointment modal shell", () => {
     renderModal();
     openMenu(inputFor("Client"));
     expect(screen.getByText("Unknown Client")).toBeInTheDocument();
+  });
+});
+
+// Pinned to a US zone: west of UTC is where reading a date-only value as a UTC
+// instant lands it on the previous day.
+describe("dates for a user in New York", () => {
+  let originalTZ;
+  beforeAll(() => {
+    originalTZ = process.env.TZ;
+    process.env.TZ = "America/New_York";
+  });
+  afterAll(() => {
+    process.env.TZ = originalTZ;
+    if (originalTZ === undefined) delete process.env.TZ;
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("pre-fills an edited appointment on its own day, not the day before", () => {
+    renderModal({
+      isEditMode: true,
+      initialData: { clientId: "c1", date: "2026-03-10T00:00:00.000Z" },
+    });
+    expect(inputFor("Date").value).toBe("2026-03-10");
+  });
+
+  it("pre-fills a date-only value on that day too", () => {
+    renderModal({ isEditMode: true, initialData: { clientId: "c1", date: "2026-03-10" } });
+    expect(inputFor("Date").value).toBe("2026-03-10");
+  });
+
+  it("defaults a new appointment to the local today, not the UTC one", () => {
+    // 11pm on the 9th in New York is already the 10th in UTC.
+    vi.useFakeTimers({ now: new Date("2026-03-10T03:00:00.000Z"), toFake: ["Date"] });
+    renderModal();
+    expect(inputFor("Date").value).toBe("2026-03-09");
   });
 });
 

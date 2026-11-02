@@ -10,6 +10,7 @@ import {
   confirmPasswordSchema,
 } from "../../../../Helper/passwordValidation";
 import api from "../../../../api/authApis";
+import { authErrorMessage } from "../../../../Helper/authErrors";
 import "../../Auth.css";
 import TenantLogo from "../../../../assets/Logo.svg";
 import { PasswordInput } from "../../../../Components/Input/Inputs";
@@ -49,8 +50,7 @@ const SuperChangePassword = () => {
       showToast(successMessage, "success");
       navigate("/auth/2fa-settings");
     } catch (error) {
-      const message =
-        error?.response?.data?.message || "Failed to update password.";
+      const message = authErrorMessage(error, "Failed to update password.");
       showToast(message, "error");
       console.error("Could not set password:", error);
     } finally {
