@@ -196,6 +196,9 @@ describe("searching", () => {
   it("restores everything when the search is cleared", async () => {
     getPrograms.mockResolvedValue({ data: { data: two } });
     await renderPage();
+    // The search box only renders once the programs have loaded; on a slow CI
+    // runner reaching for it straight away found nothing.
+    await waitFor(() => expect(screen.getByText("Speech Therapy")).toBeInTheDocument());
     const box = screen.getByPlaceholderText(/search/i);
     fireEvent.change(box, { target: { value: "speech" } });
     fireEvent.change(box, { target: { value: "" } });
