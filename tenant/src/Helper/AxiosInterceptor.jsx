@@ -4,6 +4,7 @@ import api from "../api/authApis";
 import { getStore, getPersistor } from "./storeRef";
 import { logout, setTokens } from "../ReduxStore/features/authentication";
 import { disconnectSocket } from "../api/socketService";
+import { broadcastLogout } from "./logoutBroadcast";
 import {
   prepareRequest,
   shouldRetry,
@@ -49,6 +50,7 @@ function endSession() {
   disconnectSocket();
   getStore()?.dispatch(logout());
   getPersistor()?.purge();
+  broadcastLogout();
   showToast("Session expired. Please log in again.", "error");
 }
 

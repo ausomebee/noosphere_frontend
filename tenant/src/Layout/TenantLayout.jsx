@@ -27,6 +27,7 @@ import usePermissions from "../hooks/usePermissions";
 import { logout } from "../ReduxStore/features/authentication";
 import { disconnectSocket, onReconnect } from "../api/socketService";
 import { persistor } from "../ReduxStore/store";
+import { broadcastLogout } from "../Helper/logoutBroadcast";
 import useIdleTimeout from "../hooks/useIdleTimeout";
 import MessageModal from "../Components/MessageModal/MessageModal";
 import useSocket from "../hooks/useSocket";
@@ -495,6 +496,7 @@ const DashboardLayout = ({ children }) => {
                           disconnectSocket();
                           dispatch(logout());
                           persistor.purge();
+                          broadcastLogout();
                           navigate("/");
                         });
                       }}
