@@ -121,4 +121,24 @@ describe("logoutBroadcast (tenant)", () => {
     expect(() => mod.installLogoutSync()).not.toThrow();
     expect(() => mod.broadcastLogout()).not.toThrow();
   });
+  it("logs this tab out on another tab's idle logout", () => {
+    signedIn();
+    mod.installLogoutSync();
+    new FakeChannel("tenant-auth").postMessage({ type: "logout", reason: "idle" });
+    expect(store.dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a live appointment going through another tab's idle logout", async () => {
+    const { pauseIdleLogout } = await import("../Helper/liveSessionGuard");
+    signedIn();
+    mod.installLogoutSync();
+    const resume = pauseIdleLogout();
+    new FakeChannel("tenant-auth").postMessage({ type: "logout", reason: "idle" });
+    expect(store.dispatch).not.toHaveBeenCalled();
+
+    // A real logout still ends it.
+    new FakeChannel("tenant-auth").postMessage({ type: "logout" });
+    expect(store.dispatch).toHaveBeenCalledTimes(1);
+    resume();
+  });
 });

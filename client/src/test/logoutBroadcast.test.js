@@ -35,7 +35,7 @@ class FakeChannel {
 }
 
 const signedIn = () =>
-  store.getState.mockReturnValue({ authentication: { isAuthenticated: true } });
+  store.getState.mockReturnValue({ auth: { isAuthenticated: true } });
 
 let mod;
 
@@ -101,7 +101,7 @@ describe("logoutBroadcast (client)", () => {
   });
 
   it("does nothing in a tab that is already signed out", () => {
-    store.getState.mockReturnValue({ authentication: { isAuthenticated: false } });
+    store.getState.mockReturnValue({ auth: { isAuthenticated: false } });
     mod.installLogoutSync();
     new FakeChannel("client-auth").postMessage({ type: "logout" });
     expect(store.dispatch).not.toHaveBeenCalled();
@@ -120,5 +120,11 @@ describe("logoutBroadcast (client)", () => {
     vi.stubGlobal("BroadcastChannel", undefined);
     expect(() => mod.installLogoutSync()).not.toThrow();
     expect(() => mod.broadcastLogout()).not.toThrow();
+  });
+  it("logs this tab out on another tab's idle logout", () => {
+    signedIn();
+    mod.installLogoutSync();
+    new FakeChannel("client-auth").postMessage({ type: "logout", reason: "idle" });
+    expect(store.dispatch).toHaveBeenCalledTimes(1);
   });
 });
