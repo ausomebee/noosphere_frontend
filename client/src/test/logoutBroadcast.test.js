@@ -121,4 +121,10 @@ describe("logoutBroadcast (client)", () => {
     expect(() => mod.installLogoutSync()).not.toThrow();
     expect(() => mod.broadcastLogout()).not.toThrow();
   });
+  it("logs this tab out on another tab's idle logout", () => {
+    signedIn();
+    mod.installLogoutSync();
+    new FakeChannel("client-auth").postMessage({ type: "logout", reason: "idle" });
+    expect(store.dispatch).toHaveBeenCalledTimes(1);
+  });
 });
