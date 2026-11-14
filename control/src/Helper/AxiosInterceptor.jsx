@@ -17,6 +17,7 @@ import {
   syncRotations,
 } from "./tokenRotation";
 import { disconnectSocket } from "../api/socketService";
+import { broadcastLogout } from "./logoutBroadcast";
 
 
 
@@ -50,6 +51,7 @@ function endSession() {
   disconnectSocket();
   getStore()?.dispatch(logout());
   getPersistor()?.purge();
+  broadcastLogout();
   showToast("Session expired. Please log in again.", "error");
 }
 
