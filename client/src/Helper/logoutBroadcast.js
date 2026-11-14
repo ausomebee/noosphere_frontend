@@ -79,7 +79,7 @@ export const broadcastLogout = ({ reason } = {}) => {
 // gone, ProtectedRoute sends this tab to the login page by itself.
 const logOutThisTab = () => {
   const store = getStore();
-  if (!store?.getState().authentication?.isAuthenticated) return;
+  if (!store?.getState().auth?.isAuthenticated) return;
   disconnectSocket();
   store.dispatch(logout());
   getPersistor()?.purge();
