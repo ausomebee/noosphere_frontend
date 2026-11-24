@@ -54,7 +54,14 @@ const InitialSuperLogin = () => {
         };
 
         if (!user.auth2FADone) {
-          go2FA("/auth/change-password");
+          // Already changed the temporary password (left before finishing
+          // 2FA)? Go straight to the 2FA setup: the backend won't accept a
+          // second first-login password change.
+          go2FA(
+            user.passwordChanged === true
+              ? "/auth/2fa-settings"
+              : "/auth/change-password"
+          );
         } else {
           if (user.authType === "AUTHENTICATOR") {
             go2FA("/auth/2fa/login-authenticator");

@@ -18,11 +18,18 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock('../api/authApis', () => ({ default: api }));
 
-const { navigate, params } = vi.hoisted(() => ({ navigate: vi.fn(), params: {} }));
+const { navigate, params, link, dispatch } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  params: {},
+  link: { search: 'token=link-tok' },
+  dispatch: vi.fn(),
+}));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigate,
   useParams: () => params,
+  useSearchParams: () => [new URLSearchParams(link.search)],
 }));
+vi.mock('react-redux', () => ({ useDispatch: () => dispatch }));
 
 import ForgotPasswordResetPassword from '../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword';
 
@@ -71,6 +78,7 @@ const submitValid = async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   params.userId = 'admin-9';
+  link.search = 'token=link-tok';
   api.AdminSetPassword.mockResolvedValue(setPasswordResponse());
   api.GetSuperAdminChoices.mockResolvedValue({ data: { data: { setForAll: false } } });
 });
@@ -114,7 +122,35 @@ describe('the form rules', () => {
     expect(api.AdminSetPassword).toHaveBeenCalledWith({
       id: 'admin-9',
       password: STRONG,
+      token: 'link-tok',
     });
+  });
+});
+
+describe("the reset link's token", () => {
+  it('refuses to save when the link carries no token, and says why', async () => {
+    link.search = '';
+    render(<ForgotPasswordResetPassword />);
+    await submitValid();
+    expect(showToast).toHaveBeenCalledWith(
+      'This link is incomplete or out of date. Please request a new one.',
+      'error'
+    );
+    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+  });
+
+  it('keeps the 2FA token the save hands back for the 2FA step', async () => {
+    api.AdminSetPassword.mockResolvedValue(setPasswordResponse({ twoFactorToken: '2fa-tok' }));
+    render(<ForgotPasswordResetPassword />);
+    await submitValid();
+    await waitFor(() =>
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'authentication/setTwoFactorToken',
+          payload: { token: '2fa-tok', userId: 'admin-9' },
+        })
+      )
+    );
   });
 });
 

@@ -15,11 +15,12 @@ import authReducer from "../ReduxStore/features/authentication";
  * fields at once, which is why the error assertions count matches rather than
  * expecting one.
  *
- * The user id sent with the request comes off the auth slice, so the store is
- * real. The failure path logs, so console.error is silenced.
+ * There is no email link on a first login, so the request goes out as the
+ * first-login call, which authorises itself with the signed-in session. The
+ * user id comes off the auth slice, so the store is real. The failure path logs, so console.error is silenced.
  */
 
-const api = vi.hoisted(() => ({ AdminSetPassword: vi.fn() }));
+const api = vi.hoisted(() => ({ AdminFirstLoginSetPassword: vi.fn() }));
 vi.mock("../api/authApis", () => ({ default: api }));
 
 const toast = vi.hoisted(() => vi.fn());
@@ -52,12 +53,15 @@ const makeStore = () =>
     },
   });
 
-const renderPage = () =>
-  render(
-    <Provider store={makeStore()}>
+let store;
+const renderPage = () => {
+  store = makeStore();
+  return render(
+    <Provider store={store}>
       <SuperChangePassword />
     </Provider>
   );
+};
 
 const passwordBoxes = () => screen.getAllByPlaceholderText("Enter your password");
 const newPasswordBox = () => passwordBoxes()[0];
@@ -73,7 +77,7 @@ const submit = () => fireEvent.click(continueButton());
 
 beforeEach(() => {
   vi.clearAllMocks();
-  api.AdminSetPassword.mockResolvedValue({ data: { message: "Password updated" } });
+  api.AdminFirstLoginSetPassword.mockResolvedValue({ data: { message: "Password updated" } });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -97,7 +101,7 @@ describe("validating the new password", () => {
     submit();
     expect(await screen.findByText("New password is required")).toBeInTheDocument();
     expect(screen.getByText("Confirm password is required")).toBeInTheDocument();
-    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+    expect(api.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("refuses a password that is too short", async () => {
@@ -105,7 +109,7 @@ describe("validating the new password", () => {
     fill({ password: "Ab1!", confirm: "Ab1!" });
     submit();
     await waitFor(() => expect(screen.getAllByText("At least 8 characters").length).toBe(2));
-    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+    expect(api.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("refuses a password with no special character", async () => {
@@ -113,7 +117,7 @@ describe("validating the new password", () => {
     fill({ password: "Str0ngPass", confirm: "Str0ngPass" });
     submit();
     await waitFor(() => expect(screen.getAllByText("One special character").length).toBe(2));
-    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+    expect(api.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   // The confirm field runs the strength rules itself, so a strong password
@@ -124,7 +128,7 @@ describe("validating the new password", () => {
     fill({ password: STRONG, confirm: "Different1!" });
     submit();
     expect(await screen.findByText("Passwords must match")).toBeInTheDocument();
-    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+    expect(api.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("refuses a weak confirmation of a strong password", async () => {
@@ -136,7 +140,7 @@ describe("validating the new password", () => {
     await waitFor(() =>
       expect(document.body.querySelectorAll(".auth-error-message").length).toBeGreaterThan(0)
     );
-    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+    expect(api.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 });
 
@@ -145,15 +149,15 @@ describe("setting the password", () => {
     renderPage();
     fill();
     submit();
-    await waitFor(() => expect(api.AdminSetPassword).toHaveBeenCalled());
-    expect(api.AdminSetPassword).toHaveBeenCalledWith({
+    await waitFor(() => expect(api.AdminFirstLoginSetPassword).toHaveBeenCalled());
+    expect(api.AdminFirstLoginSetPassword).toHaveBeenCalledWith({
       id: "u-1",
       password: STRONG,
     });
   });
 
   it("shows the server's own confirmation and moves on to 2FA settings", async () => {
-    api.AdminSetPassword.mockResolvedValue({
+    api.AdminFirstLoginSetPassword.mockResolvedValue({
       data: { message: "Password changed, please continue" },
     });
     renderPage();
@@ -165,8 +169,20 @@ describe("setting the password", () => {
     expect(navigate).toHaveBeenCalledWith("/auth/2fa-settings");
   });
 
+  it("keeps a 2FA token the response hands back for the 2FA setup", async () => {
+    api.AdminFirstLoginSetPassword.mockResolvedValue({
+      data: { message: "ok", data: { twoFactorToken: "2fa-next" } },
+    });
+    renderPage();
+    fill();
+    submit();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/auth/2fa-settings"));
+    expect(store.getState().authentication.twoFactorToken).toBe("2fa-next");
+    expect(store.getState().authentication.twoFactorUserId).toBe("u-1");
+  });
+
   it("falls back to a generic confirmation when the response carries none", async () => {
-    api.AdminSetPassword.mockResolvedValue({ data: {} });
+    api.AdminFirstLoginSetPassword.mockResolvedValue({ data: {} });
     renderPage();
     fill();
     submit();
@@ -176,7 +192,7 @@ describe("setting the password", () => {
   });
 
   it("falls back to a generic confirmation when there is no response body at all", async () => {
-    api.AdminSetPassword.mockResolvedValue(undefined);
+    api.AdminFirstLoginSetPassword.mockResolvedValue(undefined);
     renderPage();
     fill();
     submit();
@@ -188,7 +204,7 @@ describe("setting the password", () => {
 
 describe("a request that fails", () => {
   it("surfaces the server's own message and stays put", async () => {
-    api.AdminSetPassword.mockRejectedValue({
+    api.AdminFirstLoginSetPassword.mockRejectedValue({
       response: { data: { message: "That password was used before" } },
     });
     renderPage();
@@ -201,7 +217,7 @@ describe("a request that fails", () => {
   });
 
   it("falls back to a generic message when the rejection carries none", async () => {
-    api.AdminSetPassword.mockRejectedValue(new Error("network down"));
+    api.AdminFirstLoginSetPassword.mockRejectedValue(new Error("network down"));
     renderPage();
     fill();
     submit();
@@ -212,7 +228,7 @@ describe("a request that fails", () => {
 
   it("locks the button while the request is in flight and releases it after", async () => {
     let release;
-    api.AdminSetPassword.mockReturnValue(
+    api.AdminFirstLoginSetPassword.mockReturnValue(
       new Promise((resolve) => {
         release = resolve;
       })

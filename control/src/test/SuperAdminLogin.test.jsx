@@ -23,6 +23,7 @@ const { AdminLogin } = vi.hoisted(() => {
 vi.mock('../ReduxStore/features/authentication', () => ({
   AdminLogin,
   setPending2FARoute: (route) => ({ type: 'setPending2FARoute', payload: route }),
+  logout: () => ({ type: 'logout' }),
   complete2FA: () => ({ type: 'complete2FA' }),
 }));
 
@@ -56,7 +57,10 @@ import AdminsLogin from '../Pages/Authentication/SuperAdminLogin';
  * response produces different destinations depending on that one flag.
  */
 
-const fulfilledWith = (data) => ({ type: 'adminLogin/fulfilled', payload: { data } });
+const fulfilledWith = (data) => ({
+  type: 'adminLogin/fulfilled',
+  payload: { data: { accessToken: 'at', ...data } },
+});
 const rejectedWith = (payload) => ({ type: 'adminLogin/rejected', payload });
 
 const choices = (over = {}) => ({
@@ -369,5 +373,39 @@ describe('the rest of the screen', () => {
     render(<AdminsLogin />);
     fireEvent.click(screen.getByText('Forgot Password?'));
     expect(navigate).toHaveBeenCalledWith('/forgot-password');
+  });
+});
+
+describe('the 2FA token flow', () => {
+  it('resumes a super admin who already changed the temporary password at the administrative password', async () => {
+    result.current = fulfilledWith({ auth2FADone: false, superAdmin: true, passwordChanged: true });
+    await login();
+    expect(navigate).toHaveBeenCalledWith('/SA/administrative-password');
+    expect(navigate).not.toHaveBeenCalledWith('/SA/change-password');
+  });
+
+  it('still sends a super admin on the temporary password to change it', async () => {
+    result.current = fulfilledWith({ auth2FADone: false, superAdmin: true, passwordChanged: false });
+    await login();
+    expect(navigate).toHaveBeenCalledWith('/SA/change-password');
+  });
+
+  it('never lets a sign-in with only a 2FA token into the app', async () => {
+    api.GetSuperAdminChoices.mockResolvedValue(choices({ isEnabled: false }));
+    result.current = fulfilledWith({ accessToken: undefined, twoFactorToken: '2fa' });
+    await login();
+    expect(navigate).not.toHaveBeenCalledWith('/tenants/pipeline');
+    expect(dispatch).toHaveBeenCalledWith({ type: 'logout' });
+    expect(showToast).toHaveBeenCalledWith(
+      "Two-step verification is required for your account but isn't set up. Please contact your administrator.",
+      'error'
+    );
+  });
+
+  it('explains a timed-out 2FA step when the admin lands back here', () => {
+    sessionStorage.setItem('authNotice', 'Your sign-in timed out. Please sign in again.');
+    render(<AdminsLogin />);
+    expect(showToast).toHaveBeenCalledWith('Your sign-in timed out. Please sign in again.', 'error');
+    expect(sessionStorage.getItem('authNotice')).toBeNull();
   });
 });

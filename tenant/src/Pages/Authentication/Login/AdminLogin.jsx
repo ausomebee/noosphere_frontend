@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -10,8 +10,10 @@ import api from "../../../api/authApis";
 import {
   AdminLogin,
   clearPending2FA,
+  logout,
   setPending2FARoute,
 } from "../../../ReduxStore/features/authentication";
+import { takeAuthNotice } from "../../../Helper/twoFactorSession";
 import { connectSocket } from "../../../api/socketService";
 import "../Auth.css";
 import TenantLogo from "../../../assets/Logo.svg";
@@ -41,6 +43,12 @@ const AdminCLogin = () => {
     resolver: yupResolver(schema),
   });
   const { loading } = useAuth();
+
+  // Sent back here because the 2FA step timed out: say so.
+  useEffect(() => {
+    const notice = takeAuthNotice();
+    if (notice) showToast(notice, "error");
+  }, []);
 
   const handleGetSuperAdminChoice = async (id) => {
     try {
@@ -84,6 +92,16 @@ const AdminCLogin = () => {
 
         const goDashboard = () => {
           // The only exits from login into the app: 2FA is off or has no type.
+          // When the backend requires 2FA it sends no access token, only a 2FA
+          // token, so there is no session to enter the app with.
+          if (!user.accessToken) {
+            dispatch(logout());
+            showToast(
+              "Two-step verification is required for your account but isn't set up. Please contact your administrator.",
+              "error"
+            );
+            return;
+          }
           dispatch(clearPending2FA());
           connectSocket({
             accessToken: user.accessToken,
@@ -114,8 +132,15 @@ const AdminCLogin = () => {
           } else if (effectiveType === "SECRETMESSAGE") {
             go2FA("/auth/2fa/security-question");
           } else if (isPrivileged) {
-            // Brand-new admin, no type chosen yet → password onboarding.
-            go2FA("/auth/change-password");
+            // Brand-new admin, no type chosen yet → change the temporary
+            // password, then pick the 2FA setup. If the password was already
+            // changed (they left before finishing 2FA), skip straight to the
+            // 2FA setup: the backend won't accept a second first-login change.
+            go2FA(
+              user.passwordChanged === true
+                ? "/auth/2fa-settings"
+                : "/auth/change-password"
+            );
           } else {
             // setForAll is off and this user has no type yet → let them pick
             // their own 2FA method.

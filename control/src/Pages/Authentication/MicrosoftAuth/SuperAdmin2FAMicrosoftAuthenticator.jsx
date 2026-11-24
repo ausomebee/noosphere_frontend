@@ -73,7 +73,10 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
         userId,
         token,
       });
-      if (response.data.data === true) {
+      // Older backends answer a good code with `data: true`; newer ones hand
+      // back the session's tokens instead.
+      const verified = response.data.data;
+      if (verified === true || !!verified?.accessToken) {
         showToast(
           `OTP ${otpPhase === 1 ? "first" : "second"} verification successful!`,
           "success"

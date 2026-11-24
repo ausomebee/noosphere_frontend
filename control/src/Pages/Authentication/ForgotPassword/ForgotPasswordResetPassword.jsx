@@ -5,12 +5,15 @@ import * as yup from "yup";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import Logo from "../../../assets/NoosphereLogo-white.png";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import "./../SuperAdmin.css";
 import api from "../../../api/authApis";
 import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 import { showValidationErrors } from "../../../Helper/formErrors";
+import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../Helper/linkToken";
+import { setTwoFactorToken } from "../../../ReduxStore/features/authentication";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -24,7 +27,10 @@ const schema = yup.object().shape({
 
 const ForgotPasswordResetPassword = () => {
   const { userId } = useParams();
+  const [searchParams] = useSearchParams();
+  const linkToken = readLinkToken(searchParams);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -50,12 +56,20 @@ const ForgotPasswordResetPassword = () => {
   };
 
   const onSubmit = async (data) => {
+    if (!linkToken) {
+      showToast(MISSING_LINK_TOKEN_MESSAGE, "error");
+      return;
+    }
     setSubmitting(true);
     try {
       const response = await api.AdminSetPassword({
         id: userId,
         password: data.newPassword,
+        token: linkToken,
       });
+      // When 2FA comes next, the backend hands back a 2FA token for it.
+      const nextToken = response?.data?.data?.twoFactorToken;
+      if (nextToken) dispatch(setTwoFactorToken({ token: nextToken, userId }));
 
       showToast(response?.data?.message || "Password updated successfully!", "success");
 

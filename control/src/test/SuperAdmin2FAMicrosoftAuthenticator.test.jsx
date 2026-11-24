@@ -246,6 +246,24 @@ describe('the first verification', () => {
     expect(mocks.api.Admin2FAVerify).not.toHaveBeenCalled();
   });
 
+  it("accepts a newer backend's answer, which carries tokens instead of true", async () => {
+    mocks.api.Admin2FAVerify.mockResolvedValue({
+      data: { status: 'ok', data: { accessToken: 'at', refreshToken: 'rt' } },
+    });
+    await goToCodeEntry();
+    await typeCode('123456');
+    await clickButton('Continue');
+    expect(mocks.showToast).toHaveBeenCalledWith('OTP first verification successful!', 'success');
+  });
+
+  it('still refuses an answer that is neither true nor tokens', async () => {
+    mocks.api.Admin2FAVerify.mockResolvedValue({ data: { status: 'ok', data: false } });
+    await goToCodeEntry();
+    await typeCode('123456');
+    await clickButton('Continue');
+    expect(mocks.showToast).toHaveBeenCalledWith('Invalid OTP. Please try again.', 'error');
+  });
+
   it('sends the joined code and announces the first success', async () => {
     await goToCodeEntry();
     await typeCode('123456');

@@ -72,14 +72,14 @@ describe("getSubdomain on real hosts", () => {
 
 describe("ClientForgetPassword messaging", () => {
   it("surfaces the backend message", async () => {
-    axiosPatch.mockRejectedValue({ response: { data: { message: "No such account" } } });
+    axiosPost.mockRejectedValue({ response: { data: { message: "No such account" } } });
     await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).rejects.toThrow(
       "No such account"
     );
   });
 
   it("falls back to its own wording when the backend sends none", async () => {
-    axiosPatch.mockRejectedValue({ response: { status: 500, data: {} } });
+    axiosPost.mockRejectedValue({ response: { status: 500, data: {} } });
     await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).rejects.toThrow(
       "Forget Password Email failed"
     );
@@ -88,14 +88,14 @@ describe("ClientForgetPassword messaging", () => {
   // A rejection with no response used to fall into the case above; it now says
   // the server couldn't be reached.
   it("says the server couldn't be reached when nothing came back", async () => {
-    axiosPatch.mockRejectedValue(new Error("network down"));
+    axiosPost.mockRejectedValue(new Error("network down"));
     await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).rejects.toThrow(
       "Can't reach the server. Check your connection and try again."
     );
   });
 
   it("resolves on success", async () => {
-    axiosPatch.mockResolvedValue({ data: { ok: true } });
+    axiosPost.mockResolvedValue({ data: { ok: true } });
     await expect(authApi.ClientForgetPassword({ email: "a@b.co" })).resolves.toBeDefined();
   });
 });

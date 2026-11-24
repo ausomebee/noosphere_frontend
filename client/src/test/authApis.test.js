@@ -45,25 +45,26 @@ describe("authApis", () => {
   });
 
   describe("ClientForgetPassword", () => {
-    it("patches with email in URL", async () => {
-      axios.patch.mockResolvedValue({ data: { success: true } });
+    it("posts with the email in the body, not the address", async () => {
+      axios.post.mockResolvedValue({ data: { success: true } });
       await api.ClientForgetPassword({ email: "user@test.com" });
-      expect(axios.patch).toHaveBeenCalledWith(
-        expect.stringContaining("/client/initiate/password-reset/user@test.com"),
-        null,
+      expect(axios.post).toHaveBeenCalledWith(
+        expect.stringMatching(/\/client\/initiate\/password-reset$/),
+        { email: "user@test.com" },
         expect.any(Object),
       );
+      expect(axios.post.mock.calls[0][0]).not.toContain("user@test.com");
     });
 
     it("throws on failure", async () => {
-      axios.patch.mockRejectedValue({ response: { data: { message: "User not found" } } });
+      axios.post.mockRejectedValue({ response: { data: { message: "User not found" } } });
       await expect(api.ClientForgetPassword({ email: "x@x.com" })).rejects.toThrow("User not found");
     });
 
     it("sends a 20s timeout and maps a network drop to the can't-reach-server message", async () => {
-      axios.patch.mockRejectedValue(new Error("Network Error"));
+      axios.post.mockRejectedValue(new Error("Network Error"));
       await expect(api.ClientForgetPassword({ email: "x@x.com" })).rejects.toThrow(NETWORK_ERROR_MESSAGE);
-      expect(axios.patch.mock.calls[0][2]).toMatchObject({ timeout: 20000 });
+      expect(axios.post.mock.calls[0][2]).toMatchObject({ timeout: 20000 });
     });
   });
 
@@ -76,6 +77,41 @@ describe("authApis", () => {
         { clientTenantId: "ct1", password: "newPass123" },
         expect.any(Object),
       );
+    });
+  });
+
+  describe("reset link vs first login", () => {
+    it("a reset link sends its token in the body and no Authorization header", async () => {
+      axios.patch.mockResolvedValue({ data: { success: true } });
+      await api.ClientSetPassword({ clientTenantId: "ct1", password: "newPass123", token: "link" });
+      const [, body, config] = axios.patch.mock.calls[0];
+      expect(body).toEqual({ clientTenantId: "ct1", password: "newPass123", token: "link" });
+      expect(config.headers.Authorization).toBeUndefined();
+      expect(config.timeout).toBe(20000);
+    });
+
+    it("a first login sends the access token as Bearer and no body token", async () => {
+      axios.patch.mockResolvedValue({ data: { success: true } });
+      await api.ClientFirstLoginSetPassword({ clientTenantId: "ct1", password: "newPass123", accessToken: "at" });
+      const [url, body, config] = axios.patch.mock.calls[0];
+      expect(url).toMatch(/\/client\/password-reset$/);
+      expect(body).toEqual({ clientTenantId: "ct1", password: "newPass123" });
+      expect(config.headers.Authorization).toBe("Bearer at");
+      expect(config.headers["x-fingerprint"]).toBeDefined();
+      expect(config.timeout).toBe(20000);
+    });
+
+    it("a first login with no session sends no Authorization header", async () => {
+      axios.patch.mockResolvedValue({ data: { success: true } });
+      await api.ClientFirstLoginSetPassword({ clientTenantId: "ct1", password: "p" });
+      expect(axios.patch.mock.calls[0][2].headers.Authorization).toBeUndefined();
+    });
+
+    it("a refused first login shows the server's nested message", async () => {
+      axios.patch.mockRejectedValue({ response: { data: { data: { message: "Already changed" } } } });
+      await expect(
+        api.ClientFirstLoginSetPassword({ clientTenantId: "ct1", password: "p", accessToken: "at" })
+      ).rejects.toThrow("Already changed");
     });
   });
 

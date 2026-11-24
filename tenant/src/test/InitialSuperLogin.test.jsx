@@ -141,6 +141,14 @@ describe("the sign-in form", () => {
 });
 
 describe("where a successful login lands", () => {
+  it("sends a user who already changed the temporary password straight to 2FA setup", async () => {
+    dispatch.mockResolvedValue(loggedInAs({ auth2FADone: false, passwordChanged: true }));
+    renderPage();
+    await signIn();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/auth/2fa-settings"));
+    expect(navigate).not.toHaveBeenCalledWith("/auth/change-password");
+  });
+
   it("sends a user who has not finished 2FA enrolment to set a password", async () => {
     dispatch.mockResolvedValue(loggedInAs({ auth2FADone: false }));
     renderPage();

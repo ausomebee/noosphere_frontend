@@ -40,9 +40,10 @@ const ClientLogin = async ({ email, password }) => {
 
 const ClientForgetPassword = async ({ email }) => {
   try {
-    const response = await axios.patch(
-      `${PLAIN_API_URL}/client/initiate/password-reset/${email}`,
-      null,
+    // The email goes in the body, not the address, so it stays out of logs.
+    const response = await axios.post(
+      `${PLAIN_API_URL}/client/initiate/password-reset`,
+      { email },
       requestConfig(),
     );
     return response;
@@ -54,22 +55,43 @@ const ClientForgetPassword = async ({ email }) => {
   }
 };
 
-const ClientSetPassword = async ({ clientTenantId, password }) => {
+const setPasswordError = (error) =>
+  toError(error, error.response?.data?.data?.message || "Password setting failed");
+
+// Reset link: the email link's single-use `token` authorises the change. No
+// session token is sent, so a stale login in this browser can't interfere.
+const ClientSetPassword = async ({ clientTenantId, password, token }) => {
   try {
     const response = await axios.patch(
       `${PLAIN_API_URL}/client/password-reset`,
-      {
-        clientTenantId,
-        password,
-      },
+      { clientTenantId, password, token },
       requestConfig(),
     );
     return response;
   } catch (error) {
-    throw toError(
-      error,
-      error.response?.data?.data?.message || "Password setting failed",
+    throw setPasswordError(error);
+  }
+};
+
+// First login (forced reset): there is no email link, so the signed-in
+// client's access token authorises the change instead of a body token.
+const ClientFirstLoginSetPassword = async ({ clientTenantId, password, accessToken }) => {
+  try {
+    const config = requestConfig();
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/client/password-reset`,
+      { clientTenantId, password },
+      {
+        ...config,
+        headers: {
+          ...config.headers,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      },
     );
+    return response;
+  } catch (error) {
+    throw setPasswordError(error);
   }
 };
 
@@ -96,6 +118,7 @@ export const refreshAccessToken = async (refreshToken, onSuccess) => {
 export default {
   ClientLogin,
   ClientSetPassword,
+  ClientFirstLoginSetPassword,
   ClientForgetPassword,
   refreshAccessToken,
 };
