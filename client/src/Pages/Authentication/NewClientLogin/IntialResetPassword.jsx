@@ -23,6 +23,7 @@ const resetPasswordSchema = yup.object().shape({
 
 const InitialResetPassword = () => {
   const clientTenantId = useSelector((state) => state.auth?.user?.tenantLinks[0]?.id);
+  const accessToken = useSelector((state) => state.auth?.accessToken);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const {
@@ -43,9 +44,11 @@ const InitialResetPassword = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await api.ClientSetPassword({
+      // First login: no email link, so the signed-in session authorises this.
+      const response = await api.ClientFirstLoginSetPassword({
         clientTenantId,
         password: data.password,
+        accessToken,
       });
 
       const successMessage =

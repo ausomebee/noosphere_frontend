@@ -7,6 +7,7 @@ import { configureStore } from "@reduxjs/toolkit";
 const authApi = vi.hoisted(() => ({
   ClientLogin: vi.fn(),
   ClientSetPassword: vi.fn(),
+  ClientFirstLoginSetPassword: vi.fn(),
 }));
 vi.mock("../api/authApis", () => ({ default: authApi }));
 
@@ -289,7 +290,7 @@ describe("choosing a password on first login", () => {
       expect.stringContaining("Password is required"),
       "error"
     );
-    expect(authApi.ClientSetPassword).not.toHaveBeenCalled();
+    expect(authApi.ClientFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("refuses a password that breaks the strength rules", async () => {
@@ -300,7 +301,7 @@ describe("choosing a password on first login", () => {
       expect.stringContaining("One uppercase letter"),
       "error"
     );
-    expect(authApi.ClientSetPassword).not.toHaveBeenCalled();
+    expect(authApi.ClientFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("refuses a confirmation that does not match", async () => {
@@ -308,25 +309,27 @@ describe("choosing a password on first login", () => {
     fill("StrongPass1!", "StrongPass2!");
     await submit();
     expect(showToast).toHaveBeenCalledWith("Passwords must match", "error");
-    expect(authApi.ClientSetPassword).not.toHaveBeenCalled();
+    expect(authApi.ClientFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it("sets the password against the signed-in client's tenant link", async () => {
-    authApi.ClientSetPassword.mockResolvedValue({ data: { message: "all set" } });
+    authApi.ClientFirstLoginSetPassword.mockResolvedValue({ data: { message: "all set" } });
     renderPage();
     fill("StrongPass1!", "StrongPass1!");
     await submit();
 
-    expect(authApi.ClientSetPassword).toHaveBeenCalledWith({
+    // No email link on a first login: the signed-in access token authorises it.
+    expect(authApi.ClientFirstLoginSetPassword).toHaveBeenCalledWith({
       clientTenantId: "tc1",
       password: "StrongPass1!",
+      accessToken: "at",
     });
     expect(showToast).toHaveBeenCalledWith("all set", "success");
     expect(navigate).toHaveBeenCalledWith("/intialResetSuccessful");
   });
 
   it("confirms in its own words when the server sends no message", async () => {
-    authApi.ClientSetPassword.mockResolvedValue({});
+    authApi.ClientFirstLoginSetPassword.mockResolvedValue({});
     renderPage();
     fill("StrongPass1!", "StrongPass1!");
     await submit();
@@ -334,7 +337,7 @@ describe("choosing a password on first login", () => {
   });
 
   it("stays put when the server rejects the change", async () => {
-    authApi.ClientSetPassword.mockRejectedValue(new Error("link expired"));
+    authApi.ClientFirstLoginSetPassword.mockRejectedValue(new Error("link expired"));
     renderPage();
     fill("StrongPass1!", "StrongPass1!");
     await submit();
@@ -347,13 +350,14 @@ describe("choosing a password on first login", () => {
   });
 
   it("submits without a tenant link when nobody is signed in", async () => {
-    authApi.ClientSetPassword.mockResolvedValue({});
+    authApi.ClientFirstLoginSetPassword.mockResolvedValue({});
     renderPage(signedIn(null));
     fill("StrongPass1!", "StrongPass1!");
     await submit();
-    expect(authApi.ClientSetPassword).toHaveBeenCalledWith({
+    expect(authApi.ClientFirstLoginSetPassword).toHaveBeenCalledWith({
       clientTenantId: undefined,
       password: "StrongPass1!",
+      accessToken: "at",
     });
   });
 

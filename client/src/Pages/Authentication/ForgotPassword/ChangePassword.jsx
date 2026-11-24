@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AuthLayout from "../AuthLayout";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
 import { showToast } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
 import { showValidationErrors } from "../../../Helper/formErrors";
+import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../Helper/linkToken";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -24,6 +25,8 @@ const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { clientTenantId } = useParams();
+  const [searchParams] = useSearchParams();
+  const linkToken = readLinkToken(searchParams);
 
   const {
     register,
@@ -41,12 +44,17 @@ const ChangePassword = () => {
   });
 
   const onSubmit = async (data) => {
+    if (!linkToken) {
+      showToast(MISSING_LINK_TOKEN_MESSAGE, "error");
+      return;
+    }
     setLoading(true);
 
     try {
       const response = await api.ClientSetPassword({
         clientTenantId,
         password: data.password,
+        token: linkToken,
       });
 
       const successMessage =

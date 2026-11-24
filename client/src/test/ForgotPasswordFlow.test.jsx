@@ -267,9 +267,9 @@ describe("waiting for the reset email", () => {
 });
 
 describe("choosing a new password", () => {
-  const renderPage = () =>
+  const renderPage = (entry = "/changePassword/tc1?token=link-tok") =>
     render(
-      <MemoryRouter initialEntries={["/changePassword/tc1"]}>
+      <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/changePassword/:clientTenantId" element={<ChangePassword />} />
         </Routes>
@@ -319,9 +319,28 @@ describe("choosing a new password", () => {
     expect(authApi.ClientSetPassword).toHaveBeenCalledWith({
       clientTenantId: "tc1",
       password: "StrongPass1!",
+      token: "link-tok",
     });
     expect(showToast).toHaveBeenCalledWith("all set", "success");
     expect(navigate).toHaveBeenCalledWith("/");
+  });
+
+  it("refuses to save when the link carries no token, and says why", async () => {
+    renderPage("/changePassword/tc1");
+    fill("StrongPass1!", "StrongPass1!");
+    await submit("Continue");
+    expect(showToast).toHaveBeenCalledWith(
+      "This link is incomplete or out of date. Please request a new one.",
+      "error"
+    );
+    expect(authApi.ClientSetPassword).not.toHaveBeenCalled();
+  });
+
+  it("treats a blank token as missing", async () => {
+    renderPage("/changePassword/tc1?token=%20");
+    fill("StrongPass1!", "StrongPass1!");
+    await submit("Continue");
+    expect(authApi.ClientSetPassword).not.toHaveBeenCalled();
   });
 
   it("confirms in its own words when the server sends no message", async () => {
