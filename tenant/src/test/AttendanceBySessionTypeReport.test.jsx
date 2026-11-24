@@ -255,7 +255,11 @@ describe("loading sessions for a type", () => {
     await pick("Direct Therapy");
     await waitFor(() => expect(showApiError).toHaveBeenCalledWith(boom, "LOAD_SESSIONS"));
     expect(screen.queryByTestId("row-sess-1")).not.toBeInTheDocument();
-    expect(screen.getByTestId("table")).toHaveAttribute("data-loading", "false");
+    // The error is reported in the catch; loading only clears in the finally,
+    // a render later, which a slow CI runner can observe in between.
+    await waitFor(() =>
+      expect(screen.getByTestId("table")).toHaveAttribute("data-loading", "false")
+    );
   });
 });
 
