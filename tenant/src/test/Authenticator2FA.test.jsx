@@ -255,6 +255,23 @@ describe("verifying the first code", () => {
     expect(api.Admin2FAVerify).not.toHaveBeenCalled();
   });
 
+  it("accepts a newer backend's answer, which carries tokens instead of true", async () => {
+    api.Admin2FAVerify.mockResolvedValue({
+      data: { status: "ok", data: { accessToken: "at", refreshToken: "rt" } },
+    });
+    await renderPage();
+    await verifyFirstCode("123456");
+    expect(toast).toHaveBeenCalledWith("OTP first verification successful!", "success");
+    expect(toast).not.toHaveBeenCalledWith("Invalid OTP. Please try again.", "error");
+  });
+
+  it("still refuses an answer that is neither true nor tokens", async () => {
+    api.Admin2FAVerify.mockResolvedValue({ data: { status: "ok", data: false } });
+    await renderPage();
+    await verifyFirstCode("123456");
+    expect(toast).toHaveBeenCalledWith("Invalid OTP. Please try again.", "error");
+  });
+
   it("sends the joined code with the admin id", async () => {
     await renderPage();
     await verifyFirstCode("123456");

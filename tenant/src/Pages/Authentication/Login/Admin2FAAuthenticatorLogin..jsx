@@ -12,7 +12,7 @@ import { authErrorMessage } from "../../../Helper/authErrors";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { connectSocket } from "../../../api/socketService";
-import { clearPending2FA } from "../../../ReduxStore/features/authentication";
+import { clearPending2FA, completeTwoFactor } from "../../../ReduxStore/features/authentication";
 import AccountAccessMessage from "../../../Helper/accountAccessMessage";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
@@ -99,9 +99,22 @@ const Admin2FAAuthenticatorLogin = () => {
       });
       if (response.data.status === "ok") {
         showToast("OTP verification successful!", "success");
-        // Second factor passed: the session may now enter the app.
+        // Second factor passed: swap in the full tokens the backend issues
+        // now (older backends issue none, keeping the sign-in ones), and let
+        // the session into the app.
+        const issued = response.data.data || {};
+        dispatch(
+          completeTwoFactor({
+            accessToken: issued.accessToken,
+            refreshToken: issued.refreshToken,
+          })
+        );
         dispatch(clearPending2FA());
-        connectSocket({ accessToken, userId, tenantId });
+        connectSocket({
+          accessToken: issued.accessToken || accessToken,
+          userId,
+          tenantId,
+        });
         navigate("/dashboard");
       } else {
         throw new Error("Verification failed.");

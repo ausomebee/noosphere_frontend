@@ -4,6 +4,8 @@ import reducer, {
   updateAccessToken,
   setPending2FARoute,
   clearPending2FA,
+  setTwoFactorToken,
+  completeTwoFactor,
 } from '../ReduxStore/features/authentication';
 
 const initialState = {
@@ -15,6 +17,8 @@ const initialState = {
   error: null,
   pending2FA: false,
   pending2FARoute: null,
+  twoFactorToken: null,
+  twoFactorUserId: null,
 };
 
 describe('authenticationSlice', () => {
@@ -155,6 +159,61 @@ describe('authenticationSlice', () => {
       const legacy = { isAuthenticated: true, user: { id: '1' }, token: 't', loading: false, error: null };
       const state = reducer(legacy, updateAccessToken('t2'));
       expect(state.pending2FA).toBeUndefined();
+    });
+  });
+
+  describe('2FA token (sign-in when 2FA is required)', () => {
+    const signIn = (data) =>
+      reducer(initialState, { type: 'auth/AdminLogin/fulfilled', payload: { data } });
+
+    it('holds the 2FA token and no access token when sign-in requires 2FA', () => {
+      const state = signIn({ id: 'u1', twoFactorRequired: true, twoFactorToken: '2fa' });
+      expect(state.twoFactorToken).toBe('2fa');
+      expect(state.twoFactorUserId).toBe('u1');
+      expect(state.token).toBeNull();
+      expect(state.refreshToken).toBeNull();
+      expect(state.pending2FA).toBe(true);
+    });
+
+    it('holds no 2FA token after a normal sign-in', () => {
+      const state = signIn({ id: 'u1', accessToken: 'at', refreshToken: 'rt' });
+      expect(state.twoFactorToken).toBeNull();
+      expect(state.twoFactorUserId).toBeNull();
+      expect(state.token).toBe('at');
+    });
+
+    it('swaps the full tokens in once 2FA passes', () => {
+      const state = reducer(
+        signIn({ id: 'u1', twoFactorToken: '2fa' }),
+        completeTwoFactor({ accessToken: 'at2', refreshToken: 'rt2' })
+      );
+      expect(state.token).toBe('at2');
+      expect(state.refreshToken).toBe('rt2');
+      expect(state.user.accessToken).toBe('at2');
+      expect(state.user.refreshToken).toBe('rt2');
+      expect(state.twoFactorToken).toBeNull();
+    });
+
+    it('keeps the sign-in tokens when an older backend issues none at 2FA', () => {
+      const state = reducer(
+        signIn({ id: 'u1', accessToken: 'at', refreshToken: 'rt' }),
+        completeTwoFactor({})
+      );
+      expect(state.token).toBe('at');
+      expect(state.refreshToken).toBe('rt');
+      expect(state.user.accessToken).toBe('at');
+    });
+
+    it('stores a 2FA token handed back by a set-password', () => {
+      const state = reducer(initialState, setTwoFactorToken({ token: 'next', userId: 'u9' }));
+      expect(state.twoFactorToken).toBe('next');
+      expect(state.twoFactorUserId).toBe('u9');
+    });
+
+    it('drops the 2FA token on logout', () => {
+      const state = reducer(signIn({ id: 'u1', twoFactorToken: '2fa' }), logout());
+      expect(state.twoFactorToken).toBeNull();
+      expect(state.twoFactorUserId).toBeNull();
     });
   });
 });

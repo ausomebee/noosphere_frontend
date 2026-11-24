@@ -67,9 +67,10 @@ const store = (user) =>
     },
   });
 
+let currentStore;
 const renderPage = (user = signedInUser()) =>
   render(
-    <Provider store={store(user)}>
+    <Provider store={(currentStore = store(user))}>
       <Admin2FAAuthenticatorLogin />
     </Provider>
   );
@@ -304,5 +305,23 @@ describe("the recovery escape hatch", () => {
     fireEvent.click(screen.getByText("Can't access your authenticator app?"));
     fireEvent.click(screen.getByRole("button", { name: "I understand" }));
     expect(boxes()).toHaveLength(6);
+  });
+});
+
+describe("the full tokens issued once 2FA passes", () => {
+  it("swaps them in for the 2FA token and opens the socket with them", async () => {
+    api.Admin2FAVerify.mockResolvedValue({
+      data: { status: "ok", data: { accessToken: "full-at", refreshToken: "full-rt" } },
+    });
+    renderPage(signedInUser({ accessToken: undefined, refreshToken: undefined }));
+    await verifyWith("123456");
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/dashboard"));
+    const auth = currentStore.getState().authentication;
+    expect(auth.token).toBe("full-at");
+    expect(auth.refreshToken).toBe("full-rt");
+    expect(auth.user.accessToken).toBe("full-at");
+    expect(socket.connectSocket).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: "full-at" })
+    );
   });
 });

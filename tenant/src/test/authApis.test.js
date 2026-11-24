@@ -54,17 +54,18 @@ describe('authApis', () => {
   });
 
   describe('AdminForgetPassword', () => {
-    it('sends GET with email', async () => {
-      axios.get.mockResolvedValueOnce({ data: { status: 'ok' } });
+    it('sends POST with the email in the body, not the address', async () => {
+      axios.post.mockResolvedValueOnce({ data: { status: 'ok' } });
       await api.AdminForgetPassword({ email: 'a@b.com' });
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/tenant/forgotpassword/a@b.com'),
+      expect(axios.post).toHaveBeenCalledWith(
+        'https://api.test.com/tenant/forgotpassword',
+        { email: 'a@b.com' },
         WITH_TIMEOUT
       );
     });
 
     it('throws on failure', async () => {
-      axios.get.mockRejectedValueOnce({
+      axios.post.mockRejectedValueOnce({
         response: { data: { message: 'Not found' } },
       });
       await expect(api.AdminForgetPassword({ email: 'bad@b.com' }))
@@ -225,7 +226,7 @@ describe('authApis', () => {
       await expect(api.SuperAdminChoices({ Authenticator2FA: true, securityQuestion: false, setForAll: true, tenantId: 't1' })).rejects.toThrow('Fail');
     });
     it('AdminForgetPassword throws default message', async () => {
-      axios.get.mockRejectedValueOnce(new Error('Network'));
+      axios.post.mockRejectedValueOnce(new Error('Network'));
       await expect(api.AdminForgetPassword({ email: 'x@x.com' })).rejects.toThrow('Forget Password Email failed');
     });
   });
@@ -283,7 +284,7 @@ describe('authApis', () => {
     });
 
     it.each([
-      ['AdminForgetPassword', 'get', () => api.AdminForgetPassword({ email: 'a@b.com' })],
+      ['AdminForgetPassword', 'post', () => api.AdminForgetPassword({ email: 'a@b.com' })],
       ['Admin2FAVerify', 'post', () => api.Admin2FAVerify({ userId: 'u1', token: '1' })],
       ['Admin2FAVerifySecretMessage', 'post', () => api.Admin2FAVerifySecretMessage({ userId: 'u1', secret: 's' })],
       ['AdminSetPassword', 'patch', () => api.AdminSetPassword({ id: '1', password: 'x' })],

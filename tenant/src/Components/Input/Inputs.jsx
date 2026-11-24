@@ -93,7 +93,7 @@ const PasswordStrength = ({ value }) => {
   const brand = "var(--button-primary-color, var(--color-primary, #004aba))";
   const muted = "var(--color-muted, #98a2b3)";
   return (
-    <div className="password-strength" style={{ marginTop: 6 }}>
+    <div className="password-strength" style={{ marginTop: 6, textAlign: "left" }}>
       <div style={{ height: 6, background: "var(--input-border, #e5e7eb)", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: brand, transition: "width .2s ease" }} />
       </div>
@@ -131,6 +131,7 @@ const PasswordMatch = ({ value, matchValue, showMismatch = false }) => {
       className="password-match"
       style={{
         marginTop: 6,
+        textAlign: "left",
         fontSize: 12,
         fontWeight: 600,
         color: ok ? good : bad,
