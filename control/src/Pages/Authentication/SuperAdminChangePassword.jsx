@@ -6,8 +6,10 @@ import { PasswordInput } from "../../Components/Input/Inputs";
 import Button from "../../Components/Button/Button";
 import Logo from "../../assets/NoosphereLogo-white.png";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import "./SuperAdmin.css";
 import api from "../../api/authApis";
+import { setTwoFactorToken } from "../../ReduxStore/features/authentication";
 import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
 import { showValidationErrors } from "../../Helper/formErrors";
@@ -25,6 +27,7 @@ const schema = yup.object().shape({
 const SuperAdminChangePassword = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -42,10 +45,14 @@ const SuperAdminChangePassword = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await api.AdminSetPassword({
+      // First login: no email link, so the signed-in session authorises this.
+      const response = await api.AdminFirstLoginSetPassword({
         id: userId,
         password: data.newPassword,
       });
+      // The steps that follow may come with a fresh 2FA token.
+      const nextToken = response?.data?.data?.twoFactorToken;
+      if (nextToken) dispatch(setTwoFactorToken({ token: nextToken, userId }));
 
       const successMessage = response?.data?.message || "Password updated successfully!";
       showToast(successMessage, "success");

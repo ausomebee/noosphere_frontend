@@ -233,6 +233,17 @@ describe('verifying the code', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'authentication/complete2FA' });
   });
 
+  it('stores the full tokens the backend issues once 2FA passes', async () => {
+    api.Admin2FAVerify.mockResolvedValue({
+      data: { status: 'ok', data: { accessToken: 'full-at', refreshToken: 'full-rt' } },
+    });
+    await verify();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'authentication/applyVerifiedTokens',
+      payload: { accessToken: 'full-at', refreshToken: 'full-rt' },
+    });
+  });
+
   it('keeps the app locked when the code is refused', async () => {
     api.Admin2FAVerify.mockResolvedValue({ data: { status: 'denied' } });
     await verify();

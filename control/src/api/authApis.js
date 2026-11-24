@@ -1,6 +1,12 @@
 import axios from "axios";
 import AxiosInterceptor from "../Helper/AxiosInterceptor";
 import { toAuthError } from "../Helper/authErrors";
+import {
+  preSessionAuthHeaders,
+  twoFactorTokenExpired,
+  endExpiredTwoFactor,
+  TWO_FACTOR_EXPIRED_MESSAGE,
+} from "../Helper/twoFactorSession";
 // Define your API endpoints
 
 const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -10,17 +16,37 @@ const PLAIN_API_URL = `${import.meta.env.VITE_API_URL}`;
 const AUTH_TIMEOUT_MS = 20000;
 const withTimeout = { timeout: AUTH_TIMEOUT_MS };
 
-const AdminVerifyToken = async ({ userId, token }) => {
+// The 2FA setup and verify calls carry the 2FA token (or, without one, the
+// signed-in admin's access token). If the 2FA token has run out, the sign-in
+// has to start again, so end it rather than show a confusing error.
+const twoFactorCall = async (userId, send, fallback) => {
+  if (twoFactorTokenExpired(userId)) {
+    endExpiredTwoFactor();
+    throw new Error(TWO_FACTOR_EXPIRED_MESSAGE);
+  }
   try {
-    const response = await axios.post(`${PLAIN_API_URL}/auth/verify`, {
-      userId,
-      token,
-    }, withTimeout);
-    return response;
+    return await send({ ...withTimeout, headers: preSessionAuthHeaders(userId) });
   } catch (error) {
-    throw toAuthError(error, error.response?.data?.message || "Verification failed");
+    const status = error?.response?.status;
+    if (
+      (status === 401 || status === 403) &&
+      twoFactorTokenExpired(userId, { strict: true })
+    ) {
+      endExpiredTwoFactor();
+      throw new Error(TWO_FACTOR_EXPIRED_MESSAGE);
+    }
+    throw toAuthError(error, fallback(error));
   }
 };
+const serverMessageOr = (fallback) => (error) =>
+  error.response?.data?.message || fallback;
+
+const AdminVerifyToken = ({ userId, token }) =>
+  twoFactorCall(
+    userId,
+    (config) => axios.post(`${PLAIN_API_URL}/auth/verify`, { userId, token }, config),
+    serverMessageOr("Verification failed")
+  );
 
 const AdminLogin = async ({ email, password }) => {
   try {
@@ -33,11 +59,13 @@ const AdminLogin = async ({ email, password }) => {
     throw toAuthError(error, error.response?.data?.message || "Login failed");
   }
 };
-const AdminOnboarding = async ({ id, password }) => {
+// Invite link: the email link's `token` authorises setting the password.
+const AdminOnboarding = async ({ id, password, token }) => {
   try {
     const response = await axios.patch(`${PLAIN_API_URL}/admin/setpassword`, {
       id,
       password,
+      token,
     }, withTimeout);
     return response;
   } catch (error) {
@@ -47,8 +75,10 @@ const AdminOnboarding = async ({ id, password }) => {
 
 const AdminForgetPassword = async ({ email }) => {
   try {
-    const response = await axios.get(
-      `${PLAIN_API_URL}/admin/forgotpassword/${email}`,
+    // The email goes in the body, not the address, so it stays out of logs.
+    const response = await axios.post(
+      `${PLAIN_API_URL}/admin/forgotpassword`,
+      { email },
       withTimeout
     );
     return response;
@@ -60,52 +90,57 @@ const AdminForgetPassword = async ({ email }) => {
   }
 };
 
-const AdminSetPassword = async ({ id, password }) => {
+const setPasswordMessage = (error) =>
+  error.response?.data?.data?.message || "Password setting failed";
+
+// Reset link: the email link's `token` authorises setting the password. No
+// session token is sent, so a stale one from another login can't interfere.
+const AdminSetPassword = async ({ id, password, token }) => {
   try {
     const response = await axios.patch(`${PLAIN_API_URL}/admin/setpassword`, {
       id,
       password,
+      token,
     }, withTimeout);
     return response;
   } catch (error) {
-    throw toAuthError(
-      error,
-      error.response?.data?.data?.message || "Password setting failed"
-    );
+    throw toAuthError(error, setPasswordMessage(error));
   }
 };
+
+// First login with the emailed temporary password: there is no link token, so
+// the signed-in session (2FA token or access token) authorises the change.
+const AdminFirstLoginSetPassword = ({ id, password }) =>
+  twoFactorCall(
+    id,
+    (config) =>
+      axios.patch(`${PLAIN_API_URL}/admin/setpassword`, { id, password }, config),
+    setPasswordMessage
+  );
 
 const SuperAdministrativePassword = async ({
   id,
    oldAdministratorPassword,
   newAdministratorPassword
 }) => {
-  try {
-    const response = await axios.patch(
-      `${PLAIN_API_URL}/admin/setadministratorpassword`,
-      {
-        id,
-         oldAdministratorPassword,
-  newAdministratorPassword
-      },
-      withTimeout
-    );
-    return response;
-  } catch (error) {
-    throw toAuthError(
-      error,
-      error.response?.data?.message || "Adminstrator password failed"
-    );
-  }
+  // Part of the first-login chain, so it carries the session like the 2FA calls.
+  return twoFactorCall(
+    id,
+    (config) =>
+      axios.patch(
+        `${PLAIN_API_URL}/admin/setadministratorpassword`,
+        { id, oldAdministratorPassword, newAdministratorPassword },
+        config
+      ),
+    serverMessageOr("Adminstrator password failed")
+  );
 };
-const Admin2FALink = async ({ id, moduleType }) => {
-  try {
-    const response = await axios.get(`${PLAIN_API_URL}/auth/${id}/${moduleType}`, withTimeout);
-    return response;
-  } catch (error) {
-    throw toAuthError(error, error.response?.data?.message || "error in 2FA link");
-  }
-};
+const Admin2FALink = ({ id, moduleType }) =>
+  twoFactorCall(
+    id,
+    (config) => axios.get(`${PLAIN_API_URL}/auth/${id}/${moduleType}`, config),
+    serverMessageOr("error in 2FA link")
+  );
 // Saving the choices is a protected endpoint: send it through the auth
 // interceptor so it carries the bearer token, like SetSuperAdminEnabled.
 const SuperAdminChoices = async ({
@@ -115,15 +150,20 @@ const SuperAdminChoices = async ({
   accessToken,
   refreshToken,
 }) => {
-  const authFetch = AxiosInterceptor(accessToken, refreshToken);
+  const body = { Authenticator2FA, securityQuestion, setForAll };
+  // During a first login that requires 2FA there is no access token yet, only
+  // the 2FA token, so send that (and handle it running out like the 2FA calls).
+  if (!accessToken) {
+    return twoFactorCall(
+      undefined,
+      (config) => axios.post(`${PLAIN_API_URL}/admin/superadminchoices`, body, config),
+      serverMessageOr("error in super admin choices")
+    );
+  }
   try {
-    const response = await authFetch.post(
+    const response = await AxiosInterceptor(accessToken, refreshToken).post(
       `${PLAIN_API_URL}/admin/superadminchoices`,
-      {
-        Authenticator2FA,
-        securityQuestion,
-        setForAll,
-      },
+      body,
       withTimeout
     );
     return response;
@@ -165,50 +205,34 @@ const SetSuperAdminEnabled = async ({ isEnabled, accessToken, refreshToken }) =>
 };
 
 
-const Admin2FACreateSecretMessage = async ({ userId, secret, authQuestion, module }) => {
-  try {
-    const response = await axios.post(
-      `${PLAIN_API_URL}/auth/createsecretemessage`,
-      {
-        userId,
-        secret,
-        authQuestion,
-        module
-      },
-      withTimeout
-    );
-    return response;
-  } catch (error) {
-    throw toAuthError(error, error.response?.data?.message || "error in creating secret message");
-  }
-};
-const Admin2FAVerifySecretMessage = async ({ userId, secret, authQuestion }) => {
-  try {
-    const response = await axios.post(
-      `${PLAIN_API_URL}/auth/verifysecretmessage`,
-      {
-        userId,
-        secret,
-       authQuestion 
-      },
-      withTimeout
-    );
-    return response;
-  } catch (error) {
-    throw toAuthError(error, error.response?.data?.message || "error verifying secret message");
-  }
-};
-const Admin2FAVerify = async ({ userId, token }) => {
-  try {
-    const response = await axios.post(`${PLAIN_API_URL}/auth/verify`, {
-      userId,
-      token,
-    }, withTimeout);
-    return response;
-  } catch (error) {
-    throw toAuthError(error, error.response?.data?.message || "error in 2FA verify");
-  }
-};
+const Admin2FACreateSecretMessage = ({ userId, secret, authQuestion, module }) =>
+  twoFactorCall(
+    userId,
+    (config) =>
+      axios.post(
+        `${PLAIN_API_URL}/auth/createsecretemessage`,
+        { userId, secret, authQuestion, module },
+        config
+      ),
+    serverMessageOr("error in creating secret message")
+  );
+const Admin2FAVerifySecretMessage = ({ userId, secret, authQuestion }) =>
+  twoFactorCall(
+    userId,
+    (config) =>
+      axios.post(
+        `${PLAIN_API_URL}/auth/verifysecretmessage`,
+        { userId, secret, authQuestion },
+        config
+      ),
+    serverMessageOr("error verifying secret message")
+  );
+const Admin2FAVerify = ({ userId, token }) =>
+  twoFactorCall(
+    userId,
+    (config) => axios.post(`${PLAIN_API_URL}/auth/verify`, { userId, token }, config),
+    serverMessageOr("error in 2FA verify")
+  );
 
 export const refreshAccessToken = async (refreshToken, onSuccess) => {
   try {
@@ -235,6 +259,7 @@ export default {
   AdminLogin,
   AdminForgetPassword,
   AdminSetPassword,
+  AdminFirstLoginSetPassword,
   SuperAdministrativePassword,
   Admin2FALink,
   Admin2FAVerify,

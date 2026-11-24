@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,7 +11,9 @@ import {
   AdminLogin,
   setPending2FARoute,
   complete2FA,
+  logout,
 } from "../../ReduxStore/features/authentication";
+import { takeAuthNotice } from "../../Helper/twoFactorSession";
 import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
 import { showToast } from "../../Helper/ShowToast";
@@ -42,6 +44,12 @@ const AdminsLogin = () => {
   });
   const { loading } = useAuth();
 
+  // Sent back here because the 2FA step timed out: say so.
+  useEffect(() => {
+    const notice = takeAuthNotice();
+    if (notice) showToast(notice, "error");
+  }, []);
+
   const handleGetSuperAdminChoice = async () => {
     try {
       const response = await api.GetSuperAdminChoices();
@@ -61,7 +69,17 @@ const AdminsLogin = () => {
     dispatch(setPending2FARoute(route));
     navigate(route);
   };
-  const enterApp = () => {
+  const enterApp = (user) => {
+    // When the backend requires 2FA it sends no access token, only a 2FA
+    // token, so there is no session to enter the app with.
+    if (!user?.accessToken) {
+      dispatch(logout());
+      showToast(
+        "Two-step verification is required for your account but isn't set up. Please contact your administrator.",
+        "error"
+      );
+      return;
+    }
     dispatch(complete2FA());
     navigate("/tenants/pipeline");
   };
@@ -81,7 +99,7 @@ const AdminsLogin = () => {
 
         // Master switch: when 2FA is disabled, skip it and go to the dashboard.
         if (isEnabled === false) {
-          enterApp();
+          enterApp(user);
           return;
         }
 
@@ -103,8 +121,16 @@ const AdminsLogin = () => {
           } else if (effectiveType === "SECRETMESSAGE") {
             goTo2FA("/2fa/security-question");
           } else if (isPrivileged) {
-            // Brand-new super admin, no type chosen yet → password onboarding.
-            goTo2FA("/SA/change-password");
+            // Brand-new super admin, no type chosen yet → change the temporary
+            // password, then the administrative password, then 2FA. If the
+            // password was already changed (they left part-way), resume at
+            // the next step: the backend won't accept a second first-login
+            // password change.
+            goTo2FA(
+              user.passwordChanged === true
+                ? "/SA/administrative-password"
+                : "/SA/change-password"
+            );
           } else {
             // setForAll is off and this admin has no type yet → let them pick.
             goTo2FA("/2fa/choice");
@@ -116,7 +142,7 @@ const AdminsLogin = () => {
           } else if (effectiveType === "SECRETMESSAGE") {
             goTo2FA("/SA/2fa-question/login");
           } else {
-            enterApp();
+            enterApp(user);
           }
         }
       } else {

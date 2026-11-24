@@ -134,6 +134,11 @@ describe('verifying', () => {
     expect(navigate).toHaveBeenCalledWith('/tenants/pipeline');
     // Unlocks the app so ProtectedRoute lets the admin in.
     expect(dispatch).toHaveBeenCalledWith({ type: 'authentication/complete2FA' });
+    // An older backend issues no tokens here, which leaves the sign-in ones.
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'authentication/applyVerifiedTokens',
+      payload: { accessToken: undefined, refreshToken: undefined },
+    });
   });
 
   it('says the server could not be reached when the call never got an answer', async () => {

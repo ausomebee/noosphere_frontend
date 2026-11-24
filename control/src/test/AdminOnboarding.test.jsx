@@ -25,15 +25,17 @@ const { OnboardAdmin } = vi.hoisted(() => {
 });
 vi.mock('../ReduxStore/features/authentication', () => ({ OnboardAdmin }));
 
-const { navigate, params, dispatch, result } = vi.hoisted(() => ({
+const { navigate, params, dispatch, result, link } = vi.hoisted(() => ({
   navigate: vi.fn(),
   params: {},
   dispatch: vi.fn(),
   result: { current: null },
+  link: { search: 'token=invite-tok' },
 }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigate,
   useParams: () => params,
+  useSearchParams: () => [new URLSearchParams(link.search)],
 }));
 
 const state = { authentication: { loading: false, user: null } };
@@ -97,6 +99,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   params.userId = 'admin-9';
   params.email = encodeURIComponent('olivia@therapyco.com');
+  link.search = 'token=invite-tok';
   state.authentication.loading = false;
   result.current = fulfilledWith({ auth2FADone: false });
   dispatch.mockImplementation(() => Promise.resolve(result.current));
@@ -166,8 +169,21 @@ describe('the password rules', () => {
     await submitValid();
     expect(dispatch).toHaveBeenCalledWith({
       type: 'onboardAdmin',
-      payload: { id: 'admin-9', password: STRONG },
+      payload: { id: 'admin-9', password: STRONG, token: 'invite-tok' },
     });
+  });
+});
+
+describe("the invite link's token", () => {
+  it('refuses to submit when the link carries no token, and says why', async () => {
+    link.search = '';
+    render(<AdminOnboarding />);
+    await submitValid();
+    expect(showToast).toHaveBeenCalledWith(
+      'This link is incomplete or out of date. Please request a new one.',
+      'error'
+    );
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 
