@@ -5,7 +5,7 @@ import * as yup from "yup";
 import { TextInput, PasswordInput } from "../../../../Components/Input/Inputs";
 import Button from "../../../../Components/Button/Button";
 import TenantLogo from "../../../../assets/Logo.svg";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import useAuth from "../../../../hooks/useAuth";
 import { OnboardAdmin } from "../../../../ReduxStore/features/authentication";
@@ -18,6 +18,7 @@ import api from "../../../../api/authApis";
 import "../../../Authentication/Auth.css";
 
 import { showValidationErrors } from "../../../../Helper/formErrors";
+import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../../Helper/linkToken";
 // Yup validation schema
 // Both password fields share one rule set, so the confirm field is held to the
 // identical strength policy — not just "must match".
@@ -29,6 +30,8 @@ const schema = yup.object().shape({
 
 const AdminOnboarding = () => {
   const { userId, email } = useParams(); // Extract userId and email from route params
+  const [searchParams] = useSearchParams();
+  const linkToken = readLinkToken(searchParams);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading } = useAuth();
@@ -66,9 +69,13 @@ const AdminOnboarding = () => {
   };
 
   const onSubmit = async (data) => {
+    if (!linkToken) {
+      showToast(MISSING_LINK_TOKEN_MESSAGE, "error");
+      return;
+    }
     try {
       const resultAction = await dispatch(
-        OnboardAdmin({ id: userId, password: data.password })
+        OnboardAdmin({ id: userId, password: data.password, token: linkToken })
       );
 
       if (OnboardAdmin.fulfilled.match(resultAction)) {

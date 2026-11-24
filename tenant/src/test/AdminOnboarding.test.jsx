@@ -22,7 +22,7 @@ import authReducer, {
  * still real because `useAuth` reads the auth slice for the button's spinner.
  */
 
-const api = vi.hoisted(() => ({ GetSuperAdminChoices: vi.fn() }));
+const api = vi.hoisted(() => ({ GetSuperAdminChoices: vi.fn(), AdminOnboarding: vi.fn() }));
 vi.mock("../api/authApis", () => ({ default: api }));
 
 const toast = vi.hoisted(() => vi.fn());
@@ -31,11 +31,12 @@ vi.mock("../Helper/ShowToast", () => ({
   showApiError: vi.fn(),
 }));
 
-const routing = vi.hoisted(() => ({ navigate: vi.fn(), params: {} }));
+const routing = vi.hoisted(() => ({ navigate: vi.fn(), params: {}, search: "token=invite-tok" }));
 vi.mock("react-router-dom", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => routing.navigate,
   useParams: () => routing.params,
+  useSearchParams: () => [new URLSearchParams(routing.search)],
 }));
 
 const dispatch = vi.hoisted(() => vi.fn());
@@ -106,6 +107,7 @@ const onboardUnder = async ({ choices, user = {} }) => {
 beforeEach(() => {
   vi.clearAllMocks();
   routing.params = { userId: "u-1", email: encodeURIComponent("olivia@therapyco.com") };
+  routing.search = "token=invite-tok";
   api.GetSuperAdminChoices.mockResolvedValue({
     data: { data: { setForAll: false, Authenticator2FA: false, securityQuestion: false } },
   });
@@ -233,6 +235,38 @@ describe("where a newly onboarded admin lands", () => {
     fillPasswords();
     submitForm();
     await waitFor(() => expect(routing.navigate).toHaveBeenCalledWith("/"));
+  });
+});
+
+describe("the invite link's token", () => {
+  it("sends the link's token with the new password", async () => {
+    api.AdminOnboarding.mockResolvedValue({ data: { data: { tenantId: "t-1" } } });
+    renderPage();
+    fillPasswords();
+    submitForm();
+    await waitFor(() => expect(dispatch).toHaveBeenCalled());
+    // The page dispatches the OnboardAdmin thunk; run it to see what it sends.
+    const thunk = dispatch.mock.calls[0][0];
+    await thunk(vi.fn(), () => ({}), undefined);
+    expect(api.AdminOnboarding).toHaveBeenCalledWith({
+      id: "u-1",
+      password: PASSWORD,
+      token: "invite-tok",
+    });
+  });
+
+  it("refuses to submit when the link carries no token, and says why", async () => {
+    routing.search = "";
+    renderPage();
+    fillPasswords();
+    submitForm();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "This link is incomplete or out of date. Please request a new one.",
+        "error"
+      )
+    );
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 

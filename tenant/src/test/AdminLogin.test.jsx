@@ -378,3 +378,50 @@ describe("the rest of the screen", () => {
     expect(navigate).toHaveBeenCalledWith("/auth/forgot-password");
   });
 });
+
+describe("the 2FA token flow", () => {
+  it("sends an admin who already changed the temporary password straight to 2FA setup", async () => {
+    await loginUnder({
+      choices: POLICY_OFF,
+      user: { auth2FADone: false, passwordChanged: true, role: { name: "Admin" } },
+    });
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/auth/2fa-settings"));
+    expect(navigate).not.toHaveBeenCalledWith("/auth/change-password");
+  });
+
+  it("still sends an admin on the temporary password to change it", async () => {
+    await loginUnder({
+      choices: POLICY_OFF,
+      user: { auth2FADone: false, passwordChanged: false, role: { name: "Admin" } },
+    });
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/auth/change-password"));
+  });
+
+  it("never lets a sign-in with only a 2FA token into the app", async () => {
+    await loginUnder({
+      choices: { ...POLICY_OFF, isEnabled: false },
+      user: { accessToken: undefined, twoFactorRequired: true, twoFactorToken: "2fa" },
+    });
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Two-step verification is required for your account but isn't set up. Please contact your administrator.",
+        "error"
+      )
+    );
+    expect(navigate).not.toHaveBeenCalledWith("/dashboard");
+    expect(socket.connectSocket).not.toHaveBeenCalled();
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "authentication/logout" })
+    );
+  });
+
+  it("explains a timed-out 2FA step when the user lands back here", () => {
+    sessionStorage.setItem("authNotice", "Your sign-in timed out. Please sign in again.");
+    renderPage();
+    expect(toast).toHaveBeenCalledWith(
+      "Your sign-in timed out. Please sign in again.",
+      "error"
+    );
+    expect(sessionStorage.getItem("authNotice")).toBeNull();
+  });
+});

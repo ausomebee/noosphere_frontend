@@ -84,9 +84,9 @@ describe('authApis error paths', () => {
     rejectAll(withMessage(`${label} said no`));
     const err = await invoke().catch((e) => e);
     expect(err).toBeInstanceOf(Error);
-    // AdminSetPassword reads one `.data` deeper than the rest of the module
-    // (see the dedicated case below), so it alone falls back here.
-    if (label === 'AdminSetPassword') {
+    // AdminSetPassword and the first-login call read one `.data` deeper than the rest of the module
+    // (see the dedicated case below), so they alone fall back here.
+    if (label === 'AdminSetPassword' || label === 'AdminFirstLoginSetPassword') {
       expect(err.message).toBe('Password setting failed');
     } else {
       expect(err.message).toBe(`${label} said no`);

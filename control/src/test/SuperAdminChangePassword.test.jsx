@@ -13,7 +13,7 @@ vi.mock('../Helper/formErrors', () => ({
   default: (...a) => showValidationErrors(...a),
 }));
 
-const authApi = vi.hoisted(() => ({ AdminSetPassword: vi.fn() }));
+const authApi = vi.hoisted(() => ({ AdminFirstLoginSetPassword: vi.fn() }));
 vi.mock('../api/authApis', () => ({ default: authApi }));
 
 const navigate = vi.fn();
@@ -56,7 +56,7 @@ const fill = ({ next = STRONG, confirm = STRONG } = {}) => {
 beforeEach(() => {
   vi.clearAllMocks();
   state.authentication.user = { id: 'u1' };
-  authApi.AdminSetPassword.mockResolvedValue({});
+  authApi.AdminFirstLoginSetPassword.mockResolvedValue({});
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -109,7 +109,7 @@ describe('validation', () => {
     render(<SuperAdminChangePassword />);
     await submit();
     await waitFor(() => expect(showValidationErrors).toHaveBeenCalled());
-    expect(authApi.AdminSetPassword).not.toHaveBeenCalled();
+    expect(authApi.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it('refuses a password under eight characters', async () => {
@@ -120,7 +120,7 @@ describe('validation', () => {
     await waitFor(() =>
       expect(screen.getAllByText('At least 8 characters')).toHaveLength(2)
     );
-    expect(authApi.AdminSetPassword).not.toHaveBeenCalled();
+    expect(authApi.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it('refuses a confirmation that does not match a strong password', async () => {
@@ -130,7 +130,7 @@ describe('validation', () => {
     await waitFor(() =>
       expect(screen.getByText('Passwords must match')).toBeInTheDocument()
     );
-    expect(authApi.AdminSetPassword).not.toHaveBeenCalled();
+    expect(authApi.AdminFirstLoginSetPassword).not.toHaveBeenCalled();
   });
 
   it('refuses a password with no special character', async () => {
@@ -148,7 +148,7 @@ describe('submitting', () => {
     render(<SuperAdminChangePassword />);
     fill();
     await submit();
-    expect(authApi.AdminSetPassword).toHaveBeenCalledWith({
+    expect(authApi.AdminFirstLoginSetPassword).toHaveBeenCalledWith({
       id: 'u1',
       password: STRONG,
     });
@@ -156,7 +156,7 @@ describe('submitting', () => {
   });
 
   it('prefers the message the server sent', async () => {
-    authApi.AdminSetPassword.mockResolvedValue({
+    authApi.AdminFirstLoginSetPassword.mockResolvedValue({
       data: { message: 'Password rotated' },
     });
     render(<SuperAdminChangePassword />);
@@ -177,13 +177,13 @@ describe('submitting', () => {
     render(<SuperAdminChangePassword />);
     fill();
     await submit();
-    expect(authApi.AdminSetPassword).toHaveBeenCalledWith(
+    expect(authApi.AdminFirstLoginSetPassword).toHaveBeenCalledWith(
       expect.objectContaining({ id: null })
     );
   });
 
   it('reports the reason the server refused it and stays put', async () => {
-    authApi.AdminSetPassword.mockRejectedValue({
+    authApi.AdminFirstLoginSetPassword.mockRejectedValue({
       response: { data: { message: 'Password was used before' } },
     });
     render(<SuperAdminChangePassword />);
@@ -194,7 +194,7 @@ describe('submitting', () => {
   });
 
   it('falls back to its own failure wording', async () => {
-    authApi.AdminSetPassword.mockRejectedValue(new Error('network down'));
+    authApi.AdminFirstLoginSetPassword.mockRejectedValue(new Error('network down'));
     render(<SuperAdminChangePassword />);
     fill();
     await submit();
@@ -202,7 +202,7 @@ describe('submitting', () => {
   });
 
   it('logs the failure under a development build', async () => {
-    authApi.AdminSetPassword.mockRejectedValue(new Error('network down'));
+    authApi.AdminFirstLoginSetPassword.mockRejectedValue(new Error('network down'));
     render(<SuperAdminChangePassword />);
     fill();
     await submit();
@@ -214,7 +214,7 @@ describe('submitting', () => {
 
   it('stays quiet under a production build', async () => {
     vi.stubEnv('DEV', false);
-    authApi.AdminSetPassword.mockRejectedValue(new Error('network down'));
+    authApi.AdminFirstLoginSetPassword.mockRejectedValue(new Error('network down'));
     render(<SuperAdminChangePassword />);
     fill();
     await submit();
@@ -224,7 +224,7 @@ describe('submitting', () => {
 
   it('locks the button while the request is in flight', async () => {
     let release;
-    authApi.AdminSetPassword.mockReturnValue(
+    authApi.AdminFirstLoginSetPassword.mockReturnValue(
       new Promise((resolve) => {
         release = () => resolve({});
       })

@@ -13,8 +13,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
  * silent one, along with the navigation state each carries (the verify routes
  * thread the role through so the failure card can address the right audience).
  *
- * Nothing is signed in on this screen, so there is no redux store: the user id
- * comes from the route and everything else from the save response.
+ * Nothing is signed in on this screen: the user id comes from the route, the
+ * single-use reset token from the link's `?token=`, and everything else from
+ * the save response. The only thing dispatched is a 2FA token, when the save
+ * hands one back for the 2FA step that follows.
  */
 
 const api = vi.hoisted(() => ({
@@ -29,11 +31,22 @@ vi.mock("../Helper/ShowToast", () => ({
   showApiError: vi.fn(),
 }));
 
-const routing = vi.hoisted(() => ({ navigate: vi.fn(), params: { userId: "u-1" } }));
+const routing = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  params: { userId: "u-1" },
+  search: "token=link-tok",
+}));
 vi.mock("react-router-dom", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => routing.navigate,
   useParams: () => routing.params,
+  useSearchParams: () => [new URLSearchParams(routing.search)],
+}));
+
+const dispatch = vi.hoisted(() => vi.fn());
+vi.mock("react-redux", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useDispatch: () => dispatch,
 }));
 
 import ForgotPasswordResetPassword from "../Pages/Authentication/ForgotPassword/ForgotPasswordResetPassword";
@@ -66,6 +79,7 @@ const saveUnder = async ({ setForAll, user, message }) => {
 beforeEach(() => {
   vi.clearAllMocks();
   routing.params = { userId: "u-1" };
+  routing.search = "token=link-tok";
   api.GetSuperAdminChoices.mockResolvedValue({ data: { data: { setForAll: false } } });
   api.AdminSetPassword.mockResolvedValue({
     data: { data: { tenantId: "t-1", auth2FADone: false } },
@@ -112,7 +126,51 @@ describe("validating the new password", () => {
     expect(api.AdminSetPassword).toHaveBeenCalledWith({
       id: "u-99",
       password: PASSWORD,
+      token: "link-tok",
     });
+  });
+});
+
+describe("the reset link's token", () => {
+  it("refuses to save when the link carries no token, and says why", async () => {
+    routing.search = "";
+    render(<ForgotPasswordResetPassword />);
+    fill();
+    submitForm();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "This link is incomplete or out of date. Please request a new one.",
+        "error"
+      )
+    );
+    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+  });
+
+  it("treats a blank token as missing", async () => {
+    routing.search = "token=%20%20";
+    render(<ForgotPasswordResetPassword />);
+    fill();
+    submitForm();
+    await waitFor(() => expect(toast).toHaveBeenCalled());
+    expect(api.AdminSetPassword).not.toHaveBeenCalled();
+  });
+
+  it("keeps the 2FA token the save hands back for the 2FA step", async () => {
+    await saveUnder({
+      setForAll: false,
+      user: { auth2FADone: false, twoFactorToken: "2fa-tok" },
+    });
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "authentication/setTwoFactorToken",
+        payload: { token: "2fa-tok", userId: "u-1" },
+      })
+    );
+  });
+
+  it("dispatches nothing when the save hands back no 2FA token", async () => {
+    await saveUnder({ setForAll: false, user: { auth2FADone: false } });
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 

@@ -67,9 +67,10 @@ const makeStore = (user) =>
     },
   });
 
+let currentStore;
 const renderPage = (user = signedInUser()) =>
   render(
-    <Provider store={makeStore(user)}>
+    <Provider store={(currentStore = makeStore(user))}>
       <Admin2FAQuestionLogin />
     </Provider>
   );
@@ -240,5 +241,25 @@ describe("the recovery escape hatch", () => {
     fireEvent.click(screen.getByRole("button", { name: "I understand" }));
     expect(screen.getByPlaceholderText("Enter your answer")).toBeInTheDocument();
     expect(question()).toBe("What was your first pet's name?");
+  });
+});
+
+describe("the full tokens issued once 2FA passes", () => {
+  it("swaps them in for the 2FA token and opens the socket with them", async () => {
+    api.Admin2FAVerifySecretMessage.mockResolvedValue({
+      data: { status: "ok", data: { accessToken: "full-at", refreshToken: "full-rt" } },
+    });
+    renderPage(signedInUser({ accessToken: undefined, refreshToken: undefined }));
+    answerWith("Rex");
+    submit();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/dashboard"));
+    const auth = currentStore.getState().authentication;
+    expect(auth.token).toBe("full-at");
+    expect(auth.refreshToken).toBe("full-rt");
+    expect(auth.user.accessToken).toBe("full-at");
+    expect(auth.twoFactorToken).toBeNull();
+    expect(socket.connectSocket).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: "full-at" })
+    );
   });
 });

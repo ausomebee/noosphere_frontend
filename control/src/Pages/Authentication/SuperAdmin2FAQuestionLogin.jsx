@@ -10,7 +10,7 @@ import "./SuperAdmin.css";
 import api from "../../api/authApis";
 import useAuth from "../../hooks/useAuth";
 import { useDispatch } from "react-redux";
-import { complete2FA } from "../../ReduxStore/features/authentication";
+import { applyVerifiedTokens, complete2FA } from "../../ReduxStore/features/authentication";
 import { showToast } from "../../Helper/ShowToast";
 import { authErrorMessage } from "../../Helper/authErrors";
 
@@ -52,7 +52,16 @@ const SuperAdmin2FAQuestionLogin = () => {
       });
       if (response.data.status ==="ok") {
         showToast("Security question verified successfully!", "success");
-        // 2FA verified: unlock the app (ProtectedRoute) before entering it.
+        // 2FA verified: swap in the full tokens the backend issues now (older
+        // backends issue none, keeping the sign-in ones), then unlock the app
+        // (ProtectedRoute) before entering it.
+        const issued = response.data.data || {};
+        dispatch(
+          applyVerifiedTokens({
+            accessToken: issued.accessToken,
+            refreshToken: issued.refreshToken,
+          })
+        );
         dispatch(complete2FA());
         navigate("/tenants/pipeline");
       } else {

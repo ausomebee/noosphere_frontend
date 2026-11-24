@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import useAuth from "../../../../hooks/useAuth";
 import { showToast } from "../../../../Helper/ShowToast";
 import {
@@ -10,6 +11,7 @@ import {
   confirmPasswordSchema,
 } from "../../../../Helper/passwordValidation";
 import api from "../../../../api/authApis";
+import { setTwoFactorToken } from "../../../../ReduxStore/features/authentication";
 import { authErrorMessage } from "../../../../Helper/authErrors";
 import "../../Auth.css";
 import TenantLogo from "../../../../assets/Logo.svg";
@@ -26,6 +28,7 @@ const schema = yup.object().shape({
 const SuperChangePassword = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -41,10 +44,14 @@ const SuperChangePassword = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await api.AdminSetPassword({
+      // First login: no email link, so the signed-in session authorises this.
+      const response = await api.AdminFirstLoginSetPassword({
         id: userId,
         password: data.newPassword,
       });
+      // The 2FA setup that follows may come with a fresh 2FA token.
+      const nextToken = response?.data?.data?.twoFactorToken;
+      if (nextToken) dispatch(setTwoFactorToken({ token: nextToken, userId }));
 
       const successMessage = response?.data?.message || "Password updated successfully!";
       showToast(successMessage, "success");
