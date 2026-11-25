@@ -203,7 +203,11 @@ const RoleAndPermission = () => {
           if (value) permKeys.push(key);
         }
       }
-      const access = { module: moduleKey, permissions: permKeys };
+      // Some keys live under more than one subcategory (e.g. SCHEDULER's
+      // Calendar and Appointments both carry create/edit/reschedule/start/
+      // cancel). The backend rejects a payload with repeated keys, so send
+      // each key once.
+      const access = { module: moduleKey, permissions: [...new Set(permKeys)] };
       // For edit mode, attach `id` if this module already existed on the role
       if (configMode === "edit" && rawModuleAccesses) {
         const existing = rawModuleAccesses.find((m) => m.module === moduleKey);
