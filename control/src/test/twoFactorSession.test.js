@@ -21,6 +21,7 @@ vi.stubEnv("VITE_API_URL", "https://api.test.com");
 import authReducer, {
   setTwoFactorToken,
   applyVerifiedTokens,
+  startTwoFactorSession,
 } from "../ReduxStore/features/authentication";
 import { injectStore } from "../Helper/storeRef";
 import {
@@ -322,5 +323,19 @@ describe("a device clock that runs a little fast", () => {
       TWO_FACTOR_EXPIRED_MESSAGE
     );
     expect(assign).toHaveBeenCalledWith("/");
+  });
+});
+
+describe("startTwoFactorSession (2FA right after a password reset)", () => {
+  it("holds the half-finished sign-in, so the 2FA pages know who and what", () => {
+    const store = makeStore({});
+    const user = { id: "u1", authQuestion: "Q?", authType: "SECRETMESSAGE", superAdmin: true };
+    store.dispatch(startTwoFactorSession({ user, twoFactorToken: jwt(120) }));
+    const auth = store.getState().authentication;
+    expect(auth.isAuthenticated).toBe(true);
+    expect(auth.user).toEqual(user);
+    expect(auth.accessToken).toBeNull();
+    expect(auth.pending2FA).toBe(true);
+    expect(preSessionAuthHeaders("u1").Authorization).toMatch(/^Bearer /);
   });
 });
