@@ -6,7 +6,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AuthLayout from "../AuthLayout";
 import { PasswordInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import api from "../../../api/authApis";
 import { showValidationErrors } from "../../../Helper/formErrors";
 import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../Helper/linkToken";
@@ -64,7 +64,9 @@ const ChangePassword = () => {
     } catch (error) {
       console.error("Change password error:", error);
       showToast(
-        error?.isNetworkError ? error.message : "Failed to reset password. Please try again.",
+        error?.isNetworkError
+          ? error.message
+          : apiErrorMessage(error, "Failed to reset password. Please try again."),
         "error",
       );
     } finally {
