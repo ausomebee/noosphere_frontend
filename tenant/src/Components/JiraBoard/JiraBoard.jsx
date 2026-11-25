@@ -42,7 +42,7 @@ import {
 } from "../../ReduxStore/features/PipelineSlice";
 import { FaPlus } from "react-icons/fa";
 import Button from "../Button/Button";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
 import SectionLoader from "../SectionLoader";
 
@@ -373,7 +373,7 @@ const JiraBoard = () => {
           ).unwrap();
         } catch (err) {
           console.error("Failed to reorder column:", err);
-          showToast("Failed to update column order.", "error");
+          showToast(apiErrorMessage(err, "Failed to update column order."), "error");
         }
       }
       return;
@@ -422,7 +422,7 @@ const JiraBoard = () => {
         ).unwrap();
       } catch (err) {
         console.error("Failed to update task order:", err);
-        showToast("Failed to update task order.", "error");
+        showToast(apiErrorMessage(err, "Failed to update task order."), "error");
       }
     } else {
       const activeTaskIds = [...activeColumn.taskIds];
@@ -462,7 +462,7 @@ const JiraBoard = () => {
         ).unwrap();
       } catch (err) {
         console.error("Failed to move task:", err);
-        showToast("Failed to move task.", "error");
+        showToast(apiErrorMessage(err, "Failed to move task."), "error");
       }
     }
   };

@@ -38,7 +38,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/billingAndPaymentsApi", () => ({ default: apiMock }));
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn(), showApiError: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: (...a) => toastMock.showApiError(...a),
 }));
@@ -455,7 +456,7 @@ describe("supervisor approval", () => {
   });
 
   it("leaves the modal open and warns when approval fails", async () => {
-    apiMock.ApproveTimeSheetBySupervisor.mockRejectedValue(new Error("nope"));
+    apiMock.ApproveTimeSheetBySupervisor.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await loaded();
     openActions();
@@ -463,6 +464,20 @@ describe("supervisor approval", () => {
     fireEvent.click(screen.getByText("confirm-approve"));
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith("Failed to approve timesheet.", "error")
+    );
+    expect(screen.getByTestId("approve-modal")).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    apiMock.ApproveTimeSheetBySupervisor.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    await loaded();
+    openActions();
+    fireEvent.click(screen.getByText("Approve and Convert to Claim"));
+    fireEvent.click(screen.getByText("confirm-approve"));
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(screen.getByTestId("approve-modal")).toBeInTheDocument();
   });
@@ -485,7 +500,7 @@ describe("supervisor approval", () => {
   });
 
   it("warns when the rejection call fails", async () => {
-    apiMock.RejectTimeSheetBySupervisor.mockRejectedValue(new Error("nope"));
+    apiMock.RejectTimeSheetBySupervisor.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await loaded();
     await rejectProbe.onSave("whatever");

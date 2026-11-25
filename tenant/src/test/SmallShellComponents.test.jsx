@@ -6,7 +6,8 @@ import { configureStore } from "@reduxjs/toolkit";
 
 const showToast = vi.fn();
 const showApiError = vi.fn();
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => showToast(...a),
   showApiError: (...a) => showApiError(...a),
 }));
@@ -339,10 +340,19 @@ describe("the timesheet decisions", () => {
   });
 
   it("reports an approval the backend refused", async () => {
-    onSave.mockRejectedValue(new Error("locked"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     render(<ApproveTimeSheetModal isOpen onClose={onClose} onSave={onSave} />);
     await act(async () => { fireEvent.click(primary()); });
     expect(showToast).toHaveBeenCalledWith("Failed to approve timesheet", "error");
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    onSave.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    render(<ApproveTimeSheetModal isOpen onClose={onClose} onSave={onSave} />);
+    await act(async () => { fireEvent.click(primary()); });
+    expect(showToast).toHaveBeenCalledWith("Name already taken", "error");
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -366,7 +376,7 @@ describe("the timesheet decisions", () => {
   });
 
   it("reports a rejection the backend refused", async () => {
-    onSave.mockRejectedValue(new Error("locked"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     render(<RejectTimeSheetModal isOpen onClose={onClose} onSave={onSave} />);
     fireEvent.change(screen.getByPlaceholderText("Enter rejection reason"), {
       target: { value: "Wrong hours" },

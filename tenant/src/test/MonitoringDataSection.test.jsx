@@ -29,7 +29,8 @@ import authReducer from "../ReduxStore/features/authentication";
  */
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -352,11 +353,22 @@ describe("the supporting data attachments", () => {
   });
 
   it("says so when the upload is refused, and attaches nothing", async () => {
-    upload.UploadImage.mockRejectedValue(new Error("network"));
+    upload.UploadImage.mockRejectedValue(new Error("Request failed with status code 500"));
     renderSection();
     pickFile();
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith("File upload failed", "error")
+    );
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    upload.UploadImage.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderSection();
+    pickFile();
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(onChange).not.toHaveBeenCalled();
   });

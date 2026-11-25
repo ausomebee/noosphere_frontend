@@ -6,6 +6,7 @@ import "../../../Auth.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../api/authApis";
 import { authErrorMessage, isNetworkFailure, NETWORK_ERROR_MESSAGE } from "../../../../../Helper/authErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../../../../hooks/useTwoFactorPolicy";
 import useAuth from "../../../../../hooks/useAuth";
 import { showToast } from "../../../../../Helper/ShowToast";
 
@@ -14,6 +15,14 @@ const TOTP_PERIOD_MS = 30_000;
 const Authenticator2FA = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  // Respect the admin's choice: staff whose method is set for everyone can't
+  // set up the other one, or go back to choose.
+  const { isSuperAdmin, enforcedMethod, backTarget } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod && enforcedMethod !== "AUTHENTICATOR") {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -216,7 +225,7 @@ const Authenticator2FA = () => {
   };
 
   const handleNavBack = () => {
-    navigate("/auth/2fa-settings");
+    if (backTarget) navigate(backTarget);
   };
 
   return (
@@ -266,12 +275,14 @@ const Authenticator2FA = () => {
                     </div>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <Button
-                      label="Back"
-                      variant="secondary"
-                      onClick={handleNavBack}
-                      className="w-full"
-                    />
+                    {backTarget && (
+                      <Button
+                        label="Back"
+                        variant="secondary"
+                        onClick={handleNavBack}
+                        className="w-full"
+                      />
+                    )}
                     <Button
                       label="Continue"
                       variant="primary"

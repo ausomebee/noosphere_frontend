@@ -33,7 +33,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/generalSettingsApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn(), showApiError: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: (...a) => toast.showApiError(...a),
 }));
@@ -282,7 +283,7 @@ describe("changing a format", () => {
   });
 
   it("reports a refused save and leaves the row on the new value", async () => {
-    api.UpdateGeneralSettings.mockRejectedValue(new Error("500"));
+    api.UpdateGeneralSettings.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await settled();
     fireEvent.click(changeButtons()[0]);
@@ -290,6 +291,19 @@ describe("changing a format", () => {
     save();
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith("Failed to save settings", "error")
+    );
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.UpdateGeneralSettings.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    await settled();
+    fireEvent.click(changeButtons()[0]);
+    chooseOption("MMM");
+    save();
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
   });
 
@@ -548,7 +562,7 @@ describe("the authentication methods", () => {
   });
 
   it("reports a refused authenticator change", async () => {
-    api.Set2FASetDefault.mockRejectedValue(new Error("500"));
+    api.Set2FASetDefault.mockRejectedValue(new Error("Request failed with status code 500"));
     enabled();
     await ready();
     fireEvent.click(gear("Authenticator App"));
@@ -597,7 +611,7 @@ describe("the authentication methods", () => {
   });
 
   it("reports a refused security question change", async () => {
-    api.Set2FASetDefault.mockRejectedValue(new Error("500"));
+    api.Set2FASetDefault.mockRejectedValue(new Error("Request failed with status code 500"));
     enabled();
     await ready();
     fireEvent.click(gear("Security Question"));

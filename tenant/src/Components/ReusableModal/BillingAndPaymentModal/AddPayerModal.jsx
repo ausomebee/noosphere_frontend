@@ -5,7 +5,7 @@ import ReusableModal from "../ReusableModal";
 import { SelectInput, TextareaInput, TextInput, CheckboxInput } from "../../Input/Inputs";
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { toBackendServiceCode } from "../../../Helper/payerServiceCode";
 import { currencyOptions, modifierOptions } from "../../../Data/selectOptions";
 import {
@@ -230,7 +230,7 @@ const AddPayerModal = ({
       onClose();
     } catch (error) {
       console.error("Error saving payer:", error);
-      showToast("Failed to save payer", "error");
+      showToast(apiErrorMessage(error, "Failed to save payer"), "error");
     } finally {
       setSubmitting(false);
     }

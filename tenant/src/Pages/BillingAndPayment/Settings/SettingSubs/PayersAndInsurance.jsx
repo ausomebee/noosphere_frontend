@@ -6,7 +6,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import AddPayerModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddPayerModal";
 import AddInsuranceTypeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddInsuranceTypeModal";
 import useAuth from "../../../../hooks/useAuth";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import usePermissions from "../../../../hooks/usePermissions";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
@@ -340,7 +340,7 @@ const PayersAndInsurance = () => {
       showToast("Insurance type saved successfully", "success");
       return response;
     } catch (error) {
-      showToast("Failed to save insurance type", "error");
+      showToast(apiErrorMessage(error, "Failed to save insurance type"), "error");
       throw error;
     } finally {
       setInsuranceTypeSaving(false);
@@ -427,7 +427,7 @@ const PayersAndInsurance = () => {
       showToast("Payer saved successfully", "success");
       return response;
     } catch (error) {
-      showToast("Failed to save payer", "error");
+      showToast(apiErrorMessage(error, "Failed to save payer"), "error");
       throw error; // Let modal handle error display if needed
     } finally {
       setPayerSaving(false);

@@ -21,7 +21,8 @@ import AddServiceCodeModal from "../Components/ReusableModal/BillingAndPaymentMo
  */
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -267,11 +268,24 @@ describe("saving", () => {
 
   it("reports a refused save and leaves the modal open", async () => {
     const { onSave, onClose } = renderModal();
-    onSave.mockRejectedValue(new Error("Code already exists"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     fillMinimum();
     await submit();
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith("Failed to save service code", "error")
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(codeInput()).toHaveValue("97153");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    const { onSave, onClose } = renderModal();
+    onSave.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    fillMinimum();
+    await submit();
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(onClose).not.toHaveBeenCalled();
     expect(codeInput()).toHaveValue("97153");

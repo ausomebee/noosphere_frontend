@@ -9,7 +9,7 @@ import CustomTable from "../../Components/Table/CustomTable";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api/ProgramLibraryApis";
 import ErrorFallback from "../../Components/ErrorFallback";
-import { showToast } from "../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../Helper/ShowToast";
 import {
   formatDate,
   formatDateTime,
@@ -640,7 +640,7 @@ const TargetSingle = () => {
       await fetchData();
     } catch (e) {
       console.error("Failed to save data", e);
-      showToast("Failed to save data", "error");
+      showToast(apiErrorMessage(e, "Failed to save data"), "error");
     } finally {
       setSubmitting(false);
       handleCloseModal();

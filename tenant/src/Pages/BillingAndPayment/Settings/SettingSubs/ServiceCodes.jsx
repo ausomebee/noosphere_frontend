@@ -4,7 +4,7 @@ import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import AddServiceCodeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddServiceCodeModal";
 import useAuth from "../../../../hooks/useAuth";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import usePermissions from "../../../../hooks/usePermissions";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
@@ -110,7 +110,7 @@ const ServiceCodes = () => {
       showToast("Service code saved successfully", "success");
       return response;
     } catch (error) {
-      showToast("Failed to save service code", "error");
+      showToast(apiErrorMessage(error, "Failed to save service code"), "error");
       throw error; // Let modal handle error display if needed
     } finally {
       setSaving(false);

@@ -7,7 +7,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollItemModal from "../../../../Components/ReusableModal/PayrollModal/NewIncomeItemModal";
 import DeleteConfirmationModal from "../../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../../api/payrollApi";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 
 const IncomeItems = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -106,7 +106,7 @@ const IncomeItems = () => {
         fetchIncomeItems(); // Refresh data
       } catch (error) {
         console.error("Error updating income item status:", error);
-        showToast("Failed to update income item status", "error");
+        showToast(apiErrorMessage(error, "Failed to update income item status"), "error");
       }
     },
     [accessToken, refreshToken, fetchIncomeItems]

@@ -2,7 +2,7 @@
 import React from "react";
 import ReusableModal from "../ReusableModal";
 import { useForm } from "react-hook-form";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
 const ApproveTimeSheetModal = ({ isOpen, onClose, onSave }) => {
@@ -19,7 +19,7 @@ const ApproveTimeSheetModal = ({ isOpen, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error("Error approving timesheet:", error);
-      showToast("Failed to approve timesheet", "error");
+      showToast(apiErrorMessage(error, "Failed to approve timesheet"), "error");
     }
   };
 

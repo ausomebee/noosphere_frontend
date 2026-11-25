@@ -19,7 +19,7 @@ import RejectTimeSheetModal from "../../../Components/ReusableModal/BillingAndPa
 import ApproveTimeSheetModal from "../../../Components/ReusableModal/BillingAndPaymentModal/ApproveTimeSheetModal";
 import api from "../../../api/billingAndPaymentsApi";
 import Modal from "../../../Components/ReusableModal/ReusableModal";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 import {
   formatDuration,
@@ -657,7 +657,7 @@ const SingleTimeSheet = () => {
       showToast("Timesheet approved successfully!", "success");
     } catch (error) {
       console.error("Error approving timesheet:", error);
-      showToast("Failed to approve timesheet.", "error");
+      showToast(apiErrorMessage(error, "Failed to approve timesheet."), "error");
     }
   };
 
@@ -676,7 +676,7 @@ const SingleTimeSheet = () => {
       showToast("Timesheet rejected successfully!", "success");
     } catch (error) {
       console.error("Error rejecting timesheet:", error);
-      showToast("Failed to reject timesheet.", "error");
+      showToast(apiErrorMessage(error, "Failed to reject timesheet."), "error");
     }
   };
 

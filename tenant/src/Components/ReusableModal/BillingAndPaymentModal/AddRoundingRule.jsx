@@ -12,7 +12,7 @@ import {
   SwitchInput,
   RequiredMark,
 } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { standardRuleOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -168,7 +168,7 @@ const AddRoundingRule = ({
       onClose();
     } catch (err) {
       console.error("Error saving rounding rule:", err);
-      showToast("Failed to save rounding rule", "error");
+      showToast(apiErrorMessage(err, "Failed to save rounding rule"), "error");
     } finally {
       setSubmitting(false);
     }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import Button from "../../../../Components/Button/Button";
 import "../../Auth.css";
 
 import { showValidationErrors } from "../../../../Helper/formErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../../../hooks/useTwoFactorPolicy";
 // Admin self-choice 2FA screen. Shown when the organisation has NOT set 2FA
 // for all (setForAll = false), so each admin picks their own method. Unlike the
 // super-admin screen, there is no "enable for all" toggle. Completing the setup
@@ -22,6 +23,15 @@ const schema = yup.object().shape({
 
 const Admin2FAChoice = () => {
   const navigate = useNavigate();
+  // When the admin set one method for everyone there is nothing to choose
+  // here (the browser's Back can still land on this page): go on to that
+  // method instead.
+  const { isSuperAdmin, enforcedMethod } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod) {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const {
     register,
     handleSubmit,

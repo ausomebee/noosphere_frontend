@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -9,6 +9,7 @@ import "../../../Auth.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../api/authApis";
 import { authErrorMessage, isNetworkFailure, NETWORK_ERROR_MESSAGE } from "../../../../../Helper/authErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../../../../hooks/useTwoFactorPolicy";
 import useAuth from "../../../../../hooks/useAuth";
 import { showToast } from "../../../../../Helper/ShowToast";
 
@@ -55,6 +56,14 @@ const securityQuestionSchema = yup.object().shape({
 const QuestionAndAnswer2FA = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  // Respect the admin's choice: staff whose method is set for everyone can't
+  // set up the other one, or go back to choose.
+  const { isSuperAdmin, enforcedMethod, backTarget } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod && enforcedMethod !== "SECRETMESSAGE") {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -158,7 +167,7 @@ const QuestionAndAnswer2FA = () => {
 
   // Handle back navigation
   const handleNavBack = () => {
-    navigate("/auth/2fa-settings");
+    if (backTarget) navigate(backTarget);
   };
 
   // Handle continue for steps
@@ -287,12 +296,14 @@ const QuestionAndAnswer2FA = () => {
                       )}
                     </div>
                     <div className="flex justify-between gap-4">
-                      <Button
-                        label="Back"
-                        variant="secondary"
-                        className="w-full"
-                        onClick={handleNavBack}
-                      />
+                      {backTarget && (
+                        <Button
+                          label="Back"
+                          variant="secondary"
+                          className="w-full"
+                          onClick={handleNavBack}
+                        />
+                      )}
                       <Button
                         type="submit"
                         label="Continue"

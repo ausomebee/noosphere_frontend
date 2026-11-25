@@ -20,6 +20,16 @@ import authReducer from "../ReduxStore/features/authentication";
  */
 
 const api = vi.hoisted(() => ({ Admin2FACreateSecretMessage: vi.fn() }));
+// The admin's 2FA policy, as the page sees it. Defaults to the organisation
+// admin's own view (Back returns to their 2FA settings); tests override it.
+const policy = vi.hoisted(() => ({
+  value: { isSuperAdmin: true, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa-settings" },
+}));
+vi.mock("../hooks/useTwoFactorPolicy", async (importOriginal) => ({
+  ...(await importOriginal()),
+  default: () => policy.value,
+}));
+
 vi.mock("../api/authApis", () => ({ default: api }));
 
 const toast = vi.hoisted(() => vi.fn());
@@ -273,5 +283,32 @@ describe("when the save is refused", () => {
     expect(
       screen.queryByText("That answer is too common")
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("respecting the admin's 2FA choice", () => {
+  afterEach(() => {
+    policy.value = { isSuperAdmin: true, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa-settings" };
+  });
+
+  it("offers no Back to a choice when the admin set a method for everyone", async () => {
+    policy.value = { isSuperAdmin: false, status: "ready", enforcedMethod: "SECRETMESSAGE", backTarget: null };
+    renderPage();
+    expect(screen.queryByText("Back")).not.toBeInTheDocument();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("sends staff on to the other method when that is the one set for everyone", async () => {
+    policy.value = { isSuperAdmin: false, status: "ready", enforcedMethod: "AUTHENTICATOR", backTarget: null };
+    renderPage();
+    expect(navigate).toHaveBeenCalledWith("/auth/2fa/authenticator", { replace: true });
+  });
+
+  it("goes back to their own choice when the admin left it to each person", async () => {
+    policy.value = { isSuperAdmin: false, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa/choice" };
+    renderPage();
+    fireEvent.click(screen.getByText("Back"));
+    expect(navigate).toHaveBeenCalledWith("/auth/2fa/choice");
+    expect(navigate).not.toHaveBeenCalledWith("/auth/2fa-settings");
   });
 });

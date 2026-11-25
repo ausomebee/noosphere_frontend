@@ -16,7 +16,7 @@ import usePermissions from "../../../../hooks/usePermissions";
 import { SearchInput } from "../../../../Components/Input/Inputs";
 import DatePickerModal from "../../../../Components/ReusableModal/SchedulerModal/DatePickerModal";
 import api from "../../../../api/organisationStaffApis";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
 
 // View-only Appointment Details Modal (just close button)
@@ -474,7 +474,7 @@ const Appointment = ({ staffId, accessToken, refreshToken }) => {
       fetchAvailability();
     } catch (error) {
       console.error("Failed to save availability:", error);
-      showToast("Failed to save availability", "error");
+      showToast(apiErrorMessage(error, "Failed to save availability"), "error");
     } finally {
       setAvailabilitySaving(false);
     }

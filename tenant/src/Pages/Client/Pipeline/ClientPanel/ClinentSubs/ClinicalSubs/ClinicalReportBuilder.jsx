@@ -45,7 +45,7 @@ import {
   lastSubmittedAtFrom,
   sortNewestFirst,
 } from "./changeRequestStatus";
-import { showToast } from "../../../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../../../Helper/ShowToast";
 import Button from "../../../../../../Components/Button/Button";
 import Alert from "../../../../../../Components/Alert/Alert";
 import ReusableModal from "../../../../../../Components/ReusableModal/ReusableModal";
@@ -1210,7 +1210,7 @@ const ClinicalReportBuilder = () => {
               showToast("Document reverted to draft for editing", "success");
             } catch (err) {
               console.error("Failed to revert to draft:", err);
-              showToast("Failed to revert document to draft", "error");
+              showToast(apiErrorMessage(err, "Failed to revert document to draft"), "error");
             } finally {
               setIsRevertingToDraft(false);
             }

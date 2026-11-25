@@ -32,7 +32,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/TemplateAndReportApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -350,11 +351,21 @@ describe("the drafts tab", () => {
   });
 
   it("reports a refused duplication", async () => {
-    api.DuplicateClinicalReport.mockRejectedValue(new Error("500"));
+    api.DuplicateClinicalReport.mockRejectedValue(new Error("Request failed with status code 500"));
     await open();
     clickMenuItem("Duplicate");
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith("Failed to duplicate report", "error")
+    );
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.DuplicateClinicalReport.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await open();
+    clickMenuItem("Duplicate");
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
   });
 });
@@ -398,7 +409,7 @@ describe("deleting a report", () => {
   });
 
   it("keeps the row and says so when the delete is refused", async () => {
-    api.DeleteClinicalReport.mockRejectedValue(new Error("409"));
+    api.DeleteClinicalReport.mockRejectedValue(new Error("Request failed with status code 500"));
     await openDelete();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() =>
@@ -491,7 +502,7 @@ describe("the awaiting signature tab", () => {
   });
 
   it("reports a failed nudge", async () => {
-    api.NudgeClientForReport.mockRejectedValue(new Error("502"));
+    api.NudgeClientForReport.mockRejectedValue(new Error("Request failed with status code 500"));
     await open();
     clickMenuItem("Nudge Client");
     await waitFor(() =>
@@ -518,7 +529,7 @@ describe("the awaiting signature tab", () => {
   });
 
   it("reports a refused withdrawal", async () => {
-    api.WithdrawClientClinicalReport.mockRejectedValue(new Error("409"));
+    api.WithdrawClientClinicalReport.mockRejectedValue(new Error("Request failed with status code 500"));
     await open();
     clickMenuItem("Withdraw");
     await waitFor(() =>
