@@ -154,7 +154,7 @@ const IncomeItems = () => {
         fetchIncomeItems(); // Refresh data
       } catch (error) {
         console.error(`Error saving income item:`, error);
-        showToast(`Failed to ${mode === "add" ? "create" : "update"} income item`, "error");
+        showToast(apiErrorMessage(error, `Failed to ${mode === "add" ? "create" : "update"} income item`), "error");
       }
     },
     [tenantId, accessToken, refreshToken, mode, selectedRow, fetchIncomeItems]

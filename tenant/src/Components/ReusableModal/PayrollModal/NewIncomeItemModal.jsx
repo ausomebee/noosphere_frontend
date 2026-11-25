@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import ReusableModal from "../ReusableModal";
 import { SelectInput, TextInput, SwitchInput } from "../../Input/Inputs";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { unitTypeOptions, roundingRuleOptions } from "../../../Data/selectOptions";
 import useReduxFormDraft from "../../../hooks/useReduxFormDraft";
 
@@ -163,7 +163,7 @@ const PayrollItemModal = ({
       onClose();
     } catch (error) {
       console.error(`Error saving ${isDeduction ? "deduction" : "income item"}:`, error);
-      showToast(`Failed to save ${isDeduction ? "deduction" : "income item"}`, "error");
+      showToast(apiErrorMessage(error, `Failed to save ${isDeduction ? "deduction" : "income item"}`), "error");
       setIsLoading(false);
     }
   };

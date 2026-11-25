@@ -10,6 +10,7 @@ import {
 } from "../../Input/Inputs";
 
 import { showValidationErrors as onValidationError } from "../../../Helper/formErrors";
+import { apiErrorMessage } from "../../../Helper/ShowToast";
 // Validation schema
 const schema = yup.object().shape({
   diagnosisCode: yup.string().required("Diagnosis Code is required"),
@@ -64,7 +65,7 @@ const AddDiagnosisCode = ({
       onClose();
     } catch (error) {
       console.error("Error saving diagnosis code:", error);
-      setSubmitError("Failed to save diagnosis code.");
+      setSubmitError(apiErrorMessage(error, "Failed to save diagnosis code."));
     } finally {
       setSubmitting(false);
     }
