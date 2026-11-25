@@ -389,8 +389,19 @@ describe("adding and editing an item", () => {
     expect(apiMock.CreateIncomeItems).not.toHaveBeenCalled();
   });
 
+  it("shows the backend's reason when a create is refused", async () => {
+    apiMock.CreateIncomeItems.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    await loaded();
+    fireEvent.click(screen.getByRole("button", { name: "Add an Income Item" }));
+    fireEvent.click(screen.getByText("save-item"));
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error")
+    );
+  });
+
   it("reports a failed create and leaves the modal open", async () => {
-    apiMock.CreateIncomeItems.mockRejectedValue(new Error("nope"));
+    apiMock.CreateIncomeItems.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await loaded();
     fireEvent.click(screen.getByRole("button", { name: "Add an Income Item" }));
@@ -402,7 +413,7 @@ describe("adding and editing an item", () => {
   });
 
   it("reports a failed update", async () => {
-    apiMock.UpdateIncomeItems.mockRejectedValue(new Error("nope"));
+    apiMock.UpdateIncomeItems.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await loaded();
     fireEvent.click(screen.getByText("Edit 1"));

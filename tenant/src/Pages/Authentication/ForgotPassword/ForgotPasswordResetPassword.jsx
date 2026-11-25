@@ -13,7 +13,7 @@ import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 import { showValidationErrors } from "../../../Helper/formErrors";
 import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../Helper/linkToken";
-import { setTwoFactorToken } from "../../../ReduxStore/features/authentication";
+import { startTwoFactorSession } from "../../../ReduxStore/features/authentication";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -67,9 +67,19 @@ const ForgotPasswordResetPassword = () => {
         password: data.newPassword,
         token: linkToken,
       });
-      // When 2FA comes next, the backend hands back a 2FA token for it.
+      // When 2FA comes next, the backend hands back a 2FA token and says how.
+      // Nobody is signed in on this page, so hold the half-finished sign-in
+      // it describes (as the login page does): the 2FA pages read who is
+      // verifying, and with which question, from it.
       const nextToken = response?.data?.data?.twoFactorToken;
-      if (nextToken) dispatch(setTwoFactorToken({ token: nextToken, userId }));
+      if (nextToken) {
+        dispatch(
+          startTwoFactorSession({
+            user: { ...response.data.data, id: userId },
+            twoFactorToken: nextToken,
+          })
+        );
+      }
 
       showToast(
         response?.data?.message || "Password updated successfully!",

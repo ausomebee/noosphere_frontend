@@ -35,7 +35,11 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/organisationApis", () => ({ default: api }));
 
 const toast = vi.hoisted(() => vi.fn());
-vi.mock("../Helper/ShowToast", () => ({ showToast: toast, showApiError: vi.fn() }));
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
+  showToast: toast,
+  showApiError: vi.fn(),
+}));
 
 const probes = vi.hoisted(() => {
   const props = {};
@@ -530,7 +534,7 @@ describe("saving a session type", () => {
   });
 
   it("names the mode in the message when a save is refused", async () => {
-    api.CreateOrganizationSessionType.mockRejectedValue(new Error("Duplicate"));
+    api.CreateOrganizationSessionType.mockRejectedValue(new Error("Request failed with status code 500"));
     await openAdd();
     await save({ name: "Direct therapy" });
     expect(toast).toHaveBeenCalledWith("Failed to add session type", "error");
