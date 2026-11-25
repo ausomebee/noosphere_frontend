@@ -204,7 +204,7 @@ const ProspectPanel = () => {
       );
     } catch (err) {
       if (import.meta.env.DEV) console.error("Failed to fetch staff or stages:", err);
-      setFetchError("Failed to load staff or stages.");
+      setFetchError(apiErrorMessage(err, "Failed to load staff or stages."));
     }
   }, [accessToken, refreshToken, pipelineId]);
 
@@ -277,7 +277,7 @@ const ProspectPanel = () => {
         ]);
       } catch (err) {
         if (import.meta.env.DEV) console.error("Failed to fetch pipeline data:", err);
-        setFetchError("Failed to load pipeline data.");
+        setFetchError(apiErrorMessage(err, "Failed to load pipeline data."));
       } finally {
         setIsLoading(false);
       }

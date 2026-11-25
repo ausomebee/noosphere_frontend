@@ -23,7 +23,11 @@ const toError = (error, message) => {
     networkError.isNetworkError = true;
     return networkError;
   }
-  return new Error(message);
+  // Keep the backend's response on the error, so a page can still read
+  // exactly what it said.
+  const clientError = new Error(message);
+  clientError.response = error.response;
+  return clientError;
 };
 
 const ClientLogin = async ({ email, password }) => {
@@ -56,7 +60,12 @@ const ClientForgetPassword = async ({ email }) => {
 };
 
 const setPasswordError = (error) =>
-  toError(error, error.response?.data?.data?.message || "Password setting failed");
+  toError(
+    error,
+    error.response?.data?.data?.message ||
+      error.response?.data?.message ||
+      "Password setting failed",
+  );
 
 // Reset link: the email link's single-use `token` authorises the change. No
 // session token is sent, so a stale login in this browser can't interfere.
