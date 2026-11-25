@@ -24,7 +24,8 @@ import authReducer from "../ReduxStore/features/authentication";
  */
 
 const toast = vi.hoisted(() => vi.fn());
-vi.mock("../Helper/ShowToast", () => ({ showToast: toast, showApiError: vi.fn() }));
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage, showToast: toast, showApiError: vi.fn() }));
 
 import UploadOrganizationFileModal from "../Components/ReusableModal/OrganizationModal/UploadOrganizationFileModal";
 
@@ -303,10 +304,21 @@ describe("saving", () => {
 
   it("reports a refused save and leaves the modal open", async () => {
     const view = renderModal();
-    view.onSave.mockRejectedValue(new Error("507 Insufficient Storage"));
+    view.onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     await fill(view);
     await submit();
     expect(toast).toHaveBeenCalledWith("Failed to save document", "error");
+    expect(view.onClose).not.toHaveBeenCalled();
+    expect(nameInput()).toHaveValue("Insurance policy");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    const view = renderModal();
+    view.onSave.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await fill(view);
+    await submit();
+    expect(toast).toHaveBeenCalledWith("Name already taken", "error");
     expect(view.onClose).not.toHaveBeenCalled();
     expect(nameInput()).toHaveValue("Insurance policy");
   });

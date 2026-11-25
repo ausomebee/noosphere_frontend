@@ -29,7 +29,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/payrollApi", () => ({ default: apiMock }));
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -274,13 +275,27 @@ describe("activating and deactivating", () => {
   });
 
   it("reports a failed toggle", async () => {
-    apiMock.UpdatePayrollCycleActiveness.mockRejectedValue(new Error("nope"));
+    apiMock.UpdatePayrollCycleActiveness.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await loaded();
     fireEvent.click(screen.getByText("switch 1"));
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith(
         "Failed to update payroll cycle status",
+        "error"
+      )
+    );
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    apiMock.UpdatePayrollCycleActiveness.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    await loaded();
+    fireEvent.click(screen.getByText("switch 1"));
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith(
+        "Name already taken",
         "error"
       )
     );

@@ -3,7 +3,8 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 const showToast = vi.fn();
 const showApiError = vi.fn();
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => showToast(...a),
   showApiError: (...a) => showApiError(...a),
 }));
@@ -509,7 +510,7 @@ describe('the security question method', () => {
 
   it('reports a refused save', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    authApis.SuperAdminChoices.mockRejectedValue(new Error('offline'));
+    authApis.SuperAdminChoices.mockRejectedValue(new Error('Request failed with status code 500'));
     await open();
     await submitModal();
     expect(showToast).toHaveBeenCalledWith('Failed to save settings', 'error');
@@ -517,10 +518,18 @@ describe('the security question method', () => {
     expect(screen.getByText('Security Question Settings')).toBeInTheDocument();
   });
 
+  it("shows the backend's own message when the response carries one", async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    authApis.SuperAdminChoices.mockRejectedValue({ response: { data: { message: 'Name already taken' } } });
+    await open();
+    await submitModal();
+    expect(showToast).toHaveBeenCalledWith('Name already taken', 'error');
+  });
+
   it('stays silent about the failure in production', async () => {
     vi.stubEnv('DEV', false);
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    authApis.SuperAdminChoices.mockRejectedValue(new Error('offline'));
+    authApis.SuperAdminChoices.mockRejectedValue(new Error('Request failed with status code 500'));
     await open();
     await submitModal();
     expect(showToast).toHaveBeenCalledWith('Failed to save settings', 'error');
@@ -595,7 +604,7 @@ describe('the authenticator method', () => {
 
   it('reports a refused save', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    authApis.SuperAdminChoices.mockRejectedValue(new Error('offline'));
+    authApis.SuperAdminChoices.mockRejectedValue(new Error('Request failed with status code 500'));
     await open();
     await submitModal();
     expect(showToast).toHaveBeenCalledWith(

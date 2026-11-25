@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 /**
@@ -14,6 +14,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
  */
 
 const toast = vi.hoisted(() => vi.fn());
+// The admin's 2FA policy, as the page sees it. Defaults to the organisation
+// admin's own view (Back returns to their 2FA settings); tests override it.
+const policy = vi.hoisted(() => ({
+  value: { isSuperAdmin: true, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa-settings" },
+}));
+vi.mock("../hooks/useTwoFactorPolicy", async (importOriginal) => ({
+  ...(await importOriginal()),
+  default: () => policy.value,
+}));
+
 vi.mock("../Helper/ShowToast", () => ({ showToast: toast, showApiError: vi.fn() }));
 
 const navigate = vi.hoisted(() => vi.fn());
@@ -105,5 +115,23 @@ describe("where the choice leads", () => {
     await waitFor(() =>
       expect(navigate).toHaveBeenLastCalledWith("/auth/2fa/security-question")
     );
+  });
+});
+
+describe("respecting the admin's 2FA choice", () => {
+  afterEach(() => {
+    policy.value = { isSuperAdmin: true, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa-settings" };
+  });
+
+  it("sends staff straight to the method the admin set for everyone", () => {
+    policy.value = { isSuperAdmin: false, status: "ready", enforcedMethod: "AUTHENTICATOR", backTarget: null };
+    render(<Admin2FAChoice />);
+    expect(navigate).toHaveBeenCalledWith("/auth/2fa/authenticator", { replace: true });
+  });
+
+  it("lets staff choose when the admin left it to each person", () => {
+    policy.value = { isSuperAdmin: false, status: "ready", enforcedMethod: null, backTarget: "/auth/2fa/choice" };
+    render(<Admin2FAChoice />);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

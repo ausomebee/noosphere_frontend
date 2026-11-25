@@ -13,7 +13,8 @@ vi.mock("../api/profileAndSettingsApi", () => ({
 }));
 
 const showToast = vi.fn();
-vi.mock("../Helper/ShowToast", () => ({ showToast: (...a) => showToast(...a) }));
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage, showToast: (...a) => showToast(...a) }));
 
 import { useNotificationSettings } from "../hooks/useNotificationSettings";
 
@@ -155,13 +156,24 @@ describe("toggling", () => {
   });
 
   it("puts the switch back when the save fails", async () => {
-    updateSettings.mockRejectedValue(new Error("server said no"));
+    updateSettings.mockRejectedValue(new Error("Request failed with status code 500"));
     const { result } = setup();
     await waitFor(() => expect(result.current.notifications.appointmentScheduled).toBe(true));
 
     await act(async () => { await result.current.toggleNotification("formShared"); });
     expect(result.current.notifications.formShared).toBe(false);
     expect(showToast).toHaveBeenCalledWith("Failed to update notification settings", "error");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    updateSettings.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    const { result } = setup();
+    await waitFor(() => expect(result.current.notifications.appointmentScheduled).toBe(true));
+
+    await act(async () => { await result.current.toggleNotification("formShared"); });
+    expect(result.current.notifications.formShared).toBe(false);
+    expect(showToast).toHaveBeenCalledWith("Name already taken", "error");
   });
 
   it("clears the per-key busy flag whether it succeeds or fails", async () => {

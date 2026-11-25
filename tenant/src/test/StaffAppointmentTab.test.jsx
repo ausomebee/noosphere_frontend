@@ -35,7 +35,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/organisationStaffApis", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -849,10 +850,19 @@ describe("saving availability", () => {
   });
 
   it("reports a refused save and leaves the editor open", async () => {
-    api.CreateStaffAvailability.mockRejectedValue(new Error("409"));
+    api.CreateStaffAvailability.mockRejectedValue(new Error("Request failed with status code 500"));
     await openEditor();
     await save(week());
     expect(toast.showToast).toHaveBeenCalledWith("Failed to save availability", "error");
+    expect(screen.getByTestId("availability-modal")).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.CreateStaffAvailability.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await openEditor();
+    await save(week());
+    expect(toast.showToast).toHaveBeenCalledWith("Name already taken", "error");
     expect(screen.getByTestId("availability-modal")).toBeInTheDocument();
   });
 

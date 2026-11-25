@@ -47,7 +47,7 @@ import {
 import { FaPlus } from "react-icons/fa";
 import { IoWarningOutline } from "react-icons/io5";
 import Button from "../Button/Button";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 import api from "../../api/TenantApis";
 import SectionLoader from "../SectionLoader";
 
@@ -404,7 +404,7 @@ const JiraBoard = () => {
         } catch (err) {
           if (import.meta.env.DEV) console.error("Failed to reorder column:", err);
           dispatch(updateColumnOrder(previousColumnOrder));
-          showToast("Failed to update column order.", "error");
+          showToast(apiErrorMessage(err, "Failed to update column order."), "error");
         }
       }
       return;
@@ -452,7 +452,7 @@ const JiraBoard = () => {
         dispatch(
           updateColumnTaskIds({ columnId: activeColumnId, taskIds: activeColumn.taskIds })
         );
-        showToast("Failed to update task order.", "error");
+        showToast(apiErrorMessage(err, "Failed to update task order."), "error");
       }
     } else {
       if (activeColumnId === targetColumnId) return;
@@ -511,7 +511,7 @@ const JiraBoard = () => {
           updateColumnTaskIds({ columnId: targetColumnId, taskIds: targetColumn.taskIds })
         );
         setLocalTasks((prev) => ({ ...prev, [activeId]: previousTask }));
-        showToast("Failed to move task.", "error");
+        showToast(apiErrorMessage(err, "Failed to move task."), "error");
       }
     }
   };
@@ -560,7 +560,7 @@ const JiraBoard = () => {
       fetchPipelineData();
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to add candidate:", error);
-      showToast("Failed to add candidate.", "error");
+      showToast(apiErrorMessage(error, "Failed to add candidate."), "error");
     } finally {
       stopLoading();
     }

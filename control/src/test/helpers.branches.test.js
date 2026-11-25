@@ -203,17 +203,42 @@ describe('showApiError', () => {
 
   it('shows the mapped message for a known key', () => {
     const key = Object.keys(ERROR_MESSAGES).find((k) => k !== 'DEFAULT');
-    showApiError(new Error('raw'), key);
+    showApiError(new Error('Request failed with status code 500'), key);
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES[key], expect.any(Object));
   });
 
   it('falls back to the default message for an unknown key', () => {
-    showApiError(new Error('raw'), 'NO_SUCH_KEY');
+    showApiError(new Error('Request failed with status code 500'), 'NO_SUCH_KEY');
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
   });
 
   it('uses the default key when none is supplied', () => {
-    showApiError(new Error('raw'));
+    showApiError(new Error('Request failed with status code 500'));
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
+  });
+
+  it("shows the backend's own message when the response carries one", () => {
+    showApiError({ response: { data: { message: 'Email already exists' } } }, 'SAVE_STAFF');
+    expect(toast.error).toHaveBeenCalledWith('Email already exists', expect.any(Object));
+  });
+
+  it('shows a message an API wrapper re-threw', () => {
+    showApiError(new Error('Phone number is already in use'), 'SAVE_STAFF');
+    expect(toast.error).toHaveBeenCalledWith('Phone number is already in use', expect.any(Object));
+  });
+
+  it('joins a list of validation errors', () => {
+    showApiError(
+      { response: { data: { errors: [{ message: 'Email is invalid' }, { msg: 'Role is required' }] } } },
+      'SAVE_STAFF'
+    );
+    expect(toast.error).toHaveBeenCalledWith('Email is invalid, Role is required', expect.any(Object));
+  });
+
+  it('uses our wording for a network failure or an HTML error page', () => {
+    showApiError(new Error('Network Error'), 'NO_SUCH_KEY');
+    expect(toast.error).toHaveBeenLastCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
+    showApiError({ response: { data: '<html>502 Bad Gateway</html>' } }, 'NO_SUCH_KEY');
+    expect(toast.error).toHaveBeenLastCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
   });
 });

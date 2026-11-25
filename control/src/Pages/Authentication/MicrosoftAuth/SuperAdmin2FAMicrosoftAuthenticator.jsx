@@ -9,12 +9,21 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { authErrorMessage } from "../../../Helper/authErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../../hooks/useTwoFactorPolicy";
 
 const TOTP_PERIOD_MS = 30_000;
 
 const SuperAdmin2FAMicrosoftAuthenticator = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  // Respect the super admin's choice: an admin whose method is set for
+  // everyone can't set up the other one, or go back to choose.
+  const { isSuperAdmin, enforcedMethod, backTarget } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod && enforcedMethod !== "AUTHENTICATOR") {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -209,8 +218,7 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
   };
 
   const handleNavBack = () => {
-    navigate("/SA/2fa-settings");
-    
+    if (backTarget) navigate(backTarget);
   };
 
   const handleProceedToLogin = () => {
@@ -259,12 +267,14 @@ const SuperAdmin2FAMicrosoftAuthenticator = () => {
               </div>
             </div>
             <div className="button-group">
-              <Button
-                label="Back"
-                variant="secondary"
-                className="auth-button secondary"
-                onClick={handleNavBack}
-              />
+              {backTarget && (
+                <Button
+                  label="Back"
+                  variant="secondary"
+                  className="auth-button secondary"
+                  onClick={handleNavBack}
+                />
+              )}
               <Button
                 label="Continue"
                 variant="primary"

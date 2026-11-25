@@ -7,7 +7,7 @@ import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollItemModal from "../../../../Components/ReusableModal/PayrollModal/NewIncomeItemModal";
 import DeleteConfirmationModal from "../../../../Components/ReusableModal/PipelineModal/DeleteConfirmationModal";
 import api from "../../../../api/payrollApi";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 
 const Deductions = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -105,7 +105,7 @@ const Deductions = () => {
         fetchDeductions(); // Refresh data
       } catch (error) {
         console.error("Error updating deduction status:", error);
-        showToast("Failed to update deduction status", "error");
+        showToast(apiErrorMessage(error, "Failed to update deduction status"), "error");
       }
     },
     [accessToken, refreshToken, fetchDeductions],

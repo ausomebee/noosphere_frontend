@@ -354,3 +354,16 @@ describe("the strength and match indicators", () => {
     expect(screen.getByText(/Passwords match/i)).toBeInTheDocument();
   });
 });
+
+describe("a save that returns no 2FA details", () => {
+  it("sends the user to sign in instead of reporting a failure", async () => {
+    api.AdminSetPassword.mockResolvedValue({ data: { status: "ok", message: "Password updated" } });
+    render(<ForgotPasswordResetPassword />);
+    fill();
+    submitForm();
+    await waitFor(() => expect(routing.navigate).toHaveBeenCalledWith("/"));
+    expect(toast).toHaveBeenCalledWith("Password updated", "success");
+    expect(toast).not.toHaveBeenCalledWith("Failed to update password.", "error");
+    expect(api.GetSuperAdminChoices).not.toHaveBeenCalled();
+  });
+});

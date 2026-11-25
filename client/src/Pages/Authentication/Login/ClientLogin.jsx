@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../AuthLayout";
 import { PasswordInput, TextInput } from "../../../Components/Input/Inputs";
 import Button from "../../../Components/Button/Button";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { ClientLogin } from "../../../ReduxStore/features/authentication";
@@ -56,7 +56,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      showToast("Login failed. Please try again.", "error");
+      showToast(apiErrorMessage(error, "Login failed. Please try again."), "error");
     } finally {
       setLoading(false);
     }

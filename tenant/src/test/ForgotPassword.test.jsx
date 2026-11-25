@@ -114,9 +114,20 @@ describe("requesting the reset", () => {
     expect(api.AdminForgetPassword).toHaveBeenCalledWith({
       email: "olivia@therapyco.com",
     });
-    expect(toast).toHaveBeenCalledWith(
-      "Password reset email sent successfully!",
-      "success"
+    // The toast repeats what the backend said.
+    expect(toast).toHaveBeenCalledWith("Reset link sent to email", "success");
+    expect(errorTexts()).toEqual([]);
+  });
+
+  it("accepts the backend's \"ok\" reply, whose wording doesn't reveal whether the account exists", async () => {
+    api.AdminForgetPassword.mockResolvedValue({
+      data: { status: "ok", message: "If an account exists for that email, reset instructions have been sent." },
+    });
+    render(<ForgetPassword />);
+    typeEmail("olivia@therapyco.com");
+    submit();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("If an account exists for that email, reset instructions have been sent.", "success")
     );
     expect(errorTexts()).toEqual([]);
   });

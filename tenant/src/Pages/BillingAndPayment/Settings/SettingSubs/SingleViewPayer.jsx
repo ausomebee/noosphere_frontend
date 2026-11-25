@@ -7,7 +7,7 @@ import { FiEdit3 } from "react-icons/fi";
 import Button from "../../../../Components/Button/Button";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import AddSingleServiceCodeModal from "../../../../Components/ReusableModal/BillingAndPaymentModal/AddSingleServiceCode";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 import api from "../../../../api/billingAndPaymentsApi";
 import { formatCurrency } from "../../../../Helper/Formatters";
 import { toBackendServiceCode } from "../../../../Helper/payerServiceCode";
@@ -296,7 +296,7 @@ const SingleViewPayer = () => {
       setShowPayerModal(false);
       showToast("Payer updated successfully", "success");
     } catch (error) {
-      showToast("Failed to update payer", "error");
+      showToast(apiErrorMessage(error, "Failed to update payer"), "error");
 
       throw error;
     } finally {
@@ -411,7 +411,7 @@ const SingleViewPayer = () => {
       setSelectedService(null);
       showToast("Service code updated successfully", "success");
     } catch (error) {
-      showToast("Failed to update service code", "error");
+      showToast(apiErrorMessage(error, "Failed to update service code"), "error");
       console.error("Service code update error:", error);
     }
   };

@@ -7,7 +7,7 @@ import CustomTable from "../../../../../Components/Table/CustomTable";
 import CreateAReportDocumentModal from "../../../../../Components/ReusableModal/ClientModal/ClinicalReport/CreateAReportDocumentModal";
 import api from "../../../../../api/TemplateAndReportApi";
 import usePermissions from "../../../../../hooks/usePermissions";
-import { showToast } from "../../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../../Helper/ShowToast";
 import { formatDate, formatDateTime } from "../../../../../Helper/Formatters";
 import useFormatSettings from "../../../../../hooks/useFormatSettings";
 import useDocumentViewer from "../../../../../hooks/useDocumentViewer";
@@ -464,7 +464,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       showToast("Report deleted successfully", "success");
     } catch (err) {
       console.error("Delete failed:", err);
-      showToast("Failed to delete report", "error");
+      showToast(apiErrorMessage(err, "Failed to delete report"), "error");
     } finally {
       setDeleteModalOpen(false);
       setReportToDelete(null);
@@ -487,7 +487,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       fetchReports();
     } catch (err) {
       console.error("Withdraw failed:", err);
-      showToast("Failed to withdraw report", "error");
+      showToast(apiErrorMessage(err, "Failed to withdraw report"), "error");
     }
   };
 
@@ -501,7 +501,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       showToast("Nudge sent to client successfully", "success");
     } catch (err) {
       console.error("Nudge failed:", err);
-      showToast("Failed to nudge client", "error");
+      showToast(apiErrorMessage(err, "Failed to nudge client"), "error");
     }
   };
 
@@ -517,7 +517,7 @@ const ClinicalReportsTab = ({ clientData }) => {
       fetchReports(); // Refresh list to show the new duplicate
     } catch (err) {
       console.error("Duplicate failed:", err);
-      showToast("Failed to duplicate report", "error");
+      showToast(apiErrorMessage(err, "Failed to duplicate report"), "error");
     }
   };
 

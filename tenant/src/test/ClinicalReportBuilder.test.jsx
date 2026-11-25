@@ -50,7 +50,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/TemplateAndReportApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -1067,12 +1068,28 @@ describe("editing a report the client already signed", () => {
   });
 
   it("keeps the document locked when the revert is refused", async () => {
-    api.UpdateClinicalReportStatus.mockRejectedValue(new Error("409"));
+    api.UpdateClinicalReportStatus.mockRejectedValue(new Error("Request failed with status code 500"));
     await openSigned();
     fireEvent.click(screen.getByRole("button", { name: "Edit Document (New Version)" }));
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith(
         "Failed to revert document to draft",
+        "error"
+      )
+    );
+    expect(
+      screen.getByRole("button", { name: "Edit Document (New Version)" })
+    ).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.UpdateClinicalReportStatus.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await openSigned();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Document (New Version)" }));
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith(
+        "Name already taken",
         "error"
       )
     );

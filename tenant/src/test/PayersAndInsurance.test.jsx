@@ -40,7 +40,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/billingAndPaymentsApi", () => ({ default: apiMock }));
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -554,13 +555,28 @@ describe("saving an insurance type", () => {
   });
 
   it("warns and keeps the modal open when the save fails", async () => {
-    apiMock.CreateInsuranceType.mockRejectedValue(new Error("500"));
+    apiMock.CreateInsuranceType.mockRejectedValue(new Error("Request failed with status code 500"));
     insuranceModal.payload = { name: "HMO" };
     await openAdd();
     fireEvent.click(screen.getByText("save-insurance"));
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith(
         "Failed to save insurance type",
+        "error"
+      )
+    );
+    expect(screen.getByTestId("insurance-modal")).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    apiMock.CreateInsuranceType.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    insuranceModal.payload = { name: "HMO" };
+    await openAdd();
+    fireEvent.click(screen.getByText("save-insurance"));
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith(
+        "Name already taken",
         "error"
       )
     );
@@ -683,15 +699,16 @@ describe("saving a payer", () => {
     payerModal.payload = { ...fullPayer, insuranceType: "" };
     await openAdd();
     fireEvent.click(screen.getByText("save-payer"));
+    // The page's own validation message, not the generic save failure.
     await waitFor(() =>
-      expect(toastMock.showToast).toHaveBeenCalledWith("Failed to save payer", "error")
+      expect(toastMock.showToast).toHaveBeenCalledWith("Invalid insurance type selected", "error")
     );
     expect(apiMock.CreatePayer).not.toHaveBeenCalled();
     expect(screen.getByTestId("payer-modal")).toBeInTheDocument();
   });
 
   it("warns when the create endpoint rejects", async () => {
-    apiMock.CreatePayer.mockRejectedValue(new Error("500"));
+    apiMock.CreatePayer.mockRejectedValue(new Error("Request failed with status code 500"));
     payerModal.payload = fullPayer;
     await openAdd();
     fireEvent.click(screen.getByText("save-payer"));

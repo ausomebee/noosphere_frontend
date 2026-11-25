@@ -29,7 +29,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/billingAndPaymentsApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -414,7 +415,8 @@ describe("saving a code", () => {
         await modal.props.onSave(form);
       })
     ).rejects.toThrow("duplicate code");
-    expect(toast.showToast).toHaveBeenCalledWith("Failed to save service code", "error");
+    // The backend's reason, not generic copy.
+    expect(toast.showToast).toHaveBeenCalledWith("duplicate code", "error");
     expect(screen.getByTestId("code-modal")).toBeInTheDocument();
   });
 

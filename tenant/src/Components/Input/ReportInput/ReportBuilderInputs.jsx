@@ -3,7 +3,7 @@ import useAuth from "../../../hooks/useAuth";
 import useDocumentViewer from "../../../hooks/useDocumentViewer";
 import { FiChevronDown, FiUploadCloud, FiX, FiFile, FiLoader } from "react-icons/fi";
 import uploadApi from "../../../api/ImageUpload";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { RequiredMark } from "../Inputs";
 import "./ReportInput.css";
 // Text Input Component
@@ -333,7 +333,7 @@ const ReportFileUpload = ({
       }
     } catch (err) {
       console.error("File upload failed:", err);
-      showToast("File upload failed", "error");
+      showToast(apiErrorMessage(err, "File upload failed"), "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

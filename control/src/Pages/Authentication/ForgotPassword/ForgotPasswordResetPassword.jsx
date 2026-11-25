@@ -73,8 +73,15 @@ const ForgotPasswordResetPassword = () => {
 
       showToast(response?.data?.message || "Password updated successfully!", "success");
 
+      // The password is saved. A response without the user's 2FA details has
+      // nothing to route on, so send them to sign in, which handles 2FA.
+      const result = response?.data?.data;
+      if (!result) {
+        navigate("/");
+        return;
+      }
       const { setForAll } = await handleGetSuperAdminChoice();
-      const { authType, auth2FADone } = response.data.data; // Use setPassword response
+      const { authType, auth2FADone } = result; // Use setPassword response
 
       if (setForAll && !auth2FADone) {
         if (authType === "AUTHENTICATOR") {

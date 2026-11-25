@@ -79,7 +79,8 @@ vi.mock("../api/TenantApis", () => ({
   default: { GetPipelineStage: spies.getPipelineStage },
 }));
 
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: spies.toast,
   showApiError: spies.apiError,
 }));
@@ -482,12 +483,24 @@ describe("dragging columns", () => {
   });
 
   it("reports a reorder the server rejected", async () => {
-    spies.reorderStage.mockRejectedValue(new Error("nope"));
+    spies.reorderStage.mockRejectedValue(new Error("Request failed with status code 500"));
     await renderLoadedBoard();
     await dragColumn("s1", "s2");
 
     expect(spies.toast).toHaveBeenCalledWith(
       "Failed to update column order.",
+      "error"
+    );
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    spies.reorderStage.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await renderLoadedBoard();
+    await dragColumn("s1", "s2");
+
+    expect(spies.toast).toHaveBeenCalledWith(
+      "Name already taken",
       "error"
     );
   });
@@ -559,7 +572,7 @@ describe("dragging candidates", () => {
   });
 
   it("reports a move the server rejected", async () => {
-    spies.updateActivity.mockRejectedValue(new Error("nope"));
+    spies.updateActivity.mockRejectedValue(new Error("Request failed with status code 500"));
     const { store } = await renderLoadedBoard();
     await seedColumn(store, "s1", ["t1"]);
     await dragTask("t1", "s2");
@@ -1045,7 +1058,7 @@ describe("drags the board cannot act on", () => {
   });
 
   it("reports a reorder within one column that the server rejected", async () => {
-    spies.updateActivity.mockRejectedValue(new Error("nope"));
+    spies.updateActivity.mockRejectedValue(new Error("Request failed with status code 500"));
     spies.fetchItems.mockImplementation(({ stageId }) =>
       stageId === "s1"
         ? { items: [candidate("t1", "Ada"), candidate("t2", "Grace")] }

@@ -7,7 +7,7 @@ import Button from "../../../Components/Button/Button";
 import ReusableModal from "../../../Components/ReusableModal/ReusableModal";
 import { SelectInput, TextInput, TextareaInput } from "../../../Components/Input/Inputs";
 import api from "../../../api/helpAndSupportApi";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import usePermissions from "../../../hooks/usePermissions";
 import { FiPlus } from "react-icons/fi";
 import {
@@ -296,7 +296,7 @@ const SupportRequests = () => {
       fetchOverview();
     } catch (error) {
       console.error("Failed to submit request:", error);
-      showToast("Failed to submit support request", "error");
+      showToast(apiErrorMessage(error, "Failed to submit support request"), "error");
     } finally {
       setSubmitLoading(false);
     }

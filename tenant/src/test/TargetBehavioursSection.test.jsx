@@ -28,7 +28,8 @@ import authReducer from "../ReduxStore/features/authentication";
  */
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -426,8 +427,9 @@ describe("the graph reference file field", () => {
     upload.UploadImage.mockResolvedValue({ success: false, error: "Too large" });
     renderSection({ data: [behaviour()] });
     pickFile(cards()[0]);
+    // The backend's reason, not generic copy.
     await waitFor(() =>
-      expect(toast.showToast).toHaveBeenCalledWith("File upload failed", "error")
+      expect(toast.showToast).toHaveBeenCalledWith("Too large", "error")
     );
     expect(onChange).not.toHaveBeenCalled();
   });

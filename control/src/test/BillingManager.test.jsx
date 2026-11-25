@@ -47,7 +47,8 @@ vi.mock('../hooks/usePermission', () => ({
 }));
 vi.mock('../api/InvoiceApi', () => ({ default: mocks.invoiceApi }));
 vi.mock('../api/TenantApis', () => ({ default: mocks.tenantApi }));
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => mocks.showToast(...a),
   showApiError: (...a) => mocks.showApiError(...a),
 }));
@@ -963,7 +964,7 @@ describe('downloading an invoice', () => {
   });
 
   it('warns when the PDF cannot be produced', async () => {
-    mocks.invoiceApi.GetInvoiceById.mockRejectedValue(new Error('gone'));
+    mocks.invoiceApi.GetInvoiceById.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPage();
     fireEvent.click(screen.getByTestId('action-download-invoice'));
     await waitFor(() =>
@@ -974,9 +975,22 @@ describe('downloading an invoice', () => {
     );
   });
 
+
+  it("shows the backend's own message when the response carries one", async () => {
+    mocks.invoiceApi.GetInvoiceById.mockRejectedValue({ response: { data: { message: 'Name already taken' } } });
+    await renderPage();
+    fireEvent.click(screen.getByTestId('action-download-invoice'));
+    await waitFor(() =>
+      expect(mocks.showToast).toHaveBeenCalledWith(
+        'Name already taken',
+        'error'
+      )
+    );
+  });
+
   it('stays silent in the console outside development', async () => {
     vi.stubEnv('DEV', false);
-    mocks.invoiceApi.GetInvoiceById.mockRejectedValue(new Error('gone'));
+    mocks.invoiceApi.GetInvoiceById.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPage();
     fireEvent.click(screen.getByTestId('action-download-invoice'));
     await waitFor(() => expect(mocks.showToast).toHaveBeenCalled());

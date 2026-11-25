@@ -9,7 +9,8 @@ const authApi = vi.hoisted(() => ({
 vi.mock("../api/authApis", () => ({ default: authApi }));
 
 const showToast = vi.fn();
-vi.mock("../Helper/ShowToast", () => ({ showToast: (...a) => showToast(...a) }));
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage, showToast: (...a) => showToast(...a) }));
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("react-router-dom", async () => {
@@ -102,7 +103,8 @@ describe("asking for a reset link", () => {
     await submit("Reset password");
 
     expect(authApi.ClientForgetPassword).toHaveBeenCalledWith({ email: "ada@example.com" });
-    expect(showToast).toHaveBeenCalledWith("Password reset email sent successfully!", "success");
+    // The toast repeats what the backend said.
+    expect(showToast).toHaveBeenCalledWith("email sent successfully", "success");
     expect(navigate).toHaveBeenCalledWith("/checkEmail", {
       state: { email: "ada@example.com" },
     });
@@ -114,8 +116,20 @@ describe("asking for a reset link", () => {
     type("Enter your email", "ada@example.com");
     await submit("Reset password");
 
-    expect(showToast).toHaveBeenCalledWith("Failed to initiate password reset.", "error");
+    // The backend's own words, not generic copy.
+    expect(showToast).toHaveBeenCalledWith("unknown email", "error");
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("accepts the backend's \"ok\" reply, whose wording doesn't reveal whether the account exists", async () => {
+    authApi.ClientForgetPassword.mockResolvedValue({
+      data: { status: "ok", message: "If an account exists for that email, reset instructions have been sent." },
+    });
+    renderPage();
+    type("Enter your email", "ada@example.com");
+    await submit("Reset password");
+    expect(showToast).toHaveBeenCalledWith("If an account exists for that email, reset instructions have been sent.", "success");
+    expect(navigate).toHaveBeenCalledWith("/checkEmail", { state: { email: "ada@example.com" } });
   });
 
   it("reports the reason the server gave", async () => {
@@ -352,13 +366,27 @@ describe("choosing a new password", () => {
   });
 
   it("stays put when the server rejects the change", async () => {
-    authApi.ClientSetPassword.mockRejectedValue(new Error("expired link"));
+    authApi.ClientSetPassword.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     fill("StrongPass1!", "StrongPass1!");
     await submit("Continue");
 
     expect(showToast).toHaveBeenCalledWith(
       "Failed to reset password. Please try again.",
+      "error"
+    );
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    authApi.ClientSetPassword.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    fill("StrongPass1!", "StrongPass1!");
+    await submit("Continue");
+
+    expect(showToast).toHaveBeenCalledWith(
+      "Name already taken",
       "error"
     );
     expect(navigate).not.toHaveBeenCalled();

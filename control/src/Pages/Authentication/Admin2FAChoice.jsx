@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -10,6 +10,7 @@ import "./MicrosoftAuth/SuperAdmin2FAMicrosoftAuthenticator.css";
 import "./SuperAdmin.css";
 
 import { showValidationErrors } from "../../Helper/formErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../hooks/useTwoFactorPolicy";
 // Admin self-choice 2FA screen — shown when the org has NOT set 2FA for all
 // (setForAll = false) and the admin has no method yet. No "set for all" option;
 // completing the setup page sets the admin's own authType + auth2FADone.
@@ -22,6 +23,15 @@ const schema = yup.object().shape({
 
 const Admin2FAChoice = () => {
   const navigate = useNavigate();
+  // When the super admin set one method for everyone there is nothing to
+  // choose here (the browser's Back can still land on this page): go on to
+  // that method instead.
+  const { isSuperAdmin, enforcedMethod } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod) {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const {
     register,
     handleSubmit,

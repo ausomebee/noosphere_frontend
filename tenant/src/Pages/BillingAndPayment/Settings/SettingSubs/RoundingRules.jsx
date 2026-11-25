@@ -6,7 +6,7 @@ import AddRoundingRule from "../../../../Components/ReusableModal/BillingAndPaym
 import api from "../../../../api/billingAndPaymentsApi";
 import useAuth from "../../../../hooks/useAuth";
 import usePermissions from "../../../../hooks/usePermissions";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 
 // Standard rule descriptions
 const standardRuleDescriptions = {
@@ -196,7 +196,7 @@ const RoundingRules = () => {
       showToast("Rounding rule saved successfully", "success");
       return response;
     } catch (error) {
-      showToast("Failed to save rounding rule", "error");
+      showToast(apiErrorMessage(error, "Failed to save rounding rule"), "error");
       throw error;
     } finally {
       setSaving(false);

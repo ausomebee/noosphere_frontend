@@ -300,13 +300,15 @@ describe('a refused update', () => {
     expect(showToast).toHaveBeenCalledWith('Failed to update password.', 'error');
   });
 
-  it('treats a response without the expected payload as a failure', async () => {
-    // Destructuring authType out of a missing `data.data` throws, and the catch
-    // reports it like any other failure.
-    api.AdminSetPassword.mockResolvedValue({ data: {} });
+  it('sends the admin to sign in when the save returns no 2FA details', async () => {
+    // The password is saved; with nothing to route on, sign-in takes over (it
+    // handles 2FA). This used to crash into "Failed to update password."
+    api.AdminSetPassword.mockResolvedValue({ data: { status: 'ok', message: 'Password updated' } });
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    expect(showToast).toHaveBeenCalledWith('Failed to update password.', 'error');
+    expect(showToast).toHaveBeenCalledWith('Password updated', 'success');
+    expect(showToast).not.toHaveBeenCalledWith('Failed to update password.', 'error');
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 
   it('keeps the failure out of the production console', async () => {
