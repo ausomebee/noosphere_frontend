@@ -84,23 +84,16 @@ describe('authApis error paths', () => {
     rejectAll(withMessage(`${label} said no`));
     const err = await invoke().catch((e) => e);
     expect(err).toBeInstanceOf(Error);
-    // AdminSetPassword and the first-login call read one `.data` deeper than the rest of the module
-    // (see the dedicated case below), so they alone fall back here.
-    if (label === 'AdminSetPassword' || label === 'AdminFirstLoginSetPassword') {
-      expect(err.message).toBe('Password setting failed');
-    } else {
-      expect(err.message).toBe(`${label} said no`);
-    }
+    expect(err.message).toBe(`${label} said no`);
   });
 
-  it('AdminSetPassword only surfaces a message nested one level deeper', async () => {
-    // Documented, not endorsed: every other call in this module reads
-    // `error.response.data.message`, but AdminSetPassword reads
-    // `error.response.data.data.message`. A backend that answers in the common
-    // shape therefore shows the generic fallback here and nowhere else.
+  it('AdminSetPassword surfaces the message at either level of the body', async () => {
+    // It used to read only `data.data.message`, so the common shape
+    // (`data.message`, e.g. "Invalid or expired password-reset token") was
+    // hidden behind the generic fallback.
     rejectAll({ response: { data: { message: 'common shape' } } });
     await expect(api.AdminSetPassword({ id: '1', password: 'pw' })).rejects.toThrow(
-      'Password setting failed'
+      'common shape'
     );
 
     rejectAll({ response: { data: { data: { message: 'deeper shape' } } } });

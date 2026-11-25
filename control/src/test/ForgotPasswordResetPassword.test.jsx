@@ -139,19 +139,6 @@ describe("the reset link's token", () => {
     expect(api.AdminSetPassword).not.toHaveBeenCalled();
   });
 
-  it('keeps the 2FA token the save hands back for the 2FA step', async () => {
-    api.AdminSetPassword.mockResolvedValue(setPasswordResponse({ twoFactorToken: '2fa-tok' }));
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    await waitFor(() =>
-      expect(dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'authentication/setTwoFactorToken',
-          payload: { token: '2fa-tok', userId: 'admin-9' },
-        })
-      )
-    );
-  });
 });
 
 describe('the success message', () => {
@@ -174,111 +161,79 @@ describe('the success message', () => {
   });
 });
 
-describe('where the admin lands', () => {
-  const forceFor = (setForAll) =>
-    api.GetSuperAdminChoices.mockResolvedValue({ data: { data: { setForAll } } });
+describe('where the admin lands after the reset', () => {
+  // The reset leaves nobody signed in, so when 2FA comes next the page starts
+  // the half-finished sign-in from the response (as the login page does) and
+  // goes to the right 2FA step.
+  const withTwoFactor = (over) =>
+    setPasswordResponse({
+      twoFactorRequired: true,
+      twoFactorToken: '2fa-tok',
+      isSuperAdmin: true,
+      authQuestion: 'What is your favorite hobby?',
+      ...over,
+    });
 
-  it('goes to the authenticator setup when 2FA is forced and not yet done', async () => {
-    forceFor(true);
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(navigate).toHaveBeenCalledWith('/2fa/authenticator');
-  });
-
-  it('goes to the security question setup when that is the method', async () => {
-    forceFor(true);
+  it('starts the 2FA sign-in with the question and token, and goes to answer it', async () => {
     api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ authType: 'SECRETMESSAGE' })
+      withTwoFactor({ auth2FADone: true, authType: 'SECRETMESSAGE' })
     );
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    expect(navigate).toHaveBeenCalledWith('/2fa/security-question');
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'authentication/startTwoFactorSession',
+      payload: {
+        user: expect.objectContaining({
+          id: 'admin-9',
+          authQuestion: 'What is your favorite hobby?',
+          authType: 'SECRETMESSAGE',
+          superAdmin: true,
+        }),
+        twoFactorToken: '2fa-tok',
+      },
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'authentication/setPending2FARoute',
+      payload: '/SA/2fa-question/login',
+    });
+    expect(navigate).toHaveBeenCalledWith('/SA/2fa-question/login');
   });
 
-  it('complains when 2FA is forced but the method is unrecognised', async () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(setPasswordResponse({ authType: null }));
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(showToast).toHaveBeenCalledWith('Unknown authentication type', 'error');
-    expect(spy).toHaveBeenCalledWith('Unknown authType:', null);
-    expect(navigate).not.toHaveBeenCalled();
-  });
-
-  it('goes to the authenticator login when 2FA is forced and already done', async () => {
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ auth2FADone: true })
-    );
+  it('goes to the authenticator check when that is the method already set up', async () => {
+    api.AdminSetPassword.mockResolvedValue(withTwoFactor({ auth2FADone: true, authType: 'AUTHENTICATOR' }));
     render(<ForgotPasswordResetPassword />);
     await submitValid();
     expect(navigate).toHaveBeenCalledWith('/SA/2fa-authentication/login');
   });
 
-  it('goes to the question login when 2FA is forced and already done', async () => {
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ auth2FADone: true, authType: 'SECRETMESSAGE' })
-    );
+  it('goes to set up the authenticator when 2FA is not set up yet', async () => {
+    api.AdminSetPassword.mockResolvedValue(withTwoFactor({ auth2FADone: false, authType: 'AUTHENTICATOR' }));
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    expect(navigate).toHaveBeenCalledWith('/SA/2fa-question/login');
+    expect(navigate).toHaveBeenCalledWith('/2fa/authenticator');
   });
 
-  it('complains when an enrolled admin has an unrecognised method', async () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ auth2FADone: true, authType: 'SMS' })
-    );
+  it('goes to set up the security question when that is the method', async () => {
+    api.AdminSetPassword.mockResolvedValue(withTwoFactor({ auth2FADone: false, authType: 'SECRETMESSAGE' }));
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    expect(showToast).toHaveBeenCalledWith('Unknown authentication type', 'error');
-    expect(spy).toHaveBeenCalledWith('Unknown authType:', 'SMS');
-    expect(navigate).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/2fa/security-question');
   });
 
-  it('goes home when 2FA is not forced and not yet done', async () => {
+  it('sends the admin to sign in when the method is unrecognised', async () => {
+    api.AdminSetPassword.mockResolvedValue(withTwoFactor({ auth2FADone: true, authType: 'SMS' }));
     render(<ForgotPasswordResetPassword />);
     await submitValid();
     expect(navigate).toHaveBeenCalledWith('/');
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('sends an already-enrolled admin to sign in when 2FA is optional', async () => {
-    api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ auth2FADone: true })
-    );
+  it('sends the admin to sign in when no 2FA step follows (no 2FA token)', async () => {
+    api.AdminSetPassword.mockResolvedValue(setPasswordResponse({ auth2FADone: true, authType: 'SECRETMESSAGE' }));
     render(<ForgotPasswordResetPassword />);
     await submitValid();
-    // None of the three named arms match this combination; it used to leave
-    // the admin stuck here after the toast, so it now falls back to sign-in.
-    expect(showToast).toHaveBeenCalledWith('Password updated successfully!', 'success');
     expect(navigate).toHaveBeenCalledWith('/');
-  });
-});
-
-describe('reading the 2FA choices', () => {
-  it('treats a failed choices call as 2FA not being forced', async () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    api.GetSuperAdminChoices.mockRejectedValue(new Error('offline'));
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(spy).toHaveBeenCalledWith(
-      'Error fetching SuperAdmin choices:',
-      expect.any(Error)
-    );
-    expect(navigate).toHaveBeenCalledWith('/');
-  });
-
-  it('keeps that failure out of the production console', async () => {
-    vi.stubEnv('DEV', false);
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    api.GetSuperAdminChoices.mockRejectedValue(new Error('offline'));
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(spy).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 
@@ -351,34 +306,5 @@ describe('a refused update', () => {
     await waitFor(() =>
       expect(document.querySelector('.custom-button')).not.toBeDisabled()
     );
-  });
-});
-
-describe('the unrecognised-method warnings in production', () => {
-  const forceFor = (setForAll) =>
-    api.GetSuperAdminChoices.mockResolvedValue({ data: { data: { setForAll } } });
-
-  it('keeps an unrecognised enrolment method out of the production console', async () => {
-    vi.stubEnv('DEV', false);
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(setPasswordResponse({ authType: 'SMS' }));
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(showToast).toHaveBeenCalledWith('Unknown authentication type', 'error');
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it('keeps an unrecognised login method out of the production console', async () => {
-    vi.stubEnv('DEV', false);
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    forceFor(true);
-    api.AdminSetPassword.mockResolvedValue(
-      setPasswordResponse({ auth2FADone: true, authType: 'SMS' })
-    );
-    render(<ForgotPasswordResetPassword />);
-    await submitValid();
-    expect(showToast).toHaveBeenCalledWith('Unknown authentication type', 'error');
-    expect(spy).not.toHaveBeenCalled();
   });
 });

@@ -84,6 +84,20 @@ const authenticationSlice = createSlice({
     updateAccessToken(state, action) {
       state.accessToken = action.payload;
     },
+    // A password reset whose response leads straight into 2FA: hold the
+    // half-finished sign-in it describes, exactly as a 2FA sign-in would, so
+    // the 2FA pages know who is verifying and with what.
+    startTwoFactorSession(state, action) {
+      const { user, twoFactorToken } = action.payload || {};
+      state.isAuthenticated = true;
+      state.user = user || null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.twoFactorToken = twoFactorToken || null;
+      state.twoFactorUserId = twoFactorToken ? user?.id ?? null : null;
+      state.pending2FA = true;
+      state.pending2FARoute = null;
+    },
     // A set-password response that leads into 2FA hands back a 2FA token.
     setTwoFactorToken(state, action) {
       const { token, userId } = action.payload || {};
@@ -148,6 +162,7 @@ export const {
   setPending2FARoute,
   complete2FA,
   setTwoFactorToken,
+  startTwoFactorSession,
   applyVerifiedTokens,
 } = authenticationSlice.actions;
 export default authenticationSlice.reducer;

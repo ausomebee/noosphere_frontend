@@ -368,17 +368,23 @@ describe('gating and page-level state', () => {
 
   it('reports a failed pipeline load', async () => {
     mocks.dispatch.mockImplementation(() => ({
-      unwrap: () => Promise.reject(new Error('boom')),
+      unwrap: () => Promise.reject(new Error('Request failed with status code 500')),
     }));
     await renderPanel();
     expect(screen.getByText('Failed to load pipeline data.')).toBeInTheDocument();
   });
 
   it('reports a failed staff load without losing the rest of the page', async () => {
-    mocks.api.getAllAdmins.mockRejectedValue(new Error('nope'));
+    mocks.api.getAllAdmins.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPanel();
     expect(screen.getByText('Failed to load staff or stages.')).toBeInTheDocument();
     expect(document.body.querySelector('.prospect-panel')).toBeInTheDocument();
+  });
+
+  it("shows the backend's reason when the staff load is refused", async () => {
+    mocks.api.getAllAdmins.mockRejectedValue({ response: { data: { message: 'Not allowed to view staff' } } });
+    await renderPanel();
+    expect(screen.getByText('Not allowed to view staff')).toBeInTheDocument();
   });
 
   it('skips the stage request when no pipeline id is known yet', async () => {
@@ -1459,7 +1465,7 @@ describe('logging in a production build', () => {
   });
 
   it('reports a failed staff load without writing to the console', async () => {
-    mocks.api.getAllAdmins.mockRejectedValue(new Error('nope'));
+    mocks.api.getAllAdmins.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPanel();
     expect(screen.getByText('Failed to load staff or stages.')).toBeInTheDocument();
     expect(console.error).not.toHaveBeenCalledWith(
@@ -1470,7 +1476,7 @@ describe('logging in a production build', () => {
 
   it('reports a failed pipeline load without writing to the console', async () => {
     mocks.dispatch.mockImplementation(() => ({
-      unwrap: () => Promise.reject(new Error('boom')),
+      unwrap: () => Promise.reject(new Error('Request failed with status code 500')),
     }));
     await renderPanel();
     expect(screen.getByText('Failed to load pipeline data.')).toBeInTheDocument();

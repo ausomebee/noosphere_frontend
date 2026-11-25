@@ -5,6 +5,7 @@ import reducer, {
   setPending2FARoute,
   clearPending2FA,
   setTwoFactorToken,
+  startTwoFactorSession,
   completeTwoFactor,
 } from '../ReduxStore/features/authentication';
 
@@ -215,5 +216,18 @@ describe('authenticationSlice', () => {
       expect(state.twoFactorToken).toBeNull();
       expect(state.twoFactorUserId).toBeNull();
     });
+  });
+});
+
+describe('startTwoFactorSession (2FA right after a password reset)', () => {
+  it('holds the half-finished sign-in the reset response describes', () => {
+    const user = { id: 'u1', authQuestion: 'Q?', authType: 'SECRETMESSAGE' };
+    const state = reducer(undefined, startTwoFactorSession({ user, twoFactorToken: '2fa' }));
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.user).toEqual(user);
+    expect(state.token).toBeNull();
+    expect(state.twoFactorToken).toBe('2fa');
+    expect(state.twoFactorUserId).toBe('u1');
+    expect(state.pending2FA).toBe(true);
   });
 });

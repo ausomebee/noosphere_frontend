@@ -13,7 +13,10 @@ import { authErrorMessage } from "../../../Helper/authErrors";
 import { showToast } from "../../../Helper/ShowToast";
 import { showValidationErrors } from "../../../Helper/formErrors";
 import { MISSING_LINK_TOKEN_MESSAGE, readLinkToken } from "../../../Helper/linkToken";
-import { setTwoFactorToken } from "../../../ReduxStore/features/authentication";
+import {
+  setPending2FARoute,
+  startTwoFactorSession,
+} from "../../../ReduxStore/features/authentication";
 import {
   passwordSchema,
   confirmPasswordSchema,
@@ -24,6 +27,19 @@ const schema = yup.object().shape({
   newPassword: passwordSchema("New password"),
   confirmPassword: confirmPasswordSchema("newPassword"),
 });
+
+// Where the 2FA step after a reset happens: answer the method already set
+// up, or set one up. Null when the response doesn't say enough to choose.
+const twoFactorRouteFor = ({ auth2FADone, authType }) => {
+  if (auth2FADone) {
+    if (authType === "AUTHENTICATOR") return "/SA/2fa-authentication/login";
+    if (authType === "SECRETMESSAGE") return "/SA/2fa-question/login";
+    return null;
+  }
+  if (authType === "AUTHENTICATOR") return "/2fa/authenticator";
+  if (authType === "SECRETMESSAGE") return "/2fa/security-question";
+  return null;
+};
 
 const ForgotPasswordResetPassword = () => {
   const { userId } = useParams();
@@ -44,17 +60,6 @@ const ForgotPasswordResetPassword = () => {
     resolver: yupResolver(schema),
   });
 
-  const handleGetSuperAdminChoice = async () => {
-    try {
-      const response = await api.GetSuperAdminChoices();
-      const { setForAll } = response.data.data;
-      return { setForAll };
-    } catch (error) {
-      if (import.meta.env.DEV) console.error("Error fetching SuperAdmin choices:", error);
-      return { setForAll: false };
-    }
-  };
-
   const onSubmit = async (data) => {
     if (!linkToken) {
       showToast(MISSING_LINK_TOKEN_MESSAGE, "error");
@@ -67,48 +72,32 @@ const ForgotPasswordResetPassword = () => {
         password: data.newPassword,
         token: linkToken,
       });
-      // When 2FA comes next, the backend hands back a 2FA token for it.
-      const nextToken = response?.data?.data?.twoFactorToken;
-      if (nextToken) dispatch(setTwoFactorToken({ token: nextToken, userId }));
-
       showToast(response?.data?.message || "Password updated successfully!", "success");
 
-      // The password is saved. A response without the user's 2FA details has
-      // nothing to route on, so send them to sign in, which handles 2FA.
+      // The password is saved. When 2FA comes next, the response says how
+      // (method, question, whether it's set up) and hands back a 2FA token.
+      // Nobody is signed in on this page, so start the half-finished sign-in
+      // from that, the way the login page does, and go to the 2FA step.
+      // Without a 2FA token there is nothing to carry that step: sign in
+      // instead, which handles 2FA itself.
       const result = response?.data?.data;
-      if (!result) {
+      const route = result?.twoFactorToken ? twoFactorRouteFor(result) : null;
+      if (!route) {
         navigate("/");
         return;
       }
-      const { setForAll } = await handleGetSuperAdminChoice();
-      const { authType, auth2FADone } = result; // Use setPassword response
-
-      if (setForAll && !auth2FADone) {
-        if (authType === "AUTHENTICATOR") {
-          navigate("/2fa/authenticator");
-        } else if (authType === "SECRETMESSAGE") {
-          navigate("/2fa/security-question");
-        } else {
-          if (import.meta.env.DEV) console.error("Unknown authType:", authType);
-          showToast("Unknown authentication type", "error");
-        }
-      } else if (!setForAll && !auth2FADone) {
-        navigate("/");
-      } else if (setForAll && auth2FADone) {
-        if (authType === "AUTHENTICATOR") {
-          navigate("/SA/2fa-authentication/login");
-        } else if (authType === "SECRETMESSAGE") {
-          navigate("/SA/2fa-question/login");
-        } else {
-          if (import.meta.env.DEV) console.error("Unknown authType:", authType);
-          showToast("Unknown authentication type", "error");
-        }
-      } else {
-        // !setForAll && auth2FADone: no branch above matched and the user was
-        // left on this page after the success toast. Send them to sign in.
-        navigate("/");
-      }
-
+      dispatch(
+        startTwoFactorSession({
+          user: {
+            ...result,
+            id: userId,
+            superAdmin: result.isSuperAdmin ?? result.superAdmin,
+          },
+          twoFactorToken: result.twoFactorToken,
+        })
+      );
+      dispatch(setPending2FARoute(route));
+      navigate(route);
     } catch (error) {
       if (import.meta.env.DEV) console.error("Password update error:", error);
       // Unreachable server gets its own message; otherwise the page's wording.
