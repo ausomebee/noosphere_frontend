@@ -8,7 +8,7 @@ import { LuEye } from "react-icons/lu";
 import useAuth from "../../../hooks/useAuth";
 import Button from "../../../Components/Button/Button";
 import CustomTable from "../../../Components/Table/CustomTable";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import CreateNewTemplateModal from "../../../Components/ReusableModal/SettingsModal/CreateNewTemplateModal";
 import usePermissions from "../../../hooks/usePermissions";
 import api from "../../../api/TemplateAndReportApi";
@@ -215,7 +215,7 @@ const ClinicalReports = () => {
       showToast("Template deleted successfully", "success");
     } catch (err) {
       console.error("Delete failed:", err);
-      showToast("Failed to delete template", "error");
+      showToast(apiErrorMessage(err, "Failed to delete template"), "error");
     } finally {
       setDeleteModalOpen(false);
       setTemplateToDelete(null);
@@ -289,7 +289,7 @@ const ClinicalReports = () => {
           showToast("Template duplicated successfully", "success");
         } catch (err) {
           console.error("Duplicate failed:", err);
-          showToast("Could not duplicate template", "error");
+          showToast(apiErrorMessage(err, "Could not duplicate template"), "error");
         }
       },
     },

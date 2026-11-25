@@ -13,7 +13,7 @@ import {
 import Button from "../../Button/Button";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { modifierOptions } from "../../../Data/selectOptions";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
 // Validation schema
@@ -92,7 +92,7 @@ const AddServiceCodeModal = ({
       reset(defaultFormValues);
     } catch (error) {
       console.error("Error saving service code:", error);
-      showToast("Failed to save service code", "error");
+      showToast(apiErrorMessage(error, "Failed to save service code"), "error");
     } finally {
       setIsLoading(false);
     }

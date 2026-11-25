@@ -12,7 +12,7 @@ import {
 import { firstUnmetPasswordRule } from "../../../Helper/passwordValidation";
 import Button from "../../../Components/Button/Button";
 import api from "../../../api/generalSettingsApi";
-import { showToast, showApiError } from "../../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../../Helper/ShowToast";
 import { FiSettings } from "react-icons/fi";
 import usePermissions from "../../../hooks/usePermissions";
 import { setSettings } from "../../../ReduxStore/features/generalSettingsSlice";
@@ -183,7 +183,7 @@ const GeneralSettings = () => {
       showToast("Settings updated successfully", "success");
     } catch (error) {
       console.error("Failed to save general settings:", error);
-      showToast("Failed to save settings", "error");
+      showToast(apiErrorMessage(error, "Failed to save settings"), "error");
     } finally {
       setSaveLoading(false);
     }
@@ -268,7 +268,7 @@ const GeneralSettings = () => {
       showToast("Authenticator settings saved", "success");
     } catch (error) {
       console.error("Failed to set 2FA default:", error);
-      showToast("Failed to save authenticator settings", "error");
+      showToast(apiErrorMessage(error, "Failed to save authenticator settings"), "error");
     } finally {
       setTfaSaveLoading(false);
     }
@@ -297,7 +297,7 @@ const GeneralSettings = () => {
       showToast("Security question settings saved", "success");
     } catch (error) {
       console.error("Failed to save security question settings:", error);
-      showToast("Failed to save settings", "error");
+      showToast(apiErrorMessage(error, "Failed to save settings"), "error");
     } finally {
       setTfaSaveLoading(false);
     }

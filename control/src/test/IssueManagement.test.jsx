@@ -53,7 +53,8 @@ vi.mock('react-redux', () => ({
 
 vi.mock('../api/IssueApi', () => ({ default: mocks.issueApi }));
 vi.mock('../api/TenantApis', () => ({ default: mocks.tenantApi }));
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => mocks.showToast(...a),
   showApiError: (...a) => mocks.showApiError(...a),
 }));
@@ -770,12 +771,24 @@ describe('logging a new issue', () => {
   });
 
   it('warns and keeps the modal open when the create fails', async () => {
-    mocks.issueApi.CreateIssue.mockRejectedValue(new Error('x'));
+    mocks.issueApi.CreateIssue.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPage();
     fireEvent.click(screen.getByText('Log an Issue'));
     fireEvent.click(screen.getByTestId('add-issue-save'));
     await waitFor(() =>
       expect(mocks.showToast).toHaveBeenCalledWith('Failed to add issue.', 'error')
+    );
+    expect(screen.getByTestId('add-issue-modal')).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    mocks.issueApi.CreateIssue.mockRejectedValue({ response: { data: { message: 'Name already taken' } } });
+    await renderPage();
+    fireEvent.click(screen.getByText('Log an Issue'));
+    fireEvent.click(screen.getByTestId('add-issue-save'));
+    await waitFor(() =>
+      expect(mocks.showToast).toHaveBeenCalledWith('Name already taken', 'error')
     );
     expect(screen.getByTestId('add-issue-modal')).toBeInTheDocument();
   });
@@ -989,7 +1002,7 @@ describe('logging in a production build', () => {
   });
 
   it('warns about a failed create quietly', async () => {
-    mocks.issueApi.CreateIssue.mockRejectedValue(new Error('x'));
+    mocks.issueApi.CreateIssue.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPage();
     fireEvent.click(screen.getByText('Log an Issue'));
     fireEvent.click(screen.getByTestId('add-issue-save'));

@@ -29,7 +29,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/billingAndPaymentsApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -379,7 +380,7 @@ describe("saving a rule", () => {
       })
     ).rejects.toThrow("Invalid standard rule selected");
     expect(api.CreateTenantRoundingRule).not.toHaveBeenCalled();
-    expect(toast.showToast).toHaveBeenCalledWith("Failed to save rounding rule", "error");
+    expect(toast.showToast).toHaveBeenCalledWith("Invalid standard rule selected", "error");
     // The modal stays open so the choice can be corrected.
     expect(screen.getByTestId("rule-modal")).toBeInTheDocument();
   });
@@ -427,7 +428,8 @@ describe("saving a rule", () => {
         await modal.props.onSave(customForm);
       })
     ).rejects.toThrow("duplicate");
-    expect(toast.showToast).toHaveBeenCalledWith("Failed to save rounding rule", "error");
+    // The backend's reason, not generic copy.
+    expect(toast.showToast).toHaveBeenCalledWith("duplicate", "error");
     expect(screen.getByTestId("rule-modal")).toBeInTheDocument();
     expect(screen.getByTestId("rule-modal")).toHaveAttribute("data-saving", "false");
   });

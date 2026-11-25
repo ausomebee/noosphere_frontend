@@ -202,17 +202,17 @@ describe('the toast helper', () => {
 describe('the API error reporter', () => {
   it('shows the wording configured for the key it was given', () => {
     const key = Object.keys(ERROR_MESSAGES).find((k) => k !== 'DEFAULT');
-    showApiError(new Error('boom'), key);
+    showApiError(new Error('Request failed with status code 500'), key);
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES[key], expect.any(Object));
   });
 
   it('falls back to the default wording for a key it does not know', () => {
-    showApiError(new Error('boom'), 'NO_SUCH_KEY');
+    showApiError(new Error('Request failed with status code 500'), 'NO_SUCH_KEY');
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
   });
 
   it('falls back to the default wording when given no key at all', () => {
-    showApiError(new Error('boom'));
+    showApiError(new Error('Request failed with status code 500'));
     expect(toast.error).toHaveBeenCalledWith(ERROR_MESSAGES.DEFAULT, expect.any(Object));
   });
 

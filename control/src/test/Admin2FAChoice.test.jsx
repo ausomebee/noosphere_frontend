@@ -1,10 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const spies = vi.hoisted(() => ({
   navigate: vi.fn(),
   showValidationErrors: vi.fn(),
+}));
+
+// The super admin's 2FA policy, as the page sees it. Defaults to the super
+// admin's own view (Back returns to their 2FA settings); tests override it.
+const policy = vi.hoisted(() => ({
+  value: { isSuperAdmin: true, status: 'ready', enforcedMethod: null, backTarget: '/SA/2fa-settings' },
+}));
+vi.mock('../hooks/useTwoFactorPolicy', async (importOriginal) => ({
+  ...(await importOriginal()),
+  default: () => policy.value,
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -115,5 +125,29 @@ describe('continuing', () => {
     expect(spies.navigate).not.toHaveBeenCalled();
     expect(spies.showValidationErrors).toHaveBeenCalled();
     expect(await screen.findByText('Invalid 2FA method')).toBeInTheDocument();
+  });
+});
+
+describe("respecting the super admin's 2FA choice", () => {
+  afterEach(() => {
+    policy.value = { isSuperAdmin: true, status: 'ready', enforcedMethod: null, backTarget: '/SA/2fa-settings' };
+  });
+
+  it('sends an admin straight to the method the super admin set for everyone', () => {
+    policy.value = { isSuperAdmin: false, status: 'ready', enforcedMethod: 'SECRETMESSAGE', backTarget: null };
+    renderScreen();
+    expect(spies.navigate).toHaveBeenCalledWith('/2fa/security-question', { replace: true });
+  });
+
+  it('lets an admin choose when the super admin left it to each admin', () => {
+    policy.value = { isSuperAdmin: false, status: 'ready', enforcedMethod: null, backTarget: '/2fa/choice' };
+    renderScreen();
+    expect(spies.navigate).not.toHaveBeenCalled();
+  });
+
+  it('waits for the policy before deciding', () => {
+    policy.value = { isSuperAdmin: false, status: 'loading', enforcedMethod: null, backTarget: null };
+    renderScreen();
+    expect(spies.navigate).not.toHaveBeenCalled();
   });
 });

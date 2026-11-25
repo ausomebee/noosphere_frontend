@@ -36,7 +36,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/billingAndPaymentsApi", () => ({ default: apiMock }));
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -525,20 +526,33 @@ describe("editing the payer", () => {
     payerModal.payload = { payerName: "Acme", insuranceType: "" };
     await openPayerModal();
     fireEvent.click(screen.getByText("save-payer"));
+    // The page's own validation message, not the generic save failure.
     await waitFor(() =>
-      expect(toastMock.showToast).toHaveBeenCalledWith("Failed to update payer", "error")
+      expect(toastMock.showToast).toHaveBeenCalledWith("Invalid insurance type selected", "error")
     );
     expect(apiMock.UpdatePayer).not.toHaveBeenCalled();
     expect(screen.getByTestId("payer-modal")).toBeInTheDocument();
   });
 
   it("warns when the update endpoint rejects", async () => {
-    apiMock.UpdatePayer.mockRejectedValue(new Error("500"));
+    apiMock.UpdatePayer.mockRejectedValue(new Error("Request failed with status code 500"));
     payerModal.payload = { payerName: "Acme", insuranceType: "ins-1" };
     await openPayerModal();
     fireEvent.click(screen.getByText("save-payer"));
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith("Failed to update payer", "error")
+    );
+    expect(screen.getByTestId("payer-modal")).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    apiMock.UpdatePayer.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    payerModal.payload = { payerName: "Acme", insuranceType: "ins-1" };
+    await openPayerModal();
+    fireEvent.click(screen.getByText("save-payer"));
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(screen.getByTestId("payer-modal")).toBeInTheDocument();
   });
@@ -621,7 +635,7 @@ describe("adding a service code", () => {
   });
 
   it("warns and keeps the modal open when the update fails", async () => {
-    apiMock.UpdatePayer.mockRejectedValue(new Error("500"));
+    apiMock.UpdatePayer.mockRejectedValue(new Error("Request failed with status code 500"));
     serviceCodeModal.payload = { serviceCodeId: "sc-1", ratePerUnit: 1, unitCurrency: "USD" };
     await openAdd();
     fireEvent.click(screen.getByText("save-service-code"));

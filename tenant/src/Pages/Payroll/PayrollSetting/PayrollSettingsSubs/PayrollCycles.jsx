@@ -6,7 +6,7 @@ import { FaPlus } from "react-icons/fa";
 import CustomTable from "../../../../Components/Table/CustomTable";
 import PayrollCycleModal from "../../../../Components/ReusableModal/PayrollModal/NewPayrollCycleModal";
 import api from "../../../../api/payrollApi";
-import { showToast } from "../../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../../Helper/ShowToast";
 
 const PayrollCycles = () => {
   const { tenantId, accessToken, refreshToken } = useAuth();
@@ -97,7 +97,7 @@ const PayrollCycles = () => {
         fetchPayrollCycles();
       } catch (error) {
         console.error("Error updating payroll cycle status:", error);
-        showToast("Failed to update payroll cycle status", "error");
+        showToast(apiErrorMessage(error, "Failed to update payroll cycle status"), "error");
       }
     },
     [accessToken, refreshToken, fetchPayrollCycles],

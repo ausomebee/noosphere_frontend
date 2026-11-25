@@ -26,7 +26,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/TemplateAndReportApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -360,10 +361,21 @@ describe("duplicating a template", () => {
   });
 
   it("reports a refused duplicate and adds no row", async () => {
-    api.DuplicateClinicalReportTemplate.mockRejectedValue(new Error("409"));
+    api.DuplicateClinicalReportTemplate.mockRejectedValue(new Error("Request failed with status code 500"));
     await duplicate();
     expect(toast.showToast).toHaveBeenCalledWith(
       "Could not duplicate template",
+      "error"
+    );
+    expect(rows()).toHaveLength(1);
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.DuplicateClinicalReportTemplate.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await duplicate();
+    expect(toast.showToast).toHaveBeenCalledWith(
+      "Name already taken",
       "error"
     );
     expect(rows()).toHaveLength(1);
@@ -402,7 +414,7 @@ describe("deleting a template", () => {
   });
 
   it("keeps the row and closes the confirmation when the delete is refused", async () => {
-    api.DeleteClinicalReportTemplate.mockRejectedValue(new Error("500"));
+    api.DeleteClinicalReportTemplate.mockRejectedValue(new Error("Request failed with status code 500"));
     await openDelete();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() =>

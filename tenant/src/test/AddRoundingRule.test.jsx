@@ -25,7 +25,8 @@ import formDraftsReducer from "../ReduxStore/features/formDraftsSlice";
  */
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -340,12 +341,24 @@ describe("saving a custom rule", () => {
   });
 
   it("warns and stays open when the caller's save throws", async () => {
-    const onSave = vi.fn().mockRejectedValue(new Error("500"));
+    const onSave = vi.fn().mockRejectedValue(new Error("Request failed with status code 500"));
     const { onClose } = renderModal({ onSave });
     fillCustom();
     save();
     await waitFor(() =>
       expect(toastMock.showToast).toHaveBeenCalledWith("Failed to save rounding rule", "error")
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    const onSave = vi.fn().mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    const { onClose } = renderModal({ onSave });
+    fillCustom();
+    save();
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(onClose).not.toHaveBeenCalled();
   });

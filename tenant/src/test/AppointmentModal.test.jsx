@@ -78,7 +78,11 @@ vi.mock("react-multi-date-picker", () => ({
   },
 }));
 
-const today = new Date().toISOString().split("T")[0];
+// The modal fills in today's *local* date. toISOString() is UTC, which is a
+// different day for the hour after local midnight in a zone ahead of UTC.
+const localDate = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const today = localDate();
 
 // Two clients: one with both name parts, one with none, so the "Unknown Client"
 // fallback in clientOptions is exercised by the same fixture.

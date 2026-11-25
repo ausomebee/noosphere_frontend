@@ -31,7 +31,8 @@ const api = vi.hoisted(() => ({
 vi.mock("../api/helpAndSupportApi", () => ({ default: api }));
 
 const toast = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toast.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -512,7 +513,7 @@ describe("submitting a new request", () => {
   });
 
   it("keeps the modal open and reports a refused submission", async () => {
-    api.CreateHelpAndSupportTicket.mockRejectedValue(new Error("413"));
+    api.CreateHelpAndSupportTicket.mockRejectedValue(new Error("Request failed with status code 500"));
     renderPage();
     await waitFor(() => expect(rows()).toHaveLength(1));
     await openSubmitModal();
@@ -521,6 +522,23 @@ describe("submitting a new request", () => {
     await waitFor(() =>
       expect(toast.showToast).toHaveBeenCalledWith(
         "Failed to submit support request",
+        "error"
+      )
+    );
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    api.CreateHelpAndSupportTicket.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderPage();
+    await waitFor(() => expect(rows()).toHaveLength(1));
+    await openSubmitModal();
+    fill();
+    submit();
+    await waitFor(() =>
+      expect(toast.showToast).toHaveBeenCalledWith(
+        "Name already taken",
         "error"
       )
     );

@@ -1,6 +1,6 @@
 // hooks/useNotificationSettings.js
 import { useState, useEffect, useRef } from "react";
-import { showToast } from "../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../Helper/ShowToast";
 import api2 from "../api/profileAndSettingsApi";
 
 export const useNotificationSettings = (clientTenantId, accessToken, refreshToken) => {
@@ -126,7 +126,7 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
       });
       loadNotificationSettings();
     } catch (error) {
-      showToast("Failed to create notification settings", "error");
+      showToast(apiErrorMessage(error, "Failed to create notification settings"), "error");
       console.error("Error creating notification settings:", error);
     }
   };
@@ -168,7 +168,7 @@ export const useNotificationSettings = (clientTenantId, accessToken, refreshToke
         setNotifications((prev) =>
           prev[key] === nextValue ? { ...prev, [key]: !nextValue } : prev,
         );
-        showToast("Failed to update notification settings", "error");
+        showToast(apiErrorMessage(error, "Failed to update notification settings"), "error");
         console.error("Error updating notification settings:", error);
       } finally {
         setLoadingKeys((prev) => {

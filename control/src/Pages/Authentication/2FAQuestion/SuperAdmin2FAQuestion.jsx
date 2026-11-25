@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -12,6 +12,7 @@ import api from "../../../api/authApis";
 import useAuth from "../../../hooks/useAuth";
 import { showToast } from "../../../Helper/ShowToast";
 import { authErrorMessage } from "../../../Helper/authErrors";
+import useTwoFactorPolicy, { METHOD_ROUTES } from "../../../hooks/useTwoFactorPolicy";
 
 // Yup validation schema for security question
 const securityQuestionSchema = yup.object().shape({
@@ -56,6 +57,14 @@ const securityQuestionSchema = yup.object().shape({
 const SuperAdmin2FAQuestion = () => {
   const { userId } = useAuth();
   const navigate = useNavigate();
+  // Respect the super admin's choice: an admin whose method is set for
+  // everyone can't set up the other one, or go back to choose.
+  const { isSuperAdmin, enforcedMethod, backTarget } = useTwoFactorPolicy();
+  useEffect(() => {
+    if (!isSuperAdmin && enforcedMethod && enforcedMethod !== "SECRETMESSAGE") {
+      navigate(METHOD_ROUTES[enforcedMethod], { replace: true });
+    }
+  }, [isSuperAdmin, enforcedMethod, navigate]);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -158,7 +167,7 @@ const SuperAdmin2FAQuestion = () => {
 
   // Handle back navigation
   const handleNavBack = () => {
-    navigate("/SA/2fa-settings");
+    if (backTarget) navigate(backTarget);
   };
 
   // Handle continue for steps
@@ -259,12 +268,14 @@ const SuperAdmin2FAQuestion = () => {
                 )}
               </div>
               <div className="button-group">
-                <Button
-                  label="Back"
-                  variant="secondary"
-                  className="auth-button secondary"
-                  onClick={handleNavBack}
-                />
+                {backTarget && (
+                  <Button
+                    label="Back"
+                    variant="secondary"
+                    className="auth-button secondary"
+                    onClick={handleNavBack}
+                  />
+                )}
                 <Button
                   type="submit"
                   label="Continue"

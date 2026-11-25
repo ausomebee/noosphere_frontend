@@ -24,7 +24,8 @@ import formDraftsReducer from "../ReduxStore/features/formDraftsSlice";
  */
 
 const toast = vi.hoisted(() => vi.fn());
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...args) => toast(...args),
   showApiError: vi.fn(),
 }));
@@ -372,7 +373,7 @@ describe("saving a payer", () => {
   });
 
   it("keeps the modal open and reports a save the caller rejected", async () => {
-    onSave.mockRejectedValue(new Error("Payer already exists"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     renderModal();
     fillPayerInfo();
     await goToServiceCodeTab();
@@ -381,6 +382,21 @@ describe("saving a payer", () => {
 
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith("Failed to save payer", "error")
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    onSave.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderModal();
+    fillPayerInfo();
+    await goToServiceCodeTab();
+    fillServiceCode();
+    fireEvent.click(primaryButton());
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("Name already taken", "error")
     );
     expect(onClose).not.toHaveBeenCalled();
   });

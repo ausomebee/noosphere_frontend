@@ -95,10 +95,19 @@ describe('requesting the link', () => {
     expect(authApi.AdminForgetPassword).toHaveBeenCalledWith({
       email: 'ada@example.com',
     });
-    expect(showToast).toHaveBeenCalledWith(
-      'Password reset email sent successfully!',
-      'success'
-    );
+    // The toast repeats what the backend said.
+    expect(showToast).toHaveBeenCalledWith('mail sent successfully', 'success');
+    expect(navigate).toHaveBeenCalledWith('/password-reset-confirmation');
+  });
+
+  it("accepts the backend's \"ok\" reply, whose wording doesn't reveal whether the account exists", async () => {
+    authApi.AdminForgetPassword.mockResolvedValue({
+      data: { status: 'ok', message: 'If an account exists for that email, reset instructions have been sent.' },
+    });
+    render(<ForgotPassword />);
+    fill();
+    await submit();
+    expect(showToast).toHaveBeenCalledWith('If an account exists for that email, reset instructions have been sent.', 'success');
     expect(navigate).toHaveBeenCalledWith('/password-reset-confirmation');
   });
 

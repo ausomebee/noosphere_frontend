@@ -10,7 +10,7 @@ import {
 } from "react-icons/io5";
 import "./DocumentRequests.css";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import useAuth from "../../../hooks/useAuth";
 
 import UploadDocumentModal from "../../../Components/Modal/ClientDocumentUploadModal";
@@ -232,7 +232,7 @@ const DocumentRequests = () => {
       await Promise.all([refreshDocuments(), loadDocumentCounts()]);
     } catch (err) {
       console.error(err);
-      showToast("Failed to attach documents", "error");
+      showToast(apiErrorMessage(err, "Failed to attach documents"), "error");
     } finally {
       setAttaching(false);
     }

@@ -12,7 +12,7 @@ import {
 import { FaRegFile, FaPhotoVideo, FaImage, FaCheckCircle } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import useAuth from "../../../hooks/useAuth";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import { formatFileSize } from "../../../Helper/Formatters";
 
 import { showValidationErrors } from "../../../Helper/formErrors";
@@ -178,7 +178,7 @@ const UploadOrganizationFileModal = ({ isOpen, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error("Error saving document:", error);
-      showToast("Failed to save document", "error");
+      showToast(apiErrorMessage(error, "Failed to save document"), "error");
     } finally {
       setIsLoading(false);
     }

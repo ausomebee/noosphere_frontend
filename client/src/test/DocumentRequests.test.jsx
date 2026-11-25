@@ -14,7 +14,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/documentsAndFormsApis", () => ({ default: apiMock }));
 
 const showToast = vi.fn();
-vi.mock("../Helper/ShowToast", () => ({ showToast: (...a) => showToast(...a) }));
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage, showToast: (...a) => showToast(...a) }));
 
 const openDocument = vi.fn();
 vi.mock("../hooks/useDocumentViewer", () => ({
@@ -403,10 +404,18 @@ describe("attaching documents", () => {
   });
 
   it("reports a failed attachment", async () => {
-    apiMock.AttachDocumentsToRequest.mockRejectedValue(new Error("server said no"));
+    apiMock.AttachDocumentsToRequest.mockRejectedValue(new Error("Request failed with status code 500"));
     await openUpload();
     await act(async () => { await modalProps.upload.onFilesReady(["https://x/a.pdf"]); });
     expect(showToast).toHaveBeenCalledWith("Failed to attach documents", "error");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    apiMock.AttachDocumentsToRequest.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await openUpload();
+    await act(async () => { await modalProps.upload.onFilesReady(["https://x/a.pdf"]); });
+    expect(showToast).toHaveBeenCalledWith("Name already taken", "error");
   });
 
   it("leaves the list alone when the reload fails", async () => {

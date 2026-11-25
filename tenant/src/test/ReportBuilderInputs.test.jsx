@@ -7,7 +7,8 @@ const uploadImage = vi.hoisted(() => vi.fn());
 vi.mock("../api/ImageUpload", () => ({ default: { UploadImage: uploadImage } }));
 
 const showToast = vi.fn();
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -511,22 +512,32 @@ describe("the file upload", () => {
     expect(uploadImage).not.toHaveBeenCalled();
   });
 
+  // A refusal shows the backend's reason; an empty result has none, so the
+  // upload's own wording shows.
   it.each([
-    ["a refusal", { success: false, error: "storage full" }],
-    ["an empty result", { success: true, data: [] }],
-  ])("reports %s", async (_case, response) => {
+    ["a refusal", { success: false, error: "storage full" }, "storage full"],
+    ["an empty result", { success: true, data: [] }, "Upload failed"],
+  ])("reports %s", async (_case, response, shown) => {
     uploadImage.mockResolvedValue(response);
     renderUpload();
     await choose([file()]);
-    expect(showToast).toHaveBeenCalledWith("File upload failed", "error");
+    expect(showToast).toHaveBeenCalledWith(shown, "error");
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("reports an upload that threw", async () => {
-    uploadImage.mockRejectedValue(new Error("offline"));
+    uploadImage.mockRejectedValue(new Error("Request failed with status code 500"));
     renderUpload();
     await choose([file()]);
     expect(showToast).toHaveBeenCalledWith("File upload failed", "error");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    uploadImage.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderUpload();
+    await choose([file()]);
+    expect(showToast).toHaveBeenCalledWith("Name already taken", "error");
   });
 
   it("clears the chooser so the same file can be picked again", async () => {

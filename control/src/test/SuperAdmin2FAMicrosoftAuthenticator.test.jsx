@@ -23,6 +23,16 @@ const mocks = vi.hoisted(() => ({
   showToast: vi.fn(),
 }));
 
+// The super admin's 2FA policy, as the page sees it. Defaults to the super
+// admin's own view (Back returns to their 2FA settings); tests override it.
+const policy = vi.hoisted(() => ({
+  value: { isSuperAdmin: true, status: 'ready', enforcedMethod: null, backTarget: '/SA/2fa-settings' },
+}));
+vi.mock('../hooks/useTwoFactorPolicy', async (importOriginal) => ({
+  ...(await importOriginal()),
+  default: () => policy.value,
+}));
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mocks.navigate };
@@ -459,3 +469,29 @@ describe('editing the second code', () => {
   });
 });
 
+
+describe("respecting the super admin's 2FA choice", () => {
+  afterEach(() => {
+    policy.value = { isSuperAdmin: true, status: 'ready', enforcedMethod: null, backTarget: '/SA/2fa-settings' };
+  });
+
+  it('offers no Back to a choice when the super admin set a method for everyone', async () => {
+    policy.value = { isSuperAdmin: false, status: 'ready', enforcedMethod: 'AUTHENTICATOR', backTarget: null };
+    await renderWizard();
+    expect(screen.queryByText('Back')).not.toBeInTheDocument();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it('sends an admin to the security question when that is the method set for everyone', async () => {
+    policy.value = { isSuperAdmin: false, status: 'ready', enforcedMethod: 'SECRETMESSAGE', backTarget: null };
+    await renderWizard();
+    expect(mocks.navigate).toHaveBeenCalledWith('/2fa/security-question', { replace: true });
+  });
+
+  it('goes back to their own choice when the super admin left it to each admin', async () => {
+    policy.value = { isSuperAdmin: false, status: 'ready', enforcedMethod: null, backTarget: '/2fa/choice' };
+    await renderWizard();
+    fireEvent.click(screen.getByText('Back'));
+    expect(mocks.navigate).toHaveBeenCalledWith('/2fa/choice');
+  });
+});

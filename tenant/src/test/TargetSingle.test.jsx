@@ -36,7 +36,8 @@ const apiMock = vi.hoisted(() => ({
 vi.mock("../api/ProgramLibraryApis", () => ({ default: apiMock }));
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -884,11 +885,21 @@ describe("collecting data", () => {
 
   it("warns when the save is rejected", async () => {
     forClientCollecting(target({ dataCollectionType: "Frequency" }));
-    apiMock.CreateClientDataCollectionData.mockRejectedValue(new Error("409"));
+    apiMock.CreateClientDataCollectionData.mockRejectedValue(new Error("Request failed with status code 500"));
     await collect();
     await screen.findByTestId("frequency-modal");
     await modals.props.frequency.onSave({});
     expect(toastMock.showToast).toHaveBeenCalledWith("Failed to save data", "error");
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    forClientCollecting(target({ dataCollectionType: "Frequency" }));
+    apiMock.CreateClientDataCollectionData.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    await collect();
+    await screen.findByTestId("frequency-modal");
+    await modals.props.frequency.onSave({});
+    expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error");
   });
 
   it("refuses to save when the client-target record has no id", async () => {
