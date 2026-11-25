@@ -543,6 +543,43 @@ describe("saving a new role", () => {
     );
   });
 
+  it("sends a permission shared by two subcategories only once", async () => {
+    // Calendar and Appointments both carry create/edit/reschedule/start/cancel;
+    // the backend 400s on repeated keys.
+    await create({
+      selectedModules: ["SCHEDULER"],
+      permissions: {
+        SCHEDULER: {
+          calendar: {
+            view_calendar: true,
+            create_a_new_appointment: true,
+            edit_appointments: true,
+            cancel_appointments: false,
+          },
+          appointments: {
+            view_upcoming_appointments: true,
+            create_a_new_appointment: true,
+            edit_appointments: true,
+            cancel_appointments: true,
+          },
+        },
+      },
+    });
+    await waitFor(() => expect(roleApi.CreateRole).toHaveBeenCalled());
+    const [access] = roleApi.CreateRole.mock.calls[0][0].moduleAccesses;
+    expect(access.module).toBe("SCHEDULER");
+    expect(access.permissions).toHaveLength(new Set(access.permissions).size);
+    expect([...access.permissions].sort()).toEqual(
+      [
+        "view_calendar",
+        "create_a_new_appointment",
+        "edit_appointments",
+        "view_upcoming_appointments",
+        "cancel_appointments",
+      ].sort()
+    );
+  });
+
   it("never attaches a module access id while creating", async () => {
     await create({
       rawModuleAccesses: [{ id: "ma-1", module: "DASHBOARD", permissions: [] }],
@@ -611,6 +648,25 @@ describe("saving an edited role", () => {
     );
     expect(toast.showToast).toHaveBeenCalledWith("Role updated successfully", "success");
     await screen.findByTestId("table");
+  });
+
+  it("sends shared permissions only once on update too", async () => {
+    await beginEdit({
+      selectedModules: ["SCHEDULER"],
+      permissions: {
+        SCHEDULER: {
+          calendar: { start_appointments: true, reschedule_appointments: true },
+          appointments: { start_appointments: true, reschedule_appointments: true },
+        },
+      },
+    });
+    confirm();
+    await waitFor(() => expect(roleApi.UpdateRole).toHaveBeenCalled());
+    const [access] = roleApi.UpdateRole.mock.calls[0][0].moduleAccesses;
+    expect([...access.permissions].sort()).toEqual([
+      "reschedule_appointments",
+      "start_appointments",
+    ]);
   });
 
   it("omits the id for a module the role did not have before", async () => {
