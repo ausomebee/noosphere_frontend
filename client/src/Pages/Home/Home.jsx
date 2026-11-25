@@ -25,6 +25,7 @@ import useAuth from "../../hooks/useAuth";
 import { formatDate, formatTime, formatTimeFromDate } from "../../Helper/Formatters";
 import SectionLoader from "../../Components/SectionLoader";
 
+import { apiErrorMessage } from "../../Helper/ShowToast";
 // ============================================================================
 // Main Home Component
 // ============================================================================
@@ -131,7 +132,7 @@ const Home = () => {
         });
       } catch (error) {
         console.error("Failed to fetch overview:", error);
-        setError("Failed to load overview data");
+        setError(apiErrorMessage(error, "Failed to load overview data"));
       } finally {
         setLoading(prev => ({ ...prev, overview: false }));
       }
@@ -163,7 +164,7 @@ const Home = () => {
         setChartData(transformedData);
       } catch (error) {
         console.error("Failed to fetch chart data:", error);
-        setError("Failed to load chart data");
+        setError(apiErrorMessage(error, "Failed to load chart data"));
       } finally {
         setLoading(prev => ({ ...prev, chart: false }));
       }
@@ -188,7 +189,7 @@ const Home = () => {
         setAuthorizationData(response.data.data);
       } catch (error) {
         console.error("Failed to fetch authorization codes:", error);
-        setError("Failed to load authorization data");
+        setError(apiErrorMessage(error, "Failed to load authorization data"));
       } finally {
         setLoading(prev => ({ ...prev, authorization: false }));
       }

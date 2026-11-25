@@ -198,25 +198,25 @@ describe("a 2FA token that has run out", () => {
 });
 
 describe("setting a password", () => {
-  it("a reset link sends its token as Bearer, not in the body, and no session token", async () => {
+  it("a reset link sends its token in the body and no session token", async () => {
     makeStore({ user: { id: "u1", accessToken: "stale" } });
     axios.patch.mockResolvedValueOnce({ data: { status: "ok" } });
     await api.AdminSetPassword({ id: "u1", password: "Passw0rd!", token: "link" });
     expect(axios.patch).toHaveBeenCalledWith(
       expect.stringMatching(/\/admin\/setpassword$/),
-      { id: "u1", password: "Passw0rd!" },
-      { timeout: 20000, headers: { Authorization: "Bearer link" } }
+      { id: "u1", password: "Passw0rd!", token: "link" },
+      { timeout: 20000 }
     );
   });
 
-  it("an invite link sends its token as Bearer, not in the body, and no session token", async () => {
+  it("an invite link sends its token in the body and no session token", async () => {
     makeStore({ user: { id: "u1", accessToken: "stale" } });
     axios.patch.mockResolvedValueOnce({ data: { status: "ok" } });
     await api.AdminOnboarding({ id: "u1", password: "Passw0rd!", token: "invite" });
     expect(axios.patch).toHaveBeenCalledWith(
       expect.stringMatching(/\/admin\/setpassword$/),
-      { id: "u1", password: "Passw0rd!" },
-      { timeout: 20000, headers: { Authorization: "Bearer invite" } }
+      { id: "u1", password: "Passw0rd!", token: "invite" },
+      { timeout: 20000 }
     );
   });
 

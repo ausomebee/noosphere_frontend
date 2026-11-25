@@ -7,7 +7,7 @@ import AddDiagnosisCode from "../../../Components/ReusableModal/OrganizationModa
 import api from "../../../api/organisationApis";
 import useAuth from "../../../hooks/useAuth";
 import usePermissions from "../../../hooks/usePermissions";
-import { showToast } from "../../../Helper/ShowToast";
+import { showToast, apiErrorMessage } from "../../../Helper/ShowToast";
 import usePersistedTab from "../../../hooks/usePersistedTab";
 // Billing settings moved here as additional Practice Settings tabs.
 import ServiceCodes from "../../BillingAndPayment/Settings/SettingSubs/ServiceCodes";
@@ -214,7 +214,7 @@ const PracticeSettings = () => {
       setIsAddModalOpen(false);
       setSelectedRow(null);
     } catch (error) {
-      showToast(`Failed to ${modalMode} session type`, "error");
+      showToast(apiErrorMessage(error, `Failed to ${modalMode} session type`), "error");
       console.error(error);
     }
   };

@@ -59,21 +59,18 @@ const AdminLogin = async ({ email, password }) => {
     throw toAuthError(error, error.response?.data?.message || "Login failed");
   }
 };
-// Reset and invite links carry a single-use token. It goes to the API as
-// `Authorization: Bearer`, never in the body and never alongside a session
-// token, so a stale login in the same browser can't interfere.
-const linkTokenConfig = (token) => ({
-  ...withTimeout,
-  headers: token ? { Authorization: `Bearer ${token}` } : {},
-});
+// Reset and invite links carry a single-use, opaque token. It goes in the
+// JSON body: the API only accepts JWTs (a login or 2FA token) as
+// `Authorization: Bearer`, and rejects a link token sent there. No session
+// token is sent with it, so a stale login in this browser can't interfere.
 
 // Invite link: the email link's token authorises setting the password.
 const AdminOnboarding = async ({ id, password, token }) => {
   try {
     const response = await axios.patch(
       `${PLAIN_API_URL}/admin/setpassword`,
-      { id, password },
-      linkTokenConfig(token)
+      { id, password, token },
+      withTimeout
     );
     return response;
   } catch (error) {
@@ -99,15 +96,17 @@ const AdminForgetPassword = async ({ email }) => {
 };
 
 const setPasswordMessage = (error) =>
-  error.response?.data?.data?.message || "Password setting failed";
+  error.response?.data?.data?.message ||
+  error.response?.data?.message ||
+  "Password setting failed";
 
 // Reset link: the email link's token authorises setting the password.
 const AdminSetPassword = async ({ id, password, token }) => {
   try {
     const response = await axios.patch(
       `${PLAIN_API_URL}/admin/setpassword`,
-      { id, password },
-      linkTokenConfig(token)
+      { id, password, token },
+      withTimeout
     );
     return response;
   } catch (error) {
