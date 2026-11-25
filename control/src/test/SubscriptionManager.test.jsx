@@ -49,7 +49,8 @@ vi.mock('react-router-dom', async () => {
 });
 vi.mock('../api/SubcriptionApis', () => ({ default: mocks.subApi }));
 vi.mock('../api/InvoiceApi', () => ({ default: mocks.invoiceApi }));
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => mocks.showToast(...a),
   showApiError: (...a) => mocks.showApiError(...a),
 }));
@@ -760,7 +761,7 @@ describe('saving a subscription action', () => {
 
   it('keeps a failed action out of the console outside development', async () => {
     vi.stubEnv('DEV', false);
-    mocks.subApi.CancelSubscriptionNow.mockRejectedValue(new Error('server said no'));
+    mocks.subApi.CancelSubscriptionNow.mockRejectedValue(new Error('Request failed with status code 500'));
     mocks.saveExtras = { cancellationType: 'immediately' };
     await renderPage();
     fireEvent.click(screen.getByTestId('action-cancel-subscription'));
@@ -770,7 +771,7 @@ describe('saving a subscription action', () => {
   });
 
   it('reports a failed action', async () => {
-    mocks.subApi.CancelSubscriptionNow.mockRejectedValue(new Error('server said no'));
+    mocks.subApi.CancelSubscriptionNow.mockRejectedValue(new Error('Request failed with status code 500'));
     mocks.saveExtras = { cancellationType: 'immediately' };
     await renderPage();
     fireEvent.click(screen.getByTestId('action-cancel-subscription'));
@@ -779,6 +780,31 @@ describe('saving a subscription action', () => {
     await waitFor(() =>
       expect(mocks.showToast).toHaveBeenCalledWith(
         'Failed to perform subscription action.',
+        'error'
+      )
+    );
+    expect(mocks.showApiError).toHaveBeenCalledWith(
+      expect.any(Error),
+      'UPDATE_SUBSCRIPTION'
+    );
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    // Shaped like a real axios error: an Error that carries the response.
+    mocks.subApi.CancelSubscriptionNow.mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 409'), {
+        response: { data: { message: 'Name already taken' } },
+      })
+    );
+    mocks.saveExtras = { cancellationType: 'immediately' };
+    await renderPage();
+    fireEvent.click(screen.getByTestId('action-cancel-subscription'));
+    fireEvent.click(screen.getByTestId('cancel-save'));
+
+    await waitFor(() =>
+      expect(mocks.showToast).toHaveBeenCalledWith(
+        'Name already taken',
         'error'
       )
     );

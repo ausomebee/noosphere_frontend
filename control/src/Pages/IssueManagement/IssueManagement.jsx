@@ -23,7 +23,7 @@ import ViewIssue from "./ViewIssue";
 import api from "../../api/IssueApi";
 import api2 from "../../api/TenantApis";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 import { formatDate } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 import SectionLoader from "../../Components/SectionLoader";
@@ -388,7 +388,7 @@ const IssueManagement = () => {
         onSuccess();
         fetchData(true); // silently re-sync the list + metric counts with the real record
       } catch (err) {
-        showToast("Failed to add issue.", "error");
+        showToast(apiErrorMessage(err, "Failed to add issue."), "error");
         if (import.meta.env.DEV) console.error("Error adding issue:", err);
       } finally {
         setIsAddingIssue(false);

@@ -59,14 +59,22 @@ const AdminLogin = async ({ email, password }) => {
     throw toAuthError(error, error.response?.data?.message || "Login failed");
   }
 };
-// Invite link: the email link's `token` authorises setting the password.
+// Reset and invite links carry a single-use token. It goes to the API as
+// `Authorization: Bearer`, never in the body and never alongside a session
+// token, so a stale login in the same browser can't interfere.
+const linkTokenConfig = (token) => ({
+  ...withTimeout,
+  headers: token ? { Authorization: `Bearer ${token}` } : {},
+});
+
+// Invite link: the email link's token authorises setting the password.
 const AdminOnboarding = async ({ id, password, token }) => {
   try {
-    const response = await axios.patch(`${PLAIN_API_URL}/admin/setpassword`, {
-      id,
-      password,
-      token,
-    }, withTimeout);
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/admin/setpassword`,
+      { id, password },
+      linkTokenConfig(token)
+    );
     return response;
   } catch (error) {
     throw toAuthError(error, error.response?.data?.message || "Admin Onboarding failed");
@@ -93,15 +101,14 @@ const AdminForgetPassword = async ({ email }) => {
 const setPasswordMessage = (error) =>
   error.response?.data?.data?.message || "Password setting failed";
 
-// Reset link: the email link's `token` authorises setting the password. No
-// session token is sent, so a stale one from another login can't interfere.
+// Reset link: the email link's token authorises setting the password.
 const AdminSetPassword = async ({ id, password, token }) => {
   try {
-    const response = await axios.patch(`${PLAIN_API_URL}/admin/setpassword`, {
-      id,
-      password,
-      token,
-    }, withTimeout);
+    const response = await axios.patch(
+      `${PLAIN_API_URL}/admin/setpassword`,
+      { id, password },
+      linkTokenConfig(token)
+    );
     return response;
   } catch (error) {
     throw toAuthError(error, setPasswordMessage(error));

@@ -50,7 +50,7 @@ import {
 import api from "../../api/TenantApis";
 import billingApi from "../../api/BillingApis";
 import invoiceApi from "../../api/InvoiceApi";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 import { v4 as uuidv4 } from "uuid";
 import SectionLoader from "../SectionLoader";
 
@@ -546,7 +546,7 @@ const ProspectPanel = () => {
       showToast("Task added successfully!", "success");
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error adding task:", err);
-      showToast("Failed to add task", "error");
+      showToast(apiErrorMessage(err, "Failed to add task"), "error");
       // Re-thrown so the modal keeps the typed value and stays open.
       throw err;
     }
@@ -566,7 +566,7 @@ const ProspectPanel = () => {
       setIsCustomDocModalOpen(false);
       showToast("Document added successfully!", "success");
     } catch (err) {
-      showToast("Failed to add document", "error");
+      showToast(apiErrorMessage(err, "Failed to add document"), "error");
       // Re-thrown so the modal keeps the typed value and stays open.
       throw err;
     }
@@ -756,7 +756,7 @@ const ProspectPanel = () => {
       setEditingCustomTask(null);
       showToast("Custom task updated", "success");
     } catch (err) {
-      showToast("Failed to update custom task", "error");
+      showToast(apiErrorMessage(err, "Failed to update custom task"), "error");
       // Re-thrown so the modal keeps the typed value and stays open.
       throw err;
     }
@@ -780,7 +780,7 @@ const ProspectPanel = () => {
       setEditingCustomDocument(null);
       showToast("Custom document updated", "success");
     } catch (err) {
-      showToast("Failed to update custom document", "error");
+      showToast(apiErrorMessage(err, "Failed to update custom document"), "error");
       // Re-thrown so the modal keeps the typed value and stays open.
       throw err;
     }

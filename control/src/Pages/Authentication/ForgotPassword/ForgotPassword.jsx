@@ -48,11 +48,15 @@ const ForgetPassword = () => {
       const response = await api.AdminForgetPassword({
         email: data.email,
       });
-      if (response.data.message === "mail sent successfully") {
-        showToast("Password reset email sent successfully!", "success");
+      // The backend answers "ok" whether or not the email has an account (so
+      // the page can't be used to find out); older backends sent a fixed
+      // message instead. Show whatever the backend said.
+      const body = response?.data || {};
+      if (body.status === "ok" || body.message === "mail sent successfully") {
+        showToast(body.message || "Password reset email sent successfully!", "success");
         navigate("/password-reset-confirmation");
       } else {
-        throw new Error("Failed to initiate password reset.");
+        throw new Error(body.message || "Failed to initiate password reset.");
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Password reset failed:", error);

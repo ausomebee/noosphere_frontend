@@ -22,7 +22,7 @@ import apiInvoice from "../../../../api/InvoiceApi";
 import { SiVisa, SiMastercard, SiAmericanexpress, SiPaypal } from "react-icons/si";
 import GeneratePaymentLinkModal from "../../../../Components/ReusableModal/GeneratePaymentLinkModal";
 import AccessDenied from "../../../../Components/AccessDenied/AccessDenied";
-import { showToast, showApiError } from "../../../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../../../Helper/ShowToast";
 import { formatDate } from "../../../../Helper/Formatters";
 import "../../BillingAndPayments.css";
 import usePersistedTab from "../../../../hooks/usePersistedTab";
@@ -697,7 +697,7 @@ const SubscriptionManager = () => {
           setSelectedStatuses(new Array());
         }
       } catch (err) {
-        showToast("Failed to perform subscription action.", "error");
+        showToast(apiErrorMessage(err, "Failed to perform subscription action."), "error");
         showApiError(err, "UPDATE_SUBSCRIPTION");
         if (import.meta.env.DEV) console.error("Error saving subscription action:", err);
       } finally {

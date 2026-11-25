@@ -11,7 +11,7 @@ import {
 import Button from "../../Components/Button/Button";
 import AccessDenied from "../../Components/AccessDenied/AccessDenied";
 import authApis from "../../api/authApis";
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 import { firstUnmetPasswordRule } from "../../Helper/passwordValidation";
 import { FiSettings } from "react-icons/fi";
 import "./SecuritySettings.css";
@@ -199,7 +199,7 @@ const SecuritySettings = () => {
       fetchAdminChoices(); // re-sync the toggles with the saved server state
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to save security question settings:", error);
-      showToast("Failed to save settings", "error");
+      showToast(apiErrorMessage(error, "Failed to save settings"), "error");
     } finally {
       setSqSaveLoading(false);
     }
@@ -229,7 +229,7 @@ const SecuritySettings = () => {
       fetchAdminChoices(); // re-sync the toggles with the saved server state
     } catch (error) {
       if (import.meta.env.DEV) console.error("Failed to set 2FA default:", error);
-      showToast("Failed to save authenticator settings", "error");
+      showToast(apiErrorMessage(error, "Failed to save authenticator settings"), "error");
     } finally {
       setTfaSaveLoading(false);
     }

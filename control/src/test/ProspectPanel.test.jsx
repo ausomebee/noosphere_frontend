@@ -67,7 +67,8 @@ vi.mock('react-redux', () => ({
 vi.mock('../api/TenantApis', () => ({ default: mocks.api }));
 vi.mock('../api/BillingApis', () => ({ default: mocks.billingApi }));
 vi.mock('../api/InvoiceApi', () => ({ default: mocks.invoiceApi }));
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => mocks.showToast(...a),
   showApiError: (...a) => mocks.showApiError(...a),
 }));
@@ -668,12 +669,24 @@ describe('custom tasks and documents', () => {
   });
 
   it('keeps the add-task modal open when the create fails', async () => {
-    mocks.api.CreateCustomTask.mockRejectedValue(new Error('no'));
+    mocks.api.CreateCustomTask.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPanel();
     fireEvent.click(screen.getByText('Add a custom task'));
     fireEvent.click(screen.getByTestId('add-task-save'));
     await waitFor(() =>
       expect(mocks.showToast).toHaveBeenCalledWith('Failed to add task', 'error')
+    );
+    expect(screen.getByTestId('add-task-modal')).toBeInTheDocument();
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    mocks.api.CreateCustomTask.mockRejectedValue({ response: { data: { message: 'Name already taken' } } });
+    await renderPanel();
+    fireEvent.click(screen.getByText('Add a custom task'));
+    fireEvent.click(screen.getByTestId('add-task-save'));
+    await waitFor(() =>
+      expect(mocks.showToast).toHaveBeenCalledWith('Name already taken', 'error')
     );
     expect(screen.getByTestId('add-task-modal')).toBeInTheDocument();
   });
@@ -697,7 +710,7 @@ describe('custom tasks and documents', () => {
   });
 
   it('keeps the add-document modal open when the create fails', async () => {
-    mocks.api.CreateCustomDocument.mockRejectedValue(new Error('no'));
+    mocks.api.CreateCustomDocument.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPanel();
     fireEvent.click(screen.getByText('Add custom document request'));
     fireEvent.click(screen.getByTestId('add-doc-save'));
@@ -787,7 +800,7 @@ describe('custom tasks and documents', () => {
   });
 
   it('keeps the edit modal open when the custom task update fails', async () => {
-    mocks.api.UpdateCustomTask.mockRejectedValue(new Error('x'));
+    mocks.api.UpdateCustomTask.mockRejectedValue(new Error('Request failed with status code 500'));
     await withCustoms();
     fireEvent.click(screen.getByLabelText('Edit custom task'));
     fireEvent.click(screen.getByTestId('edit-task-save'));
@@ -807,7 +820,7 @@ describe('custom tasks and documents', () => {
   });
 
   it('keeps the edit modal open when the custom document update fails', async () => {
-    mocks.api.UpdateCustomDocument.mockRejectedValue(new Error('x'));
+    mocks.api.UpdateCustomDocument.mockRejectedValue(new Error('Request failed with status code 500'));
     await withCustoms();
     fireEvent.click(screen.getByLabelText('Edit custom document'));
     fireEvent.click(screen.getByTestId('edit-doc-save'));
@@ -1501,7 +1514,7 @@ describe('logging in a production build', () => {
   });
 
   it('warns about a failed task create without writing to the console', async () => {
-    mocks.api.CreateCustomTask.mockRejectedValue(new Error('no'));
+    mocks.api.CreateCustomTask.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderPanel();
     fireEvent.click(screen.getByText('Add a custom task'));
     fireEvent.click(screen.getByTestId('add-task-save'));

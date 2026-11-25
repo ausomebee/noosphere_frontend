@@ -20,7 +20,7 @@ import { formatDate, formatMoney } from "../../Helper/Formatters";
 import usePersistedTab from "../../hooks/usePersistedTab";
 import "./BillingAndPayments.css";
 
-import { showToast, showApiError } from "../../Helper/ShowToast";
+import { showToast, showApiError, apiErrorMessage } from "../../Helper/ShowToast";
 const statusMap = {
   // Payment statuses
   successful: "Successful",
@@ -586,7 +586,7 @@ const BillingManager = () => {
       document.body.removeChild(tempContainer);
     } catch (err) {
       if (import.meta.env.DEV) console.error("Error generating PDF:", err);
-      showToast("Failed to download invoice. Please try again.", "error");
+      showToast(apiErrorMessage(err, "Failed to download invoice. Please try again."), "error");
     }
   };
 

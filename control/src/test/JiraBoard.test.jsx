@@ -80,7 +80,8 @@ vi.mock('react-redux', () => ({
 }));
 
 vi.mock('../api/TenantApis', () => ({ default: mocks.api }));
-vi.mock('../Helper/ShowToast', () => ({
+vi.mock('../Helper/ShowToast', async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => mocks.showToast(...a),
   showApiError: (...a) => mocks.showApiError(...a),
 }));
@@ -592,10 +593,18 @@ describe('dragging a column', () => {
   });
 
   it('warns when the new order cannot be saved', async () => {
-    mocks.api.ReorderPipelineStage.mockRejectedValue(new Error('x'));
+    mocks.api.ReorderPipelineStage.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderBoard();
     await dragEnd('s1', 's2', 'Column');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to update column order.', 'error');
+  });
+
+
+  it("shows the backend's own message when the response carries one", async () => {
+    mocks.api.ReorderPipelineStage.mockRejectedValue({ response: { data: { message: 'Name already taken' } } });
+    await renderBoard();
+    await dragEnd('s1', 's2', 'Column');
+    expect(mocks.showToast).toHaveBeenCalledWith('Name already taken', 'error');
   });
 
   it('ignores a drag that ends outside any droppable', async () => {
@@ -647,7 +656,7 @@ describe('dragging a card', () => {
   });
 
   it('warns when the new order cannot be saved', async () => {
-    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('Request failed with status code 500'));
     await withCards();
     await dragEnd('t1', 't2');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to update task order.', 'error');
@@ -674,7 +683,7 @@ describe('dragging a card', () => {
   });
 
   it('warns when the move cannot be saved', async () => {
-    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('Request failed with status code 500'));
     await withCards();
     await dragEnd('t1', 's2');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to move task.', 'error');
@@ -1189,7 +1198,7 @@ describe('logging in a production build', () => {
   });
 
   it('warns about an unsaved column order without logging it', async () => {
-    mocks.api.ReorderPipelineStage.mockRejectedValue(new Error('x'));
+    mocks.api.ReorderPipelineStage.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderBoard();
     await dragEnd('s1', 's2', 'Column');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to update column order.', 'error');
@@ -1204,7 +1213,7 @@ describe('logging in a production build', () => {
             ? [{ id: 't1', companyName: 'Acme' }, { id: 't2', companyName: 'Beta' }]
             : [],
       });
-    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderBoard();
     await dragEnd('t1', 't2');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to update task order.', 'error');
@@ -1216,7 +1225,7 @@ describe('logging in a production build', () => {
       Promise.resolve({
         items: action.payload.stageId === 's1' ? [{ id: 't1', companyName: 'Acme' }] : [],
       });
-    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('x'));
+    mocks.api.UpdatePipelineItemActivity.mockRejectedValue(new Error('Request failed with status code 500'));
     await renderBoard();
     await dragEnd('t1', 's2');
     expect(mocks.showToast).toHaveBeenCalledWith('Failed to move task.', 'error');
@@ -1764,7 +1773,8 @@ describe('an optimistic add that throws', () => {
   // mock is made to throw for exactly that action.
   const breakAddTaskToColumn = () => {
     mocks.dispatch.mockImplementation((action) => {
-      if (action.type === 'addTaskToColumn') throw new Error('store rejected it');
+      // No useful message, so the page's own wording is shown.
+      if (action.type === 'addTaskToColumn') throw new Error('Request failed with status code 500');
       return { unwrap: () => mocks.unwrap(action) };
     });
   };
