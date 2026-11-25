@@ -221,9 +221,17 @@ describe("saving", () => {
     onSave.mockRejectedValue(new Error("Code already on file"));
     fillMinimum();
     await submit();
-    expect(await screen.findByText("Failed to save diagnosis code.")).toBeInTheDocument();
+    expect(await screen.findByText("Code already on file")).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
     expect(codeInput()).toHaveValue("F84.0");
+  });
+
+  it("banners our own wording when the failure carries no reason", async () => {
+    const { onSave } = renderModal();
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
+    fillMinimum();
+    await submit();
+    expect(await screen.findByText("Failed to save diagnosis code.")).toBeInTheDocument();
   });
 
   it("drops the banner when the next attempt succeeds", async () => {
@@ -231,7 +239,7 @@ describe("saving", () => {
     onSave.mockRejectedValueOnce(new Error("Code already on file"));
     fillMinimum();
     await submit();
-    expect(await screen.findByText("Failed to save diagnosis code.")).toBeInTheDocument();
+    expect(await screen.findByText("Code already on file")).toBeInTheDocument();
     onSave.mockImplementation(async (data) => {
       saved.push({ ...data });
     });

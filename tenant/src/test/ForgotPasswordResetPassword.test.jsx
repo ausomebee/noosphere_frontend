@@ -160,12 +160,13 @@ describe("the reset link's token", () => {
       setForAll: false,
       user: { auth2FADone: false, twoFactorToken: "2fa-tok" },
     });
-    expect(dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "authentication/setTwoFactorToken",
-        payload: { token: "2fa-tok", userId: "u-1" },
-      })
-    );
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "authentication/startTwoFactorSession",
+      payload: {
+        user: expect.objectContaining({ id: "u-1", twoFactorToken: "2fa-tok" }),
+        twoFactorToken: "2fa-tok",
+      },
+    });
   });
 
   it("dispatches nothing when the save hands back no 2FA token", async () => {

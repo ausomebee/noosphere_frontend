@@ -28,7 +28,8 @@ import formDraftsReducer from "../ReduxStore/features/formDraftsSlice";
  */
 
 const toastMock = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("../Helper/ShowToast", () => ({
+vi.mock("../Helper/ShowToast", async (importOriginal) => ({
+  apiErrorMessage: (await importOriginal()).apiErrorMessage,
   showToast: (...a) => toastMock.showToast(...a),
   showApiError: vi.fn(),
 }));
@@ -369,8 +370,17 @@ describe("saving", () => {
     );
   });
 
+  it("shows the backend's reason when a save is refused", async () => {
+    onSave.mockRejectedValue({ response: { data: { message: "Name already taken" } } });
+    renderModal({ mode: "edit", initialData: FLAT_ITEM });
+    fireEvent.click(saveButton());
+    await waitFor(() =>
+      expect(toastMock.showToast).toHaveBeenCalledWith("Name already taken", "error")
+    );
+  });
+
   it("reports a rejected save as an income item failure and stays open", async () => {
-    onSave.mockRejectedValue(new Error("boom"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     renderModal({ mode: "edit", initialData: FLAT_ITEM });
     fireEvent.click(saveButton());
     await waitFor(() =>
@@ -381,7 +391,7 @@ describe("saving", () => {
   });
 
   it("reports a rejected save as a deduction failure when it is one", async () => {
-    onSave.mockRejectedValue(new Error("boom"));
+    onSave.mockRejectedValue(new Error("Request failed with status code 500"));
     renderModal({ mode: "edit", initialData: FLAT_ITEM, isDeduction: true });
     fireEvent.click(screen.getByRole("button", { name: "Save Deduction" }));
     await waitFor(() =>

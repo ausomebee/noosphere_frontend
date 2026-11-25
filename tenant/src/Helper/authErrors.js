@@ -16,11 +16,9 @@ export const isNetworkFailure = (error) =>
     !!error.request ||
     error.message === "Network Error");
 
-// What the backend said, wherever it put it, or null. Skips axios's generic
-// texts and bugs in the page (a TypeError and the like), which mean nothing
-// to the user.
+// What the backend said, wherever it put it in its response, or null. Skips
+// axios's generic texts, which mean nothing to the user.
 const GENERIC = /^(Request failed with status code|Network Error$|timeout of )/i;
-const PAGE_BUGS = ["TypeError", "ReferenceError", "RangeError", "SyntaxError"];
 const backendMessage = (error) => {
   const data = error?.response?.data;
   const fromBody =
@@ -29,8 +27,9 @@ const backendMessage = (error) => {
     data?.data?.message ||
     data?.error ||
     "";
-  const fromError = PAGE_BUGS.includes(error?.name) ? "" : error?.message || "";
-  const text = String(fromBody || fromError).trim();
+  // Only the response counts: an error without one (a dropped socket, a
+  // check in the page) isn't something the backend said.
+  const text = String(fromBody).trim();
   return text && !GENERIC.test(text) ? text : null;
 };
 
